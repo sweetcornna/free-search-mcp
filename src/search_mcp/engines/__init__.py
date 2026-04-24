@@ -1,4 +1,4 @@
-from .base import Engine, SearchResult
+from .base import Engine, SearchFilters, SearchResult, apply_post_filters
 from .baidu import BaiduEngine
 from .bing import BingEngine
 from .brave import BraveEngine
@@ -23,4 +23,11 @@ def get_engine(name: str) -> Engine:
     return ENGINES[key]
 
 
-__all__ = ["ENGINES", "Engine", "SearchResult", "get_engine"]
+__all__ = [
+    "ENGINES",
+    "Engine",
+    "SearchFilters",
+    "SearchResult",
+    "apply_post_filters",
+    "get_engine",
+]

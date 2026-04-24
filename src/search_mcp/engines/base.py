@@ -1,14 +1,62 @@
 from __future__ import annotations
 
 import abc
-from dataclasses import asdict, dataclass
-from typing import Any
+from dataclasses import asdict, dataclass, field
+from typing import Any, Literal
+from urllib.parse import urlparse
 
 import httpx
 from selectolax.parser import HTMLParser
 
 from ..browser import pool
 from ..config import settings
+
+
+Freshness = Literal["day", "week", "month", "year"]
+Category = Literal["news", "pdf", "github", "paper", "forum", "blog"]
+
+
+# Host whitelists for category filtering when the engine has no native flag.
+# Match-by-suffix so subdomains (e.g. www.arxiv.org) count.
+_PAPER_HOSTS = (
+    "arxiv.org",
+    "acm.org",
+    "springer.com",
+    "ieee.org",
+    "nature.com",
+    "sciencedirect.com",
+)
+_FORUM_HOSTS = (
+    "reddit.com",
+    "news.ycombinator.com",
+    "stackoverflow.com",
+    "serverfault.com",
+    "superuser.com",
+)
+_GITHUB_HOSTS = ("github.com", "gist.github.com")
+
+
+@dataclass(slots=True)
+class SearchFilters:
+    """LLM-friendly filter set passed from the aggregator to each engine.
+    Fields default to None / empty so callers can omit any subset."""
+
+    freshness: Freshness | None = None
+    include_domains: list[str] = field(default_factory=list)
+    exclude_domains: list[str] = field(default_factory=list)
+    category: Category | None = None
+    include_text: str | None = None
+    exclude_text: str | None = None
+
+    def is_empty(self) -> bool:
+        return (
+            self.freshness is None
+            and not self.include_domains
+            and not self.exclude_domains
+            and self.category is None
+            and not self.include_text
+            and not self.exclude_text
+        )
 
 
 @dataclass(slots=True)
@@ -23,25 +71,127 @@ class SearchResult:
         return asdict(self)
 
 
+def _host(url: str) -> str:
+    try:
+        return (urlparse(url).hostname or "").lower()
+    except ValueError:
+        return ""
+
+
+def _host_matches(host: str, suffixes: tuple[str, ...] | list[str]) -> bool:
+    if not host:
+        return False
+    return any(host == s or host.endswith("." + s) for s in suffixes)
+
+
+def _strip_query(url: str) -> str:
+    return url.split("?", 1)[0].split("#", 1)[0]
+
+
+def apply_post_filters(
+    results: list[SearchResult], filters: SearchFilters | None
+) -> list[SearchResult]:
+    """Strict client-side filter pass. Engines under-honor URL operators, so
+    we re-check domain/category/text constraints here."""
+    if filters is None or filters.is_empty():
+        return results
+
+    inc = [d.lower().lstrip(".") for d in (filters.include_domains or [])]
+    exc = [d.lower().lstrip(".") for d in (filters.exclude_domains or [])]
+    inc_text = (filters.include_text or "").lower().strip()
+    exc_text = (filters.exclude_text or "").lower().strip()
+
+    out: list[SearchResult] = []
+    for r in results:
+        host = _host(r.url)
+
+        if inc and not _host_matches(host, tuple(inc)):
+            continue
+        if exc and _host_matches(host, tuple(exc)):
+            continue
+
+        if filters.category == "paper" and not _host_matches(host, _PAPER_HOSTS):
+            continue
+        if filters.category == "forum" and not _host_matches(host, _FORUM_HOSTS):
+            continue
+        if filters.category == "github" and not _host_matches(host, _GITHUB_HOSTS):
+            continue
+        if filters.category == "pdf" and not _strip_query(r.url).lower().endswith(".pdf"):
+            continue
+        if filters.category == "blog":
+            # Blog = "ordinary web page" — exclude obvious non-blog hosts.
+            if (
+                _host_matches(host, _PAPER_HOSTS)
+                or _host_matches(host, _FORUM_HOSTS)
+                or _host_matches(host, _GITHUB_HOSTS)
+            ):
+                continue
+
+        if inc_text or exc_text:
+            haystack = (r.title + " \n " + r.snippet).lower()
+            if inc_text and inc_text not in haystack:
+                continue
+            if exc_text and exc_text in haystack:
+                continue
+
+        out.append(r)
+    return out
+
+
+def augment_query_with_operators(
+    query: str,
+    *,
+    include_domains: list[str] | None = None,
+    exclude_domains: list[str] | None = None,
+    filetype: str | None = None,
+) -> str:
+    """Append `site:` / `-site:` / `filetype:` operators to a free-text query.
+    These are universally understood by every engine we target, even when the
+    engine has no dedicated URL parameter for the same constraint."""
+    parts: list[str] = [query]
+    if include_domains:
+        if len(include_domains) == 1:
+            parts.append(f"site:{include_domains[0]}")
+        else:
+            joined = " OR ".join(f"site:{d}" for d in include_domains)
+            parts.append(f"({joined})")
+    if exclude_domains:
+        for d in exclude_domains:
+            parts.append(f"-site:{d}")
+    if filetype:
+        parts.append(f"filetype:{filetype}")
+    return " ".join(parts)
+
+
 class Engine(abc.ABC):
     name: str
     needs_browser: bool = False
     wait_selector: str | None = None
 
     @abc.abstractmethod
-    def build_url(self, query: str, max_results: int) -> str: ...
+    def build_url(
+        self, query: str, max_results: int, filters: SearchFilters | None = None
+    ) -> str: ...
 
     @abc.abstractmethod
     def parse(self, html: str) -> list[SearchResult]: ...
 
-    async def search(self, query: str, max_results: int) -> list[SearchResult]:
-        url = self.build_url(query, max_results)
+    async def search(
+        self,
+        query: str,
+        max_results: int,
+        filters: SearchFilters | None = None,
+    ) -> list[SearchResult]:
+        url = self.build_url(query, max_results, filters)
         html = await self._fetch(url)
-        results = self.parse(html)[:max_results]
+        results = self.parse(html)
         if not results and not self.needs_browser and settings.fetch_strategy == "auto":
             # HTTP succeeded but the page was an interstitial/captcha shell.
             _, html = await pool.fetch_html(url, wait_selector=self.wait_selector)
-            results = self.parse(html)[:max_results]
+            results = self.parse(html)
+        # Client-side post-filter BEFORE truncation, so we don't waste the budget
+        # on hits that the engine returned but the user excluded.
+        results = apply_post_filters(results, filters)[:max_results]
         for i, r in enumerate(results):
             r.rank = i + 1
             r.engine = self.name

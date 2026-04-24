@@ -1,15 +1,41 @@
 from urllib.parse import quote_plus
 
-from .base import Engine, SearchResult, parse_html, text_of
+from .base import (
+    Engine,
+    SearchFilters,
+    SearchResult,
+    augment_query_with_operators,
+    parse_html,
+    text_of,
+)
+
+
+# Baidu's `gpc=stf=<from>,<to>|stftype=1` for explicit ranges, but the simpler
+# documented `gpc` time-window keys map cleanly to LLM freshness buckets.
+# We rely on inline operators + client-side post-filter for everything else.
 
 
 class BaiduEngine(Engine):
     name = "baidu"
     needs_browser = False
 
-    def build_url(self, query: str, max_results: int) -> str:
+    def build_url(
+        self, query: str, max_results: int, filters: SearchFilters | None = None
+    ) -> str:
         rn = min(max(max_results, 10), 50)
-        return f"https://www.baidu.com/s?wd={quote_plus(query)}&rn={rn}"
+        filetype = None
+        if filters and filters.category == "pdf":
+            filetype = "pdf"
+        q = augment_query_with_operators(
+            query,
+            include_domains=filters.include_domains if filters else None,
+            exclude_domains=filters.exclude_domains if filters else None,
+            filetype=filetype,
+        )
+        # Baidu has no reliable freshness URL parameter for the public HTML
+        # endpoint (the gpc=stf=… token requires unix timestamps and is
+        # session-bound). Skip and let the client-side filter handle it.
+        return f"https://www.baidu.com/s?wd={quote_plus(q)}&rn={rn}"
 
     def parse(self, html: str) -> list[SearchResult]:
         tree = parse_html(html)

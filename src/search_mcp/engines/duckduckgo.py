@@ -1,6 +1,16 @@
 from urllib.parse import parse_qs, quote_plus, unquote, urlparse
 
-from .base import Engine, SearchResult, parse_html, text_of
+from .base import (
+    Engine,
+    SearchFilters,
+    SearchResult,
+    augment_query_with_operators,
+    parse_html,
+    text_of,
+)
+
+
+_DDG_FRESHNESS = {"day": "d", "week": "w", "month": "m", "year": "y"}
 
 
 def _unwrap(url: str) -> str:
@@ -20,8 +30,23 @@ class DuckDuckGoEngine(Engine):
     name = "duckduckgo"
     needs_browser = False
 
-    def build_url(self, query: str, max_results: int) -> str:
-        return f"https://html.duckduckgo.com/html/?q={quote_plus(query)}"
+    def build_url(
+        self, query: str, max_results: int, filters: SearchFilters | None = None
+    ) -> str:
+        # Inline operators that DDG honors well: site:, -site:, filetype:
+        filetype = None
+        if filters and filters.category == "pdf":
+            filetype = "pdf"
+        q = augment_query_with_operators(
+            query,
+            include_domains=filters.include_domains if filters else None,
+            exclude_domains=filters.exclude_domains if filters else None,
+            filetype=filetype,
+        )
+        url = f"https://html.duckduckgo.com/html/?q={quote_plus(q)}"
+        if filters and filters.freshness:
+            url += f"&df={_DDG_FRESHNESS[filters.freshness]}"
+        return url
 
     def parse(self, html: str) -> list[SearchResult]:
         tree = parse_html(html)

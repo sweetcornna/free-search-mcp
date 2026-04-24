@@ -1,6 +1,17 @@
 from urllib.parse import quote_plus
 
-from .base import Engine, SearchResult, parse_html, text_of
+from .base import (
+    Engine,
+    SearchFilters,
+    SearchResult,
+    augment_query_with_operators,
+    parse_html,
+    text_of,
+)
+
+
+# Startpage uses Google-style `with_date=` semantics on the `sp/search` endpoint.
+_STARTPAGE_FRESHNESS = {"day": "d", "week": "w", "month": "m", "year": "y"}
 
 
 class StartpageEngine(Engine):
@@ -8,11 +19,25 @@ class StartpageEngine(Engine):
     needs_browser = True
     wait_selector = ".result a[aria-label='link']"
 
-    def build_url(self, query: str, max_results: int) -> str:
-        return (
-            f"https://www.startpage.com/sp/search?query={quote_plus(query)}"
+    def build_url(
+        self, query: str, max_results: int, filters: SearchFilters | None = None
+    ) -> str:
+        filetype = None
+        if filters and filters.category == "pdf":
+            filetype = "pdf"
+        q = augment_query_with_operators(
+            query,
+            include_domains=filters.include_domains if filters else None,
+            exclude_domains=filters.exclude_domains if filters else None,
+            filetype=filetype,
+        )
+        url = (
+            f"https://www.startpage.com/sp/search?query={quote_plus(q)}"
             "&cat=web&pl=opensearch&language=english"
         )
+        if filters and filters.freshness:
+            url += f"&with_date={_STARTPAGE_FRESHNESS[filters.freshness]}"
+        return url
 
     def parse(self, html: str) -> list[SearchResult]:
         # Startpage uses dynamic emotion-css class names that change every load,
