@@ -12,7 +12,7 @@ already includes the actual page text — same total tokens, far fewer turns.
 """
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 from .aggregator import aggregate_search
 from .config import settings
@@ -26,6 +26,13 @@ async def research(
     engines: list[str] | None = None,
     fetch: bool = True,
     use_cache: bool = True,
+    *,
+    freshness: Literal["day", "week", "month", "year"] | None = None,
+    include_domains: list[str] | None = None,
+    exclude_domains: list[str] | None = None,
+    category: Literal["news", "pdf", "github", "paper", "forum", "blog"] | None = None,
+    include_text: str | None = None,
+    exclude_text: str | None = None,
 ) -> dict[str, Any]:
     if not question.strip():
         raise ValueError("question must not be empty")
@@ -36,6 +43,12 @@ async def research(
         engines=engines,
         max_results=max(depth * 2, depth + 3),
         use_cache=use_cache,
+        freshness=freshness,
+        include_domains=include_domains,
+        exclude_domains=exclude_domains,
+        category=category,
+        include_text=include_text,
+        exclude_text=exclude_text,
     )
 
     top = sr["results"][:depth]

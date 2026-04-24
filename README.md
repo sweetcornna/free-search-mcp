@@ -37,18 +37,29 @@ shakedown.
 
 Existing search MCPs each do one thing well, but you usually want all of it:
 
-| | Multi-engine | No API key | Smart fallback | PDF/DOCX | FTS5 cache | LLM-tuned |
-|---|---|---|---|---|---|---|
-| `nickclyde/duckduckgo-mcp-server` | ✗ | ✓ | ✗ | ✗ | ✗ | ~ |
-| `mrkrsl/web-search-mcp` | ✓ | ✓ | ✓ | ✗ | ✗ | ~ |
-| `Aas-ee/open-webSearch` | ✓ | ✓ | ~ | ✗ | ✗ | ~ |
-| `VincentKaufmann/noapi-google-search-mcp` | ✗ | ✓ | ✓ | ✓ | ✓ | ~ |
-| **free-search-mcp** | **✓** | **✓** | **✓** | **✓** | **✓** | **✓** |
+| | Multi-engine | No API key | Smart fallback | PDF/DOCX | FTS5 cache | Filters | Trafilatura | LLM-tuned |
+|---|---|---|---|---|---|---|---|---|
+| `nickclyde/duckduckgo-mcp-server` | ✗ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ~ |
+| `mrkrsl/web-search-mcp` | ✓ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ~ |
+| `Aas-ee/open-webSearch` | ✓ | ✓ | ~ | ✗ | ✗ | ✗ | ✗ | ~ |
+| `VincentKaufmann/noapi-google-search-mcp` | ✗ | ✓ | ✓ | ✓ | ✓ | ✗ | ✗ | ~ |
+| **free-search-mcp** | **✓** | **✓** | **✓** | **✓** | **✓** | **✓** | **✓** | **✓** |
 
 "LLM-tuned" here means: Markdown-first output, token estimates, smart
-truncation at paragraph boundaries, structured docstrings the model can use
-to pick the right tool, actionable error hints, and a one-shot
+truncation at paragraph boundaries, "Best for / Not for / Returns / Common
+mistakes" docstrings the model uses to pick the right tool, actionable
+error hints, MCP prompts and resource templates, and a one-shot
 `research()` that collapses search→fetch→fetch→fetch into a single turn.
+
+"Trafilatura" means we extract main content using
+[trafilatura](https://github.com/adbar/trafilatura) — winner of the
+Bevendorff 2023 ROUGE benchmark (~0.85 vs ~0.55 for naive boilerplate
+stripping). Each fetched page also returns `author`, `published_date`, and
+`sitename` for free.
+
+"Filters" means search/research accept `freshness`, `include_domains`,
+`exclude_domains`, `category` (`news`/`pdf`/`github`/`paper`/`forum`/`blog`),
+`include_text`, `exclude_text`.
 
 ---
 
@@ -56,13 +67,29 @@ to pick the right tool, actionable error hints, and a one-shot
 
 | Tool | Description |
 |---|---|
-| `search(query, engines?, max_results?, use_cache?, format?)` | Parallel multi-engine search merged via Reciprocal Rank Fusion |
-| `research(question, depth?, engines?, fetch?, format?)` | One-shot: search + fetch top N + return Markdown brief |
-| `fetch(url, render?, force_refresh?, format?)` | Fetch a page, return reader-mode Markdown |
+| `search(query, engines?, max_results?, use_cache?, max_age_hours?, freshness?, include_domains?, exclude_domains?, category?, include_text?, exclude_text?, format?)` | Parallel multi-engine search merged via Reciprocal Rank Fusion |
+| `research(question, depth?, engines?, fetch?, use_cache?, max_age_hours?, freshness?, include_domains?, exclude_domains?, category?, include_text?, exclude_text?, format?)` | One-shot: search + fetch top N + return Markdown brief |
+| `fetch(url, render?, force_refresh?, max_age_hours?, format?)` | Fetch a page, return reader-mode Markdown (trafilatura-extracted, with author/date/sitename) |
 | `fetch_batch(urls, render?, format?)` | Concurrent multi-URL fetch |
 | `read_doc(source, start?, length?, format?)` | Parse PDF / DOCX / HTML / TXT / MD with pagination |
 | `cache_search(query, limit?, format?)` | FTS5 search across previously fetched pages |
 | `engines()` | List engine names available to `search` |
+
+Plus **2 MCP prompts** (`Research thoroughly`, `Fact-check claim`) and a
+**resource template** (`cache://page/{url}`) for dragging cached pages back
+into context without re-fetching.
+
+### Filters (search / research)
+
+| Param | Values | Effect |
+|---|---|---|
+| `freshness` | `day` / `week` / `month` / `year` | Only results from the last N |
+| `include_domains` | `["python.org", "djangoproject.com"]` | Restrict to these domains |
+| `exclude_domains` | `["pinterest.com"]` | Remove these |
+| `category` | `news` / `pdf` / `github` / `paper` / `forum` / `blog` | Content-type shortcut (paper = arxiv/acm/ieee/…, forum = reddit/HN/SE, etc.) |
+| `include_text` | `"async"` | Substring required in title/snippet |
+| `exclude_text` | `"beginner"` | Substring forbidden |
+| `max_age_hours` | `24` | Override the 7-day default cache TTL on this call |
 
 All tools default to `format="markdown"` — readable, ~40% fewer tokens than
 JSON, with provenance and a token-budget header. Pass `format="json"` for

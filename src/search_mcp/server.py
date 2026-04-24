@@ -66,6 +66,12 @@ async def search(
     max_results: int = 10,
     use_cache: bool = True,
     max_age_hours: float | None = None,
+    freshness: Literal["day", "week", "month", "year"] | None = None,
+    include_domains: list[str] | None = None,
+    exclude_domains: list[str] | None = None,
+    category: Literal["news", "pdf", "github", "paper", "forum", "blog"] | None = None,
+    include_text: str | None = None,
+    exclude_text: str | None = None,
     format: Format = "markdown",
 ) -> str | dict[str, Any]:
     """Run a multi-engine web search and return a ranked, deduplicated link list.
@@ -73,7 +79,9 @@ async def search(
     Best for:
     - Discovery queries ("what is X", "find me X", "who is X").
     - Getting a list of URLs you can hand to `fetch` / `fetch_batch` next.
-    - Topics likely to be after your knowledge cutoff.
+    - Topics likely to be after your knowledge cutoff (use `freshness="week"`).
+    - Filtering to specific domains (`include_domains=["python.org"]`) or
+      content types (`category="paper"|"pdf"|"github"|"news"|"forum"|"blog"`).
 
     Not recommended for:
     - You already know the URL -> use `fetch` instead.
@@ -93,6 +101,8 @@ async def search(
       10-20 each, anything beyond is duplicate noise.
     - Adding `engines=["brave","bing","baidu"]` by default — those need
       captcha-friendly conditions; stick with defaults unless they returned 0.
+    - Using `category="news"` for breaking news without also setting
+      `freshness="day"` — the index lag is days, not minutes.
 
     Args:
         query: Natural-language query (the same string a human would type).
@@ -103,6 +113,14 @@ async def search(
         max_age_hours: Treat cached results older than this as a miss. Use
             0 to force-refresh while keeping cache writes; None = use server
             default TTL (7 days).
+        freshness: "day"|"week"|"month"|"year" — restrict to recent results.
+        include_domains: List of domains to restrict to (e.g. ["python.org"]).
+        exclude_domains: List of domains to exclude.
+        category: "news"|"pdf"|"github"|"paper"|"forum"|"blog" — content-type
+            shortcut. "paper" => arxiv/acm/springer/ieee/etc; "forum" =>
+            reddit/HN/stackexchange; "github" => github.com only.
+        include_text: Substring required in title or snippet (case-insensitive).
+        exclude_text: Substring forbidden in title or snippet.
         format: "markdown" (default) or "json".
     """
     if not query.strip():
@@ -114,11 +132,22 @@ async def search(
 
     if use_cache and max_age_seconds is not None:
         # Pre-check cache with a tighter TTL ourselves; if it misses we tell
-        # the aggregator not to use cache so it re-runs.
-        from .aggregator import _key  # local import: aggregator owns the key shape
+        # the aggregator not to use cache so it re-runs. The aggregator owns
+        # the cache key shape (incl. filter dict), so build SearchFilters here
+        # and reuse its `_key` helper.
+        from .aggregator import _key
+        from .engines import SearchFilters
         engine_names = engines or settings.default_engines
         n = max_results or settings.max_results_per_engine
-        key = _key(query, engine_names, n)
+        prebuilt_filters = SearchFilters(
+            freshness=freshness,
+            include_domains=list(include_domains) if include_domains else [],
+            exclude_domains=list(exclude_domains) if exclude_domains else [],
+            category=category,
+            include_text=include_text,
+            exclude_text=exclude_text,
+        )
+        key = _key(query, engine_names, n, prebuilt_filters)
         if max_age_seconds == 0:
             cache_hit = None
         else:
@@ -139,6 +168,12 @@ async def search(
             engines=engines,
             max_results=max_results,
             use_cache=effective_use_cache,
+            freshness=freshness,
+            include_domains=include_domains,
+            exclude_domains=exclude_domains,
+            category=category,
+            include_text=include_text,
+            exclude_text=exclude_text,
         )
     hint = errors_to_hint(payload.get("errors"))
     if hint:
@@ -337,6 +372,12 @@ async def research(
     fetch: bool = True,
     use_cache: bool = True,
     max_age_hours: float | None = None,
+    freshness: Literal["day", "week", "month", "year"] | None = None,
+    include_domains: list[str] | None = None,
+    exclude_domains: list[str] | None = None,
+    category: Literal["news", "pdf", "github", "paper", "forum", "blog"] | None = None,
+    include_text: str | None = None,
+    exclude_text: str | None = None,
     format: Format = "markdown",
     ctx: Context | None = None,
 ) -> str | dict[str, Any]:
@@ -394,6 +435,12 @@ async def research(
         engines=engines,
         fetch=fetch,
         use_cache=effective_use_cache,
+        freshness=freshness,
+        include_domains=include_domains,
+        exclude_domains=exclude_domains,
+        category=category,
+        include_text=include_text,
+        exclude_text=exclude_text,
     )
 
     if ctx is not None:

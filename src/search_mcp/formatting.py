@@ -107,16 +107,31 @@ def render_fetch(result: dict[str, Any]) -> str:
     method = result.get("method", "")
     truncated = result.get("truncated", False)
     tokens = result.get("tokens_estimated")
+    author = result.get("author") or ""
+    published_date = result.get("published_date") or ""
+    sitename = result.get("sitename") or ""
     content = result.get("content") or ""
 
-    header = [
-        f"# {title}",
-        f"<{url}>",
+    byline_parts: list[str] = []
+    if sitename:
+        byline_parts.append(sitename)
+    if author:
+        byline_parts.append(f"by {author}")
+    if published_date:
+        byline_parts.append(published_date)
+    byline = " · ".join(byline_parts)
+
+    meta_line = (
         f"_fetched via {method}_"
         + (f" · ~{tokens} tokens" if tokens else "")
-        + (" · truncated" if truncated else ""),
-        "",
-    ]
+        + (" · truncated" if truncated else "")
+    )
+
+    header = [f"# {title}", f"<{url}>"]
+    if byline:
+        header.append(f"_{byline}_")
+    header.append(meta_line)
+    header.append("")
     return "\n".join(header) + content.rstrip() + "\n"
 
 
