@@ -1,0 +1,39 @@
+[project]
+name = "search-mcp"
+version = "0.1.0"
+description = "Local-first, no-API-key search MCP server. Multi-engine web search, smart fetching, document reading."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+    "mcp[cli]>=1.2.0",
+    "httpx>=0.27",
+    "selectolax>=0.3.21",
+    "playwright>=1.47",
+    "playwright-stealth>=1.0.6",
+    "pypdf>=5.0",
+    "python-docx>=1.1",
+    "markdownify>=0.13",
+    "aiosqlite>=0.20",
+    "pydantic>=2.8",
+    "pydantic-settings>=2.5",
+    "anyio>=4.4",
+    "tenacity>=9.0",
+]
+
+[project.scripts]
+search-mcp = "search_mcp.__main__:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/search_mcp"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.7",
+]
