@@ -42,9 +42,18 @@ async def test_aggregate_merges_results():
 @skip_offline
 async def test_fetch_returns_markdown():
     from search_mcp.fetcher import fetch_page
-    result = await fetch_page("https://example.com", render="http", force_refresh=True)
-    assert "Example Domain" in result.content
+    result = await fetch_page(
+        "https://en.wikipedia.org/wiki/Python_(programming_language)",
+        render="http",
+        force_refresh=True,
+    )
+    assert "Python" in result.content
     assert result.tokens_estimated > 0
+    # trafilatura should populate at least one metadata field on Wikipedia.
+    assert any([result.author, result.published_date, result.sitename])
+    # New dataclass fields exist and are exposed via to_dict.
+    d = result.to_dict()
+    assert "author" in d and "published_date" in d and "sitename" in d
 
 
 async def test_read_local_text(tmp_path):
