@@ -63,7 +63,9 @@ class Cache:
             self._initialized = True
         return conn
 
-    async def get_search(self, key: str) -> list[dict[str, Any]] | None:
+    async def get_search(
+        self, key: str, max_age_seconds: int | None = None,
+    ) -> list[dict[str, Any]] | None:
         conn = await self._conn()
         try:
             cur = await conn.execute(
@@ -73,7 +75,8 @@ class Cache:
             row = await cur.fetchone()
             if not row:
                 return None
-            if time.time() - row[1] > settings.cache_ttl_seconds:
+            ttl = max_age_seconds if max_age_seconds is not None else settings.cache_ttl_seconds
+            if time.time() - row[1] > ttl:
                 return None
             return json.loads(row[0])
         finally:
@@ -91,7 +94,9 @@ class Cache:
         finally:
             await conn.close()
 
-    async def get_page(self, url: str) -> dict[str, Any] | None:
+    async def get_page(
+        self, url: str, max_age_seconds: int | None = None,
+    ) -> dict[str, Any] | None:
         conn = await self._conn()
         try:
             cur = await conn.execute(
@@ -101,7 +106,8 @@ class Cache:
             row = await cur.fetchone()
             if not row:
                 return None
-            if time.time() - row[2] > settings.cache_ttl_seconds:
+            ttl = max_age_seconds if max_age_seconds is not None else settings.cache_ttl_seconds
+            if time.time() - row[2] > ttl:
                 return None
             return {"url": url, "title": row[0], "content": row[1], "fetched": row[2]}
         finally:

@@ -1,12 +1,12 @@
 """MCP server entry point. Tool docstrings are written for an LLM to read:
-each tool says when to use it, when NOT to use it, what to do when it fails,
-and how it composes with the others."""
+each tool says when to use it, when NOT to use it, what it returns, and the
+mistakes models commonly make when calling it."""
 from __future__ import annotations
 
 import logging
 from typing import Any, Literal
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp import Context, FastMCP
 from mcp.types import ToolAnnotations
 
 from .aggregator import aggregate_search, list_engines
@@ -46,6 +46,12 @@ def _maybe_render(payload: dict[str, Any], fmt: Format, renderer) -> str | dict[
     return renderer(payload)
 
 
+def _max_age_to_seconds(max_age_hours: float | None) -> int | None:
+    if max_age_hours is None:
+        return None
+    return int(max_age_hours * 3600)
+
+
 @mcp.tool(
     annotations=ToolAnnotations(
         title="Web search (multi-engine, no API key)",
@@ -59,46 +65,81 @@ async def search(
     engines: list[str] | None = None,
     max_results: int = 10,
     use_cache: bool = True,
+    max_age_hours: float | None = None,
     format: Format = "markdown",
 ) -> str | dict[str, Any]:
-    """Run a multi-engine web search and return a ranked, deduplicated list.
+    """Run a multi-engine web search and return a ranked, deduplicated link list.
 
-    USE WHEN:
-    - The user asks "what is X / who is X / search for X / find me X".
-    - You need fresh information that may be after your knowledge cutoff.
-    - You want links you can hand to `fetch` next.
+    Best for:
+    - Discovery queries ("what is X", "find me X", "who is X").
+    - Getting a list of URLs you can hand to `fetch` / `fetch_batch` next.
+    - Topics likely to be after your knowledge cutoff.
 
-    DO NOT USE WHEN:
-    - You already have the URL — call `fetch` directly.
-    - The user wants to combine search + read in one shot — call `research`.
-    - You want to query *previously fetched* pages — call `cache_search`.
+    Not recommended for:
+    - You already know the URL -> use `fetch` instead.
+    - You want both links AND their full text in one call -> use `research`.
+    - You want to query pages already in the local cache -> use `cache_search`.
+    - Reading PDFs/DOCX from a known URL -> use `read_doc`.
 
-    OUTPUT:
-    - format="markdown" (default): numbered list of titles, URLs, snippets.
-      Compact, readable, ~40% fewer tokens than JSON.
-    - format="json": structured dict with `results`, `engines`, `errors`.
+    Returns:
+    - markdown (default): numbered list of `n. title`, `<url>`, snippet — ~40%
+      fewer tokens than json.
+    - json: dict with `results` (list of {title,url,snippet,engines,score}),
+      `engines`, `cached`, optional `errors` map, optional `hint` string.
 
-    ARGS:
-        query: Natural-language query. Engines accept the same string the user
-            would type into a search box.
-        engines: Subset of `engines()` to query in parallel. None = defaults
-            (duckduckgo, mojeek, startpage). Pass `["brave"]`, `["bing"]`, or
-            `["baidu"]` only if you need results none of the defaults could
-            find — those engines challenge headless clients intermittently.
+    Common mistakes:
+    - Passing a URL as `query` — that's `fetch`'s job.
+    - Cranking `max_results` to 50 hoping for better recall; engines cap around
+      10-20 each, anything beyond is duplicate noise.
+    - Adding `engines=["brave","bing","baidu"]` by default — those need
+      captcha-friendly conditions; stick with defaults unless they returned 0.
+
+    Args:
+        query: Natural-language query (the same string a human would type).
+        engines: Subset of `engines()`. None = duckduckgo+mojeek+startpage.
         max_results: Merged result count after dedup. 5-20 is the useful range.
         use_cache: Reuse the last result for this exact (query, engines,
-            max_results) within the cache TTL. Pass False to force re-fetch.
-
-    ON FAILURE:
-    - Empty results -> rephrase, broaden, or add `engines=` with one not in the
-      defaults. The response includes an `errors` map if individual engines
-      blew up; the others still ran.
+            max_results) within the cache TTL. False forces a re-fetch.
+        max_age_hours: Treat cached results older than this as a miss. Use
+            0 to force-refresh while keeping cache writes; None = use server
+            default TTL (7 days).
+        format: "markdown" (default) or "json".
     """
     if not query.strip():
         raise ValueError("query must not be empty")
-    payload = await aggregate_search(
-        query, engines=engines, max_results=max_results, use_cache=use_cache,
-    )
+
+    max_age_seconds = _max_age_to_seconds(max_age_hours)
+    effective_use_cache = use_cache
+    cache_hit: list[dict[str, Any]] | None = None
+
+    if use_cache and max_age_seconds is not None:
+        # Pre-check cache with a tighter TTL ourselves; if it misses we tell
+        # the aggregator not to use cache so it re-runs.
+        from .aggregator import _key  # local import: aggregator owns the key shape
+        engine_names = engines or settings.default_engines
+        n = max_results or settings.max_results_per_engine
+        key = _key(query, engine_names, n)
+        if max_age_seconds == 0:
+            cache_hit = None
+        else:
+            cache_hit = await cache.get_search(key, max_age_seconds=max_age_seconds)
+        if cache_hit is None:
+            effective_use_cache = False
+
+    if cache_hit is not None:
+        payload: dict[str, Any] = {
+            "query": query,
+            "engines": engines or settings.default_engines,
+            "cached": True,
+            "results": cache_hit,
+        }
+    else:
+        payload = await aggregate_search(
+            query,
+            engines=engines,
+            max_results=max_results,
+            use_cache=effective_use_cache,
+        )
     hint = errors_to_hint(payload.get("errors"))
     if hint:
         payload["hint"] = hint
@@ -117,38 +158,56 @@ async def fetch(
     url: str,
     render: Literal["auto", "http", "browser"] = "auto",
     force_refresh: bool = False,
+    max_age_hours: float | None = None,
     format: Format = "markdown",
 ) -> str | dict[str, Any]:
-    """Fetch a single URL and return reader-mode Markdown of the main content.
+    """Fetch one URL and return reader-mode Markdown of the main content.
 
-    USE WHEN:
-    - You have a URL (from `search`, the user, or your own knowledge) and need
-      the actual page text.
-    - You want to verify a claim by reading the source.
+    Best for:
+    - You already have a URL (from `search`, the user, or your own knowledge)
+      and need the actual page text.
+    - Verifying a single claim by reading the source.
+    - Pages that need reader-mode cleanup (nav/footer/scripts stripped).
 
-    DO NOT USE WHEN:
-    - You have many URLs at once -> `fetch_batch` is concurrent.
-    - You haven't searched yet and don't know URLs -> `search` or `research`.
-    - The URL points to a PDF or DOCX -> `read_doc` parses those properly.
+    Not recommended for:
+    - Multiple URLs at once -> use `fetch_batch` (concurrent, one round-trip).
+    - "Search then read top N" -> use `research` (one call, not two).
+    - PDF/DOCX URLs -> use `read_doc` (proper binary parsing).
+    - You don't have a URL yet -> use `search` first.
 
-    OUTPUT:
-    - format="markdown" (default): a small header (URL, render method, token
-      count) plus the cleaned content.
-    - format="json": dict with `content`, `title`, `method`, `truncated`,
-      `tokens_estimated`.
+    Returns:
+    - markdown (default): a small header (URL, render method, token count)
+      plus the cleaned page body.
+    - json: {url, title, content, method, truncated, tokens_estimated,
+      author, published_date, sitename}.
 
-    Boilerplate (nav/footer/scripts) is stripped. Result is cached for 7 days
-    by URL — pass `force_refresh=True` to bypass.
+    Common mistakes:
+    - Passing a search query instead of a URL.
+    - Using `render="http"` on a JS-only SPA — it returns near-empty content;
+      use "auto" (default) or "browser".
+    - Forgetting that results are cached 7 days — use `force_refresh=True`
+      or `max_age_hours=0` for a fresh pull.
 
-    ARGS:
+    Args:
         url: Absolute http(s) URL.
-        render: "auto" (default) tries plain HTTP first, falls back to a
-            stealth headless Chromium if the page is JS-only or hostile.
-            "http" forces no-browser (fast, fails on JS sites). "browser"
-            forces Playwright (slow, works on most sites).
-        force_refresh: Bypass the page cache.
+        render: "auto" (try HTTP, fall back to stealth Chromium), "http"
+            (fast, fails on JS), "browser" (slow, robust).
+        force_refresh: Bypass the page cache entirely.
+        max_age_hours: Treat cached pages older than this as a miss. 0 = same
+            as force_refresh. None = server default TTL (7 days).
+        format: "markdown" or "json".
     """
-    result = await fetch_page(url, render=render, force_refresh=force_refresh)
+    effective_force = force_refresh
+    if max_age_hours is not None:
+        if max_age_hours == 0:
+            effective_force = True
+        else:
+            cached = await cache.get_page(
+                url, max_age_seconds=_max_age_to_seconds(max_age_hours),
+            )
+            if cached is None:
+                effective_force = True
+    result = await fetch_page(url, render=render, force_refresh=effective_force)
     payload = result.to_dict()
     return _maybe_render(payload, format, render_fetch)
 
@@ -165,28 +224,44 @@ async def fetch_batch(
     urls: list[str],
     render: Literal["auto", "http", "browser"] = "auto",
     format: Format = "markdown",
+    ctx: Context | None = None,
 ) -> str | list[dict[str, Any]]:
-    """Fetch a list of URLs in parallel. Failures are reported per-URL, not raised.
+    """Fetch a list of URLs in parallel. Per-URL failures do not raise.
 
-    USE WHEN:
-    - You have 2+ URLs you want to read.
-    - You want one round-trip instead of N.
+    Best for:
+    - 2+ URLs you want to read in one round-trip.
+    - Reading the top N results of a previous `search` call.
 
-    For 1 URL use `fetch`. For "search and then read top N", `research` is one
-    call instead of two.
+    Not recommended for:
+    - A single URL -> `fetch` (no list-wrapping overhead).
+    - "Search and then read" -> `research` collapses both into one tool call.
+    - PDFs/DOCX -> `read_doc` per file.
 
-    OUTPUT:
-    - format="markdown" (default): each page rendered as a Markdown section,
-      separated by horizontal rules. Failed URLs become inline error notes.
-    - format="json": list[dict], one entry per URL, with `error` set on
-      failures.
+    Returns:
+    - markdown (default): each page rendered as a Markdown section, separated
+      by horizontal rules; failed URLs become inline error notes.
+    - json: list[dict], one entry per URL, with `error` set on failures.
+
+    Common mistakes:
+    - Passing a single URL inside a 1-element list — use `fetch` directly.
+    - Assuming an exception means the whole batch failed; check each item's
+      `error` field instead.
+
+    Args:
+        urls: List of absolute http(s) URLs.
+        render: Same as `fetch`.
+        format: "markdown" or "json".
     """
     if not urls:
         return "" if format == "markdown" else []
+    if ctx is not None:
+        await ctx.report_progress(0.0, float(len(urls)), "starting batch fetch")
     raw = await fetch_many(urls, render=render)
     items: list[dict[str, Any]] = []
-    for r in raw:
+    for idx, r in enumerate(raw, 1):
         items.append(r.to_dict() if hasattr(r, "to_dict") else r)
+        if ctx is not None:
+            await ctx.report_progress(float(idx), float(len(urls)), f"fetched {idx}/{len(urls)}")
     if format == "json":
         return items
     sections = []
@@ -212,26 +287,35 @@ async def read_doc(
     length: int | None = None,
     format: Format = "markdown",
 ) -> str | dict[str, Any]:
-    """Read a local file path or http(s) URL into Markdown.
+    """Read a local file or http(s) document into Markdown.
 
-    Supports PDF, DOCX, HTML, plain text, and Markdown — all parsed locally
-    (no remote API). For arbitrary web pages use `fetch` instead; this tool
-    is the right one for binary documents like PDFs.
+    Best for:
+    - Local or remote PDFs and DOCX (parsed locally, no remote API).
+    - Local text/HTML/Markdown files the user pointed at.
+    - Paginating through a long document via `start` / `length`.
 
-    USE WHEN:
-    - The source is a PDF/DOCX file (local OR a URL ending in .pdf/.docx).
-    - The source is a local text/HTML file the user pointed at.
+    Not recommended for:
+    - Arbitrary HTML web pages -> `fetch` does reader-mode cleanup that this
+      tool does not.
+    - Pages discovered through search -> `fetch` or `research`.
 
-    PAGINATION:
-    - Large documents are sliced. The response includes `total_chars`, `start`,
-      `returned_chars`, and `truncated`. To read the next chunk, call again
-      with `start=<previous start + returned_chars>`.
+    Returns:
+    - markdown (default): rendered document text with a small header.
+    - json: {content, title, format, total_chars, start, returned_chars,
+      truncated}. Use `total_chars` and `returned_chars` to drive pagination.
 
-    ARGS:
+    Common mistakes:
+    - Calling this on a normal article URL — you'll get raw HTML noise; use
+      `fetch` instead.
+    - Forgetting to advance `start` when paginating: next call should pass
+      `start = previous_start + returned_chars`.
+
+    Args:
         source: Local path (e.g. "~/papers/x.pdf") or http(s) URL.
-        start: Character offset to start reading from. Default 0.
-        length: Max characters to read. Default None (= read to end of doc,
-            still subject to the per-call max content cap).
+        start: Character offset to begin reading from. Default 0.
+        length: Max characters to return; None = read to end (still capped
+            by per-call max content size).
+        format: "markdown" or "json".
     """
     result = await read_document(source, start=start, length=length)
     payload = result.to_dict()
@@ -252,36 +336,73 @@ async def research(
     engines: list[str] | None = None,
     fetch: bool = True,
     use_cache: bool = True,
+    max_age_hours: float | None = None,
     format: Format = "markdown",
+    ctx: Context | None = None,
 ) -> str | dict[str, Any]:
     """One-shot research: search the web, fetch the top results, return both.
 
-    USE WHEN:
-    - The user asks a question that needs both finding sources AND reading them
-      ("what's new with X", "summarize the controversy around Y", "find me a
-      tutorial for Z").
-    - You'd otherwise call `search` + `fetch` + `fetch` + `fetch`. This is
-      one round-trip instead of four.
+    Best for:
+    - Open-ended questions that need finding sources AND reading them
+      ("what's new with X", "summarize the controversy around Y").
+    - Replacing a `search` + N x `fetch` chain with one call.
+    - Producing a citable brief with [n]-style source references.
 
-    DO NOT USE WHEN:
-    - You only need a list of links -> `search` is cheaper.
+    Not recommended for:
+    - You only need links -> `search` (cheaper, no fetching).
     - You only need to read one URL you already have -> `fetch`.
+    - You want to query previously-fetched cached pages -> `cache_search`.
 
-    OUTPUT (format="markdown"):
-    - A "Research brief" with a `Sources` index and full Markdown bodies of
-      each fetched document, separated by horizontal rules. Includes a token
-      estimate so you can decide whether to summarize.
+    Returns:
+    - markdown (default): a "Research brief" with a Sources index then the
+      full Markdown body of each fetched document, separated by horizontal
+      rules; includes a token estimate.
+    - json: {question, engines, sources:[{rank,title,url,snippet,...}],
+      documents:[...], tokens_estimated, errors}.
 
-    ARGS:
+    Common mistakes:
+    - Using `depth=8` for a quick lookup — that's 8 page fetches; 2-3 is
+      almost always enough.
+    - Calling `research` for a known URL — that's `fetch` territory.
+    - Forgetting that `fetch=False` returns sources only (much cheaper if
+      the LLM only needs to pick which one to read).
+
+    Args:
         question: What you want to know, in natural language.
         depth: How many top results to fetch (1-8). 3 is a good default.
         engines: Override the engine set (see `engines()` for names).
-        fetch: If False, return source list without reading them (cheap).
+        fetch: If False, return source list without reading them.
         use_cache: Reuse cached search/page data within TTL.
+        max_age_hours: Treat cached search results older than this as a miss
+            (0 = force-refresh search; None = server default TTL).
+        format: "markdown" or "json".
     """
+    if ctx is not None:
+        await ctx.report_progress(0.05, 1.0, "starting research")
+
+    # Translate max_age_hours -> use_cache for the search portion.
+    effective_use_cache = use_cache
+    if max_age_hours is not None and max_age_hours == 0:
+        effective_use_cache = False
+
+    if ctx is not None:
+        await ctx.report_progress(0.15, 1.0, "searching engines")
+
     payload = await run_research(
-        question, depth=depth, engines=engines, fetch=fetch, use_cache=use_cache,
+        question,
+        depth=depth,
+        engines=engines,
+        fetch=fetch,
+        use_cache=effective_use_cache,
     )
+
+    if ctx is not None:
+        # Coarse end-of-fetch milestones — research.py runs fetch_many internally
+        # so we can't checkpoint per-URL without rewriting it.
+        n_docs = max(1, len(payload.get("documents") or [1]))
+        await ctx.report_progress(0.95, 1.0, f"fetched {n_docs} sources")
+        await ctx.report_progress(1.0, 1.0, "done")
+
     return _maybe_render(payload, format, render_research)
 
 
@@ -298,17 +419,35 @@ async def cache_search(
     limit: int = 10,
     format: Format = "markdown",
 ) -> str | list[dict[str, Any]]:
-    """Full-text search over pages already fetched into the local SQLite FTS5
-    index.
+    """Full-text search over pages already fetched into the local SQLite FTS5 index.
 
-    USE WHEN:
-    - The user asks about something you've previously fetched ("what did that
-      Wikipedia page say about X").
-    - You want to avoid re-fetching the same content.
+    Best for:
+    - Recalling something the user/agent fetched earlier in the conversation
+      ("what did that Wikipedia page say about X").
+    - Avoiding re-fetching content already in the local cache.
+    - Quick keyword grep across the corpus you've built up.
 
-    Query syntax is FTS5: bare terms AND-by-default, supports OR/NOT, prefix
-    `term*`, and phrase `"exact phrase"`. Results include a snippet with the
-    matched terms wrapped in [brackets].
+    Not recommended for:
+    - Discovering new pages on the open web -> use `search` or `research`.
+    - When the cache is empty (fresh install) -> `search`/`research` first to
+      populate it.
+
+    Returns:
+    - markdown (default): a per-hit list of title, URL, and a `[bracket]`-
+      highlighted snippet around the matched terms.
+    - json: list of {url, title, snippet}.
+
+    Common mistakes:
+    - Treating this like web search — it ONLY hits pages already in the local
+      cache. If the user hasn't fetched anything, you'll get zero hits.
+    - Using natural-language phrases without quoting them; FTS5 splits on
+      whitespace as AND. For an exact phrase use `"like this"`.
+
+    Args:
+        query: FTS5 query. Bare terms = AND. Supports OR / NOT, prefix
+            (`term*`), and phrase (`"exact phrase"`).
+        limit: Max hits to return.
+        format: "markdown" or "json".
     """
     rows = await cache.search_pages(query, limit=limit)
     if format == "json":
@@ -336,13 +475,97 @@ async def cache_search(
     ),
 )
 def engines() -> list[str]:
-    """List engines you can pass to `search` / `research` via `engines=`.
+    """List engine names accepted by the `engines=` parameter of `search` / `research`.
+
+    Best for:
+    - Discovering what's installable before passing a non-default engine.
+    - Building user-facing UIs that let humans pick engines.
+
+    Not recommended for:
+    - Calling on every search — the list is static; cache it.
+
+    Returns:
+    - A list of engine name strings (e.g. ["duckduckgo", "mojeek",
+      "startpage", "brave", "bing", "baidu"]).
+
+    Common mistakes:
+    - Passing one of these names as a query to `search` — they go in the
+      `engines=` argument, not `query`.
 
     Defaults: duckduckgo + mojeek + startpage (all reliable, no captchas).
     Opt-in:   brave (PoW captcha after a few calls), bing (UA-gated),
               baidu (results wrapped in baidu.com/link redirects).
     """
     return list_engines()
+
+
+# ---------------------------------------------------------------------------
+# Prompts (slash-commands in MCP clients)
+# ---------------------------------------------------------------------------
+
+
+@mcp.prompt(title="Research thoroughly")
+def research_prompt(question: str, depth: int = 3) -> str:
+    """Instruct the model to do a thorough, cited research pass on a question."""
+    return (
+        f"You have access to the search-mcp tools. Research the following "
+        f"question thoroughly and produce a well-cited answer.\n\n"
+        f"QUESTION: {question}\n\n"
+        f"PROCEDURE:\n"
+        f"1. Call the `research` tool with question={question!r} and depth={depth}.\n"
+        f"2. Read each fetched source. If a source seems unreliable, call "
+        f"`search` for a corroborating source.\n"
+        f"3. If any document was truncated, call `fetch` again with that URL "
+        f"or use `read_doc` for paginating PDFs.\n"
+        f"4. Write a synthesis (3-8 paragraphs) that:\n"
+        f"   - Answers the question directly in the first sentence.\n"
+        f"   - Cites sources inline using [1], [2], ... markers that match the\n"
+        f"     order returned by `research`.\n"
+        f"   - Notes any disagreement between sources.\n"
+        f"   - Lists the full source URLs at the end under a 'Sources' header.\n"
+        f"5. If you could not find a confident answer, say so explicitly and\n"
+        f"   show what was checked."
+    )
+
+
+@mcp.prompt(title="Fact-check claim")
+def factcheck_prompt(claim: str) -> str:
+    """Instruct the model to fact-check a specific claim with citations."""
+    return (
+        f"Fact-check the following claim using the search-mcp tools.\n\n"
+        f"CLAIM: {claim}\n\n"
+        f"PROCEDURE:\n"
+        f"1. Call `search` with a focused query (key entities + date if any).\n"
+        f"2. Call `fetch_batch` on the 3-5 most authoritative-looking URLs\n"
+        f"   (prefer primary sources, official sites, established outlets).\n"
+        f"3. For each source, quote the supporting or contradicting passage.\n"
+        f"4. Output a verdict on a 5-point scale: TRUE / MOSTLY TRUE / MIXED /\n"
+        f"   MOSTLY FALSE / FALSE, followed by a one-paragraph justification\n"
+        f"   with [n]-style citations matching the source order.\n"
+        f"5. End with a 'Sources' list of URLs.\n"
+        f"6. If sources disagree, surface that explicitly rather than picking\n"
+        f"   one side silently."
+    )
+
+
+# ---------------------------------------------------------------------------
+# Resource template — expose cached pages as readable resources
+# ---------------------------------------------------------------------------
+
+
+@mcp.resource("cache://page/{url}", title="Cached page")
+async def cached_page(url: str) -> str:
+    """Return the cached Markdown body for a previously-fetched URL.
+
+    The URL must be percent-encoded when embedded in the resource URI
+    (RFC 6570 templates do not allow `:` or `/` inside variable expansions).
+    """
+    from urllib.parse import unquote
+    decoded = unquote(url)
+    page = await cache.get_page(decoded)
+    if not page:
+        raise ValueError(f"Not in cache: {decoded}")
+    return page.get("content") or ""
 
 
 def run() -> None:
