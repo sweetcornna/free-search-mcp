@@ -76,23 +76,59 @@ def _dedup_by_title(items: list[dict]) -> list[dict]:
     return keep
 
 
+def _is_cjk(c: str) -> bool:
+    o = ord(c)
+    return (
+        0x4E00 <= o <= 0x9FFF       # CJK unified ideographs
+        or 0x3040 <= o <= 0x30FF    # Japanese hiragana/katakana
+        or 0xAC00 <= o <= 0xD7A3    # Korean hangul syllables
+    )
+
+
+def _lead_query_terms(query: str) -> set[str]:
+    """Tokenize a query for snippet-substring matching.
+
+    Pure-ASCII tokens: keep when len > 3 (skip "the", "vs", "of"...).
+    CJK tokens: extract char-bigrams ("模型架构" -> {"模型","型架","架构"})
+    so we still match when the snippet splits the term into "模型" and
+    "架构" separately rather than emitting the whole 4-char run.
+    Mixed-script tokens are included as-is when they contain a length-3+ ASCII
+    portion or any CJK at all.
+    """
+    terms: set[str] = set()
+    for tok in query.split():
+        cjk_chars = [c for c in tok if _is_cjk(c)]
+        if len(cjk_chars) >= 2:
+            for i in range(len(cjk_chars) - 1):
+                terms.add(cjk_chars[i] + cjk_chars[i + 1])
+        elif len(cjk_chars) == 1:
+            # Single CJK char alone is too generic; skip.
+            pass
+        elif len(tok) > 3:
+            terms.add(tok.lower())
+    return terms
+
+
 def _lead_snippet(query: str, results: list[dict]) -> str | None:
     """Pick an honest extractive lead from the top-3 results.
 
-    Requires the snippet to contain >=2 query terms (>3 chars) and be >=80
-    chars — short enough to skip filler titles, long enough to actually
-    answer something. Prefixed with the host so the model sees the source
-    inline. NOT an LLM answer; if no snippet qualifies we return None and
-    the renderer skips the lead block entirely.
+    Requires the snippet to contain >=2 query terms and be >=80 chars — short
+    enough to skip filler titles, long enough to actually answer something.
+    Prefixed with the host so the model sees the source inline. NOT an LLM
+    answer; if no snippet qualifies we return None and the renderer skips the
+    lead block entirely.
+
+    Term tokenization is CJK-aware (see ``_lead_query_terms``).
     """
-    qterms = {t.lower() for t in query.split() if len(t) > 3}
+    qterms = _lead_query_terms(query)
     if not qterms:
         return None
     for r in results[:3]:
         sn = (r.get("snippet") or "").strip()
         if not sn or len(sn) < 80:
             continue
-        hits = sum(1 for t in qterms if t in sn.lower())
+        sn_lower = sn.lower()
+        hits = sum(1 for t in qterms if t in sn_lower)
         if hits >= 2:
             host = (urlparse(r.get("url", "")).hostname or "")
             if host.startswith("www."):

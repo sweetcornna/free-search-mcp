@@ -109,6 +109,19 @@ _PAPER_HOSTS = (
     "ieee.org",
     "nature.com",
     "sciencedirect.com",
+    # Open / preprint repositories + journal portals
+    "biorxiv.org",
+    "openreview.net",
+    "paperswithcode.com",
+    "semanticscholar.org",
+    "plos.org",
+    "ssrn.com",
+    "jstor.org",
+    "mdpi.com",
+    "sciencemag.org",
+    "frontiersin.org",
+    "wiley.com",
+    "tandfonline.com",
 )
 _FORUM_HOSTS = (
     "reddit.com",
@@ -116,8 +129,27 @@ _FORUM_HOSTS = (
     "stackoverflow.com",
     "serverfault.com",
     "superuser.com",
+    # Whole Stack Exchange network (math.stackexchange.com etc.)
+    "stackexchange.com",
+    # Other community discussion platforms
+    "lobste.rs",
+    "tildes.net",
+    "lemmy.world",
+    "lemmy.ml",
+    "discourse.org",
 )
-_GITHUB_HOSTS = ("github.com", "gist.github.com")
+# Code-hosting platforms. Kept the _GITHUB_HOSTS name for back-compat with
+# tests that import it, but it now covers other public Git forges as well.
+_GITHUB_HOSTS = (
+    "github.com",
+    "gist.github.com",
+    "gitlab.com",
+    "codeberg.org",
+    "bitbucket.org",
+    "sourceforge.net",
+    "savannah.gnu.org",
+    "git.sr.ht",
+)
 # Major news outlets — used by category="news" since the default engine pool
 # (DDG/Mojeek/Startpage) has no native news flag, so this filter would
 # otherwise be a no-op.

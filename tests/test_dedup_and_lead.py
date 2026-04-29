@@ -10,6 +10,7 @@ from __future__ import annotations
 from search_mcp.aggregator import (
     _canonical_host,
     _dedup_by_title,
+    _lead_query_terms,
     _lead_snippet,
 )
 from search_mcp.formatting import render_search
@@ -256,3 +257,49 @@ def test_render_search_omits_lead_block_when_absent():
     }
     md = render_search(payload)
     assert "Lead:" not in md
+
+
+# ---------------------------------------------------------------------------
+# CJK-aware lead_snippet (B fix)
+# ---------------------------------------------------------------------------
+def test_lead_query_terms_cjk_emits_bigrams():
+    terms = _lead_query_terms("DeepSeek MoE 模型架构")
+    assert "deepseek" in terms          # ASCII >3 kept
+    assert "moe" not in terms            # ASCII len 3, dropped
+    # CJK bigrams from "模型架构"
+    assert "模型" in terms
+    assert "型架" in terms
+    assert "架构" in terms
+
+
+def test_lead_query_terms_pure_ascii_unchanged():
+    # Regression guard: English queries still tokenize the old way.
+    terms = _lead_query_terms("python async tutorial guide")
+    assert terms == {"python", "async", "tutorial", "guide"}
+
+
+def test_lead_query_terms_skips_solo_cjk_char():
+    terms = _lead_query_terms("python 是 best")
+    # "是" is a single CJK char alone — too generic, dropped.
+    assert "是" not in terms
+    assert terms == {"python", "best"}
+
+
+def test_lead_snippet_picks_chinese_query_when_bigrams_match():
+    results = [
+        {
+            "title": "DeepSeek 解析",
+            "url": "https://zhuanlan.zhihu.com/p/123",
+            "snippet": (
+                "DeepSeek 是一个基于稀疏 MoE 模型 的开源大模型，其 架构 设计在"
+                "多个维度上都有显著创新。本文从专家路由、负载均衡、训练稳定性、"
+                "以及推理时延等多个角度系统拆解 DeepSeek-V3 的关键设计权衡。"
+            ),
+            "engines": ["mojeek"],
+            "score": 0.05,
+        },
+    ]
+    out = _lead_snippet("DeepSeek MoE 模型架构", results)
+    assert out is not None
+    assert "zhihu.com" in out
+    assert "DeepSeek" in out
