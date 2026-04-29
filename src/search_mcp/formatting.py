@@ -66,6 +66,13 @@ def render_search(payload: dict[str, Any]) -> str:
         lines.append("_(from cache)_")
     lines.append("")
 
+    # Extractive lead from the top result that mentions the query terms — sits
+    # above the result list so the model sees an answer-shaped fragment first.
+    lead = payload.get("lead_snippet")
+    if lead:
+        lines.append(f"> **Lead:** {lead}")
+        lines.append("")
+
     if not results:
         lines.append("**No results.** Try a broader query, different engines, "
                      "or check `errors` if any engine failed.")
@@ -205,6 +212,63 @@ def render_research(payload: dict[str, Any]) -> str:
             lines.append("")
             lines.append("---")
             lines.append("")
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def render_compare(payload: dict[str, Any]) -> str:
+    """Render a `compare_urls` payload as a Markdown brief, one section per URL."""
+    question = payload.get("question", "")
+    excerpts = payload.get("excerpts") or []
+    tokens = payload.get("tokens_estimated")
+    lines = [f"# Compare: {question}", ""]
+    if tokens:
+        lines.append(f"_~{tokens} tokens across {len(excerpts)} URLs_")
+        lines.append("")
+    for i, e in enumerate(excerpts, 1):
+        if "error" in e:
+            lines.append(f"## {i}. ⚠ {e['url']}")
+            lines.append(f"_failed: {e['error']}_")
+            lines.append("")
+            continue
+        lines.append(f"## {i}. {e.get('title') or '(untitled)'}")
+        lines.append(f"<{e['url']}>")
+        meta_bits: list[str] = []
+        if e.get("sitename"):
+            meta_bits.append(e["sitename"])
+        if e.get("published_date"):
+            meta_bits.append(e["published_date"])
+        if e.get("truncated"):
+            meta_bits.append("truncated")
+        if meta_bits:
+            lines.append(f"_{' · '.join(meta_bits)}_")
+        lines.append("")
+        lines.append((e.get("excerpt") or "").rstrip())
+        lines.append("")
+        lines.append("---")
+        lines.append("")
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def render_structured(payload: dict[str, Any]) -> str:
+    """Render an `extract_structured` payload as Markdown with JSON code blocks."""
+    import json
+
+    url = payload.get("url", "")
+    lines = [f"# Structured data: {url}", ""]
+    any_section = False
+    for key, items in payload.items():
+        if key == "url" or not items:
+            continue
+        any_section = True
+        lines.append(f"## {key}")
+        for it in items:
+            lines.append("```json")
+            lines.append(json.dumps(it, ensure_ascii=False, indent=2)[:2000])
+            lines.append("```")
+        lines.append("")
+    if not any_section:
+        lines.append("_No structured data found on this page._")
+        lines.append("")
     return "\n".join(lines).rstrip() + "\n"
 
 

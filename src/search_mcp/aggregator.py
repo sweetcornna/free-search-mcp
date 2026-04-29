@@ -6,6 +6,9 @@ import json
 import logging
 from dataclasses import asdict
 from typing import Any, Literal
+from urllib.parse import urlparse
+
+from rapidfuzz import fuzz
 
 from .cache import cache
 from .config import settings
@@ -20,6 +23,82 @@ def _normalize_url(url: str) -> str:
     if url.startswith("//"):
         url = "https:" + url
     return url.split("#", 1)[0].rstrip("/")
+
+
+_HOST_PREFIXES = ("www.", "m.", "amp.", "mobile.")
+# Country-coded TLDs we collapse to ".com" so bbc.co.uk and bbc.com look the
+# same to the dedup pass. We never strip generic TLDs (.com, .org, .net) —
+# only the country variants that syndicators reuse.
+_TLD_NORMALIZE = (".co.uk", ".co.jp", ".com.au", ".co.in")
+
+
+def _canonical_host(url: str) -> str:
+    """Strip mobile/AMP prefixes and collapse country-TLDs to a single key.
+
+    Doesn't change the URL we keep — just used as a dedup signal alongside
+    title fuzzy match.
+    """
+    h = (urlparse(url).hostname or "").lower()
+    for p in _HOST_PREFIXES:
+        if h.startswith(p):
+            h = h[len(p):]
+            break
+    for tld in _TLD_NORMALIZE:
+        if h.endswith(tld):
+            h = h[: -len(tld)] + ".com"
+            break
+    return h
+
+
+def _dedup_by_title(items: list[dict]) -> list[dict]:
+    """Remove near-duplicate titles on the same canonical host.
+
+    Catches the cases URL-only dedup misses: bbc.com/news/x vs bbc.co.uk/news/x,
+    and amp.example.com/x vs www.example.com/x where the two URLs differ but
+    point at the same story. Different hosts with the same title (e.g. wire
+    stories on Reuters and AP) are kept — those are legitimately distinct
+    sources.
+    """
+    keep: list[dict] = []
+    for it in items:
+        t = (it.get("title") or "").lower().strip()
+        if not t:
+            keep.append(it)
+            continue
+        host = _canonical_host(it.get("url", ""))
+        is_dup = any(
+            fuzz.token_set_ratio(t, (k.get("title") or "").lower()) >= 92
+            and _canonical_host(k.get("url", "")) == host
+            for k in keep
+        )
+        if not is_dup:
+            keep.append(it)
+    return keep
+
+
+def _lead_snippet(query: str, results: list[dict]) -> str | None:
+    """Pick an honest extractive lead from the top-3 results.
+
+    Requires the snippet to contain >=2 query terms (>3 chars) and be >=80
+    chars — short enough to skip filler titles, long enough to actually
+    answer something. Prefixed with the host so the model sees the source
+    inline. NOT an LLM answer; if no snippet qualifies we return None and
+    the renderer skips the lead block entirely.
+    """
+    qterms = {t.lower() for t in query.split() if len(t) > 3}
+    if not qterms:
+        return None
+    for r in results[:3]:
+        sn = (r.get("snippet") or "").strip()
+        if not sn or len(sn) < 80:
+            continue
+        hits = sum(1 for t in qterms if t in sn.lower())
+        if hits >= 2:
+            host = (urlparse(r.get("url", "")).hostname or "")
+            if host.startswith("www."):
+                host = host[4:]
+            return f"According to {host}: {sn}"
+    return None
 
 
 def _key(query: str, engines: list[str], max_results: int, filters: SearchFilters) -> str:
@@ -69,7 +148,9 @@ def _merge(buckets: list[list[SearchResult]], max_results: int) -> list[dict[str
         if not rec.get("published_age"):
             rec.pop("published_age", None)
         out.append(rec)
-    return out
+    # URL-keyed RRF already collapsed exact-URL dupes; this second pass kills
+    # the cross-host syndication and AMP/mobile variants the URL key misses.
+    return _dedup_by_title(out)
 
 
 async def aggregate_search(
@@ -139,6 +220,7 @@ async def aggregate_search(
         "engines": engine_names,
         "cached": False,
         "results": merged,
+        "lead_snippet": _lead_snippet(query, merged),
         "errors": errors or None,
     }
 
