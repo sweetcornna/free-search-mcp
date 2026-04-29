@@ -34,6 +34,20 @@ _FORUM_HOSTS = (
     "superuser.com",
 )
 _GITHUB_HOSTS = ("github.com", "gist.github.com")
+# Major news outlets — used by category="news" since the default engine pool
+# (DDG/Mojeek/Startpage) has no native news flag, so this filter would
+# otherwise be a no-op.
+_NEWS_HOSTS = (
+    "reuters.com", "apnews.com", "bbc.com", "bbc.co.uk", "nytimes.com",
+    "washingtonpost.com", "theguardian.com", "cnn.com", "nbcnews.com",
+    "abcnews.go.com", "cbsnews.com", "foxnews.com", "npr.org",
+    "bloomberg.com", "ft.com", "wsj.com", "economist.com", "cnbc.com",
+    "axios.com", "politico.com", "thehill.com", "aljazeera.com",
+    "techcrunch.com", "theverge.com", "arstechnica.com", "wired.com",
+    "venturebeat.com", "engadget.com", "9to5mac.com", "9to5google.com",
+    "theinformation.com", "businessinsider.com", "forbes.com",
+    "news.google.com",  # Google News RSS items live here
+)
 
 
 @dataclass(slots=True)
@@ -116,6 +130,8 @@ def apply_post_filters(
             continue
         if filters.category == "github" and not _host_matches(host, _GITHUB_HOSTS):
             continue
+        if filters.category == "news" and not _host_matches(host, _NEWS_HOSTS):
+            continue
         if filters.category == "pdf" and not _strip_query(r.url).lower().endswith(".pdf"):
             continue
         if filters.category == "blog":
@@ -124,6 +140,7 @@ def apply_post_filters(
                 _host_matches(host, _PAPER_HOSTS)
                 or _host_matches(host, _FORUM_HOSTS)
                 or _host_matches(host, _GITHUB_HOSTS)
+                or _host_matches(host, _NEWS_HOSTS)
             ):
                 continue
 
