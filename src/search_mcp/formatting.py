@@ -106,7 +106,47 @@ def render_search(payload: dict[str, Any]) -> str:
         for name, err in errors.items():
             lines.append(f"- {name}: {err}")
 
+    diag = payload.get("filter_diagnostics")
+    if diag:
+        lines.extend(_render_filter_diagnostics(diag))
+
     return "\n".join(lines).rstrip() + "\n"
+
+
+def _render_filter_diagnostics(diag: dict[str, Any]) -> list[str]:
+    """Format the filter_diagnostics block as Markdown lines.
+
+    Sits AFTER the result list (and after any engine-error block) because
+    it's a meta-explanation, not a result. Marked clearly so the LLM can
+    spot it and decide whether to retry with looser filters.
+    """
+    raw_per_engine = diag.get("raw_per_engine") or {}
+    after_per_engine = diag.get("after_filter_per_engine") or {}
+    drops = diag.get("drops_by_reason") or {}
+    hint = diag.get("hint") or ""
+
+    raw_total = sum(raw_per_engine.values())
+    after_total = sum(after_per_engine.values())
+    n_engines = len(raw_per_engine) or len(after_per_engine)
+
+    lines: list[str] = []
+    lines.append("")
+    lines.append("---")
+    lines.append("⚠️ **Filter diagnostics** (results were sparse)")
+    lines.append("")
+    lines.append(
+        f"Raw results: {raw_total} across {n_engines} engine"
+        f"{'s' if n_engines != 1 else ''} → {after_total} after filters."
+    )
+    if drops:
+        # Sort by drop count desc so the worst offender leads.
+        ordered = sorted(drops.items(), key=lambda kv: kv[1], reverse=True)
+        top = ", ".join(f"{name} ({n})" for name, n in ordered)
+        lines.append(f"Top drops: {top}.")
+    if hint:
+        lines.append("")
+        lines.append(f"Hint: {hint}")
+    return lines
 
 
 def render_fetch(result: dict[str, Any]) -> str:
@@ -249,15 +289,32 @@ def render_compare(payload: dict[str, Any]) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
+_STRUCTURED_KEYS = ("json_ld", "microdata", "opengraph", "rdfa", "microformat")
+
+
 def render_structured(payload: dict[str, Any]) -> str:
-    """Render an `extract_structured` payload as Markdown with JSON code blocks."""
+    """Render an `extract_structured` payload as Markdown with JSON code blocks.
+
+    Surfaces a top-of-page hint (when ``hint`` is set) and a Meta-tags table
+    (when ``meta_fallback`` is set) so callers can tell apart "no data" from
+    "blocked by bot shield".
+    """
     import json
 
     url = payload.get("url", "")
     lines = [f"# Structured data: {url}", ""]
+
+    hint = payload.get("hint")
+    if hint:
+        lines.append("> **No structured data found.**")
+        lines.append(">")
+        lines.append(f"> {hint}")
+        lines.append("")
+
     any_section = False
-    for key, items in payload.items():
-        if key == "url" or not items:
+    for key in _STRUCTURED_KEYS:
+        items = payload.get(key) or []
+        if not items:
             continue
         any_section = True
         lines.append(f"## {key}")
@@ -266,7 +323,25 @@ def render_structured(payload: dict[str, Any]) -> str:
             lines.append(json.dumps(it, ensure_ascii=False, indent=2)[:2000])
             lines.append("```")
         lines.append("")
-    if not any_section:
+
+    meta_fallback = payload.get("meta_fallback") or {}
+    if meta_fallback:
+        lines.append("## Meta tags")
+        lines.append("")
+        lines.append("| key | value |")
+        lines.append("| --- | --- |")
+        for k, v in meta_fallback.items():
+            # Escape pipes in values so the Markdown table doesn't break.
+            safe_v = str(v).replace("|", "\\|").replace("\n", " ").strip()
+            if len(safe_v) > 200:
+                safe_v = safe_v[:200] + " …"
+            lines.append(f"| `{k}` | {safe_v} |")
+        lines.append("")
+        any_section = True
+
+    if not any_section and not hint:
+        # Defensive: payload had no syntaxes and no hint (shouldn't happen
+        # with the new extractor, but keeps render side-effect free).
         lines.append("_No structured data found on this page._")
         lines.append("")
     return "\n".join(lines).rstrip() + "\n"
