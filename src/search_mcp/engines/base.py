@@ -228,32 +228,65 @@ def apply_post_filters(
 ) -> list[SearchResult]:
     """Strict client-side filter pass. Engines under-honor URL operators, so
     we re-check domain/category/text constraints here."""
+    kept, _ = apply_post_filters_with_diagnostics(results, filters)
+    return kept
+
+
+def apply_post_filters_with_diagnostics(
+    results: list[SearchResult], filters: SearchFilters | None
+) -> tuple[list[SearchResult], dict[str, int]]:
+    """Same logic as :func:`apply_post_filters` but also returns a
+    ``drops_by_reason`` mapping so callers can explain *why* a sparse result
+    set is sparse.
+
+    Reason keys (only added when count > 0):
+      - ``include_domains``
+      - ``exclude_domains``
+      - ``category_<paper|forum|github|news|pdf|blog>``
+      - ``include_text``
+      - ``exclude_text``
+
+    Each result is counted against AT MOST ONE reason — the first filter that
+    rejects it. This keeps the totals interpretable: ``sum(drops.values()) ==
+    len(results) - len(kept)``.
+    """
+    drops: dict[str, int] = {}
     if filters is None or filters.is_empty():
-        return results
+        return list(results), drops
 
     inc = [d.lower().lstrip(".") for d in (filters.include_domains or [])]
     exc = [d.lower().lstrip(".") for d in (filters.exclude_domains or [])]
     inc_text = (filters.include_text or "").lower().strip()
     exc_text = (filters.exclude_text or "").lower().strip()
 
+    def _bump(reason: str) -> None:
+        drops[reason] = drops.get(reason, 0) + 1
+
     out: list[SearchResult] = []
     for r in results:
         host = _host(r.url)
 
         if inc and not _host_matches(host, tuple(inc)):
+            _bump("include_domains")
             continue
         if exc and _host_matches(host, tuple(exc)):
+            _bump("exclude_domains")
             continue
 
         if filters.category == "paper" and not _host_matches(host, _PAPER_HOSTS):
+            _bump("category_paper")
             continue
         if filters.category == "forum" and not _host_matches(host, _FORUM_HOSTS):
+            _bump("category_forum")
             continue
         if filters.category == "github" and not _host_matches(host, _GITHUB_HOSTS):
+            _bump("category_github")
             continue
         if filters.category == "news" and not _host_matches(host, _NEWS_HOSTS):
+            _bump("category_news")
             continue
         if filters.category == "pdf" and not _strip_query(r.url).lower().endswith(".pdf"):
+            _bump("category_pdf")
             continue
         if filters.category == "blog":
             # Blog = "ordinary web page" — exclude obvious non-blog hosts.
@@ -263,17 +296,20 @@ def apply_post_filters(
                 or _host_matches(host, _GITHUB_HOSTS)
                 or _host_matches(host, _NEWS_HOSTS)
             ):
+                _bump("category_blog")
                 continue
 
         if inc_text or exc_text:
             haystack = (r.title + " \n " + r.snippet).lower()
             if inc_text and inc_text not in haystack:
+                _bump("include_text")
                 continue
             if exc_text and exc_text in haystack:
+                _bump("exclude_text")
                 continue
 
         out.append(r)
-    return out
+    return out, drops
 
 
 def augment_query_with_operators(
@@ -319,7 +355,18 @@ class Engine(abc.ABC):
         query: str,
         max_results: int,
         filters: SearchFilters | None = None,
+        diagnostics: dict[str, Any] | None = None,
     ) -> list[SearchResult]:
+        """Run the engine and return up to ``max_results`` filtered hits.
+
+        When ``diagnostics`` is supplied, populate it in place with:
+          * ``raw_per_engine[self.name]``       — pre-filter result count
+          * ``after_filter_per_engine[self.name]`` — post-filter count (pre-truncate)
+          * ``drops_by_reason``                 — accumulated reason→count map
+
+        The aggregator passes a shared dict so totals merge across engines
+        without changing the return signature (back-compat).
+        """
         url = self.build_url(query, max_results, filters)
         html = await self._fetch(url)
         results = self.parse(html)
@@ -329,7 +376,17 @@ class Engine(abc.ABC):
             results = self.parse(html)
         # Client-side post-filter BEFORE truncation, so we don't waste the budget
         # on hits that the engine returned but the user excluded.
-        results = apply_post_filters(results, filters)[:max_results]
+        if diagnostics is not None:
+            raw_count = len(results)
+            filtered, drops = apply_post_filters_with_diagnostics(results, filters)
+            diagnostics.setdefault("raw_per_engine", {})[self.name] = raw_count
+            diagnostics.setdefault("after_filter_per_engine", {})[self.name] = len(filtered)
+            agg = diagnostics.setdefault("drops_by_reason", {})
+            for reason, n in drops.items():
+                agg[reason] = agg.get(reason, 0) + n
+            results = filtered[:max_results]
+        else:
+            results = apply_post_filters(results, filters)[:max_results]
         for i, r in enumerate(results):
             r.rank = i + 1
             r.engine = self.name

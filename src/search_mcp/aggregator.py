@@ -129,12 +129,54 @@ def _lead_snippet(query: str, results: list[dict]) -> str | None:
             continue
         sn_lower = sn.lower()
         hits = sum(1 for t in qterms if t in sn_lower)
-        if hits >= 2:
+        # Single-term queries (e.g. "python", "ai") can never satisfy hits>=2,
+        # so cap the requirement at the number of terms we actually have.
+        if hits >= min(2, len(qterms)):
             host = (urlparse(r.get("url", "")).hostname or "")
             if host.startswith("www."):
                 host = host[4:]
             return f"According to {host}: {sn}"
     return None
+
+
+# Human-readable labels for the drop-reason keys we surface to the LLM.
+# Kept here (not in base) so the rendering text stays close to the aggregator
+# that emits it.
+_DROP_REASON_LABEL: dict[str, str] = {
+    "include_domains": "include_domains",
+    "exclude_domains": "exclude_domains",
+    "include_text": "include_text",
+    "exclude_text": "exclude_text",
+    "category_paper": "category=paper",
+    "category_forum": "category=forum",
+    "category_github": "category=github",
+    "category_news": "category=news",
+    "category_pdf": "category=pdf",
+    "category_blog": "category=blog",
+}
+
+
+def _filter_hint(drops: dict[str, int], raw_total: int, kept_total: int) -> str:
+    """One-sentence actionable explanation for a sparse result set.
+
+    Names the single highest-dropping filter so the LLM knows which knob is
+    most worth relaxing.
+    """
+    if not drops:
+        # Nothing was dropped client-side — the engines themselves returned
+        # almost nothing, so widening filters won't help.
+        return (
+            f"Engines returned only {raw_total} raw results (none dropped by filters). "
+            "Try a broader query or different engines."
+        )
+    top_reason, top_n = max(drops.items(), key=lambda kv: kv[1])
+    label = _DROP_REASON_LABEL.get(top_reason, top_reason)
+    dropped_total = sum(drops.values())
+    return (
+        f"Filters dropped {dropped_total} of {raw_total} raw results "
+        f"(kept {kept_total}). Most were excluded by {label}. "
+        "Try widening or removing one filter."
+    )
 
 
 def _key(query: str, engines: list[str], max_results: int, filters: SearchFilters) -> str:
@@ -225,6 +267,11 @@ async def aggregate_search(
         if hit:
             return {"query": query, "engines": engine_names, "cached": True, "results": hit}
 
+    # Shared accumulator the engines populate with raw/filtered counts and
+    # per-reason drop tallies. Only built when filters are non-default —
+    # diagnostics are pure overhead on the happy path.
+    diagnostics: dict[str, Any] | None = None if filters.is_empty() else {}
+
     async def run(name: str) -> tuple[str, list[SearchResult] | Exception]:
         try:
             engine = get_engine(name)
@@ -232,7 +279,7 @@ async def aggregate_search(
             return name, e
         await search_limiter.acquire(name)
         try:
-            return name, await engine.search(query, n, filters)
+            return name, await engine.search(query, n, filters, diagnostics=diagnostics)
         except Exception as e:
             log.warning("engine %s failed: %s", name, e)
             return name, e
@@ -251,7 +298,7 @@ async def aggregate_search(
     if use_cache and merged:
         await cache.put_search(cache_key, query, engine_names, merged)
 
-    return {
+    payload: dict[str, Any] = {
         "query": query,
         "engines": engine_names,
         "cached": False,
@@ -259,6 +306,23 @@ async def aggregate_search(
         "lead_snippet": _lead_snippet(query, merged),
         "errors": errors or None,
     }
+
+    # Surface diagnostics ONLY when (a) the user actually set a filter, AND
+    # (b) the final result set is sparse. Otherwise omit the field entirely
+    # so happy-path output stays clean.
+    if diagnostics is not None and len(merged) <= 3:
+        raw_per_engine = diagnostics.get("raw_per_engine", {})
+        after_per_engine = diagnostics.get("after_filter_per_engine", {})
+        drops = diagnostics.get("drops_by_reason", {})
+        raw_total = sum(raw_per_engine.values())
+        payload["filter_diagnostics"] = {
+            "raw_per_engine": raw_per_engine,
+            "after_filter_per_engine": after_per_engine,
+            "drops_by_reason": drops,
+            "hint": _filter_hint(drops, raw_total, len(merged)),
+        }
+
+    return payload
 
 
 def list_engines() -> list[str]:

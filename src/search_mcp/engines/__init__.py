@@ -1,15 +1,23 @@
-from .base import Engine, SearchFilters, SearchResult, apply_post_filters
+from .base import (
+    Engine,
+    SearchFilters,
+    SearchResult,
+    apply_post_filters,
+    apply_post_filters_with_diagnostics,
+)
 from .baidu import BaiduEngine
 from .bing import BingEngine
 from .brave import BraveEngine
 from .duckduckgo import DuckDuckGoEngine
 from .googlenews import GoogleNewsEngine
 from .mojeek import MojeekEngine
+from .searx import SearxEngine
 from .startpage import StartpageEngine
 
 ENGINES: dict[str, Engine] = {
     "duckduckgo": DuckDuckGoEngine(),
     "mojeek": MojeekEngine(),
+    "searx": SearxEngine(),
     "googlenews": GoogleNewsEngine(),
     "startpage": StartpageEngine(),
     "brave": BraveEngine(),
@@ -31,5 +39,6 @@ __all__ = [
     "SearchFilters",
     "SearchResult",
     "apply_post_filters",
+    "apply_post_filters_with_diagnostics",
     "get_engine",
 ]
