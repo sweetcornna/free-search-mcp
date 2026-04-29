@@ -3,12 +3,14 @@ from .baidu import BaiduEngine
 from .bing import BingEngine
 from .brave import BraveEngine
 from .duckduckgo import DuckDuckGoEngine
+from .googlenews import GoogleNewsEngine
 from .mojeek import MojeekEngine
 from .startpage import StartpageEngine
 
 ENGINES: dict[str, Engine] = {
     "duckduckgo": DuckDuckGoEngine(),
     "mojeek": MojeekEngine(),
+    "googlenews": GoogleNewsEngine(),
     "startpage": StartpageEngine(),
     "brave": BraveEngine(),
     "bing": BingEngine(),
