@@ -52,6 +52,21 @@ def _max_age_to_seconds(max_age_hours: float | None) -> int | None:
     return int(max_age_hours * 3600)
 
 
+async def _safe_progress(
+    ctx: "Context | None", current: float, total: float, message: str,
+) -> None:
+    """report_progress() raises 'Context is not available outside of a request'
+    when called from non-MCP contexts (unit tests, ad-hoc scripts, or clients
+    that didn't pass a progressToken). Swallow that case so progress is a
+    nice-to-have, not a crash trigger."""
+    if ctx is None:
+        return
+    try:
+        await ctx.report_progress(current, total, message)
+    except (ValueError, AttributeError):
+        return
+
+
 @mcp.tool(
     annotations=ToolAnnotations(
         title="Web search (multi-engine, no API key)",
@@ -289,14 +304,12 @@ async def fetch_batch(
     """
     if not urls:
         return "" if format == "markdown" else []
-    if ctx is not None:
-        await ctx.report_progress(0.0, float(len(urls)), "starting batch fetch")
+    await _safe_progress(ctx, 0.0, float(len(urls)), "starting batch fetch")
     raw = await fetch_many(urls, render=render)
     items: list[dict[str, Any]] = []
     for idx, r in enumerate(raw, 1):
         items.append(r.to_dict() if hasattr(r, "to_dict") else r)
-        if ctx is not None:
-            await ctx.report_progress(float(idx), float(len(urls)), f"fetched {idx}/{len(urls)}")
+        await _safe_progress(ctx, float(idx), float(len(urls)), f"fetched {idx}/{len(urls)}")
     if format == "json":
         return items
     sections = []
@@ -418,16 +431,14 @@ async def research(
             (0 = force-refresh search; None = server default TTL).
         format: "markdown" or "json".
     """
-    if ctx is not None:
-        await ctx.report_progress(0.05, 1.0, "starting research")
+    await _safe_progress(ctx, 0.05, 1.0, "starting research")
 
     # Translate max_age_hours -> use_cache for the search portion.
     effective_use_cache = use_cache
     if max_age_hours is not None and max_age_hours == 0:
         effective_use_cache = False
 
-    if ctx is not None:
-        await ctx.report_progress(0.15, 1.0, "searching engines")
+    await _safe_progress(ctx, 0.15, 1.0, "searching engines")
 
     payload = await run_research(
         question,
@@ -443,12 +454,11 @@ async def research(
         exclude_text=exclude_text,
     )
 
-    if ctx is not None:
-        # Coarse end-of-fetch milestones — research.py runs fetch_many internally
-        # so we can't checkpoint per-URL without rewriting it.
-        n_docs = max(1, len(payload.get("documents") or [1]))
-        await ctx.report_progress(0.95, 1.0, f"fetched {n_docs} sources")
-        await ctx.report_progress(1.0, 1.0, "done")
+    # Coarse end-of-fetch milestones — research.py runs fetch_many internally
+    # so we can't checkpoint per-URL without rewriting it.
+    n_docs = max(1, len(payload.get("documents") or [1]))
+    await _safe_progress(ctx, 0.95, 1.0, f"fetched {n_docs} sources")
+    await _safe_progress(ctx, 1.0, 1.0, "done")
 
     return _maybe_render(payload, format, render_research)
 
