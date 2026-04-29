@@ -85,7 +85,13 @@ async def aggregate_search(
     include_text: str | None = None,
     exclude_text: str | None = None,
 ) -> dict[str, Any]:
-    engine_names = engines or settings.default_engines
+    engine_names = list(engines) if engines else list(settings.default_engines)
+    # Smart routing: news category benefits enormously from the Google News RSS
+    # engine. If the user didn't explicitly choose engines and asked for news,
+    # add googlenews to the pool — RSS items have structured pubDates and the
+    # index is overwhelmingly news outlets.
+    if category == "news" and engines is None and "googlenews" not in engine_names:
+        engine_names.append("googlenews")
     n = max_results or settings.max_results_per_engine
     filters = SearchFilters(
         freshness=freshness,

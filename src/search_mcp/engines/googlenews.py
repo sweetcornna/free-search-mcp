@@ -18,6 +18,8 @@ from __future__ import annotations
 import html as html_lib
 import re
 import xml.etree.ElementTree as ET
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from urllib.parse import quote_plus
 
 from .base import (
@@ -26,6 +28,37 @@ from .base import (
     SearchResult,
     augment_query_with_operators,
 )
+
+
+def _format_pubdate(raw: str | None) -> str:
+    """Convert RSS RFC-2822 pubDate ('Tue, 28 Apr 2026 15:30:00 GMT') into
+    either a relative phrase ('2 days ago') for recent items or an ISO date
+    ('2026-04-28') for older ones. Returns "" on parse failure."""
+    if not raw:
+        return ""
+    try:
+        dt = parsedate_to_datetime(raw)
+    except (TypeError, ValueError):
+        return ""
+    if dt is None:
+        return ""
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    now = datetime.now(timezone.utc)
+    delta = now - dt
+    secs = delta.total_seconds()
+    if secs < 0:
+        return dt.strftime("%Y-%m-%d")
+    if secs < 3600:
+        m = max(1, int(secs // 60))
+        return f"{m} minute{'s' if m != 1 else ''} ago"
+    if secs < 86400:
+        h = int(secs // 3600)
+        return f"{h} hour{'s' if h != 1 else ''} ago"
+    if secs < 86400 * 14:
+        d = int(secs // 86400)
+        return f"{d} day{'s' if d != 1 else ''} ago"
+    return dt.strftime("%Y-%m-%d")
 
 
 # Google News supports a `when:` query operator: when:1d, when:7d, when:1m, when:1y.
@@ -81,6 +114,7 @@ class GoogleNewsEngine(Engine):
             link_el = item.find("link")
             desc_el = item.find("description")
             source_el = item.find("source")
+            pubdate_el = item.find("pubDate")
 
             title = (title_el.text or "").strip() if title_el is not None else ""
             url = (link_el.text or "").strip() if link_el is not None else ""
@@ -93,6 +127,7 @@ class GoogleNewsEngine(Engine):
 
             display_title = f"{title} ({source})" if source else title
             snippet = _strip_html(desc_el.text) if desc_el is not None else ""
+            published_age = _format_pubdate(pubdate_el.text if pubdate_el is not None else None)
 
             results.append(
                 SearchResult(
@@ -101,6 +136,7 @@ class GoogleNewsEngine(Engine):
                     snippet=snippet,
                     engine=self.name,
                     rank=0,
+                    published_age=published_age,
                 )
             )
         return results
