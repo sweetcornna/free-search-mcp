@@ -12,13 +12,16 @@ class Settings(BaseSettings):
     cache_dir: Path = DEFAULT_CACHE_DIR
     cache_ttl_seconds: int = 60 * 60 * 24 * 7
 
-    # All-HTTP, low-latency default pool. Each engine here returns in <1.5s
-    # via curl_cffi's Chrome-impersonated session — no Playwright in the
-    # critical path. Startpage stays opt-in: it forces a browser render and
-    # adds 5-10s to the parallel timing without measurably better results.
-    # Brave/Bing/Baidu are opt-in via the `engines=` arg — they have
-    # intermittent PoW challenges to headless clients.
-    default_engines: list[str] = ["duckduckgo", "mojeek", "searx"]
+    # All-HTTP, low-latency default pool. Picked for "consistently fast AND
+    # consistently returns results in 2026":
+    #   * duckduckgo  — curl_cffi chrome131 fingerprint dodges anomaly 202s
+    #   * mojeek      — independent index; intermittently IP-blocked but cheap
+    #                   to attempt and falls back fast when it is
+    #   * googlenews  — RSS, ~1s, gives news-skewed coverage that complements
+    #                   the other two on time-sensitive queries
+    # Searx public instances are unreliable (often ≥10s timeouts/empties) and
+    # Startpage forces a browser render — both stay opt-in via `engines=`.
+    default_engines: list[str] = ["duckduckgo", "mojeek", "googlenews"]
     max_results_per_engine: int = 10
 
     rate_limit_per_minute: int = 30

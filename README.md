@@ -127,25 +127,34 @@ elevated actions.
 
 ### Engines
 
-Default set (all-HTTP, **no browser**, ~5x faster than the old default
+Default set (all-HTTP, **no browser**, ~2x faster than the old default
 that included Startpage):
-`duckduckgo`, `mojeek`, `searx`.
+`duckduckgo`, `mojeek`, `googlenews`.
 
 Opt-in:
 - `startpage` — browser-rendered (~5-10s/query); good for hard-to-reach
   results that the HTTP defaults miss.
 - `brave`, `bing`, `baidu` — intermittent challenges to headless clients.
-- `googlenews` — RSS-style news index.
+- `searx` — meta-search proxy via public SearXNG instances; included for
+  completeness but most public instances are slow/unreliable in 2026.
 
 > Brave/Bing/Baidu all gate headless browsers after a handful of calls (PoW
 > CAPTCHAs, "something went wrong" pages, redirect wrappers). Pass
 > `engines=["brave"]` etc. only when the defaults can't find what you need.
 
-> **Searx fallback chain.** `searx` is a meta-search aggregator that proxies
-> Google/Bing/DDG/Wikipedia/etc. through public [SearXNG](https://docs.searxng.org/)
-> instances. We round-robin across a shortlist of vetted public instances
-> (5s timeout each) and return the first non-empty response, so a single
-> instance going 429/503 doesn't kill the engine.
+### Sparse-result diagnostics
+
+When filters drop results so aggressively that ≤3 are returned, the
+response includes `filter_diagnostics` so the LLM knows which knob to
+relax. Example for `category="forum" + exclude_text="beginner"`:
+
+```text
+⚠️ **Filter diagnostics** (results were sparse)
+Raw results: 20 across 3 engines → 0 after filters.
+Top drops: category_forum (20).
+Hint: Filters dropped 20 of 20 raw results. Most were excluded by
+category=forum. Try widening or removing one filter.
+```
 
 ---
 
