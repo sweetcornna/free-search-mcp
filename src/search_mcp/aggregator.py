@@ -63,6 +63,11 @@ def _merge(buckets: list[list[SearchResult]], max_results: int) -> list[dict[str
         rec["score"] = round(score, 5)
         rec.pop("rank", None)
         rec.pop("engine", None)
+        # `published_age` (when present) flows through automatically via
+        # SearchResult.to_dict(); we drop the empty-string default so the
+        # field is absent from output rather than noisy.
+        if not rec.get("published_age"):
+            rec.pop("published_age", None)
         out.append(rec)
     return out
 

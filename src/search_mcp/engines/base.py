@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import abc
+import re
 from dataclasses import asdict, dataclass, field
+from datetime import datetime
 from typing import Any, Literal
 from urllib.parse import urlparse
 
@@ -14,6 +16,81 @@ from ..config import settings
 
 Freshness = Literal["day", "week", "month", "year"]
 Category = Literal["news", "pdf", "github", "paper", "forum", "blog"]
+
+
+# Date-extraction patterns. Order matters: relative phrases ("2 days ago")
+# are more LLM-friendly than reverse-engineering an ISO date from a vague
+# "Apr 28" with no year, so we try them first.
+_REL_RE = re.compile(
+    r"\b(\d+)\s*(minute|hour|day|week|month|year)s?\s*ago\b",
+    re.I,
+)
+# "Apr 28, 2026" or "Apr 28" (year optional, but we only normalise when present)
+_ABS_RE_1 = re.compile(
+    r"\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+(\d{1,2})(?:,\s*(\d{4}))?\b"
+)
+# ISO date 2024-12-01
+_ABS_RE_2 = re.compile(r"\b(\d{4})-(\d{2})-(\d{2})\b")
+# US/EU short date 12/01/2024 or 1/2/24
+_ABS_RE_3 = re.compile(r"\b(\d{1,2})/(\d{1,2})/(\d{2,4})\b")
+
+
+def extract_date_hint(text: str) -> str:
+    """Return a normalised date string if one is present in ``text``.
+
+    Output forms:
+      * ``"YYYY-MM-DD"`` — when the input contains an unambiguous absolute date.
+      * ``"N units ago"`` — when the input contains a relative phrase, lower-cased.
+      * ``""``           — when nothing date-like was found.
+
+    Best-effort: never raises, never guesses years for partial dates, and
+    deliberately ignores ``"Today"`` / ``"Yesterday"`` because correct
+    interpretation needs the engine's timezone, which we don't have.
+    """
+    if not text:
+        return ""
+
+    # Relative phrases beat absolute dates: they're shorter, self-describing,
+    # and don't need timezone disambiguation.
+    rel = _REL_RE.search(text)
+    if rel:
+        n, unit = rel.group(1), rel.group(2).lower()
+        return f"{n} {unit}{'s' if int(n) != 1 else ''} ago"
+
+    # ISO date wins next — least ambiguous.
+    iso = _ABS_RE_2.search(text)
+    if iso:
+        try:
+            d = datetime.strptime(iso.group(0), "%Y-%m-%d")
+            return d.strftime("%Y-%m-%d")
+        except ValueError:
+            pass
+
+    # "Apr 28, 2026" — only normalise when year is present.
+    abs1 = _ABS_RE_1.search(text)
+    if abs1 and abs1.group(3):
+        raw = f"{abs1.group(1)} {abs1.group(2)}, {abs1.group(3)}"
+        for fmt in ("%b %d, %Y", "%B %d, %Y"):
+            try:
+                d = datetime.strptime(raw, fmt)
+                return d.strftime("%Y-%m-%d")
+            except ValueError:
+                continue
+
+    # Numeric short date — try a few orderings, prefer m/d/Y (US/most engines).
+    short = _ABS_RE_3.search(text)
+    if short:
+        raw = short.group(0)
+        for fmt in ("%m/%d/%Y", "%m/%d/%y", "%d/%m/%Y", "%d/%m/%y"):
+            try:
+                d = datetime.strptime(raw, fmt)
+                # Sanity: reject obviously bogus years (e.g. version numbers)
+                if 1990 <= d.year <= datetime.now().year + 1:
+                    return d.strftime("%Y-%m-%d")
+            except ValueError:
+                continue
+
+    return ""
 
 
 # Host whitelists for category filtering when the engine has no native flag.
@@ -80,6 +157,11 @@ class SearchResult:
     snippet: str
     engine: str
     rank: int
+    # Human-readable publication hint pulled from the snippet/title, e.g.
+    # ``"2 days ago"`` or ``"2026-04-28"``. Empty when no date was detected.
+    # Surfaced to the LLM so date-sensitive queries don't require fetching
+    # every URL just to check freshness.
+    published_age: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)

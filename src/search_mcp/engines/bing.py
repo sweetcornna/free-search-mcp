@@ -8,6 +8,7 @@ from .base import (
     SearchFilters,
     SearchResult,
     augment_query_with_operators,
+    extract_date_hint,
     parse_html,
     text_of,
 )
@@ -77,5 +78,9 @@ class BingEngine(Engine):
             snippet = text_of(snippet_node)
             if not url or not title:
                 continue
-            results.append(SearchResult(title=title, url=url, snippet=snippet, engine=self.name, rank=0))
+            result = SearchResult(title=title, url=url, snippet=snippet, engine=self.name, rank=0)
+            hint = extract_date_hint(snippet) or extract_date_hint(title)
+            if hint:
+                result.published_age = hint
+            results.append(result)
         return results

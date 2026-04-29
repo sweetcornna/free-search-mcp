@@ -82,6 +82,8 @@ def render_search(payload: dict[str, Any]) -> str:
         engines_for = ", ".join(r.get("engines") or [])
         score = r.get("score")
         meta = f"_{engines_for}_" + (f" · score {score}" if score is not None else "")
+        if r.get("published_age"):
+            meta += f" · {r['published_age']}"
         lines.append(f"## {i}. {title}")
         lines.append(f"<{url}>")
         if snippet:
