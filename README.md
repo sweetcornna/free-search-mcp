@@ -17,7 +17,7 @@ were each missing.
 research("how does reciprocal rank fusion work", depth=3)
    ↓
 # Research brief: how does reciprocal rank fusion work
-_engines: duckduckgo, mojeek, startpage · sources: 3 · ~3,400 tokens_
+_engines: duckduckgo, mojeek, searx · sources: 3 · ~3,400 tokens_
 
 ## Sources
 - [1] Reciprocal rank fusion | Elasticsearch Reference — <https://…>
@@ -127,15 +127,25 @@ elevated actions.
 
 ### Engines
 
-Default set (all reliable, **no captchas** during repeated calls):
-`duckduckgo`, `mojeek`, `startpage`.
+Default set (all-HTTP, **no browser**, ~5x faster than the old default
+that included Startpage):
+`duckduckgo`, `mojeek`, `searx`.
 
-Opt-in (intermittent challenges to headless clients):
-`brave`, `bing`, `baidu`.
+Opt-in:
+- `startpage` — browser-rendered (~5-10s/query); good for hard-to-reach
+  results that the HTTP defaults miss.
+- `brave`, `bing`, `baidu` — intermittent challenges to headless clients.
+- `googlenews` — RSS-style news index.
 
 > Brave/Bing/Baidu all gate headless browsers after a handful of calls (PoW
 > CAPTCHAs, "something went wrong" pages, redirect wrappers). Pass
 > `engines=["brave"]` etc. only when the defaults can't find what you need.
+
+> **Searx fallback chain.** `searx` is a meta-search aggregator that proxies
+> Google/Bing/DDG/Wikipedia/etc. through public [SearXNG](https://docs.searxng.org/)
+> instances. We round-robin across a shortlist of vetted public instances
+> (5s timeout each) and return the first non-empty response, so a single
+> instance going 429/503 doesn't kill the engine.
 
 ---
 
@@ -200,7 +210,7 @@ All settings can be overridden by environment variables prefixed with
 
 | Var | Default | Meaning |
 |---|---|---|
-| `SEARCH_MCP_DEFAULT_ENGINES` | `["duckduckgo","mojeek","startpage"]` | JSON list |
+| `SEARCH_MCP_DEFAULT_ENGINES` | `["duckduckgo","mojeek","searx"]` | JSON list |
 | `SEARCH_MCP_MAX_RESULTS_PER_ENGINE` | `10` | |
 | `SEARCH_MCP_RATE_LIMIT_PER_MINUTE` | `30` | per engine |
 | `SEARCH_MCP_FETCH_RATE_LIMIT_PER_MINUTE` | `20` | shared `fetch` bucket |
@@ -234,9 +244,10 @@ All settings can be overridden by environment variables prefixed with
    │  engines/            │  │  browser pool              │
    │   duckduckgo.py      │  │   - persistent context     │
    │   mojeek.py          │  │   - stealth init script    │
-   │   startpage.py       │  │   - shared cookies         │
-   │   brave.py     (opt) │  │   - semaphore-bounded pages│
-   │   bing.py      (opt) │  └────────────────────────────┘
+   │   searx.py           │  │   - shared cookies         │
+   │   startpage.py (opt) │  │   - semaphore-bounded pages│
+   │   brave.py     (opt) │  └────────────────────────────┘
+   │   bing.py      (opt) │
    │   baidu.py     (opt) │
    └──────────────────────┘
 

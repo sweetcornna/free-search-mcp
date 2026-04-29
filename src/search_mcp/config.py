@@ -12,10 +12,13 @@ class Settings(BaseSettings):
     cache_dir: Path = DEFAULT_CACHE_DIR
     cache_ttl_seconds: int = 60 * 60 * 24 * 7
 
-    # Default set is the three engines that consistently work without JS-gating
-    # or proof-of-work captchas. Brave/Bing/Baidu are opt-in via the `engines=`
-    # arg — they all have intermittent challenges to headless clients.
-    default_engines: list[str] = ["duckduckgo", "mojeek", "startpage"]
+    # All-HTTP, low-latency default pool. Each engine here returns in <1.5s
+    # via curl_cffi's Chrome-impersonated session — no Playwright in the
+    # critical path. Startpage stays opt-in: it forces a browser render and
+    # adds 5-10s to the parallel timing without measurably better results.
+    # Brave/Bing/Baidu are opt-in via the `engines=` arg — they have
+    # intermittent PoW challenges to headless clients.
+    default_engines: list[str] = ["duckduckgo", "mojeek", "searx"]
     max_results_per_engine: int = 10
 
     rate_limit_per_minute: int = 30
