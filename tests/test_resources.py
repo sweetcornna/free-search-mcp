@@ -30,10 +30,35 @@ def isolated_cache(tmp_path, monkeypatch):
 async def test_resource_template_registered():
     from search_mcp.server import mcp
     templates = await mcp.list_resource_templates()
-    assert len(templates) == 1
-    t = templates[0]
-    assert "cache://page/" in t.uriTemplate
-    assert t.title == "Cached page"
+    assert len(templates) == 2
+    by_uri = {t.uriTemplate: t for t in templates}
+    page_uri = next(u for u in by_uri if "cache://page/" in u)
+    search_uri = next(u for u in by_uri if "cache://search/" in u)
+    assert by_uri[page_uri].title == "Cached page"
+    assert by_uri[search_uri].title == "Cached search result"
+
+
+async def test_cached_search_resource_returns_json(isolated_cache):
+    """The cache://search/{query_hash} template should round-trip a known key."""
+    import json
+
+    from search_mcp.server import mcp
+
+    query_hash = "deadbeef"
+    rows = [{"url": "https://x.example", "title": "X", "snippet": "s"}]
+    await isolated_cache.put_search(query_hash, "q", ["duckduckgo"], rows)
+
+    contents = await mcp.read_resource(f"cache://search/{query_hash}")
+    items = list(contents)
+    body = "".join(getattr(c, "content", "") or "" for c in items)
+    parsed = json.loads(body)
+    assert parsed == rows
+
+
+async def test_cached_search_resource_misses_raise(isolated_cache):
+    from search_mcp.server import mcp
+    with pytest.raises(Exception):
+        await mcp.read_resource("cache://search/no-such-hash")
 
 
 async def test_cached_page_resource_returns_content(isolated_cache):

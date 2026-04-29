@@ -5,12 +5,17 @@ import pytest
 pytestmark = pytest.mark.asyncio
 
 
-async def test_two_prompts_registered():
+async def test_prompts_registered():
     from search_mcp.server import mcp
     prompts = await mcp.list_prompts()
-    assert len(prompts) == 2
+    assert len(prompts) == 4
     names = {p.name for p in prompts}
-    assert names == {"research_prompt", "factcheck_prompt"}
+    assert names == {
+        "research_prompt",
+        "factcheck_prompt",
+        "compare_sources",
+        "news_brief",
+    }
 
 
 async def test_research_prompt_renders_with_args():
@@ -52,3 +57,34 @@ async def test_prompts_have_titles():
     titles = {p.title for p in prompts}
     assert "Research thoroughly" in titles
     assert "Fact-check claim" in titles
+    assert "Compare sources" in titles
+    assert "News brief" in titles
+
+
+async def test_compare_sources_prompt_renders():
+    from search_mcp.server import mcp
+    result = await mcp.get_prompt(
+        "compare_sources",
+        {"question": "which is faster", "urls": "https://a.example,https://b.example"},
+    )
+    assert result.messages
+    text = ""
+    for msg in result.messages:
+        text += getattr(msg.content, "text", "") or ""
+    assert "compare" in text
+    assert "which is faster" in text
+    assert "https://a.example" in text
+
+
+async def test_news_brief_prompt_renders():
+    from search_mcp.server import mcp
+    result = await mcp.get_prompt(
+        "news_brief", {"topic": "ai regulation", "since": "week"},
+    )
+    assert result.messages
+    text = ""
+    for msg in result.messages:
+        text += getattr(msg.content, "text", "") or ""
+    assert "ai regulation" in text
+    assert "week" in text
+    assert "search" in text and "fetch_batch" in text

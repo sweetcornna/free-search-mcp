@@ -12,18 +12,22 @@ from mcp.types import ToolAnnotations
 from .aggregator import aggregate_search, list_engines
 from .browser import pool
 from .cache import cache
+from .compare import compare_urls
 from .config import settings
 from .documents import read_document
 from .fetcher import fetch_many, fetch_page
 from .formatting import (
     estimate_tokens,
     errors_to_hint,
+    render_compare,
     render_doc,
     render_fetch,
     render_research,
     render_search,
+    render_structured,
 )
 from .research import research as run_research
+from .structured import extract_structured as _extract_structured
 
 logging.basicConfig(
     level=getattr(logging, settings.log_level.upper(), logging.INFO),
@@ -556,6 +560,98 @@ def engines() -> list[str]:
     return list_engines()
 
 
+@mcp.tool(
+    annotations=ToolAnnotations(
+        title="Compare URLs side-by-side",
+        readOnlyHint=True,
+        idempotentHint=True,
+        openWorldHint=True,
+    ),
+)
+async def compare(
+    question: str,
+    urls: list[str],
+    format: Format = "markdown",
+) -> str | dict[str, Any]:
+    """Fetch 2-5 URLs concurrently and return per-URL excerpts so the LLM can
+    compare them against a single question in one round trip.
+
+    Best for:
+    - Side-by-side product/feature/article comparisons.
+    - "Compare X to Y" or "How does A differ from B" queries.
+    - Triangulating a fact across multiple sources.
+
+    Not recommended for:
+    - >5 URLs -> use `fetch_batch`.
+    - 1 URL -> use `fetch`.
+    - Don't have URLs yet -> use `search` or `research` first.
+
+    Returns:
+    - markdown (default): a comparison brief with per-URL sections, each
+      containing title, sitename, published date, and a smart-truncated excerpt.
+    - json: {question, urls, excerpts:[{url, title, excerpt, ...}],
+      tokens_estimated}.
+
+    Common mistakes:
+    - Asking `compare` to actually answer the question — it returns material,
+      the LLM does the comparison.
+    - Passing >5 URLs and expecting them all to fit in context — use
+      `fetch_batch` for bulk reads.
+
+    Args:
+        question: The comparison question the LLM will answer using the
+            returned excerpts.
+        urls: 2-5 absolute http(s) URLs.
+        format: "markdown" (default) or "json".
+    """
+    payload = await compare_urls(question, urls)
+    return _maybe_render(payload, format, render_compare)
+
+
+@mcp.tool(
+    annotations=ToolAnnotations(
+        title="Extract structured data from a URL",
+        readOnlyHint=True,
+        idempotentHint=True,
+        openWorldHint=True,
+    ),
+)
+async def extract_structured(
+    url: str,
+    format: Format = "markdown",
+) -> str | dict[str, Any]:
+    """Pull JSON-LD, OpenGraph, Twitter cards, and microdata from a web page.
+
+    Best for:
+    - Product pages (price, currency, availability, brand, rating).
+    - Article pages (author, publish date, image, headline).
+    - Recipe / event / video pages where rich metadata IS the answer.
+    - Cases where `fetch` returns prose but you need fields.
+
+    Not recommended for:
+    - Just reading a page -> use `fetch`.
+    - PDFs / DOCX -> use `read_doc`.
+    - Pages that don't publish schema.org metadata (most blogs) — you'll get
+      empty lists; fall back to `fetch`.
+
+    Returns:
+    - json: {url, json_ld:[], microdata:[], opengraph:[], rdfa:[]}. Twitter
+      card meta tags are surfaced inside the `opengraph` list.
+    - markdown (default): a flattened key/value view with each block printed
+      as a JSON code block under its syntax heading.
+
+    Common mistakes:
+    - Calling on every URL "just in case" — most sites have no structured
+      data, and `fetch` is what you actually want.
+
+    Args:
+        url: Absolute http(s) URL.
+        format: "markdown" (default) or "json".
+    """
+    payload = await _extract_structured(url)
+    return _maybe_render(payload, format, render_structured)
+
+
 # ---------------------------------------------------------------------------
 # Prompts (slash-commands in MCP clients)
 # ---------------------------------------------------------------------------
@@ -605,8 +701,34 @@ def factcheck_prompt(claim: str) -> str:
     )
 
 
+@mcp.prompt(title="Compare sources")
+def compare_sources(question: str, urls: str) -> str:
+    """Instruct the model to use `compare` against several URLs and answer
+    the question with per-URL citations."""
+    return (
+        f"Use the `compare` tool with question={question!r} and "
+        f"urls={urls!r} (comma-separated). For each excerpt returned, "
+        "answer the question with [n] citations to the URL it came from. "
+        "If the excerpts disagree, surface that explicitly rather than "
+        "picking one side silently."
+    )
+
+
+@mcp.prompt(title="News brief")
+def news_brief(topic: str, since: str = "day") -> str:
+    """Instruct the model to produce a fresh news brief using `search` +
+    `fetch_batch`, with citations."""
+    return (
+        f"Use the `search` tool with query={topic!r}, category='news', "
+        f"freshness={since!r}. Then fetch the top 3 results in parallel "
+        "via `fetch_batch`. Produce a 5-bullet brief, with [n] citations "
+        "matching the order returned by `search`. End with a 'Sources' "
+        "list of URLs."
+    )
+
+
 # ---------------------------------------------------------------------------
-# Resource template — expose cached pages as readable resources
+# Resource templates — expose cached data as readable resources
 # ---------------------------------------------------------------------------
 
 
@@ -623,6 +745,21 @@ async def cached_page(url: str) -> str:
     if not page:
         raise ValueError(f"Not in cache: {decoded}")
     return page.get("content") or ""
+
+
+@mcp.resource("cache://search/{query_hash}", title="Cached search result")
+async def cached_search(query_hash: str) -> str:
+    """Return the cached merged result list for a search query hash.
+
+    The hash is the same one the aggregator uses internally to key the
+    `search_cache` table. Useful for exposing prior `search` invocations
+    as MCP resources without re-running them.
+    """
+    rows = await cache.get_search(query_hash)
+    if rows is None:
+        raise ValueError(f"No cached search for hash: {query_hash}")
+    import json
+    return json.dumps(rows, ensure_ascii=False, indent=2)
 
 
 def run() -> None:
