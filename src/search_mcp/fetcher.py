@@ -6,8 +6,8 @@ import logging
 from dataclasses import dataclass
 from typing import Any
 
-import httpx
 import trafilatura
+from curl_cffi.requests import AsyncSession
 from markdownify import markdownify as html_to_md
 from selectolax.parser import HTMLParser
 
@@ -19,6 +19,10 @@ from .ratelimit import RateLimiter
 
 log = logging.getLogger(__name__)
 fetch_limiter = RateLimiter(settings.fetch_rate_limit_per_minute)
+
+# Match the engine fast-path: real Chrome JA3/JA4 + H2 fingerprint so target
+# sites don't see "headless client claiming to be Chrome".
+_IMPERSONATE = "chrome131"
 
 
 # Tags that contribute no content to a reader-mode view (fallback path).
@@ -180,11 +184,13 @@ def _truncate(text: str) -> tuple[str, bool]:
 
 
 async def _http_fetch(url: str) -> tuple[str, str]:
-    async with httpx.AsyncClient(
+    # No explicit User-Agent: curl_cffi sets one matching the impersonated
+    # Chrome build, keeping the UA <-> JA3/H2 fingerprints consistent.
+    async with AsyncSession(
+        impersonate=_IMPERSONATE,
         timeout=settings.fetch_timeout,
-        follow_redirects=True,
+        allow_redirects=True,
         headers={
-            "User-Agent": settings.user_agent,
             "Accept-Language": settings.accept_language,
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         },

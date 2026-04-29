@@ -7,11 +7,18 @@ from datetime import datetime
 from typing import Any, Literal
 from urllib.parse import urlparse
 
-import httpx
+from curl_cffi.requests import AsyncSession
+from curl_cffi.requests.exceptions import RequestException
 from selectolax.parser import HTMLParser
 
 from ..browser import pool
 from ..config import settings
+
+
+# Pinned at chrome131 to match the desktop UA we send elsewhere. curl_cffi
+# uses this token to set the JA3/JA4 + HTTP/2 SETTINGS fingerprint that real
+# Chrome would emit, defeating naive headless detection (DDG anomaly page).
+_IMPERSONATE = "chrome131"
 
 
 Freshness = Literal["day", "week", "month", "year"]
@@ -300,21 +307,23 @@ class Engine(abc.ABC):
         if self.needs_browser or settings.fetch_strategy == "browser":
             _, html = await pool.fetch_html(url, wait_selector=self.wait_selector)
             return html
+        # curl_cffi sets the User-Agent matching the impersonated browser, so
+        # we deliberately do NOT pass our own UA here — sending a mismatched UA
+        # would re-introduce the very fingerprint discrepancy DDG checks for.
         try:
-            async with httpx.AsyncClient(
+            async with AsyncSession(
+                impersonate=_IMPERSONATE,
                 timeout=settings.request_timeout,
-                follow_redirects=True,
+                allow_redirects=True,
                 headers={
-                    "User-Agent": settings.user_agent,
                     "Accept-Language": settings.accept_language,
                     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
                 },
-                http2=False,
             ) as client:
                 resp = await client.get(url)
                 resp.raise_for_status()
                 return resp.text
-        except (httpx.HTTPError, httpx.HTTPStatusError):
+        except RequestException:
             if settings.fetch_strategy == "http":
                 raise
             _, html = await pool.fetch_html(url, wait_selector=self.wait_selector)

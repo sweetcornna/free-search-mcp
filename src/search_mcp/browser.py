@@ -1,10 +1,11 @@
 import asyncio
 import logging
 import random
+import sys
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
-from playwright.async_api import Browser, BrowserContext, Page, async_playwright
+from playwright.async_api import BrowserContext, Page, async_playwright
 
 from .config import settings
 
@@ -25,41 +26,80 @@ window.navigator.permissions.query = (p) => (
 );
 """
 
+# Common desktop viewports — pick one per session to break up the trivially
+# constant-1366x800 fingerprint without straying into freakish dimensions.
+_VIEWPORTS = [
+    (1366, 768),
+    (1440, 900),
+    (1536, 864),
+    (1680, 1050),
+]
+
 
 class BrowserPool:
     """One shared persistent BrowserContext, semaphore-bounded page concurrency.
 
     Sharing the context keeps cookies and session storage across requests, which
-    lets sites like Bing pass us through after the first warmup challenge.
+    lets sites like Bing pass us through after the first warmup challenge. We
+    use ``launch_persistent_context`` so the same profile (cookies, storage,
+    HSTS list, etc.) survives across server restarts on disk.
     """
 
     def __init__(self) -> None:
         self._playwright = None
-        self._browser: Browser | None = None
+        # ``launch_persistent_context`` returns a BrowserContext directly; there
+        # is no separate Browser handle to track.
         self._ctx: BrowserContext | None = None
         self._page_sema = asyncio.Semaphore(settings.browser_pool_size)
         self._lock = asyncio.Lock()
 
+    def _launch_args(self) -> list[str]:
+        args = [
+            "--disable-blink-features=AutomationControlled",
+            "--disable-dev-shm-usage",
+        ]
+        # ``--no-sandbox`` is itself a fingerprint marker (no real desktop
+        # Chrome ships with it). Only keep it on Linux/containers where the
+        # sandbox often can't run anyway.
+        if sys.platform != "darwin":
+            args.append("--no-sandbox")
+        return args
+
     async def _ensure(self) -> BrowserContext:
         async with self._lock:
-            if self._ctx and self._browser and self._browser.is_connected():
+            if self._ctx is not None:
                 return self._ctx
             self._playwright = await async_playwright().start()
-            self._browser = await self._playwright.chromium.launch(
+
+            user_data_dir = str(settings.cache_dir / "browser_profile")
+            settings.cache_dir.mkdir(parents=True, exist_ok=True)
+
+            width, height = random.choice(_VIEWPORTS)
+            common_kwargs = dict(
+                user_data_dir=user_data_dir,
                 headless=settings.browser_headless,
-                args=[
-                    "--disable-blink-features=AutomationControlled",
-                    "--disable-dev-shm-usage",
-                    "--no-sandbox",
-                ],
-            )
-            self._ctx = await self._browser.new_context(
+                args=self._launch_args(),
                 user_agent=settings.user_agent,
                 locale="en-US",
                 timezone_id="America/Los_Angeles",
-                viewport={"width": 1366, "height": 800},
+                viewport={"width": width, "height": height},
                 extra_http_headers={"Accept-Language": settings.accept_language},
             )
+
+            # Prefer a real installed Chrome (better fingerprint than bundled
+            # Chromium). Fall back transparently when Chrome isn't installed.
+            try:
+                self._ctx = await self._playwright.chromium.launch_persistent_context(
+                    channel="chrome",
+                    **common_kwargs,
+                )
+            except Exception as e:
+                log.warning(
+                    "real Chrome not found, using bundled Chromium: %s", e
+                )
+                self._ctx = await self._playwright.chromium.launch_persistent_context(
+                    **common_kwargs,
+                )
             await self._ctx.add_init_script(_STEALTH_SCRIPT)
             return self._ctx
 
@@ -105,14 +145,8 @@ class BrowserPool:
                 try:
                     await self._ctx.close()
                 except Exception:
-                    pass
+                    log.exception("context close failed")
                 self._ctx = None
-            if self._browser:
-                try:
-                    await self._browser.close()
-                except Exception:
-                    log.exception("browser close failed")
-                self._browser = None
             if self._playwright:
                 await self._playwright.stop()
                 self._playwright = None
