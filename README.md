@@ -61,23 +61,47 @@ stripping). Each fetched page also returns `author`, `published_date`, and
 `exclude_domains`, `category` (`news`/`pdf`/`github`/`paper`/`forum`/`blog`),
 `include_text`, `exclude_text`.
 
+### Anti-detection &amp; resilience
+
+- HTTP fast path uses [`curl_cffi`](https://github.com/lexiforest/curl_cffi)
+  with a real Chrome 131 JA3/JA4 + HTTP/2 fingerprint, fixing the DDG
+  "anomaly 202" rate-limit response that vanilla httpx triggered.
+- Playwright fallback uses `launch_persistent_context` (cookies survive
+  restarts on disk), prefers a real installed Chrome (`channel="chrome"`),
+  drops the `--no-sandbox` fingerprint marker on macOS, and randomizes the
+  viewport per session.
+- Result dedup is **title-fuzzy + host-canonical** (rapidfuzz
+  `token_set_ratio >= 92`, host normalized for `www./m./amp.` and
+  country-TLD collapse), catching `bbc.co.uk` vs `bbc.com` duplicates that
+  URL-only dedup misses.
+- `search` includes an honest extractive `lead_snippet` — picks the top-3
+  result whose snippet contains ≥2 query terms and is ≥80 chars; rendered
+  as `> **Lead:** According to {host}: …`. No LLM call. Returns nothing
+  if no snippet qualifies (no fake answer).
+
+> ⚠️ We deliberately do **not** attempt to defeat proof-of-work captchas
+> on Bing or Brave — that crosses the ToS line. When those engines
+> challenge us, we fall back to other engines instead.
+
 ---
 
-## Tools
+## Tools (9)
 
 | Tool | Description |
 |---|---|
-| `search(query, engines?, max_results?, use_cache?, max_age_hours?, freshness?, include_domains?, exclude_domains?, category?, include_text?, exclude_text?, format?)` | Parallel multi-engine search merged via Reciprocal Rank Fusion |
-| `research(question, depth?, engines?, fetch?, use_cache?, max_age_hours?, freshness?, include_domains?, exclude_domains?, category?, include_text?, exclude_text?, format?)` | One-shot: search + fetch top N + return Markdown brief |
-| `fetch(url, render?, force_refresh?, max_age_hours?, format?)` | Fetch a page, return reader-mode Markdown (trafilatura-extracted, with author/date/sitename) |
-| `fetch_batch(urls, render?, format?)` | Concurrent multi-URL fetch |
-| `read_doc(source, start?, length?, format?)` | Parse PDF / DOCX / HTML / TXT / MD with pagination |
-| `cache_search(query, limit?, format?)` | FTS5 search across previously fetched pages |
+| `search(query, ...filters)` | Parallel multi-engine search, RRF-merged, title-fuzzy + host-canonical deduped, with optional extractive `lead_snippet` |
+| `research(question, depth?, ...filters)` | One-shot: search + fetch top N + return Markdown brief |
+| `compare(question, urls=[2..5])` | Concurrent fetch of 2-5 URLs, side-by-side excerpts keyed by question |
+| `fetch(url, render?, ...)` | Fetch a page, return reader-mode Markdown (trafilatura, with author/date/sitename) |
+| `fetch_batch(urls, ...)` | Concurrent multi-URL fetch |
+| `read_doc(source, start?, length?, ...)` | Parse PDF / DOCX / HTML / TXT / MD with pagination |
+| `extract_structured(url, ...)` | Pull JSON-LD / OpenGraph / Twitter cards / microdata via extruct |
+| `cache_search(query, limit?, ...)` | FTS5 search across previously fetched pages |
 | `engines()` | List engine names available to `search` |
 
-Plus **2 MCP prompts** (`Research thoroughly`, `Fact-check claim`) and a
-**resource template** (`cache://page/{url}`) for dragging cached pages back
-into context without re-fetching.
+Plus **4 MCP prompts** (`Research thoroughly`, `Fact-check claim`,
+`Compare sources`, `News brief`) and **2 resource templates**
+(`cache://page/{url}`, `cache://search/{query_hash}`).
 
 ### Filters (search / research)
 
