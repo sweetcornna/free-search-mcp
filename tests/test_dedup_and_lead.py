@@ -12,7 +12,9 @@ from search_mcp.aggregator import (
     _dedup_by_title,
     _lead_query_terms,
     _lead_snippet,
+    _merge,
 )
+from search_mcp.engines import SearchResult
 from search_mcp.formatting import render_search
 
 
@@ -109,6 +111,51 @@ def test_dedup_keeps_items_without_title():
 
 def test_dedup_empty_input():
     assert _dedup_by_title([]) == []
+
+
+# ---------------------------------------------------------------------------
+# _merge — dedup must run BEFORE the slice so backfill keeps max_results (#7)
+# ---------------------------------------------------------------------------
+
+
+def _sr(title: str, url: str, rank: int, engine: str = "e1", snippet: str = "snip") -> SearchResult:
+    return SearchResult(title=title, url=url, snippet=snippet, engine=engine, rank=rank)
+
+
+def test_merge_backfills_after_title_dedup_to_keep_max_results():
+    """The top `max_results` slots contain a same-host title-duplicate pair, and
+    there are extra unique URLs ranked just below the cutoff. Dedup must run over
+    the FULL ranked list and THEN slice, so the duplicate is replaced by the next
+    unique result rather than leaving us short.
+
+    With max_results=3 and a duplicate inside the top-3, the OLD (slice-then-dedup)
+    code returned only 2 results. The fix backfills to a full 3.
+    """
+    # Lower rank => higher RRF score => higher in the ranked list.
+    bucket = [
+        _sr("How async works in Python", "https://www.example.com/post", rank=0),
+        # Same canonical host + near-identical title -> a title duplicate that
+        # sits in the top-3 by score.
+        _sr("How async works in Python", "https://amp.example.com/post", rank=1),
+        _sr("Totally different unique article", "https://other.com/a", rank=2),
+        # Just below the cutoff — must be pulled up to backfill the dropped dup.
+        _sr("Another distinct article here", "https://third.com/b", rank=3),
+    ]
+    out = _merge([bucket], max_results=3)
+    assert len(out) == 3, "dedup-before-slice must backfill to a full max_results"
+    urls = {r["url"] for r in out}
+    # Exactly one of the example.com variants survives.
+    assert len({u for u in urls if "example.com" in u}) == 1
+    # The previously-below-cutoff unique result was pulled in.
+    assert "https://third.com/b" in urls
+
+
+def test_merge_never_exceeds_max_results():
+    bucket = [
+        _sr(f"Unique title {i}", f"https://site{i}.com/x", rank=i) for i in range(10)
+    ]
+    out = _merge([bucket], max_results=4)
+    assert len(out) == 4
 
 
 # ---------------------------------------------------------------------------

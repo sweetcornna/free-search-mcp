@@ -193,6 +193,7 @@ def render_doc(result: dict[str, Any]) -> str:
     tokens = result.get("tokens_estimated")
     start = result.get("start", 0)
     length = result.get("returned_chars")
+    total_chars = result.get("total_chars")
     content = result.get("content") or ""
 
     parts = [f"_{fmt}: {source}_"]
@@ -200,7 +201,11 @@ def render_doc(result: dict[str, Any]) -> str:
         parts.append(f"{pages} pages")
     if tokens:
         parts.append(f"~{tokens} tokens")
-    if start or length:
+    # Only show the slice crumb for a genuine sub-range. A full read (start==0
+    # AND the whole document was returned) prints no crumb, since the crumb
+    # implies pagination that isn't happening (A7).
+    full_read = start == 0 and length is not None and length == total_chars
+    if (start or length) and not full_read:
         parts.append(f"slice [{start}:{(start + length) if length else ''}]")
     if truncated:
         parts.append("truncated")

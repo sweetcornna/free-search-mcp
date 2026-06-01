@@ -12,12 +12,42 @@ already includes the actual page text — same total tokens, far fewer turns.
 """
 from __future__ import annotations
 
+import asyncio
 from typing import Any, Literal
 
 from .aggregator import aggregate_search
-from .config import settings
-from .fetcher import fetch_many
+from .cache import cache
+from .fetcher import fetch_many, fetch_page
 from .formatting import estimate_tokens
+
+
+async def _fetch_with_freshness(
+    urls: list[str], page_max_age_seconds: int | None,
+) -> list[Any]:
+    """Fetch page bodies, honoring a per-page freshness ceiling.
+
+    When ``page_max_age_seconds`` is None we defer to the shared ``fetch_many``
+    (which serves whatever is cached within the default TTL). When it is set we
+    pre-check each page's age via ``cache.get_page(..., max_age_seconds=...)`` —
+    a miss means the cached body is too old, so we re-fetch that URL with
+    ``force_refresh=True``. ``page_max_age_seconds == 0`` forces every page to be
+    re-fetched. Per-URL errors are captured as ``{"url", "error"}`` dicts, same
+    contract as ``fetch_many``.
+    """
+    if page_max_age_seconds is None:
+        return await fetch_many(urls)
+
+    async def one(u: str):
+        try:
+            force = page_max_age_seconds == 0
+            if not force:
+                cached = await cache.get_page(u, max_age_seconds=page_max_age_seconds)
+                force = cached is None
+            return await fetch_page(u, force_refresh=force)
+        except Exception as e:  # mirror fetch_many's per-URL error capture
+            return {"url": u, "error": str(e)}
+
+    return await asyncio.gather(*(one(u) for u in urls))
 
 
 async def research(
@@ -27,6 +57,8 @@ async def research(
     fetch: bool = True,
     use_cache: bool = True,
     *,
+    max_age_seconds: int | None = None,
+    page_max_age_seconds: int | None = None,
     freshness: Literal["day", "week", "month", "year"] | None = None,
     include_domains: list[str] | None = None,
     exclude_domains: list[str] | None = None,
@@ -43,6 +75,7 @@ async def research(
         engines=engines,
         max_results=max(depth * 2, depth + 3),
         use_cache=use_cache,
+        max_age_seconds=max_age_seconds,
         freshness=freshness,
         include_domains=include_domains,
         exclude_domains=exclude_domains,
@@ -67,7 +100,7 @@ async def research(
     docs: list[dict[str, Any]] = []
     if fetch and sources:
         urls = [s["url"] for s in sources]
-        results = await fetch_many(urls)
+        results = await _fetch_with_freshness(urls, page_max_age_seconds)
         for src, r in zip(sources, results):
             if isinstance(r, dict) and "error" in r:
                 docs.append({"url": src["url"], "error": r["error"]})

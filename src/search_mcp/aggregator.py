@@ -213,8 +213,8 @@ def _merge(buckets: list[list[SearchResult]], max_results: int) -> list[dict[str
                 representative[url]["url"] = url
 
     ranked = sorted(scores.items(), key=lambda kv: kv[1], reverse=True)
-    out = []
-    for url, score in ranked[:max_results]:
+    out_full = []
+    for url, score in ranked:
         rec = representative[url]
         rec["engines"] = sorted(set(engines_for[url]))
         rec["score"] = round(score, 5)
@@ -225,10 +225,13 @@ def _merge(buckets: list[list[SearchResult]], max_results: int) -> list[dict[str
         # field is absent from output rather than noisy.
         if not rec.get("published_age"):
             rec.pop("published_age", None)
-        out.append(rec)
+        out_full.append(rec)
     # URL-keyed RRF already collapsed exact-URL dupes; this second pass kills
     # the cross-host syndication and AMP/mobile variants the URL key misses.
-    return _dedup_by_title(out)
+    # Dedup over the FULL ranked list BEFORE slicing so a title-duplicate inside
+    # the top-N is backfilled by the next unique result instead of leaving the
+    # caller short of max_results (#7).
+    return _dedup_by_title(out_full)[:max_results]
 
 
 async def aggregate_search(
@@ -237,6 +240,7 @@ async def aggregate_search(
     max_results: int | None = None,
     use_cache: bool = True,
     *,
+    max_age_seconds: int | None = None,
     freshness: Literal["day", "week", "month", "year"] | None = None,
     include_domains: list[str] | None = None,
     exclude_domains: list[str] | None = None,
@@ -262,10 +266,27 @@ async def aggregate_search(
     )
     cache_key = _key(query, engine_names, n, filters)
 
-    if use_cache:
-        hit = await cache.get_search(cache_key)
+    # Read-bypass and cache-WRITE are decoupled. `use_cache` gates BOTH the read
+    # and the write; `max_age_seconds` only tightens the read TTL. So a caller
+    # passing max_age_seconds=0 (force-refresh) still writes the fresh result
+    # back — caching is never silently disabled by a freshness request.
+    #   max_age_seconds is None  -> read with the server default TTL.
+    #   max_age_seconds == 0     -> always a read miss (force-refresh).
+    #   max_age_seconds > 0      -> read only if the row is younger than that.
+    if use_cache and max_age_seconds != 0:
+        hit = await cache.get_search(cache_key, max_age_seconds=max_age_seconds)
         if hit:
-            return {"query": query, "engines": engine_names, "cached": True, "results": hit}
+            # A4: recompute lead_snippet from the cached results so the rendered
+            # markdown keeps its '> **Lead:**' block. filter_diagnostics can't be
+            # rebuilt from results alone (it needs the per-engine raw/drop tallies
+            # that only exist on a fresh run), so it is intentionally fresh-only.
+            return {
+                "query": query,
+                "engines": engine_names,
+                "cached": True,
+                "results": hit,
+                "lead_snippet": _lead_snippet(query, hit),
+            }
 
     # Shared accumulator the engines populate with raw/filtered counts and
     # per-reason drop tallies. Only built when filters are non-default —
