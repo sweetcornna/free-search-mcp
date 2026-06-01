@@ -179,6 +179,24 @@ def _filter_hint(drops: dict[str, int], raw_total: int, kept_total: int) -> str:
     )
 
 
+def _gate_hint(gated: dict[str, str], fallback: dict[str, str]) -> str:
+    """One-line explanation of which engines were gated (CAPTCHA/consent/login)
+    and how each was handled (searx fallback, or nothing)."""
+    parts: list[str] = []
+    for name in sorted(set(gated) | set(fallback)):
+        reason = gated.get(name, "gated")
+        via = fallback.get(name)
+        if via:
+            parts.append(f"{name} was {reason}-gated → served via {via}")
+        else:
+            parts.append(f"{name} was {reason}-gated (no results)")
+    return (
+        "; ".join(parts)
+        + ". Configure a proxy (admin UI / SEARCH_MCP_PROXY) to route through a "
+        "non-blocked IP, or rely on the keyless default engines."
+    )
+
+
 def _key(query: str, engines: list[str], max_results: int, filters: SearchFilters) -> str:
     raw = json.dumps(
         {
@@ -288,10 +306,10 @@ async def aggregate_search(
                 "lead_snippet": _lead_snippet(query, hit),
             }
 
-    # Shared accumulator the engines populate with raw/filtered counts and
-    # per-reason drop tallies. Only built when filters are non-default —
-    # diagnostics are pure overhead on the happy path.
-    diagnostics: dict[str, Any] | None = None if filters.is_empty() else {}
+    # Shared accumulator the engines populate with raw/filtered counts, per-reason
+    # drop tallies, and gate/fallback signals. Always built (cheap dict writes) so
+    # gates (CAPTCHA/consent/login) are captured even on unfiltered queries.
+    diagnostics: dict[str, Any] = {}
 
     async def run(name: str) -> tuple[str, list[SearchResult] | Exception]:
         try:
@@ -328,10 +346,10 @@ async def aggregate_search(
         "errors": errors or None,
     }
 
-    # Surface diagnostics ONLY when (a) the user actually set a filter, AND
-    # (b) the final result set is sparse. Otherwise omit the field entirely
+    # Surface filter diagnostics ONLY when (a) the user actually set a filter,
+    # AND (b) the final result set is sparse. Otherwise omit the field entirely
     # so happy-path output stays clean.
-    if diagnostics is not None and len(merged) <= 3:
+    if not filters.is_empty() and len(merged) <= 3:
         raw_per_engine = diagnostics.get("raw_per_engine", {})
         after_per_engine = diagnostics.get("after_filter_per_engine", {})
         drops = diagnostics.get("drops_by_reason", {})
@@ -342,6 +360,18 @@ async def aggregate_search(
             "drops_by_reason": drops,
             "hint": _filter_hint(drops, raw_total, len(merged)),
         }
+
+    # Surface gate/fallback signals (CAPTCHA / consent / login walls) so the
+    # caller learns WHY an engine returned nothing — and whether a searx
+    # fallback covered it — instead of seeing a silent gap.
+    gated = diagnostics.get("gated") or {}
+    fallback = diagnostics.get("fallback") or {}
+    if gated or fallback:
+        payload["gated_engines"] = {
+            name: {"reason": gated.get(name, "gated"), "fallback": fallback.get(name)}
+            for name in sorted(set(gated) | set(fallback))
+        }
+        payload["gated_hint"] = _gate_hint(gated, fallback)
 
     return payload
 

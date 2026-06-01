@@ -33,6 +33,36 @@ shakedown.
 
 ---
 
+## 🚀 One-click deploy
+
+Three commands — keyless engines work immediately, no signup, no key:
+
+```bash
+git clone https://github.com/sweetcornna/free-search-mcp.git
+cd free-search-mcp
+./scripts/install.sh        # installs uv + deps + Chromium, writes .env, smoke-tests
+```
+
+Then wire it into your client (pick one):
+
+```bash
+# Claude Code — register the server globally
+claude mcp add search uv -- --directory "$PWD" run search-mcp
+# …or just run `claude` inside the repo: the bundled .mcp.json auto-detects it.
+```
+
+Optional extras, any time (the defaults already work without them):
+
+```bash
+uv run search-mcp-admin        # browser UI to add API keys / a proxy  (127.0.0.1:8765)
+uv run search-mcp-login zhihu  # one-time Zhihu login (persists cookies)
+```
+
+Prefer containers? `docker compose run --rm search-mcp`. Claude Desktop and
+other clients: see [Install](#install) below.
+
+---
+
 ## Why this exists
 
 Existing search MCPs each do one thing well, but you usually want all of it:
@@ -137,6 +167,81 @@ Opt-in:
 - `brave`, `bing`, `baidu` — intermittent challenges to headless clients.
 - `searx` — meta-search proxy via public SearXNG instances; included for
   completeness but most public instances are slow/unreliable in 2026.
+- `google` — keyless Google web SERP scrape (HTTP first, Playwright
+  fallback when Google serves a JS/consent shell). `serpsearch` is a pure
+  alias of `google` (all dedicated "SERP APIs" require a key, so the only
+  keyless SERP is a direct scrape).
+- `anysearch` — [AnySearch](https://github.com/anysearch-ai/anysearch-mcp-server)
+  unified-search REST API, anonymous (keyless) tier; one HTTP call returns
+  fused, re-ranked results. IP rate-limited; 429/5xx degrade to empty.
+- `bilibili` — keyless Bilibili (哔哩哔哩) video search via the public
+  `web-interface/search/all/v2` JSON API (synthetic `buvid3` cookie, no
+  login). Returns video results only.
+- `zhihu` — **best-effort** keyless Zhihu (知乎) search. Zhihu's
+  `api/v4/search_v3` needs login cookies + `x-zse-96` signing, so the only
+  no-key path is browser-rendering the public search page. Zhihu hard-gates
+  headless clients, so a login wall / empty result is common and honest —
+  treat it like `baidu`/`brave`.
+
+> All five added engines are **keyless** (no API key, no account) and stay
+> **opt-in** — they're not in the fast default pool, so the ~2x latency win
+> of the all-HTTP defaults is preserved. Enable per call with
+> `engines=["google","bilibili", ...]`, or globally via
+> `SEARCH_MCP_DEFAULT_ENGINES`.
+
+### API-key engines & the admin backend
+
+Keyless is the default, but you can also plug in keyed providers for higher
+reliability/quality. These engines stay dormant (and return a clear "not
+configured" hint) until you add a key:
+
+| Engine | Provider | Free tier |
+|---|---|---|
+| `brave_api` | [Brave Search API](https://brave.com/search/api/) | 2,000 queries/mo |
+| `serper` | [Serper](https://serper.dev) (Google) | 2,500 queries |
+| `tavily` | [Tavily](https://app.tavily.com) (AI search) | 1,000 credits/mo |
+| `google_cse` | [Google Custom Search](https://programmablesearchengine.google.com/) | 100 queries/day |
+| `anysearch` | [AnySearch](https://anysearch.com) (key optional) | keyless works; key lifts limits |
+
+**Simplest setup — the admin UI:**
+
+```bash
+uv run search-mcp-admin          # opens a local config page on 127.0.0.1:8765
+```
+
+It serves one page (bound to localhost only) with, per provider: a
+**how-to-get-a-key** guide + signup link, a masked key field, **Save** (applies
+live — no server restart), a **Test** button, and **Clear**. Keys are written to
+`~/.config/search-mcp/config.json` (`0600`); they're never echoed back to the
+page. Prefer env vars? Set `SEARCH_MCP_<PROVIDER>_API_KEY` instead (these
+override the saved file). Full walkthrough for each provider:
+**[docs/API_KEYS.md](docs/API_KEYS.md)**.
+
+```text
+search("…", engines=["brave_api"])        # once a key is saved
+search("…", engines=["tavily", "serper"]) # mix keyed + keyless freely
+```
+
+### When an engine is gated (proxy · fallback · login)
+
+Some engines get blocked by the *provider* — Google/Bing serve a CAPTCHA to
+datacenter IPs, Zhihu needs a login. We don't defeat CAPTCHAs (ToS); instead:
+
+- **Proxy** (the real fix for IP gating): set a proxy in the admin UI
+  "Network / Proxy" card or `SEARCH_MCP_PROXY` (`http`/`https`/`socks5`, optional
+  `user:pass@`). It routes the HTTP engines, the browser, and `fetch` through a
+  non-blocked IP. Scope it with `SEARCH_MCP_PROXY_ENGINES="google bing zhihu"`.
+- **SearXNG auto-fallback**: when `google`/`serpsearch`/`bing` are CAPTCHA-gated,
+  they transparently retry via the working `searx` meta-search — you still get
+  results, honestly attributed to `searx`.
+- **Gate diagnostics**: the response includes `gated_engines` + `gated_hint`
+  telling you which engine was gated (`captcha`/`consent`/`login`) and how it was
+  handled.
+- **Zhihu login**: run `uv run search-mcp-login zhihu` (or the admin "Login"
+  button) once — a browser opens, you log in, cookies persist, and `zhihu` search
+  then works. Requires a desktop session.
+
+Full guide: **[docs/PROXY_AND_GATES.md](docs/PROXY_AND_GATES.md)**.
 
 > Brave/Bing/Baidu all gate headless browsers after a handful of calls (PoW
 > CAPTCHAs, "something went wrong" pages, redirect wrappers). Pass
@@ -160,11 +265,21 @@ category=forum. Try widening or removing one filter.
 
 ## Install
 
+### One-click setup
+
 ```bash
-git clone https://github.com/ymylive/free-search-mcp.git
+git clone https://github.com/sweetcornna/free-search-mcp.git
 cd free-search-mcp
+./scripts/install.sh        # installs uv (if needed) + deps + Chromium, writes .env, smoke-tests
+```
+
+The script prints the exact command to wire the server into Claude Code or
+Claude Desktop when it finishes. Prefer to do it by hand?
+
+```bash
 uv sync
 uv run playwright install chromium
+cp .env.example .env        # optional: customize engines/limits
 ```
 
 Run as a stand-alone server (stdio transport):
@@ -173,15 +288,37 @@ Run as a stand-alone server (stdio transport):
 uv run search-mcp
 ```
 
-Run live tests (hits the real web — set the env var):
+### Docker (one-click, containerized)
 
 ```bash
-SEARCH_MCP_TEST_NETWORK=1 uv run pytest -v
+docker compose build
+docker compose run --rm search-mcp     # attaches stdio for MCP
 ```
 
-Offline tests run by default and don't touch the network.
+### Config & env vars
+
+All settings are env vars prefixed with `SEARCH_MCP_`. Copy `.env.example` →
+`.env` and edit — it documents every knob, including how to enable the new
+engines via `SEARCH_MCP_DEFAULT_ENGINES`. See the full table under
+[Configuration](#configuration) and the [usage guide](docs/USAGE.md).
+
+### Tests
+
+```bash
+uv run pytest -q                              # offline (default, no network)
+SEARCH_MCP_TEST_NETWORK=1 uv run pytest -v    # live tests, hit the real web
+```
 
 ---
+
+## Wire into Claude Code
+
+This repo ships a project-scoped `.mcp.json`, so running `claude` inside the
+project auto-detects the `search` server. To register it globally instead:
+
+```bash
+claude mcp add search uv -- --directory /absolute/path/to/free-search-mcp run search-mcp
+```
 
 ## Wire into Claude Desktop
 
@@ -199,7 +336,7 @@ Add this to `~/Library/Application Support/Claude/claude_desktop_config.json`
 }
 ```
 
-Restart Claude Desktop. The seven tools above will appear in the tool
+Restart Claude Desktop. The nine tools above will appear in the tool
 drawer.
 
 ### Wire into other clients
@@ -258,6 +395,11 @@ All settings can be overridden by environment variables prefixed with
    │   brave.py     (opt) │  └────────────────────────────┘
    │   bing.py      (opt) │
    │   baidu.py     (opt) │
+   │   google.py    (opt) │
+   │   serpsearch.py(opt) │
+   │   anysearch.py (opt) │
+   │   bilibili.py  (opt) │
+   │   zhihu.py     (opt) │
    └──────────────────────┘
 
    ┌────────────────────────────┐    ┌──────────────────┐

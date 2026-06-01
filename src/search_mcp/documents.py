@@ -13,6 +13,7 @@ from markdownify import markdownify as html_to_md
 from pypdf import PdfReader
 
 from .config import settings
+from .net import proxy_url
 from .fetcher import (
     _accumulate_capped,
     _check_content_length,
@@ -169,6 +170,7 @@ async def _read_remote(url: str) -> tuple[bytes, str | None]:
         # each hop with assert_url_allowed.
         follow_redirects=False,
         headers={"User-Agent": settings.user_agent},
+        proxy=proxy_url(),
     ) as client:
         current = url
         for _ in range(_MAX_REDIRECTS + 1):

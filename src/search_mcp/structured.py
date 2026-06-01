@@ -16,6 +16,7 @@ from selectolax.parser import HTMLParser
 from w3lib.html import get_base_url
 
 from .config import settings
+from .net import proxy_url
 from .fetcher import (
     _accumulate_capped,
     _check_content_length,
@@ -68,6 +69,7 @@ async def extract_structured(url: str) -> dict[str, Any]:
         # each hop with assert_url_allowed so a 30x can't reach an internal IP.
         follow_redirects=False,
         headers={"User-Agent": settings.user_agent},
+        proxy=proxy_url(),
     ) as client:
         current = url
         body = b""

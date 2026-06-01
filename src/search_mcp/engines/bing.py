@@ -1,5 +1,6 @@
 import asyncio
 
+from typing import Any
 from urllib.parse import quote_plus
 
 from ..browser import pool
@@ -33,13 +34,43 @@ class BingEngine(Engine):
     _warmup_lock = asyncio.Lock()
     _warmed = False
 
-    async def search(self, query: str, max_results: int, filters: SearchFilters | None = None):
+    async def search(
+        self,
+        query: str,
+        max_results: int,
+        filters: SearchFilters | None = None,
+        diagnostics: dict[str, Any] | None = None,
+    ) -> list[SearchResult]:
+        """Warm the browser pool, scrape Bing, then fall back to SearXNG when
+        the provider gated us.
+
+        The warmup primes Playwright against the www4 edge (Bing serves a JS
+        interstitial/captcha to non-browser clients). ``base.search()`` then
+        proxies the fetch and records any gate into
+        ``diagnostics["gated"][self.name]``. An empty result set almost always
+        means a CAPTCHA/consent gate, so we recover keylessly via the working
+        SearXNG meta-search (it proxies Google/Bing). Fallback results keep
+        ``engine="searx"`` for honest attribution. Never raises.
+        """
         if not BingEngine._warmed:
             async with BingEngine._warmup_lock:
                 if not BingEngine._warmed:
                     await pool.warmup("https://www4.bing.com/")
                     BingEngine._warmed = True
-        return await super().search(query, max_results, filters)
+        results = await super().search(
+            query, max_results, filters, diagnostics=diagnostics
+        )
+        if results:
+            return results
+        # Empty almost always means a CAPTCHA/consent gate. Recover keyless via
+        # the working SearXNG meta-search (it proxies Google/Bing results).
+        from .searx import SearxEngine
+
+        fb = await SearxEngine().search(query, max_results, filters)
+        if fb and diagnostics is not None:
+            diagnostics.setdefault("gated", {}).setdefault(self.name, "gated")
+            diagnostics.setdefault("fallback", {})[self.name] = "searx"
+        return fb
 
     def build_url(
         self, query: str, max_results: int, filters: SearchFilters | None = None

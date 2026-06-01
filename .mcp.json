@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "search": {
+      "command": "uv",
+      "args": ["run", "search-mcp"]
+    }
+  }
+}

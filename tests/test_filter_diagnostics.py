@@ -183,6 +183,37 @@ async def test_aggregate_omits_diagnostics_when_no_filters_set():
     assert "filter_diagnostics" not in out
 
 
+# ---------------------------------------------------------------------------
+# aggregate_search — gate diagnostics (CAPTCHA / consent / login walls)
+# ---------------------------------------------------------------------------
+
+
+async def test_aggregate_surfaces_gated_engine_even_without_filters():
+    """When an engine gets a CAPTCHA shell instead of results, the response must
+    name the gated engine + reason — even on an unfiltered query."""
+    e = get_engine("googlenews")  # supports_browser_fallback=False → no real render
+    captcha = "<html> /sorry/index?continue=… unusual traffic </html>"
+    with patch.object(e, "_fetch", return_value=captcha):
+        out = await aggregate_search(
+            "x", engines=["googlenews"], max_results=5, use_cache=False,
+        )
+    assert out["results"] == []
+    assert out.get("gated_engines") == {
+        "googlenews": {"reason": "captcha", "fallback": None}
+    }
+    assert "captcha" in out.get("gated_hint", "")
+
+
+async def test_aggregate_no_gate_field_on_normal_results():
+    e = get_engine("duckduckgo")
+    with patch.object(e, "_fetch", return_value=_DDG_FAKE_HTML_PLENTIFUL):
+        out = await aggregate_search(
+            "x", engines=["duckduckgo"], max_results=10, use_cache=False,
+        )
+    assert "gated_engines" not in out
+    assert "gated_hint" not in out
+
+
 async def test_aggregate_diagnostic_hint_names_top_dropping_filter():
     """The hint sentence must mention the highest-drop filter name."""
     e = get_engine("duckduckgo")

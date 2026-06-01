@@ -1,6 +1,6 @@
 [project]
 name = "search-mcp"
-version = "0.1.0"
+version = "0.2.0"
 description = "Local-first, no-API-key search MCP server. Multi-engine web search, smart fetching, document reading."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -27,6 +27,8 @@ dependencies = [
 
 [project.scripts]
 search-mcp = "search_mcp.__main__:main"
+search-mcp-admin = "search_mcp.admin:main"
+search-mcp-login = "search_mcp.login:main"
 
 [build-system]
 requires = ["hatchling"]

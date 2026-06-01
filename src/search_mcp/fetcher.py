@@ -15,6 +15,7 @@ from .browser import pool
 from .cache import cache
 from .config import settings
 from .formatting import estimate_tokens, smart_truncate
+from .net import curl_proxy_kwargs
 from .ratelimit import RateLimiter
 from .url_safety import assert_url_allowed
 
@@ -273,6 +274,7 @@ async def _http_fetch(url: str) -> tuple[str, str]:
             "Accept-Language": settings.accept_language,
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         },
+        **curl_proxy_kwargs(),
     ) as client:
         current = url
         for _ in range(_MAX_REDIRECTS + 1):

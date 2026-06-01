@@ -13,6 +13,7 @@ from selectolax.parser import HTMLParser
 
 from ..browser import pool
 from ..config import settings
+from ..net import curl_proxy_kwargs
 
 
 # Pinned at chrome131 to match the desktop UA we send elsewhere. curl_cffi
@@ -455,6 +456,65 @@ def augment_query_with_operators(
     return " ".join(parts)
 
 
+# --- gate detection --------------------------------------------------------
+# Substrings that mark a "gated" response — a CAPTCHA / consent / login wall
+# served INSTEAD of results. Lets engines turn a silent empty into an honest,
+# actionable reason, and lets gated SERP engines trigger a searx fallback.
+# Lower-cased haystack; order = priority (captcha > consent > login).
+_GATE_MARKERS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    (
+        "captcha",
+        (
+            "/sorry/index",          # Google "/sorry/" interstitial
+            "unusual traffic",
+            "/recaptcha/",
+            "g-recaptcha",
+            "h-captcha",
+            "captcha-delivery",
+            "px-captcha",
+            "are you a robot",
+            "verify you are a human",
+        ),
+    ),
+    (
+        "consent",
+        (
+            "consent.google.com",
+            "consent.youtube.com",
+            "before you continue",
+            "consent.bing.com",
+        ),
+    ),
+    (
+        "login",
+        (
+            "请登录",                 # zhihu / generic CN login wall
+            "登录知乎",
+            "signflow",              # zhihu login modal class
+            "sign in to continue",
+            "you must log in",
+            "please log in to continue",
+        ),
+    ),
+)
+
+
+def detect_gate(html: str) -> str | None:
+    """Best-effort: classify a page as a gate (``"captcha"``/``"consent"``/
+    ``"login"``) when it carries a known wall marker, else ``None``.
+
+    Used to (a) surface an honest reason instead of a silent empty result set,
+    and (b) let gated SERP engines fall back to a working meta-search. Never
+    raises; a normal results page returns ``None``."""
+    if not html:
+        return None
+    low = html.lower()
+    for reason, markers in _GATE_MARKERS:
+        if any(m in low for m in markers):
+            return reason
+    return None
+
+
 class Engine(abc.ABC):
     name: str
     needs_browser: bool = False
@@ -504,6 +564,13 @@ class Engine(abc.ABC):
             # HTTP succeeded but the page was an interstitial/captcha shell.
             _, html = await pool.fetch_html(url, wait_selector=self.wait_selector)
             results = self.parse(html)
+        # When we got nothing, check whether the page was a gate (CAPTCHA /
+        # consent / login wall) and record an honest reason so the aggregator
+        # can explain the empty result instead of silently dropping the engine.
+        if not results and diagnostics is not None:
+            reason = detect_gate(html)
+            if reason:
+                diagnostics.setdefault("gated", {})[self.name] = reason
         # Client-side post-filter BEFORE truncation, so we don't waste the budget
         # on hits that the engine returned but the user excluded.
         if diagnostics is not None:
@@ -538,6 +605,7 @@ class Engine(abc.ABC):
                     "Accept-Language": settings.accept_language,
                     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
                 },
+                **curl_proxy_kwargs(self.name),
             ) as client:
                 resp = await client.get(url)
                 resp.raise_for_status()

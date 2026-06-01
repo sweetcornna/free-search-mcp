@@ -26,6 +26,7 @@ from curl_cffi.requests import AsyncSession
 from curl_cffi.requests.exceptions import RequestException
 
 from ..config import settings
+from ..net import curl_proxy_kwargs
 from .base import (
     Engine,
     SearchFilters,
@@ -148,6 +149,7 @@ class SearxEngine(Engine):
                         "application/xml;q=0.9,*/*;q=0.8"
                     ),
                 },
+                **curl_proxy_kwargs("searx"),
             ) as client:
                 resp = await client.get(url)
                 if resp.status_code != 200:

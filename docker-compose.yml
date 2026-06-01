@@ -1,0 +1,23 @@
+# Build + run free-search-mcp in a container.
+#   docker compose build
+#   docker compose run --rm search-mcp     # attaches stdio for MCP
+#
+# To wire into a client, point the client's command at:
+#   docker compose run --rm search-mcp
+# (or `docker run -i --rm search-mcp`).
+services:
+  search-mcp:
+    build: .
+    image: search-mcp
+    # MCP uses stdio — STDIN must stay open.
+    stdin_open: true
+    tty: false
+    volumes:
+      - search-mcp-cache:/data
+    environment:
+      # Override any SEARCH_MCP_* knob here (see .env.example for the full list).
+      SEARCH_MCP_DEFAULT_ENGINES: '["duckduckgo","mojeek","googlenews"]'
+      SEARCH_MCP_CACHE_DIR: /data
+
+volumes:
+  search-mcp-cache:
