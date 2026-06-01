@@ -36,6 +36,11 @@ class BaiduEngine(Engine):
         # Baidu has no reliable freshness URL parameter for the public HTML
         # endpoint (the gpc=stf=… token requires unix timestamps and is
         # session-bound). Skip and let the client-side filter handle it.
+        #
+        # safesearch/region: Baidu is a China-locale, Mandarin-first index with
+        # no documented stable query param for either (its SafeSearch is account
+        # /session-bound, not URL-driven). We deliberately emit neither rather
+        # than send a token Baidu will ignore or that would skew results.
         return f"https://www.baidu.com/s?wd={quote_plus(q)}&rn={rn}"
 
     def parse(self, html: str) -> list[SearchResult]:

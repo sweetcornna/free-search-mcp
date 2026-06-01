@@ -3,13 +3,16 @@ import asyncio
 from urllib.parse import quote_plus
 
 from ..browser import pool
+from ..config import settings
 from .base import (
     Engine,
     SearchFilters,
     SearchResult,
+    _region_to_bing_market,
     augment_query_with_operators,
     extract_date_hint,
     parse_html,
+    safesearch_param,
     text_of,
 )
 
@@ -58,6 +61,13 @@ class BingEngine(Engine):
         url = f"https://www4.bing.com/search?q={quote_plus(q)}&count={count}"
         if filters and filters.freshness:
             url += f"&filters={quote_plus(_BING_FRESHNESS[filters.freshness])}"
+        # SafeSearch: adlt=strict|moderate|off maps 1:1 to our setting.
+        adlt = safesearch_param(self.name)
+        if adlt is not None:
+            url += f"&adlt={adlt}"
+        # Region -> Bing market code, e.g. us-en -> en-US, uk-en -> en-GB.
+        if settings.region:
+            url += f"&mkt={quote_plus(_region_to_bing_market(settings.region))}"
         return url
 
     def parse(self, html: str) -> list[SearchResult]:

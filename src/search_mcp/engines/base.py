@@ -223,6 +223,63 @@ def _strip_query(url: str) -> str:
     return url.split("?", 1)[0].split("#", 1)[0]
 
 
+# Freshness windows, in days. A result older than the window is "outside" it.
+# Generous upper bounds (month=31, year=366) avoid off-by-one over-dropping.
+_FRESHNESS_MAX_DAYS = {"day": 1, "week": 7, "month": 31, "year": 366}
+
+# Relative-phrase units -> approximate days. Coarse on purpose: we only need to
+# decide in/out of a window, not compute an exact date.
+_AGE_UNIT_DAYS = {
+    "minute": 1.0 / 1440,
+    "hour": 1.0 / 24,
+    "day": 1.0,
+    "week": 7.0,
+    "month": 30.0,
+    "year": 365.0,
+}
+
+_AGE_REL_RE = re.compile(
+    r"\b(\d+)\s*(minute|hour|day|week|month|year)s?\s*ago\b", re.I
+)
+_AGE_ISO_RE = re.compile(r"\b(\d{4})-(\d{2})-(\d{2})\b")
+
+
+def _published_age_in_days(published_age: str) -> float | None:
+    """Best-effort: convert a ``published_age`` hint into an age in days.
+
+    Handles the two shapes ``published_age`` ever holds (see
+    :func:`extract_date_hint` / GoogleNews ``_format_pubdate``):
+      * ``"N units ago"`` — relative phrase.
+      * ``"YYYY-MM-DD"``  — ISO date.
+
+    Returns ``None`` when the hint is empty or unparseable, which the caller
+    treats as "unknown — keep" so we never over-drop.
+    """
+    if not published_age:
+        return None
+    s = published_age.strip()
+
+    rel = _AGE_REL_RE.search(s)
+    if rel:
+        n = int(rel.group(1))
+        unit = rel.group(2).lower()
+        per = _AGE_UNIT_DAYS.get(unit)
+        if per is not None:
+            return n * per
+
+    iso = _AGE_ISO_RE.search(s)
+    if iso:
+        try:
+            d = datetime.strptime(iso.group(0), "%Y-%m-%d")
+        except ValueError:
+            return None
+        age = (datetime.now() - d).total_seconds() / 86400.0
+        # Future-dated (clock skew / TZ): treat as "now", i.e. age 0.
+        return max(age, 0.0)
+
+    return None
+
+
 def apply_post_filters(
     results: list[SearchResult], filters: SearchFilters | None
 ) -> list[SearchResult]:
@@ -308,8 +365,69 @@ def apply_post_filters_with_diagnostics(
                 _bump("exclude_text")
                 continue
 
+        # Client-side freshness enforcement. Engines under-honor (baidu omits
+        # any freshness param entirely) or silently ignore the freshness URL
+        # operator, so re-check here using the parsed publication hint. We only
+        # drop results we can PROVE are stale: an empty/unparseable
+        # published_age is kept (unknown != old) to avoid over-dropping.
+        if filters.freshness is not None:
+            age_days = _published_age_in_days(r.published_age)
+            if age_days is not None:
+                max_days = _FRESHNESS_MAX_DAYS.get(filters.freshness)
+                if max_days is not None and age_days > max_days:
+                    _bump("freshness")
+                    continue
+
         out.append(r)
     return out, drops
+
+
+# --- safesearch / region wiring -------------------------------------------
+# ``settings.safesearch`` ('strict'|'moderate'|'off') and ``settings.region``
+# (a DDG-style 'cc-lang' token, e.g. 'us-en', 'uk-en') are user-facing knobs.
+# Each engine spells these differently, so we centralise the per-engine value
+# maps here and expose tiny helpers the engines call from build_url.
+
+# DuckDuckGo html endpoint: kp=1 strict, kp=-1 moderate, kp=-2 off.
+_DDG_SAFESEARCH = {"strict": "1", "moderate": "-1", "off": "-2"}
+# Bing: adlt=strict|moderate|off maps 1:1 to our vocabulary.
+_BING_SAFESEARCH = {"strict": "strict", "moderate": "moderate", "off": "off"}
+# Brave: safesearch=strict|moderate|off maps 1:1.
+_BRAVE_SAFESEARCH = {"strict": "strict", "moderate": "moderate", "off": "off"}
+# Mojeek: safe is binary (1 = filter on, 0 = off). Treat strict/moderate as on.
+_MOJEEK_SAFESEARCH = {"strict": "1", "moderate": "1", "off": "0"}
+# Startpage: family filter is binary (1 = on, 0 = off).
+_STARTPAGE_SAFESEARCH = {"strict": "1", "moderate": "1", "off": "0"}
+
+
+def _region_to_bing_market(region: str) -> str:
+    """Turn a 'cc-lang' region token ('us-en', 'uk-en') into a Bing mkt code
+    ('en-US', 'en-GB'). Falls back to a sane default on malformed input."""
+    if not region or "-" not in region:
+        return "en-US"
+    cc, _, lang = region.partition("-")
+    cc = cc.strip().upper()
+    lang = (lang.strip() or "en").lower()
+    # Bing uses GB, not UK, for the United Kingdom country code.
+    if cc == "UK":
+        cc = "GB"
+    return f"{lang}-{cc}"
+
+
+def safesearch_param(engine: str) -> str | None:
+    """Return the engine-specific safesearch value for the current setting, or
+    ``None`` when the engine has no usable parameter / the map lacks the key."""
+    val = settings.safesearch
+    table = {
+        "duckduckgo": _DDG_SAFESEARCH,
+        "bing": _BING_SAFESEARCH,
+        "brave": _BRAVE_SAFESEARCH,
+        "mojeek": _MOJEEK_SAFESEARCH,
+        "startpage": _STARTPAGE_SAFESEARCH,
+    }.get(engine)
+    if table is None:
+        return None
+    return table.get(val)
 
 
 def augment_query_with_operators(
@@ -341,6 +459,13 @@ class Engine(abc.ABC):
     name: str
     needs_browser: bool = False
     wait_selector: str | None = None
+    # When parse() yields nothing on the HTTP path, the base search() retries
+    # via a Playwright render to recover from interstitial/captcha shells.
+    # That recovery only makes sense for HTML engines: an RSS/XML feed that
+    # parsed to [] is genuinely empty (or malformed), and re-rendering it in a
+    # headless browser just burns ~1s for the same empty result. RSS-backed
+    # engines set this False to opt out of the wasted render.
+    supports_browser_fallback: bool = True
 
     @abc.abstractmethod
     def build_url(
@@ -370,7 +495,12 @@ class Engine(abc.ABC):
         url = self.build_url(query, max_results, filters)
         html = await self._fetch(url)
         results = self.parse(html)
-        if not results and not self.needs_browser and settings.fetch_strategy == "auto":
+        if (
+            not results
+            and self.supports_browser_fallback
+            and not self.needs_browser
+            and settings.fetch_strategy == "auto"
+        ):
             # HTTP succeeded but the page was an interstitial/captcha shell.
             _, html = await pool.fetch_html(url, wait_selector=self.wait_selector)
             results = self.parse(html)
