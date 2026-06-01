@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Literal
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEFAULT_CACHE_DIR = Path.home() / ".cache" / "search-mcp"
@@ -24,8 +25,8 @@ class Settings(BaseSettings):
     default_engines: list[str] = ["duckduckgo", "mojeek", "googlenews"]
     max_results_per_engine: int = 10
 
-    rate_limit_per_minute: int = 30
-    fetch_rate_limit_per_minute: int = 20
+    rate_limit_per_minute: int = Field(default=30, gt=0)
+    fetch_rate_limit_per_minute: int = Field(default=20, gt=0)
 
     request_timeout: float = 15.0
     fetch_timeout: float = 25.0
@@ -46,6 +47,21 @@ class Settings(BaseSettings):
     region: str = "us-en"
 
     log_level: str = "INFO"
+
+    # --- Safety / sandbox knobs -------------------------------------------
+    # SSRF guard escape hatch: when False (default) URLs that resolve to
+    # loopback/link-local/private/reserved addresses are rejected.
+    allow_private_hosts: bool = False
+    # read_doc local-file sandbox root. None (default) DISABLES local file
+    # reads entirely — the user opts in by pointing this at a directory.
+    document_root: Path | None = None
+    # Response-bomb guard: cap on remote response body bytes.
+    max_response_bytes: int = 25_000_000
+    # Decompression-bomb guard: max PDF pages to parse.
+    max_pdf_pages: int = 200
+    # Cap on extracted document text (distinct from max_content_chars, which
+    # is the fetch-truncation knob for web pages).
+    max_document_chars: int = 2_000_000
 
     def cache_path(self) -> Path:
         self.cache_dir.mkdir(parents=True, exist_ok=True)

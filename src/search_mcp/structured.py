@@ -16,6 +16,13 @@ from selectolax.parser import HTMLParser
 from w3lib.html import get_base_url
 
 from .config import settings
+from .fetcher import (
+    _accumulate_capped,
+    _check_content_length,
+    _resolve_redirect_location,
+    _MAX_REDIRECTS,
+)
+from .url_safety import assert_url_allowed
 
 
 _SYNTAXES = ["json-ld", "microdata", "opengraph", "rdfa", "microformat"]
@@ -52,27 +59,70 @@ async def extract_structured(url: str) -> dict[str, Any]:
     `meta_fallback` dict of bare ``<meta>`` tags (if any) and a `hint`
     explaining why the page produced no structured data.
     """
+    # SSRF guard: validate the caller URL before opening a socket.
+    assert_url_allowed(url)
+    status = 200
     async with httpx.AsyncClient(
         timeout=settings.fetch_timeout,
-        follow_redirects=True,
+        # Automatic redirects DISABLED; we follow Location by hand and re-check
+        # each hop with assert_url_allowed so a 30x can't reach an internal IP.
+        follow_redirects=False,
         headers={"User-Agent": settings.user_agent},
     ) as client:
-        resp = await client.get(url)
-        resp.raise_for_status()
-        html = resp.text
+        current = url
+        body = b""
+        encoding = "utf-8"
+        for _ in range(_MAX_REDIRECTS + 1):
+            async with client.stream("GET", current) as resp:
+                if resp.status_code in (301, 302, 303, 307, 308):
+                    nxt = _resolve_redirect_location(
+                        current, resp.headers.get("location")
+                    )
+                    if not nxt:
+                        raise RuntimeError(f"redirect with no Location from {current}")
+                    assert_url_allowed(nxt)
+                    current = nxt
+                    continue
+                # DO NOT raise on non-2xx: a 403/503 bot-block still ships an
+                # HTML shell we want to run through the meta_fallback/hint path.
+                # Only genuine transport errors (httpx.* exceptions from
+                # client.stream) propagate. Caps still apply to the shell body.
+                status = resp.status_code
+                _check_content_length(resp.headers)
+                body = await _accumulate_capped(resp.aiter_bytes())
+                encoding = resp.encoding or "utf-8"
+                break
+        else:
+            raise RuntimeError(f"too many redirects (>{_MAX_REDIRECTS}) fetching {url}")
 
-    return extract_structured_from_html(html, url)
+    html = body.decode(encoding, errors="replace")
+    return extract_structured_from_html(html, url, status=status)
 
 
-def extract_structured_from_html(html: str, url: str) -> dict[str, Any]:
-    """Pure-function variant for unit tests and callers that already have HTML."""
-    base_url = get_base_url(html, url)
-    data = extruct.extract(
-        html,
-        base_url=base_url,
-        syntaxes=_SYNTAXES,
-        uniform=True,
-    )
+def extract_structured_from_html(
+    html: str, url: str, *, status: int = 200
+) -> dict[str, Any]:
+    """Pure-function variant for unit tests and callers that already have HTML.
+
+    ``status`` is the HTTP status the HTML came back with (200 for the pure
+    unit-test path). A non-2xx status is woven into the diagnostic hint so the
+    caller can tell "site has no structured data" apart from "site bot-blocked
+    us with a 403/503 shell".
+    """
+    # extruct/w3lib can blow up on pathological HTML. Treat any failure as
+    # "no structured data" and fall through to the meta_fallback/hint path
+    # rather than letting the exception escape the tool.
+    try:
+        base_url = get_base_url(html, url)
+        data = extruct.extract(
+            html,
+            base_url=base_url,
+            syntaxes=_SYNTAXES,
+            uniform=True,
+        )
+    except Exception:
+        data = {}
+
     result: dict[str, Any] = {
         "url": url,
         "json_ld": data.get("json-ld", []) or [],
@@ -95,6 +145,11 @@ def extract_structured_from_html(html: str, url: str) -> dict[str, Any]:
             "(try fetch with render='browser'), (3) site blocks bots and served "
             "an empty shell. Bare <meta> tags surfaced as `meta_fallback` if any."
         )
+        if status >= 400:
+            hint += (
+                f" The page returned HTTP {status}, so this is very likely a "
+                "bot-block/error shell rather than the real content."
+            )
         if not meta:
             hint += (
                 " No fallback meta tags either — the response was likely a "

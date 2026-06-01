@@ -16,6 +16,7 @@ from .cache import cache
 from .config import settings
 from .formatting import estimate_tokens, smart_truncate
 from .ratelimit import RateLimiter
+from .url_safety import assert_url_allowed
 
 log = logging.getLogger(__name__)
 fetch_limiter = RateLimiter(settings.fetch_rate_limit_per_minute)
@@ -145,8 +146,21 @@ def _extract(html: str, url: str) -> tuple[str, str, str, str, str]:
     date = ""
     sitename = ""
 
+    # Parse the HTML ONCE (trafilatura otherwise re-parses it for both
+    # extract_metadata and extract). Both calls accept a pre-parsed
+    # lxml.html.HtmlElement; verified that metadata-then-extract on a shared
+    # tree yields output identical to the string path. If parsing fails we
+    # fall back to passing the raw string, preserving the old behaviour.
     try:
-        meta = trafilatura.extract_metadata(html)
+        doc = trafilatura.load_html(html)
+    except Exception as e:
+        log.debug("trafilatura load_html failed for %s: %s", url, e)
+        doc = None
+    meta_input = doc if doc is not None else html
+    extract_input = doc if doc is not None else html
+
+    try:
+        meta = trafilatura.extract_metadata(meta_input)
     except Exception as e:  # extract_metadata can raise on weird inputs
         log.debug("trafilatura metadata failed for %s: %s", url, e)
         meta = None
@@ -159,7 +173,7 @@ def _extract(html: str, url: str) -> tuple[str, str, str, str, str]:
     md = ""
     try:
         md = trafilatura.extract(
-            html,
+            extract_input,
             url=url,
             output_format="markdown",
             include_links=True,
@@ -183,24 +197,108 @@ def _truncate(text: str) -> tuple[str, bool]:
     return smart_truncate(text, settings.max_content_chars)
 
 
+# Cap on manually-followed redirect hops. We disable the HTTP client's
+# automatic redirect handling (which would chase a 30x straight to an
+# internal IP, bypassing the SSRF guard) and follow Location headers by hand,
+# re-validating each hop with assert_url_allowed before connecting.
+_MAX_REDIRECTS = 5
+
+
+class MaxBytesExceededError(RuntimeError):
+    """Raised when a response body grows past settings.max_response_bytes."""
+
+
+def _check_content_length(headers: Any) -> None:
+    """Reject up front if the declared Content-Length exceeds the cap.
+
+    Shared by all three remote-GET helpers (fetcher._http_fetch,
+    documents._read_remote, structured.extract_structured). A streaming guard
+    (_accumulate_capped) still backstops servers that lie or omit the header.
+    """
+    raw = headers.get("content-length") or headers.get("Content-Length")
+    if not raw:
+        return
+    try:
+        declared = int(raw)
+    except (TypeError, ValueError):
+        return
+    cap = settings.max_response_bytes
+    if declared > cap:
+        raise MaxBytesExceededError(
+            f"Response Content-Length {declared} exceeds cap {cap} bytes; refusing to download."
+        )
+
+
+async def _accumulate_capped(aiter: Any) -> bytes:
+    """Buffer an async byte-chunk iterator, aborting once it passes the cap.
+
+    The cap is settings.max_response_bytes. Shared across the three remote
+    helpers so an oversized (or Content-Length-lying) body never fully buffers
+    into memory.
+    """
+    cap = settings.max_response_bytes
+    buf = bytearray()
+    async for chunk in aiter:
+        if not chunk:
+            continue
+        buf.extend(chunk)
+        if len(buf) > cap:
+            raise MaxBytesExceededError(
+                f"Response body exceeded cap {cap} bytes while streaming; aborted."
+            )
+    return bytes(buf)
+
+
+def _resolve_redirect_location(base_url: str, location: str | None) -> str | None:
+    """Resolve a (possibly relative) Location against base_url. None if absent."""
+    if not location:
+        return None
+    from urllib.parse import urljoin
+
+    return urljoin(base_url, location)
+
+
 async def _http_fetch(url: str) -> tuple[str, str]:
+    # SSRF guard: validate the caller URL before we ever open a socket.
+    assert_url_allowed(url)
     # No explicit User-Agent: curl_cffi sets one matching the impersonated
     # Chrome build, keeping the UA <-> JA3/H2 fingerprints consistent.
     async with AsyncSession(
         impersonate=_IMPERSONATE,
         timeout=settings.fetch_timeout,
-        allow_redirects=True,
+        # Automatic redirects are DISABLED: a 30x could otherwise jump straight
+        # to an internal IP, bypassing the per-hop SSRF check below.
+        allow_redirects=False,
         headers={
             "Accept-Language": settings.accept_language,
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         },
     ) as client:
-        resp = await client.get(url)
-        resp.raise_for_status()
-        ctype = resp.headers.get("content-type", "")
-        if "html" not in ctype and "xml" not in ctype:
-            return "", resp.text
-        return "", resp.text
+        current = url
+        for _ in range(_MAX_REDIRECTS + 1):
+            resp = await client.get(current, stream=True)
+            status = resp.status_code
+            if status in (301, 302, 303, 307, 308):
+                # Drain/close the redirect response without buffering its body.
+                await resp.aclose()
+                nxt = _resolve_redirect_location(current, resp.headers.get("location"))
+                if not nxt:
+                    raise RuntimeError(f"redirect with no Location from {current}")
+                assert_url_allowed(nxt)  # re-validate EACH hop before following
+                current = nxt
+                continue
+            # Terminal response: enforce caps, then stream the body.
+            resp.raise_for_status()
+            _check_content_length(resp.headers)
+            try:
+                body = await _accumulate_capped(resp.aiter_content())
+            finally:
+                await resp.aclose()
+            ctype = resp.headers.get("content-type", "")
+            encoding = getattr(resp, "encoding", None) or "utf-8"
+            text = body.decode(encoding, errors="replace")
+            return ctype, text
+        raise RuntimeError(f"too many redirects (>{_MAX_REDIRECTS}) fetching {url}")
 
 
 async def fetch_page(
@@ -231,11 +329,12 @@ async def fetch_page(
     method = "http"
     title = ""
     html = ""
+    ctype = ""
     last_err: Exception | None = None
 
     if render in ("auto", "http"):
         try:
-            title, html = await _http_fetch(url)
+            ctype, html = await _http_fetch(url)
         except Exception as e:
             last_err = e
             log.info("http fetch failed for %s: %s", url, e)
@@ -246,6 +345,7 @@ async def fetch_page(
             title2, html2 = await pool.fetch_html(url)
             title = title2 or title
             html = html2
+            ctype = "text/html"  # browser always renders HTML
             method = "browser"
         except Exception as e:
             if not html:
@@ -255,8 +355,16 @@ async def fetch_page(
     if not html:
         raise RuntimeError(f"empty response for {url}: {last_err}")
 
-    extracted_title, md, author, date, sitename = _extract(html, url)
-    title = title or extracted_title
+    # Content-type contract: only HTML/XML payloads go through trafilatura
+    # extraction. JSON / plain-text / other content-types are returned VERBATIM
+    # (extracting them through trafilatura would mangle or drop the body).
+    is_markup = ("html" in ctype) or ("xml" in ctype)
+    if is_markup:
+        extracted_title, md, author, date, sitename = _extract(html, url)
+        title = title or extracted_title
+    else:
+        md = html  # raw body, verbatim
+        author = date = sitename = ""
 
     await cache.put_page(url, _encode_title_meta(title, author, date, sitename), md)
     content, truncated = _truncate(md)
