@@ -1,5 +1,6 @@
-from urllib.parse import parse_qs, quote_plus, unquote, urlparse
+from urllib.parse import parse_qs, quote_plus, urlparse
 
+from ..config import settings
 from .base import (
     Engine,
     SearchFilters,
@@ -7,6 +8,7 @@ from .base import (
     augment_query_with_operators,
     extract_date_hint,
     parse_html,
+    safesearch_param,
     text_of,
 )
 
@@ -23,7 +25,10 @@ def _unwrap(url: str) -> str:
     if "duckduckgo.com" in parsed.netloc and parsed.path.startswith("/l/"):
         qs = parse_qs(parsed.query)
         if "uddg" in qs:
-            return unquote(qs["uddg"][0])
+            # parse_qs already percent-decodes the value once. Decoding again
+            # would corrupt targets that legitimately contain literal %xx — e.g.
+            # .../wiki/C%2B%2B (a real "C++" wiki URL) would become C++ and 404.
+            return qs["uddg"][0]
     return url
 
 
@@ -47,6 +52,13 @@ class DuckDuckGoEngine(Engine):
         url = f"https://html.duckduckgo.com/html/?q={quote_plus(q)}"
         if filters and filters.freshness:
             url += f"&df={_DDG_FRESHNESS[filters.freshness]}"
+        # SafeSearch: kp=1 strict, kp=-1 moderate, kp=-2 off.
+        kp = safesearch_param(self.name)
+        if kp is not None:
+            url += f"&kp={kp}"
+        # Region: DDG's kl param already uses our 'cc-lang' token form (us-en).
+        if settings.region:
+            url += f"&kl={quote_plus(settings.region)}"
         return url
 
     def parse(self, html: str) -> list[SearchResult]:

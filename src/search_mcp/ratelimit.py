@@ -12,6 +12,12 @@ class TokenBucket:
         self._lock = asyncio.Lock()
 
     async def acquire(self, n: int = 1) -> None:
+        # Defense-in-depth: a non-positive rate means "unlimited" rather than
+        # dividing by zero (or sleeping a negative/NaN duration) below. Config
+        # already rejects rate_per_minute<=0 via Field(gt=0), but a TokenBucket
+        # constructed directly must not blow up.
+        if self.rate <= 0:
+            return
         async with self._lock:
             while True:
                 now = time.monotonic()

@@ -110,6 +110,58 @@ def test_render_doc_shows_pagination_slice():
     assert "truncated" in md
 
 
+def test_render_doc_full_read_has_no_slice_crumb():
+    """A complete read (start=0, returned_chars==total_chars) must NOT print a
+    'slice [...]' crumb — that crumb implies pagination that isn't happening (A7)."""
+    md = render_doc({
+        "source": "/x.txt",
+        "format": "text",
+        "title": "",
+        "content": "hello world",
+        "truncated": False,
+        "pages": None,
+        "tokens_estimated": 3,
+        "total_chars": 11,
+        "start": 0,
+        "returned_chars": 11,
+    })
+    assert "slice [" not in md
+
+
+def test_render_doc_subrange_still_shows_slice_crumb():
+    """A genuine sub-range (returned_chars < total_chars) keeps the crumb."""
+    md = render_doc({
+        "source": "/x.txt",
+        "format": "text",
+        "title": "",
+        "content": "hello",
+        "truncated": True,
+        "pages": None,
+        "tokens_estimated": 1,
+        "total_chars": 100,
+        "start": 10,
+        "returned_chars": 40,
+    })
+    assert "slice [10:50]" in md
+
+
+def test_render_doc_start_at_zero_partial_shows_slice_crumb():
+    """start=0 but returned_chars < total_chars is still a partial read -> crumb."""
+    md = render_doc({
+        "source": "/x.txt",
+        "format": "text",
+        "title": "",
+        "content": "hello",
+        "truncated": True,
+        "pages": None,
+        "tokens_estimated": 1,
+        "total_chars": 100,
+        "start": 0,
+        "returned_chars": 50,
+    })
+    assert "slice [0:50]" in md
+
+
 def test_render_research_lists_sources_and_documents():
     md = render_research({
         "question": "what is mcp",

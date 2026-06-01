@@ -88,19 +88,46 @@ class BrowserPool:
 
             # Prefer a real installed Chrome (better fingerprint than bundled
             # Chromium). Fall back transparently when Chrome isn't installed.
+            #
+            # If BOTH launch attempts (or the stealth init script) fail we must
+            # not leak the started Playwright driver — otherwise it is silently
+            # re-started on every subsequent _ensure call, piling up zombie node
+            # processes. Tear it down and reset state so the next call retries
+            # from a clean slate.
             try:
-                self._ctx = await self._playwright.chromium.launch_persistent_context(
-                    channel="chrome",
-                    **common_kwargs,
-                )
-            except Exception as e:
-                log.warning(
-                    "real Chrome not found, using bundled Chromium: %s", e
-                )
-                self._ctx = await self._playwright.chromium.launch_persistent_context(
-                    **common_kwargs,
-                )
-            await self._ctx.add_init_script(_STEALTH_SCRIPT)
+                try:
+                    self._ctx = await self._playwright.chromium.launch_persistent_context(
+                        channel="chrome",
+                        **common_kwargs,
+                    )
+                except Exception as e:
+                    log.warning(
+                        "real Chrome not found, using bundled Chromium: %s", e
+                    )
+                    self._ctx = await self._playwright.chromium.launch_persistent_context(
+                        **common_kwargs,
+                    )
+                try:
+                    await self._ctx.add_init_script(_STEALTH_SCRIPT)
+                except Exception:
+                    # Context launched but stealth wiring failed: close the
+                    # half-built context so the next _ensure rebuilds it.
+                    try:
+                        await self._ctx.close()
+                    except Exception:
+                        log.debug("ctx close after add_init_script failure failed")
+                    self._ctx = None
+                    raise
+            except Exception:
+                # Launch failed entirely (or stealth re-raised): stop the driver
+                # and reset so we don't leak it across retries.
+                if self._playwright is not None:
+                    try:
+                        await self._playwright.stop()
+                    except Exception:
+                        log.debug("playwright stop after launch failure failed")
+                    self._playwright = None
+                raise
             return self._ctx
 
     @asynccontextmanager

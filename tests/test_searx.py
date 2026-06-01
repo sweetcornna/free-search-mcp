@@ -7,7 +7,7 @@ A small live suite is gated on ``SEARCH_MCP_TEST_NETWORK=1``.
 from __future__ import annotations
 
 import os
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -148,7 +148,9 @@ def _mock_session_returning(status: int, body: str):
 async def test_search_returns_first_nonempty_instance(monkeypatch):
     e = SearxEngine()
 
-    # First instance: empty body. Second: real results. Third: never called.
+    # The first race batch is _RACE_BATCH (3) instances: empty, real, real.
+    # They're raced concurrently and the first NON-EMPTY result wins, so the
+    # empty body is skipped and one of the real instances supplies the hits.
     sessions = iter([
         _mock_session_returning(200, "<html></html>"),
         _mock_session_returning(200, _FAKE_SEARX_HTML),

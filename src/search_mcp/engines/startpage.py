@@ -1,5 +1,6 @@
 from urllib.parse import quote_plus
 
+from ..config import settings
 from .base import (
     Engine,
     SearchFilters,
@@ -7,8 +8,14 @@ from .base import (
     augment_query_with_operators,
     extract_date_hint,
     parse_html,
+    safesearch_param,
     text_of,
 )
+
+
+# Startpage's family filter param qadf: 'heavy' enables filtering, 'none' off.
+# safesearch_param('startpage') returns '1'/'0' (binary); translate here.
+_STARTPAGE_QADF = {"1": "heavy", "0": "none"}
 
 
 # Startpage uses Google-style `with_date=` semantics on the `sp/search` endpoint.
@@ -38,6 +45,16 @@ class StartpageEngine(Engine):
         )
         if filters and filters.freshness:
             url += f"&with_date={_STARTPAGE_FRESHNESS[filters.freshness]}"
+        # SafeSearch via the family filter (qadf=heavy on / none off).
+        safe = safesearch_param(self.name)
+        if safe is not None and safe in _STARTPAGE_QADF:
+            url += f"&qadf={_STARTPAGE_QADF[safe]}"
+        # Region: Startpage's lui param takes the language ('english' is already
+        # in the base URL); the cc-lang region maps to its 'rl' country hint.
+        if settings.region and "-" in settings.region:
+            cc = settings.region.split("-", 1)[0].strip().upper()
+            if cc:
+                url += f"&rl={quote_plus(cc)}"
         return url
 
     def parse(self, html: str) -> list[SearchResult]:

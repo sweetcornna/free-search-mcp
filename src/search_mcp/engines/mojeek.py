@@ -1,5 +1,6 @@
 from urllib.parse import quote_plus
 
+from ..config import settings
 from .base import (
     Engine,
     SearchFilters,
@@ -7,6 +8,7 @@ from .base import (
     augment_query_with_operators,
     extract_date_hint,
     parse_html,
+    safesearch_param,
     text_of,
 )
 
@@ -36,6 +38,16 @@ class MojeekEngine(Engine):
         url = f"https://www.mojeek.com/search?q={quote_plus(q)}"
         if filters and filters.freshness:
             url += f"&since={_MOJEEK_FRESHNESS[filters.freshness]}"
+        # SafeSearch: Mojeek's safe= is binary (1 = on, 0 = off); strict and
+        # moderate both map to on.
+        safe = safesearch_param(self.name)
+        if safe is not None:
+            url += f"&safe={safe}"
+        # Region: Mojeek's arc= takes the two-letter country code (cc of cc-lang).
+        if settings.region and "-" in settings.region:
+            cc = settings.region.split("-", 1)[0].strip().lower()
+            if cc:
+                url += f"&arc={quote_plus(cc)}"
         return url
 
     def parse(self, html: str) -> list[SearchResult]:

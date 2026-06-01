@@ -17,7 +17,6 @@ from .config import settings
 from .documents import read_document
 from .fetcher import fetch_many, fetch_page
 from .formatting import (
-    estimate_tokens,
     errors_to_hint,
     render_compare,
     render_doc,
@@ -54,6 +53,52 @@ def _max_age_to_seconds(max_age_hours: float | None) -> int | None:
     if max_age_hours is None:
         return None
     return int(max_age_hours * 3600)
+
+
+# FTS5 boolean keywords are only valid as INFIX operators between two terms.
+_FTS_OPERATORS = {"AND", "OR", "NOT", "NEAR"}
+
+
+def _invalid_fts_hint(query: str) -> str | None:
+    """Return a sanitized hint if `query` is malformed FTS5 syntax, else None.
+
+    The cache layer already swallows the SQLite OperationalError and returns []
+    (so we never leak raw SQL), but an empty result then looks identical to a
+    legitimate "no pages matched". This heuristic detects the common syntax
+    mistakes an LLM makes so the tool can explain *why* it got nothing, without
+    re-running SQL or echoing SQLite's error text.
+    """
+    q = query.strip()
+    if not q:
+        return None  # empty query is "no input", not "bad syntax"
+    # Unbalanced double quotes -> unterminated phrase.
+    if q.count('"') % 2 == 1:
+        return (
+            "Your query has an unterminated quote. FTS5 phrases need matching "
+            'double quotes, e.g. `"exact phrase"`.'
+        )
+    # Unbalanced parentheses.
+    if q.count("(") != q.count(")"):
+        return (
+            "Your query has unbalanced parentheses. Group sub-expressions like "
+            "`(a OR b) c`."
+        )
+    tokens = q.split()
+    upper = [t.upper() for t in tokens]
+    # A boolean operator may not lead or trail the expression.
+    if upper[0] in _FTS_OPERATORS or upper[-1] in _FTS_OPERATORS:
+        return (
+            "Your query starts or ends with a boolean operator (AND/OR/NOT/NEAR). "
+            "These join two terms, e.g. `cats AND dogs`, not `cats AND`."
+        )
+    # Two boolean operators in a row (e.g. `a AND OR b`).
+    for prev, cur in zip(upper, upper[1:]):
+        if prev in _FTS_OPERATORS and cur in _FTS_OPERATORS:
+            return (
+                "Your query has two boolean operators in a row. Put a term "
+                "between them, e.g. `a AND b OR c`."
+            )
+    return None
 
 
 async def _safe_progress(
@@ -118,20 +163,23 @@ async def search(
     - Passing a URL as `query` — that's `fetch`'s job.
     - Cranking `max_results` to 50 hoping for better recall; engines cap around
       10-20 each, anything beyond is duplicate noise.
-    - Adding `engines=["brave","bing","baidu"]` by default — those need
-      captcha-friendly conditions; stick with defaults unless they returned 0.
+    - Adding `engines=["startpage","brave","bing","baidu"]` by default — those
+      need browser rendering or captcha-friendly conditions; stick with the
+      defaults unless they returned 0.
     - Using `category="news"` for breaking news without also setting
       `freshness="day"` — the index lag is days, not minutes.
 
     Args:
         query: Natural-language query (the same string a human would type).
-        engines: Subset of `engines()`. None = duckduckgo+mojeek+startpage.
+        engines: Subset of `engines()`. None = duckduckgo+mojeek+googlenews.
+            (startpage is opt-in and browser-rendered.)
         max_results: Merged result count after dedup. 5-20 is the useful range.
         use_cache: Reuse the last result for this exact (query, engines,
             max_results) within the cache TTL. False forces a re-fetch.
-        max_age_hours: Treat cached results older than this as a miss. Use
-            0 to force-refresh while keeping cache writes; None = use server
-            default TTL (7 days).
+        max_age_hours: Treat cached results older than this as a read miss; a
+            fresh result is ALWAYS written back to the cache regardless of this
+            value, so caching is never disabled. Use 0 to force-refresh while
+            keeping cache writes; None = use server default TTL (7 days).
         freshness: "day"|"week"|"month"|"year" — restrict to recent results.
         include_domains: List of domains to restrict to (e.g. ["python.org"]).
         exclude_domains: List of domains to exclude.
@@ -145,55 +193,25 @@ async def search(
     if not query.strip():
         raise ValueError("query must not be empty")
 
-    max_age_seconds = _max_age_to_seconds(max_age_hours)
-    effective_use_cache = use_cache
-    cache_hit: list[dict[str, Any]] | None = None
-
-    if use_cache and max_age_seconds is not None:
-        # Pre-check cache with a tighter TTL ourselves; if it misses we tell
-        # the aggregator not to use cache so it re-runs. The aggregator owns
-        # the cache key shape (incl. filter dict), so build SearchFilters here
-        # and reuse its `_key` helper.
-        from .aggregator import _key
-        from .engines import SearchFilters
-        engine_names = engines or settings.default_engines
-        n = max_results or settings.max_results_per_engine
-        prebuilt_filters = SearchFilters(
-            freshness=freshness,
-            include_domains=list(include_domains) if include_domains else [],
-            exclude_domains=list(exclude_domains) if exclude_domains else [],
-            category=category,
-            include_text=include_text,
-            exclude_text=exclude_text,
-        )
-        key = _key(query, engine_names, n, prebuilt_filters)
-        if max_age_seconds == 0:
-            cache_hit = None
-        else:
-            cache_hit = await cache.get_search(key, max_age_seconds=max_age_seconds)
-        if cache_hit is None:
-            effective_use_cache = False
-
-    if cache_hit is not None:
-        payload: dict[str, Any] = {
-            "query": query,
-            "engines": engines or settings.default_engines,
-            "cached": True,
-            "results": cache_hit,
-        }
-    else:
-        payload = await aggregate_search(
-            query,
-            engines=engines,
-            max_results=max_results,
-            use_cache=effective_use_cache,
-            freshness=freshness,
-            include_domains=include_domains,
-            exclude_domains=exclude_domains,
-            category=category,
-            include_text=include_text,
-            exclude_text=exclude_text,
-        )
+    # aggregate_search owns the single cache key/read/write path. We just hand it
+    # the tighter read TTL (max_age_seconds); it tightens the cache READ but
+    # ALWAYS writes a fresh non-empty result, so caching is never disabled by a
+    # freshness request. This also keeps news-category engine routing inside the
+    # one place that computes the key, so the read key can't drift from the
+    # write key.
+    payload = await aggregate_search(
+        query,
+        engines=engines,
+        max_results=max_results,
+        use_cache=use_cache,
+        max_age_seconds=_max_age_to_seconds(max_age_hours),
+        freshness=freshness,
+        include_domains=include_domains,
+        exclude_domains=exclude_domains,
+        category=category,
+        include_text=include_text,
+        exclude_text=exclude_text,
+    )
     hint = errors_to_hint(payload.get("errors"))
     if hint:
         payload["hint"] = hint
@@ -327,10 +345,11 @@ async def fetch_batch(
 
 @mcp.tool(
     annotations=ToolAnnotations(
-        title="Read a local or remote document",
+        title="Read a remote (or sandboxed local) document",
         readOnlyHint=True,
         idempotentHint=True,
-        openWorldHint=False,
+        # Reads http(s) URLs over the network, so this is an open-world tool.
+        openWorldHint=True,
     ),
 )
 async def read_doc(
@@ -339,17 +358,28 @@ async def read_doc(
     length: int | None = None,
     format: Format = "markdown",
 ) -> str | dict[str, Any]:
-    """Read a local file or http(s) document into Markdown.
+    """Read an http(s) document (or a sandboxed local file) into Markdown.
 
     Best for:
-    - Local or remote PDFs and DOCX (parsed locally, no remote API).
-    - Local text/HTML/Markdown files the user pointed at.
+    - Remote PDFs and DOCX from an http(s) URL (parsed locally, no remote API).
+    - Local PDF/DOCX/text/Markdown files — ONLY when local reads are enabled
+      (see Security below).
     - Paginating through a long document via `start` / `length`.
 
     Not recommended for:
     - Arbitrary HTML web pages -> `fetch` does reader-mode cleanup that this
       tool does not.
     - Pages discovered through search -> `fetch` or `research`.
+
+    Security (local files are sandboxed and OFF by default):
+    - Local-file reads are DISABLED unless the server operator sets the
+      SEARCH_MCP_DOCUMENT_ROOT env var to a directory. With it unset, a local
+      path raises a "local file reads are disabled" error — pass an http(s)
+      URL instead, or ask the operator to enable the sandbox.
+    - When enabled, `source` must resolve INSIDE that root; relative paths
+      resolve against the root (not the process CWD) and any `..` traversal
+      that escapes the root is rejected. `file://` URLs are always rejected.
+    - Remote http(s) sources are unaffected by this setting.
 
     Returns:
     - markdown (default): rendered document text with a small header.
@@ -361,14 +391,27 @@ async def read_doc(
       `fetch` instead.
     - Forgetting to advance `start` when paginating: next call should pass
       `start = previous_start + returned_chars`.
+    - Passing a negative `length` (raises an error) or a `start` past the end
+      (clamped to EOF: you'll get `returned_chars == 0`, `start == total_chars`,
+      and `truncated == False` — that's the signal you've paged off the end).
 
     Args:
-        source: Local path (e.g. "~/papers/x.pdf") or http(s) URL.
-        start: Character offset to begin reading from. Default 0.
-        length: Max characters to return; None = read to end (still capped
-            by per-call max content size).
+        source: http(s) URL, or a local path UNDER SEARCH_MCP_DOCUMENT_ROOT when
+            local reads are enabled (disabled by default — see Security).
+        start: Character offset to begin reading from. Default 0. Clamped into
+            [0, total_chars]; a negative value is treated as 0.
+        length: Max characters to return; None = read to end (still capped by
+            the per-call max content size). Must be >= 0 — a negative length
+            is rejected with a ValueError.
         format: "markdown" or "json".
     """
+    # Reject a negative `start` at the boundary with a clear, LLM-readable
+    # message. documents.py would silently clamp it to 0; surfacing the mistake
+    # is more helpful to a calling model than swallowing it. Negative `length`
+    # and out-of-range `start` are validated/clamped inside read_document — we
+    # do NOT duplicate that logic here (it would risk diverging behavior).
+    if start < 0:
+        raise ValueError(f"start must be >= 0, got {start}")
     result = await read_document(source, start=start, length=length)
     payload = result.to_dict()
     return _maybe_render(payload, format, render_doc)
@@ -431,16 +474,20 @@ async def research(
         engines: Override the engine set (see `engines()` for names).
         fetch: If False, return source list without reading them.
         use_cache: Reuse cached search/page data within TTL.
-        max_age_hours: Treat cached search results older than this as a miss
-            (0 = force-refresh search; None = server default TTL).
+        max_age_hours: Treat cached search results AND cached page bodies older
+            than this as a read miss; fresh data is always written back. 0 =
+            force-refresh both the engine search and every fetched page body;
+            None = server default TTL (7 days). A non-zero value is honored for
+            both halves (it used to be ignored for anything but 0).
         format: "markdown" or "json".
     """
     await _safe_progress(ctx, 0.05, 1.0, "starting research")
 
-    # Translate max_age_hours -> use_cache for the search portion.
-    effective_use_cache = use_cache
-    if max_age_hours is not None and max_age_hours == 0:
-        effective_use_cache = False
+    # max_age_hours tightens the READ TTL for BOTH the search-cache and the
+    # page-cache; aggregate_search/_fetch_with_freshness still write fresh data
+    # back, so caching is never disabled. max_age_hours=0 force-refreshes both
+    # the engine search and every fetched page body.
+    max_age_seconds = _max_age_to_seconds(max_age_hours)
 
     await _safe_progress(ctx, 0.15, 1.0, "searching engines")
 
@@ -449,7 +496,9 @@ async def research(
         depth=depth,
         engines=engines,
         fetch=fetch,
-        use_cache=effective_use_cache,
+        use_cache=use_cache,
+        max_age_seconds=max_age_seconds,
+        page_max_age_seconds=max_age_seconds,
         freshness=freshness,
         include_domains=include_domains,
         exclude_domains=exclude_domains,
@@ -514,6 +563,11 @@ async def cache_search(
     if format == "json":
         return rows
     if not rows:
+        bad = _invalid_fts_hint(query)
+        if bad:
+            return (
+                f"_No results — your search syntax looks invalid. {bad}_\n"
+            )
         return f"_No cached pages match `{query}`. Use `fetch` or `research` to populate the cache._\n"
     lines = [f"# Cache hits for `{query}`", ""]
     for r in rows:
@@ -547,15 +601,17 @@ def engines() -> list[str]:
 
     Returns:
     - A list of engine name strings (e.g. ["duckduckgo", "mojeek",
-      "startpage", "brave", "bing", "baidu"]).
+      "googlenews", "startpage", "brave", "bing", "baidu"]).
 
     Common mistakes:
     - Passing one of these names as a query to `search` — they go in the
       `engines=` argument, not `query`.
 
-    Defaults: duckduckgo + mojeek + startpage (all reliable, no captchas).
-    Opt-in:   brave (PoW captcha after a few calls), bing (UA-gated),
-              baidu (results wrapped in baidu.com/link redirects).
+    Defaults: duckduckgo + mojeek + googlenews (all reliable, no captchas;
+              googlenews is an RSS index with structured publish dates).
+    Opt-in:   startpage (browser-rendered, slower), brave (PoW captcha after a
+              few calls), bing (UA-gated), baidu (results wrapped in
+              baidu.com/link redirects).
     """
     return list_engines()
 

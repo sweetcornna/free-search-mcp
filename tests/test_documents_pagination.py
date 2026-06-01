@@ -4,6 +4,19 @@ import pytest
 pytestmark = pytest.mark.asyncio
 
 
+@pytest.fixture(autouse=True)
+def _sandbox(tmp_path, monkeypatch):
+    """Local reads are disabled by default; opt into a sandbox at tmp_path.
+
+    All tests in this module read files they write under tmp_path, so we point
+    settings.document_root at tmp_path to exercise the (now opt-in) local path.
+    """
+    from search_mcp import config, documents
+    monkeypatch.setattr(config.settings, "document_root", tmp_path)
+    monkeypatch.setattr(documents.settings, "document_root", tmp_path)
+    yield
+
+
 async def test_pagination_slices_offset(tmp_path):
     from search_mcp.documents import read_document
     p = tmp_path / "long.txt"

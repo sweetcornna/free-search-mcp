@@ -63,13 +63,67 @@ async def test_fetch_returns_markdown():
     assert "author" in d and "published_date" in d and "sitename" in d
 
 
-async def test_read_local_text(tmp_path):
+async def test_read_local_text(tmp_path, monkeypatch):
+    """Local reads are now OFF by default; opt into the sandbox at tmp_path so
+    we exercise the (correct) post-sandbox local-read path."""
+    from search_mcp import config, documents
+    monkeypatch.setattr(config.settings, "document_root", tmp_path)
+    monkeypatch.setattr(documents.settings, "document_root", tmp_path)
     from search_mcp.documents import read_document
     p = tmp_path / "hello.txt"
     p.write_text("hello world\n", encoding="utf-8")
     result = await read_document(str(p))
     assert "hello world" in result.content
     assert result.format == "text"
+
+
+async def test_read_doc_tool_rejects_negative_start():
+    """The read_doc tool wrapper surfaces a clear error for a negative start
+    rather than silently clamping (server-side input validation, #19)."""
+    from search_mcp.server import read_doc
+    with pytest.raises(ValueError, match="start must be >= 0"):
+        await read_doc("https://example.com/x.pdf", start=-5)
+
+
+async def test_read_doc_tool_propagates_negative_length_error(tmp_path, monkeypatch):
+    """Negative length is rejected by read_document and the tool lets that
+    ValueError propagate (no duplicate-raise with a different message, #19)."""
+    from search_mcp import config, documents
+    monkeypatch.setattr(config.settings, "document_root", tmp_path)
+    monkeypatch.setattr(documents.settings, "document_root", tmp_path)
+    p = tmp_path / "doc.txt"
+    p.write_text("some content", encoding="utf-8")
+    from search_mcp.server import read_doc
+    with pytest.raises(ValueError, match="length must be >= 0"):
+        await read_doc(str(p), length=-10)
+
+
+async def test_read_doc_tool_local_disabled_by_default_raises(tmp_path, monkeypatch):
+    """With SEARCH_MCP_DOCUMENT_ROOT unset, a local path raises a clear
+    'disabled' PermissionError surfaced through the tool (#2 server-side)."""
+    from search_mcp import config, documents
+    monkeypatch.setattr(config.settings, "document_root", None)
+    monkeypatch.setattr(documents.settings, "document_root", None)
+    p = tmp_path / "doc.txt"
+    p.write_text("data", encoding="utf-8")
+    from search_mcp.server import read_doc
+    with pytest.raises(PermissionError):
+        await read_doc(str(p))
+
+
+async def test_read_doc_tool_start_past_eof_clamps(tmp_path, monkeypatch):
+    """A start past EOF is clamped: returned_chars==0, start==total_chars,
+    truncated False — matching documents.py semantics (#19)."""
+    from search_mcp import config, documents
+    monkeypatch.setattr(config.settings, "document_root", tmp_path)
+    monkeypatch.setattr(documents.settings, "document_root", tmp_path)
+    p = tmp_path / "short.txt"
+    p.write_text("hello", encoding="utf-8")
+    from search_mcp.server import read_doc
+    out = await read_doc(str(p), start=9999, format="json")
+    assert out["returned_chars"] == 0
+    assert out["start"] == out["total_chars"]
+    assert out["truncated"] is False
 
 
 @skip_offline

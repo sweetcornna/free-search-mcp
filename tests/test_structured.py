@@ -246,16 +246,33 @@ def test_render_structured_shows_hint_and_meta_fallback():
 
 @pytest.mark.asyncio
 async def test_extract_structured_async_uses_httpx(monkeypatch):
-    """The async wrapper should fetch the URL itself (not via the page cache)."""
+    """The async wrapper should fetch the URL itself (not via the page cache).
+
+    Updated for the SSRF-hardened path: redirects are disabled and the body is
+    streamed via ``client.stream("GET", url)`` (not ``client.get``), so the mock
+    now models the streaming context-manager API. Public-host example.com passes
+    the SSRF guard.
+    """
     from search_mcp import structured as structured_mod
 
     captured: dict[str, str] = {}
 
-    class _Resp:
-        text = _JSONLD_HTML
+    class _StreamCtx:
+        status_code = 200
+        encoding = "utf-8"
+        headers: dict[str, str] = {}
 
-        def raise_for_status(self):
+        def __init__(self, url):
+            captured["url"] = url
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *a):
             return None
+
+        async def aiter_bytes(self):
+            yield _JSONLD_HTML.encode("utf-8")
 
     class _FakeClient:
         def __init__(self, *a, **kw):
@@ -267,9 +284,9 @@ async def test_extract_structured_async_uses_httpx(monkeypatch):
         async def __aexit__(self, *a):
             return None
 
-        async def get(self, url):
-            captured["url"] = url
-            return _Resp()
+        def stream(self, method, url):
+            assert method == "GET"
+            return _StreamCtx(url)
 
     monkeypatch.setattr(structured_mod.httpx, "AsyncClient", _FakeClient)
 

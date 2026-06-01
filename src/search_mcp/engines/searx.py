@@ -7,7 +7,10 @@ HTML response is stable across versions and parses reliably.
 
 Strategy:
   * Try a shortlist of known-good public instances in random order.
-  * First instance to return >0 parsed results wins; rest are skipped.
+  * RACE a small batch concurrently: the first instance in the batch to
+    return >0 parsed results wins, and the rest are cancelled. Dead/slow
+    instances therefore cost ~one per-instance timeout for the whole batch
+    instead of K x timeout serially.
   * Use ``curl_cffi`` with the Chrome JA3 fingerprint — vanilla httpx
     triggers the 429/403 anti-bot pages on most instances.
 """
@@ -45,6 +48,12 @@ _IMPERSONATE = "chrome131"
 # want to fall through to the next quickly rather than blow the latency
 # budget the new defaults are trying to defend.
 _PER_INSTANCE_TIMEOUT = 5.0
+
+# How many instances to race in parallel per batch. Racing a small batch
+# bounds worst-case latency at ~one timeout per batch instead of one timeout
+# per instance, while not hammering every public instance at once on the
+# common case where the first batch already returns results.
+_RACE_BATCH = 3
 
 # Public instances verified live (Apr 2026) to return parseable results
 # under a Chrome-impersonated curl_cffi session. Order is randomised at
@@ -121,6 +130,37 @@ class SearxEngine(Engine):
             results.append(result)
         return results
 
+    async def _fetch_instance(
+        self, instance: str, query: str, filters: SearchFilters | None
+    ) -> list[SearchResult]:
+        """Fetch + parse a single instance. Never raises: a flaky instance must
+        not poison the engine, so every failure path returns ``[]``."""
+        url = self._instance_url(instance, query, filters)
+        try:
+            async with AsyncSession(
+                impersonate=_IMPERSONATE,
+                timeout=_PER_INSTANCE_TIMEOUT,
+                allow_redirects=True,
+                headers={
+                    "Accept-Language": settings.accept_language,
+                    "Accept": (
+                        "text/html,application/xhtml+xml,"
+                        "application/xml;q=0.9,*/*;q=0.8"
+                    ),
+                },
+            ) as client:
+                resp = await client.get(url)
+                if resp.status_code != 200:
+                    return []
+                return self.parse(resp.text)
+        except asyncio.CancelledError:
+            # Lost the race — propagate so the gather/cancel path unwinds cleanly.
+            raise
+        except (RequestException, asyncio.TimeoutError):
+            return []
+        except Exception:
+            return []
+
     async def search(
         self,
         query: str,
@@ -128,41 +168,41 @@ class SearxEngine(Engine):
         filters: SearchFilters | None = None,
         diagnostics: dict[str, Any] | None = None,
     ) -> list[SearchResult]:
-        # Randomise instance order: spreads load + avoids pinning one
-        # instance for the whole process. We keep the first 3 attempts
-        # serial so we don't hammer the network with parallel hits to
-        # all instances when the first one usually works.
+        # Randomise instance order: spreads load + avoids pinning one instance
+        # for the whole process. We then RACE a small batch concurrently so a
+        # dead/slow instance costs ~one timeout for the batch instead of one
+        # timeout serially per instance.
         order = list(_INSTANCES)
         random.shuffle(order)
 
         results: list[SearchResult] = []
-        for instance in order:
-            url = self._instance_url(instance, query, filters)
+        for start in range(0, len(order), _RACE_BATCH):
+            batch = order[start : start + _RACE_BATCH]
+            tasks = [
+                asyncio.ensure_future(self._fetch_instance(inst, query, filters))
+                for inst in batch
+            ]
             try:
-                async with AsyncSession(
-                    impersonate=_IMPERSONATE,
-                    timeout=_PER_INSTANCE_TIMEOUT,
-                    allow_redirects=True,
-                    headers={
-                        "Accept-Language": settings.accept_language,
-                        "Accept": (
-                            "text/html,application/xhtml+xml,"
-                            "application/xml;q=0.9,*/*;q=0.8"
-                        ),
-                    },
-                ) as client:
-                    resp = await client.get(url)
-                    if resp.status_code != 200:
+                # Take the FIRST task that yields a non-empty result; cancel the
+                # rest. Empty/failed tasks are skipped, so a fast-but-dead
+                # instance can't beat a slower-but-live one.
+                for fut in asyncio.as_completed(tasks):
+                    try:
+                        parsed = await fut
+                    except Exception:
+                        # Never-raise contract: ignore individual task failures.
                         continue
-                    parsed = self.parse(resp.text)
-            except (RequestException, asyncio.TimeoutError):
-                continue
-            except Exception:
-                # A flaky instance must not poison the engine: never raise.
-                continue
-
-            if parsed:
-                results = parsed
+                    if parsed:
+                        results = parsed
+                        break
+            finally:
+                for t in tasks:
+                    if not t.done():
+                        t.cancel()
+                # Drain cancellations so no "task was destroyed but pending"
+                # warnings leak; exceptions from cancellation are swallowed.
+                await asyncio.gather(*tasks, return_exceptions=True)
+            if results:
                 break
 
         # We override search(), so we must call the post-filter ourselves —

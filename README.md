@@ -17,7 +17,7 @@ were each missing.
 research("how does reciprocal rank fusion work", depth=3)
    ↓
 # Research brief: how does reciprocal rank fusion work
-_engines: duckduckgo, mojeek, searx · sources: 3 · ~3,400 tokens_
+_engines: duckduckgo, mojeek, googlenews · sources: 3 · ~3,400 tokens_
 
 ## Sources
 - [1] Reciprocal rank fusion | Elasticsearch Reference — <https://…>
@@ -219,7 +219,7 @@ All settings can be overridden by environment variables prefixed with
 
 | Var | Default | Meaning |
 |---|---|---|
-| `SEARCH_MCP_DEFAULT_ENGINES` | `["duckduckgo","mojeek","searx"]` | JSON list |
+| `SEARCH_MCP_DEFAULT_ENGINES` | `["duckduckgo","mojeek","googlenews"]` | JSON list |
 | `SEARCH_MCP_MAX_RESULTS_PER_ENGINE` | `10` | |
 | `SEARCH_MCP_RATE_LIMIT_PER_MINUTE` | `30` | per engine |
 | `SEARCH_MCP_FETCH_RATE_LIMIT_PER_MINUTE` | `20` | shared `fetch` bucket |
