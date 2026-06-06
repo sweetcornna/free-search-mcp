@@ -336,7 +336,7 @@ EOF
 register_add_mcp() {
   local server_cmd add_cmd
   server_cmd="uv --directory $(quote_dq "$ROOT") run search-mcp"
-  add_cmd="npx -y add-mcp $(quote_dq "$server_cmd") --name search -g -y"
+  add_cmd="npx -y add-mcp $(quote_dq "$server_cmd") --name search --all -g -y"
 
   if [ "$DRY_RUN" -eq 1 ]; then
     printf 'DRY RUN: %s\n' "$add_cmd"
@@ -349,7 +349,7 @@ register_add_mcp() {
     return 0
   fi
 
-  if npx -y add-mcp "$server_cmd" --name search -g -y; then
+  if npx -y add-mcp "$server_cmd" --name search --all -g -y; then
     ok "ran add-mcp for supported global agent configs"
   else
     warn "add-mcp failed. You can still copy the generic config below."

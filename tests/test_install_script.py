@@ -63,6 +63,14 @@ def test_install_script_dry_run_prints_generic_agent_config():
     assert "docs/AGENT_USAGE.md" in result.stdout
 
 
+def test_install_script_dry_run_add_mcp_targets_all_supported_agents():
+    result = run_install_script("--dry-run", "--client", "add-mcp")
+
+    assert result.returncode == 0
+    assert "npx -y add-mcp" in result.stdout
+    assert "--name search --all -g -y" in result.stdout
+
+
 def test_piped_installer_dry_run_bootstraps_repo(tmp_path):
     copied_script = tmp_path / "install.sh"
     shutil.copy2(SCRIPT, copied_script)
