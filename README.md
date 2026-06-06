@@ -35,21 +35,29 @@ shakedown.
 
 ## 🚀 One-click deploy
 
-Three commands — keyless engines work immediately, no signup, no key:
+One command — keyless engines work immediately, no signup, no key:
 
 ```bash
-git clone https://github.com/sweetcornna/free-search-mcp.git
-cd free-search-mcp
-./scripts/install.sh        # installs uv + deps + Chromium, writes .env, smoke-tests
+curl -LsSf https://raw.githubusercontent.com/sweetcornna/free-search-mcp/main/scripts/install.sh | bash -s -- --client claude-code
 ```
 
-Then wire it into your client (pick one):
+It clones or updates the project under `~/.local/share/free-search-mcp`,
+installs `uv`, syncs dependencies, installs Chromium for rendered engines,
+smoke-tests the server, and registers the `search` MCP server in Claude Code
+user scope.
+
+Other client targets:
 
 ```bash
-# Claude Code — register the server globally
-claude mcp add search uv -- --directory "$PWD" run search-mcp
-# …or just run `claude` inside the repo: the bundled .mcp.json auto-detects it.
+curl -LsSf https://raw.githubusercontent.com/sweetcornna/free-search-mcp/main/scripts/install.sh | bash -s -- --client claude-desktop
+curl -LsSf https://raw.githubusercontent.com/sweetcornna/free-search-mcp/main/scripts/install.sh | bash -s -- --client codex
+curl -LsSf https://raw.githubusercontent.com/sweetcornna/free-search-mcp/main/scripts/install.sh | bash -s -- --client generic
+curl -LsSf https://raw.githubusercontent.com/sweetcornna/free-search-mcp/main/scripts/install.sh | bash -s -- --client add-mcp
+curl -LsSf https://raw.githubusercontent.com/sweetcornna/free-search-mcp/main/scripts/install.sh | bash -s -- --client all
 ```
+
+Codex, Cursor, Cline, Continue, Zed, and generic agent guidance:
+[docs/AGENT_USAGE.md](docs/AGENT_USAGE.md).
 
 Optional extras, any time (the defaults already work without them):
 
@@ -268,13 +276,34 @@ category=forum. Try widening or removing one filter.
 ### One-click setup
 
 ```bash
-git clone https://github.com/sweetcornna/free-search-mcp.git
-cd free-search-mcp
-./scripts/install.sh        # installs uv (if needed) + deps + Chromium, writes .env, smoke-tests
+curl -LsSf https://raw.githubusercontent.com/sweetcornna/free-search-mcp/main/scripts/install.sh | bash -s -- --client claude-code
 ```
 
-The script prints the exact command to wire the server into Claude Code or
-Claude Desktop when it finishes. Prefer to do it by hand?
+The remote installer clones or updates
+`~/.local/share/free-search-mcp`, installs `uv` if needed, syncs dependencies,
+installs Chromium, smoke-tests the MCP server, then registers it with the
+requested client:
+
+```bash
+--client claude-code      # Claude Code user-scope config
+--client claude-desktop   # claude_desktop_config.json
+--client codex            # Codex config
+--client generic          # print portable MCP JSON for other agents
+--client add-mcp          # delegate to npx add-mcp
+--client both             # Claude Code + Claude Desktop
+--client all              # Claude Code + Claude Desktop + Codex
+--client none             # install only, no client config changes
+```
+
+Prefer a local checkout?
+
+```bash
+git clone https://github.com/sweetcornna/free-search-mcp.git
+cd free-search-mcp
+./scripts/install.sh --client none
+```
+
+Prefer to do it by hand?
 
 ```bash
 uv sync
@@ -317,7 +346,16 @@ This repo ships a project-scoped `.mcp.json`, so running `claude` inside the
 project auto-detects the `search` server. To register it globally instead:
 
 ```bash
-claude mcp add search uv -- --directory /absolute/path/to/free-search-mcp run search-mcp
+claude mcp add search -s user -- uv --directory /absolute/path/to/free-search-mcp run search-mcp
+```
+
+## Wire into Codex
+
+Register the server with the Codex CLI:
+
+```bash
+codex mcp add search -- uv --directory /absolute/path/to/free-search-mcp run search-mcp
+codex mcp list
 ```
 
 ## Wire into Claude Desktop
@@ -343,9 +381,22 @@ drawer.
 
 The server speaks plain MCP over stdio. Anything that supports MCP works:
 
-- Claude Code (`claude mcp add search uv --directory /…/free-search-mcp run search-mcp`)
+- Codex (`codex mcp add search -- uv --directory /…/free-search-mcp run search-mcp`)
+- Claude Code (`claude mcp add search -s user -- uv --directory /…/free-search-mcp run search-mcp`)
 - Cursor / Continue / Cline (use the JSON snippet above)
 - Custom Python / TypeScript clients via the official MCP SDK
+
+For agent-specific operating rules, tool-selection guidance, and a reusable
+system-prompt snippet, see [docs/AGENT_USAGE.md](docs/AGENT_USAGE.md).
+
+### Installer choice
+
+Generic MCP installers are useful, but they do not replace this script yet:
+`add-mcp` can write config for many clients, Smithery is strongest for registry
+or remote MCP connections, and MCPB is the right future format for clickable
+desktop bundles. This project still needs a Python/uv checkout, Playwright
+Chromium, and a smoke test, so `scripts/install.sh` handles the full bootstrap
+and then performs client registration.
 
 ---
 
