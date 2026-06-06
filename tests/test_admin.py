@@ -38,6 +38,30 @@ def test_index_renders_each_provider(client):
         assert provider.signup_url in body
 
 
+def test_index_renders_chinese_admin_copy(client):
+    resp = client.get("/")
+    assert resp.status_code == 200
+    body = resp.text
+
+    for text in [
+        "提供商密钥配置",
+        "本地配置工具",
+        "已配置",
+        "未配置",
+        "免费额度",
+        "如何获取密钥",
+        "保存",
+        "测试",
+        "清除",
+        "注册",
+        "文档",
+        "网络 / 代理",
+        "代理 URL",
+        "仅代理这些引擎",
+    ]:
+        assert text in body
+
+
 def test_index_never_echoes_saved_secret(client):
     # Save a key first, then assert the raw value never appears in the HTML.
     keystore.set_secrets({"serper_api_key": "TOPSECRETVALUE42"})

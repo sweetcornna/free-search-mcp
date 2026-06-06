@@ -37,7 +37,8 @@ outbound path uses the same exit IP.
 
 Two equivalent ways (the environment variable wins when both are present):
 
-- **Admin UI** — open the **"Network / Proxy"** card and fill in **Proxy URL**.
+- **Admin UI** — open the bilingual **"Network / Proxy / 网络 / 代理"** card and
+  fill in **Proxy URL / 代理 URL**.
   This saves to the config file and hot-reloads on a running server; no restart
   needed. The value is treated as a secret (masked in the UI, never logged).
 - **Environment variable** — set `SEARCH_MCP_PROXY`.
@@ -63,8 +64,8 @@ the fetcher. Proxies are often slower than a direct connection, so you can keep
 the fast default engines direct and route **only** the engines that actually
 get gated through the proxy.
 
-- **Admin UI** — fill in **"Proxy only these engines"** on the Network / Proxy
-  card.
+- **Admin UI** — fill in **"Proxy only these engines / 仅代理这些引擎"** on the
+  Network / Proxy / 网络 / 代理 card.
 - **Environment variable** — set `SEARCH_MCP_PROXY_ENGINES`.
 
 The value is a list of engine names separated by spaces or commas, for example:

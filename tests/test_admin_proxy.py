@@ -85,6 +85,7 @@ def test_save_persists_proxy(client):
     resp = client.post("/api/save", json={"proxy": "http://127.0.0.1:9"})
     assert resp.status_code == 200
     assert resp.json()["ok"] is True
+    assert resp.json()["status"]["__network__"] is True
 
     keystore._reset_cache()
     assert keystore.get_secret("proxy") == "http://127.0.0.1:9"
@@ -97,6 +98,17 @@ def test_save_persists_proxy_engines(client):
 
     keystore._reset_cache()
     assert keystore.get_secret("proxy_engines") == "zhihu google"
+
+
+def test_clear_proxy_updates_network_status(client):
+    keystore.set_secrets({"proxy": "http://127.0.0.1:9"})
+    keystore._reset_cache()
+
+    resp = client.post("/api/clear", json={"field": "proxy"})
+
+    assert resp.status_code == 200
+    assert resp.json()["ok"] is True
+    assert resp.json()["status"]["__network__"] is False
 
 
 # --- zhihu browser login ----------------------------------------------------

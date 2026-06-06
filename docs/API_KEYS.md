@@ -24,6 +24,10 @@ Then open **http://127.0.0.1:8765** in your browser, paste your key(s) into the
 relevant provider fields, and click **Save**. Changes take effect **live, with
 no restart** — a running server picks up the new key on its next request.
 
+The Admin UI is **中英双语**: labels, badges, buttons, free-tier notes, and
+"How to get a key / 如何获取密钥" steps are shown in English and Chinese. It
+also includes the **Network / Proxy / 网络 / 代理** card for proxy settings.
+
 ### (b) Environment variables / `.env`
 
 Set the `SEARCH_MCP_<FIELD>` environment variable for each field you want to
