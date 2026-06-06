@@ -9,18 +9,31 @@ filters. For install/deploy see the [Quick start](#quick-start) below or the
 ## Quick start
 
 ```bash
-# one-command setup (installs deps + Chromium, writes .env, smoke-tests)
-./scripts/install.sh
+# one-line setup for Claude Code
+curl -LsSf https://raw.githubusercontent.com/sweetcornna/free-search-mcp/main/scripts/install.sh | bash -s -- --client claude-code
 
-# run standalone (stdio MCP)
-uv run search-mcp
+# one-line setup for Codex
+curl -LsSf https://raw.githubusercontent.com/sweetcornna/free-search-mcp/main/scripts/install.sh | bash -s -- --client codex
+
+# local checkout / install only
+./scripts/install.sh --client none
 ```
+
+For Codex, Cursor, Cline, Continue, Zed, and generic agent operating rules, see
+[AGENT_USAGE.md](AGENT_USAGE.md).
 
 Wire into **Claude Code**: this repo ships a `.mcp.json`, so running `claude`
 inside the project auto-detects the `search` server. To register it globally:
 
 ```bash
-claude mcp add search uv -- --directory /absolute/path/to/free-search-mcp run search-mcp
+claude mcp add search -s user -- uv --directory /absolute/path/to/free-search-mcp run search-mcp
+```
+
+Wire into **Codex**:
+
+```bash
+codex mcp add search -- uv --directory /absolute/path/to/free-search-mcp run search-mcp
+codex mcp list
 ```
 
 Wire into **Claude Desktop** — add to `claude_desktop_config.json`:
