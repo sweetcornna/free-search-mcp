@@ -37,25 +37,112 @@ def _esc(text: str) -> str:
     return html.escape(str(text), quote=True)
 
 
+_PROVIDER_ZH: dict[str, dict[str, object]] = {
+    "brave_api": {
+        "label": "Brave 搜索 API",
+        "free_tier": "每月 2,000 次免费查询",
+        "how_to": [
+            "打开 Brave Search API 页面并点击 Get started。",
+            "注册或登录账号，并完成邮箱验证。",
+            "订阅免费的 Data for Search 计划。可能需要绑定卡片，但免费额度不会收费。",
+            "进入 dashboard -> API Keys，复制 subscription token。",
+        ],
+    },
+    "serper": {
+        "label": "Serper（Google 搜索）",
+        "free_tier": "一次性 2,500 次免费查询",
+        "how_to": [
+            "打开 serper.dev 并注册，Google 登录也可以。",
+            "进入 dashboard 后会看到 2,500 次免费额度。",
+            "复制 API Key 栏里的密钥。",
+        ],
+    },
+    "tavily": {
+        "label": "Tavily（AI 搜索）",
+        "free_tier": "每月 1,000 credits 免费",
+        "how_to": [
+            "打开 app.tavily.com 并注册。",
+            "在 dashboard 中找到 API Keys 区域。",
+            "复制以 tvly- 开头的密钥。",
+        ],
+    },
+    "google_cse": {
+        "label": "Google 自定义搜索",
+        "free_tier": "每天 100 次免费查询",
+        "how_to": [
+            "在 Google Cloud Console 创建 API key。",
+            "为项目启用 Custom Search API。",
+            "在 Programmable Search Engine 创建搜索引擎，并设置为搜索整个 web。",
+            "从控制台复制 Search engine ID，也就是 cx；这里需要同时填写 API key 和 cx。",
+        ],
+    },
+    "anysearch": {
+        "label": "AnySearch（可选密钥）",
+        "free_tier": "无需密钥也可使用；填写密钥可提高限额",
+        "how_to": [
+            "AnySearch 可以匿名使用，不填密钥也能工作，只是限额较低。",
+            "如需更高限额，注册 anysearch.com 并进入 Console -> API Keys。",
+            "创建密钥并粘贴到这里。",
+        ],
+    },
+}
+
+_FIELD_ZH: dict[str, str] = {
+    "brave_api_key": "API 密钥",
+    "serper_api_key": "API 密钥",
+    "tavily_api_key": "API 密钥",
+    "google_cse_api_key": "API 密钥",
+    "google_cse_cx": "搜索引擎 ID (cx)",
+    "anysearch_api_key": "API 密钥（可选）",
+    "proxy": "代理 URL",
+    "proxy_engines": "仅代理这些引擎（可选，逗号分隔）",
+}
+
+
+def _bilingual(primary: str, zh: str | None) -> str:
+    if not zh or zh == primary:
+        return _esc(primary)
+    return f"{_esc(primary)} <span class=\"zh\">/ {_esc(zh)}</span>"
+
+
+def _badge_text(configured: bool) -> str:
+    return "Configured ✓ / 已配置 ✓" if configured else "Not configured / 未配置"
+
+
 def _render_provider_card(provider: keystore.Provider) -> str:
     configured = keystore.is_configured(provider.id)
     badge_cls = "ok" if configured else "no"
-    badge_txt = "Configured ✓" if configured else "Not configured"
+    badge_txt = _badge_text(configured)
 
+    zh = _PROVIDER_ZH.get(provider.id, {})
     steps = "".join(f"<li>{_esc(step)}</li>" for step in provider.how_to)
+    zh_steps = zh.get("how_to", [])
+    zh_steps_html = ""
+    if isinstance(zh_steps, list) and zh_steps:
+        zh_steps_html = (
+            '<p class="steps-title">中文</p>'
+            + "<ol>"
+            + "".join(f"<li>{_esc(str(step))}</li>" for step in zh_steps)
+            + "</ol>"
+        )
 
-    links = [f'<a href="{_esc(provider.signup_url)}" target="_blank" rel="noopener">Sign up</a>']
+    links = [
+        f'<a href="{_esc(provider.signup_url)}" target="_blank" rel="noopener">Sign up / 注册</a>'
+    ]
     if provider.docs_url:
-        links.append(f'<a href="{_esc(provider.docs_url)}" target="_blank" rel="noopener">Docs</a>')
+        links.append(
+            f'<a href="{_esc(provider.docs_url)}" target="_blank" rel="noopener">Docs / 文档</a>'
+        )
     links_html = " · ".join(links)
 
     inputs = []
     for field in provider.fields:
         ftype = "password" if field.secret else "text"
+        label_html = _bilingual(field.label, _FIELD_ZH.get(field.key))
         # NEVER pre-fill the value — only ever render an empty input.
         inputs.append(
             f'<label class="field">'
-            f'<span class="field-label">{_esc(field.label)}</span>'
+            f'<span class="field-label">{label_html}</span>'
             f'<input type="{ftype}" data-key="{_esc(field.key)}" '
             f'placeholder="{_esc(field.placeholder)}" autocomplete="off" '
             f'spellcheck="false" />'
@@ -66,26 +153,35 @@ def _render_provider_card(provider: keystore.Provider) -> str:
     # zhihu authenticates via an interactive browser login, not an API key.
     login_btn = ""
     if provider.id == "zhihu":
-        login_btn = '<button class="login" onclick="loginProvider(this)">Login</button>'
+        login_btn = '<button class="login" onclick="loginProvider(this)">Login / 登录</button>'
+
+    title_html = _bilingual(provider.label, str(zh.get("label", "")))
+    free_tier_html = (
+        f'<span class="label">Free tier / 免费额度:</span> {_esc(provider.free_tier)}'
+    )
+    if zh.get("free_tier"):
+        free_tier_html += f'<br><span class="zh">{_esc(str(zh["free_tier"]))}</span>'
 
     return f"""
     <section class="card" data-provider="{_esc(provider.id)}">
       <div class="card-head">
-        <h2>{_esc(provider.label)}</h2>
+        <h2>{title_html}</h2>
         <span class="badge {badge_cls}" data-badge>{badge_txt}</span>
       </div>
-      <p class="free-tier">{_esc(provider.free_tier)}</p>
+      <p class="free-tier">{free_tier_html}</p>
       <details class="howto">
-        <summary>How to get a key</summary>
+        <summary>How to get a key / 如何获取密钥</summary>
+        <p class="steps-title">English</p>
         <ol>{steps}</ol>
+        {zh_steps_html}
         <p class="links">{links_html}</p>
       </details>
       <div class="fields">{inputs_html}</div>
       <div class="actions">
-        <button class="save" onclick="saveProvider(this)">Save</button>
-        <button class="test" onclick="testProvider(this)">Test</button>
+        <button class="save" onclick="saveProvider(this)">Save / 保存</button>
+        <button class="test" onclick="testProvider(this)">Test / 测试</button>
         {login_btn}
-        <button class="clear" onclick="clearProvider(this)">Clear</button>
+        <button class="clear" onclick="clearProvider(this)">Clear / 清除</button>
         <span class="result" data-result></span>
       </div>
     </section>
@@ -102,10 +198,11 @@ def _render_network_card() -> str:
     inputs = []
     for field in keystore.NETWORK_FIELDS:
         ftype = "password" if field.secret else "text"
+        label_html = _bilingual(field.label, _FIELD_ZH.get(field.key))
         # NEVER pre-fill the value — only ever render an empty input.
         inputs.append(
             f'<label class="field">'
-            f'<span class="field-label">{_esc(field.label)}</span>'
+            f'<span class="field-label">{label_html}</span>'
             f'<input type="{ftype}" data-key="{_esc(field.key)}" '
             f'placeholder="{_esc(field.placeholder)}" autocomplete="off" '
             f'spellcheck="false" />'
@@ -114,19 +211,22 @@ def _render_network_card() -> str:
     inputs_html = "".join(inputs)
     configured = keystore.get_secret("proxy") is not None
     badge_cls = "ok" if configured else "no"
-    badge_txt = "Configured ✓" if configured else "Not configured"
+    badge_txt = _badge_text(configured)
 
     return f"""
     <section class="card" data-provider="__network__">
       <div class="card-head">
-        <h2>Network / Proxy</h2>
+        <h2>Network / Proxy <span class="zh">/ 网络 / 代理</span></h2>
         <span class="badge {badge_cls}" data-badge>{badge_txt}</span>
       </div>
-      <p class="free-tier">A proxy fixes datacenter-IP CAPTCHA gating.</p>
+      <p class="free-tier">
+        A proxy fixes datacenter-IP CAPTCHA gating.<br>
+        <span class="zh">代理用于解决数据中心 IP 触发 CAPTCHA 或访问限制的问题。</span>
+      </p>
       <div class="fields">{inputs_html}</div>
       <div class="actions">
-        <button class="save" onclick="saveProvider(this)">Save</button>
-        <button class="clear" onclick="clearProvider(this)">Clear</button>
+        <button class="save" onclick="saveProvider(this)">Save / 保存</button>
+        <button class="clear" onclick="clearProvider(this)">Clear / 清除</button>
         <span class="result" data-result></span>
       </div>
     </section>
@@ -142,6 +242,8 @@ body {
 }
 .wrap { max-width: 720px; margin: 0 auto; }
 header h1 { margin: 0 0 .25rem; font-size: 1.4rem; }
+.zh { color: #4b5563; }
+.label { font-weight: 600; color: #374151; }
 .note {
   margin: 0 0 1.5rem; padding: .6rem .8rem; background: #fff6e0;
   border: 1px solid #ecd9a0; border-radius: 8px; font-size: .85rem; color: #6a5300;
@@ -158,6 +260,7 @@ header h1 { margin: 0 0 .25rem; font-size: 1.4rem; }
 .free-tier { margin: .35rem 0 .6rem; font-size: .85rem; color: #5a6270; }
 .howto { margin-bottom: .7rem; font-size: .85rem; }
 .howto summary { cursor: pointer; color: #2563eb; }
+.steps-title { margin: .55rem 0 .2rem; font-weight: 600; color: #374151; }
 .howto ol { margin: .5rem 0; padding-left: 1.2rem; }
 .howto li { margin: .25rem 0; }
 .howto .links a { color: #2563eb; text-decoration: none; }
@@ -196,6 +299,10 @@ button.clear:hover { background: #fdecec; }
 
 
 _SCRIPT = """
+function badgeText(ok) {
+  return ok ? 'Configured \\u2713 / 已配置 \\u2713' : 'Not configured / 未配置';
+}
+
 function showToast(msg, ok) {
   var t = document.getElementById('toast');
   t.textContent = msg;
@@ -210,7 +317,7 @@ function applyStatus(status) {
     if (!(id in status)) return;
     var badge = card.querySelector('[data-badge]');
     var ok = !!status[id];
-    badge.textContent = ok ? 'Configured \\u2713' : 'Not configured';
+    badge.textContent = badgeText(ok);
     badge.className = 'badge ' + (ok ? 'ok' : 'no');
   });
 }
@@ -232,18 +339,18 @@ async function saveProvider(btn) {
       applyStatus(data.status);
       // Clear inputs so secrets never linger in the DOM.
       card.querySelectorAll('input[data-key]').forEach(function (inp) { inp.value = ''; });
-      showToast('Saved', true);
+      showToast('Saved / 已保存', true);
     } else {
-      showToast('Save failed: ' + (data.error || res.status), false);
+      showToast('Save failed / 保存失败: ' + (data.error || res.status), false);
     }
   } catch (e) {
-    showToast('Save failed: ' + e, false);
+    showToast('Save failed / 保存失败: ' + e, false);
   }
 }
 
 async function clearProvider(btn) {
   var card = btn.closest('.card');
-  if (!confirm('Remove the stored key(s) for this provider?')) return;
+  if (!confirm('Remove the stored key(s) for this provider?\\n确认删除该提供商已保存的密钥或配置吗？')) return;
   var keys = [];
   card.querySelectorAll('input[data-key]').forEach(function (inp) {
     keys.push(inp.getAttribute('data-key'));
@@ -258,16 +365,16 @@ async function clearProvider(btn) {
       });
       var data = await res.json();
       if (!(res.ok && data.ok)) {
-        showToast('Clear failed: ' + (data.error || res.status), false);
+        showToast('Clear failed / 清除失败: ' + (data.error || res.status), false);
         return;
       }
       status = data.status;
     }
     if (status) applyStatus(status);
     card.querySelectorAll('input[data-key]').forEach(function (inp) { inp.value = ''; });
-    showToast('Cleared', true);
+    showToast('Cleared / 已清除', true);
   } catch (e) {
-    showToast('Clear failed: ' + e, false);
+    showToast('Clear failed / 清除失败: ' + e, false);
   }
 }
 
@@ -275,17 +382,17 @@ async function loginProvider(btn) {
   var card = btn.closest('.card');
   var id = card.getAttribute('data-provider');
   var out = card.querySelector('[data-result]');
-  out.textContent = 'A browser window will open; log in, it auto-closes…';
+  out.textContent = 'A browser window will open; log in, it auto-closes… / 浏览器窗口会打开，请登录，完成后会自动关闭…';
   out.className = 'result';
   btn.disabled = true;
   try {
     var res = await fetch('/api/login/' + encodeURIComponent(id), { method: 'POST' });
     var data = await res.json();
     if (res.ok && data.ok) {
-      out.textContent = 'Logged in';
+      out.textContent = 'Logged in / 已登录';
       out.className = 'result ok';
     } else {
-      out.textContent = data.error || 'login failed';
+      out.textContent = data.error || 'login failed / 登录失败';
       out.className = 'result err';
     }
   } catch (e) {
@@ -300,16 +407,16 @@ async function testProvider(btn) {
   var card = btn.closest('.card');
   var id = card.getAttribute('data-provider');
   var out = card.querySelector('[data-result]');
-  out.textContent = 'Testing…';
+  out.textContent = 'Testing… / 正在测试…';
   out.className = 'result';
   try {
     var res = await fetch('/api/test/' + encodeURIComponent(id));
     var data = await res.json();
     if (data.ok) {
-      out.textContent = data.count + ' result(s)';
+      out.textContent = data.count + ' result(s) / 条结果';
       out.className = 'result ok';
     } else {
-      out.textContent = data.error || 'failed';
+      out.textContent = data.error || 'failed / 测试失败';
       out.className = 'result err';
     }
   } catch (e) {
@@ -325,10 +432,11 @@ def _render_page() -> str:
     cards += _render_network_card()
     note = (
         "Local config tool — bound to 127.0.0.1. Keys are stored at "
-        "~/.config/search-mcp/config.json (0600)."
+        "~/.config/search-mcp/config.json (0600). "
+        "本地配置工具，仅绑定 127.0.0.1；密钥保存在上述本地文件中。"
     )
     return f"""<!doctype html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -338,7 +446,7 @@ def _render_page() -> str:
 <body>
   <div class="wrap">
     <header>
-      <h1>search-mcp · provider keys</h1>
+      <h1>search-mcp · provider keys <span class="zh">/ 提供商密钥配置</span></h1>
       <p class="note">{_esc(note)}</p>
     </header>
     {cards}
@@ -350,6 +458,12 @@ def _render_page() -> str:
 
 
 # --- routes -----------------------------------------------------------------
+
+
+def _ui_status() -> dict[str, bool]:
+    status = keystore.provider_status()
+    status["__network__"] = keystore.get_secret("proxy") is not None
+    return status
 
 
 async def index(request: Request) -> HTMLResponse:
@@ -376,7 +490,7 @@ async def api_save(request: Request) -> JSONResponse:
     }
     if non_empty:
         keystore.set_secrets(non_empty)
-    return JSONResponse({"ok": True, "status": keystore.provider_status()})
+    return JSONResponse({"ok": True, "status": _ui_status()})
 
 
 async def api_clear(request: Request) -> JSONResponse:
@@ -388,7 +502,7 @@ async def api_clear(request: Request) -> JSONResponse:
     if not field or not isinstance(field, str):
         return JSONResponse({"ok": False, "error": "missing 'field'"}, status_code=400)
     keystore.delete_secret(field)
-    return JSONResponse({"ok": True, "status": keystore.provider_status()})
+    return JSONResponse({"ok": True, "status": _ui_status()})
 
 
 async def api_test(request: Request) -> JSONResponse:

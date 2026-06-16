@@ -464,9 +464,12 @@ if [ ! -f .env ] && [ -f .env.example ]; then
 fi
 
 if [ "$DRY_RUN" -eq 0 ]; then
-  echo "Smoke-testing the engine registry..."
+  echo "Smoke-testing the server..."
 fi
-run uv run python -c "from search_mcp.aggregator import list_engines; print('engines:', ', '.join(list_engines()))"
+# Import the full server module (which transitively imports every engine, the
+# fetcher, the Google News URL resolver, documents, etc.) so a broken import in
+# any code path fails the install loudly, not just the engine registry.
+run uv run python -c "import search_mcp.server; from search_mcp.aggregator import list_engines; print('engines:', ', '.join(list_engines()))"
 [ "$DRY_RUN" -eq 1 ] || ok "server imports cleanly"
 
 register_clients

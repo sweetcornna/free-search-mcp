@@ -116,6 +116,10 @@ class BilibiliEngine(Engine):
                 url = (item.get("arcurl") or "").strip()
                 if url.startswith("//"):
                     url = "https:" + url
+                elif url.startswith("http://"):
+                    # Bilibili serves https everywhere; upgrade the plain-http
+                    # arcurl so we don't hand the LLM a downgraded link.
+                    url = "https://" + url[len("http://"):]
                 if not title or not url:
                     continue
                 snippet = _strip_html(item.get("description") or "")
@@ -128,6 +132,8 @@ class BilibiliEngine(Engine):
                         engine=self.name,
                         rank=0,
                         published_age=published_age,
+                        # pubdate is a structured unix-seconds publish time.
+                        published_age_confident=bool(published_age),
                     )
                 )
         return results

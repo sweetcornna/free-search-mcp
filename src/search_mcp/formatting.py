@@ -24,7 +24,15 @@ def estimate_tokens(text: str) -> int:
     cjk = 0
     for c in text:
         o = ord(c)
-        if 0x4E00 <= o <= 0x9FFF or 0x3040 <= o <= 0x30FF or 0xAC00 <= o <= 0xD7A3:
+        if (
+            0x3000 <= o <= 0x303F      # CJK symbols & punctuation （。！？…）
+            or 0x3040 <= o <= 0x30FF   # Japanese hiragana/katakana
+            or 0x3400 <= o <= 0x4DBF   # CJK Extension-A
+            or 0x4E00 <= o <= 0x9FFF   # CJK unified ideographs
+            or 0xAC00 <= o <= 0xD7A3   # Korean hangul syllables
+            or 0xF900 <= o <= 0xFAFF   # CJK compatibility ideographs
+            or 0xFF00 <= o <= 0xFFEF   # fullwidth forms / halfwidth kana
+        ):
             cjk += 1
     latin = len(text) - cjk
     return cjk + max(1, latin // 4)

@@ -202,9 +202,19 @@ class SearchResult:
     # Surfaced to the LLM so date-sensitive queries don't require fetching
     # every URL just to check freshness.
     published_age: str = ""
+    # True when ``published_age`` came from a STRUCTURED source (RSS pubDate, an
+    # API date field) rather than a date scraped out of arbitrary snippet text.
+    # Only confident absolute dates are trusted to DROP a result under a
+    # freshness filter — otherwise a fresh page that merely *mentions* an old
+    # date ("...founded in 2009...") would be wrongly dropped. Relative "N ago"
+    # phrases are always trusted regardless of this flag. Internal-only: excluded
+    # from to_dict() so it never leaks into tool output or the cache.
+    published_age_confident: bool = False
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        d = asdict(self)
+        d.pop("published_age_confident", None)
+        return d
 
 
 def _host(url: str) -> str:
@@ -374,8 +384,16 @@ def apply_post_filters_with_diagnostics(
         if filters.freshness is not None:
             age_days = _published_age_in_days(r.published_age)
             if age_days is not None:
+                # Only DROP on a date we trust: a relative "N ago" phrase (an
+                # explicit recency claim) or a date from a structured source
+                # (RSS/API, published_age_confident). An absolute date scraped
+                # from arbitrary snippet text is display-only — a fresh page that
+                # merely mentions an old year must not be dropped.
+                trusted = bool(
+                    r.published_age_confident or _AGE_REL_RE.search(r.published_age)
+                )
                 max_days = _FRESHNESS_MAX_DAYS.get(filters.freshness)
-                if max_days is not None and age_days > max_days:
+                if trusted and max_days is not None and age_days > max_days:
                     _bump("freshness")
                     continue
 
@@ -474,6 +492,12 @@ _GATE_MARKERS: tuple[tuple[str, tuple[str, ...]], ...] = (
             "px-captcha",
             "are you a robot",
             "verify you are a human",
+            # DuckDuckGo's anomaly/challenge page (HTTP 202) never contains the
+            # literal "captcha" — it shows an "anomaly-modal" asking the user to
+            # "select all squares containing a duck". Without these markers a
+            # gated DDG (the #1 default engine) returns a silent empty.
+            "anomaly-modal",
+            "made by a human",
         ),
     ),
     (
@@ -497,6 +521,33 @@ _GATE_MARKERS: tuple[tuple[str, tuple[str, ...]], ...] = (
         ),
     ),
 )
+
+
+def raise_for_key_error(engine: str, status: int | None) -> None:
+    """Turn an auth/quota HTTP status from a keyed engine into an actionable
+    error, so a bad/expired key surfaces a hint instead of a silent empty.
+
+    Called by the keyed engines AFTER their try/except, only when they got no
+    results — so a healthy 200 never trips it. The aggregator catches the raised
+    ValueError into its per-engine ``errors`` map. Network/transport failures
+    (status is None) stay silent, preserving the "a flaky API never poisons the
+    aggregator" contract; only an explicit auth/quota status raises.
+    """
+    if status in (401, 403):
+        raise ValueError(
+            f"{engine}: the API key was rejected (HTTP {status}). Verify it in the "
+            "admin UI (uv run search-mcp-admin) or the SEARCH_MCP_*_API_KEY env var."
+        )
+    if status == 422:
+        raise ValueError(
+            f"{engine}: the API rejected the request (HTTP 422) — usually an "
+            "invalid key or malformed parameters."
+        )
+    if status == 429:
+        raise ValueError(
+            f"{engine}: rate limit / quota exceeded (HTTP 429). Slow down or raise "
+            "the plan's limit."
+        )
 
 
 def detect_gate(html: str) -> str | None:

@@ -62,7 +62,7 @@ Codex, Cursor, Cline, Continue, Zed, and generic agent guidance:
 Optional extras, any time (the defaults already work without them):
 
 ```bash
-uv run search-mcp-admin        # browser UI to add API keys / a proxy  (127.0.0.1:8765)
+uv run search-mcp-admin        # bilingual browser UI / 中英双语配置页: http://127.0.0.1:8765
 uv run search-mcp-login zhihu  # one-time Zhihu login (persists cookies)
 ```
 
@@ -217,9 +217,11 @@ configured" hint) until you add a key:
 uv run search-mcp-admin          # opens a local config page on 127.0.0.1:8765
 ```
 
-It serves one page (bound to localhost only) with, per provider: a
-**how-to-get-a-key** guide + signup link, a masked key field, **Save** (applies
-live — no server restart), a **Test** button, and **Clear**. Keys are written to
+It serves one bilingual page (English + 中文, bound to localhost only) with,
+per provider: a **how-to-get-a-key / 如何获取密钥** guide + signup/docs links,
+masked key fields, **Save / 保存** (applies live — no server restart),
+**Test / 测试**, and **Clear / 清除**. The same page also includes
+**Network / Proxy / 网络 / 代理** settings. Keys are written to
 `~/.config/search-mcp/config.json` (`0600`); they're never echoed back to the
 page. Prefer env vars? Set `SEARCH_MCP_<PROVIDER>_API_KEY` instead (these
 override the saved file). Full walkthrough for each provider:

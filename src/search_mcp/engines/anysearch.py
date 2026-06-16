@@ -56,6 +56,10 @@ _IMPERSONATE = "chrome131"
 
 _ENDPOINT = "https://api.anysearch.com/v1/search"
 
+# Cap on the content-blob snippet fallback (chars). A SERP snippet is a teaser,
+# not the page body; without a cap a single result can dump multiple KB.
+_SNIPPET_CAP = 400
+
 
 class AnySearchEngine(Engine):
     """AnySearch unified search REST API — anonymous (keyless), JSON POST."""
@@ -104,10 +108,18 @@ class AnySearchEngine(Engine):
             url = (item.get("url") or "").strip()
             if not title or not url:
                 continue
-            # snippet: the longer of description / content (non-empty wins).
-            description = (item.get("description") or "").strip()
-            content = (item.get("content") or "").strip()
-            snippet = description if len(description) >= len(content) else content
+            # snippet: prefer the API's dedicated short ``snippet``/``description``
+            # summary; only fall back to the (often multi-KB) full-page ``content``
+            # blob when neither is present, and cap that fallback so a single
+            # result can't dump thousands of chars into the SERP list. The live
+            # payload frequently omits ``description`` entirely, so the old
+            # "longer of description/content" rule degenerated to dumping the
+            # whole content blob as the snippet.
+            snippet = (item.get("snippet") or item.get("description") or "").strip()
+            if not snippet:
+                snippet = (item.get("content") or "").strip()
+                if len(snippet) > _SNIPPET_CAP:
+                    snippet = snippet[:_SNIPPET_CAP].rstrip() + " …"
             published_age = self._date_portion(item.get("published_at"))
             results.append(
                 SearchResult(
@@ -117,6 +129,8 @@ class AnySearchEngine(Engine):
                     engine=self.name,
                     rank=0,
                     published_age=published_age,
+                    # published_at is a structured API date field.
+                    published_age_confident=bool(published_age),
                 )
             )
         return results

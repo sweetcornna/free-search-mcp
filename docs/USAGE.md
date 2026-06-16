@@ -115,9 +115,12 @@ Add keys the simple way:
 uv run search-mcp-admin     # http://127.0.0.1:8765 → paste keys → Save (applies live)
 ```
 
-or set `SEARCH_MCP_<FIELD>` env vars (e.g. `SEARCH_MCP_SERPER_API_KEY`). An
-unconfigured keyed engine returns a clear "not configured" hint instead of
-failing silently. Step-by-step key acquisition: **[API_KEYS.md](API_KEYS.md)**.
+The admin page is **中英双语** and includes provider key fields, "How to get a
+key / 如何获取密钥" steps, Save/Test/Clear buttons, and the Network / Proxy /
+网络 / 代理 card. Or set `SEARCH_MCP_<FIELD>` env vars (e.g.
+`SEARCH_MCP_SERPER_API_KEY`). An unconfigured keyed engine returns a clear
+"not configured" hint instead of failing silently. Step-by-step key acquisition:
+**[API_KEYS.md](API_KEYS.md)**.
 
 ### Examples
 

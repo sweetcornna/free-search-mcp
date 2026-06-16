@@ -4,6 +4,7 @@ import asyncio
 import hashlib
 import json
 import logging
+import re
 from dataclasses import asdict
 from typing import Any, Literal
 from urllib.parse import urlparse
@@ -50,6 +51,9 @@ def _canonical_host(url: str) -> str:
     return h
 
 
+_NUM_RE = re.compile(r"\d+")
+
+
 def _dedup_by_title(items: list[dict]) -> list[dict]:
     """Remove near-duplicate titles on the same canonical host.
 
@@ -58,6 +62,13 @@ def _dedup_by_title(items: list[dict]) -> list[dict]:
     point at the same story. Different hosts with the same title (e.g. wire
     stories on Reuters and AP) are kept — those are legitimately distinct
     sources.
+
+    Numeric guard: two same-host titles whose digit-tokens differ (e.g. "Python
+    3.13 released" vs "Python 3.12 released", "iPhone 15" vs "iPhone 14", "...25
+    basis points" vs "...50 basis points") are kept as DISTINCT, because the
+    fuzzy ratio alone scores those >=92 and would silently drop a real, separate
+    result. Version/year/quantity differences are meaningful, not syndication
+    noise.
     """
     keep: list[dict] = []
     for it in items:
@@ -66,11 +77,18 @@ def _dedup_by_title(items: list[dict]) -> list[dict]:
             keep.append(it)
             continue
         host = _canonical_host(it.get("url", ""))
-        is_dup = any(
-            fuzz.token_set_ratio(t, (k.get("title") or "").lower()) >= 92
-            and _canonical_host(k.get("url", "")) == host
-            for k in keep
-        )
+        t_nums = _NUM_RE.findall(t)
+        is_dup = False
+        for k in keep:
+            if _canonical_host(k.get("url", "")) != host:
+                continue
+            kt = (k.get("title") or "").lower()
+            # Distinct digit-tokens => distinct results; never collapse them.
+            if _NUM_RE.findall(kt) != t_nums:
+                continue
+            if fuzz.token_set_ratio(t, kt) >= 92:
+                is_dup = True
+                break
         if not is_dup:
             keep.append(it)
     return keep
@@ -135,8 +153,26 @@ def _lead_snippet(query: str, results: list[dict]) -> str | None:
             host = (urlparse(r.get("url", "")).hostname or "")
             if host.startswith("www."):
                 host = host[4:]
+            # GoogleNews items carry an opaque news.google.com redirect URL, but
+            # the real outlet is appended to the title as "(Reuters)". Attribute
+            # the lead to that outlet instead of "news.google.com", which is
+            # never the actual source.
+            if host == "news.google.com":
+                outlet = _outlet_from_gnews_title(r.get("title", ""))
+                if outlet:
+                    host = outlet
             return f"According to {host}: {sn}"
     return None
+
+
+# GoogleNews display titles end with the outlet in parens: "Headline (Reuters)".
+_GNEWS_OUTLET_RE = re.compile(r"\(([^()]+)\)\s*$")
+
+
+def _outlet_from_gnews_title(title: str) -> str:
+    """Extract the trailing "(Outlet)" name a GoogleNews title carries, or ""."""
+    m = _GNEWS_OUTLET_RE.search(title or "")
+    return m.group(1).strip() if m else ""
 
 
 # Human-readable labels for the drop-reason keys we surface to the LLM.

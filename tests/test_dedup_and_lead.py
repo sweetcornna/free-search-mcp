@@ -77,6 +77,34 @@ def test_dedup_keeps_differing_titles_on_same_host():
     assert len(out) == 2
 
 
+def test_dedup_keeps_version_bumps_on_same_host():
+    # Near-identical titles differing only by a version/year/quantity number must
+    # NOT be collapsed — the fuzzy ratio scores them >=92 but they are distinct
+    # results. Guards the numeric-token exception in _dedup_by_title.
+    items = [
+        {"title": "Python 3.13 released", "url": "https://www.python.org/downloads/release/3130"},
+        {"title": "Python 3.12 released", "url": "https://www.python.org/downloads/release/3120"},
+    ]
+    out = _dedup_by_title(items)
+    assert len(out) == 2
+
+    items = [
+        {"title": "The 6 best mechanical keyboards of 2026", "url": "https://www.nytimes.com/a"},
+        {"title": "The 6 best mechanical keyboards of 2025", "url": "https://www.nytimes.com/b"},
+    ]
+    assert len(_dedup_by_title(items)) == 2
+
+
+def test_dedup_still_collapses_when_numbers_match():
+    # Same digit-tokens + near-identical wording on the same host is still a dup
+    # (AMP/mobile/cc-TLD syndication of the SAME story).
+    items = [
+        {"title": "Fed holds rates at 5% in 2026", "url": "https://www.bbc.com/news/x"},
+        {"title": "Fed holds rates at 5% in 2026.", "url": "https://amp.bbc.com/news/x"},
+    ]
+    assert len(_dedup_by_title(items)) == 1
+
+
 def test_dedup_keeps_same_title_across_different_canonical_hosts():
     """Wire-story syndication: Reuters and AP both run the same headline.
     These are legitimately distinct sources — we must not collapse them.
@@ -190,6 +218,26 @@ def test_lead_snippet_picks_top3_with_two_query_terms_and_long_enough():
     assert out is not None
     assert out.startswith("According to realpython.com:")
     assert "python async programming" in out
+
+
+def test_lead_snippet_attributes_googlenews_to_real_outlet():
+    # A GoogleNews lead carries an opaque news.google.com URL, but the outlet is
+    # in the title as "(Reuters)" — the lead must attribute to that, not to
+    # "news.google.com".
+    results = [
+        {
+            "title": "OpenAI ships a new python async runtime (Reuters)",
+            "url": "https://news.google.com/rss/articles/CBMiABC123",
+            "snippet": (
+                "The new python async runtime overhauls coroutine scheduling "
+                "and the event loop for high-throughput inference workloads."
+            ),
+        },
+    ]
+    out = _lead_snippet("python async runtime", results)
+    assert out is not None
+    assert out.startswith("According to Reuters:")
+    assert "news.google.com" not in out
 
 
 def test_lead_snippet_returns_none_when_no_snippet_qualifies():

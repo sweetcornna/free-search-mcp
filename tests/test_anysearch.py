@@ -24,9 +24,11 @@ skip_offline = pytest.mark.skipif(
 
 # A representative 200 payload in the REAL live shape: results nested under
 # ``data.results`` (with the top-level code/message envelope the live API
-# returns). The first item has a longer ``content`` than ``description``
-# (content should win); the second has a longer ``description`` (description
-# should win) and a ``published_at`` to derive published_age from.
+# returns). Snippet precedence is: dedicated ``snippet`` field > ``description``
+# > a length-capped slice of the full ``content`` blob. The first item carries
+# an explicit ``snippet`` (must win over the long ``content``); the second has
+# only a ``description`` (must win over ``content``) plus a ``published_at`` to
+# derive published_age from.
 _OK_PAYLOAD = {
     "code": 0,
     "message": "success",
@@ -35,8 +37,9 @@ _OK_PAYLOAD = {
             {
                 "title": "Result A",
                 "url": "https://example.com/a",
+                "snippet": "the dedicated snippet field",
                 "description": "short desc",
-                "content": "a much longer content body that should be chosen as snippet",
+                "content": "a much longer content body that must NOT be chosen as snippet",
                 "score": 0.9,
                 "quality_score": 0.8,
                 "signal_scores": {"relevance": 0.75},
@@ -135,14 +138,38 @@ async def test_search_parses_results(monkeypatch):
     a, b = out
     assert a.title == "Result A"
     assert a.url == "https://example.com/a"
-    # content was longer than description -> snippet is content.
-    assert a.snippet == "a much longer content body that should be chosen as snippet"
+    # The dedicated `snippet` field wins over both description and the long content.
+    assert a.snippet == "the dedicated snippet field"
     # published_age is the YYYY-MM-DD portion of published_at.
     assert a.published_age == "2024-02-06"
 
-    # description was longer than content -> snippet is description.
+    # No `snippet` field -> `description` is used (never the raw content blob).
     assert b.snippet == "a longer description that should be chosen over content"
     assert b.published_age == "2025-11-30"
+
+
+async def test_content_only_snippet_is_length_capped(monkeypatch):
+    # When neither snippet nor description is present, the full content blob is
+    # used but capped so a single result can't dump multiple KB into the list.
+    from search_mcp.engines.anysearch import _SNIPPET_CAP
+
+    long_body = "x" * (_SNIPPET_CAP + 500)
+    payload = {
+        "data": {
+            "results": [
+                {"title": "Big", "url": "https://example.com/big", "content": long_body},
+            ]
+        }
+    }
+    e = AnySearchEngine()
+    _patch_session(
+        monkeypatch, lambda *a, **kw: _mock_session_returning(200, payload)
+    )
+    out = await e.search("hello", max_results=10)
+    assert len(out) == 1
+    # Capped to _SNIPPET_CAP chars plus a short ellipsis marker, never the full blob.
+    assert len(out[0].snippet) <= _SNIPPET_CAP + 2
+    assert out[0].snippet.endswith("…")
 
 
 async def test_search_parses_flat_fallback_shape(monkeypatch):

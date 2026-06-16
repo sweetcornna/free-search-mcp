@@ -1,13 +1,15 @@
 [project]
 name = "search-mcp"
-version = "0.2.0"
+version = "0.3.0"
 description = "Local-first, no-API-key search MCP server. Multi-engine web search, smart fetching, document reading."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 dependencies = [
     "mcp[cli]>=1.2.0",
-    "httpx>=0.27",
+    # [socks] extra so the documented socks5:// proxy works with the httpx
+    # clients in documents.py / structured.py (curl_cffi handles socks natively).
+    "httpx[socks]>=0.27",
     "curl-cffi>=0.7",
     "selectolax>=0.3.21",
     "playwright>=1.47",

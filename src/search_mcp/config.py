@@ -25,6 +25,15 @@ class Settings(BaseSettings):
     default_engines: list[str] = ["duckduckgo", "mojeek", "googlenews"]
     max_results_per_engine: int = 10
 
+    # Public SearXNG instances rot constantly (DNS death, 429 walls, disabled
+    # backends). An operator can pin a known-good instance (or several) via
+    # SEARCH_MCP_SEARX_INSTANCES (comma/space separated, e.g.
+    # "https://searx.be https://priv.au"); when set it takes precedence over the
+    # built-in shortlist the searx engine races. searx is also the keyless
+    # fallback for the google/bing scrapers, so a live instance here re-arms
+    # those too.
+    searx_instances: str = ""
+
     rate_limit_per_minute: int = Field(default=30, gt=0)
     fetch_rate_limit_per_minute: int = Field(default=20, gt=0)
 

@@ -64,7 +64,14 @@ class DuckDuckGoEngine(Engine):
     def parse(self, html: str) -> list[SearchResult]:
         tree = parse_html(html)
         results: list[SearchResult] = []
-        for div in tree.css("div.result, div.web-result"):
+        seen: set[str] = set()
+        # Every organic row carries class "result" (alongside "web-result" etc.);
+        # selecting on "div.result" alone matches each row EXACTLY ONCE. The old
+        # "div.result, div.web-result" comma selector matched the same div twice
+        # (it has both classes), emitting every result twice and doubling DDG's
+        # weight in the RRF merge. The seen-set is a belt-and-braces guard against
+        # any future markup that re-introduces a double match.
+        for div in tree.css("div.result"):
             classes = div.attributes.get("class") or ""
             # Skip the obvious ad rows DDG injects; their URL is also a y.js redirect.
             if "result--ad" in classes or "result--sponsored" in classes:
@@ -78,8 +85,9 @@ class DuckDuckGoEngine(Engine):
                 continue
             title = text_of(link)
             snippet = text_of(div.css_first(".result__snippet"))
-            if not url or not title:
+            if not url or not title or url in seen:
                 continue
+            seen.add(url)
             result = SearchResult(title=title, url=url, snippet=snippet, engine=self.name, rank=0)
             hint = extract_date_hint(snippet) or extract_date_hint(title)
             if hint:
