@@ -3,8 +3,10 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import re
 from dataclasses import dataclass
 from typing import Any
+from urllib.parse import urlparse
 
 import trafilatura
 from curl_cffi.requests import AsyncSession
@@ -15,6 +17,7 @@ from .browser import pool
 from .cache import cache
 from .config import settings
 from .formatting import estimate_tokens, smart_truncate
+from .gnews import is_google_news_url, resolve_google_news_url
 from .net import curl_proxy_kwargs
 from .ratelimit import RateLimiter
 from .url_safety import assert_url_allowed
@@ -259,6 +262,49 @@ def _resolve_redirect_location(base_url: str, location: str | None) -> str | Non
     return urljoin(base_url, location)
 
 
+# Charset detection for the HTTP text path. We can't blindly decode as UTF-8:
+# many CJK pages (baidu/zhihu hits served as GBK/GB2312/Big5, Japanese pages as
+# Shift-JIS/EUC-JP) declare their charset in the Content-Type header or an HTML
+# <meta> tag, and decoding those as UTF-8 yields mojibake the LLM can't read.
+_CTYPE_CHARSET_RE = re.compile(r"charset\s*=\s*[\"']?([\w\-]+)", re.I)
+_META_CHARSET_RE = re.compile(
+    rb"""<meta[^>]+charset\s*=\s*["']?\s*([a-zA-Z0-9_\-]+)""", re.I
+)
+
+
+def _charset_from_ctype(ctype: str) -> str | None:
+    m = _CTYPE_CHARSET_RE.search(ctype or "")
+    return m.group(1).lower() if m else None
+
+
+def _sniff_meta_charset(body: bytes) -> str | None:
+    """Best-effort: read the charset from an HTML <meta> tag in the head."""
+    m = _META_CHARSET_RE.search(body[:4096])
+    if not m:
+        return None
+    try:
+        return m.group(1).decode("ascii").lower()
+    except (UnicodeDecodeError, AttributeError):
+        return None
+
+
+def _decode_body(body: bytes, ctype: str) -> str:
+    """Decode a response body using the declared/sniffed charset, not blind UTF-8.
+
+    Precedence: Content-Type header charset > HTML <meta> charset > UTF-8.
+    Unknown/invalid codecs fall back to UTF-8 so we never raise on decode.
+    """
+    enc = _charset_from_ctype(ctype)
+    if not enc and (not ctype or "html" in ctype or "xml" in ctype):
+        enc = _sniff_meta_charset(body)
+    enc = enc or "utf-8"
+    try:
+        return body.decode(enc, errors="replace")
+    except LookupError:
+        # An unrecognised charset label (e.g. a typo'd or exotic codec name).
+        return body.decode("utf-8", errors="replace")
+
+
 async def _http_fetch(url: str) -> tuple[str, str]:
     # SSRF guard: validate the caller URL before we ever open a socket.
     assert_url_allowed(url)
@@ -297,10 +343,56 @@ async def _http_fetch(url: str) -> tuple[str, str]:
             finally:
                 await resp.aclose()
             ctype = resp.headers.get("content-type", "")
-            encoding = getattr(resp, "encoding", None) or "utf-8"
-            text = body.decode(encoding, errors="replace")
+            text = _decode_body(body, ctype)
             return ctype, text
         raise RuntimeError(f"too many redirects (>{_MAX_REDIRECTS}) fetching {url}")
+
+
+_DOC_URL_SUFFIXES = (".pdf", ".docx")
+_DOC_CTYPES = ("application/pdf", "wordprocessingml", "application/msword")
+
+
+def _is_document_url(url: str) -> bool:
+    """True for URLs whose path ends in a binary-document extension."""
+    try:
+        path = urlparse(url).path.lower()
+    except ValueError:
+        return False
+    return path.endswith(_DOC_URL_SUFFIXES)
+
+
+def _is_document_ctype(ctype: str) -> bool:
+    c = (ctype or "").lower()
+    return any(t in c for t in _DOC_CTYPES)
+
+
+def _ctype_is_markup(ctype: str) -> bool:
+    """True for HTML/XML content-types, or an empty one (HTTP fetch failed /
+    server omitted the header) where a browser render may still recover."""
+    c = (ctype or "").lower()
+    return (not c) or ("html" in c) or ("xml" in c)
+
+
+async def _fetch_as_document(url: str) -> FetchResult:
+    """Parse a binary document (PDF/DOCX) via the document reader and adapt it to
+    a FetchResult, so fetch/research return real text instead of decoded bytes.
+
+    Caches the extracted text under the page cache (so repeat fetches + cache
+    search work). Lazy-imports documents to avoid a fetcher<->documents cycle.
+    """
+    from .documents import read_document
+
+    doc = await read_document(url)
+    content, soft_trunc = _truncate(doc.content)
+    await cache.put_page(url, _encode_title_meta(doc.title, "", "", ""), doc.content)
+    return FetchResult(
+        url=url,
+        title=doc.title,
+        content=content,
+        method="document",
+        truncated=soft_trunc or doc.truncated,
+        tokens_estimated=estimate_tokens(content),
+    )
 
 
 async def fetch_page(
@@ -309,6 +401,17 @@ async def fetch_page(
     render: str = "auto",
     force_refresh: bool = False,
 ) -> FetchResult:
+    # Google News RSS/article links (news.google.com/.../articles/CBM...) are
+    # opaque redirect blobs that resolve to an empty JS shell over both HTTP and
+    # a headless browser — so fetch/research would otherwise return zero content
+    # for every news result. Resolve to the real publisher URL up front (best
+    # effort, memoised) so the cache key, fetched body, and returned url are all
+    # the publisher's. On failure we keep the original url (no regression).
+    if is_google_news_url(url):
+        resolved = await resolve_google_news_url(url)
+        if resolved:
+            url = resolved
+
     if not force_refresh:
         cached = await cache.get_page(url)
         if cached:
@@ -326,6 +429,13 @@ async def fetch_page(
                 sitename=sitename,
             )
 
+    # Binary documents (PDF/DOCX) must be parsed by the document reader, not
+    # decoded as text (which yields U+FFFD garbage). The URL suffix is known up
+    # front, so route before fetching; the content-type check below catches
+    # extension-less URLs that still serve a PDF/DOCX.
+    if _is_document_url(url):
+        return await _fetch_as_document(url)
+
     await fetch_limiter.acquire("fetch")
 
     method = "http"
@@ -341,7 +451,18 @@ async def fetch_page(
             last_err = e
             log.info("http fetch failed for %s: %s", url, e)
 
-    needs_browser = render == "browser" or (render == "auto" and (not html or len(html) < 500))
+    # An extension-less URL that nonetheless serves a PDF/DOCX content-type:
+    # hand off to the document parser instead of decoding its bytes as text.
+    if _is_document_ctype(ctype):
+        return await _fetch_as_document(url)
+
+    # The short-body browser fallback is for HTML pages that arrived as an empty
+    # JS shell — gate it on the content-type being markup (or unknown), so a
+    # small JSON/text API response isn't needlessly re-rendered in Chromium and
+    # then mislabelled text/html (which would route it through trafilatura).
+    needs_browser = render == "browser" or (
+        render == "auto" and _ctype_is_markup(ctype) and (not html or len(html) < 500)
+    )
     if needs_browser:
         try:
             title2, html2 = await pool.fetch_html(url)

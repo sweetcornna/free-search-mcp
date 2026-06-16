@@ -50,7 +50,12 @@ class BaiduEngine(Engine):
             link = div.css_first("h3.t a") or div.css_first("h3 a")
             if not link:
                 continue
-            url = link.attributes.get("href", "")
+            # Baidu wraps every organic href in an opaque www.baidu.com/link?url=
+            # 302 redirector. The container's `mu` attribute carries the REAL
+            # destination, so prefer it — gives the LLM a usable/citable URL and
+            # lets cross-engine dedup collapse Baidu hits against the same page
+            # from other engines (the redirector URL would never match).
+            url = div.attributes.get("mu") or link.attributes.get("href", "")
             title = text_of(link)
             snippet = text_of(
                 div.css_first(".c-abstract")

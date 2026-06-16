@@ -205,7 +205,9 @@ async def test_search_missing_key_raises_value_error(monkeypatch):
     assert "brave_api_key" in msg
 
 
-async def test_search_non_200_returns_empty(monkeypatch):
+async def test_search_quota_error_raises(monkeypatch):
+    # A 429 (quota/rate limit) surfaces an actionable error instead of a silent
+    # empty so the caller learns WHY a configured engine returned nothing.
     e = BraveApiEngine()
     _patch_key(monkeypatch, "FAKE")
     _patch_session(
@@ -213,8 +215,20 @@ async def test_search_non_200_returns_empty(monkeypatch):
         lambda *a, **kw: _mock_session_returning(429, None, text="Too Many Requests"),
     )
 
-    out = await e.search("hello", max_results=10)
-    assert out == []
+    with pytest.raises(ValueError, match="429"):
+        await e.search("hello", max_results=10)
+
+
+async def test_search_server_error_returns_empty(monkeypatch):
+    # A non-auth non-200 (e.g. 500) still degrades to empty (transient), no raise.
+    e = BraveApiEngine()
+    _patch_key(monkeypatch, "FAKE")
+    _patch_session(
+        monkeypatch,
+        lambda *a, **kw: _mock_session_returning(500, None, text="Server Error"),
+    )
+
+    assert await e.search("hello", max_results=10) == []
 
 
 async def test_search_malformed_json_returns_empty(monkeypatch):

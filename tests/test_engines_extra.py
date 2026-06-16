@@ -175,9 +175,10 @@ def test_safesearch_region_urls_still_parse_and_keep_freshness(monkeypatch):
 # ---------------------------------------------------------------------------
 
 
-def _r(url: str, published_age: str = "") -> SearchResult:
+def _r(url: str, published_age: str = "", confident: bool = False) -> SearchResult:
     return SearchResult(
-        title="t", url=url, snippet="s", engine="x", rank=1, published_age=published_age
+        title="t", url=url, snippet="s", engine="x", rank=1,
+        published_age=published_age, published_age_confident=confident,
     )
 
 
@@ -206,8 +207,32 @@ def test_freshness_keeps_unparseable_published_age():
     assert drops == {"freshness": 1}
 
 
-def test_freshness_iso_date_outside_window_dropped():
-    results = [_r("https://a.com", published_age="2019-01-01")]
+def test_freshness_confident_iso_date_outside_window_dropped():
+    # A STRUCTURED (confident) absolute date — e.g. an RSS pubDate — outside the
+    # window is dropped.
+    results = [_r("https://a.com", published_age="2019-01-01", confident=True)]
+    kept, drops = apply_post_filters_with_diagnostics(
+        results, SearchFilters(freshness="month")
+    )
+    assert kept == []
+    assert drops == {"freshness": 1}
+
+
+def test_freshness_keeps_unconfident_absolute_date():
+    # An absolute date scraped from snippet text (confident=False) is display-only
+    # — a fresh page that merely mentions an old year must NOT be dropped.
+    results = [_r("https://a.com", published_age="2019-01-01", confident=False)]
+    kept, drops = apply_post_filters_with_diagnostics(
+        results, SearchFilters(freshness="month")
+    )
+    assert [r.url for r in kept] == ["https://a.com"]
+    assert drops == {}
+
+
+def test_freshness_relative_phrase_dropped_even_without_confident_flag():
+    # A relative "N ago" phrase is an explicit recency claim — trusted to drop
+    # regardless of the confident flag.
+    results = [_r("https://a.com", published_age="5 years ago", confident=False)]
     kept, drops = apply_post_filters_with_diagnostics(
         results, SearchFilters(freshness="month")
     )

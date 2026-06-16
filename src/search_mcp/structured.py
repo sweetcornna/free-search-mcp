@@ -20,6 +20,7 @@ from .net import proxy_url
 from .fetcher import (
     _accumulate_capped,
     _check_content_length,
+    _decode_body,
     _resolve_redirect_location,
     _MAX_REDIRECTS,
 )
@@ -73,7 +74,7 @@ async def extract_structured(url: str) -> dict[str, Any]:
     ) as client:
         current = url
         body = b""
-        encoding = "utf-8"
+        content_type = ""
         for _ in range(_MAX_REDIRECTS + 1):
             async with client.stream("GET", current) as resp:
                 if resp.status_code in (301, 302, 303, 307, 308):
@@ -92,12 +93,14 @@ async def extract_structured(url: str) -> dict[str, Any]:
                 status = resp.status_code
                 _check_content_length(resp.headers)
                 body = await _accumulate_capped(resp.aiter_bytes())
-                encoding = resp.encoding or "utf-8"
+                content_type = resp.headers.get("content-type", "")
                 break
         else:
             raise RuntimeError(f"too many redirects (>{_MAX_REDIRECTS}) fetching {url}")
 
-    html = body.decode(encoding, errors="replace")
+    # Honor the declared/sniffed charset (shared with fetcher) so non-UTF-8 pages
+    # don't turn schema.org metadata into mojibake.
+    html = _decode_body(body, content_type)
     return extract_structured_from_html(html, url, status=status)
 
 

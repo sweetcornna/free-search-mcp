@@ -56,6 +56,7 @@ from .base import (
     SearchResult,
     apply_post_filters,
     apply_post_filters_with_diagnostics,
+    raise_for_key_error,
 )
 
 
@@ -135,6 +136,8 @@ class TavilyEngine(Engine):
                     engine=self.name,
                     rank=0,
                     published_age=published_age,
+                    # published_date is a structured API date field.
+                    published_age_confident=bool(published_age),
                 )
             )
         return results
@@ -185,6 +188,7 @@ class TavilyEngine(Engine):
             body["exclude_domains"] = list(filters.exclude_domains)
 
         results: list[SearchResult] = []
+        status_code: int | None = None
         try:
             async with AsyncSession(
                 impersonate=_IMPERSONATE,
@@ -199,6 +203,7 @@ class TavilyEngine(Engine):
                 **curl_proxy_kwargs(self.name),
             ) as client:
                 resp = await client.post(_ENDPOINT, json=body)
+                status_code = resp.status_code
                 if resp.status_code == 200:
                     try:
                         payload = resp.json()
@@ -211,6 +216,11 @@ class TavilyEngine(Engine):
             results = []
         except Exception:
             results = []
+
+        # A configured-but-rejected key (401/403/422) or a quota hit (429) raises
+        # an actionable error instead of returning a confusing silent empty.
+        if not results:
+            raise_for_key_error(self.name, status_code)
 
         # We override search(), so we must call the post-filter ourselves — the
         # base class only does it on its own code path. Mirror the base class's

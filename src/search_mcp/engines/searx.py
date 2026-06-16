@@ -56,16 +56,33 @@ _PER_INSTANCE_TIMEOUT = 5.0
 # common case where the first batch already returns results.
 _RACE_BATCH = 3
 
-# Public instances verified live (Apr 2026) to return parseable results
-# under a Chrome-impersonated curl_cffi session. Order is randomised at
-# request time to spread load and avoid pinning a single instance.
+# Public instances verified live (Jun 2026) to return parseable results under a
+# Chrome-impersonated curl_cffi session. Order is randomised at request time to
+# spread load and avoid pinning a single instance. Public SearXNG instances rot
+# fast: an operator can override this entirely with SEARCH_MCP_SEARX_INSTANCES
+# (see _resolve_instances). The leading two were re-verified parsing 10 results
+# each on the day this list was refreshed; the rest are kept as fallbacks that
+# the race skips quickly when dead.
 _INSTANCES: list[str] = [
+    "https://searx.namejeff.xyz",
+    "https://etsi.me",
     "https://search.inetol.net",
     "https://baresearch.org",
     "https://searx.tiekoetter.com",
     "https://opnxng.com",
     "https://search.rhscz.eu",
+    "https://priv.au",
+    "https://search.hbubli.cc",
 ]
+
+
+def _resolve_instances() -> list[str]:
+    """Operator-pinned instances (SEARCH_MCP_SEARX_INSTANCES) when set, else the
+    built-in shortlist. Lets an operator route around the public-instance rot
+    without a code change."""
+    raw = settings.searx_instances or ""
+    pinned = [s.strip() for s in raw.replace(",", " ").split() if s.strip()]
+    return pinned or list(_INSTANCES)
 
 # SearXNG <-> our freshness vocabulary.
 _SEARX_FRESHNESS = {"day": "day", "week": "week", "month": "month", "year": "year"}
@@ -174,7 +191,7 @@ class SearxEngine(Engine):
         # for the whole process. We then RACE a small batch concurrently so a
         # dead/slow instance costs ~one timeout for the batch instead of one
         # timeout serially per instance.
-        order = list(_INSTANCES)
+        order = _resolve_instances()
         random.shuffle(order)
 
         results: list[SearchResult] = []
@@ -206,6 +223,13 @@ class SearxEngine(Engine):
                 await asyncio.gather(*tasks, return_exceptions=True)
             if results:
                 break
+
+        # Every public instance was dead/blocked (all returned [] without
+        # raising). Record an honest gate reason so the aggregator surfaces a
+        # hint ("configure SEARCH_MCP_SEARX_INSTANCES / a proxy") instead of a
+        # silent empty the caller can't diagnose.
+        if not results and diagnostics is not None:
+            diagnostics.setdefault("gated", {}).setdefault(self.name, "no_live_instance")
 
         # We override search(), so we must call the post-filter ourselves —
         # the base class only does it on its own code path. Mirror the base

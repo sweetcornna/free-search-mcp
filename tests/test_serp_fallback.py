@@ -123,20 +123,21 @@ async def test_google_with_results_does_not_fall_back(monkeypatch):
 
 
 # ---------------------------------------------------------------------------
-# Bing (account for its warmup)
+# Bing (HTTP-first, browser fallback on empty parse)
 # ---------------------------------------------------------------------------
 
 
 async def test_bing_gated_falls_back_to_searx(monkeypatch):
-    # Bing warms the browser pool first; stub it so the test stays offline.
-    monkeypatch.setattr("search_mcp.engines.bing.pool.warmup", AsyncMock())
-    # Reset the process-wide warmed flag so warmup logic is exercised cleanly.
-    monkeypatch.setattr(BingEngine, "_warmed", False)
-
     engine = BingEngine()
-    # Bing is needs_browser=True, so super().search() goes through _fetch ->
-    # gate page -> parse() == [] -> base records the gate.
+    # Bing is now needs_browser=False: super().search() does the HTTP _fetch
+    # first, and on an empty parse the base retries via the browser pool. Stub
+    # both to return the gate page so the test stays offline and parse() == [],
+    # which makes base record the gate and bing fall back to searx.
     monkeypatch.setattr(engine, "_fetch", AsyncMock(return_value=_GATE_HTML))
+    monkeypatch.setattr(
+        "search_mcp.engines.base.pool.fetch_html",
+        AsyncMock(return_value=("", _GATE_HTML)),
+    )
     search_mock = _stub_searx_class(monkeypatch)
 
     diag: dict = {}
@@ -153,9 +154,6 @@ async def test_bing_gated_falls_back_to_searx(monkeypatch):
 
 
 async def test_bing_with_results_does_not_fall_back(monkeypatch):
-    monkeypatch.setattr("search_mcp.engines.bing.pool.warmup", AsyncMock())
-    monkeypatch.setattr(BingEngine, "_warmed", False)
-
     engine = BingEngine()
     real_bing_html = """
     <html><body>

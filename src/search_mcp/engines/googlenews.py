@@ -140,6 +140,8 @@ class GoogleNewsEngine(Engine):
                     engine=self.name,
                     rank=0,
                     published_age=published_age,
+                    # RSS <pubDate> is an exact, structured publish time.
+                    published_age_confident=bool(published_age),
                 )
             )
         return results

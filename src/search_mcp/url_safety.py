@@ -5,9 +5,12 @@ could point a tool at ``http://169.254.169.254/`` (cloud metadata), at
 ``http://127.0.0.1:.../`` (loopback services), or at any RFC1918 host reachable
 from the server and exfiltrate internal data. ``assert_url_allowed`` resolves
 the hostname to *every* A/AAAA address and rejects the request if any of them
-land on a blocked range — DNS-rebinding-resistant because callers should pass
-the same hostname downstream and ``assert_ip_allowed`` re-checks each redirect
-hop's resolved IP.
+land on a blocked range. Each redirect hop is independently re-validated by
+``assert_url_allowed`` (re-resolving every A/AAAA record), which mitigates — but
+does not fully eliminate — DNS rebinding: a residual TOCTOU window remains
+because the HTTP client does its own connect-time DNS that is not pinned to the
+validated addresses. ``assert_ip_allowed`` is provided for callers that have
+already resolved an IP literal and want to validate it directly.
 
 Dependency-light on purpose: stdlib ``socket`` + ``ipaddress`` only, so this
 module is importable in any context without pulling in heavyweight deps.
@@ -104,6 +107,15 @@ def assert_url_allowed(url: str) -> str:
     if not host:
         raise UnsafeURLError(f"URL has no host to validate: {url!r}")
 
+    # `parts.port` is a property that raises ValueError for an out-of-range or
+    # non-numeric port. Convert it into the module's fail-closed UnsafeURLError
+    # so read_doc / extract_structured surface a clean "URL refused" instead of
+    # leaking a bare "Port out of range 0-65535".
+    try:
+        port = parts.port
+    except ValueError as exc:
+        raise UnsafeURLError(f"Invalid port in {url!r}: {exc}") from exc
+
     if _private_hosts_allowed():
         # Escape hatch fully engaged: skip the (network-touching) DNS resolution
         # entirely so private/local fetches work without leaking lookups.
@@ -120,7 +132,7 @@ def assert_url_allowed(url: str) -> str:
 
     # Resolve to ALL A/AAAA addresses; block if ANY is unsafe.
     try:
-        infos = socket.getaddrinfo(host, parts.port, proto=socket.IPPROTO_TCP)
+        infos = socket.getaddrinfo(host, port, proto=socket.IPPROTO_TCP)
     except socket.gaierror as exc:
         raise UnsafeURLError(
             f"Could not resolve host {host!r}: {exc}. Refusing to connect."

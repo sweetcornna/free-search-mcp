@@ -150,7 +150,8 @@ async def test_search_sets_rank_and_engine(monkeypatch):
     assert all(r.engine == "google_cse" for r in out)
 
 
-async def test_search_non_200_returns_empty(monkeypatch):
+async def test_search_rejected_key_raises(monkeypatch):
+    # A 403 (rejected key) surfaces an actionable error instead of a silent empty.
     e = GoogleCSEEngine()
     _patch_secret(monkeypatch)
     _patch_session(
@@ -158,8 +159,20 @@ async def test_search_non_200_returns_empty(monkeypatch):
         lambda *a, **kw: _mock_session_returning(403, None, text="Forbidden"),
     )
 
-    out = await e.search("hello", max_results=10)
-    assert out == []
+    with pytest.raises(ValueError, match="rejected"):
+        await e.search("hello", max_results=10)
+
+
+async def test_search_server_error_returns_empty(monkeypatch):
+    # A non-auth non-200 (e.g. 500) still degrades to empty (transient), no raise.
+    e = GoogleCSEEngine()
+    _patch_secret(monkeypatch)
+    _patch_session(
+        monkeypatch,
+        lambda *a, **kw: _mock_session_returning(500, None, text="Server Error"),
+    )
+
+    assert await e.search("hello", max_results=10) == []
 
 
 async def test_search_malformed_json_returns_empty(monkeypatch):

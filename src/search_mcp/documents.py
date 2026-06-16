@@ -314,10 +314,22 @@ async def read_document(
     title = ""
     pages: int | None = None
     doc_truncated = False
-    if fmt == "pdf":
-        title, full, pages, doc_truncated = _parse_pdf(blob)
-    elif fmt == "docx":
-        full, doc_truncated = _parse_docx(blob)
+    if fmt in ("pdf", "docx"):
+        # The .pdf/.docx extension (or content-type) said binary, but the body
+        # may actually be HTML — a login wall, soft-404, paywall, or CDN error
+        # page served with the document's URL. Parsing those bytes as PDF/DOCX
+        # raises; degrade to HTML extraction instead of crashing so the caller
+        # still sees the (useful) wall/error text.
+        try:
+            if fmt == "pdf":
+                title, full, pages, doc_truncated = _parse_pdf(blob)
+            else:
+                full, doc_truncated = _parse_docx(blob)
+        except Exception as e:
+            log.info("%s parse failed for %s; falling back to HTML: %s", fmt, source, e)
+            fmt = "html"
+            pages = None
+            full = _parse_html(blob)
     elif fmt == "html":
         full = _parse_html(blob)
     elif fmt in ("text", "markdown"):

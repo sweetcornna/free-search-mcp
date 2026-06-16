@@ -165,7 +165,9 @@ async def search(
       10-20 each, anything beyond is duplicate noise.
     - Adding `engines=["startpage","brave","bing","baidu"]` by default — those
       need browser rendering or captcha-friendly conditions; stick with the
-      defaults unless they returned 0.
+      defaults unless they returned 0. If the defaults DO return 0, the keyless
+      HTTP extras `engines=["google"]` or `engines=["anysearch"]` (no key, no
+      browser) are the best recovery before reaching for the browser-gated ones.
     - Using `category="news"` for breaking news without also setting
       `freshness="day"` — the index lag is days, not minutes.
 
@@ -175,17 +177,28 @@ async def search(
             (startpage is opt-in and browser-rendered.)
         max_results: Merged result count after dedup. 5-20 is the useful range.
         use_cache: Reuse the last result for this exact (query, engines,
-            max_results) within the cache TTL. False forces a re-fetch.
+            max_results, AND all active filters — freshness, include/exclude
+            domains, category, include/exclude text) within the cache TTL.
+            Changing any filter is a different cache entry. False forces a
+            re-fetch.
         max_age_hours: Treat cached results older than this as a read miss; a
             fresh result is ALWAYS written back to the cache regardless of this
             value, so caching is never disabled. Use 0 to force-refresh while
             keeping cache writes; None = use server default TTL (7 days).
         freshness: "day"|"week"|"month"|"year" — restrict to recent results.
+            Best-effort: applied as an engine time-window param AND a client-side
+            date check, but most HTML-engine results carry no parseable date, so
+            undated results are kept rather than dropped (unknown != old). Treat
+            it as a strong hint, not a hard filter; googlenews dates are exact.
         include_domains: List of domains to restrict to (e.g. ["python.org"]).
         exclude_domains: List of domains to exclude.
         category: "news"|"pdf"|"github"|"paper"|"forum"|"blog" — content-type
             shortcut. "paper" => arxiv/acm/springer/ieee/etc; "forum" =>
-            reddit/HN/stackexchange; "github" => github.com only.
+            reddit/HN/stackexchange; "github" => code forges (github/gitlab/
+            codeberg/bitbucket/sourceforge/...). "news" keeps only ~33 major
+            outlets (client-side whitelist), so most DDG/Mojeek hits are dropped
+            — pair it with the default engines (googlenews is auto-added) and
+            note googlenews URLs resolve to the publisher on fetch/research.
         include_text: Substring required in title or snippet (case-insensitive).
         exclude_text: Substring forbidden in title or snippet.
         format: "markdown" (default) or "json".
@@ -600,18 +613,26 @@ def engines() -> list[str]:
     - Calling on every search — the list is static; cache it.
 
     Returns:
-    - A list of engine name strings (e.g. ["duckduckgo", "mojeek",
-      "googlenews", "startpage", "brave", "bing", "baidu"]).
+    - The live, complete list of engine name strings. The buckets below are
+      illustrative; always trust the returned list over this doc.
 
     Common mistakes:
     - Passing one of these names as a query to `search` — they go in the
       `engines=` argument, not `query`.
+    - Passing a key-only engine (brave_api/serper/tavily/google_cse) with no key
+      configured — it returns an actionable error, not results.
 
-    Defaults: duckduckgo + mojeek + googlenews (all reliable, no captchas;
-              googlenews is an RSS index with structured publish dates).
-    Opt-in:   startpage (browser-rendered, slower), brave (PoW captcha after a
-              few calls), bing (UA-gated), baidu (results wrapped in
-              baidu.com/link redirects).
+    Defaults: duckduckgo + mojeek + googlenews (reliable, no captchas;
+              googlenews is an RSS index with structured publish dates and its
+              URLs resolve to the real publisher on fetch/research).
+    Keyless opt-in: google + serpsearch (Google SERP scrapers, HTTP-first),
+              anysearch (JSON aggregator), startpage (browser-rendered, slower),
+              brave (PoW captcha after a few calls), bing (HTTP-first), baidu
+              (CN index), bilibili (CN video), zhihu (CN Q&A, often login-gated),
+              searx (public-instance meta-search; set SEARCH_MCP_SEARX_INSTANCES
+              if it returns nothing).
+    Key-required (configure via admin UI / SEARCH_MCP_*_API_KEY): brave_api,
+              serper, tavily, google_cse.
     """
     return list_engines()
 
