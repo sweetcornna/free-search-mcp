@@ -63,6 +63,22 @@ def test_parse_batchexecute_returns_none_on_garbage():
     assert _parse_batchexecute(")]}'\n" + json.dumps([["di", 13]])) is None
 
 
+def test_parse_batchexecute_handles_multiline_and_length_prefix():
+    # A pretty-printed / length-prefixed (chunked) response defeats the single-
+    # line structured scan; the regex fallback still recovers the publisher url.
+    body = (
+        ")]}'\n\n"
+        "359\n"  # chunk length prefix line
+        "[[\"wrb.fr\",\"Fbv4je\",\n"
+        "  \"[\\\"garturlres\\\",\\\"https://www.bbc.com/news/articles/abc123\\\",1]\",\n"
+        "  null,null,null,\"generic\"]]\n"
+    )
+    assert (
+        _parse_batchexecute(body)
+        == "https://www.bbc.com/news/articles/abc123"
+    )
+
+
 @pytest.mark.asyncio
 async def test_resolve_returns_none_for_non_gnews_url():
     # A non-Google-News URL short-circuits without any network call.

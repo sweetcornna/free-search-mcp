@@ -48,9 +48,16 @@ class BingEngine(Engine):
         meta-search (it proxies Google/Bing). Fallback results keep
         ``engine="searx"`` for honest attribution. Never raises.
         """
-        results = await super().search(
-            query, max_results, filters, diagnostics=diagnostics
-        )
+        try:
+            results = await super().search(
+                query, max_results, filters, diagnostics=diagnostics
+            )
+        except Exception:
+            # Under fetch_strategy="http", a www4 non-200 (captcha/throttle shell)
+            # makes base._fetch raise instead of returning an empty body. Treat
+            # that as "gated → empty" so the SearXNG fallback below still runs and
+            # the documented never-raise contract holds for every fetch_strategy.
+            results = []
         if results:
             return results
         # Empty almost always means a CAPTCHA/consent gate. Recover keyless via

@@ -153,6 +153,30 @@ async def test_bing_gated_falls_back_to_searx(monkeypatch):
     assert diag["gated"]["bing"]
 
 
+async def test_bing_http_fetch_raises_still_falls_back_to_searx(monkeypatch):
+    # Bing is now HTTP-first (needs_browser=False). Under fetch_strategy="http" a
+    # www4 non-200 makes base._fetch RAISE instead of returning an empty body;
+    # bing must still recover via SearXNG (never propagate / never silently die).
+    from curl_cffi.requests.exceptions import RequestException
+
+    engine = BingEngine()
+    monkeypatch.setattr(
+        engine, "_fetch", AsyncMock(side_effect=RequestException("non-200 shell"))
+    )
+    search_mock = _stub_searx_class(monkeypatch)
+
+    diag: dict = {}
+    out = await engine.search("anything", 5, diagnostics=diag)
+
+    assert [r.url for r in out] == [
+        "https://fallback.example/1",
+        "https://fallback.example/2",
+    ]
+    assert all(r.engine == "searx" for r in out)
+    search_mock.assert_awaited_once()
+    assert diag["fallback"]["bing"] == "searx"
+
+
 async def test_bing_with_results_does_not_fall_back(monkeypatch):
     engine = BingEngine()
     real_bing_html = """

@@ -103,7 +103,7 @@ def _parse_batchexecute(text: str) -> str | None:
     try:
         arr = json.loads(candidate)
     except (json.JSONDecodeError, ValueError):
-        return None
+        arr = None
     for row in arr if isinstance(arr, list) else []:
         if isinstance(row, list) and len(row) > 2 and row[1] == "Fbv4je":
             try:
@@ -114,7 +114,16 @@ def _parse_batchexecute(text: str) -> str | None:
                 url = payload[1]
                 if url.startswith("http"):
                     return url
-    return None
+    # Fallback: a pretty-printed/chunked response (array split across lines, or a
+    # length-prefix line we couldn't strip) defeats the structured parse above.
+    # The garturlres URL is unambiguous in the raw text, so pull it directly.
+    m = _GARTURL_RE.search(text)
+    return m.group(1) if m else None
+
+
+# Matches the publisher url inside the escaped ``["garturlres","<url>",...]``
+# payload, robust to whitespace/line breaks the structured parser can't follow.
+_GARTURL_RE = re.compile(r'garturlres\\?",\\?"\s*(https?://[^"\\]+)')
 
 
 async def _resolve(url: str) -> str | None:
@@ -166,7 +175,7 @@ async def resolve_google_news_url(url: str) -> str | None:
     if inflight is not None:
         return await inflight
 
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     fut: asyncio.Future = loop.create_future()
     _INFLIGHT[url] = fut
     try:
@@ -175,10 +184,16 @@ async def resolve_google_news_url(url: str) -> str | None:
             if len(_MEMO) >= _MEMO_MAX:
                 _MEMO.pop(next(iter(_MEMO)), None)
             _MEMO[url] = resolved
-        fut.set_result(resolved)
+        if not fut.done():
+            fut.set_result(resolved)
         return resolved
-    except Exception as e:  # pragma: no cover - defensive
-        fut.set_exception(e)
+    except BaseException:
+        # Includes CancelledError: settle waiters with the best-effort None
+        # result rather than orphaning the future (which would hang every
+        # coalesced waiter forever) or propagating OUR cancellation into other,
+        # independent requests that merely share this in-flight url.
+        if not fut.done():
+            fut.set_result(None)
         raise
     finally:
         _INFLIGHT.pop(url, None)
