@@ -4,6 +4,214 @@ All notable changes to this project are documented here. The format is loosely
 based on [Keep a Changelog](https://keepachangelog.com/), and the project follows
 semantic versioning.
 
+## [0.7.0] - 2026-07-30
+
+Search and fetch anything, not just web pages: images and binaries are
+described (and optionally shown to vision models), six more document formats
+parse, and files can be downloaded — with permission, and not forever.
+
+### Added
+
+- **`fetch` handles non-text resources.** Images, video, audio, fonts and
+  opaque binaries return a description — media type, byte size, image
+  dimensions, sha256 — instead of being decoded as text into a screen of
+  U+FFFD. `inline=True` returns the image itself as MCP `ImageContent` for a
+  vision-capable model. Bytes are withheld by default because a 1MB image
+  costs well over a thousand tokens, and the description usually settles
+  whether it's worth spending them.
+- **`download` tool** — saves a file to disk. **Off by default.** With no
+  `SEARCH_MCP_DOWNLOAD_DIR` configured it asks for permission first (MCP
+  elicitation, which the SDK carries across both protocol eras) and the answer
+  applies to that session only. Declining writes nothing. A client that can't
+  be prompted gets an actionable error rather than a silent refusal.
+  Downloads are **ephemeral**: anything older than
+  `SEARCH_MCP_DOWNLOAD_TTL_HOURS` (default 24) is deleted before the next
+  download and at startup.
+- **`read_doc` formats**: xlsx, pptx, epub, csv/tsv, source code and config
+  files, zip/tar archives — see 0.6.0.
+- **`image` and `dataset` categories**, served by `openverse` (CC-licensed
+  images, direct file URLs that work with `fetch(inline=True)`) and `zenodo`.
+  Unlike the other categories these **replace** the default web pool rather
+  than augmenting it: a web engine cannot return an image file or a dataset
+  record, so mixing it in only crowds out the source that can.
+
+### Fixed
+
+- **JSON engines now ask for JSON.** The shared curl_cffi session impersonates
+  Chrome, so it advertised `Accept: text/html`; Openverse (Django REST
+  Framework) answered 200 with its browsable **HTML** API, which failed to
+  parse and looked exactly like "no results". Openverse additionally requests
+  `format=json` in the query string, because header negotiation does not
+  survive the impersonation reliably.
+- **Zenodo is no longer blocked.** It answers 403 to clients presenting a
+  browser TLS/header fingerprint on its API — the opposite of what every
+  scraper needs. Engines can now opt out of impersonation and send an honest,
+  contactable User-Agent instead.
+- **Downloads no longer block the event loop.** Writing up to
+  `SEARCH_MCP_DOWNLOAD_MAX_MB` and sweeping the directory both run on a worker
+  thread; a large save would otherwise stall every in-flight request.
+
+### Changed
+
+- `fetch` opts out of structured output. It can return page text, a JSON
+  payload, or an actual image, and no single JSON Schema covers an
+  `ImageContent` block — while from 2026-07-28 the SDK *validates* returns
+  against the derived schema, so deriving one would reject every inline image
+  at call time.
+- `readOnlyHint` is now accurate per tool rather than blanket-true: `download`
+  is the one tool that writes, and clients use that hint to decide whether a
+  call needs confirmation.
+
+### Security
+
+- Downloaded filenames are treated as untrusted input: collapsed to a single
+  path component, filtered to a conservative character set, length-capped,
+  content-hash-prefixed so two resources claiming the same name cannot
+  overwrite each other, and the final path is re-checked against the download
+  root before writing.
+- Archives are listed, never extracted, and a listing that expands more than
+  100x is flagged.
+
+## [0.6.0] - 2026-07-30
+
+Thirteen new keyless sources, and `category=` now routes to the ones that
+actually index the category instead of filtering general web results by
+hostname. Plus six new document formats for `read_doc`.
+
+### Added
+
+- **Category routing.** Passing `category=` without `engines=` pulls in the
+  sources that natively index it, capped by
+  `SEARCH_MCP_CATEGORY_ENGINE_LIMIT` (default 3). `category="paper"` now
+  queries arXiv/OpenAlex/Crossref; previously it ran the same four general web
+  engines and discarded every result whose hostname wasn't on a whitelist.
+  Engines declare what they cover via `Engine.categories`, which replaces the
+  hardcoded "if news, add googlenews" branch.
+- **Academic sources** (`paper`): `arxiv`, `openalex`, `crossref`, `pubmed`.
+  All keyless, all with structured publication dates, so freshness filtering
+  can drop stale results instead of guessing from snippet text.
+- **Code and developer discussion**: `github` (repositories + issues/PRs,
+  keyless), `stackexchange`, `hackernews`, and `github_code` (keyed — GitHub
+  returns 401 to anonymous code search).
+- **Reference and news**: `wikipedia` (language follows `SEARCH_MCP_REGION`),
+  `openlibrary`, `gdelt` (worldwide news in 100+ languages).
+- **Chinese indexes**: `sogou`, `so360`.
+- **`read_doc` formats**: xlsx (one Markdown table per sheet), pptx (per slide,
+  including speaker notes), epub, csv/tsv, source code and config files (fenced
+  with their language), and zip/tar archives.
+- **Per-engine rate limits.** An engine can declare `rate_limit_per_minute` and
+  `rate_limit_max_wait`; when its bucket is empty the aggregator **skips** it
+  and records the fact, rather than making a parallel search wait. GDELT
+  publishes a one-request-per-few-seconds rule, and queueing on it would have
+  added that delay to every other engine's results.
+- `SEARCH_MCP_CONTACT_EMAIL` — optional, routes OpenAlex/Crossref/NCBI calls
+  into their faster identified-caller pools.
+
+### Fixed
+
+- **Archives are listed, never extracted**, and a listing that expands more
+  than 100x is flagged as such — decompressing untrusted archive members is
+  how zip bombs win.
+- **`_detect_format` matches the URL path, not the raw URL.** A query string
+  routinely ends in something extension-shaped
+  (`.../data.csv?token=abc.png`), which classified the document by the wrong
+  one.
+- **A keyed engine's "missing key" error is no longer swallowed.** The new
+  `EngineKeyError` escapes the keyless never-raise boundary, so an
+  unconfigured engine says so instead of reporting "no results" —
+  indistinguishable from "nothing matched".
+- **Unconfigured keyed engines stay out of category routing.** `github_code`
+  without a token used to be auto-added to every `category="github"` search,
+  guaranteeing an error alongside the results. Naming it explicitly still
+  raises, which is the point.
+- CSV/table cells escape `|` so a cell cannot forge extra columns, and code
+  fences widen past any backtick run in the file so a Markdown fence inside a
+  source file cannot break out.
+
+### Notes
+
+- New sources are **not** in the default pool. Ordinary web searches pay
+  nothing for them; they arrive via `category=` or an explicit `engines=`.
+- `sogou` returns Sogou redirect URLs (`/link?url=...`) rather than target
+  URLs — the blob is only resolvable by following it. `fetch` handles that
+  fine, but host-based `category` filtering will discard them. `baidu` and
+  `so360` return direct URLs.
+
+## [0.5.0] - 2026-07-30
+
+Migrates to MCP protocol revision **2026-07-28** on SDK v2, and adds an
+optional HTTP transport. Existing stdio clients need no changes: one server
+instance serves both protocol eras, and the tool surface is byte-identical.
+
+### Added
+
+- **`streamable-http` transport.** `search-mcp --transport streamable-http
+  [--host --port --path]`, or the matching `SEARCH_MCP_TRANSPORT` /
+  `SEARCH_MCP_HTTP_*` env vars; CLI beats env beats default. `stdio` remains
+  the default, so nothing changes unless you ask for it. The 2026-07-28
+  revision removed protocol-level sessions and `Mcp-Session-Id`, so the HTTP
+  endpoint is stateless and needs no session affinity across replicas.
+- **DNS-rebinding protection on the HTTP transport**, always on. The SDK
+  leaves this *off* when no settings are supplied, which would let any web
+  page a user visits drive the server through their browser; the allowed
+  `Host`/`Origin` set is now built explicitly from the bind address, plus
+  anything in `SEARCH_MCP_HTTP_ALLOWED_ORIGINS`.
+- **Cache hints on list results** (SEP-2549). `tools/list`, `prompts/list`,
+  `resources/list` and `resources/templates/list` advertise
+  `ttlMs=3600000, cacheScope=public` — all four are fixed for the life of the
+  process, so clients can stop re-listing. `resources/read` is 60s/private.
+- **Server identity.** `serverInfo` now carries a title, version, project URL,
+  and instructions describing when to reach for which tool; previously the
+  server reported a bare name and an empty version string.
+- Tests covering both protocol eras end-to-end, tool/prompt/resource wire
+  shapes, transport selection, and the origin guard.
+
+### Changed
+
+- **Requires `mcp>=2.0.0`.** v2 is the first release that speaks 2026-07-28,
+  and it renamed `FastMCP` to `MCPServer` with no compatibility alias, so
+  there is no version that satisfies both. Pulls in `httpx2` and `mcp-types`
+  transitively; `httpx2` imports as `httpx2` and does not collide with the
+  `httpx` this project already uses.
+- **Tool titles moved to the real `Tool.title` field.** They previously lived
+  only in `ToolAnnotations.title`, which the spec defines as an untrusted
+  display hint rather than the tool's name.
+- Synchronous tool and prompt handlers now run on worker threads (SDK v2
+  behavior). `engines()` and the four prompts are unaffected — none touch the
+  event loop or thread-local state.
+- `_safe_progress` no longer enumerates SDK exception types. A dropped
+  progress ping is logged at debug and never fails the call it belongs to.
+
+### Fixed
+
+- **A missing cached resource now reports `-32602` (invalid params) instead of
+  `-32603` (internal error).** `cache://page/...` and `cache://search/...`
+  raised a bare `ValueError` on a miss, which the SDK could only classify as
+  "the server broke" — telling clients to retry something that will never
+  succeed. They raise `ResourceNotFoundError` now, matching the code the
+  2026-07-28 revision assigns to resource-not-found.
+
+### Notes
+
+- Roots, Sampling and protocol-level Logging are deprecated as of 2026-07-28.
+  This server never used any of them; its stderr logging is already the
+  recommended replacement.
+
+## [0.4.3] - 2026-07-30
+
+Single-line dependency hotfix. No code changes.
+
+### Fixed
+
+- **Fresh installs were broken.** The `mcp[cli]>=1.2.0` pin had no upper bound,
+  so any new resolve (`uvx free-search-mcp`, `pip install free-search-mcp`)
+  picked up MCP Python SDK 2.0.0, released 2026-07-28. That release deletes
+  `mcp.server.fastmcp` entirely — `FastMCP` is gone with no compatibility
+  alias — and `server.py` imports `FastMCP` from exactly there, so the server
+  died at import with `ModuleNotFoundError`. Pinned to `>=1.2.0,<2` to restore
+  installability. The cap comes off in 0.5.0, which migrates to the v2
+  `MCPServer` API and the 2026-07-28 protocol revision.
+
 ## [0.4.2] - 2026-07-26
 
 Hardening + hygiene pass: packaging correctness, stricter lint, lifecycle

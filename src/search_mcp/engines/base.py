@@ -23,7 +23,7 @@ from ..httpfetch import IMPERSONATE
 from ..net import curl_proxy_kwargs
 
 Freshness = Literal["day", "week", "month", "year"]
-Category = Literal["news", "pdf", "github", "paper", "forum", "blog"]
+Category = Literal["news", "pdf", "github", "paper", "forum", "blog", "image", "dataset"]
 
 
 # Date-extraction patterns. Order matters: relative phrases ("2 days ago")
@@ -522,6 +522,18 @@ _GATE_MARKERS: tuple[tuple[str, tuple[str, ...]], ...] = (
 )
 
 
+class EngineKeyError(ValueError):
+    """A keyed engine cannot run: its key is missing, rejected, or out of quota.
+
+    Subclasses ValueError so existing `except ValueError` handling keeps
+    working, but exists as its own type so the keyless never-raise boundary
+    (see `JsonApiEngine.search`) can let *this* through while still swallowing
+    transport failures and malformed payloads. Without the distinction, an
+    unconfigured keyed engine reports "no results" — which reads as "nothing
+    matched" rather than "you need to add a token".
+    """
+
+
 def raise_for_key_error(engine: str, status: int | None) -> None:
     """Turn an auth/quota HTTP status from a keyed engine into an actionable
     error, so a bad/expired key surfaces a hint instead of a silent empty.
@@ -533,17 +545,17 @@ def raise_for_key_error(engine: str, status: int | None) -> None:
     aggregator" contract; only an explicit auth/quota status raises.
     """
     if status in (401, 403):
-        raise ValueError(
+        raise EngineKeyError(
             f"{engine}: the API key was rejected (HTTP {status}). Verify it in the "
             "admin UI (uv run search-mcp-admin) or the SEARCH_MCP_*_API_KEY env var."
         )
     if status == 422:
-        raise ValueError(
+        raise EngineKeyError(
             f"{engine}: the API rejected the request (HTTP 422) — usually an "
             "invalid key or malformed parameters."
         )
     if status == 429:
-        raise ValueError(
+        raise EngineKeyError(
             f"{engine}: rate limit / quota exceeded (HTTP 429). Slow down or raise "
             "the plan's limit."
         )
@@ -606,6 +618,29 @@ class Engine(abc.ABC):
     name: str
     needs_browser: bool = False
     wait_selector: str | None = None
+    # Categories this engine natively indexes, from the `Category` literal
+    # above. Empty (the default) means "general web" — the engine has no
+    # special claim on any category and is only used when asked for by name or
+    # via the default pool.
+    #
+    # A non-empty set is a routing signal, not a filter: `aggregate_search`
+    # pulls these engines in when a caller asks for that category, because
+    # asking a general web engine for `category="paper"` can only ever filter
+    # its results by hostname, whereas arXiv actually indexes papers.
+    categories: frozenset[str] = frozenset()
+    # Per-engine override for the aggregator's rate limiter, when the source
+    # documents a stricter rule than settings.rate_limit_per_minute. None means
+    # "use the global default". Declared here so the number lives next to the
+    # engine that has to obey it rather than in a table somewhere else.
+    rate_limit_per_minute: int | None = None
+    # How long the aggregator will wait for this engine's rate-limit token
+    # before giving up and skipping it for this search. None means "wait as
+    # long as it takes", which is right for a 30/min engine (sub-second) and
+    # wrong for a source limited to one request every few seconds: search runs
+    # in a parallel fan-out, so queueing behind a slow bucket would add that
+    # delay to the WHOLE search. Skipping costs one source; waiting costs the
+    # user's latency on every result.
+    rate_limit_max_wait: float | None = None
     # When parse() yields nothing on the HTTP path, the base search() retries
     # via a Playwright render to recover from interstitial/captcha shells.
     # That recovery only makes sense for HTML engines: an RSS/XML feed that
@@ -613,6 +648,16 @@ class Engine(abc.ABC):
     # headless browser just burns ~1s for the same empty result. RSS-backed
     # engines set this False to opt out of the wasted render.
     supports_browser_fallback: bool = True
+
+    def is_available(self) -> bool:
+        """Whether this engine can run right now, for AUTO-SELECTION only.
+
+        Category routing consults this so an unconfigured keyed engine is not
+        silently added to a pool it can only fail in. It deliberately does NOT
+        gate an explicit `engines=[...]` request: someone who names an engine
+        should get the actionable "your key is missing" error, not silence.
+        """
+        return True
 
     @abc.abstractmethod
     def build_url(

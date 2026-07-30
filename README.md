@@ -6,7 +6,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](pyproject.toml)
-[![MCP](https://img.shields.io/badge/MCP-1.2%2B-purple.svg)](https://modelcontextprotocol.io/)
+[![MCP](https://img.shields.io/badge/MCP-2026--07--28-purple.svg)](https://modelcontextprotocol.io/specification/2026-07-28)
 
 A **local-first, no-API-key** Model Context Protocol server that gives any
 LLM (Claude, GPT, local Ollama, …) the ability to search the web, fetch and
@@ -125,8 +125,10 @@ stripping). Each fetched page also returns `author`, `published_date`, and
 `sitename` for free.
 
 "Filters" means search/research accept `freshness`, `include_domains`,
-`exclude_domains`, `category` (`news`/`pdf`/`github`/`paper`/`forum`/`blog`),
-`include_text`, `exclude_text`.
+`exclude_domains`, `category`
+(`news`/`pdf`/`github`/`paper`/`forum`/`blog`/`image`/`dataset`),
+`include_text`, `exclude_text`. `category` also **routes** the query to
+sources that natively index it — see [Vertical sources](#vertical-sources-selected-automatically-by-category).
 
 ### Anti-detection &amp; resilience
 
@@ -152,19 +154,20 @@ stripping). Each fetched page also returns `author`, `published_date`, and
 
 ---
 
-## Tools (9)
+## Tools (10)
 
 | Tool | Description |
 |---|---|
 | `search(query, ...filters)` | Parallel multi-engine search, RRF-merged, title-fuzzy + host-canonical deduped, with optional extractive `lead_snippet` |
 | `research(question, depth?, ...filters)` | One-shot: search + fetch top N + return Markdown brief |
 | `compare(question, urls=[2..5])` | Concurrent fetch of 2-5 URLs, side-by-side excerpts keyed by question |
-| `fetch(url, render?, ...)` | Fetch a page, return reader-mode Markdown (trafilatura, with author/date/sitename) |
+| `fetch(url, render?, inline?, ...)` | Fetch any resource: reader-mode Markdown for pages, parsed text for documents, or a description (type/size/dimensions/sha256) for images and binaries. `inline=True` returns the image itself for vision models |
 | `fetch_batch(urls, ...)` | Concurrent multi-URL fetch (max 20 per call) |
-| `read_doc(source, start?, length?, ...)` | Parse PDF / DOCX / HTML / TXT / MD with pagination |
+| `read_doc(source, start?, length?, ...)` | Parse PDF / DOCX / XLSX / PPTX / EPUB / CSV / code / zip-tar / HTML / TXT / MD with pagination |
 | `extract_structured(url, ...)` | Pull JSON-LD / OpenGraph / Twitter cards / microdata via extruct |
 | `cache_search(query, limit?, ...)` | FTS5 search across previously fetched pages |
 | `engines()` | List engine names available to `search` |
+| `download(url, ...)` | Save a file to disk. **Disabled by default** — asks permission on first use, and files auto-delete after 24h |
 
 Plus **4 MCP prompts** (`Research thoroughly`, `Fact-check claim`,
 `Compare sources`, `News brief`) and **2 resource templates**
@@ -224,11 +227,44 @@ Opt-in:
   headless clients, so a login wall / empty result is common and honest —
   treat it like `baidu`/`brave`.
 
-> All five added engines are **keyless** (no API key, no account) and stay
-> **opt-in** — they're not in the fast default pool, so the ~2x latency win
-> of the all-HTTP defaults is preserved. Enable per call with
-> `engines=["google","bilibili", ...]`, or globally via
+- `sogou`, `so360` — Chinese web indexes, HTML scrapes, best-effort like
+  `zhihu`. Note `sogou` returns **redirect URLs** (`sogou.com/link?url=…`)
+  rather than target URLs; the blob is only resolvable by following it.
+  `fetch` handles that, but host-based `category` filtering will discard
+  them. `baidu` and `so360` return direct URLs.
+- `wikipedia` — encyclopedia search; language follows `SEARCH_MCP_REGION`.
+- `openlibrary` — book search over the Internet Archive catalogue.
+
+> All keyless engines stay **opt-in** — they're not in the fast default pool,
+> so the ~2x latency win of the all-HTTP defaults is preserved. Enable per
+> call with `engines=["google","bilibili", ...]`, or globally via
 > `SEARCH_MCP_DEFAULT_ENGINES`.
+
+### Vertical sources (selected automatically by `category`)
+
+These index something a general web engine can't. You normally **don't name
+them** — passing `category=` to `search`/`research` routes to them:
+
+| `category` | Engines | Why it matters |
+|---|---|---|
+| `paper` | `arxiv`, `openalex`, `crossref`, `pubmed` | Actually searches the literature instead of filtering web results by hostname |
+| `github` | `github` (repos + issues/PRs), `github_code` (needs a token) | Real repository metadata, stars, last push |
+| `forum` | `stackexchange`, `hackernews` | Accepted-answer and score signals |
+| `news` | `googlenews`, `gdelt` | GDELT covers 100+ languages Google News never surfaces |
+| `image` | `openverse` | Openly-licensed images; results are direct file URLs, so `fetch(inline=True)` works on them |
+| `dataset` | `zenodo` | Datasets, software and their DOIs |
+
+`image` and `dataset` **replace** the default pool rather than adding to it —
+a web engine can't return an image file or a dataset record, so mixing it in
+only crowds out the source that can. The others augment it, capped by
+`SEARCH_MCP_CATEGORY_ENGINE_LIMIT` (default 3).
+
+Naming engines explicitly (`engines=[...]`) turns the routing off.
+
+Sources that publish a stricter rate limit than our default declare it
+themselves, and are **skipped** rather than queued when their bucket is empty
+— search is a parallel fan-out, so waiting on one slow source would add that
+delay to every other engine's results.
 
 ### API-key engines & the admin backend
 
@@ -243,6 +279,8 @@ configured" hint) until you add a key:
 | `tavily` | [Tavily](https://app.tavily.com) (AI search) | 1,000 credits/mo |
 | `google_cse` | [Google Custom Search](https://programmablesearchengine.google.com/) | 100 queries/day |
 | `anysearch` | [AnySearch](https://anysearch.com) (key optional) | keyless works; key lifts limits |
+| `github_code` | [GitHub](https://github.com/settings/tokens) | code search is auth-only; the keyless `github` engine covers repos + issues |
+| `stackexchange` | [Stack Apps](https://stackapps.com/apps/oauth/register) (key optional) | 300 req/day keyless; a key lifts the quota |
 
 **Simplest setup — the admin UI:**
 
@@ -367,6 +405,22 @@ Run as a stand-alone server (stdio transport):
 uv run search-mcp
 ```
 
+Or serve it over HTTP. MCP revision `2026-07-28` removed protocol-level
+sessions, so the HTTP endpoint is stateless — no sticky routing, any replica
+can answer any request:
+
+```bash
+uv run search-mcp --transport streamable-http --port 8000   # → http://127.0.0.1:8000/mcp
+```
+
+> The HTTP endpoint has **no authentication** and will fetch arbitrary URLs on
+> behalf of whoever reaches it. It binds `127.0.0.1` by default; if you change
+> `--host`, put an authenticating reverse proxy in front. A DNS-rebinding guard
+> rejects unknown `Origin`/`Host` headers — add trusted browser origins with
+> `SEARCH_MCP_HTTP_ALLOWED_ORIGINS`. This is a separate process and port from
+> the admin UI (`search-mcp-admin`, port 8765), which stays loopback-only
+> because it reads and writes your API keys.
+
 ### Docker (one-click, containerized)
 
 ```bash
@@ -438,7 +492,9 @@ drawer.
 
 ### Wire into other clients
 
-The server speaks plain MCP over stdio. Anything that supports MCP works:
+The server speaks plain MCP over stdio (or streamable-http, see above). It
+implements protocol revision `2026-07-28` and serves every earlier revision
+from the same process, so both new and older clients work unchanged:
 
 - Codex (`codex mcp add search -- uvx free-search-mcp`)
 - Claude Code (`claude mcp add search -s user -- uvx free-search-mcp`)
@@ -493,6 +549,16 @@ Available knobs:
 | `SEARCH_MCP_BROWSER_POOL_SIZE` | `2` | concurrent pages |
 | `SEARCH_MCP_MAX_CONTENT_CHARS` | `50000` | per result truncation |
 | `SEARCH_MCP_USER_AGENT` | desktop Chrome UA | used by the httpx (documents) and Playwright paths; the curl_cffi path derives its UA from browser impersonation |
+| `SEARCH_MCP_DOWNLOAD_DIR` | *(unset)* | **unset disables downloads.** Set a directory to allow `download` without prompting |
+| `SEARCH_MCP_DOWNLOAD_TTL_HOURS` | `24` | downloaded files are deleted after this; `0` keeps them forever |
+| `SEARCH_MCP_DOWNLOAD_MAX_MB` | `100` | refuse to save anything larger |
+| `SEARCH_MCP_CATEGORY_ENGINE_LIMIT` | `3` | how many category-native engines `category=` may add |
+| `SEARCH_MCP_CONTACT_EMAIL` | *(empty)* | optional; routes OpenAlex/Crossref/NCBI into their faster identified-caller pools |
+| `SEARCH_MCP_TRANSPORT` | `stdio` | `stdio` / `streamable-http` |
+| `SEARCH_MCP_HTTP_HOST` | `127.0.0.1` | streamable-http bind address |
+| `SEARCH_MCP_HTTP_PORT` | `8000` | streamable-http port |
+| `SEARCH_MCP_HTTP_PATH` | `/mcp` | streamable-http endpoint path |
+| `SEARCH_MCP_HTTP_ALLOWED_ORIGINS` | *(empty)* | extra `Origin` values the DNS-rebinding guard accepts, comma/space separated (loopback is always allowed) |
 
 ---
 
@@ -500,7 +566,7 @@ Available knobs:
 
 ```
    ┌─────────────────────────────────────────────────────┐
-   │  FastMCP server (stdio)                             │
+   │  MCP server (stdio | streamable-http)               │
    │  tools: search / research / fetch / fetch_batch /   │
    │         read_doc / cache_search / engines           │
    └────────────┬────────────────────────────────────────┘
@@ -527,6 +593,14 @@ Available knobs:
    │   anysearch.py (opt) │
    │   bilibili.py  (opt) │
    │   zhihu.py     (opt) │
+   │   sogou.py     (opt) │
+   │   so360.py     (opt) │
+   │   arxiv/openalex/    │
+   │   crossref/pubmed    │
+   │   github/stackexch.  │
+   │   hackernews/gdelt   │
+   │   wikipedia/openlib. │
+   │   openverse/zenodo   │
    └──────────────────────┘
 
    ┌────────────────────────────┐    ┌──────────────────┐

@@ -1,6 +1,6 @@
 [project]
 name = "free-search-mcp"
-version = "0.4.2"
+version = "0.7.0"
 description = "Local-first, no-API-key search MCP server. Multi-engine web search, smart fetching, document reading."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -25,7 +25,12 @@ classifiers = [
     "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
 ]
 dependencies = [
-    "mcp[cli]>=1.2.0",
+    # v2 is the floor, not a preference: it is the first release that speaks
+    # protocol revision 2026-07-28, and it renamed `FastMCP` -> `MCPServer`
+    # with no compatibility alias, so server.py cannot run on 1.x either.
+    # One MCPServer instance serves both protocol eras, so this does not drop
+    # older clients.
+    "mcp[cli]>=2.0.0",
     # [socks] extra so the documented socks5:// proxy works with the httpx
     # clients in documents.py / structured.py (curl_cffi handles socks natively).
     "httpx[socks]>=0.27",
@@ -34,6 +39,14 @@ dependencies = [
     "playwright>=1.47",
     "pypdf>=5.0",
     "python-docx>=1.1",
+    # Office / ebook readers for read_doc. Each is pulled in lazily at parse
+    # time, so an install that never opens a spreadsheet never imports openpyxl.
+    "openpyxl>=3.1",
+    "python-pptx>=1.0",
+    "ebooklib>=0.18",
+    # Pillow reads image dimensions from the first few KB of a file, so `fetch`
+    # can describe an image without decoding (or inlining) the whole thing.
+    "pillow>=10.0",
     "markdownify>=0.13",
     "trafilatura>=2.0",
     "aiosqlite>=0.20",

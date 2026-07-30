@@ -136,10 +136,11 @@ async def test_research_one_shot_returns_brief():
     assert len(out["documents"]) == len(out["sources"])
 
 
-async def test_server_tool_format_markdown_returns_string():
-    """End-to-end via the MCP layer: format=markdown returns a string."""
+async def test_server_tool_call_returns_a_result():
+    """End-to-end through the MCP layer with a tool that needs no network."""
+    from search_mcp.engines import ENGINES
     from search_mcp.server import mcp
-    # call a tool that doesn't need network: engines()
+
     result = await mcp.call_tool("engines", {})
-    # call_tool returns (content_blocks, structured_content?) tuple in newer SDKs
-    assert result is not None
+    assert result.is_error is not True
+    assert result.structured_content == {"result": list(ENGINES)}

@@ -1,6 +1,13 @@
-# Containerized free-search-mcp. The server speaks MCP over stdio, so run it
+# Containerized free-search-mcp. Defaults to MCP over stdio, so run it
 # attached:   docker run -i --rm search-mcp
 # (or use docker-compose, which sets stdin_open).
+#
+# To serve over HTTP instead — protocol revision 2026-07-28 is stateless, so
+# no sticky sessions are needed and replicas scale horizontally:
+#   docker run --rm -p 8000:8000 search-mcp \
+#     uv run search-mcp --transport streamable-http --host 0.0.0.0
+# That endpoint is UNAUTHENTICATED and fetches arbitrary URLs on the caller's
+# behalf. Only publish the port behind a proxy that terminates auth.
 FROM python:3.12-slim
 
 ENV PYTHONUNBUFFERED=1 \

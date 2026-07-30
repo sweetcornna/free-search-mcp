@@ -6,16 +6,22 @@ from __future__ import annotations
 import logging
 from typing import Any, Literal
 
-from mcp.server.fastmcp import Context, FastMCP
+from mcp.server.caching import CacheHint
+from mcp.server.mcpserver import Context, Image, MCPServer
+from mcp.server.mcpserver.exceptions import ResourceNotFoundError
+from mcp.server.transport_security import TransportSecuritySettings
 from mcp.types import ToolAnnotations
+from pydantic import BaseModel, Field
 
+from . import __version__, downloads
 from .aggregator import aggregate_search, list_engines
 from .browser import pool
 from .cache import cache
 from .compare import compare_urls
 from .config import settings
 from .documents import read_document
-from .fetcher import fetch_many, fetch_page
+from .engines import Category
+from .fetcher import fetch_bytes, fetch_many, fetch_page
 from .formatting import (
     errors_to_hint,
     render_compare,
@@ -33,14 +39,49 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)s %(name)s %(message)s",
 )
 
-mcp = FastMCP("search-mcp")
+# Protocol-level logging (`notifications/message`) is deprecated as of the
+# 2026-07-28 revision; stderr via the stdlib is the recommended replacement,
+# which is what basicConfig above already gives us on stdio.
+log = logging.getLogger(__name__)
+
+# Every list here is fixed for the life of the process — tools, prompts and
+# resource templates are all declared at import time and nothing mutates them.
+# Saying so lets clients cache and stop re-listing. `resources/read` is the
+# exception: it serves this machine's page cache, so it is per-user and short.
+_STATIC_LIST = CacheHint(ttl_ms=3_600_000, scope="public")
+_CACHE_HINTS = {
+    "tools/list": _STATIC_LIST,
+    "prompts/list": _STATIC_LIST,
+    "resources/list": _STATIC_LIST,
+    "resources/templates/list": _STATIC_LIST,
+    "resources/read": CacheHint(ttl_ms=60_000, scope="private"),
+}
+
+# Keyword args throughout: MCPServer's positional order is
+# (name, title, description, instructions, ...), so a positional `instructions`
+# would silently land in the `title` slot.
+mcp = MCPServer(
+    "search-mcp",
+    title="Free Search",
+    instructions=(
+        "Multi-engine web search, fetching, and document reading with no API "
+        "key required. Use `search` for queries, `fetch`/`fetch_batch` to read "
+        "specific URLs, `research` when you want search and reading in one "
+        "round trip, and `engines` to discover which backends are available. "
+        "Every tool takes format='markdown' (default, compact) or "
+        "format='json' (structured)."
+    ),
+    website_url="https://github.com/sweetcornna/free-search-mcp",
+    version=__version__,
+    cache_hints=_CACHE_HINTS,
+)
 
 Format = Literal["markdown", "json"]
 
 # ToolAnnotations meaning recap (for the maintainers, not for the LLM):
-#   readOnlyHint  - the call does not change server state visible to others
-#   idempotentHint - same args within a session yield the same result
-#   openWorldHint  - the tool reaches outside the server (network, real world)
+#   read_only_hint   - the call does not change server state visible to others
+#   idempotent_hint  - same args yield the same result
+#   open_world_hint  - the tool reaches outside the server (network, real world)
 
 
 def _maybe_render(payload: dict[str, Any], fmt: Format, renderer) -> str | dict[str, Any]:
@@ -104,24 +145,28 @@ def _invalid_fts_hint(query: str) -> str | None:
 async def _safe_progress(
     ctx: Context | None, current: float, total: float, message: str,
 ) -> None:
-    """report_progress() raises 'Context is not available outside of a request'
-    when called from non-MCP contexts (unit tests, ad-hoc scripts, or clients
-    that didn't pass a progressToken). Swallow that case so progress is a
-    nice-to-have, not a crash trigger."""
+    """report_progress() raises when called from non-MCP contexts (unit tests,
+    ad-hoc scripts, or clients that didn't pass a progressToken). Swallow that
+    so progress is a nice-to-have, not a crash trigger.
+
+    The catch is deliberately broad: the exception type is SDK plumbing that
+    has already changed once across protocol revisions, and no failure to emit
+    a progress ping is worth losing an otherwise-complete search result over.
+    """
     if ctx is None:
         return
     try:
         await ctx.report_progress(current, total, message)
-    except (ValueError, AttributeError):
-        return
+    except Exception:
+        log.debug("progress notification dropped", exc_info=True)
 
 
 @mcp.tool(
+    title="Web search (multi-engine, no API key)",
     annotations=ToolAnnotations(
-        title="Web search (multi-engine, no API key)",
-        readOnlyHint=True,
-        idempotentHint=False,
-        openWorldHint=True,
+        read_only_hint=True,
+        idempotent_hint=False,
+        open_world_hint=True,
     ),
 )
 async def search(
@@ -133,7 +178,7 @@ async def search(
     freshness: Literal["day", "week", "month", "year"] | None = None,
     include_domains: list[str] | None = None,
     exclude_domains: list[str] | None = None,
-    category: Literal["news", "pdf", "github", "paper", "forum", "blog"] | None = None,
+    category: Category | None = None,
     include_text: str | None = None,
     exclude_text: str | None = None,
     format: Format = "markdown",
@@ -232,44 +277,63 @@ async def search(
 
 
 @mcp.tool(
+    title="Fetch a URL: page text, document, or resource",
     annotations=ToolAnnotations(
-        title="Fetch URL as Markdown",
-        readOnlyHint=True,
-        idempotentHint=True,
-        openWorldHint=True,
+        read_only_hint=True,
+        idempotent_hint=True,
+        open_world_hint=True,
     ),
+    # This tool can return page text, a JSON payload, or an actual image.
+    # There is no single JSON Schema that covers an ImageContent block, and
+    # from 2026-07-28 the SDK VALIDATES returns against the derived schema —
+    # so deriving one here would reject every inline image at call time.
+    structured_output=False,
 )
 async def fetch(
     url: str,
     render: Literal["auto", "http", "browser"] = "auto",
     force_refresh: bool = False,
     max_age_hours: float | None = None,
+    inline: bool = False,
     format: Format = "markdown",
-) -> str | dict[str, Any]:
-    """Fetch one URL and return reader-mode Markdown of the main content.
+) -> str | dict[str, Any] | Image:
+    """Fetch one URL: page text, or a description of a non-text resource.
+
+    Handles any http(s) resource, not just HTML:
+    - HTML pages -> reader-mode Markdown (nav/footer/scripts stripped).
+    - PDF/DOCX/XLSX/PPTX/EPUB/CSV/code/archives -> parsed text (same engine as
+      `read_doc`, which you should prefer when you need pagination).
+    - Images, video, audio, fonts, opaque binaries -> a description
+      (media type, byte size, dimensions, sha256), NOT the bytes.
 
     Best for:
     - You already have a URL (from `search`, the user, or your own knowledge)
       and need the actual page text.
     - Verifying a single claim by reading the source.
-    - Pages that need reader-mode cleanup (nav/footer/scripts stripped).
+    - Checking what a resource IS before deciding to spend tokens on it.
 
     Not recommended for:
     - Multiple URLs at once -> use `fetch_batch` (concurrent, one round-trip).
     - "Search then read top N" -> use `research` (one call, not two).
-    - PDF/DOCX URLs -> use `read_doc` (proper binary parsing).
+    - Long documents you need to page through -> use `read_doc` (start/length).
     - You don't have a URL yet -> use `search` first.
 
     Returns:
     - markdown (default): a small header (URL, render method, token count)
       plus the cleaned page body.
     - json: {url, title, content, method, truncated, tokens_estimated,
-      author, published_date, sitename}.
+      author, published_date, sitename}, plus {media_type, bytes_size, sha256,
+      width, height} for non-text resources.
+    - With `inline=True` on an image: the image itself, viewable by a
+      vision-capable model.
 
     Common mistakes:
     - Passing a search query instead of a URL.
     - Using `render="http"` on a JS-only SPA — it returns near-empty content;
       use "auto" (default) or "browser".
+    - Setting `inline=True` on a large image out of habit. A 1MB image costs
+      well over a thousand tokens; fetch it plainly first and inline only if
+      the description says it's worth looking at.
     - Forgetting that results are cached 7 days — use `force_refresh=True`
       or `max_age_hours=0` for a fresh pull.
 
@@ -280,6 +344,9 @@ async def fetch(
         force_refresh: Bypass the page cache entirely.
         max_age_hours: Treat cached pages older than this as a miss. 0 = same
             as force_refresh. None = server default TTL (7 days).
+        inline: For images only — return the image itself instead of a
+            description, so a vision-capable model can see it. Ignored for
+            text resources.
         format: "markdown" or "json".
     """
     effective_force = force_refresh
@@ -292,17 +359,23 @@ async def fetch(
             )
             if cached is None:
                 effective_force = True
-    result = await fetch_page(url, render=render, force_refresh=effective_force)
+    result = await fetch_page(
+        url, render=render, force_refresh=effective_force, inline=inline,
+    )
+    if result.data is not None and result.media_type.startswith("image/"):
+        # Hand back real MCP image content rather than base64 in a string —
+        # the client decides how to show it, and non-vision clients can skip it.
+        return Image(data=result.data, format=result.media_type.split("/", 1)[-1])
     payload = result.to_dict()
     return _maybe_render(payload, format, render_fetch)
 
 
 @mcp.tool(
+    title="Fetch many URLs concurrently",
     annotations=ToolAnnotations(
-        title="Fetch many URLs concurrently",
-        readOnlyHint=True,
-        idempotentHint=True,
-        openWorldHint=True,
+        read_only_hint=True,
+        idempotent_hint=True,
+        open_world_hint=True,
     ),
 )
 async def fetch_batch(
@@ -362,12 +435,12 @@ async def fetch_batch(
 
 
 @mcp.tool(
+    title="Read a remote (or sandboxed local) document",
     annotations=ToolAnnotations(
-        title="Read a remote (or sandboxed local) document",
-        readOnlyHint=True,
-        idempotentHint=True,
+        read_only_hint=True,
+        idempotent_hint=True,
         # Reads http(s) URLs over the network, so this is an open-world tool.
-        openWorldHint=True,
+        open_world_hint=True,
     ),
 )
 async def read_doc(
@@ -436,11 +509,11 @@ async def read_doc(
 
 
 @mcp.tool(
+    title="Search and read in one call",
     annotations=ToolAnnotations(
-        title="Search and read in one call",
-        readOnlyHint=True,
-        idempotentHint=False,
-        openWorldHint=True,
+        read_only_hint=True,
+        idempotent_hint=False,
+        open_world_hint=True,
     ),
 )
 async def research(
@@ -453,7 +526,7 @@ async def research(
     freshness: Literal["day", "week", "month", "year"] | None = None,
     include_domains: list[str] | None = None,
     exclude_domains: list[str] | None = None,
-    category: Literal["news", "pdf", "github", "paper", "forum", "blog"] | None = None,
+    category: Category | None = None,
     include_text: str | None = None,
     exclude_text: str | None = None,
     format: Format = "markdown",
@@ -535,11 +608,11 @@ async def research(
 
 
 @mcp.tool(
+    title="Search local cache (FTS5)",
     annotations=ToolAnnotations(
-        title="Search local cache (FTS5)",
-        readOnlyHint=True,
-        idempotentHint=True,
-        openWorldHint=False,
+        read_only_hint=True,
+        idempotent_hint=True,
+        open_world_hint=False,
     ),
 )
 async def cache_search(
@@ -603,11 +676,11 @@ async def cache_search(
 
 
 @mcp.tool(
+    title="List available search engines",
     annotations=ToolAnnotations(
-        title="List available search engines",
-        readOnlyHint=True,
-        idempotentHint=True,
-        openWorldHint=False,
+        read_only_hint=True,
+        idempotent_hint=True,
+        open_world_hint=False,
     ),
 )
 def engines() -> list[str]:
@@ -638,20 +711,33 @@ def engines() -> list[str]:
               anysearch (JSON aggregator), startpage (browser-rendered, slower),
               brave (PoW captcha after a few calls), baidu
               (CN index), bilibili (CN video), zhihu (CN Q&A, often login-gated),
+              sogou + so360 (CN indexes; sogou returns redirect URLs),
+              wikipedia (encyclopedia, follows SEARCH_MCP_REGION language),
+              openlibrary (books),
               searx (public-instance meta-search; set SEARCH_MCP_SEARX_INSTANCES
               if it returns nothing).
+    Vertical (auto-selected by `category`, see below): arxiv, openalex,
+              crossref, pubmed (papers); github, stackexchange, hackernews
+              (code and developer discussion); gdelt (worldwide news).
     Key-required (configure via admin UI / SEARCH_MCP_*_API_KEY): brave_api,
-              serper, tavily, google_cse.
+              serper, tavily, google_cse, github_code (GitHub rejects anonymous
+              code search).
+
+    You usually do NOT need to pass `engines=` for these. Passing `category=`
+    to `search`/`research` routes the query to the sources that natively index
+    it — `category="paper"` actually queries arXiv/OpenAlex/Crossref instead of
+    filtering general web results by hostname. Naming engines explicitly turns
+    that routing off.
     """
     return list_engines()
 
 
 @mcp.tool(
+    title="Compare URLs side-by-side",
     annotations=ToolAnnotations(
-        title="Compare URLs side-by-side",
-        readOnlyHint=True,
-        idempotentHint=True,
-        openWorldHint=True,
+        read_only_hint=True,
+        idempotent_hint=True,
+        open_world_hint=True,
     ),
 )
 async def compare(
@@ -695,11 +781,11 @@ async def compare(
 
 
 @mcp.tool(
+    title="Extract structured data from a URL",
     annotations=ToolAnnotations(
-        title="Extract structured data from a URL",
-        readOnlyHint=True,
-        idempotentHint=True,
-        openWorldHint=True,
+        read_only_hint=True,
+        idempotent_hint=True,
+        open_world_hint=True,
     ),
 )
 async def extract_structured(
@@ -736,6 +822,132 @@ async def extract_structured(
     """
     payload = await _extract_structured(url)
     return _maybe_render(payload, format, render_structured)
+
+
+class _EnableDownloads(BaseModel):
+    """Elicitation schema for the download opt-in (primitives only, per spec)."""
+
+    enable: bool = Field(
+        description=(
+            "Save downloaded files to disk for this session? Files are deleted "
+            "automatically after the retention window."
+        )
+    )
+
+
+@mcp.tool(
+    title="Download a file to disk",
+    annotations=ToolAnnotations(
+        # The one tool here that writes outside the cache.
+        read_only_hint=False,
+        idempotent_hint=True,
+        open_world_hint=True,
+    ),
+)
+async def download(
+    url: str,
+    ctx: Context | None = None,
+    format: Format = "markdown",
+) -> str | dict[str, Any]:
+    """Save a file from a URL to a local, auto-expiring download directory.
+
+    Downloads are DISABLED by default. The first call asks you to turn them on
+    for this session; answering no cancels the download and writes nothing.
+    To enable permanently, set `SEARCH_MCP_DOWNLOAD_DIR`.
+
+    Best for:
+    - Keeping an actual file (installer, dataset, archive, image) rather than
+      its text.
+    - Handing a path to another tool that needs a real file on disk.
+
+    Not recommended for:
+    - Reading a document's contents -> use `read_doc`, which parses it without
+      touching the filesystem.
+    - Looking at a web page -> use `fetch`.
+    - Viewing an image -> use `fetch(inline=True)`.
+
+    Returns:
+    - markdown (default): where the file was saved, its size and type.
+    - json: {url, saved_path, media_type, bytes_size, sha256, expires_in_hours}.
+
+    Retention: files older than SEARCH_MCP_DOWNLOAD_TTL_HOURS (default 24) are
+    deleted before the next download and at startup. Treat the path as
+    short-lived; copy it elsewhere if you need to keep it.
+
+    Args:
+        url: Absolute http(s) URL of the file to save.
+        format: "markdown" or "json".
+    """
+    if not downloads.is_enabled():
+        # Ask rather than assume. Under 2026-07-28 this rides the multi
+        # round-trip pattern; the SDK handles both protocol eras.
+        if ctx is None:
+            raise PermissionError(
+                "Downloads are disabled and this client cannot be prompted. "
+                "Set SEARCH_MCP_DOWNLOAD_DIR to a directory to enable them."
+            )
+        target = downloads.default_download_dir()
+        try:
+            answer = await ctx.elicit(
+                f"Allow search-mcp to save downloaded files to {target}? "
+                f"Files are deleted automatically after "
+                f"{settings.download_ttl_hours}h. This applies to this session "
+                f"only; set SEARCH_MCP_DOWNLOAD_DIR to make it permanent.",
+                _EnableDownloads,
+            )
+        except Exception as exc:
+            raise PermissionError(
+                "Downloads are disabled and this client does not support "
+                "prompting for permission. Set SEARCH_MCP_DOWNLOAD_DIR to a "
+                f"directory to enable them. ({exc})"
+            ) from exc
+        if answer.action != "accept" or not getattr(answer.data, "enable", False):
+            raise PermissionError(
+                "Download cancelled: permission to write files was not granted. "
+                "Nothing was saved."
+            )
+        downloads.enable_for_session(target)
+
+    import anyio
+
+    result = await fetch_bytes(url)
+    # Writing up to download_max_mb and stat-ing a directory are both blocking
+    # syscalls; keep them off the event loop so a large save doesn't stall
+    # every other in-flight request.
+    await anyio.to_thread.run_sync(downloads.purge_expired)
+    path = await anyio.to_thread.run_sync(
+        downloads.save, url, result.data or b"", result.media_type
+    )
+
+    payload = {
+        "url": url,
+        "saved_path": str(path),
+        "media_type": result.media_type,
+        "bytes_size": result.bytes_size,
+        "sha256": result.sha256,
+        "expires_in_hours": settings.download_ttl_hours,
+    }
+    if result.width is not None:
+        payload["width"] = result.width
+        payload["height"] = result.height
+    if format == "json":
+        return payload
+    lines = [
+        f"# Downloaded `{path.name}`",
+        "",
+        f"- **Saved to:** `{path}`",
+        f"- **Type:** {result.media_type or 'unknown'}",
+        f"- **Size:** {result.bytes_size:,} bytes",
+    ]
+    if result.width is not None:
+        lines.append(f"- **Dimensions:** {result.width}×{result.height}px")
+    lines += [
+        f"- **SHA-256:** `{result.sha256}`",
+        "",
+        f"> Deleted automatically after {settings.download_ttl_hours}h. "
+        "Copy it elsewhere to keep it.",
+    ]
+    return "\n".join(lines)
 
 
 # ---------------------------------------------------------------------------
@@ -829,7 +1041,7 @@ async def cached_page(url: str) -> str:
     decoded = unquote(url)
     page = await cache.get_page(decoded)
     if not page:
-        raise ValueError(f"Not in cache: {decoded}")
+        raise ResourceNotFoundError(f"Not in cache: {decoded}")
     return page.get("content") or ""
 
 
@@ -843,14 +1055,64 @@ async def cached_search(query_hash: str) -> str:
     """
     rows = await cache.get_search(query_hash)
     if rows is None:
-        raise ValueError(f"No cached search for hash: {query_hash}")
+        raise ResourceNotFoundError(f"No cached search for hash: {query_hash}")
     import json
     return json.dumps(rows, ensure_ascii=False, indent=2)
 
 
-def run() -> None:
+_LOOPBACK_HOSTS = ("127.0.0.1", "localhost", "[::1]")
+
+
+def _http_security(host: str, port: int) -> TransportSecuritySettings:
+    """Build the DNS-rebinding guard for the HTTP transport.
+
+    Passing no settings at all leaves the guard OFF (the SDK defaults that way
+    for backwards compatibility), which would let any web page a user visits
+    drive this server through their browser. So it is always constructed —
+    every host/origin that can legitimately reach the bind address is
+    enumerated instead.
+    """
+    hosts = [f"{h}:{port}" for h in _LOOPBACK_HOSTS]
+    origins = [f"http://{h}:{port}" for h in _LOOPBACK_HOSTS]
+    if host not in (*_LOOPBACK_HOSTS, "0.0.0.0", "::"):  # noqa: S104 - comparison, not a bind
+        hosts.append(f"{host}:{port}")
+        origins.append(f"http://{host}:{port}")
+    extra = [o for o in settings.http_allowed_origins.replace(",", " ").split() if o]
+    origins.extend(extra)
+    return TransportSecuritySettings(
+        enable_dns_rebinding_protection=True,
+        allowed_hosts=hosts,
+        allowed_origins=origins,
+    )
+
+
+def run(
+    transport: str | None = None,
+    host: str | None = None,
+    port: int | None = None,
+    path: str | None = None,
+) -> None:
+    """Start the MCP server. Arguments override the SEARCH_MCP_* settings."""
+    transport = transport or settings.transport
+    # Ephemeral downloads are swept here as well as before each download:
+    # this process is often short-lived, so a background timer would
+    # frequently never fire.
+    downloads.purge_expired()
     try:
-        mcp.run()
+        if transport == "streamable-http":
+            host = host or settings.http_host
+            port = port if port is not None else settings.http_port
+            path = path or settings.http_path
+            log.info("search-mcp listening on http://%s:%s%s", host, port, path)
+            mcp.run(
+                transport="streamable-http",
+                host=host,
+                port=port,
+                streamable_http_path=path,
+                transport_security=_http_security(host, port),
+            )
+        else:
+            mcp.run()
     finally:
         try:
             import anyio

@@ -3,8 +3,14 @@
 API keys are **optional**. search-mcp ships with a set of keyless engines that
 work out of the box with no signup, no key, and no configuration:
 `duckduckgo`, `mojeek`, `googlenews`, `google`, `bilibili`, `searx`,
-`startpage`, `bing`, `baidu`, `serpsearch`, `zhihu`, and the keyless tier of
-`anysearch`.
+`startpage`, `bing`, `baidu`, `serpsearch`, `zhihu`, `sogou`, `so360`,
+`wikipedia`, `openlibrary`, the vertical sources (`arxiv`, `openalex`,
+`crossref`, `pubmed`, `github`, `stackexchange`, `hackernews`, `gdelt`,
+`openverse`, `zenodo`), and the keyless tier of `anysearch`.
+
+Two of these accept an **optional** key that only raises limits: `github`
+(a token also unlocks the separate `github_code` engine, since GitHub rejects
+anonymous code search) and `stackexchange`.
 
 Adding a key simply **unlocks the corresponding keyed engine** — for example,
 setting your Brave key enables the `brave_api` engine. You only need a key for

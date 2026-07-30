@@ -301,6 +301,53 @@ PROVIDERS: list[Provider] = [
         docs_url="https://www.anysearch.com/docs",
         optional=True,
     ),
+    Provider(
+        id="github",
+        label="GitHub",
+        engine="github",
+        fields=[
+            ProviderField(
+                "github_token",
+                "Personal access token (optional)",
+                required=False,
+                placeholder="leave blank for anonymous repo/issue search",
+            )
+        ],
+        signup_url="https://github.com/settings/tokens",
+        free_tier="repo/issue search works keyless (10 req/min); a token raises it "
+        "to 30 req/min and unlocks the github_code engine",
+        how_to=[
+            "The `github` engine searches repositories and issues with no token.",
+            "A token raises the rate limit and enables `github_code`, because "
+            "GitHub's code-search API rejects anonymous requests outright.",
+            "Create one at https://github.com/settings/tokens — no scopes are "
+            "needed for searching public repositories.",
+        ],
+        docs_url="https://docs.github.com/rest/search",
+        optional=True,
+    ),
+    Provider(
+        id="stackexchange",
+        label="Stack Exchange",
+        engine="stackexchange",
+        fields=[
+            ProviderField(
+                "stackexchange_key",
+                "App key (optional)",
+                required=False,
+                placeholder="leave blank for the anonymous 300/day quota",
+            )
+        ],
+        signup_url="https://stackapps.com/apps/oauth/register",
+        free_tier="300 requests/day per IP keyless; an app key raises the quota",
+        how_to=[
+            "Stack Exchange search works with no key at 300 requests/day per IP.",
+            "For more, register an app at https://stackapps.com/apps/oauth/register.",
+            "Only the 'key' value is needed here — not the client secret.",
+        ],
+        docs_url="https://api.stackexchange.com/docs",
+        optional=True,
+    ),
 ]
 
 

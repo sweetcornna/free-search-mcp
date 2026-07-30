@@ -84,6 +84,7 @@ class GoogleNewsEngine(Engine):
     # RSS feed: an empty/malformed parse is genuinely empty, so don't waste a
     # Playwright render trying to "recover" it (see Engine.search fallback).
     supports_browser_fallback = False
+    categories = frozenset({"news"})
 
     def build_url(
         self, query: str, max_results: int, filters: SearchFilters | None = None

@@ -14,11 +14,71 @@ from rapidfuzz import fuzz
 from .browser import BROWSER_INSTALL_HINT
 from .cache import cache
 from .config import settings
-from .engines import ENGINES, Engine, SearchFilters, SearchResult, get_engine
+from .engines import ENGINES, Category, Engine, SearchFilters, SearchResult, get_engine
 from .ratelimit import RateLimiter
 
 log = logging.getLogger(__name__)
 search_limiter = RateLimiter(settings.rate_limit_per_minute)
+
+# Engines that publish a stricter limit than our global default get their own
+# bucket. GDELT, for one, answers 429 with "limit requests to one every 5
+# seconds" — the default 30/min would walk straight into that.
+for _name, _engine in ENGINES.items():
+    if _engine.rate_limit_per_minute is not None:
+        search_limiter.configure(_name, _engine.rate_limit_per_minute)
+
+
+def _max_token_wait(engine: Any) -> float | None:
+    """Seconds this engine is willing to queue for a rate-limit token.
+
+    getattr rather than attribute access: tests substitute duck-typed engine
+    stubs that don't inherit from `Engine`, and a missing attribute should mean
+    "wait as long as needed" (the historical behavior), not a crash.
+    """
+    return getattr(engine, "rate_limit_max_wait", None)
+
+
+# Categories whose specialist engines REPLACE the default pool rather than
+# augment it — see aggregate_search.
+_EXCLUSIVE_CATEGORIES = frozenset({"image", "dataset"})
+
+
+def engines_for_category(
+    category: str | None, exclude: list[str] | None = None
+) -> list[str]:
+    """Engines that natively index `category`, in registry order.
+
+    The default pool is four general web engines; they can only honour a
+    `category` by discarding results whose hostname isn't on a whitelist. An
+    engine that declares the category actually searches it, so pull those in
+    when the caller asked for a category but not for specific engines.
+
+    Capped by `settings.category_engine_limit`: every added engine is another
+    round trip on the critical path, and the specialist sources are ordered
+    best-first in the registry.
+    """
+    if not category:
+        return []
+    already = set(exclude or ())
+    picks = [
+        name
+        for name, engine in ENGINES.items()
+        if category in engine.categories
+        and name not in already
+        and engine.is_available()
+    ]
+    limit = settings.category_engine_limit
+    if limit >= 0:
+        dropped = picks[limit:]
+        picks = picks[:limit]
+        if dropped:
+            # Say so rather than silently truncating — an operator wondering
+            # why arxiv never runs needs this in the log, not in the source.
+            log.info(
+                "category %r: using %s, over category_engine_limit=%d (skipped %s)",
+                category, picks, limit, dropped,
+            )
+    return picks
 
 
 def _normalize_url(url: str) -> str:
@@ -324,7 +384,11 @@ async def _rescue(
             engine: Engine = engine,
             rescue_diag: dict[str, Any] = rescue_diag,
         ) -> list[SearchResult]:
-            await search_limiter.acquire(name)
+            if not await search_limiter.acquire(name, max_wait=_max_token_wait(engine)):
+                # Rescue is already a bounded, best-effort recovery attempt;
+                # burning its timeout budget queueing for a token would starve
+                # the remaining candidates.
+                return []
             return await engine.search(query, n, filters, diagnostics=rescue_diag)
 
         try:
@@ -411,17 +475,21 @@ async def aggregate_search(
     freshness: Literal["day", "week", "month", "year"] | None = None,
     include_domains: list[str] | None = None,
     exclude_domains: list[str] | None = None,
-    category: Literal["news", "pdf", "github", "paper", "forum", "blog"] | None = None,
+    category: Category | None = None,
     include_text: str | None = None,
     exclude_text: str | None = None,
 ) -> dict[str, Any]:
-    engine_names = list(engines) if engines else list(settings.default_engines)
-    # Smart routing: news category benefits enormously from the Google News RSS
-    # engine. If the user didn't explicitly choose engines and asked for news,
-    # add googlenews to the pool — RSS items have structured pubDates and the
-    # index is overwhelmingly news outlets.
-    if category == "news" and engines is None and "googlenews" not in engine_names:
-        engine_names.append("googlenews")
+    if engines:
+        engine_names = list(engines)
+    elif category in _EXCLUSIVE_CATEGORIES:
+        # For these, the general web pool is noise rather than coverage: a web
+        # engine cannot return an image file or a dataset record, so mixing it
+        # in only crowds out the sources that can. Falls back to the default
+        # pool if no specialist is available.
+        engine_names = engines_for_category(category) or list(settings.default_engines)
+    else:
+        engine_names = list(settings.default_engines)
+        engine_names.extend(engines_for_category(category, exclude=engine_names))
     n = max_results or settings.max_results_per_engine
     filters = SearchFilters(
         freshness=freshness,
@@ -465,7 +533,13 @@ async def aggregate_search(
             engine = get_engine(name)
         except ValueError as e:
             return name, e
-        await search_limiter.acquire(name)
+        if not await search_limiter.acquire(name, max_wait=_max_token_wait(engine)):
+            # Strictly-limited source with no token to spare. Skipping keeps
+            # the parallel fan-out at the speed of the other engines; say so
+            # in diagnostics so an empty slot doesn't read as "found nothing".
+            log.info("engine %s skipped: rate limit token unavailable", name)
+            diagnostics.setdefault("rate_limited", []).append(name)
+            return name, []
         try:
             return name, await engine.search(query, n, filters, diagnostics=diagnostics)
         except Exception as e:

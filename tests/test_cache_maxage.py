@@ -92,9 +92,10 @@ def counting_engines(monkeypatch):
         return _FakeEngine(name)
 
     monkeypatch.setattr(agg_mod, "get_engine", fake_get_engine)
-    # Defang the rate limiter so tests don't sleep.
-    async def _noop_acquire(name):
-        return None
+    # Defang the rate limiter so tests don't sleep. True == "token granted";
+    # returning None here would read as "skipped, rate limited".
+    async def _noop_acquire(name, max_wait=None):
+        return True
 
     monkeypatch.setattr(agg_mod.search_limiter, "acquire", _noop_acquire)
     return calls

@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import asyncio
+import io
 import json
 import logging
 from dataclasses import dataclass
 from typing import Any
 from urllib.parse import urlparse
 
+import httpx
 import trafilatura
 from curl_cffi.requests import AsyncSession
 from markdownify import markdownify as html_to_md
@@ -60,9 +62,23 @@ class FetchResult:
     author: str = ""
     published_date: str = ""
     sitename: str = ""
+    # --- asset fields, set only on the binary/media path -------------------
+    # A page has content; an image has properties. These describe the resource
+    # itself so a model can decide whether it's worth spending tokens to look
+    # at, without the bytes being inlined by default.
+    media_type: str = ""
+    bytes_size: int = 0
+    sha256: str = ""
+    width: int | None = None
+    height: int | None = None
+    # Raw bytes, populated ONLY when the caller asked to inline them. Kept off
+    # to_dict() so a JSON-format tool response never carries a megabyte of
+    # base64 the caller didn't request.
+    data: bytes | None = None
+    saved_path: str = ""
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        out: dict[str, Any] = {
             "url": self.url,
             "title": self.title,
             "content": self.content,
@@ -73,6 +89,16 @@ class FetchResult:
             "published_date": self.published_date,
             "sitename": self.sitename,
         }
+        if self.media_type:
+            out["media_type"] = self.media_type
+            out["bytes_size"] = self.bytes_size
+            out["sha256"] = self.sha256
+            if self.width is not None:
+                out["width"] = self.width
+                out["height"] = self.height
+        if self.saved_path:
+            out["saved_path"] = self.saved_path
+        return out
 
 
 def _encode_title_meta(title: str, author: str, date: str, sitename: str) -> str:
@@ -246,6 +272,124 @@ def _ctype_is_markup(ctype: str) -> bool:
     return (not c) or ("html" in c) or ("xml" in c)
 
 
+# Binary resources that are neither markup nor a text-bearing document. These
+# get described (type, size, dimensions, hash) rather than decoded — decoding
+# them as text produces a screen of U+FFFD.
+_ASSET_CTYPE_PREFIXES = ("image/", "video/", "audio/", "font/")
+_ASSET_CTYPES = (
+    "application/octet-stream", "application/zip", "application/x-tar",
+    "application/gzip", "application/x-7z-compressed", "application/x-rar",
+    "application/wasm",
+)
+
+
+def _is_asset_ctype(ctype: str) -> bool:
+    c = (ctype or "").lower()
+    if not c:
+        return False
+    # SVG is markup and readable as text, so it is NOT an opaque asset.
+    if c.startswith("image/svg"):
+        return False
+    return c.startswith(_ASSET_CTYPE_PREFIXES) or any(t in c for t in _ASSET_CTYPES)
+
+
+def _is_asset_url(url: str) -> bool:
+    from .documents import _detect_format
+
+    try:
+        path = urlparse(url).path
+    except ValueError:
+        return False
+    if path.lower().endswith(".svg"):
+        return False
+    return _detect_format(path) == "image"
+
+
+def _image_dimensions(blob: bytes) -> tuple[int | None, int | None]:
+    """Read (width, height) from an image header without decoding the pixels.
+
+    Pillow parses only the header on `open`, so this stays cheap even for a
+    large photo. Anything unrecognised returns (None, None) rather than
+    raising — dimensions are a nicety, not the point of the fetch.
+    """
+    try:
+        from PIL import Image as PILImage
+
+        with PILImage.open(io.BytesIO(blob)) as im:
+            return im.width, im.height
+    except Exception:
+        return None, None
+
+
+def _human_size(n: int) -> str:
+    value = float(n)
+    for unit in ("B", "KB", "MB", "GB"):
+        if value < 1024 or unit == "GB":
+            return f"{value:.0f} {unit}" if unit == "B" else f"{value:.1f} {unit}"
+        value /= 1024
+    return f"{value:.1f} GB"
+
+
+async def _fetch_as_asset(
+    url: str, *, inline: bool = False, describe_only: bool = True
+) -> FetchResult:
+    """Describe a binary resource; carry its bytes only if asked.
+
+    `content` is a human/LLM-readable summary rather than the bytes, so an
+    ordinary `fetch` of an image costs a few dozen tokens instead of a
+    megabyte of base64. `inline=True` additionally attaches the raw bytes for
+    the server layer to turn into MCP ImageContent.
+    """
+    import hashlib
+
+    from .httpfetch import httpx_client_kwargs, httpx_stream_capped
+
+    await assert_url_allowed_async(url)
+    async with httpx.AsyncClient(**httpx_client_kwargs()) as client:
+        _status, ctype, blob = await httpx_stream_capped(client, url, raise_for_status=True)
+
+    media_type = (ctype or "application/octet-stream").split(";", 1)[0].strip()
+    width, height = (None, None)
+    if media_type.startswith("image/"):
+        width, height = _image_dimensions(blob)
+
+    name = urlparse(url).path.rsplit("/", 1)[-1] or url
+    bits = [f"**{name}**", media_type, _human_size(len(blob))]
+    if width and height:
+        bits.append(f"{width}×{height}px")
+    summary = " · ".join(bits)
+    if not inline and describe_only and media_type.startswith("image/"):
+        summary += (
+            "\n\nBytes not included. Call `fetch` again with `inline=True` to "
+            "pass the image itself to a vision-capable model."
+        )
+
+    return FetchResult(
+        url=url,
+        title=name,
+        content=summary,
+        method="asset",
+        truncated=False,
+        tokens_estimated=estimate_tokens(summary),
+        media_type=media_type,
+        bytes_size=len(blob),
+        sha256=hashlib.sha256(blob).hexdigest(),
+        width=width,
+        height=height,
+        data=blob if inline else None,
+    )
+
+
+async def fetch_bytes(url: str) -> FetchResult:
+    """Download a URL as raw bytes, whatever its type.
+
+    Distinct from `fetch_page`, which routes by content-type and returns text
+    for anything text-bearing. A download must preserve the FILE — saving
+    trafilatura's Markdown rendering of a PDF would not be the PDF.
+    """
+    return await _fetch_as_asset(url, inline=True, describe_only=False)
+
+
 async def _fetch_as_document(url: str) -> FetchResult:
     """Parse a binary document (PDF/DOCX) via the document reader and adapt it to
     a FetchResult, so fetch/research return real text instead of decoded bytes.
@@ -273,6 +417,7 @@ async def fetch_page(
     *,
     render: str = "auto",
     force_refresh: bool = False,
+    inline: bool = False,
 ) -> FetchResult:
     # Google News RSS/article links (news.google.com/.../articles/CBM...) are
     # opaque redirect blobs that resolve to an empty JS shell over both HTTP and
@@ -309,6 +454,12 @@ async def fetch_page(
     if _is_document_url(url):
         return await _fetch_as_document(url)
 
+    # Images and other opaque binaries are described, never decoded as text.
+    # Routed by URL first so we don't pay for a text fetch we'd throw away;
+    # the content-type check below catches extension-less URLs.
+    if _is_asset_url(url):
+        return await _fetch_as_asset(url, inline=inline)
+
     await fetch_limiter.acquire("fetch")
 
     method = "http"
@@ -328,6 +479,9 @@ async def fetch_page(
     # hand off to the document parser instead of decoding its bytes as text.
     if _is_document_ctype(ctype):
         return await _fetch_as_document(url)
+
+    if _is_asset_ctype(ctype):
+        return await _fetch_as_asset(url, inline=inline)
 
     # The short-body browser fallback is for HTML pages that arrived as an empty
     # JS shell — gate it on the content-type being markup (or unknown), so a

@@ -33,7 +33,7 @@ async def test_resource_template_registered():
     from search_mcp.server import mcp
     templates = await mcp.list_resource_templates()
     assert len(templates) == 2
-    by_uri = {t.uriTemplate: t for t in templates}
+    by_uri = {t.uri_template: t for t in templates}
     page_uri = next(u for u in by_uri if "cache://page/" in u)
     search_uri = next(u for u in by_uri if "cache://search/" in u)
     assert by_uri[page_uri].title == "Cached page"
@@ -58,8 +58,10 @@ async def test_cached_search_resource_returns_json(isolated_cache):
 
 
 async def test_cached_search_resource_misses_raise(isolated_cache):
+    from mcp.server.mcpserver.exceptions import ResourceNotFoundError
+
     from search_mcp.server import mcp
-    with pytest.raises(Exception):
+    with pytest.raises(ResourceNotFoundError):
         await mcp.read_resource("cache://search/no-such-hash")
 
 
@@ -82,8 +84,10 @@ async def test_cached_page_resource_returns_content(isolated_cache):
 async def test_cached_page_resource_misses_raise(isolated_cache):
     from urllib.parse import quote
 
+    from mcp.server.mcpserver.exceptions import ResourceNotFoundError
+
     from search_mcp.server import mcp
-    with pytest.raises(Exception):
+    with pytest.raises(ResourceNotFoundError):
         await mcp.read_resource(
             f"cache://page/{quote('https://nope.example.com/', safe='')}",
         )

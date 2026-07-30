@@ -17,6 +17,7 @@ from typing import Any, Literal
 
 from .aggregator import aggregate_search
 from .cache import cache
+from .engines import Category
 from .fetcher import fetch_many, fetch_page
 from .formatting import estimate_tokens
 
@@ -62,7 +63,7 @@ async def research(
     freshness: Literal["day", "week", "month", "year"] | None = None,
     include_domains: list[str] | None = None,
     exclude_domains: list[str] | None = None,
-    category: Literal["news", "pdf", "github", "paper", "forum", "blog"] | None = None,
+    category: Category | None = None,
     include_text: str | None = None,
     exclude_text: str | None = None,
 ) -> dict[str, Any]:

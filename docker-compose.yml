@@ -5,6 +5,11 @@
 # To wire into a client, point the client's command at:
 #   docker compose run --rm search-mcp
 # (or `docker run -i --rm search-mcp`).
+#
+# For the HTTP transport, set SEARCH_MCP_TRANSPORT=streamable-http and
+# SEARCH_MCP_HTTP_HOST=0.0.0.0 below, then publish `ports: ["8000:8000"]`.
+# Note the server is unauthenticated — keep it on an internal network or put
+# an authenticating proxy in front.
 services:
   search-mcp:
     build: .

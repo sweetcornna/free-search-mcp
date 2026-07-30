@@ -58,6 +58,13 @@ class Settings(BaseSettings):
     # silent zero) — the aggregator makes one bounded recovery attempt via
     # these engines, in order, first hit wins. A healthy sparse result never
     # triggers it, so the normal path pays nothing.
+    # When a search asks for a `category` but not for specific engines, the
+    # aggregator adds engines that natively index that category (arxiv for
+    # "paper", googlenews for "news", ...). Each one is another round trip, so
+    # cap how many get pulled in; registry order decides which. 0 disables the
+    # routing entirely and restores pure default-pool behavior.
+    category_engine_limit: int = 3
+
     rescue_enabled: bool = True
     rescue_engines: list[str] = ["searx", "bing"]
     rescue_timeout: float = 10.0
@@ -83,7 +90,30 @@ class Settings(BaseSettings):
     safesearch: Literal["strict", "moderate", "off"] = "moderate"
     region: str = "us-en"
 
+    # Scholarly APIs (OpenAlex, Crossref, NCBI E-utilities) ask callers to
+    # identify themselves and route them to a faster, more reliable pool when
+    # they do. Optional — every one of them also serves anonymous traffic.
+    contact_email: str = ""
+
     log_level: str = "INFO"
+
+    # --- MCP transport ----------------------------------------------------
+    # stdio stays the default: it needs no port, no origin checks, and it is
+    # what every `uvx search-mcp` entry in a client config already expects.
+    # streamable-http is for running the server as a shared service — protocol
+    # revision 2026-07-28 removed sessions entirely, so HTTP deployments no
+    # longer need sticky routing.
+    transport: Literal["stdio", "streamable-http"] = "stdio"
+    # Loopback by default. Binding 0.0.0.0 exposes an UNAUTHENTICATED server
+    # that will fetch arbitrary URLs on the caller's behalf — put it behind a
+    # reverse proxy that terminates auth before doing that.
+    http_host: str = "127.0.0.1"
+    http_port: int = 8000
+    http_path: str = "/mcp"
+    # Extra Origin values accepted by the DNS-rebinding guard (comma/space
+    # separated). Loopback origins are always allowed; add entries here when a
+    # browser-based client is served from another origin.
+    http_allowed_origins: str = ""
 
     # --- Safety / sandbox knobs -------------------------------------------
     # SSRF guard escape hatch: when False (default) URLs that resolve to
@@ -92,6 +122,14 @@ class Settings(BaseSettings):
     # read_doc local-file sandbox root. None (default) DISABLES local file
     # reads entirely — the user opts in by pointing this at a directory.
     document_root: Path | None = None
+    # Download sandbox. None (default) DISABLES writing files to disk; the
+    # `download` tool then asks the user before enabling it for the session.
+    # Same posture as document_root: writing to someone's disk is opt-in.
+    download_dir: Path | None = None
+    # Downloads are ephemeral. Files older than this are deleted before the
+    # next download and at startup; 0 disables the purge (files kept forever).
+    download_ttl_hours: int = 24
+    download_max_mb: int = 100
     # Response-bomb guard: cap on remote response body bytes.
     max_response_bytes: int = 25_000_000
     # Decompression-bomb guard: max PDF pages to parse.

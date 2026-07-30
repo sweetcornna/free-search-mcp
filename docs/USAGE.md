@@ -101,6 +101,25 @@ reports it as `rescued_via`.
 | `anysearch` | [AnySearch](https://github.com/anysearch-ai/anysearch-mcp-server) REST API | anonymous tier, IP rate-limited; one call returns fused/re-ranked results |
 | `bilibili` | Bilibili (哔哩哔哩) JSON API | keyless video search (synthetic `buvid3` cookie); **video results only** |
 | `zhihu` | Zhihu (知乎) search page | **best-effort**, browser-rendered; Zhihu hard-gates bots so a login wall / empty result is common and honest |
+| `sogou` | 搜狗 HTML scrape | best-effort; returns **redirect URLs** (`sogou.com/link?url=…`), not target URLs |
+| `so360` | 360搜索 HTML scrape | best-effort; returns direct URLs |
+| `wikipedia` | MediaWiki API | language follows `SEARCH_MCP_REGION` |
+| `openlibrary` | Open Library | book search |
+
+**Vertical sources — selected automatically by `category=`, not usually named:**
+
+| `category` | Engines | Notes |
+|---|---|---|
+| `paper` | `arxiv`, `openalex`, `crossref`, `pubmed` | real literature search, structured publication dates |
+| `github` | `github`, `github_code` (keyed) | repos + issues/PRs; code search needs a token |
+| `forum` | `stackexchange`, `hackernews` | accepted-answer / score signals |
+| `news` | `googlenews`, `gdelt` | GDELT covers 100+ languages; strictly rate-limited, skipped rather than queued |
+| `image` | `openverse` | CC-licensed; direct file URLs, usable with `fetch(inline=True)` |
+| `dataset` | `zenodo` | datasets, software, DOIs |
+
+`image` and `dataset` **replace** the default pool; the rest augment it (capped
+by `SEARCH_MCP_CATEGORY_ENGINE_LIMIT`, default 3). Passing `engines=` disables
+the routing.
 
 Enable globally via `SEARCH_MCP_DEFAULT_ENGINES` (JSON list) in `.env`.
 
@@ -112,6 +131,8 @@ Enable globally via `SEARCH_MCP_DEFAULT_ENGINES` (JSON list) in `.env`.
 | `serper` | Serper (Google) | `serper_api_key` | 2,500 |
 | `tavily` | Tavily (AI search) | `tavily_api_key` | 1,000/mo |
 | `google_cse` | Google Custom Search | `google_cse_api_key` + `google_cse_cx` | 100/day |
+| `github_code` | GitHub code search | `github_token` | keyless `github` covers repos/issues |
+| `stackexchange` | Stack Exchange | `stackexchange_key` (optional) | 300/day keyless |
 
 Add keys the simple way:
 

@@ -119,9 +119,22 @@ Prefer the default engines first. They are keyless and fast:
 `duckduckgo`, `mojeek`, `googlenews`, and `bing`.
 
 Use opt-in engines only when the task needs them. Examples: `bilibili` for video
-search, `zhihu` for Chinese Q&A, `google` or `serpsearch` for Google-style SERP
-coverage, and keyed engines such as `brave_api`, `serper`, `tavily`, or
-`google_cse` only after keys are configured.
+search, `zhihu`/`sogou`/`so360` for Chinese content, `google` or `serpsearch` for
+Google-style SERP coverage, and keyed engines such as `brave_api`, `serper`,
+`tavily`, or `google_cse` only after keys are configured.
+
+**Prefer `category=` over naming engines.** It routes the query to sources that
+natively index that kind of content: `category="paper"` searches arXiv, OpenAlex
+and Crossref rather than filtering web results by hostname; `category="github"`
+reaches GitHub; `category="forum"` reaches Stack Exchange and Hacker News;
+`category="image"` reaches Openverse; `category="dataset"` reaches Zenodo.
+Passing `engines=` turns that routing off, so only do it when you specifically
+want one source.
+
+For non-text resources, `fetch` describes rather than decodes: an image returns
+its type, size and dimensions. Only pass `inline=True` when you actually need to
+look at the picture — it is expensive. `download` writes to disk and is disabled
+until the user allows it.
 
 If a result includes `gated_engines` or `gated_hint`, report the gate honestly.
 Do not treat a CAPTCHA, consent wall, or login wall as proof that the web has no
