@@ -27,6 +27,52 @@ async def _close_global_cache():
 
 
 @pytest.fixture(autouse=True)
+def _hermetic_config(tmp_path_factory, monkeypatch):
+    """Assert against the SHIPPED defaults, not the developer's machine.
+
+    ``config.load_all_env_files()`` deliberately merges ``./.env`` and
+    ``<config_dir>/.env`` into ``os.environ`` at import time, which is right at
+    runtime and wrong for a test suite: a single
+    ``SEARCH_MCP_ALLOW_PRIVATE_HOSTS=true`` in a personal config file disarms
+    the guard under test, so 26 SSRF cases fail on that machine and pass
+    everywhere else. A suite whose result depends on who runs it cannot be used
+    to review a change to the thing it covers.
+
+    The proxy matters for the same reason now that the guard consults it: a
+    developer with ``SEARCH_MCP_PROXY`` set would skip the resolve-and-check
+    layer everywhere and never know.
+    """
+    monkeypatch.setenv("SEARCH_MCP_CONFIG_DIR", str(tmp_path_factory.mktemp("cfg")))
+    for var in (
+        "SEARCH_MCP_ALLOW_PRIVATE_HOSTS",
+        "SEARCH_MCP_SSRF_RESOLVE_ADDRESSES",
+        "SEARCH_MCP_PROXY",
+        "SEARCH_MCP_PROXY_ENGINES",
+        "SEARCH_MCP_DOCUMENT_ROOT",
+        "SEARCH_MCP_DOWNLOAD_DIR",
+    ):
+        monkeypatch.delenv(var, raising=False)
+
+    from search_mcp import keystore
+    from search_mcp.config import Settings, settings
+
+    keystore._reset_cache()
+    # `settings` is a module-level singleton built at import time, so clearing
+    # the env is not enough — reset the fields that were already read from it.
+    for name in ("allow_private_hosts", "ssrf_resolve_addresses",
+                 "document_root", "download_dir"):
+        monkeypatch.setattr(settings, name, Settings.model_fields[name].default)
+
+    # The fake-IP verdict is memoised per process; tests re-stub the resolver,
+    # so a verdict from one test must not decide the next.
+    from search_mcp.url_safety import reset_resolver_detection
+    reset_resolver_detection()
+    yield
+    reset_resolver_detection()
+    keystore._reset_cache()
+
+
+@pytest.fixture(autouse=True)
 def _hermetic_dns(monkeypatch):
     """Offline suite must never depend on the machine's real resolver: some
     environments (the CC sandbox, DNS-filtering VPNs) resolve public hosts to

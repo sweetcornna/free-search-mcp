@@ -30,6 +30,7 @@ from .base import (
     augment_query_with_operators,
     extract_date_hint,
     parse_html,
+    region_to_google_params,
     text_of,
 )
 
@@ -85,6 +86,14 @@ class GoogleEngine(Engine):
     # serves a JS/consent shell to plain HTTP, parse()==[] then recovers via a
     # Playwright render. When even that stays gated, the AGGREGATOR runs the
     # keyless rescue pass (searx/bing) — the fallback no longer lives here.
+    #
+    # Ask Google as a CURRENT Chrome rather than the shared chrome131 default.
+    # Measured caveat, so nobody expects too much of this line: Google answered
+    # the HTTP probe with its JS-redirect interstitial under every profile
+    # tried (chrome131/136/142/146, edge99/101) — its gate is behavioural, not
+    # a TLS-fingerprint check, so the identity alone does not unblock it. It is
+    # still the right client to present, and it costs nothing.
+    impersonate = "chrome"
 
     def build_url(
         self, query: str, max_results: int, filters: SearchFilters | None = None
@@ -101,7 +110,14 @@ class GoogleEngine(Engine):
             exclude_domains=filters.exclude_domains if filters else None,
             filetype=filetype,
         )
-        url = f"https://www.google.com/search?q={quote_plus(q)}&num={num}&hl=en&gl=us"
+        # Locale from settings.region, same as every other region-aware engine
+        # (this was pinned to hl=en&gl=us, which biased results away from the
+        # user's configured region for no stated reason).
+        hl, gl = region_to_google_params(settings.region)
+        url = (
+            f"https://www.google.com/search?q={quote_plus(q)}"
+            f"&num={num}&hl={hl}&gl={gl.lower()}"
+        )
         if filters and filters.freshness:
             url += f"&tbs=qdr:{_GOOGLE_FRESHNESS[filters.freshness]}"
         # SafeSearch: Google is NOT in base's safesearch table, so read the

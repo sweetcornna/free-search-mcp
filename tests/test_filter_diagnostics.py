@@ -286,3 +286,91 @@ def test_render_search_omits_filter_diagnostics_when_absent():
     }
     md = render_search(payload)
     assert "Filter diagnostics" not in md
+
+
+def test_render_search_includes_filter_diagnostics_at_ZERO_results():
+    """Regression: the no-results branch returned before the diagnostics block
+    was ever appended, so the one case the diagnostics exist to explain — "your
+    filters dropped everything" — was the one case that never showed them. The
+    user instead saw only the silent-engine note, which pointed at an IP block
+    that wasn't happening."""
+    payload = {
+        "query": "AI 新闻 最新进展",
+        "engines": ["duckduckgo", "bing", "googlenews"],
+        "results": [],
+        "lead_snippet": None,
+        "errors": None,
+        "empty_engines": ["googlenews"],
+        "empty_hint": "googlenews returned 0 results with no error ...",
+        "filter_diagnostics": {
+            "raw_per_engine": {"duckduckgo": 10, "bing": 7, "googlenews": 0},
+            "after_filter_per_engine": {"duckduckgo": 0, "bing": 0, "googlenews": 0},
+            "drops_by_reason": {"category_news": 17},
+            "hint": (
+                "Filters dropped 17 of 17 raw results (kept 0). "
+                "Most were excluded by category=news. "
+                "Try widening or removing one filter."
+            ),
+        },
+    }
+    md = render_search(payload)
+    assert "No results" in md
+    assert "Filter diagnostics" in md
+    assert "category=news" in md
+    assert "17" in md
+    # The accurate explanation must be present alongside the silent-engine note,
+    # not replaced by it.
+    assert "Silent engines" in md
+
+
+def test_render_research_surfaces_errors_and_hints():
+    """render_research dropped `errors` and every diagnostic the search
+    computed, so an empty brief came back with no stated reason at all."""
+    from search_mcp.formatting import render_research
+
+    md = render_research({
+        "question": "q",
+        "engines": ["duckduckgo"],
+        "sources": [],
+        "documents": [],
+        "tokens_estimated": 0,
+        "errors": {"duckduckgo": "boom"},
+        "empty_hint": "mojeek returned 0 results with no error",
+        "filter_diagnostics": {
+            "raw_per_engine": {"duckduckgo": 9},
+            "after_filter_per_engine": {"duckduckgo": 0},
+            "drops_by_reason": {"category_news": 9},
+            "hint": "Filters dropped 9 of 9 raw results (kept 0).",
+        },
+    })
+    assert "boom" in md
+    assert "Silent engines" in md
+    assert "Filter diagnostics" in md
+
+
+async def test_research_forwards_search_diagnostics(monkeypatch):
+    """`research` built its return dict by hand and forwarded only `errors`,
+    so a brief that came back empty because the filters ate everything said
+    nothing about why — strictly less informative than `search` itself."""
+    from search_mcp import research as research_mod
+
+    async def fake_search(*a, **kw):
+        return {
+            "query": "q",
+            "engines": ["duckduckgo"],
+            "cached": False,
+            "results": [],
+            "errors": {"mojeek": "timeout"},
+            "empty_hint": "googlenews returned 0 results",
+            "gated_hint": "bing hit a consent wall",
+            "rescued_via": "searx",
+            "filter_diagnostics": {"drops_by_reason": {"category_news": 12}},
+        }
+
+    monkeypatch.setattr(research_mod, "aggregate_search", fake_search)
+    out = await research_mod.research("q", fetch=False)
+    assert out["errors"] == {"mojeek": "timeout"}
+    assert out["empty_hint"] == "googlenews returned 0 results"
+    assert out["gated_hint"] == "bing hit a consent wall"
+    assert out["rescued_via"] == "searx"
+    assert out["filter_diagnostics"]["drops_by_reason"] == {"category_news": 12}

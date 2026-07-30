@@ -32,6 +32,7 @@ House rules this enforces for every subclass:
 from __future__ import annotations
 
 import logging
+from contextvars import ContextVar
 from typing import Any
 
 from curl_cffi.requests import AsyncSession
@@ -51,6 +52,20 @@ SNIPPET_CAP = 400
 # contactable, which is what an API operator wants to see in their logs.
 USER_AGENT = (
     "free-search-mcp/1.0 (+https://github.com/sweetcornna/free-search-mcp)"
+)
+
+
+# Last non-200 status this engine saw, so a swallowed HTTP error can still be
+# NAMED in diagnostics. The never-raise rule means a 429 and a genuine
+# zero-hit response both arrive at the aggregator as `[]`, and the aggregator
+# then reported the 429 as "returned 0 results with no error — possible silent
+# IP block", pointing the user at a proxy for what is really just a rate limit.
+#
+# A ContextVar rather than instance state: `ENGINES` holds one shared instance
+# per engine and searches run concurrently, so `self._last_status` would be a
+# cross-request race. ContextVars are per-asyncio-task.
+_last_http_status: ContextVar[int | None] = ContextVar(
+    "jsonapi_last_http_status", default=None
 )
 
 
@@ -136,6 +151,7 @@ class JsonApiEngine(Engine):
                     resp = await client.get(url)
                 if resp.status_code != 200:
                     log.debug("%s: HTTP %s from %s", self.name, resp.status_code, url)
+                    _last_http_status.set(resp.status_code)
                     return None
                 return resp.text
         except Exception:
@@ -197,6 +213,7 @@ class JsonApiEngine(Engine):
         filters: SearchFilters | None = None,
         diagnostics: dict[str, Any] | None = None,
     ) -> list[SearchResult]:
+        token = _last_http_status.set(None)
         try:
             results = await self.fetch_results(query, max_results, filters)
         except EngineKeyError:
@@ -211,4 +228,9 @@ class JsonApiEngine(Engine):
             # nothing", which the aggregator already knows how to report.
             log.debug("%s: search failed", self.name, exc_info=True)
             results = []
+        finally:
+            status = _last_http_status.get()
+            if status is not None and diagnostics is not None:
+                diagnostics.setdefault("http_status", {})[self.name] = status
+            _last_http_status.reset(token)
         return self.finalize_results(results, filters, max_results, diagnostics)

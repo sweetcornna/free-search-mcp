@@ -33,6 +33,11 @@ class BingEngine(Engine):
     # Match the actual result item; #b_results is the empty container that
     # exists immediately and would short-circuit the wait.
     wait_selector = "li.b_algo"
+    # Ask Bing as Edge — Microsoft's own browser is the client its SERP is
+    # built and tested against. Verified equivalent to the Chrome default here
+    # (10 organic results either way), so this is about presenting a coherent,
+    # expected identity rather than about unblocking anything.
+    impersonate = "edge"
 
     # No search() override: bing behaves like every other engine now. A raise
     # (e.g. a www4 non-200 under fetch_strategy="http") lands in the

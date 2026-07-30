@@ -22,11 +22,15 @@ from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
 from urllib.parse import quote_plus
 
+from ..config import settings
 from .base import (
     Engine,
     SearchFilters,
     SearchResult,
     augment_query_with_operators,
+    detect_query_region,
+    region_to_google_news_ceid,
+    region_to_google_params,
 )
 
 
@@ -96,10 +100,22 @@ class GoogleNewsEngine(Engine):
         )
         if filters and filters.freshness:
             q = f"{q} when:{_GN_FRESHNESS[filters.freshness]}"
-        # hl=en-US&gl=US&ceid=US:en gives us the English-language US edition.
+        # The edition comes from settings.region (default 'us-en' -> the
+        # English-language US edition), like every other region-aware engine.
+        # Hardcoding US:en here made the engine silently return an EMPTY feed
+        # for any query the US edition does not index — a Chinese query got 0
+        # items where the zh-Hans edition had 35 — and the empty feed then read
+        # as "possible IP block" in the aggregator's diagnostics.
+        # ...and the edition follows the query's script when the configured one
+        # could not serve it at all (see detect_query_region).
+        region = detect_query_region(query, settings.region)
+        hl, gl = region_to_google_params(region)
+        ceid = region_to_google_news_ceid(region)
         return (
             f"https://news.google.com/rss/search?q={quote_plus(q)}"
-            "&hl=en-US&gl=US&ceid=US:en"
+            # ceid is built from validated alpha components ('US:en',
+            # 'CN:zh-Hans'), so its ':' needs no percent-encoding.
+            f"&hl={hl}&gl={gl}&ceid={ceid}"
         )
 
     def parse(self, html: str) -> list[SearchResult]:

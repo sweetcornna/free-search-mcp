@@ -3,20 +3,62 @@
 The MCP server fetches arbitrary user-supplied URLs. Without a guard, a caller
 could point a tool at ``http://169.254.169.254/`` (cloud metadata), at
 ``http://127.0.0.1:.../`` (loopback services), or at any RFC1918 host reachable
-from the server and exfiltrate internal data. ``assert_url_allowed`` resolves
-the hostname to *every* A/AAAA address and rejects the request if any of them
-land on a blocked range. Each redirect hop is independently re-validated by
-``assert_url_allowed`` (re-resolving every A/AAAA record), which mitigates — but
-does not fully eliminate — DNS rebinding: a residual TOCTOU window remains
-because the HTTP client does its own connect-time DNS that is not pinned to the
-validated addresses. ``assert_ip_allowed`` is provided for callers that have
-already resolved an IP literal and want to validate it directly.
+from the server and exfiltrate internal data.
 
-Dependency-light on purpose: stdlib ``socket`` + ``ipaddress`` only, so this
-module is importable in any context without pulling in heavyweight deps.
+The guard is layered, and the layers differ in whether they need DNS:
 
-Fail-closed: scheme problems, DNS-resolution failures, and unparseable hosts
-all raise :class:`UnsafeURLError` rather than silently allowing the fetch.
+1. **Scheme** — only http/https. No DNS.
+2. **Address literals** — a host that IS an address (``127.0.0.1``,
+   ``[::1]``, ``169.254.169.254``, ``100.100.100.200``) is checked directly.
+   No DNS.
+3. **Internal names** — ``localhost``, ``*.internal``, ``*.local``,
+   ``metadata.google.internal`` and friends are refused by name. No DNS.
+4. **Resolved addresses** — the hostname is resolved to *every* A/AAAA record
+   and refused if any lands on a blocked range. Needs DNS, and is therefore
+   only meaningful **when this process is the one connecting**.
+
+When layer 4 applies
+--------------------
+Layer 4 only means something when THIS process's resolver decides what gets
+connected to. Two common setups break that assumption, and running the layer
+anyway did not merely add nothing — it refused every fetch and took the server
+down:
+
+  * **An outbound proxy.** The proxy resolves and connects; the address we
+    would resolve is not the one used. On proxy-only egress the local resolver
+    often cannot answer at all (fail-closed ⇒ "Could not resolve host …"), and
+    on a censored network it answers with a blackhole address that the guard
+    then read as an SSRF attempt.
+  * **A fake-IP VPN** (Clash/Surge/sing-box in TUN mode). Every hostname is
+    mapped into a tunnel range such as ``198.18.0.0/15``; the answer is a handle
+    the tunnel translates, not a destination. Those ranges are reserved, so the
+    guard classified every public host as private. Detected from canary
+    hostnames that are public by definition, and only ever able to excuse the
+    ranges in ``_FAKE_IP_CANDIDATES`` — never loopback, link-local or RFC1918.
+
+In both cases layer 4 stands down and layers 1–3 — which need no DNS, and are
+exactly the ones that stop a caller aiming the *proxy or tunnel* at loopback or
+at a metadata endpoint — keep running. What is given up is catching a public
+hostname whose DNS record points into a private network; on those setups the
+egress path, not this process, is where that can be observed at all.
+
+``ssrf_resolve_addresses`` ("auto" | "always" | "never") overrides the decision.
+
+This matters because the failure mode it replaces is not "a fetch is refused"
+but "the operator sets ``allow_private_hosts=true``" — trading a layer that
+cannot work on their network for no guard at all, loopback and cloud metadata
+included.
+
+``assert_ip_allowed`` is provided for callers that have already resolved an IP
+literal and want to validate it directly.
+
+Dependency-light on purpose: stdlib ``socket`` + ``ipaddress`` plus the local
+``net``/``config`` modules (themselves stdlib-only), so this stays importable
+anywhere without pulling in heavyweight deps.
+
+Fail-closed: scheme problems, unparseable hosts, and — on the unproxied path —
+DNS-resolution failures all raise :class:`UnsafeURLError` rather than silently
+allowing the fetch.
 """
 from __future__ import annotations
 
@@ -26,17 +68,145 @@ import socket
 import time
 from urllib.parse import urlsplit
 
-from . import config
+from . import config, net
 
 __all__ = [
     "UnsafeURLError",
     "assert_url_allowed",
     "assert_url_allowed_async",
+    "assert_url_allowed_offline",
     "assert_ip_allowed",
     "clear_dns_cache",
 ]
 
 _ALLOWED_SCHEMES = frozenset({"http", "https"})
+
+# Ranges the stdlib flags do NOT already cover. Only CGNAT qualifies: 198.18/15,
+# 192.0.0/24 and 64:ff9b::/96 all come back is_private/is_reserved from
+# `ipaddress` and listing them here would imply a protection they do not add.
+#
+# 100.64.0.0/10 is carrier-grade NAT, reported as ordinary public space, yet it
+# holds Alibaba Cloud's metadata endpoint at 100.100.100.200 — reachable from
+# any instance there and every bit as sensitive as 169.254.169.254.
+_EXTRA_BLOCKED_NETWORKS = (
+    ipaddress.ip_network("100.64.0.0/10"),
+)
+
+# Hostnames that name an internal resource. Refused WITHOUT a DNS lookup, so
+# they hold whether or not this process resolves the name — which is what makes
+# them the layer that still protects a proxied request.
+_INTERNAL_HOST_EXACT = frozenset({
+    "localhost",
+    "metadata",                    # k8s / docker short name
+    "metadata.google.internal",    # GCP
+    "metadata.goog",               # GCP
+    "instance-data",               # AWS
+    "instance-data.ec2.internal",  # AWS
+})
+_INTERNAL_HOST_SUFFIXES = (
+    ".localhost",
+    ".local",        # mDNS
+    ".internal",     # ICANN-reserved for private use
+    ".intranet",
+    ".private",
+    ".corp",
+    ".lan",
+    ".home.arpa",
+)
+
+
+def _host_is_internal(host: str) -> bool:
+    """True when the hostname itself names an internal/link-local resource."""
+    h = host.strip().rstrip(".").lower()
+    if not h:
+        return False
+    return h in _INTERNAL_HOST_EXACT or h.endswith(_INTERNAL_HOST_SUFFIXES)
+
+
+# Ranges a fake-IP tunnel may hand out as synthetic handles. Deliberately NOT
+# the real private networks: a tunnel picks a range precisely because it never
+# appears as a genuine destination, so auto-detection is allowed to stand down
+# for these and NEVER for loopback, link-local, or RFC1918 — those stay blocked
+# whatever the resolver claims.
+_FAKE_IP_CANDIDATES = (
+    ipaddress.ip_network("198.18.0.0/15"),   # IANA benchmarking; Clash/Surge default
+    ipaddress.ip_network("28.0.0.0/8"),      # used by some fake-IP builds
+    ipaddress.ip_network("fc00::/7"),        # v6 ULA
+)
+
+# Hostnames that are public by definition. If THESE resolve into a candidate
+# range, the resolver is synthesising addresses for everything and layer 4
+# cannot tell a public host from a private one.
+_CANARY_HOSTS = ("example.com", "a.root-servers.net")
+
+_synthetic_verdict: bool | None = None
+
+
+def reset_resolver_detection() -> None:
+    """Drop the memoised fake-IP verdict (tests re-stub the resolver)."""
+    global _synthetic_verdict
+    _synthetic_verdict = None
+
+
+def _in_fake_ip_candidate(ip: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
+    return any(ip in n for n in _FAKE_IP_CANDIDATES if ip.version == n.version)
+
+
+def _resolver_is_synthetic() -> bool:
+    """True when the local resolver maps every hostname into a tunnel range.
+
+    A fake-IP VPN (Clash/Surge/sing-box in TUN mode) answers every lookup with a
+    synthetic address that the tunnel maps back to the real destination. The
+    address is a handle, not a destination, so checking it tells us nothing —
+    and because those ranges are reserved, the guard read every public host as
+    private and refused every fetch. That is what drove this machine to disable
+    the guard wholesale, which is far worse than standing this one layer down.
+
+    Established once per process from canary hostnames, and only ever able to
+    excuse the ranges in ``_FAKE_IP_CANDIDATES``.
+    """
+    global _synthetic_verdict
+    if _synthetic_verdict is not None:
+        return _synthetic_verdict
+    verdict = False
+    for host in _CANARY_HOSTS:
+        try:
+            infos = socket.getaddrinfo(host, None, proto=socket.IPPROTO_TCP)
+        except OSError:
+            # No DNS at all says nothing about synthesis — stay strict.
+            _synthetic_verdict = False
+            return False
+        addrs = {i[4][0].split("%", 1)[0] for i in infos}
+        if not addrs:
+            _synthetic_verdict = False
+            return False
+        try:
+            parsed = [ipaddress.ip_address(a) for a in addrs]
+        except ValueError:
+            _synthetic_verdict = False
+            return False
+        if not all(_in_fake_ip_candidate(p) for p in parsed):
+            # A canary landed on a real public address: the resolver is honest.
+            _synthetic_verdict = False
+            return False
+        verdict = True
+    _synthetic_verdict = verdict
+    return verdict
+
+
+def _request_is_proxied() -> bool:
+    """Whether outbound fetches currently go through a proxy.
+
+    The fetch paths (`httpfetch`, and through it `fetcher`/`documents`/
+    `structured`) all use the UNSCOPED proxy, so the per-engine scope in
+    ``net.proxy_for`` does not apply here.
+    """
+    try:
+        return bool(net.proxy_url())
+    except Exception:
+        # A malformed keystore must not decide a security question by accident;
+        # treat "unknown" as "not proxied" so the stricter path runs.
+        return False
 
 # A successful (host, port) validation is remembered briefly so a research()
 # call that reads N pages from one site doesn't pay a DNS round trip for every
@@ -98,14 +268,16 @@ def _ip_is_blocked(ip: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
     mapped = getattr(ip, "ipv4_mapped", None)
     if mapped is not None:
         ip = mapped
-    return (
+    if (
         ip.is_private
         or ip.is_loopback
         or ip.is_link_local
         or ip.is_reserved
         or ip.is_multicast
         or ip.is_unspecified
-    )
+    ):
+        return True
+    return any(ip in net_ for net_ in _EXTRA_BLOCKED_NETWORKS if ip.version == net_.version)
 
 
 def _check_ip_str(ip: str) -> None:
@@ -164,13 +336,34 @@ def _precheck(url: str) -> tuple[str, int | None] | None:
         # entirely so private/local fetches work without leaking lookups.
         return None
 
-    # If the host is a bare IP literal, check it directly without DNS.
+    # Layer 2 — if the host is a bare IP literal, check it directly without DNS.
     try:
         literal = ipaddress.ip_address(host)
     except ValueError:
         literal = None
     if literal is not None:
         _check_ip_str(str(literal))
+        return None
+
+    # Layer 3 — names that identify an internal resource. Deliberately BEFORE
+    # the proxy check below: aiming a proxy at `metadata.google.internal` makes
+    # the proxy read cloud credentials on the caller's behalf, so this is one of
+    # the checks that matters MORE when proxied, not less.
+    if _host_is_internal(host):
+        raise UnsafeURLError(
+            f"Refusing to connect to internal hostname {host!r} "
+            "(localhost / .internal / .local / cloud metadata). "
+            "Set allow_private_hosts=True to override."
+        )
+
+    # Layer 4 — resolve-and-check, but only when THIS process's resolver is what
+    # decides the destination. Through a proxy the locally-resolved address is
+    # not the one used, and insisting on it takes the server down wherever
+    # direct DNS is unavailable or answers with a blackhole address.
+    mode = config.settings.ssrf_resolve_addresses
+    if mode == "never":
+        return None
+    if mode == "auto" and _request_is_proxied():
         return None
 
     return host, port
@@ -185,7 +378,41 @@ def _check_resolved(host: str, infos) -> None:
         )
     for addr in addresses:
         # getaddrinfo may append a scope id to link-local v6 (e.g. 'fe80::1%en0').
-        _check_ip_str(addr.split("%", 1)[0])
+        clean = addr.split("%", 1)[0]
+        try:
+            parsed = ipaddress.ip_address(clean)
+        except ValueError:
+            _check_ip_str(clean)
+            continue
+        # A synthetic address from a fake-IP tunnel is a handle, not a
+        # destination. Only consult the (network-touching) canary probe when we
+        # are otherwise about to refuse, and only for the tunnel candidate
+        # ranges — loopback/link-local/RFC1918 never reach this branch.
+        if (
+            _ip_is_blocked(parsed)
+            and _in_fake_ip_candidate(parsed)
+            and config.settings.ssrf_resolve_addresses == "auto"
+            and _resolver_is_synthetic()
+        ):
+            continue
+        _check_ip_str(clean)
+
+
+def assert_url_allowed_offline(url: str) -> str:
+    """Run only the layers that need no network: scheme, address literal and
+    internal hostname. Returns the URL unchanged on success.
+
+    For paths that answer WITHOUT connecting — a cache hit above all. Serving a
+    cached body is still handing the caller the contents of that URL, so it has
+    to obey the same policy; skipping the check meant anything fetched while the
+    guard was permissive stayed retrievable forever afterwards, and tightening
+    the setting did not take effect for it.
+
+    Deliberately DNS-free so a cache hit stays a cache hit: the resolve-and-check
+    layer only matters when we are about to open a connection.
+    """
+    _precheck(url)
+    return url
 
 
 def assert_url_allowed(url: str) -> str:

@@ -112,6 +112,7 @@ _PAPER_HOSTS = (
     "sciencedirect.com",
     # Open / preprint repositories + journal portals
     "biorxiv.org",
+    "medrxiv.org",
     "openreview.net",
     "paperswithcode.com",
     "semanticscholar.org",
@@ -123,6 +124,29 @@ _PAPER_HOSTS = (
     "frontiersin.org",
     "wiley.com",
     "tandfonline.com",
+    # Resolvers and indexes the keyless paper engines actually emit. Crossref
+    # and OpenAlex return DOI links, PubMed returns NCBI links; without these
+    # a category="paper" search discards its own best sources.
+    "doi.org",
+    "ncbi.nlm.nih.gov",
+    "europepmc.org",
+    "osf.io",
+    "zenodo.org",
+    "dblp.org",
+    "researchgate.net",
+    "aclanthology.org",
+    "mlr.press",
+    "neurips.cc",
+    "openaccess.thecvf.com",
+    # Non-Anglophone scholarly portals — same standing as the above.
+    "cnki.net",
+    "ci.nii.ac.jp",
+    "j-stage.jst.go.jp",
+    "hal.science",
+    "scielo.org",
+    "cambridge.org",
+    "oup.com",
+    "sagepub.com",
 )
 _FORUM_HOSTS = (
     "reddit.com",
@@ -138,6 +162,15 @@ _FORUM_HOSTS = (
     "lemmy.world",
     "lemmy.ml",
     "discourse.org",
+    # Non-Anglophone Q&A / discussion sites. zhihu is a registered engine, so
+    # leaving it out meant `engines=["zhihu"], category="forum"` dropped every
+    # result the engine returned.
+    "zhihu.com",
+    "v2ex.com",
+    "segmentfault.com",
+    "juejin.cn",
+    "teratail.com",
+    "qiita.com",
 )
 # Code-hosting platforms. Kept the _GITHUB_HOSTS name for back-compat with
 # tests that import it, but it now covers other public Git forges as well.
@@ -151,20 +184,62 @@ _GITHUB_HOSTS = (
     "savannah.gnu.org",
     "git.sr.ht",
 )
-# Major news outlets — used by category="news" since the default engine pool
-# (DDG/Mojeek/Startpage) has no native news flag, so this filter would
-# otherwise be a no-op.
+# Known news outlets — used by category="news" since the general web pool
+# (DDG/Mojeek/Bing) has no native news flag, so this filter would otherwise be
+# a no-op.
+#
+# This list is a FLOOR, not a definition of "news". There are tens of thousands
+# of news outlets worldwide and no hand-maintained tuple will ever hold them;
+# `_is_news_host` below therefore also accepts the `news.<domain>` naming
+# convention, and results from engines that natively index news skip the
+# hostname check entirely (see `apply_post_filters_with_diagnostics`).
 _NEWS_HOSTS = (
-    "reuters.com", "apnews.com", "bbc.com", "bbc.co.uk", "nytimes.com",
-    "washingtonpost.com", "theguardian.com", "cnn.com", "nbcnews.com",
-    "abcnews.go.com", "cbsnews.com", "foxnews.com", "npr.org",
+    # Wire services and English-language majors
+    "reuters.com", "apnews.com", "afp.com", "bbc.com", "bbc.co.uk",
+    "nytimes.com", "washingtonpost.com", "theguardian.com", "cnn.com",
+    "nbcnews.com", "abcnews.go.com", "cbsnews.com", "foxnews.com", "npr.org",
     "bloomberg.com", "ft.com", "wsj.com", "economist.com", "cnbc.com",
     "axios.com", "politico.com", "thehill.com", "aljazeera.com",
+    "latimes.com", "usatoday.com", "nypost.com", "newsweek.com", "time.com",
+    "theatlantic.com", "newyorker.com", "semafor.com", "independent.co.uk",
+    "telegraph.co.uk", "sky.com", "cbc.ca", "abc.net.au", "smh.com.au",
+    "straitstimes.com", "channelnewsasia.com", "scmp.com", "japantimes.co.jp",
+    "thehindu.com", "timesofindia.indiatimes.com", "ndtv.com",
+    # Tech press
     "techcrunch.com", "theverge.com", "arstechnica.com", "wired.com",
     "venturebeat.com", "engadget.com", "9to5mac.com", "9to5google.com",
     "theinformation.com", "businessinsider.com", "forbes.com",
+    "theregister.com", "zdnet.com", "cnet.com", "techradar.com",
+    "tomshardware.com", "restofworld.org", "thenextweb.com", "infoq.com",
+    # Chinese-language outlets and tech press
+    "xinhuanet.com", "people.com.cn", "chinadaily.com.cn", "cctv.com",
+    "thepaper.cn", "caixin.com", "yicai.com", "jiemian.com", "sina.com.cn",
+    "163.com", "sohu.com", "qq.com", "ifeng.com", "guancha.cn",
+    "36kr.com", "jiqizhixin.com", "qbitai.com", "ithome.com", "cnbeta.com.tw",
+    "udn.com", "ltn.com.tw", "chinatimes.com", "cna.com.tw", "hk01.com",
+    # Other non-Anglophone majors
+    "nikkei.com", "asahi.com", "yomiuri.co.jp", "nhk.or.jp", "mainichi.jp",
+    "chosun.com", "joongang.co.kr", "hani.co.kr", "yna.co.kr",
+    "lemonde.fr", "lefigaro.fr", "liberation.fr", "spiegel.de", "zeit.de",
+    "faz.net", "welt.de", "sueddeutsche.de", "elpais.com", "elmundo.es",
+    "corriere.it", "repubblica.it", "folha.uol.com.br", "globo.com",
+    "tass.com", "themoscowtimes.com", "haaretz.com", "timesofisrael.com",
     "news.google.com",  # Google News RSS items live here
 )
+
+# Hosts that name themselves as news: `news.sina.com.cn`, `news.mydrivers.com`,
+# `newsroom.example.co.jp`. Cheap, convention-based, and deliberately narrow —
+# a bare "news"/"times"/"post" substring test would match postgresql.org and
+# newsletter.example.com.
+_NEWS_HOST_PREFIXES = ("news.", "newsroom.")
+_NEWS_HOST_SUFFIXES = (".press", "news.com", "news.net", "news.cn", "news.org")
+
+
+def _is_news_host(host: str) -> bool:
+    """Allowlist membership OR the `news.<domain>` naming convention."""
+    if _host_matches(host, _NEWS_HOSTS):
+        return True
+    return host.startswith(_NEWS_HOST_PREFIXES) or host.endswith(_NEWS_HOST_SUFFIXES)
 
 
 @dataclass(slots=True)
@@ -292,16 +367,24 @@ def _published_age_in_days(published_age: str) -> float | None:
 
 
 def apply_post_filters(
-    results: list[SearchResult], filters: SearchFilters | None
+    results: list[SearchResult],
+    filters: SearchFilters | None,
+    *,
+    native_category: bool = False,
 ) -> list[SearchResult]:
     """Strict client-side filter pass. Engines under-honor URL operators, so
     we re-check domain/category/text constraints here."""
-    kept, _ = apply_post_filters_with_diagnostics(results, filters)
+    kept, _ = apply_post_filters_with_diagnostics(
+        results, filters, native_category=native_category
+    )
     return kept
 
 
 def apply_post_filters_with_diagnostics(
-    results: list[SearchResult], filters: SearchFilters | None
+    results: list[SearchResult],
+    filters: SearchFilters | None,
+    *,
+    native_category: bool = False,
 ) -> tuple[list[SearchResult], dict[str, int]]:
     """Same logic as :func:`apply_post_filters` but also returns a
     ``drops_by_reason`` mapping so callers can explain *why* a sparse result
@@ -317,6 +400,16 @@ def apply_post_filters_with_diagnostics(
     Each result is counted against AT MOST ONE reason — the first filter that
     rejects it. This keeps the totals interpretable: ``sum(drops.values()) ==
     len(results) - len(kept)``.
+
+    ``native_category`` says these results came from an engine that natively
+    indexes the requested category (``filters.category in engine.categories``).
+    The hostname allowlists exist only to approximate a category for GENERAL web
+    engines that have no such flag; re-applying them to a source that indexes
+    the category by definition is not a safety net, it is data loss. GDELT is
+    the clearest case: it indexes news in 100+ languages, and every non-Western
+    outlet it returned used to be discarded by an Anglophone hostname tuple.
+    Domain, text and freshness filters still apply — only the category-by-host
+    guess is skipped.
     """
     drops: dict[str, int] = {}
     if filters is None or filters.is_empty():
@@ -341,30 +434,33 @@ def apply_post_filters_with_diagnostics(
             _bump("exclude_domains")
             continue
 
-        if filters.category == "paper" and not _host_matches(host, _PAPER_HOSTS):
-            _bump("category_paper")
-            continue
-        if filters.category == "forum" and not _host_matches(host, _FORUM_HOSTS):
-            _bump("category_forum")
-            continue
-        if filters.category == "github" and not _host_matches(host, _GITHUB_HOSTS):
-            _bump("category_github")
-            continue
-        if filters.category == "news" and not _host_matches(host, _NEWS_HOSTS):
-            _bump("category_news")
-            continue
+        # `category="pdf"` is checked against the URL itself, not a hostname
+        # guess, so it stays authoritative even for a native engine.
         if filters.category == "pdf" and not _strip_query(r.url).lower().endswith(".pdf"):
             _bump("category_pdf")
             continue
-        if filters.category == "blog" and (
-            # Blog = "ordinary web page" — exclude obvious non-blog hosts.
-            _host_matches(host, _PAPER_HOSTS)
-            or _host_matches(host, _FORUM_HOSTS)
-            or _host_matches(host, _GITHUB_HOSTS)
-            or _host_matches(host, _NEWS_HOSTS)
-        ):
-            _bump("category_blog")
-            continue
+        if not native_category:
+            if filters.category == "paper" and not _host_matches(host, _PAPER_HOSTS):
+                _bump("category_paper")
+                continue
+            if filters.category == "forum" and not _host_matches(host, _FORUM_HOSTS):
+                _bump("category_forum")
+                continue
+            if filters.category == "github" and not _host_matches(host, _GITHUB_HOSTS):
+                _bump("category_github")
+                continue
+            if filters.category == "news" and not _is_news_host(host):
+                _bump("category_news")
+                continue
+            if filters.category == "blog" and (
+                # Blog = "ordinary web page" — exclude obvious non-blog hosts.
+                _host_matches(host, _PAPER_HOSTS)
+                or _host_matches(host, _FORUM_HOSTS)
+                or _host_matches(host, _GITHUB_HOSTS)
+                or _is_news_host(host)
+            ):
+                _bump("category_blog")
+                continue
 
         if inc_text or exc_text:
             haystack = (r.title + " \n " + r.snippet).lower()
@@ -432,6 +528,192 @@ def _region_to_bing_market(region: str) -> str:
     return f"{lang}-{cc}"
 
 
+# Google News editions are keyed by written script, not just language: the
+# Simplified and Traditional Chinese editions are separate feeds and neither
+# answers to a bare `zh`.
+_GOOGLE_NEWS_SCRIPT = {
+    ("zh", "TW"): "zh-Hant",
+    ("zh", "HK"): "zh-Hant",
+    ("zh", "MO"): "zh-Hant",
+    ("zh", "CN"): "zh-Hans",
+    ("zh", "SG"): "zh-Hans",
+}
+
+
+def region_to_google_params(region: str) -> tuple[str, str]:
+    """Turn a 'cc-lang' region token into Google's ``(hl, gl)`` pair.
+
+    'cn-zh' -> ('zh-CN', 'CN'). Falls back to US English on malformed input.
+    """
+    if not region or "-" not in region:
+        return "en-US", "US"
+    cc, _, lang = region.partition("-")
+    cc = cc.strip().upper()
+    lang = (lang.strip() or "en").lower()
+    if cc == "UK":
+        cc = "GB"
+    if not (cc.isalpha() and len(cc) == 2 and lang.isalpha()):
+        return "en-US", "US"
+    return f"{lang}-{cc}", cc
+
+
+def region_to_google_news_ceid(region: str) -> str:
+    """Google News edition token, e.g. 'US:en', 'CN:zh-Hans', 'DE:de'.
+
+    The News RSS endpoint is edition-scoped rather than merely
+    language-hinted: asking the US/English edition for a Chinese query returns
+    an EMPTY feed, not a translated or degraded one. Measured on
+    'AI 新闻 最新进展': 0 items on US:en, 35 items on CN:zh-Hans.
+    """
+    hl, gl = region_to_google_params(region)
+    lang = hl.partition("-")[0]
+    return f"{gl}:{_GOOGLE_NEWS_SCRIPT.get((lang, gl), lang)}"
+
+
+# --- query-script -> edition -----------------------------------------------
+# Search backends are edition-scoped, and the edition is picked from settings
+# rather than from the query, so a query written in a script the configured
+# edition does not cover gets served badly or not at all. Measured against the
+# Google News US/English edition (item counts, same query in each language):
+#
+#     Chinese   0 vs 35    <- empty feed; indistinguishable from an outage
+#     Thai     12 vs 100
+#     Hebrew   31 vs 100
+#     Arabic   49 vs 100
+#     Greek    69 vs 100
+#     Russian 100 vs 100   <- already fine, native edition no worse
+#     German/French/Spanish/Vietnamese/Turkish: 100 vs 100
+#
+# So this is a general quality fix (every non-Latin script gains or ties), of
+# which Chinese is the pathological case. Latin-script languages are left on
+# the configured edition: the measurements show nothing to gain, and script
+# alone cannot tell German from English anyway — separating those needs real
+# language ID, which is a dependency this project does not carry.
+#
+# Detection is by Unicode script: dependency-free, deterministic, and it covers
+# every language whose writing system is distinctive, not a hand-picked few.
+_SCRIPT_RANGES: tuple[tuple[str, tuple[tuple[int, int], ...]], ...] = (
+    ("hangul", ((0x1100, 0x11FF), (0xA960, 0xA97F), (0xAC00, 0xD7A3))),
+    ("kana", ((0x3040, 0x309F), (0x30A0, 0x30FF), (0x31F0, 0x31FF))),
+    ("han", ((0x3400, 0x4DBF), (0x4E00, 0x9FFF), (0xF900, 0xFAFF))),
+    ("cyrillic", ((0x0400, 0x04FF), (0x0500, 0x052F))),
+    ("greek", ((0x0370, 0x03FF), (0x1F00, 0x1FFF))),
+    ("hebrew", ((0x0590, 0x05FF),)),
+    ("arabic", ((0x0600, 0x06FF), (0x0750, 0x077F), (0x08A0, 0x08FF))),
+    ("thai", ((0x0E00, 0x0E7F),)),
+    ("lao", ((0x0E80, 0x0EFF),)),
+    ("khmer", ((0x1780, 0x17FF),)),
+    ("myanmar", ((0x1000, 0x109F),)),
+    ("devanagari", ((0x0900, 0x097F),)),
+    ("bengali", ((0x0980, 0x09FF),)),
+    ("gurmukhi", ((0x0A00, 0x0A7F),)),
+    ("gujarati", ((0x0A80, 0x0AFF),)),
+    ("tamil", ((0x0B80, 0x0BFF),)),
+    ("telugu", ((0x0C00, 0x0C7F),)),
+    ("kannada", ((0x0C80, 0x0CFF),)),
+    ("malayalam", ((0x0D00, 0x0D7F),)),
+    ("sinhala", ((0x0D80, 0x0DFF),)),
+    ("georgian", ((0x10A0, 0x10FF), (0x1C90, 0x1CBF))),
+    ("armenian", ((0x0530, 0x058F),)),
+    ("ethiopic", ((0x1200, 0x137F),)),
+)
+
+# One region per script. Where a script serves several languages we take the
+# largest by online news volume; a user who wants another sets SEARCH_MCP_REGION
+# explicitly and keeps it (see the `configured` check below).
+#
+# Measured item counts from the Google News edition each row selects (vs. the
+# US/English edition it replaces): zh 100/0, ko 102/102, ja 100/36, ru 100/100,
+# el 100/69, he 100/31, ar 100/49, th 100/12, hi 100/100, bn 100/7, ta 100/6,
+# te 100/6, gu 33/1, ml 29/0, pa 1/0, si 1/1, ka 1/1, am 1/1.
+#
+# fa, ur, km, my, kn and hy return 0 from EVERY url form tried (bare `hl=fa`,
+# `hl=fa-IR`, alternate country codes, no locale at all) while an Arabic
+# control returned 100 on the same harness — Google News does not run those
+# editions. They are mapped anyway because the mapping is correct and costs
+# nothing; do not re-test them expecting a url-form fix.
+_SCRIPT_REGION = {
+    "han": "cn-zh", "kana": "jp-ja", "hangul": "kr-ko",
+    "cyrillic": "ru-ru", "greek": "gr-el", "hebrew": "il-he",
+    "arabic": "eg-ar", "thai": "th-th", "lao": "la-lo",
+    "khmer": "kh-km", "myanmar": "mm-my", "devanagari": "in-hi",
+    "bengali": "in-bn", "gurmukhi": "in-pa", "gujarati": "in-gu",
+    "tamil": "in-ta", "telugu": "in-te", "kannada": "in-kn",
+    "malayalam": "in-ml", "sinhala": "lk-si", "georgian": "ge-ka",
+    "armenian": "am-hy", "ethiopic": "et-am",
+}
+
+# Persian and Urdu are written in Arabic script but are separate editions.
+# These letters do not occur in Arabic proper, so their presence is decisive.
+_PERSIAN_CHARS = frozenset("پچژگک")
+_URDU_CHARS = frozenset("ٹڈڑںھے")
+
+# Share of alphabetic characters that must belong to one non-Latin script
+# before we switch editions. Real queries mix in Latin tokens ("AI 新闻",
+# "GPT-4 نموذج"), so a majority test would miss them; 30% is high enough that
+# an English query with a stray glyph does not trip it.
+_SCRIPT_SWITCH_RATIO = 0.3
+
+
+def detect_query_region(query: str, configured: str) -> str:
+    """Region token to use for ``query``, given the configured default.
+
+    Returns ``configured`` unchanged for Latin-script queries and whenever the
+    configured region already speaks the detected language — an operator who
+    set ``tw-zh`` keeps Traditional Chinese rather than being rewritten to
+    ``cn-zh``.
+    """
+    counts: dict[str, int] = {}
+    letters = 0
+    for ch in query:
+        if not ch.isalpha():
+            continue
+        letters += 1
+        o = ord(ch)
+        for script, ranges in _SCRIPT_RANGES:
+            if any(lo <= o <= hi for lo, hi in ranges):
+                counts[script] = counts.get(script, 0) + 1
+                break
+    if not letters or not counts:
+        return configured
+
+    # Kana and Hangul are exclusive to Japanese and Korean, while Han is shared
+    # with both. Japanese prose is largely kanji, so a plain "most frequent
+    # script" vote reads 人工知能ニュース as Chinese (4 Han vs 4 kana, Han wins
+    # the tie) and sends it to the Chinese edition — measured at 36 items
+    # against 100 from the Japanese one. Presence of the exclusive script
+    # decides; the ratio gate then applies to the CJK block as a whole so
+    # "AI ニュース" still qualifies.
+    cjk = counts.get("han", 0) + counts.get("kana", 0) + counts.get("hangul", 0)
+    if counts.get("kana") or counts.get("hangul"):
+        if cjk / letters < _SCRIPT_SWITCH_RATIO:
+            return configured
+        script = "hangul" if counts.get("hangul") else "kana"
+        n = cjk
+    else:
+        script, n = max(counts.items(), key=lambda kv: kv[1])
+    if n / letters < _SCRIPT_SWITCH_RATIO:
+        return configured
+
+    if script == "arabic":
+        chars = set(query)
+        if chars & _URDU_CHARS:
+            detected = "pk-ur"
+        elif chars & _PERSIAN_CHARS:
+            detected = "ir-fa"
+        else:
+            detected = _SCRIPT_REGION["arabic"]
+    else:
+        detected = _SCRIPT_REGION.get(script, "")
+    if not detected:
+        return configured
+
+    conf_lang = (configured or "").partition("-")[2].strip().lower()
+    if conf_lang and conf_lang == detected.partition("-")[2]:
+        return configured
+    return detected
+
+
 def safesearch_param(engine: str) -> str | None:
     """Return the engine-specific safesearch value for the current setting, or
     ``None`` when the engine has no usable parameter / the map lacks the key."""
@@ -497,6 +779,30 @@ _GATE_MARKERS: tuple[tuple[str, tuple[str, ...]], ...] = (
             # gated DDG (the #1 default engine) returns a silent empty.
             "anomaly-modal",
             "made by a human",
+            # Mojeek serves an ALTCHA proof-of-work challenge titled "Captcha"
+            # whose markup shares none of the markers above, so a captcha-walled
+            # Mojeek — one of the four DEFAULT engines — was reported as a
+            # silent empty and sent the user chasing an IP block instead.
+            "captcha-wrap",
+            "altcha",
+            "verification required",
+            "complete the challenge",
+        ),
+    ),
+    (
+        # Not a challenge to solve — a JS-only shell served instead of results.
+        # Google answers a plain-HTTP SERP request with a 200 whose body is
+        # `table,div,span,p{display:none}` plus "Please click here if you are
+        # not redirected", which parses to zero results and matches no captcha
+        # marker, so it was indistinguishable from "this query found nothing".
+        # Named to read correctly in the aggregator's "<engine> was
+        # <reason>-gated" hint.
+        "javascript",
+        (
+            "if you are not redirected",
+            "please click here if you are not",
+            "enable javascript to continue",
+            "javascript is required",
         ),
     ),
     (
@@ -600,7 +906,8 @@ def _retry_after_seconds(headers: Any) -> float | None:
 
 def detect_gate(html: str) -> str | None:
     """Best-effort: classify a page as a gate (``"captcha"``/``"consent"``/
-    ``"login"``) when it carries a known wall marker, else ``None``.
+    ``"login"``/``"javascript"``) when it carries a known wall marker, else
+    ``None``.
 
     Used to (a) surface an honest reason instead of a silent empty result set,
     and (b) let gated SERP engines fall back to a working meta-search. Never
@@ -641,6 +948,16 @@ class Engine(abc.ABC):
     # delay to the WHOLE search. Skipping costs one source; waiting costs the
     # user's latency on every result.
     rate_limit_max_wait: float | None = None
+    # TLS/JA3 + header fingerprint for this engine's HTTP requests. None means
+    # "use the shared default" (httpfetch.IMPERSONATE).
+    #
+    # Worth overriding when a SERP is operated by a browser vendor and the
+    # matching browser is the least surprising client it can see: Google gets a
+    # current Chrome, Bing gets Edge. curl_cffi sends the whole coherent
+    # profile — JA3, HTTP/2 SETTINGS, header order, User-Agent and the sec-ch-ua
+    # client hints — so these stay mutually consistent, which a hand-set
+    # User-Agent alone would not.
+    impersonate: str | None = None
     # When parse() yields nothing on the HTTP path, the base search() retries
     # via a Playwright render to recover from interstitial/captcha shells.
     # That recovery only makes sense for HTML engines: an RSS/XML feed that
@@ -729,10 +1046,19 @@ class Engine(abc.ABC):
         ``search()`` — so it lives in one place instead of being mirrored by
         hand in every override. Post-filtering happens BEFORE truncation, so
         the result budget is never wasted on hits the user excluded.
+
+        An engine that declares the requested category in ``self.categories``
+        is trusted for it: `categories` is documented above as a routing
+        signal, and re-filtering a native source's output through the hostname
+        allowlist contradicted that — it discarded 8 of 8 Crossref hits on
+        `category="paper"` because Crossref emits doi.org links.
         """
+        native = bool(filters and filters.category in self.categories)
         if diagnostics is not None:
             raw_count = len(results)
-            filtered, drops = apply_post_filters_with_diagnostics(results, filters)
+            filtered, drops = apply_post_filters_with_diagnostics(
+                results, filters, native_category=native
+            )
             diagnostics.setdefault("raw_per_engine", {})[self.name] = raw_count
             diagnostics.setdefault("after_filter_per_engine", {})[self.name] = len(filtered)
             agg = diagnostics.setdefault("drops_by_reason", {})
@@ -740,7 +1066,9 @@ class Engine(abc.ABC):
                 agg[reason] = agg.get(reason, 0) + n
             results = filtered[:max_results]
         else:
-            results = apply_post_filters(results, filters)[:max_results]
+            results = apply_post_filters(
+                results, filters, native_category=native
+            )[:max_results]
         for i, r in enumerate(results):
             r.rank = i + 1
             r.engine = self.name
@@ -775,7 +1103,7 @@ class Engine(abc.ABC):
         # we deliberately do NOT pass our own UA here — sending a mismatched UA
         # would re-introduce the very fingerprint discrepancy DDG checks for.
         async with AsyncSession(
-            impersonate=IMPERSONATE,
+            impersonate=self.impersonate or IMPERSONATE,
             timeout=settings.request_timeout,
             allow_redirects=True,
             headers={

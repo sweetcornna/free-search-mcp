@@ -34,11 +34,12 @@ class _StubEngine:
     """Minimal engine double that populates diagnostics the way base.search
     does: raw/after counts always, a gate entry when configured."""
 
-    def __init__(self, name, results, *, gate=None, raise_exc=None):
+    def __init__(self, name, results, *, gate=None, raise_exc=None, http_status=None):
         self.name = name
         self._results = results
         self._gate = gate
         self._raise = raise_exc
+        self._http_status = http_status
 
     async def search(self, query, max_results, filters=None, diagnostics=None):
         if self._raise is not None:
@@ -50,6 +51,8 @@ class _StubEngine:
             )
             if self._gate and not self._results:
                 diagnostics.setdefault("gated", {})[self.name] = self._gate
+            if self._http_status is not None:
+                diagnostics.setdefault("http_status", {})[self.name] = self._http_status
         return list(self._results)
 
 
@@ -75,6 +78,39 @@ async def test_silent_empty_engine_surfaced_when_sparse(monkeypatch):
     assert len(out["results"]) == 3
     assert out["empty_engines"] == ["beta"]
     assert "beta" in out["empty_hint"]
+    assert "IP block" in out["empty_hint"]
+
+
+async def test_http_refusal_reported_as_refusal_not_silence(monkeypatch):
+    """A keyless JSON source that answered 429 told us exactly what happened;
+    the never-raise rule swallowed it and the aggregator then blamed a silent
+    IP block and told the user to configure a proxy. It is a rate limit."""
+    _stub_registry(
+        monkeypatch,
+        {
+            "alpha": _StubEngine("alpha", _mk_results("alpha", 2)),
+            "gdelt": _StubEngine("gdelt", [], http_status=429),
+        },
+    )
+    out = await aggregate_search("q", engines=["alpha", "gdelt"], use_cache=False)
+    assert out["refused_engines"] == {"gdelt": 429}
+    assert "empty_engines" not in out          # not silent — it answered
+    assert "HTTP 429" in out["empty_hint"]
+    assert "IP block" not in out["empty_hint"]
+
+
+async def test_refused_and_silent_engines_reported_separately(monkeypatch):
+    _stub_registry(
+        monkeypatch,
+        {
+            "gdelt": _StubEngine("gdelt", [], http_status=503),
+            "mojeek": _StubEngine("mojeek", []),
+        },
+    )
+    out = await aggregate_search("q", engines=["gdelt", "mojeek"], use_cache=False)
+    assert out["refused_engines"] == {"gdelt": 503}
+    assert out["empty_engines"] == ["mojeek"]
+    assert "HTTP 503" in out["empty_hint"]
     assert "IP block" in out["empty_hint"]
 
 

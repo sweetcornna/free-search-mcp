@@ -82,10 +82,66 @@ def test_detect_gate_none_on_empty_and_normal():
         ("<form action='/recaptcha/api'>g-recaptcha</form>", "captcha"),
         ("<a href='https://consent.google.com/...'>before you continue</a>", "consent"),
         ("<div class='SignFlow'>请登录知乎</div>", "login"),
+        # Mojeek's ALTCHA proof-of-work wall. Shares no markup with the Google
+        # or DDG walls, so a captcha-blocked Mojeek — one of the four DEFAULT
+        # engines — was reported as a silent empty and read as an IP block.
+        (
+            "<title>Captcha</title><div class='captcha-wrap'><div class='captcha-box'>"
+            "<h1>Verification required</h1><p>Please complete the challenge to "
+            "continue.</p><form id='altcha-form'></form></div></div>",
+            "captcha",
+        ),
     ],
 )
 def test_detect_gate_classifies(html, expected):
     assert detect_gate(html) == expected
+
+
+def test_detect_gate_classifies_js_only_shell():
+    """Google answers a plain-HTTP SERP request with a 200 whose body is a JS
+    redirect stub. It parses to zero results and carries no captcha marker, so
+    it used to be indistinguishable from 'this query found nothing'."""
+    html = (
+        "<title>Google Search</title><style>table,div,span,p{display:none}</style>"
+        "<div>Please click here if you are not redirected within a few seconds.</div>"
+    )
+    assert detect_gate(html) == "javascript"
+
+
+def test_per_engine_impersonation_profiles():
+    """Google is asked as Chrome and Bing as Edge; everything else inherits the
+    shared default."""
+    from search_mcp.engines import get_engine
+    from search_mcp.httpfetch import IMPERSONATE
+
+    assert get_engine("google").impersonate == "chrome"
+    assert get_engine("bing").impersonate == "edge"
+    # Unset engines fall back to the shared profile at request time.
+    ddg = get_engine("duckduckgo")
+    assert ddg.impersonate is None
+    assert (ddg.impersonate or IMPERSONATE) == IMPERSONATE
+
+
+def test_impersonation_profiles_are_known_to_curl_cffi():
+    """A typo here would only surface as a runtime error on a live search."""
+    from curl_cffi.requests.impersonate import normalize_browser_type
+
+    from search_mcp.engines import get_engine
+
+    for name in ("google", "bing"):
+        profile = get_engine(name).impersonate
+        assert normalize_browser_type(profile)
+
+
+def test_detect_gate_does_not_fire_on_a_real_serp():
+    """detect_gate is only consulted when parsing yielded nothing, but the
+    markers must still not match an ordinary results page."""
+    serp = (
+        "<ul class='results-standard'><li><h2><a class='title' href='https://x'>"
+        "How CAPTCHA systems work</a></h2><p class='s'>A guide to challenge "
+        "pages and verification.</p></li></ul>"
+    )
+    assert detect_gate(serp) is None
 
 
 def test_detect_gate_priority_captcha_over_login():

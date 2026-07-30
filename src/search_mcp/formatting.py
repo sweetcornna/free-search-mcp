@@ -89,7 +89,15 @@ def render_search(payload: dict[str, Any]) -> str:
             for name, err in errors.items():
                 lines.append(f"- {name}: {err}")
         lines.extend(_render_search_hints(payload))
-        return "\n".join(lines)
+        # Filter diagnostics matter MOST at zero results — that is exactly when
+        # "your filters dropped all 17 hits" is the answer and the silent-engine
+        # note above is a red herring. This branch used to return before the
+        # block below ever ran, so the one case the diagnostics were written for
+        # was the one case that never showed them.
+        diag = payload.get("filter_diagnostics")
+        if diag:
+            lines.extend(_render_filter_diagnostics(diag))
+        return "\n".join(lines).rstrip() + "\n"
 
     for i, r in enumerate(results, 1):
         title = (r.get("title") or "(untitled)").strip()
@@ -266,12 +274,30 @@ def render_research(payload: dict[str, Any]) -> str:
     lines.append("")
 
     lines.append("## Sources")
+    if not sources:
+        lines.append("_(none — the search returned nothing to read)_")
     for s in sources:
         lines.append(f"- [{s.get('rank')}] **{s.get('title')}** — <{s.get('url')}>")
         sn = (s.get("snippet") or "").strip()
         if sn:
             lines.append(f"    > {sn}")
     lines.append("")
+
+    # Same reporting contract as render_search: engine errors and the
+    # gate/silent/filter notes explain an empty or thin brief, and were
+    # previously computed and then dropped on the floor here.
+    errors = payload.get("errors") or {}
+    if errors:
+        lines.append("**Engine errors (non-fatal):**")
+        for name, err in errors.items():
+            lines.append(f"- {name}: {err}")
+        lines.append("")
+    lines.extend(_render_search_hints(payload))
+    diag = payload.get("filter_diagnostics")
+    if diag:
+        lines.extend(_render_filter_diagnostics(diag))
+    if errors or payload.get("empty_hint") or payload.get("gated_hint") or diag:
+        lines.append("")
 
     if docs:
         lines.append("## Documents")

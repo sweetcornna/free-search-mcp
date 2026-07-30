@@ -119,6 +119,20 @@ class Settings(BaseSettings):
     # SSRF guard escape hatch: when False (default) URLs that resolve to
     # loopback/link-local/private/reserved addresses are rejected.
     allow_private_hosts: bool = False
+    # When the SSRF guard runs its resolve-every-A/AAAA layer.
+    #   "auto" (default) — only when local DNS actually decides what gets
+    #       connected to. It is skipped behind an outbound proxy (the proxy
+    #       resolves and connects) and on a fake-IP VPN (every hostname is
+    #       mapped into a tunnel range, so the answer is a handle, not a
+    #       destination). Both cases previously refused every fetch, which is
+    #       what pushes operators to set allow_private_hosts=true and give up
+    #       the whole guard.
+    #   "always" — run it regardless. Correct only where local DNS agrees with
+    #       the egress path.
+    #   "never" — skip it entirely.
+    # The DNS-free layers (scheme, address literals, internal hostnames) run in
+    # every mode, so none of these values opens loopback or a metadata endpoint.
+    ssrf_resolve_addresses: Literal["auto", "always", "never"] = "auto"
     # read_doc local-file sandbox root. None (default) DISABLES local file
     # reads entirely — the user opts in by pointing this at a directory.
     document_root: Path | None = None

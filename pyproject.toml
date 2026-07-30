@@ -1,6 +1,6 @@
 [project]
 name = "free-search-mcp"
-version = "0.7.0"
+version = "0.8.0"
 description = "Local-first, no-API-key search MCP server. Multi-engine web search, smart fetching, document reading."
 readme = "README.md"
 requires-python = ">=3.11"

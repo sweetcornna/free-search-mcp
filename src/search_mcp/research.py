@@ -111,7 +111,7 @@ async def research(
                 docs.append(d)
 
     total_tokens = sum(d.get("tokens_estimated", 0) for d in docs)
-    return {
+    out = {
         "question": question,
         "engines": sr.get("engines"),
         "sources": sources,
@@ -121,3 +121,11 @@ async def research(
         ),
         "errors": sr.get("errors"),
     }
+    # Carry the search's own explanation of a thin result set through to the
+    # caller. Without this, `research(..., category="news")` that filtered every
+    # hit away returned an empty brief with no stated reason — strictly less
+    # informative than calling `search` with the same arguments.
+    for key in ("filter_diagnostics", "gated_hint", "empty_hint", "rescued_via"):
+        if sr.get(key):
+            out[key] = sr[key]
+    return out

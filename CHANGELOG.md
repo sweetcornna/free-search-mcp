@@ -4,6 +4,103 @@ All notable changes to this project are documented here. The format is loosely
 based on [Keep a Changelog](https://keepachangelog.com/), and the project follows
 semantic versioning.
 
+## [0.8.0] - 2026-07-30
+
+Search in your own language, and keep the SSRF guard switched on.
+
+Two themes, both found by asking why a Chinese-language news search returned
+nothing. The filters were discarding correct results, and the diagnostics that
+should have said so were the one thing never shown.
+
+### Fixed
+
+- **`category="news"` no longer discards the non-English web.** The category
+  filter matched results against a hand-written tuple of 33 Anglosphere
+  outlets, so a Chinese news search dropped 17 of 17 hits — `news.sina.com.cn`
+  included. The list now covers major outlets in Chinese, Japanese, Korean,
+  French, German, Spanish, Portuguese, Russian, Hebrew and more, and also
+  accepts the `news.<domain>` naming convention, because no hand-maintained
+  tuple will ever hold every news site on earth.
+- **Category-native engines are no longer filtered out by their own
+  category.** `categories` is documented as a *routing* signal, but results
+  were then re-checked against the hostname allowlist anyway. Crossref returned
+  8 papers for `category="paper"` and all 8 were dropped for being on
+  `doi.org`; OpenAlex kept 1 of 8; GDELT — which exists to index news in 100+
+  languages — had every non-Western outlet discarded. An engine that natively
+  indexes the requested category is now trusted for it. Domain, text, freshness
+  and `category="pdf"` checks still apply.
+- **Filter diagnostics are shown when there are no results at all.** The
+  aggregator computed "filters dropped 17 of 17 raw results (kept 0), most by
+  category=news" and the Markdown renderer returned before ever printing it.
+  Callers saw only the silent-engine note and went hunting for an IP block that
+  wasn't happening. `research` dropped the same diagnostics, plus `errors`, on
+  the floor entirely.
+- **Google News is asked in the query's language.** The edition was pinned to
+  `hl=en-US&gl=US&ceid=US:en` while every other region-aware engine reads
+  `SEARCH_MCP_REGION`. That endpoint is edition-scoped, so a Chinese query got
+  an **empty** feed — 0 items where the Simplified Chinese edition had 35. The
+  edition now follows `SEARCH_MCP_REGION`, and falls back to the query's
+  writing system when the configured one cannot serve it: 23 scripts, from
+  Cyrillic and Arabic to Tamil and Georgian. Measured gains include Thai
+  12→100, Hebrew 31→100, Arabic 49→100, Bengali 7→100. Latin-script queries
+  are deliberately left alone — the US edition already serves them at full
+  volume, and script alone cannot tell German from English.
+- **A rate-limited source is no longer reported as a silent IP block.** The
+  keyless-JSON never-raise rule turned GDELT's HTTP 429 into an empty list, and
+  the aggregator advised configuring a proxy for what was a documented
+  6-requests-per-minute limit. Refusals are now reported with their status
+  code, separately from genuinely silent engines.
+- **Mojeek's CAPTCHA is detected.** It serves an ALTCHA proof-of-work wall that
+  shares no markup with the Google or DuckDuckGo walls, so a captcha-blocked
+  Mojeek — one of the four *default* engines — read as an unexplained empty.
+  Google's JavaScript-redirect interstitial is likewise classified now instead
+  of looking like "this query found nothing".
+
+### Security
+
+- **The SSRF guard was bypassable via the browser fallback.** `fetch_page`
+  caught the guard's rejection as if it were a transport error and handed the
+  same URL to the Chromium render, which ran no check at all — so any blocked
+  target was reachable by being unreachable over plain HTTP first. On a cloud
+  instance `http://169.254.169.254/` returned instance credentials that way.
+  A refusal is no longer a failure to fall back from, and the browser path is
+  independently guarded (`render="browser"` skips the HTTP branch entirely).
+- **A cache hit bypassed the guard.** The page cache was read before any check,
+  so anything fetched while the guard was permissive stayed retrievable
+  afterwards and tightening the setting had no effect on it. Cache reads now
+  run the DNS-free layers first.
+- **Alibaba Cloud's metadata endpoint (`100.100.100.200`) is blocked.** It sits
+  in CGNAT space, which `ipaddress` reports as ordinary public address space.
+- **Internal hostnames are refused by name** — `localhost`, `*.internal`,
+  `*.local`, `*.corp`, `*.lan`, `metadata.google.internal`, `instance-data` and
+  friends — with no DNS lookup, so the check holds on setups where resolution
+  says nothing useful.
+
+### Changed
+
+- **The SSRF guard's resolve-every-address layer now runs only when this
+  process's resolver decides what gets connected to.** It is skipped behind an
+  outbound proxy (the proxy resolves and connects) and on a fake-IP VPN in TUN
+  mode, where every hostname is mapped into a range like `198.18.0.0/15` and
+  the answer is a handle, not a destination. Both setups previously refused
+  *every* fetch, whose real-world outcome is not "one request blocked" but
+  "operator sets `allow_private_hosts=true`" and gives up loopback and metadata
+  protection too. The DNS-free layers run in every mode. Fake-IP detection uses
+  canary hostnames that are public by definition and can only ever stand down
+  for tunnel ranges — never loopback, link-local or RFC1918.
+  New `SEARCH_MCP_SSRF_RESOLVE_ADDRESSES` = `auto` (default) | `always` |
+  `never`.
+- **Google is asked as Chrome, Bing as Edge.** Engines can now declare their
+  own TLS/header fingerprint. Measured caveat: Google answered its JS
+  interstitial under every profile tried, so its gate is behavioural rather
+  than a fingerprint check — this is about presenting a coherent identity, not
+  about unblocking it.
+- The offline test suite is hermetic with respect to *configuration*, not just
+  DNS. A personal `SEARCH_MCP_ALLOW_PRIVATE_HOSTS=true` disarmed the guard
+  under test and failed 26 SSRF cases on that machine while passing everywhere
+  else; a suite whose result depends on who runs it cannot review a change to
+  the thing it covers.
+
 ## [0.7.0] - 2026-07-30
 
 Search and fetch anything, not just web pages: images and binaries are

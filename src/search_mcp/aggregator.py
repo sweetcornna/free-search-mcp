@@ -625,19 +625,39 @@ async def aggregate_search(
     # leaves no trace at all. Same sparseness threshold as filter_diagnostics
     # so a healthy response with one quiet engine stays clean.
     if len(merged) <= 3:
-        empty = sorted(
+        # An engine whose HTTP call was refused (429/5xx) is NOT silent — it
+        # told us exactly what happened and the keyless-JSON never-raise rule
+        # swallowed it. Report those by status instead of sending the user off
+        # to configure a proxy for what is usually a rate limit.
+        http_status = diagnostics.get("http_status") or {}
+        zero = [
             name
             for name, count in diagnostics.get("raw_per_engine", {}).items()
             if count == 0 and name not in gated and name not in errors
-        )
+        ]
+        refused = sorted(n for n in zero if n in http_status)
+        empty = sorted(n for n in zero if n not in http_status)
+        hints: list[str] = []
+        if refused:
+            detail = ", ".join(f"{n} (HTTP {http_status[n]})" for n in refused)
+            hints.append(
+                f"{detail} — the source refused the request rather than "
+                "returning no matches. 429 means back off and retry later; "
+                "5xx means the source is down."
+            )
         if empty:
-            payload["empty_engines"] = empty
-            payload["empty_hint"] = (
+            hints.append(
                 f"{', '.join(empty)} returned 0 results with no error and no "
                 "CAPTCHA/consent wall detected — possible silent IP block or a "
                 "markup change. If this persists, configure a proxy (admin UI / "
                 "SEARCH_MCP_PROXY) or pick different engines via `engines=`."
             )
+        if refused:
+            payload["refused_engines"] = {n: http_status[n] for n in refused}
+        if empty:
+            payload["empty_engines"] = empty
+        if hints:
+            payload["empty_hint"] = " ".join(hints)
 
     return payload
 

@@ -31,7 +31,11 @@ from .httpfetch import (  # noqa: F401
     curl_stream_capped,
 )
 from .ratelimit import RateLimiter
-from .url_safety import assert_url_allowed_async
+from .url_safety import (
+    UnsafeURLError,
+    assert_url_allowed_async,
+    assert_url_allowed_offline,
+)
 
 log = logging.getLogger(__name__)
 fetch_limiter = RateLimiter(settings.fetch_rate_limit_per_minute)
@@ -430,6 +434,11 @@ async def fetch_page(
         if resolved:
             url = resolved
 
+    # Policy check BEFORE the cache read: returning a cached body is still
+    # disclosing that URL's contents, so a cache hit must not be a way around
+    # the guard. DNS-free, so a hit costs no lookup.
+    assert_url_allowed_offline(url)
+
     if not force_refresh:
         cached = await cache.get_page(url)
         if cached:
@@ -471,6 +480,14 @@ async def fetch_page(
     if render in ("auto", "http"):
         try:
             ctype, html = await _http_fetch(url)
+        except UnsafeURLError:
+            # A URL the SSRF guard refused is not a transport failure to fall
+            # back from — swallowing it here handed the very same URL to the
+            # browser render below, which runs no guard at all. That made the
+            # guard bypassable for every blocked target: a refused
+            # http://169.254.169.254/ came back as a successful browser fetch
+            # of the instance's cloud credentials.
+            raise
         except Exception as e:
             last_err = e
             log.info("http fetch failed for %s: %s", url, e)
@@ -491,6 +508,10 @@ async def fetch_page(
         render == "auto" and _ctype_is_markup(ctype) and (not html or len(html) < 500)
     )
     if needs_browser:
+        # Independently guarded rather than relying on the HTTP attempt above:
+        # `render="browser"` skips that branch entirely, so this is the only
+        # check on the path Chromium actually takes.
+        await assert_url_allowed_async(url)
         try:
             title2, html2 = await pool.fetch_html(url)
             title = title2 or title
