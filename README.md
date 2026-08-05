@@ -1,5 +1,7 @@
 # free-search-mcp
 
+[![MCP Toplist](https://mcptoplist.com/badge/glama%2Fsweetcornna%2Ffree-search-mcp.svg)](https://mcptoplist.com/server/glama%2Fsweetcornna%2Ffree-search-mcp)
+
 <p align="center">
   <img src="https://raw.githubusercontent.com/sweetcornna/free-search-mcp/main/docs/search.gif" alt="free-search-mcp — one research() call returns a cited Markdown brief, no API key" width="820">
 </p>
