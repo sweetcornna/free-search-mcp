@@ -1,0 +1,808 @@
+{
+ "captured_at": "2026-08-29",
+ "pool": [
+  "duckduckgo",
+  "mojeek",
+  "googlenews",
+  "bing"
+ ],
+ "note": "A dated slice of evals/ranking/buckets.json, committed because it is evidence: three cases where Bing answered HTTP 200 with ten well-formed results about the first word of the query only ('decoy' names those buckets), each with the healthy buckets other engines returned for the same query, plus one case where a paper arrives as both http:// and https://. Snippets are clipped to 240 characters. The live capture is a moving target and stays untracked; this file does not change.",
+ "cases": [
+  {
+   "query": "deep residual learning for image recognition",
+   "category": "paper",
+   "expect": "10.1109/cvpr.2016.90",
+   "decoy": [],
+   "buckets": {
+    "duckduckgo": [
+     {
+      "title": "[1512.03385] Deep Residual Learning for Image Recognition",
+      "url": "https://arxiv.org/abs/1512.03385",
+      "snippet": "The authors present a residual learning framework to train very deep neural networks for image recognition tasks. They show that residual nets achieve state-of-the-art results on ImageNet, COCO, and other datasets."
+     },
+     {
+      "title": "Deep Residual Learning for Image Recognition",
+      "url": "https://arxiv.org/pdf/1512.03385v1",
+      "snippet": "A paper that introduces a residual learning framework to train very deep neural networks for image classification and detection. The paper presents the theory, experiments, and analysis of the residual networks, which won the 1st place on I"
+     },
+     {
+      "title": "Deep Residual Learning for Image Recognition | IEEE Conference ...",
+      "url": "https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=7780459",
+      "snippet": "Deeper neural networks are more difficult to train. We present a residual learning framework to ease the training of networks that are substantially deeper than those used previously. We explicitly reformulate the layers as learning residua"
+     },
+     {
+      "title": "[1512.03385] Deep Residual Learning for Image Recognition - ar5iv",
+      "url": "https://ar5iv.labs.arxiv.org/html/1512.03385",
+      "snippet": "Deep Residual Learning for Image Recognition Kaiming He Xiangyu Zhang Shaoqing Ren Jian Sun Microsoft Research {kahe,˜v-xiangz,˜v-shren,˜jiansun}@microsoft.com"
+     }
+    ],
+    "bing": [
+     {
+      "title": "[1512.03385] Deep Residual Learning for Image Recognition",
+      "url": "https://arxiv.org/abs/1512.03385",
+      "snippet": "Dec 10, 2015 · We present a residual learning framework to ease the training of networks that are substantially deeper than those …",
+      "published_age": "2015-12-10"
+     },
+     {
+      "title": "Deep Residual Learning for Image Recognition",
+      "url": "https://arxiv.org/pdf/1512.03385",
+      "snippet": "We present a residual learning framework to ease the training of networks that are substantially deeper than those used previously. …"
+     },
+     {
+      "title": "Deep Residual Learning for Image Recognition | IEEE Conference ...",
+      "url": "https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=7780459",
+      "snippet": "Deeper neural networks are more difficult to train. We present a residual learning framework to ease the training of networks that are …"
+     },
+     {
+      "title": "Deep Residual Learning for Image Recognition : A Survey - MDPI",
+      "url": "https://www.mdpi.com/2076-3417/12/18/8972",
+      "snippet": "Sep 7, 2022 · This comprehensive survey looks at the current state of the art in deep learning for image recognition and proposes a …",
+      "published_age": "2022-09-07"
+     },
+     {
+      "title": "Deep Residual Learning for Image Recognition - Semantic Scholar",
+      "url": "https://www.semanticscholar.org/paper/Deep-Residual-Learning-for-Image-Recognition-He-Zhang/2c03df8b48bf3fa39054345bafabfeff15bfd11d",
+      "snippet": "Dec 10, 2015 · We present a residual learning framework to ease the training of networks that are substantially deeper than those …",
+      "published_age": "2015-12-10"
+     },
+     {
+      "title": "CVPR 2016 Open Access Repository",
+      "url": "https://openaccess.thecvf.com/content_cvpr_2016/html/He_Deep_Residual_Learning_CVPR_2016_paper.html",
+      "snippet": "We provide comprehensive empirical evidence showing that these residual networks are easier to optimize, and can gain accuracy …"
+     }
+    ],
+    "arxiv": [
+     {
+      "title": "Learn to Accumulate Evidence from All Training Samples: Theory and Practice",
+      "url": "https://arxiv.org/abs/2306.11113v2",
+      "snippet": "Deep Pandey, Qi Yu — Evidential deep learning, built upon belief theory and subjective logic, offers a principled and computationally efficient way to turn a deterministic neural network uncertainty-aware. The resultant evidential models ca",
+      "published_age": "2023-06-19"
+     },
+     {
+      "title": "The Modern Mathematics of Deep Learning",
+      "url": "https://arxiv.org/abs/2105.04026v2",
+      "snippet": "Julius Berner, Philipp Grohs, Gitta Kutyniok et al. — We describe the new field of mathematical analysis of deep learning. This field emerged around a list of research questions that were not answered within the classical framework of learn",
+      "published_age": "2021-05-09"
+     },
+     {
+      "title": "DILIE: Deep Internal Learning for Image Enhancement",
+      "url": "https://arxiv.org/abs/2012.06469v1",
+      "snippet": "Indra Deep Mastan, Shanmuganathan Raman — We consider the generic deep image enhancement problem where an input image is transformed into a perceptually better-looking image. Recent methods for image enhancement consider the problem by perf",
+      "published_age": "2020-12-11"
+     },
+     {
+      "title": "DCIL: Deep Contextual Internal Learning for Image Restoration and Image Retargeting",
+      "url": "https://arxiv.org/abs/1912.04229v1",
+      "snippet": "Indra Deep Mastan, Shanmuganathan Raman — Recently, there is a vast interest in developing methods which are independent of the training samples such as deep image prior, zero-shot learning, and internal learning. The methods above are base",
+      "published_age": "2019-12-09"
+     },
+     {
+      "title": "Predicting Thrombectomy Recanalization from CT Imaging Using Deep Learning Models",
+      "url": "https://arxiv.org/abs/2302.04143v2",
+      "snippet": "Haoyue Zhang, Jennifer S. Polson, Eric J. Yang et al. — For acute ischemic stroke (AIS) patients with large vessel occlusions, clinicians must decide if the benefit of mechanical thrombectomy (MTB) outweighs the risks and potential complica",
+      "published_age": "2023-02-08"
+     },
+     {
+      "title": "Deep Learning in Palmprint Recognition-A Comprehensive Survey",
+      "url": "https://arxiv.org/abs/2501.01166v2",
+      "snippet": "Chengrui Gao, Ziyuan Yang, Wei Jia et al. — Palmprint recognition has emerged as a prominent biometric technology, widely applied in diverse scenarios. Traditional handcrafted methods for palmprint recognition often fall short in representa",
+      "published_age": "2025-01-02"
+     },
+     {
+      "title": "DeepCFL: Deep Contextual Features Learning from a Single Image",
+      "url": "https://arxiv.org/abs/2011.03712v1",
+      "snippet": "Indra Deep Mastan, Shanmuganathan Raman — Recently, there is a vast interest in developing image feature learning methods that are independent of the training data, such as deep image prior, InGAN, SinGAN, and DCIL. These methods are unsupe",
+      "published_age": "2020-11-07"
+     },
+     {
+      "title": "Deep Learning and Computational Physics (Lecture Notes)",
+      "url": "https://arxiv.org/abs/2301.00942v1",
+      "snippet": "Deep Ray, Orazio Pinti, Assad A. Oberai — These notes were compiled as lecture notes for a course developed and taught at the University of the Southern California. They should be accessible to a typical engineering graduate student with a ",
+      "published_age": "2023-01-03"
+     },
+     {
+      "title": "Hybrid deep learning-based strategy for the hepatocellular carcinoma cancer grade classification of H&E stained liver histopathology images",
+      "url": "https://arxiv.org/abs/2412.03084v2",
+      "snippet": "Ajinkya Deshpande, Deep Gupta, Ankit Bhurane et al. — Hepatocellular carcinoma (HCC) is a common type of liver cancer whose early-stage diagnosis is a common challenge, mainly due to the manual assessment of hematoxylin and eosin-stained wh",
+      "published_age": "2024-12-04"
+     },
+     {
+      "title": "PePR: Performance Per Resource Unit as a Metric to Promote Small-Scale Deep Learning in Medical Image Analysis",
+      "url": "https://arxiv.org/abs/2403.12562v2",
+      "snippet": "Raghavendra Selvan, Bob Pepin, Christian Igel et al. — The recent advances in deep learning (DL) have been accelerated by access to large-scale data and compute. These large-scale resources have been used to train progressively larger model",
+      "published_age": "2024-03-19"
+     }
+    ],
+    "openalex": [
+     {
+      "title": "Deep Residual Learning for Image Recognition",
+      "url": "https://doi.org/10.1109/cvpr.2016.90",
+      "snippet": "cited by 227757 — Deeper neural networks are more difficult to train. We present a residual learning framework to ease the training of networks that are substantially deeper than those used previously. We explicitly reformulate the layers a",
+      "published_age": "2016-06-01"
+     },
+     {
+      "title": "Deep Residual Learning for Image Recognition",
+      "url": "http://arxiv.org/abs/1512.03385",
+      "snippet": "arXiv (Cornell University) · cited by 4765 — A curated reading list of foundational machine-learning papers, blog posts, and course notes. Compiled from a Hacker News comment by user cute_boi (news.ycombinator.com/item?id=48822131). This re",
+      "published_age": "2015-12-10"
+     },
+     {
+      "title": "Deep Residual Learning for Image Recognition: A Survey",
+      "url": "https://doi.org/10.3390/app12188972",
+      "snippet": "Applied Sciences · cited by 1002 — Deep Residual Networks have recently been shown to significantly improve the performance of neural networks trained on ImageNet, with results beating all previous methods on this dataset by large margins i",
+      "published_age": "2022-09-07"
+     },
+     {
+      "title": "ImageNet classification with deep convolutional neural networks",
+      "url": "https://doi.org/10.1145/3065386",
+      "snippet": "Communications of the ACM · cited by 75665 — We trained a large, deep convolutional neural network to classify the 1.2 million high-resolution images in the ImageNet LSVRC-2010 contest into the 1000 different classes. On the test data, we a",
+      "published_age": "2017-05-24"
+     },
+     {
+      "title": "A survey on deep learning in medical image analysis",
+      "url": "https://doi.org/10.1016/j.media.2017.07.005",
+      "snippet": "Medical Image Analysis · cited by 15073",
+      "published_age": "2017-07-26"
+     },
+     {
+      "title": "A survey on Image Data Augmentation for Deep Learning",
+      "url": "https://doi.org/10.1186/s40537-019-0197-0",
+      "snippet": "Journal Of Big Data · cited by 12970 — Deep convolutional neural networks have performed remarkably well on many Computer Vision tasks. However, these networks are heavily reliant on big data to avoid overfitting. Overfitting refers to the ",
+      "published_age": "2019-07-06"
+     },
+     {
+      "title": "Inception-v4, Inception-ResNet and the Impact of Residual Connections on Learning",
+      "url": "https://ojs.aaai.org/index.php/AAAI/article/view/11231",
+      "snippet": "cited by 12727 — Very deep convolutional networks have been central to the largest advances in image recognition performance in recent years. One example is the Inception architecture that has been shown to achieve very good performance at ",
+      "published_age": "2017-02-12"
+     },
+     {
+      "title": "FPGA accelerates deep residual learning for image recognition",
+      "url": "https://doi.org/10.1109/itnec.2017.8284852",
+      "snippet": "2017 IEEE 2nd Information Technology, Networking, Electronic and Automation Control Conference (ITNEC) · cited by 61 — Deep learning is greatly promoting the fast development of artificial intelligence. In the image classification area, the",
+      "published_age": "2017-12-01"
+     },
+     {
+      "title": "Using Deep Learning for Image-Based Plant Disease Detection",
+      "url": "https://doi.org/10.3389/fpls.2016.01419",
+      "snippet": "Frontiers in Plant Science · cited by 4875 — Crop diseases are a major threat to food security, but their rapid identification remains difficult in many parts of the world due to the lack of the necessary infrastructure. The combination of ",
+      "published_age": "2016-09-22"
+     },
+     {
+      "title": "Deep learning for time series classification: a review",
+      "url": "https://doi.org/10.1007/s10618-019-00619-1",
+      "snippet": "Data Mining and Knowledge Discovery · cited by 3305 — Time Series Classification (TSC) is an important and challenging problem in data mining. With the increase of time series data availability, hundreds of TSC algorithms have been proposed",
+      "published_age": "2019-03-02"
+     }
+    ]
+   }
+  },
+  {
+   "query": "vietnam gdp growth",
+   "category": "finance.macro",
+   "expect": "imf.org/external/datamapper",
+   "decoy": [
+    "bing"
+   ],
+   "buckets": {
+    "duckduckgo": [
+     {
+      "title": "GDP growth (annual %) - Viet Nam | Data",
+      "url": "https://data.worldbank.org/indicator/NY.GDP.MKTP.KD.ZG?locations=VN",
+      "snippet": "GDP growth (annual %) - Viet Nam Country official statistics, National Statistical Organizations and/or Central Banks; National Accounts data files, Organisation for Economic Co-operation and Development ( OECD ); Staff estimates, World Ban"
+     },
+     {
+      "title": "Vietnam GDP Annual Growth Rate - TRADING ECONOMICS",
+      "url": "https://tradingeconomics.com/vietnam/gdp-growth-annual",
+      "snippet": "The Gross Domestic Product ( GDP ) in Vietnam expanded 8.39 percent in the second quarter of 2026 over the same quarter of the previous year. GDP Annual Growth Rate in Vietnam is expected to be 7.30 percent by the end of this quarter, accor"
+     },
+     {
+      "title": "Vietnam GDP (2026) | Live GDP, Growth Rate & Historical Data",
+      "url": "https://livegdp.com/vietnam-gdp/",
+      "snippet": "Vietnam GDP (2026): Latest GDP value, GDP growth rate, GDP per capita, historical GDP data from 1980-2026, economic overview, charts, rankings, and future projections."
+     },
+     {
+      "title": "GDP - Official information channel of the Government of Viet Nam",
+      "url": "https://en.baochinhphu.vn/gdp.html",
+      "snippet": "Viet Nam's GDP growth accelerates to 8,39% in April-June period Economy 2 months ago VGP - Viet Nam's GDP growth accelerated to 8.39 percent in April-June period from 7.83 percent in the first quarter this year, the National Statistics Offi",
+      "published_age": "2 months ago"
+     },
+     {
+      "title": "PDF Vietnam Economic Update - 9M 2025 - PwC",
+      "url": "https://www.pwc.com/vn/en/publications/2025/vn-economic-update-9m2025.pdf",
+      "snippet": "PwC Market Research & Economic Study In the first 9 months of 2025, Vietnam has continued its growth momentum, with key economic metrics indicating a positive outlook."
+     },
+     {
+      "title": "Economy of Vietnam - Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Economy_of_Vietnam",
+      "snippet": "GDP per capita development in Vietnam The economy of Vietnam is a developing mixed socialist-oriented market economy. [3] It is the 33rd-largest economy in the world by nominal gross domestic product ( GDP ) and the 23rd-largest economy in "
+     },
+     {
+      "title": "Growth of the real gross domestic product (GDP) Vietnam | Statista",
+      "url": "https://www.statista.com/statistics/444616/gross-domestic-product-gdp-growth-rate-in-vietnam/",
+      "snippet": "The growth of the real gross domestic product ( GDP ) in Vietnam stood at 8.02 percent in 2025. Between 1980 and 2025, the growth rose by 11.52 percentage points, though the increase followed an ..."
+     },
+     {
+      "title": "Vietnam GDP (2026) - Worldometer",
+      "url": "https://www.worldometers.info/gdp/vietnam-gdp/",
+      "snippet": "Current and historical Gross Domestic Product ( GDP ) of Vietnam in nominal and real US dollar values. GDP growth rates and charts"
+     },
+     {
+      "title": "Vietnam reports 8.02% GDP growth in 2025 - VnExpress International",
+      "url": "https://e.vnexpress.net/news/business/economy/vietnam-reports-8-02-gdp-growth-in-2025-5002078.html",
+      "snippet": "The growth rate was second only to 2022 when the economy expanded by 8.12% after the Covid-19 pandemic. In 2025 GDP grew to US$514 billion and per capita income to $5,026, making Vietnam an upper-middle-income country."
+     },
+     {
+      "title": "Vietnam's GDP grows 8.02% in 2025, second-highest in 15 years",
+      "url": "https://news.tuoitre.vn/vietnams-gdp-grows-802-in-2025-second-highest-in-15-years-103260106150642491.htm",
+      "snippet": "Vietnam's economy expanded by 8.02 percent year on year to about US$514 billion in 2025, marking the second-highest growth in 15 years, driven by strong performance in industry, construction, and services, according to data from the Nationa"
+     }
+    ],
+    "googlenews": [
+     {
+      "title": "Double-digit growth: When capital and labor no longer the main drivers - Theinvestor (Theinvestor)",
+      "url": "https://news.google.com/rss/articles/CBMipwFBVV95cUxONEZkZWlpUTNwYjNEVG9OWmcwMWl6ZEVJYXhsb19lbnh2MjBDa2wwUkpFdnl5YkNjRHo0SEEtWUk4VHJpTWQ3VWZJUVQ0MEx5bzB0VlI2Zmo0WWdDckRWeXl0ZmtGRlhIYUVZdDh4WEI3WTFRQjR5bVZFNjBfbUNmcjEzcnhIRnpCQk92bDMtYmNYUm1vQ1pjUHZKZmVPdVJRb25jbjd2UQ?oc=5",
+      "snippet": "Double-digit growth: When capital and labor no longer the main drivers Theinvestor",
+      "published_age": "2 days ago"
+     },
+     {
+      "title": "Who stands to gain from Vietnam’s double-digit growth ambitions? - Báo VietNamNet (Báo VietNamNet)",
+      "url": "https://news.google.com/rss/articles/CBMiowFBVV95cUxQVDlHdk9zbjVwTGpxR2JGYXNPVzkyZDByTHY3MHFGaHpITzI3RDVjX0J3ZS11OTNIUFVRZzBZSmt6aEFGelZ5eGgxN3pCbmFkMC1HX1FRWmEyLWFISDJWTjlRRjc3aElxMjFzd0luTUdzOXRCU240MURWQjJkWnRGLTM5RlBWSjNtZXN1djZfZG5GMXh5b204TzMta3NvYVBDenpJ?oc=5",
+      "snippet": "Who stands to gain from Vietnam’s double-digit growth ambitions? Báo VietNamNet",
+      "published_age": "12 hours ago"
+     },
+     {
+      "title": "Fitch says Vietnam banks likely to face significant pressure from government growth target - Reuters (Reuters)",
+      "url": "https://news.google.com/rss/articles/CBMiygFBVV95cUxOb2YzOUc5UUU5bzk2ZDFJd3M5MUY2YmttTUpDRzVkdnV3MjZ3am9MNkN3SUtoYnNMOExGZHFkLTJtY2xZeWVFcTFPcUpoX3gzS1BMeGMxZkh6QXRnVTkzV2ZDTnVfZzdkcVJMcl9jQWhvUlFiZXdVU1A1R0NoWWZiNEk1QnRkdFUwMDNaeE9FS1RUc0htejd1dDhNbnY4MVV2VHZ6dUJsZ2N6U01ldzVUVXp4eFZscDVSVm8zQ1ZQMWpNV0RPQ3Z1eU9B?oc=5",
+      "snippet": "Fitch says Vietnam banks likely to face significant pressure from government growth target Reuters",
+      "published_age": "2026-08-05"
+     },
+     {
+      "title": "Vietnam Strengthens Power Planning to Support Economic Growth Goals - OpenGov Asia (OpenGov Asia)",
+      "url": "https://news.google.com/rss/articles/CBMilwFBVV95cUxNb2hsaXJ6VGRtOVdDOHdFQkU3T25HaHQ2clF4NW1DOThPQW9iRGgzYlh2OWYxYjBEWEpaRG5TeWlPcW82dF8tVmJGYjN0SkJRdUI5a3B6Vko1ekpHTGMwaVpVMmdqcGVtOHRDdkNGUnFvaFBHU1ZqWmxrcExWci1NMDNJbHR4OTdBejNmakI3X1VVelpUY2Uw?oc=5",
+      "snippet": "Vietnam Strengthens Power Planning to Support Economic Growth Goals OpenGov Asia",
+      "published_age": "2 days ago"
+     },
+     {
+      "title": "Vietnam’s GDP growth surges in Q2 - FocusEconomics (FocusEconomics)",
+      "url": "https://news.google.com/rss/articles/CBMiyAFBVV95cUxPNHUtRTNabWhBR1JLSmtMODdkN3lVcDVJQ19wdm9TRmVCS1BjQ0JUUDdPeHhtU0Foa1E2S1BRTkJaN1lDQnQ4TVhtbkd3NWJtWE5UUlJPQTU3MHcyR0hmNnJDNDg5NUY5TjZrcjFmOEJwZ0hPQkl6a3NsQU1CaXBkdkxJZ3NON3B1Vnl3NHBCZ3lHUGtpZU81NUdVbElTMl9KcnZqVmRoMHJDUEg0empwVXN0MVdPS284RmsxUGFRS0VTRHFEM2tINg?oc=5",
+      "snippet": "Vietnam’s GDP growth surges in Q2 FocusEconomics",
+      "published_age": "2026-07-03"
+     },
+     {
+      "title": "Vietnam's 10% growth drive runs into economic realities - Nikkei Asia (Nikkei Asia)",
+      "url": "https://news.google.com/rss/articles/CBMiogFBVV95cUxPeERIOWpnRktKU0xSclRPeFV6ZTdQMFc1eGJYZnRlYzlOVWlpS09UODc1WWxfUVJIVFAzQVRVNHdNM2RFclBUcEZBQUNYT0VYdVBKc3owd1liY3VqdE5JTTNGTjFxZ3JmV3hJcXBCb2RvR3EyVUhuVWpQN0t3WUxibzdHYWd4d1JJMlNaN2M5bGZ5TDFsd0pSWkxOZms1OEd5dGc?oc=5",
+      "snippet": "Vietnam's 10% growth drive runs into economic realities Nikkei Asia",
+      "published_age": "2026-07-31"
+     },
+     {
+      "title": "Debunking the investment funding question: Maybank - Vietnam Investment Review - VIR (Vietnam Investment Review - VIR)",
+      "url": "https://news.google.com/rss/articles/CBMihwFBVV95cUxQcjFMdzlMUDZTT3RWeXljV3lTVVlKMUJ0QmFFRjU0aVlYcjBFaG1tMjNVVjYwUnR3SnBvX1pQSWNoQThvOUtSTnlORFY5QjF2T0prbGR3NkhzaF9zUFE0dk1FZXlac2xpQjJ5TlBjOVQ4V3NzSkNjLWxtVlJTZjNERGlHRVpiTGc?oc=5",
+      "snippet": "Debunking the investment funding question: Maybank Vietnam Investment Review - VIR",
+      "published_age": "3 days ago"
+     },
+     {
+      "title": "Vietnamese people's incomes have increased significantly. - Vietnam.vn (Vietnam.vn)",
+      "url": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE8xdGQ2U2lwZlVLOWJ1MUNhZzhNUDhiN0JIMFNGd3Y3VDJpcktjY1J5NFlkX2kxTGZMUXdHby05TTJSZ1dyOExtR2ZpYXQ2bVFyRWdDb2lxZHF5RlZsMy1yYWl6SFQ?oc=5",
+      "snippet": "Vietnamese people's incomes have increased significantly. Vietnam.vn",
+      "published_age": "13 hours ago"
+     },
+     {
+      "title": "Encouraging shift in GDP growth forecasts for Vietnam - Vietnam Economic Times (Vietnam Economic Times)",
+      "url": "https://news.google.com/rss/articles/CBMiiAFBVV95cUxNOGdhZDItN1dsV1J1eTBqb1hLdTFDOVRDVXNORS1JX3Q4RkRBNFdTVG5Jbm5GVTV2WC1aWjlDX05Hd2psZkRERFBoVkNHbG9QSjc2aFJjalpMczMwemFlSDZsZDZtR0paQ3NaYThWN3NxSUNDcU5FaGJXUDUyblJBa2RFOUFleFJI?oc=5",
+      "snippet": "Encouraging shift in GDP growth forecasts for Vietnam Vietnam Economic Times",
+      "published_age": "5 days ago"
+     },
+     {
+      "title": "School IB economics: Communist Vietnam bets on Korean-style ‘chaebols’ to boost growth - Financial Times (Financial Times)",
+      "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTE9ZOVB2Uko2NTZuMFpBN2IyaG0tWUpjYzZuNHVPSlRROVlkWmRNa0t2NlFqb1MyR3JEZk1CbjAxVEdyS2ZvVFpfOVVWdmhxWkxoMFRVOGMySW5kci1zUHJDVm96NHBHMnJyam9BcHpxWVM?oc=5",
+      "snippet": "School IB economics: Communist Vietnam bets on Korean-style ‘chaebols’ to boost growth Financial Times",
+      "published_age": "1 day ago"
+     }
+    ],
+    "bing": [
+     {
+      "title": "Vietnam - Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Vietnam",
+      "snippet": "Upon the North Vietnamese victory in 1975, Vietnam reunified as a communist state that self-designated as a socialist state under …"
+     },
+     {
+      "title": "Vietnam | History, Population, Map, Flag, Government , & Facts",
+      "url": "https://www.britannica.com/place/Vietnam",
+      "snippet": "3 days ago · Vietnam, country occupying the eastern portion of mainland Southeast Asia. It has a long coastline, much of which …",
+      "published_age": "3 days ago"
+     },
+     {
+      "title": "Visit Vietnam : The Official Tourism Website of Vietnam",
+      "url": "https://vietnam.travel/",
+      "snippet": "Discover the highlights of Vietnam through the country's official tourism website. Plan your trip with advice on Vietnam's best …"
+     },
+     {
+      "title": "Viet Nam Goverment Portal",
+      "url": "https://vietnam.gov.vn/",
+      "snippet": "15 hours ago · VGP - Viet Nam has announced US$100,000 in emergency aid to Colombia to help the Colombian Government and …",
+      "published_age": "15 hours ago"
+     },
+     {
+      "title": "Vietnam Facts | Britannica",
+      "url": "https://www.britannica.com/facts/Vietnam",
+      "snippet": "5 days ago · Vietnam, country occupying the eastern portion of mainland Southeast Asia. It has a long coastline, much of which …",
+      "published_age": "5 days ago"
+     },
+     {
+      "title": "15 Best Places to Visit in Vietnam (Updated 2025)｜",
+      "url": "https://myvietnamtours.com/travelguide/best-places-to-visit-in-vietnam/",
+      "snippet": "From its dramatic limestone mountains in the north to pristine beaches in the south, Vietnam is truly a bucket-list destination. In this …"
+     },
+     {
+      "title": "Vietnam Maps & Facts - World Atlas",
+      "url": "https://www.worldatlas.com/maps/vietnam",
+      "snippet": "Feb 24, 2021 · Vietnam is situated in Southeast Asia along the eastern coast of the Indochinese Peninsula. It is located in the …",
+      "published_age": "2021-02-24"
+     },
+     {
+      "title": "History of Vietnam - Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/History_of_Vietnam",
+      "snippet": "The Second World War brought a 5-year occupation by Imperial Japan. In 1945 Vietnam was proclaimed a republic, but a three-way …"
+     },
+     {
+      "title": "About Viet Nam",
+      "url": "https://vietnam.gov.vn/about-viet-nam",
+      "snippet": "1 day ago · Trang web cung cấp thông tin về Việt Nam, bao gồm chính trị, địa lý, văn hóa, lịch sử và các khía cạnh khác.",
+      "published_age": "1 day ago"
+     },
+     {
+      "title": "The Complete Guide to Vietnam 2026 | Vietnamnomad",
+      "url": "https://vietnamnomad.com/featured-articles/vietnam/",
+      "snippet": "Jan 9, 2026 · Vietnam is divided into three main regions: Northern Vietnam, Central Vietnam, and Southern Vietnam, comprising 34 …",
+      "published_age": "2026-01-09"
+     }
+    ],
+    "worldbank": [
+     {
+      "title": "Vietnam Development Report 2019 : Connecting Vietnam for Growth and Shared Prosperity",
+      "url": "https://documents.worldbank.org/curated/en/590451578409008253",
+      "snippet": "Working Paper · Viet Nam — Globally, Vietnam is among the most open economies with a trade-to-GDP ratio of 190 percent in 2018. Through the removal of both tariff and non-tariff barriers and fulfilling its commitment in several regional tra",
+      "published_age": "2019-09-25"
+     },
+     {
+      "title": "Vietnam Development Report 2019 : Connecting Vietnam for Growth and Shared Prosperity",
+      "url": "https://documents.worldbank.org/curated/en/817501579101801852",
+      "snippet": "Working Paper · Viet Nam — Globally, Vietnam is among the most open economies with a trade-to-GDP ratio of 190 percent in 2018. Through the removal of both tariff and non-tariff barriers and fulfilling its commitment in several regional tra",
+      "published_age": "2019-12-30"
+     },
+     {
+      "title": "Vietnam - Northern Delta Transport Development Project : environmental assessment (Vol. 2 of 14) : EIA priority ports, component A",
+      "url": "https://documents.worldbank.org/curated/en/520011468129618459",
+      "snippet": "Environmental Assessment · Viet Nam — The development objective of the Northern Delta Transport Development Project for Vietnam is to support sustainable economic growth and inclusive development in the Northern Delta Region by increasing t",
+      "published_age": "2008-01-14"
+     },
+     {
+      "title": "Vietnam - Agriculture and forestry sectors",
+      "url": "https://documents.worldbank.org/curated/en/652301468339100964",
+      "snippet": "Brief · Viet Nam — In 2006 agriculture, forestry, and fisheries accounted for 20 percent of the Vietnam's gross domestic product (GDP), 54 percent of its employment, and 30 percent of its exports. While the rapid growth of manufacturing has",
+      "published_age": "2010-06-29"
+     },
+     {
+      "title": "Vietnam Macro Monitoring",
+      "url": "https://documents.worldbank.org/curated/en/213631600443823992",
+      "snippet": "Brief · Viet Nam — This brief focuses on the economic developments of Vietnam for the month of September 2020.",
+      "published_age": "2020-09-01"
+     },
+     {
+      "title": "Vietnam Macro Monitoring",
+      "url": "https://documents.worldbank.org/curated/en/652401600444756523",
+      "snippet": "Brief · Viet Nam — This brief focuses on the economic developments of Vietnam for the month of September 2020.",
+      "published_age": "2020-09-01"
+     },
+     {
+      "title": "Vietnam - Country Forest Note",
+      "url": "https://documents.worldbank.org/curated/en/544891570456214844",
+      "snippet": "Working Paper · Viet Nam — This Country Forest Note (CFN) provides an upstream analysis of the status of forests and of investments and policies relevant to the forest sector in Vietnam. It looks at forests in a programmatic and cross-secto",
+      "published_age": "2019-06-13"
+     },
+     {
+      "title": "Vietnam - Industry sector",
+      "url": "https://documents.worldbank.org/curated/en/113381468321569069",
+      "snippet": "Brief · Viet Nam — One of the major engines for economic growth in Vietnam over the past 15 years has been industry. Since 1990 the industrial sector has grown an average of 10 percent per year, and its share of Gross Domestic Product (GDP)",
+      "published_age": "2010-06-29"
+     },
+     {
+      "title": "Vietnam Macro Monitoring",
+      "url": "https://documents.worldbank.org/curated/en/390061597219151963",
+      "snippet": "Brief · Viet Nam — This brief focuses on the economic developments of Vietnam for the month of August 2020.",
+      "published_age": "2020-08-01"
+     },
+     {
+      "title": "Vietnam Macro Monitoring",
+      "url": "https://documents.worldbank.org/curated/en/461411639423631063",
+      "snippet": "Brief · Viet Nam — The December 2021 Vietnam Macro Monitoring discusses some of the following topics: the number of new COVID-19 infections and deaths; economic conditions; merchandise exports; fiscal stance; policy of living with COVID.",
+      "published_age": "2021-12-01"
+     }
+    ],
+    "imf": [
+     {
+      "title": "Real GDP growth — Vietnam (Annual percent change)",
+      "url": "https://www.imf.org/external/datamapper/NGDP_RPCH@WEO/VNM",
+      "snippet": "2024: 7 · 2025: 8 · 2026: 7.1 · 2027: 6.7 · 2028: 6.2 · 2029: 5.6 · 2030: 5.4 · 2031: 5.4 — World Economic Outlook (April 2026) — Gross domestic product is the most commonly used single measure of a country's overall economic activity. It r"
+     }
+    ]
+   }
+  },
+  {
+   "query": "rust ownership borrowing",
+   "category": null,
+   "expect": "doc.rust-lang.org",
+   "decoy": [
+    "bing"
+   ],
+   "buckets": {
+    "duckduckgo": [
+     {
+      "title": "Understanding Ownership - The Rust Programming Language",
+      "url": "https://doc.rust-lang.org/book/ch04-00-understanding-ownership.html",
+      "snippet": "Understanding Ownership Ownership is Rust's most unique feature and has deep implications for the rest of the language. It enables Rust to make memory safety guarantees without needing a garbage collector, so it's important to understand ho"
+     },
+     {
+      "title": "Rust Ownership and Borrowing Explained: A Visual Guide for 2026",
+      "url": "https://rustify.rs/articles/rust-ownership-borrowing-explained",
+      "snippet": "The clearest explanation of Rust ownership , borrowing , and the borrow checker in 2026. Understand why Rust works this way and how to stop fighting the compiler."
+     },
+     {
+      "title": "Ownership & Borrowing · Learn Rust | LearningRust.org",
+      "url": "https://learningrust.org/lessons/06-ownership",
+      "snippet": "Ownership & Borrowing Ownership is Rust's most unique feature and has deep implications for the rest of the language. It enables Rust to make memory safety guarantees without needing a garbage collector. What is Ownership ? Ownership is a s"
+     },
+     {
+      "title": "Rust ownership and borrowing - understanding ownership in Rust - ZetCode",
+      "url": "https://www.zetcode.com/rust/ownership/",
+      "snippet": "Rust ownership and borrowing tutorial shows how to use ownership , borrowing , and slices in Rust ."
+     },
+     {
+      "title": "References and Borrowing - The Rust Programming Language",
+      "url": "https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html",
+      "snippet": "References and Borrowing The issue with the tuple code in Listing 4-5 is that we have to return the String to the calling function so that we can still use the String after the call to calculate_length, because the String was moved into cal"
+     },
+     {
+      "title": "Rust Basics Explained: Borrowing in Rust - The Art of Lending Data",
+      "url": "https://manjushaps.github.io/Rust-Series-Borrowing/",
+      "snippet": "Borrowing is Rust's way of letting you use data without taking ownership , ensuring safe and efficient memory management. Whether you borrow immutably or mutably, the rules are simple but powerful — follow them, and you avoid many pitfalls "
+     },
+     {
+      "title": "Ownership and Borrowing in Rust: Complete Guide 2026",
+      "url": "https://sharpskill.dev/en/blog/rust/ownership-borrowing-rust-complete-guide",
+      "snippet": "The ownership system is what sets Rust apart from every other programming language. This unique approach guarantees memory safety without a garbage collector, catching bugs at compile time rather than runtime. This in-depth guide explores o"
+     },
+     {
+      "title": "Rust Ownership and Borrowing",
+      "url": "https://rust.guide/article/Rust_Ownership_and_Borrowing.html",
+      "snippet": "Rust's ownership and borrowing system is a powerful and intuitive way to manage memory in Rust programs. By enforcing strict rules around ownership and borrowing , Rust is able to guarantee memory safety and thread safety without sacrificin"
+     },
+     {
+      "title": "7. Ownership and Borrowing - Rust for C/C++ Programmers",
+      "url": "https://microsoft.github.io/RustTraining/c-cpp-book/ch07-ownership-and-borrowing.html",
+      "snippet": "Rust ownership , borrowing and lifetimes Recall that Rust only permits a single mutable reference to a variable and multiple read-only references The initial declaration of the variable establishes ownership Subsequent references borrow fro"
+     },
+     {
+      "title": "Rust Ownership and Borrowing: The Guide That Demystifies Everything",
+      "url": "https://sharpskill.dev/en/blog/rust/rust-ownership-borrowing-demystified",
+      "snippet": "Rust ownership and borrowing form the foundation of Rust's memory safety guarantees. Unlike garbage-collected languages, Rust enforces strict rules at compile time through the borrow checker, eliminating entire classes of bugs -- null point"
+     }
+    ],
+    "googlenews": [
+     {
+      "title": "A Grounded Conceptual Model for Ownership Types in Rust - Communications of the ACM (Communications of the ACM)",
+      "url": "https://news.google.com/rss/articles/CBMingFBVV95cUxPc1BwYXkyTWFRZ0RKNUtId1hfMHVfbEhGS3hycXltYWpoN004RGtwLTBXeDNVY05OQW5UWVdOVTBVN3NCcVNXN0d6djF1Nm53NVBYYnIybkxTend1aHlHMWs0MlBTS1hPV2dsMFRaR0VSdm9MLW8wRmpoNHBob3J6NlZaMmM0dGdpU0lrWmJ4dkVDZEFRWV8yOExMa0Fkdw?oc=5",
+      "snippet": "A Grounded Conceptual Model for Ownership Types in Rust Communications of the ACM",
+      "published_age": "2026-04-23"
+     },
+     {
+      "title": "Improved Rust Borrow Checker Enters Testing - i-programmer.info (i-programmer.info)",
+      "url": "https://news.google.com/rss/articles/CBMipAFBVV95cUxORTItcmFwbXctTmZwc1Q4SFVWM3JWMXROQWNMRlo1WEtXUm5fOHpkVG80TTFEYi1MQjB5YXBpWVlYTXB4UXZMNE9DdWhKS2pTZXgzazBwN2Naa0MxQzdFUHlkS1c3NEFuQ2RTR3hFY3dqMXkzSE1VcjVDMzhKeEE1bXFtM1BkaEFaSG1zakdZRTFvTTJhbGRzdE9yeHNnY1ltQnU4TQ?oc=5",
+      "snippet": "Improved Rust Borrow Checker Enters Testing i-programmer.info",
+      "published_age": "2026-08-13"
+     },
+     {
+      "title": "Beyond Memory Safety: What Makes Rust Different – Lessons from Autonomous Robotics - infoq.com (infoq.com)",
+      "url": "https://news.google.com/rss/articles/CBMijAFBVV95cUxQN1JFUUMtYW5xWE5DYjh3TXFQbkVRQnVqUmJMZjBBbWRIUDFnc0VaWkdEY3J2WUdRX2ZWTndnUkVQRUJVZ0ZJVEN0MHdpMENXUXNTNFBFNTBtS0hCMHRqSDhIbzF2TE50MERKeGxpYXRIS1V5RThtQkd4d2laTHAtSS1iTkdqUldDbUFSUA?oc=5",
+      "snippet": "Beyond Memory Safety: What Makes Rust Different – Lessons from Autonomous Robotics infoq.com",
+      "published_age": "2026-03-18"
+     },
+     {
+      "title": "Technical Perspective: A Grounded Conceptual Model for Ownership Types in Rust - Communications of the ACM (Communications of the ACM)",
+      "url": "https://news.google.com/rss/articles/CBMiuwFBVV95cUxPRlRqSkR4N1RheTB1MXpNTDR5RGxjc3FDZnJsTnlzQWJNOVY0VXhsMzQ0VktYdnF2RmE2amdrRnNmN3FHQXhCZ3VwWlM5X3JsVnFYa2p5WVNOZ0FkdzFOV0U2a2piVU9UN3RVYzgwMXRxOWFCMzJIdC1SMHJYZW8wc2RJaGI0VW5YN3BBZzQ0a1p1bXgxTTdlN19ScVI3SVZSRS14Z1FXdjQyZUg2MXNMY2JHRTY3eXRSY0FJ?oc=5",
+      "snippet": "Technical Perspective: A Grounded Conceptual Model for Ownership Types in Rust Communications of the ACM",
+      "published_age": "2026-04-23"
+     },
+     {
+      "title": "Coding Rust With Claude Code and Codex - HackerNoon (HackerNoon)",
+      "url": "https://news.google.com/rss/articles/CBMibkFVX3lxTE40STF5Vm5NMk1PcHA1MnpDMTRXY1ZyU0s3Ti04azNNalpFcmFrakNidTcwNHRBVHJoNWgxcU1nT3R6endjWERlWkpkMHRnZFNQNkUtcUVCa2wzb2lGSklGMFNrNHQtbjdNUmpWU3l3?oc=5",
+      "snippet": "Coding Rust With Claude Code and Codex HackerNoon",
+      "published_age": "2025-12-26"
+     },
+     {
+      "title": "Rust Programming Tutorial: 13 Steps from Zero to CLI [2026] - tech-insider.org (tech-insider.org)",
+      "url": "https://news.google.com/rss/articles/CBMid0FVX3lxTE1vZERnQXh6OWUtQkstX1hQeDJUU3ZSZ3lnNkRqTlYyQ2J3N3Qzc0VLWjlZekVsUmtYQXp5RERadUZmVl9ocE9FSi1DTExwcTBrUDVCYmhyRXdKejZETVBNNlNZeUtkY2J2QkpkZG1sSnlTbEJsQ05J?oc=5",
+      "snippet": "Rust Programming Tutorial: 13 Steps from Zero to CLI [2026] tech-insider.org",
+      "published_age": "2026-04-24"
+     },
+     {
+      "title": "Rust vs. C++: a Modern Take on Performance and Safety - The New Stack (The New Stack)",
+      "url": "https://news.google.com/rss/articles/CBMifkFVX3lxTE9ZRkRGWnVPcVYyTk9IZEttVlVZdDVfeDc5eEx5bE01OEZqWHVWQXM1VGFpWFhKbUZGY0dIUVViUG9TOEdTZ3Z2bzRjSFN0d3VxZEwyNExkU05VWXBqVGRrMmxlcDhveUg0SzVLMHYyY2o3dm9NOV9mUjNid0xpdw?oc=5",
+      "snippet": "Rust vs. C++: a Modern Take on Performance and Safety The New Stack",
+      "published_age": "2025-10-22"
+     },
+     {
+      "title": "ARM Mali Open Source Driver Gets First Rust Shader Compiler in Mesa History - Tech Times (Tech Times)",
+      "url": "https://news.google.com/rss/articles/CBMixgFBVV95cUxOZ21FTmhQQ0J2NzZ2bFVJaXVCb2V5Zjd5dUFWaXVrX2JkNUI1eDhHOEJiNFV0TF9rNU11VlE1VkJPVjMwQjdMbFlkQVFtZnI2QUs5SjJyOFpDcGpmckZUb0JIQXJLN09ORW1fdXg1NlV1TlJxTjk0b2U5VEJVRC14RnJ0Tnd5NWxjZUtFZmhSYVlBajU1RjBjaWZsa2FNOVhZaDk5c3lMRWhyLUx4b2JTaWlSS2F4b1JVeDg0MWVCSW9DalpnVWc?oc=5",
+      "snippet": "ARM Mali Open Source Driver Gets First Rust Shader Compiler in Mesa History Tech Times",
+      "published_age": "2026-06-04"
+     },
+     {
+      "title": "Pointers in Rust: Whacking the Mole (Part 3)—Indirection, References, and the Borrow Checker - Electronic Design (Electronic Design)",
+      "url": "https://news.google.com/rss/articles/CBMihgJBVV95cUxOWWN0MTFrUUhrVnZYMGppZFVkN25IaDVwUV9ReWtySDg5SkZmODQyRjNVV29DbHhoM0FzdGtqQXA2Z1A0dFg3OGFmTGhjVGJyeW5CUzNIcnpHT2ZremZ5MnlNX0pCZTRtWHQ4ODV1ek9DQkc1WVRDRXZaLTJ2WEg3T1JnMHlDbUhDNmVMdWpqY1AxWFZkdkdOMUFoME1fOFVwdDcyOTdoRmpHRWZxbEJQZmdlaGlld3FVV0JfSFVxZXpBTS1mR3I1MS1xd0lFUkR1Z3dUU3dxNm1UNEVQLXRkck1ZRHRHMWw0dEdQMmJsXzBvSldWMDk0LVJrcEhqNEFDTzc2Zi1B?oc=5",
+      "snippet": "Pointers in Rust: Whacking the Mole (Part 3)—Indirection, References, and the Borrow Checker Electronic Design",
+      "published_age": "2025-03-12"
+     },
+     {
+      "title": "Memory-Safe Programming Languages and National Cybersecurity: — A Technical Review of Rust - Medium (Medium)",
+      "url": "https://news.google.com/rss/articles/CBMizAFBVV95cUxOREtmTWUxZDZjVTZaaTBDXzlQblRveDBQajB4bG92ZUQxYlQyOTE4dUdPazFmNXRTZ1B6QkE4U1ItMWgzckpYTXRGaFRBN2xrSlczal9vMnhYN2puMXVicXBJSFNDaUpUS0lvaDF5Z3NuYWlMMzlTNGU0ZU5DQzZMWThqTkxzSUJYZWNlTWtOem5iZ0dpRnh5ZGVtcjZJRmlSMGgxZkhOQlF5d0h4ckdJQ2ZmT29VRTU3cEtzTm1lM0REdmxya0xDeWc1RXo?oc=5",
+      "snippet": "Memory-Safe Programming Languages and National Cybersecurity: — A Technical Review of Rust Medium",
+      "published_age": "2025-03-28"
+     }
+    ],
+    "bing": [
+     {
+      "title": "Rust on Steam",
+      "url": "https://store.steampowered.com/app/252490/Rust/",
+      "snippet": "The only aim in Rust is to survive. Everything wants you to die - the island’s wildlife, other inhabitants, the environment, and other …"
+     },
+     {
+      "title": "Rust — Explore, Build and Survive",
+      "url": "https://rust.facepunch.com/",
+      "snippet": "The only aim in Rust is to survive. Everything wants you to die - the island’s wildlife and other inhabitants, the environment, other …"
+     },
+     {
+      "title": "Rust Programming Language",
+      "url": "https://rust-lang.org/",
+      "snippet": "Rust in production Hundreds of companies around the world are using Rust in production today for fast, low-resource, cross-platform …"
+     },
+     {
+      "title": "Install Rust - Rust Programming Language",
+      "url": "https://rust-lang.org/tools/install/",
+      "snippet": "A language empowering everyone to build reliable and efficient software."
+     },
+     {
+      "title": "Rust (programming language ) - Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Rust_(programming_language)",
+      "snippet": "Rust (programming language) ... Rust is a general-purpose programming language that emphasizes performance, type safety, …"
+     },
+     {
+      "title": "rust -lang / rust : Empowering everyone to build reliable and ... - GitHub",
+      "url": "https://github.com/rust-lang/rust",
+      "snippet": "The Rust Foundation owns and protects the Rust and Cargo trademarks and logos (the \"Rust Trademarks\"). If you want to use these …"
+     },
+     {
+      "title": "Rust (video game ) - Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Rust_(video_game)",
+      "snippet": "Rust is a 2018 multiplayer survival video game developed by Facepunch Studios. It was first released in early access in December …"
+     },
+     {
+      "title": "Rust+ - Official Companion App — Rust",
+      "url": "https://rust.facepunch.com/companion",
+      "snippet": "The official Rust companion app. Track your base status, chat to your clan members and control your bases electricity."
+     },
+     {
+      "title": "Rust - Download",
+      "url": "https://rust.en.softonic.com/",
+      "snippet": "May 7, 2026 · Rust is a PvP-driven game with deep crafting systems and unforgiving mechanics. It makes every decision a matter of …",
+      "published_age": "2026-05-07"
+     },
+     {
+      "title": "Introduction to Rust Programming Language - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/rust/introduction-to-rust-programming-language/",
+      "snippet": "Jul 23, 2025 · Rust is a blazing fast and memory-efficient static compiled language with a rich type system and ownership model. It …",
+      "published_age": "2025-07-23"
+     }
+    ]
+   }
+  },
+  {
+   "query": "postgres explain analyze",
+   "category": null,
+   "expect": "postgresql.org/docs",
+   "decoy": [
+    "bing"
+   ],
+   "buckets": {
+    "duckduckgo": [
+     {
+      "title": "PostgreSQL: Documentation: 18: EXPLAIN",
+      "url": "https://www.postgresql.org/docs/current/sql-explain.html",
+      "snippet": "Although EXPLAIN will discard any output that a SELECT would return, other side effects of the statement will happen as usual. If you wish to use EXPLAIN ANALYZE on an INSERT, UPDATE, DELETE, MERGE, CREATE TABLE AS, or EXECUTE statement wit"
+     },
+     {
+      "title": "PostgreSQL: Documentation: 18: 14.1. Using EXPLAIN",
+      "url": "https://www.postgresql.org/docs/current/using-explain.html",
+      "snippet": "14.1. Using EXPLAIN # 14.1.1. EXPLAIN Basics 14.1.2. EXPLAIN ANALYZE 14.1.3. Caveats PostgreSQL devises a query plan for each query it receives. Choosing the right plan to match the query structure and the properties of the data is absolute"
+     },
+     {
+      "title": "EXPLAIN ANALYZE in PostgreSQL and how to interpret it",
+      "url": "https://www.cybertec-postgresql.com/en/how-to-interpret-postgresql-explain-analyze-output/",
+      "snippet": "UPDATED July 2023: How to use EXPLAIN ANALYZE in PostgreSQL, learn tools to visualize the output. See query execution time and row count."
+     },
+     {
+      "title": "Reading PostgreSQL EXPLAIN and EXPLAIN ANALYZE Output",
+      "url": "https://dev.to/philip_mcclarence_2ef9475/reading-postgresql-explain-and-explain-analyze-output-3o74",
+      "snippet": "This is part of the Complete Guide to PostgreSQL SQL Query Analysis & Optimization series. EXPLAIN vs EXPLAIN ANALYZE vs EXPLAIN ( ANALYZE , BUFFERS) The three variants you'll use in practice: EXPLAIN — asks the planner what it would do, wi"
+     },
+     {
+      "title": "PostgreSQL EXPLAIN Statement - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/postgresql/postgresql-explain-statement/",
+      "snippet": "EXPLAIN provides detailed information on how PostgreSQL executes queries, helping us optimize performance. In this article, we will explain how to use the PostgreSQL EXPLAIN statement, along with its syntax, examples, and output interpretat"
+     },
+     {
+      "title": "Explain PostgreSQL / Plan Visualizer",
+      "url": "https://explain-postgresql.com/",
+      "snippet": "Interactive tool for visualizing and understanding PostgreSQL query execution plans."
+     },
+     {
+      "title": "explain.dalibo.com",
+      "url": "https://explain.dalibo.com/",
+      "snippet": "explain .dalibo.com PostgreSQL execution plan visualizer Visualizing and understanding PostgreSQL EXPLAIN plans made easy."
+     },
+     {
+      "title": "PostgreSQL Explain for Query Performance Tuning",
+      "url": "https://www.mssqltips.com/sqlservertip/11530/postgresql-using-explain-for-query-tuning/",
+      "snippet": "Learn how to optimize PostgreSQL queries by analyzing execution plans with PostgreSQL EXPLAIN to see text based and graphical query plans."
+     },
+     {
+      "title": "Reading a Postgres EXPLAIN ANALYZE Query Plan - thoughtbot",
+      "url": "https://thoughtbot.com/blog/reading-an-explain-analyze-query-plan",
+      "snippet": "Postgres builds a tree structure of plan nodes representing the different actions taken, with the root and each -> pointing to one of them. In some cases, EXPLAIN ANALYZE provides additional execution statistics beyond the execution times a"
+     },
+     {
+      "title": "PostgreSQL Query Performance: The Complete EXPLAIN ANALYZE Guide for ...",
+      "url": "https://dev.to/pockit_tools/postgresql-query-performance-the-complete-explain-analyze-guide-for-developers-whove-had-enough-47nf",
+      "snippet": "This guide walks you through EXPLAIN ANALYZE output, index strategies that actually work, the N+1 problem and how to kill it, connection pooling pitfalls, and the exact PostgreSQL performance debugging workflow used in production systems ha"
+     }
+    ],
+    "googlenews": [
+     {
+      "title": "Optimize and troubleshoot database performance in Amazon Aurora PostgreSQL by analyzing execution plans using CloudWatch Database Insights - Amazon Web Services (AWS) (Amazon Web Services (AWS))",
+      "url": "https://news.google.com/rss/articles/CBMiiAJBVV95cUxNcUl1WFBDSlFZYkc0VlNPVmNORUtocDZQZDVGSVJCVW55enFDZ29YTHB5NDdiWjgzZHg4WUU1MWlCY25vVjdyQkFrX2V0V2ljUDgzYUZpOWNXQlFkMGRhbndXelpFb3dsQkMydTVHSzN3WGhUQ2lHYmY5V0lUb2wtQlVkZFlVbmhOQUQxZ2sxWkRVb3kwb0YxdS1CTUczUG5yYmFmd29qOXlUWFk0OG8yOF9pRlUxdVpid3pZbG5zcXdHNzZybk1SOW50OXBtRWNJRmVqbHltdWVIZ0s4OXNaOGNXb3R2MnR3cjVFcnVmMzhxU0ZjQzJPU1V2SDNSU2RFQWhSS2JzY3A?oc=5",
+      "snippet": "Optimize and troubleshoot database performance in Amazon Aurora PostgreSQL by analyzing execution plans using CloudWatch Database Insights Amazon Web Services (AWS)",
+      "published_age": "2025-10-27"
+     },
+     {
+      "title": "PostgreSQL Tutorial: 7 Steps From Setup to Production [2026] - tech-insider.org (tech-insider.org)",
+      "url": "https://news.google.com/rss/articles/CBMif0FVX3lxTFBtWW9pVi1ocnJHZXJTVnJjUW5nTk1UTlBnWnVuRUpnVTZ0OUhxYmNtcmlORGhyVVJqakNobkxqQ0Z6MEN6V3VGWENfaDkyUTlDU3I4R1BUdHMyNDYwR0JvT0xqNzBYbno0U196VGlaNlBPWXdRWFlNQ0ExTTdkNHM?oc=5",
+      "snippet": "PostgreSQL Tutorial: 7 Steps From Setup to Production [2026] tech-insider.org",
+      "published_age": "2026-04-03"
+     },
+     {
+      "title": "Manage PostgreSQL Databases Directly in VS Code with Microsoft's Extension - Laravel News (Laravel News)",
+      "url": "https://news.google.com/rss/articles/CBMinwFBVV95cUxNWnRuVExlNVRXSnV4b01lV0RuRW40cTE3WXdqWUoycXhJaWRxang3MHVSNGdaTWNaS3k3NlpadVFiWWxUODNDOGhDWk9GM0RTYW1Kd3VNQXV2dERLc1JXT2JCS0lQeHI1YTBtSWNiM3JMam9vUVhSdVVTYmhxZHRvUHN1Q292OVk5SFRsc1gtNGQ2VTBFYXhUZk1wcHduU1E?oc=5",
+      "snippet": "Manage PostgreSQL Databases Directly in VS Code with Microsoft's Extension Laravel News",
+      "published_age": "2026-02-02"
+     },
+     {
+      "title": "Migrating mission-critical payments at Nubank to Amazon Aurora PostgreSQL - Amazon Web Services (AWS) (Amazon Web Services (AWS))",
+      "url": "https://news.google.com/rss/articles/CBMisgFBVV95cUxQTnluVW1KQ3NDLVVxT2FuTDZ6UUZGWEI3eVJUbzctNEpXYVFfVXk0N09pZVktTWlOTjhaX1FTOFVBQmR2Q3ZvQUNvMHdhN2RraGhXNTNiNUxmdjBPRXhsc19kd3ZwZUlyM1pLaktob2lKbUZ6NzVEVmg2dmtWV3Q0N1A0QUs5TGYzbkFCMHZLdkttTEc2M1g1eERyckFpUXdZcXQzWEhVT3FhTWlFV3dXRktB?oc=5",
+      "snippet": "Migrating mission-critical payments at Nubank to Amazon Aurora PostgreSQL Amazon Web Services (AWS)",
+      "published_age": "2026-07-21"
+     },
+     {
+      "title": "Django Performance Optimization: A Profiling-First Guide - Netguru (Netguru)",
+      "url": "https://news.google.com/rss/articles/CBMibEFVX3lxTE83RzJyZ3RTS2VYV2M1elhPLUdWa0F1cjE5RGJKamRtb2k1T211QlBaSHZpU05xd3JRZk9keXBqR2pBRG8xeHp2amNad0JWN3MzVEFEWTl6TkYxV25nS0xiSFFMU1paYk4taExRYg?oc=5",
+      "snippet": "Django Performance Optimization: A Profiling-First Guide Netguru",
+      "published_age": "2026-07-03"
+     },
+     {
+      "title": "PostgreSQL cost model: estimating the cost of flushing temp buffers to disk - Хабр (Хабр)",
+      "url": "https://news.google.com/rss/articles/CBMiakFVX3lxTFBvWGl6VWVmbGhqRXJFdzFUZC1EZjdjOWl1TE82VzNpdDAwTEF6WlZiRU5OZjZ6QlpfOGF2YjRmcG9OZjFBQllEdnJRQ3JZdDVKM3lTRmtBMzZOU2RLTXlyRFR6VDRQQlktMWfSAVdBVV95cUxNSkJQcEhtOW1oSlVHVUlXejVzZi01VXFDU3RvTlJIU09VejI3REhyb0M4c2VuVGFFc05ERE41dkpEa1FySVVzNHo4ZG1ZeDdfV2g3dkRWelE?oc=5",
+      "snippet": "PostgreSQL cost model: estimating the cost of flushing temp buffers to disk Хабр",
+      "published_age": "2026-03-26"
+     },
+     {
+      "title": "10 Tips to Optimize PostgreSQL Queries in Your Django Project - GitGuardian Blog (GitGuardian Blog)",
+      "url": "https://news.google.com/rss/articles/CBMilgFBVV95cUxNQ21rVk5kMUptblVVc3laNUhfQ3U2WjZxbmFvUFVXMFYzMENXekdzajZLRkdnUGVBcjY2dVJac09hZk8yU3NvamZVVS1ONFZnNzZMUEtobGtVMTZCOVhRb0pXOXgydlZpLUFvOVF0TjNYVDFKczUyQTBibjJac2M2RkQxM1BDSlBTMVRIRWZhMmxKM290WUE?oc=5",
+      "snippet": "10 Tips to Optimize PostgreSQL Queries in Your Django Project GitGuardian Blog",
+      "published_age": "2023-01-11"
+     },
+     {
+      "title": "Real-Time SQL Monitoring: a MUST for SQL Tuning - Oracle Blogs (Oracle Blogs)",
+      "url": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxObnM1a1ZmMy16UzJBQUhTYWJpdDJ2RFNfbUZId3l0alM3ZnBqel9oSzBtZ0FUc2t6cVAtQWF4OTgyOURSTWFBQ19TOUZULUxZRDVRMWNsb0lETUZIWnk3ZnYxWFpVWW5jM1NvamJldm5vcDk1WldOU1NpWDMzaUl2WjZZVndTMHB4TUZGc3NCZUhKLVNvWjF0WXAtMmpZTW5USV85RkpqRkI?oc=5",
+      "snippet": "Real-Time SQL Monitoring: a MUST for SQL Tuning Oracle Blogs",
+      "published_age": "2026-02-18"
+     },
+     {
+      "title": "Postgres Pro Enterprise 18: built-in memory cache and new high‑availability options - Хабр (Хабр)",
+      "url": "https://news.google.com/rss/articles/CBMiakFVX3lxTE5yOHhyM0VMRUhMZ0hVWm44bHU5cG1JMThqV0t4VnJUMkEyRllldlpZM3hqVG1kZkRoOXJtUExPUnp0azZKd21HNENHVDVXMm1XZkg2N2t5aFpVUVYzelpORzhmaC04NExwd0HSAVdBVV95cUxOTjBleHR0N0FOZE1DUGswc0s4THprUlpSbE1zWFJhaGR3R2xscFlPemNnNEFKbUh5QXVCRUFFeTd2U2x2UW02a0VWc2xERkwzUmcwSkt2M00?oc=5",
+      "snippet": "Postgres Pro Enterprise 18: built-in memory cache and new high‑availability options Хабр",
+      "published_age": "2026-01-28"
+     },
+     {
+      "title": "Migrate full-text search from SQL Server to Amazon Aurora PostgreSQL-compatible edition or Amazon RDS for PostgreSQL - Amazon Web Services (AWS) (Amazon Web Services (AWS))",
+      "url": "https://news.google.com/rss/articles/CBMi6wFBVV95cUxNZkt4VUduMS1XSWRJWGllbm1tZ2l0VHZZV0RoY1RQekpCb19Vblg3SkwxZkVTZHZxbkJHajNaMVpVVHEzS0F1eWFBY1lRdHhNVGplNVdhTkRVZHdKZ0s5Zm9xMFNfOGs1a085bC1WUDV2NjN2eGlYSE5aQ2RSWHQwd0JiRjRMTlNVbUxSTHE3Vm1FOGNtTTV6NTd0SkhIOTAtYWFzZmY5dmU5NnFRSndzQ1oyU1RoUWNfTm4zcnYzSWdQSUUyQ3MtbW9HWks1MjA0eWhHZWxsbTZ6dXBRMGJyN0lkVGNmdmduZlNF?oc=5",
+      "snippet": "Migrate full-text search from SQL Server to Amazon Aurora PostgreSQL-compatible edition or Amazon RDS for PostgreSQL Amazon Web Services (AWS)",
+      "published_age": "2025-09-22"
+     }
+    ],
+    "bing": [
+     {
+      "title": "PostgreSQL: The world's most advanced open source database",
+      "url": "https://www.postgresql.org/",
+      "snippet": "15 hours ago · PostgreSQL is a powerful, open source object-relational database system with over 35 years of active development …",
+      "published_age": "15 hours ago"
+     },
+     {
+      "title": "PostgreSQL: Downloads",
+      "url": "https://www.postgresql.org/download/",
+      "snippet": "Downloads PostgreSQL Downloads PostgreSQL is available for download as ready-to-use packages or installers for various …"
+     },
+     {
+      "title": "PostgreSQL - Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/PostgreSQL",
+      "snippet": "PostgreSQL (/ ˈpoʊstɡrɛskjuˌɛl / ⓘ POHST-gres-kew-EL), [11][12] also known as Postgres, is a free and open-source relational …"
+     },
+     {
+      "title": "PostgreSQL Tutorial - W3Schools",
+      "url": "https://www.w3schools.com/postgresql/index.php",
+      "snippet": "PostgreSQL is an advanced, free, and open-source relational database system. PostgreSQL supports both relational (SQL) and non …"
+     },
+     {
+      "title": "GitHub - postgres / postgres : Mirror of the official PostgreSQL GIT ...",
+      "url": "https://github.com/postgres/postgres",
+      "snippet": "This directory contains the source code distribution of the PostgreSQL database management system. PostgreSQL is an advanced …"
+     },
+     {
+      "title": "Introduction | Postgres Guide - The Complete PostgreSQL Resource",
+      "url": "https://postgres.guide/docs/intro/",
+      "snippet": "Learn PostgreSQL fundamentals, benefits, and essential features - your comprehensive guide to this powerful open-source database."
+     },
+     {
+      "title": "pgAdmin - PostgreSQL Tools",
+      "url": "https://www.pgadmin.org/",
+      "snippet": "pgadmin 4 · v9.17 The PostgreSQL management tool Administration, development and monitoring for PostgreSQL. Desktop or server …"
+     },
+     {
+      "title": "PostgreSQL",
+      "url": "https://download.postgresql.org/pub/README",
+      "snippet": "PostgreSQL Data Base Management System This directory contains the current and past releases of PostgreSQL, and related …"
+     },
+     {
+      "title": "PostgreSQL: Documentation",
+      "url": "https://www.postgresql.org/docs/",
+      "snippet": "Looking for documentation for an older, unsupported, version? Check the archive of older manuals."
+     },
+     {
+      "title": "About - PostgreSQL",
+      "url": "https://www.postgresql.org/about/",
+      "snippet": "About What is PostgreSQL? PostgreSQL is a powerful, open source object-relational database system that uses and extends the SQL …"
+     }
+    ]
+   }
+  }
+ ]
+}

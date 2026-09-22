@@ -1,0 +1,16 @@
+# Not a package: nothing here is built or published. The bundle carries no
+# server code — this file tells the host's `uv run` what to install, which is
+# the released distribution, pinned exactly. Installing bundle X.Y.Z must run
+# package X.Y.Z, the same rule the Claude Code plugin's .mcp.json follows, and
+# tests/test_plugin_manifest.py holds both numbers to pyproject.toml's.
+[project]
+name = "free-search-mcp-bundle"
+version = "0.12.0"
+description = "Claude Desktop bundle for free-search-mcp"
+requires-python = ">=3.11"
+dependencies = [
+    "free-search-mcp==0.12.0",
+]
+
+[tool.uv]
+package = false

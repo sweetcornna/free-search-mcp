@@ -3,26 +3,47 @@ each tool says when to use it, when NOT to use it, what it returns, and the
 mistakes models commonly make when calling it."""
 from __future__ import annotations
 
+import functools
+import inspect
+import json
 import logging
-from typing import Any, Literal
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from typing import Any, Literal, get_args
+from urllib.parse import quote, unquote
 
+import httpx
+import pydantic_core
 from mcp.server.caching import CacheHint
 from mcp.server.mcpserver import Context, Image, MCPServer
-from mcp.server.mcpserver.exceptions import ResourceNotFoundError
+from mcp.server.mcpserver.exceptions import ResourceNotFoundError, ToolError
 from mcp.server.transport_security import TransportSecuritySettings
-from mcp.types import ToolAnnotations
+from mcp.types import (
+    CallToolResult,
+    Completion,
+    Icon,
+    PromptReference,
+    ResourceLink,
+    ResourceTemplateReference,
+    TextContent,
+    ToolAnnotations,
+)
 
 from . import __version__, downloads
+from .agent import HOST_AGENT_PROMPT, AgentError, config_problem
+from .agent import ask as run_ask
 from .aggregator import aggregate_search, list_engines
-from .browser import pool
+from .browser import BrowserUnavailableError, pool
 from .cache import cache
 from .compare import compare_urls
 from .config import settings
 from .documents import read_document
 from .engines import ENGINES, Category, source_taxonomy
+from .engines.base import Freshness
 from .fetcher import decode_cached_title, fetch_bytes, fetch_many, fetch_page
 from .formatting import (
     errors_to_hint,
+    render_ask,
     render_compare,
     render_doc,
     render_engines,
@@ -32,7 +53,8 @@ from .formatting import (
     render_search,
     render_structured,
 )
-from .keystore import PROVIDERS
+from .httpfetch import FetchError, MaxBytesExceededError
+from .keystore import opt_in_engines
 from .paper_graph import paper_graph as run_paper_graph
 from .research import research as run_research
 from .structured import extract_structured as _extract_structured
@@ -53,6 +75,8 @@ log = logging.getLogger(__name__)
 # exception: it serves this machine's page cache, so it is per-user and short.
 _STATIC_LIST = CacheHint(ttl_ms=3_600_000, scope="public")
 _CACHE_HINTS = {
+    # Identity and capabilities: as static as the lists, and asked for first.
+    "server/discover": _STATIC_LIST,
     "tools/list": _STATIC_LIST,
     "prompts/list": _STATIC_LIST,
     "resources/list": _STATIC_LIST,
@@ -66,13 +90,34 @@ _CACHE_HINTS = {
 mcp = MCPServer(
     "search-mcp",
     title="Free Search",
+    description=(
+        "Keyless multi-engine web search, page fetching and document reading. "
+        "Runs locally; no account, no API key."
+    ),
+    # A URL, never a data: URI — in the 2026-07-28 era serverInfo rides along in
+    # the `_meta` of every result, so an inlined PNG would be paid for per call.
+    icons=[
+        Icon(
+            src="https://raw.githubusercontent.com/sweetcornna/free-search-mcp/main/assets/icon.png",
+            mime_type="image/png",
+            sizes=["128x128"],
+        )
+    ],
+    # Sent to every client on connect, so it is kept to what changes behaviour.
+    # Plugin users also get the `verified-research` skill; everyone else has
+    # only this, which is why the two rules that matter most are here: read
+    # details from the page, and check how old the output says it is.
     instructions=(
-        "Multi-engine web search, fetching, and document reading with no API "
-        "key required. Use `search` for queries, `fetch`/`fetch_batch` to read "
-        "specific URLs, `research` when you want search and reading in one "
-        "round trip, and `engines` to discover which backends are available. "
-        "Every tool takes format='markdown' (default, compact) or "
-        "format='json' (structured)."
+        "Keyless multi-engine web search, page fetching and document reading. No API "
+        "key is needed, so never ask the user for one. `search` finds URLs. Its snippets "
+        "are summaries and may be out of date, so read dates, amounts, rules and other "
+        "details from the page itself: `fetch` / `fetch_batch` for known URLs, `research` "
+        "for search plus reading in one call, `read_doc` for paginated PDF/DOCX, and "
+        "`extract_structured` for dates and prices as fields. Results say when they were "
+        "retrieved, how old a cached copy is, and which results are undated. Check that "
+        "before calling anything current, and pull again with `force_refresh=True` or "
+        "`max_age_hours=0` when it matters. Every tool takes format='markdown' (default, "
+        "compact) or format='json' (structured)."
     ),
     website_url="https://github.com/sweetcornna/free-search-mcp",
     version=__version__,
@@ -80,6 +125,15 @@ mcp = MCPServer(
 )
 
 Format = Literal["markdown", "json"]
+# The top level of `source_taxonomy()`. A Literal, so the input schema carries an
+# enum and a typo is a validation error that lists the choices — it used to be a
+# silently empty tree. MCP has no completion for TOOL arguments (completion refs
+# are prompts and resource templates only); an enum is the equivalent.
+# tests/test_tool_schemas.py asserts this stays equal to the taxonomy's keys.
+EngineGroup = Literal[
+    "web", "news", "paper", "github", "forum", "image", "dataset", "finance",
+    "software", "security", "reference", "weather", "docs", "gov", "stats", "calendar",
+]
 
 # ToolAnnotations meaning recap (for the maintainers, not for the LLM):
 #   read_only_hint   - the call does not change server state visible to others
@@ -164,7 +218,241 @@ async def _safe_progress(
         log.debug("progress notification dropped", exc_info=True)
 
 
-@mcp.tool(
+# --- the tool boundary -----------------------------------------------------
+#
+# Since MCP SDK 2.1 a tool's exception reaches the client with its message only
+# when it is a `ToolError`. Anything else is treated as a crash: the traceback
+# goes to the server log and the model is told "Error executing tool <name>" —
+# nothing about WHAT was wrong. That is the right default for a genuine bug and
+# the wrong one for everything this server raises on purpose: "query must not
+# be empty", "compare expects 2-5 URLs", "Refusing to connect to blocked
+# address", "downloads are disabled (SEARCH_MCP_DOWNLOAD_ENABLED=false)". Those
+# messages exist to let the model correct its own call, and 0.11.0 shipped them
+# into a void — CI ran SDK 2.0 (where every message was forwarded) while `uvx`
+# resolved 2.2 for every real install.
+#
+# The translation lives HERE, at registration, rather than at each raise site:
+#   * compare.py / documents.py / downloads.py / url_safety.py stay free of any
+#     MCP import and keep raising the builtin types their own tests assert on
+#     (`pytest.raises(ValueError)`, `pytest.raises(PermissionError)`);
+#   * the module-level tool functions stay raw too (`_tool` returns the original
+#     function), so a direct Python caller gets native exceptions and native
+#     return values, exactly as before;
+#   * one place decides what the model may be told.
+#
+# The list is explicit on purpose. Allow-listing `Exception` would forward the
+# text of real bugs — a KeyError's key, an AttributeError naming an internal —
+# which is both useless to the model and the leak the SDK change set out to
+# stop. `RuntimeError` is deliberately NOT here for the same reason; the fetch
+# path's intentional failures carry the narrower `FetchError` instead.
+_ANTICIPATED: tuple[type[BaseException], ...] = (
+    # Argument checks here and in compare/documents/downloads. UnsafeURLError
+    # (SSRF refusals) and EngineKeyError subclass it.
+    ValueError,
+    # PermissionError (sandbox / feature disabled), FileNotFoundError, and the
+    # ConnectionError / TimeoutError family.
+    OSError,
+    FetchError,
+    MaxBytesExceededError,
+    BrowserUnavailableError,
+    # read_doc, download and extract_structured fetch over httpx.
+    httpx.HTTPError,
+    httpx.InvalidURL,
+    # `ask` with a backend that cannot run as configured. The message names the
+    # setting to change.
+    AgentError,
+)
+
+
+def _message(exc: BaseException) -> str:
+    # Some network errors stringify to "" (httpx.ConnectTimeout does); a bare
+    # "Error executing tool fetch: " would be the old problem all over again.
+    text = str(exc).strip()
+    return text or type(exc).__name__
+
+
+def _translate(name: str, exc: Exception) -> ToolError:
+    if isinstance(exc, ToolError):
+        return exc
+    if isinstance(exc, _ANTICIPATED):
+        return ToolError(_message(exc))
+    # A bug. Log everything, tell the model only what helps it decide what to
+    # do next: this is not about its arguments, so retrying unchanged is wasted.
+    log.exception("tool %s crashed", name)
+    return ToolError(
+        f"internal error ({type(exc).__name__}) - a server bug, not a problem "
+        "with your arguments; retrying the same call will not help. Details "
+        "are in the server log."
+    )
+
+
+@dataclass
+class _Linked:
+    """A tool result plus resource links to attach to it.
+
+    Only ever returned when the tool was given a request `Context`, i.e. when it
+    is running behind the boundary below, which unpacks it. A direct Python
+    caller passes no context and gets the plain value, as before.
+    """
+
+    body: Any
+    links: list[ResourceLink] = field(default_factory=list)
+
+
+# `resource_link` content blocks arrived in protocol revision 2025-06-18. The
+# SDK does not downgrade content for older clients, so an unknown block type
+# would reach them as-is; revision strings are ISO dates and compare as such.
+_LINKS_SINCE = "2025-06-18"
+
+
+def _supports_links(ctx: Context | None) -> bool:
+    if ctx is None:
+        return False
+    try:
+        version = ctx.protocol_version
+    except Exception:
+        return False
+    return isinstance(version, str) and version >= _LINKS_SINCE
+
+
+def _to_result(value: Any) -> Any:
+    """Shape a tool's return value into what actually goes on the wire.
+
+    Every tool here is dual-format: `format="markdown"` returns a `str`,
+    `format="json"` a dict (or a list). Left to the SDK, that `str | dict`
+    annotation derives an output schema of `{"result": <either>}` — and the SDK
+    then sends the markdown TWICE: once as a text block, once as
+    `structuredContent={"result": "<the same markdown>"}`. Clients that prefer
+    structured content (Claude Code does) hand the model the second copy: one
+    JSON string with every newline escaped. That is the opposite of what the
+    markdown default exists for, and it is also not what the spec allows — a
+    tool that advertises an outputSchema MUST return structured content
+    conforming to it, which a tool whose default output is prose cannot do.
+
+    So no tool advertises an output schema (see `_tool`), and the shape is
+    decided here instead:
+      * str  -> one text block, real newlines, no structured content;
+      * dict -> the JSON as text, plus the dict itself as structured content
+                (unwrapped — the `{"result": ...}` envelope is gone);
+      * list -> same, but the wire format requires structured content to be an
+                object, so a list keeps the `{"result": [...]}` envelope;
+      * `_Linked` -> its body shaped as above, then its resource links;
+      * anything else (an `Image`) is left for the SDK to convert.
+    """
+    if isinstance(value, _Linked):
+        shaped = _to_result(value.body)
+        if isinstance(shaped, CallToolResult):
+            shaped.content.extend(value.links)
+        return shaped
+    if isinstance(value, str):
+        return CallToolResult(content=[TextContent(type="text", text=value)])
+    if isinstance(value, dict | list):
+        # Same serializer, same options, as the SDK's own text rendering, so the
+        # json-mode text block is byte-for-byte what clients already received.
+        text = pydantic_core.to_json(value, fallback=str, indent=2).decode()
+        # Round-tripped so structured content holds only plain JSON types even
+        # if a payload ever carries a Path or a datetime.
+        plain = json.loads(text)
+        structured = plain if isinstance(plain, dict) else {"result": plain}
+        return CallToolResult(
+            content=[TextContent(type="text", text=text)],
+            structured_content=structured,
+        )
+    return value
+
+
+_calls_run = 0
+
+
+def _over_budget() -> CallToolResult | None:
+    """The stand-in result once `SEARCH_MCP_TOOL_CALL_BUDGET` is spent.
+
+    A plain result, not an error: a model that sees `isError` tends to retry,
+    and the point is to make it stop and write.
+    """
+    global _calls_run
+    budget = settings.tool_call_budget
+    if not budget:
+        return None
+    _calls_run += 1
+    if _calls_run <= budget:
+        return None
+    text = (
+        f"Tool budget used up ({budget} call{'s' if budget != 1 else ''}). Do not call "
+        "another tool. Answer now from the pages you already have, and list what you "
+        "could not confirm."
+    )
+    return CallToolResult(content=[TextContent(type="text", text=text)])
+
+
+def _boundary(fn: Callable[..., Any]) -> Callable[..., Any]:
+    """Wrap a tool: shape its result, and let anticipated failures reach the
+    model with their message.
+
+    `functools.wraps` keeps `__wrapped__`, which is what the SDK's signature
+    inspection follows — so the input schema, the `Context` injection and the
+    docstring-derived description are all still read off the real function.
+    """
+    name = fn.__name__
+    if inspect.iscoroutinefunction(fn):
+
+        @functools.wraps(fn)
+        async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
+            refusal = _over_budget()
+            if refusal is not None:
+                return refusal
+            try:
+                return _to_result(await fn(*args, **kwargs))
+            except Exception as exc:
+                raise _translate(name, exc) from exc
+
+        return async_wrapper
+
+    @functools.wraps(fn)
+    def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
+        refusal = _over_budget()
+        if refusal is not None:
+            return refusal
+        try:
+            return _to_result(fn(*args, **kwargs))
+        except Exception as exc:
+            raise _translate(name, exc) from exc
+
+    return sync_wrapper
+
+
+# Every tool name this module declares, registered or not. `run()` checks the
+# `SEARCH_MCP_TOOLS` allow-list against it so a typo is reported at startup.
+_DECLARED_TOOLS: set[str] = set()
+
+
+def _tool(**kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    """`@mcp.tool(...)`, plus the boundary above.
+
+    Registers the WRAPPED function and hands back the original, so
+    `from search_mcp.server import search` is still the plain coroutine with
+    its native return value and native exceptions.
+
+    `structured_output=False` for every tool: see `_to_result` for why a
+    dual-format tool must not advertise a derived output schema.
+
+    `SEARCH_MCP_TOOLS` narrows what gets registered. A tool left out is still
+    importable and callable from Python; it is only absent from `tools/list`.
+    """
+    kwargs.setdefault("structured_output", False)
+    server: MCPServer = kwargs.pop("server", None) or mcp
+
+    def register(fn: Callable[..., Any]) -> Callable[..., Any]:
+        _DECLARED_TOOLS.add(fn.__name__)
+        allowed = settings.enabled_tools()
+        if not allowed or fn.__name__ in allowed:
+            server.add_tool(_boundary(fn), **kwargs)
+        return fn
+
+    return register
+
+
+@_tool(
     title="Web search (multi-engine, no API key)",
     annotations=ToolAnnotations(
         read_only_hint=True,
@@ -185,6 +473,7 @@ async def search(
     include_text: str | None = None,
     exclude_text: str | None = None,
     format: Format = "markdown",
+    ctx: Context | None = None,
 ) -> str | dict[str, Any]:
     """Run a multi-engine web search and return a ranked, deduplicated link list.
 
@@ -194,8 +483,21 @@ async def search(
     - Topics likely to be after your knowledge cutoff (use `freshness="week"`).
     - Filtering to specific domains (`include_domains=["python.org"]`) or
       a kind of source (`category="paper"` / `"finance"`, or a sub-group like
-      `category="paper.biomed"` / `"finance.filings"` — see `engines()` for the
+      `category="paper.biomed"` / `"finance.filings"`; see `engines()` for the
       full tree).
+    - Looking a fact up at its registry, with no category needed: a current
+      version or support end date ("latest fastapi version"), a CVE
+      ("CVE-2024-3094": NVD record, OSV advisories, CISA exploited status),
+      a forecast ("上海明天天气"), an exchange rate ("100 usd to cny": ECB, and
+      the PBOC parity for 人民币), a coin price, a country indicator ("china
+      gdp", "japan population"), public holidays ("2026年放假安排"), the current
+      time in a city, a domain's expiry, a company's legal entity, an iOS
+      app's version, Wikidata facts ("Shanghai population"). The source that
+      fits the words joins the search and its record arrives as the first
+      result with the publisher's date in `dated …`, so it can be cited
+      without a fetch. Name the thing plainly. `category=` ("software",
+      "security", "weather", "finance.fx", "stats", "calendar", "reference",
+      "docs", "gov") asks the same sources explicitly.
 
     Not recommended for:
     - You already know the URL -> use `fetch` instead.
@@ -205,36 +507,48 @@ async def search(
     - Following one paper's references or citations -> use `paper_graph`.
 
     Returns:
-    - markdown (default): numbered list of `n. title`, `<url>`, snippet — ~40%
+    - markdown (default): numbered list of `n. title`, `<url>`, snippet. About 40%
       fewer tokens than json.
     - json: dict with `results` (list of {title,url,snippet,engines,score}),
       `engines`, `cached`, optional `errors` map, optional `hint` string.
-      `engines` is what was REQUESTED; each result's own `engines` is what
-      actually found it, and those differ whenever the rescue pass substitutes
-      a source (see `rescued_via`).
+      `engines` is what was actually ASKED for this answer; each result's own
+      `engines` is what found it. A default engine that failed recently is not
+      asked and appears under `benched_engines` instead; a rescue pass that
+      substituted a source appears as `rescued_via`.
 
     Common mistakes:
-    - Passing a URL as `query` — that's `fetch`'s job.
+    - Answering from snippets. A snippet is an engine's summary of a page as it
+      looked when crawled: it drops qualifiers and is often years old. Use
+      `search` to find the URL, then read the page (`fetch`, `research`) for
+      any date, amount, rule, deadline or number you will state.
+    - Treating a result as recent because `freshness=` was set. The filter keeps
+      undated results; the header says how many could be dated (`dated: 3/10`)
+      and each result is marked `dated …`, `… (from snippet text)` or `undated`.
+    - Passing a URL as `query`: that is `fetch`'s job.
     - Cranking `max_results` up hoping for better recall; engines cap around
       10-20 each, anything beyond is duplicate noise (and 50 is the ceiling).
-    - Adding `engines=["startpage","brave","bing","baidu"]` by default — those
-      need browser rendering or captcha-friendly conditions; stick with the
-      defaults unless they returned 0. If the defaults DO return 0, the keyless
-      HTTP extras `engines=["google"]` or `engines=["anysearch"]` (no key, no
-      browser) are the best recovery before reaching for the browser-gated ones.
+    - Naming engines by default. The default pool is already the set that works
+      keylessly over plain HTTP, it benches an engine that starts failing and
+      seats a reserve when it gets thin, and naming engines switches all of
+      that, and `category=` routing, off. Name engines when you want a
+      specific index: `engines=["so360","baidu"]` for Chinese-language sites,
+      `engines=["brave"]` or `["startpage"]` (both need the browser) for a
+      second opinion.
     - Using `category="news"` for breaking news without also setting
-      `freshness="day"` — the index lag is days, not minutes.
+      `freshness="day"`: the index lags by days.
 
     Args:
         query: Natural-language query (the same string a human would type).
-        engines: Subset of `engines()`. None = duckduckgo+mojeek+googlenews+bing.
-            (startpage is opt-in and browser-rendered.)
+        engines: Subset of `engines()`. None (recommended) = the health-aware
+            default pool: duckduckgo, bing, anysearch and mojeek, plus
+            googlenews when `freshness` is "day"/"week" and a Chinese index for
+            a Chinese query.
         max_results: Merged result count after dedup, clamped to 1-50. It is
             also the PER-ENGINE budget, so it multiplies across the fan-out;
             5-20 is the useful range and anything past that is duplicate noise
             bought with real latency. Omit it for the configured default.
         use_cache: Reuse the last result for this exact (query, engines,
-            max_results, AND all active filters — freshness, include/exclude
+            max_results, AND all active filters: freshness, include/exclude
             domains, category, include/exclude text) within the cache TTL.
             Changing any filter is a different cache entry. False forces a
             re-fetch.
@@ -242,25 +556,27 @@ async def search(
             fresh result is ALWAYS written back to the cache regardless of this
             value, so caching is never disabled. Use 0 to force-refresh while
             keeping cache writes; None = use server default TTL (7 days).
-        freshness: "day"|"week"|"month"|"year" — restrict to recent results.
+        freshness: "day"|"week"|"month"|"year". Restricts to recent results.
             Best-effort: applied as an engine time-window param AND a client-side
             date check, but most HTML-engine results carry no parseable date, so
             undated results are kept rather than dropped (unknown != old). Treat
             it as a strong hint, not a hard filter; googlenews dates are exact.
         include_domains: List of domains to restrict to (e.g. ["python.org"]).
         exclude_domains: List of domains to exclude.
-        category: Which KIND of source to search — the enum lists every value.
+        category: Which KIND of source to search. The enum lists every value.
             A bare group widens: "paper" adds one specialist per sub-group to the
             default web pool. A dotted sub-group narrows to just the sources that
             index it ("paper.biomed" => the biomedical indexes only). It also
             RERANKS: engines that natively index the category count double in
-            the fusion, so the filing outranks the commentary about it. Call
+            the fusion, so the filing outranks the commentary about it, and a
+            record looked up by the query (a PyPI release, a CVE, an ECB rate,
+            a forecast) counts five times, so it leads the list. Call
             `engines()` for the group -> sub-group -> engine tree with a line on
             each source. Two behaviours worth knowing: "image"/"dataset" REPLACE
             the web pool rather than augment it (a web engine cannot return an
             image file), and "news"/"paper"/"forum"/"github"/"blog" also filter
             general-web hits by hostname, so a strict category can thin those
-            engines out — the specialists it routes to are exempt.
+            engines out. The specialists it routes to are exempt.
         include_text: Substring required in title or snippet (case-insensitive).
         exclude_text: Substring forbidden in title or snippet.
         format: "markdown" (default) or "json".
@@ -290,20 +606,39 @@ async def search(
     hint = errors_to_hint(payload.get("errors"))
     if hint:
         payload["hint"] = hint
-    return _maybe_render(payload, format, render_search)
+    body = _maybe_render(payload, format, render_search)
+    cache_key = payload.get("cache_key")
+    if format == "json" and cache_key and _supports_links(ctx):
+        # json is what a program asks for, and a program can come back for the
+        # same result set by handle instead of re-running the search. Markdown
+        # callers are reading, not storing — a link there is just more tokens.
+        return _Linked(
+            body,
+            [
+                ResourceLink(
+                    type="resource_link",
+                    name="cached-search",
+                    title="This result set, from the local cache",
+                    uri=f"cache://search/{cache_key}",
+                    mime_type="application/json",
+                )
+            ],
+        )
+    return body
 
 
-@mcp.tool(
+@_tool(
     title="Fetch a URL: page text, document, or resource",
     annotations=ToolAnnotations(
         read_only_hint=True,
         idempotent_hint=True,
         open_world_hint=True,
     ),
-    # This tool can return page text, a JSON payload, or an actual image.
-    # There is no single JSON Schema that covers an ImageContent block, and
-    # from 2026-07-28 the SDK VALIDATES returns against the derived schema —
-    # so deriving one here would reject every inline image at call time.
+    # No derived output schema — true of every tool now (see `_to_result`), and
+    # doubly so here: this one can also return an actual image, no single JSON
+    # Schema covers an ImageContent block, and from 2026-07-28 the SDK
+    # VALIDATES returns against a derived schema — so one here would reject
+    # every inline image at call time.
     structured_output=False,
 )
 async def fetch(
@@ -313,6 +648,7 @@ async def fetch(
     max_age_hours: float | None = None,
     inline: bool = False,
     format: Format = "markdown",
+    ctx: Context | None = None,
 ) -> str | dict[str, Any] | Image:
     """Fetch one URL: page text, or a description of a non-text resource.
 
@@ -346,13 +682,16 @@ async def fetch(
 
     Common mistakes:
     - Passing a search query instead of a URL.
-    - Using `render="http"` on a JS-only SPA — it returns near-empty content;
+    - Using `render="http"` on a JS-only SPA: it returns near-empty content;
       use "auto" (default) or "browser".
     - Setting `inline=True` on a large image out of habit. A 1MB image costs
       well over a thousand tokens; fetch it plainly first and inline only if
       the description says it's worth looking at.
-    - Forgetting that results are cached 7 days — use `force_refresh=True`
-      or `max_age_hours=0` for a fresh pull.
+    - Forgetting that results are cached 7 days: use `force_refresh=True`
+      or `max_age_hours=0` for a fresh pull. The header says `cached N days ago`
+      when you are not looking at the live page; for deadlines, prices and
+      anything else that moves, that is the cue to refresh.
+    - Reading `no publication date found` as "recent". It means unknown.
 
     Args:
         url: Absolute http(s) URL.
@@ -361,7 +700,7 @@ async def fetch(
         force_refresh: Bypass the page cache entirely.
         max_age_hours: Treat cached pages older than this as a miss. 0 = same
             as force_refresh. None = server default TTL (7 days).
-        inline: For images only — return the image itself instead of a
+        inline: For images only. Returns the image itself instead of a
             description, so a vision-capable model can see it. Ignored for
             text resources.
         format: "markdown" or "json".
@@ -386,10 +725,28 @@ async def fetch(
         # the client decides how to show it, and non-vision clients can skip it.
         return Image(data=result.data, format=result.media_type.split("/", 1)[-1])
     payload = result.to_dict()
-    return _maybe_render(payload, format, render_fetch)
+    body = _maybe_render(payload, format, render_fetch)
+    if result.truncated and not result.media_type and _supports_links(ctx):
+        # The cache holds the WHOLE body; what was returned is the first
+        # `max_content_chars` of it. For an HTML page this link is the only way
+        # to the rest — `read_doc` paginates documents, not web pages.
+        return _Linked(
+            body,
+            [
+                ResourceLink(
+                    type="resource_link",
+                    name="full-page",
+                    title="Full cached text of this page",
+                    uri=f"cache://page/{quote(result.url, safe='')}",
+                    description="The untruncated body this result was cut from.",
+                    mime_type="text/markdown",
+                )
+            ],
+        )
+    return body
 
 
-@mcp.tool(
+@_tool(
     title="Fetch many URLs concurrently",
     annotations=ToolAnnotations(
         read_only_hint=True,
@@ -420,7 +777,7 @@ async def fetch_batch(
     - json: list[dict], one entry per URL, with `error` set on failures.
 
     Common mistakes:
-    - Passing a single URL inside a 1-element list — use `fetch` directly.
+    - Passing a single URL inside a 1-element list: use `fetch` directly.
     - Assuming an exception means the whole batch failed; check each item's
       `error` field instead.
 
@@ -459,7 +816,7 @@ async def fetch_batch(
     return "\n---\n\n".join(sections)
 
 
-@mcp.tool(
+@_tool(
     title="Read a remote (or sandboxed local) document",
     annotations=ToolAnnotations(
         read_only_hint=True,
@@ -478,7 +835,7 @@ async def read_doc(
 
     Best for:
     - Remote PDFs and DOCX from an http(s) URL (parsed locally, no remote API).
-    - Local PDF/DOCX/text/Markdown files — ONLY when local reads are enabled
+    - Local PDF/DOCX/text/Markdown files, ONLY when local reads are enabled
       (see Security below).
     - Paginating through a long document via `start` / `length`.
 
@@ -490,7 +847,7 @@ async def read_doc(
     Security (local files are sandboxed and OFF by default):
     - Local-file reads are DISABLED unless the server operator sets the
       SEARCH_MCP_DOCUMENT_ROOT env var to a directory. With it unset, a local
-      path raises a "local file reads are disabled" error — pass an http(s)
+      path raises a "local file reads are disabled" error. Pass an http(s)
       URL instead, or ask the operator to enable the sandbox.
     - When enabled, `source` must resolve INSIDE that root; relative paths
       resolve against the root (not the process CWD) and any `..` traversal
@@ -503,21 +860,21 @@ async def read_doc(
       truncated}. Use `total_chars` and `returned_chars` to drive pagination.
 
     Common mistakes:
-    - Calling this on a normal article URL — you'll get raw HTML noise; use
+    - Calling this on a normal article URL: you'll get raw HTML noise. Use
       `fetch` instead.
     - Forgetting to advance `start` when paginating: next call should pass
       `start = previous_start + returned_chars`.
     - Passing a negative `length` (raises an error) or a `start` past the end
       (clamped to EOF: you'll get `returned_chars == 0`, `start == total_chars`,
-      and `truncated == False` — that's the signal you've paged off the end).
+      and `truncated == False`, which is the signal you've paged off the end).
 
     Args:
         source: http(s) URL, or a local path UNDER SEARCH_MCP_DOCUMENT_ROOT when
-            local reads are enabled (disabled by default — see Security).
+            local reads are enabled (disabled by default; see Security).
         start: Character offset to begin reading from. Default 0. Clamped into
             [0, total_chars]; a negative value is treated as 0.
         length: Max characters to return; None = read to end (still capped by
-            the per-call max content size). Must be >= 0 — a negative length
+            the per-call max content size). Must be >= 0. A negative length
             is rejected with a ValueError.
         format: "markdown" or "json".
     """
@@ -539,7 +896,7 @@ async def read_doc(
     return _maybe_render(payload, format, render_doc)
 
 
-@mcp.tool(
+@_tool(
     title="Search and read in one call",
     annotations=ToolAnnotations(
         read_only_hint=True,
@@ -585,9 +942,9 @@ async def research(
       documents:[...], tokens_estimated, errors}.
 
     Common mistakes:
-    - Using `depth=8` for a quick lookup — that's 8 page fetches; 2-3 is
+    - Using `depth=8` for a quick lookup: that's 8 page fetches, and 2-3 is
       almost always enough.
-    - Calling `research` for a known URL — that's `fetch` territory.
+    - Calling `research` for a known URL: that is what `fetch` is for.
     - Forgetting that `fetch=False` returns sources only (much cheaper if
       the LLM only needs to pick which one to read).
 
@@ -595,14 +952,14 @@ async def research(
         question: What you want to know, in natural language.
         depth: How many top results to fetch (1-8). 3 is a good default.
         engines: Override the engine set (see `engines()` for names). Prefer
-            `category=` — naming engines turns category routing off.
+            `category=`. Naming engines turns category routing off.
         fetch: If False, return source list without reading them.
-        freshness: "day"|"week"|"month"|"year" — restrict to recent results.
+        freshness: "day"|"week"|"month"|"year". Restricts to recent results.
             Best-effort; undated results are kept rather than dropped.
         include_domains: Restrict to these domains (e.g. ["python.org"]).
         exclude_domains: Drop results from these domains.
         category: Which KIND of source to search; a bare group widens, a dotted
-            sub-group narrows. Same values as `search` — see `engines()`.
+            sub-group narrows. Same values as `search`; see `engines()`.
         include_text: Substring required in title or snippet (case-insensitive).
         exclude_text: Substring forbidden in title or snippet.
         use_cache: Reuse cached search/page data within TTL.
@@ -648,7 +1005,7 @@ async def research(
     return _maybe_render(payload, format, render_research)
 
 
-@mcp.tool(
+@_tool(
     title="Walk a paper's citation graph",
     annotations=ToolAnnotations(
         read_only_hint=True,
@@ -670,7 +1027,7 @@ async def paper_graph(
     Best for:
     - Checking a citation before repeating it: is the DOI real, and has the
       paper been retracted or corrected?
-    - "What happened after this result" — citing works come back ordered by how
+    - "What happened after this result": citing works come back ordered by how
       much the field cited them, so a 2019 paper leads to the current state of
       the art rather than to the most recent preprint about it.
     - Building a reading list backwards from one good paper.
@@ -708,7 +1065,7 @@ async def paper_graph(
     return _maybe_render(payload, format, render_paper_graph)
 
 
-@mcp.tool(
+@_tool(
     title="Search local cache (FTS5)",
     annotations=ToolAnnotations(
         read_only_hint=True,
@@ -741,7 +1098,7 @@ async def cache_search(
       three are "" when the cached row predates metadata capture.
 
     Common mistakes:
-    - Treating this like web search — it ONLY hits pages already in the local
+    - Treating this like web search: it ONLY hits pages already in the local
       cache. If the user hasn't fetched anything, you'll get zero hits.
     - Using natural-language phrases without quoting them; FTS5 splits on
       whitespace as AND. For an exact phrase use `"like this"`.
@@ -767,7 +1124,7 @@ async def cache_search(
         bad = _invalid_fts_hint(query)
         if bad:
             return (
-                f"_No results — your search syntax looks invalid. {bad}_\n"
+                f"_No results: your search syntax looks invalid. {bad}_\n"
             )
         return (
             f"_No cached pages match `{query}`. "
@@ -785,7 +1142,7 @@ async def cache_search(
     return "\n".join(lines)
 
 
-@mcp.tool(
+@_tool(
     title="List available search engines",
     annotations=ToolAnnotations(
         read_only_hint=True,
@@ -794,7 +1151,7 @@ async def cache_search(
     ),
 )
 def engines(
-    group: str | None = None,
+    group: EngineGroup | Category | None = None,
     format: Format = "markdown",
 ) -> str | dict[str, Any]:
     """List the available sources, grouped by what they index.
@@ -805,44 +1162,59 @@ def engines(
     - Checking a name before passing it to `engines=` on `search` / `research`.
 
     Not recommended for:
-    - Calling on every search — the list is static; read it once.
+    - Calling on every search: the list is static, so read it once.
 
     Returns (markdown): a `group -> sub-group -> engine` tree, one line of
     description per engine. `group="paper"` restricts it to that group.
     Returns (json): `{"engines": [...names...], "taxonomy": {...},
     "descriptions": {...}}`.
 
-    Prefer `category=` over `engines=`. `category="paper"` WIDENS — it routes to
+    Prefer `category=` over `engines=`. `category="paper"` WIDENS: it routes to
     one specialist per sub-group. A dotted sub-group NARROWS: `"paper.biomed"`
     queries only the biomedical indexes. Naming engines explicitly turns that
     routing off entirely, so reach for it only to force a specific source.
 
     Common mistakes:
-    - Passing one of these names as `query` — they belong in `engines=`.
+    - Passing one of these names as `query`: they belong in `engines=`.
     - Passing a key-only engine with no key configured; it returns an
       actionable error, not results.
     """
     taxonomy = source_taxonomy()
     if group:
         key = group.split(".", 1)[0].strip().lower()
-        taxonomy = {key: taxonomy[key]} if key in taxonomy else {}
+        if key not in taxonomy:
+            # `pdf` and `blog` are valid `category=` values with no source group
+            # behind them. An empty tree would read as "nothing is installed".
+            raise ValueError(
+                f"{group!r} is a result filter, not a source group: no engine indexes it "
+                f"natively, so `category={group!r}` filters the default engines' results. "
+                f"Source groups: {', '.join(taxonomy)}."
+            )
+        taxonomy = {key: taxonomy[key]}
     names = [n for subs in taxonomy.values() for names_ in subs.values() for n in names_]
     descriptions = {n: ENGINES[n].description for n in dict.fromkeys(names)}
-    # A provider marked `optional` works keyless (anysearch, github); the rest
-    # cannot run at all without a key. Derived from the keystore registry the
-    # admin UI already drives, so the two can never disagree.
-    needs_key = {p.engine for p in PROVIDERS if not p.optional}
+    # Opt-in engines cannot run without the operator's own key. Derived from the
+    # keystore registry the settings page already drives, so the two can never
+    # disagree — and it includes `github_code`, which the old
+    # `not provider.optional` test missed because its provider IS optional.
+    opt_in = {name: on for name, on in opt_in_engines().items() if name in descriptions}
+    # Asked the same question category routing asks, so the answer is the same.
+    unrouted = {
+        name for name in descriptions if name not in opt_in and not ENGINES[name].is_available()
+    }
     if format == "json":
         return {
             "engines": list_engines() if not group else list(descriptions),
             "taxonomy": taxonomy,
             "descriptions": descriptions,
-            "needs_api_key": sorted(needs_key & set(descriptions)),
+            "needs_api_key": sorted(opt_in),
+            "opt_in": opt_in,
+            "not_auto_routed": sorted(unrouted),
         }
-    return render_engines(taxonomy, descriptions, needs_key)
+    return render_engines(taxonomy, descriptions, opt_in, unrouted)
 
 
-@mcp.tool(
+@_tool(
     title="Compare URLs side-by-side",
     annotations=ToolAnnotations(
         read_only_hint=True,
@@ -875,9 +1247,9 @@ async def compare(
       tokens_estimated}.
 
     Common mistakes:
-    - Asking `compare` to actually answer the question — it returns material,
+    - Asking `compare` to actually answer the question: it returns material,
       the LLM does the comparison.
-    - Passing >5 URLs and expecting them all to fit in context — use
+    - Passing >5 URLs and expecting them all to fit in context: use
       `fetch_batch` for bulk reads.
 
     Args:
@@ -890,7 +1262,7 @@ async def compare(
     return _maybe_render(payload, format, render_compare)
 
 
-@mcp.tool(
+@_tool(
     title="Extract structured data from a URL",
     annotations=ToolAnnotations(
         read_only_hint=True,
@@ -913,7 +1285,7 @@ async def extract_structured(
     Not recommended for:
     - Just reading a page -> use `fetch`.
     - PDFs / DOCX -> use `read_doc`.
-    - Pages that don't publish schema.org metadata (most blogs) — you'll get
+    - Pages that don't publish schema.org metadata (most blogs): you'll get
       empty lists; fall back to `fetch`.
 
     Returns:
@@ -923,7 +1295,7 @@ async def extract_structured(
       as a JSON code block under its syntax heading.
 
     Common mistakes:
-    - Calling on every URL "just in case" — most sites have no structured
+    - Calling on every URL "just in case": most sites have no structured
       data, and `fetch` is what you actually want.
 
     Args:
@@ -934,7 +1306,7 @@ async def extract_structured(
     return _maybe_render(payload, format, render_structured)
 
 
-@mcp.tool(
+@_tool(
     title="Download a file to disk",
     annotations=ToolAnnotations(
         # The one tool here that creates a caller-visible local file.
@@ -1025,21 +1397,114 @@ async def download(
 
 
 # ---------------------------------------------------------------------------
+# The optional answer agent (agent.py)
+# ---------------------------------------------------------------------------
+
+
+async def ask(
+    question: str,
+    freshness: Literal["day", "week", "month", "year"] | None = None,
+    include_domains: list[str] | None = None,
+    category: Category | None = None,
+    format: Format = "markdown",
+    ctx: Context | None = None,
+) -> str | dict[str, Any]:
+    """Delegate one web question and get back a short answer with dated sources.
+
+    The server searches, reads the top pages, and has the language model its
+    operator configured answer from them. You receive a few sentences and the
+    source URLs. The page text stays out of your context.
+
+    Best for:
+    - A quick factual lookup where you want the answer and its sources, and do
+      not need the pages ("latest stable version of X", "when does Y close").
+    - Keeping your own context small during a long task.
+
+    Not recommended for:
+    - Facts someone will act on (deadlines, prices, rules): read the primary
+      page yourself with `research` or `fetch`. The answering model is small.
+    - Reading a URL you already have -> `fetch`.
+    - Anything that needs more than a paragraph -> `research`.
+
+    Returns:
+    - markdown (default): the answer, a line saying which model produced it and
+      how long it took, and the pages that were read.
+    - json: {question, answer, backend, model, sources:[{rank,title,url,date}],
+      tool_calls, model_calls, usage, elapsed_seconds, retrieved_at}.
+    - When the model fails, `answer` is null and the pages come back as a
+      `research` brief, so answer from those.
+
+    Common mistakes:
+    - Packing several questions into one call. Ask one thing per call.
+    - Quoting the answer without its sources. Pass the URLs and dates on.
+    - Treating the answer as verified. It is one small model's reading of a
+      few pages.
+
+    Args:
+        question: One question, in natural language, in the user's language.
+        freshness: "day"|"week"|"month"|"year" for questions about recent events.
+        include_domains: Restrict the search to these domains when you know the
+            official site.
+        category: Which kind of source to search. Same values as `search`.
+        format: "markdown" or "json".
+    """
+    await _safe_progress(ctx, 0.1, 1.0, "searching and reading")
+    payload = await run_ask(
+        question,
+        freshness=freshness,
+        include_domains=include_domains,
+        category=category,
+    )
+    await _safe_progress(ctx, 1.0, 1.0, "done")
+    return _maybe_render(payload, format, render_ask)
+
+
+def enable_ask(server: MCPServer | None = None) -> None:
+    """Register `ask`. Called at import only when an answer backend is set, so a
+    default install lists eleven tools and pays nothing for this one."""
+    _tool(
+        server=server,
+        title="Ask the web, get a short sourced answer",
+        annotations=ToolAnnotations(
+            read_only_hint=True,
+            idempotent_hint=False,
+            open_world_hint=True,
+        ),
+    )(ask)
+
+
+# Declared whether or not it is registered, so that naming it in
+# SEARCH_MCP_TOOLS is never reported as a typo.
+_DECLARED_TOOLS.add("ask")
+
+if settings.agent_backend != "off":
+    enable_ask()
+    _problem = config_problem()
+    if _problem:
+        # Registered anyway: the same text is what a call returns, and an
+        # operator reading the log sees it before any model does.
+        log.warning("answer agent is misconfigured: %s", _problem)
+
+
+# ---------------------------------------------------------------------------
 # Prompts (slash-commands in MCP clients)
 # ---------------------------------------------------------------------------
 
 
 @mcp.prompt(title="Research thoroughly")
-def research_prompt(question: str, depth: int = 3) -> str:
+def research_prompt(question: str, depth: int = 3, category: str = "") -> str:
     """Instruct the model to do a thorough, cited research pass on a question."""
+    scope = f", category={category!r}" if category else ""
     return (
         f"You have access to the search-mcp tools. Research the following "
         f"question thoroughly and produce a well-cited answer.\n\n"
         f"QUESTION: {question}\n\n"
         f"PROCEDURE:\n"
-        f"1. Call the `research` tool with question={question!r} and depth={depth}.\n"
-        f"2. Read each fetched source. If a source seems unreliable, call "
-        f"`search` for a corroborating source.\n"
+        f"1. Call the `research` tool with question={question!r} and depth={depth}{scope}.\n"
+        f"2. Read each fetched source. Note each one's publish date and whether the "
+        f"copy was cached (both are shown); treat an undated source as of unknown "
+        f"age, not as current. If a source seems unreliable or stale, call `search` "
+        f"for a corroborating source.\n"
         f"3. If any document was truncated, call `fetch` again with that URL "
         f"or use `read_doc` for paginating PDFs.\n"
         f"4. Write a synthesis (3-8 paragraphs) that:\n"
@@ -1048,8 +1513,10 @@ def research_prompt(question: str, depth: int = 3) -> str:
         f"     order returned by `research`.\n"
         f"   - Notes any disagreement between sources.\n"
         f"   - Lists the full source URLs at the end under a 'Sources' header.\n"
+        f"   - Takes facts from the fetched pages, never from search snippets.\n"
         f"5. If you could not find a confident answer, say so explicitly and\n"
-        f"   show what was checked."
+        f"   show what was checked. End with a 'Could not verify' list of any\n"
+        f"   requested detail you did not find on a page you actually read."
     )
 
 
@@ -1063,6 +1530,9 @@ def factcheck_prompt(claim: str) -> str:
         f"1. Call `search` with a focused query (key entities + date if any).\n"
         f"2. Call `fetch_batch` on the 3-5 most authoritative-looking URLs\n"
         f"   (prefer primary sources, official sites, established outlets).\n"
+        f"   Judge from the pages, not from snippets, and check each page's\n"
+        f"   publish date: a true statement about last year's edition is a false\n"
+        f"   one about this year's.\n"
         f"3. For each source, quote the supporting or contradicting passage.\n"
         f"4. Output a verdict on a 5-point scale: TRUE / MOSTLY TRUE / MIXED /\n"
         f"   MOSTLY FALSE / FALSE, followed by a one-paragraph justification\n"
@@ -1094,9 +1564,18 @@ def news_brief(topic: str, since: str = "day") -> str:
         f"Use the `search` tool with query={topic!r}, category='news', "
         f"freshness={since!r}. Then fetch the top 3 results in parallel "
         "via `fetch_batch`. Produce a 5-bullet brief, with [n] citations "
-        "matching the order returned by `search`. End with a 'Sources' "
-        "list of URLs."
+        "matching the order returned by `search`, each bullet carrying the "
+        "story's publish date. Drop anything you cannot date. End with a "
+        "'Sources' list of URLs."
     )
+
+
+@mcp.prompt(title="Quick search")
+def quick_search(question: str) -> str:
+    """A fast, sourced lookup: the quick-search agent's instructions plus the
+    question. Run it inline, or hand the text to a subagent on a host that has
+    no agent files (Codex's `spawn_agent` takes it as the message)."""
+    return f"{HOST_AGENT_PROMPT}\n\nQuestion: {question}"
 
 
 # ---------------------------------------------------------------------------
@@ -1111,11 +1590,16 @@ async def cached_page(url: str) -> str:
     The URL must be percent-encoded when embedded in the resource URI
     (RFC 6570 templates do not allow `:` or `/` inside variable expansions).
     """
-    from urllib.parse import unquote
-    decoded = unquote(url)
-    page = await cache.get_page(decoded)
+    # The SDK has ALREADY percent-decoded the template variable. Decoding again
+    # turned every cached URL that legitimately contains an escape — any
+    # non-ASCII Wikipedia title, any `?q=a%20b` — into a different string, and
+    # a guaranteed miss. So: the value as given first; one more decode only as a
+    # fallback, for a client that double-encoded.
+    page = await cache.get_page(url)
+    if not page and "%" in url:
+        page = await cache.get_page(unquote(url))
     if not page:
-        raise ResourceNotFoundError(f"Not in cache: {decoded}")
+        raise ResourceNotFoundError(f"Not in cache: {url}")
     return page.get("content") or ""
 
 
@@ -1136,6 +1620,47 @@ async def cached_search(query_hash: str) -> str:
     rows, _meta = hit
     import json
     return json.dumps(rows, ensure_ascii=False, indent=2)
+
+
+# ---------------------------------------------------------------------------
+# Completion — for prompt arguments and resource-template variables
+# ---------------------------------------------------------------------------
+#
+# The protocol offers completion for exactly those two reference kinds. Tool
+# arguments are not completable; theirs is the JSON-Schema enum (`Category`,
+# `Freshness`, `EngineGroup`), which clients already render as a picker.
+
+_PROMPT_CHOICES: dict[tuple[str, str], tuple[str, ...]] = {
+    ("research_prompt", "category"): get_args(Category),
+    ("research_prompt", "depth"): tuple(str(n) for n in range(1, 9)),
+    ("news_brief", "since"): get_args(Freshness),
+}
+_COMPLETION_LIMIT = 50
+
+
+@mcp.completion()
+async def _complete(ref: Any, argument: Any, context: Any) -> Completion | None:
+    typed = argument.value or ""
+    if isinstance(ref, PromptReference):
+        choices = _PROMPT_CHOICES.get((ref.name, argument.name))
+        if choices is None:
+            return None
+        return Completion(values=[c for c in choices if c.startswith(typed)][:_COMPLETION_LIMIT])
+    if isinstance(ref, ResourceTemplateReference):
+        if ref.uri == "cache://page/{url}" and argument.name == "url":
+            # What was typed may be raw ("python.org") or already encoded
+            # ("https%3A%2F%2Fdocs"). Raw first: a cached URL can itself contain
+            # escapes, and decoding a fragment of one would stop it matching.
+            urls = await cache.complete_page_urls(typed, _COMPLETION_LIMIT)
+            if not urls and "%" in typed:
+                urls = await cache.complete_page_urls(unquote(typed), _COMPLETION_LIMIT)
+            # Percent-encoded, because that is the only form the template
+            # accepts: a raw `https://…` cannot match `{url}` (RFC 6570 simple
+            # expansion stops at `/` and `:`).
+            return Completion(values=[quote(u, safe="") for u in urls])
+        if ref.uri == "cache://search/{query_hash}" and argument.name == "query_hash":
+            return Completion(values=await cache.recent_search_keys(typed, _COMPLETION_LIMIT))
+    return None
 
 
 _LOOPBACK_HOSTS = ("127.0.0.1", "localhost", "[::1]")
@@ -1172,6 +1697,29 @@ def run(
 ) -> None:
     """Start the MCP server. Arguments override the SEARCH_MCP_* settings."""
     transport = transport or settings.transport
+    allowed = settings.enabled_tools()
+    unknown = allowed - _DECLARED_TOOLS
+    if unknown:
+        log.warning(
+            "SEARCH_MCP_TOOLS names no such tool: %s. The tools are: %s",
+            ", ".join(sorted(unknown)),
+            ", ".join(sorted(_DECLARED_TOOLS)),
+        )
+    # The two settings that decide whether `ask` exists, disagreeing.
+    if allowed and "ask" not in allowed and settings.agent_backend != "off":
+        log.warning(
+            "SEARCH_MCP_AGENT_BACKEND=%s is set, but SEARCH_MCP_TOOLS leaves `ask` out, "
+            "so the tool is not registered",
+            settings.agent_backend,
+        )
+    if "ask" in allowed and settings.agent_backend == "off":
+        log.warning("SEARCH_MCP_TOOLS names `ask`, which also needs SEARCH_MCP_AGENT_BACKEND")
+    if settings.tool_call_budget and transport == "streamable-http":
+        log.warning(
+            "SEARCH_MCP_TOOL_CALL_BUDGET=%s on a long-lived HTTP server: after that many "
+            "calls every tool answers 'budget used up' until the process restarts",
+            settings.tool_call_budget,
+        )
     # Ephemeral downloads are swept here as well as before each download:
     # this process is often short-lived, so a background timer would
     # frequently never fire.

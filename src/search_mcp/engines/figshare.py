@@ -26,7 +26,7 @@ class FigshareEngine(JsonApiEngine):
     """figshare public-dataset search (keyless JSON API)."""
 
     name = "figshare"
-    description = "figshare — public datasets across institutional and subject repositories."
+    description = "figshare: public datasets across institutional and subject repositories."
     categories = frozenset({"dataset", "dataset.repository"})
 
     def build_url(

@@ -136,7 +136,7 @@ class SecEdgarEngine(JsonApiEngine):
     """SEC EDGAR filing full-text search (keyless JSON API)."""
 
     name = "sec_edgar"
-    description = "SEC EDGAR full-text search over US filings — 10-K, 10-Q, 8-K, proxies."
+    description = "SEC EDGAR full-text search over US filings: 10-K, 10-Q, 8-K, proxies."
     categories = frozenset({"finance", "finance.filings"})
     # A browser fingerprint is the wrong thing to present to a government
     # bulk-data endpoint that asks callers to identify themselves.

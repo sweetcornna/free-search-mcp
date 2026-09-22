@@ -47,7 +47,7 @@ class EuropePmcEngine(JsonApiEngine):
     """Europe PMC literature search (keyless JSON API)."""
 
     name = "europepmc"
-    description = "Europe PMC — 40M+ life-science papers and preprints, with open-access full text."
+    description = "Europe PMC: 40M+ life-science papers and preprints, with open-access full text."
     categories = frozenset(
         {"paper", "paper.biomed", "paper.preprint", "paper.openaccess"}
     )

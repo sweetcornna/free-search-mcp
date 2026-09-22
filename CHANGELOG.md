@@ -4,6 +4,349 @@ All notable changes to this project are documented here. The format is loosely
 based on [Keep a Changelog](https://keepachangelog.com/), and the project follows
 semantic versioning.
 
+## [0.12.0] - 2026-09-22
+
+Three of the four default engines had stopped contributing, and no structural
+test could see it. Bing answered every multi-word query with ten well-formed
+results about the first word only (the Steam page for "rust ownership
+borrowing"). Mojeek sat behind a captcha on every request. Google News put
+redirect links that cannot be deduplicated into ordinary searches. Rank fusion
+interleaved all of that with DuckDuckGo's real answers at positions 3, 6 and 9.
+
+The errors that would have helped were also lost. 0.11.0 declared
+`mcp[cli]>=2.0.0`, so every `uvx` install ran SDK 2.2 while CI tested the
+locked 2.0.0. Since SDK 2.1 the message of any exception other than `ToolError`
+is replaced, so an actionable error such as "at most 20 URLs" reached the
+client as `Error executing tool fetch_batch`.
+
+This release fixes both problems. It also adds the signals an agent needs to
+judge how old and how reliable a result is, makes keyless operation a tested
+property, and makes the plugin the main way to install.
+
+Upgrading: the search cache key changed, so the first search after the upgrade
+is cold. You do not need to delete anything. Output changed in three places
+that a program parsing it would notice, all listed under Changed.
+
+### Fixed
+
+- Bing returns results about the whole query again. Measured on 2026-09-21
+  with one fresh query per variant, because Bing caches per query: the 0.11.0
+  request (`?q=…&count=10`) scored 0 of 10 on topic, a warmed cookie jar plus
+  `form=QBRE` without `count=` scored 9 to 10 of 10, and adding `count=10` back
+  produced decoys again. The engine now mints one cookie jar per proxy egress
+  with a 30-minute lifetime. Minting is single-flight, a failed warm-up is
+  remembered for 60 s, and it never raises. The engine never sends `count=`,
+  pages with `first=11` when more than ten results are requested, and discards
+  the jar and retries once when a response still looks like a decoy.
+- Error messages reach the client. Every tool is registered through a boundary
+  that converts the exceptions a caller can act on into `ToolError` with the
+  original text: `ValueError`, `OSError`, the new `FetchError`, size caps, a
+  missing browser and `httpx` errors. Any other exception is logged and
+  reported as `internal error (<Type>)`, described as a server bug, without its
+  message, because the message may contain paths or response bodies.
+- The SDK under test is the SDK users run. The requirement is now
+  `mcp[cli]>=2.2.0,<2.3`. `uvx` ignores lockfiles, which makes the declared
+  range the only constraint in production, and 2.1.0 was a minor release that
+  changed handler semantics. CI gained a daily `sdk-canary` job with two legs.
+  One resolves the newest SDK inside the range and is a hard gate that the
+  release reuses. The other ignores the upper bound and may fail, which shows
+  in advance what the next bump will meet.
+- Markdown is no longer delivered inside JSON. The SDK derived an output schema
+  of `{"result": <str | dict>}` for the dual-format tools and sent the markdown
+  twice, as a text block and as `structuredContent={"result": "…"}`. Clients
+  that prefer structured content, Claude Code among them, showed the model the
+  second copy, a single JSON string with every newline escaped. That cancelled
+  the token saving the markdown default exists for.
+- The same page is merged when engines disagree about its address. Rank fusion
+  is keyed on an identity that ignores scheme, `www.`, default port and
+  fragment, so the `http://` and `https://` copies of an arXiv page count as
+  one result with two votes. An `https` sighting upgrades the URL that is
+  printed. The key itself is never emitted, because emitting it regressed two
+  ranking cases. Title de-duplication used to treat a number that appears in
+  only one of two titles as a version mismatch, which kept the `abs/` and
+  `pdf/` copies of one paper apart. It now compares numbers only when both
+  titles have them.
+- Google News results are publisher URLs. The first `max_results` links are
+  resolved four at a time within four seconds in total. Resolution stops after
+  three consecutive failures and keeps the original link when it fails. As a
+  result `include_domains`, category filters and cross-engine merging see the
+  real host in place of `news.google.com/rss/articles/…`.
+- `cache://page/{url}` finds pages whose URL contains an escape. The handler
+  unquoted a value the SDK had already decoded, so every non-ASCII Wikipedia
+  link was a permanent miss.
+- `paper_graph` resolves arXiv identifiers. OpenAlex answers 404 for DataCite's
+  `10.48550/arXiv.*` DOIs, so those now go through the arXiv API for the title
+  and then an exact-title lookup, and `notes` says the fallback was used. A
+  bare id such as `1706.03762` or `hep-th/9901001` is accepted when it is the
+  whole input. Before, it was searched as a title.
+- `extract_structured` no longer returns the whole article. JSON-LD
+  `articleBody`, `text` and `description` values longer than 500 characters are
+  clipped, with their original length recorded under `trimmed`. RDFa nodes that
+  carry only a layout `role` are dropped. Dates, authors, prices and event
+  fields are unchanged.
+- `read_doc` reads API responses that have no file extension. A URL such as
+  `https://pypi.org/pypi/uv/json` was rejected as an unsupported format because
+  only the path was consulted for structured text. `application/json`,
+  `application/xml`, `application/yaml` and the `+json` and `+xml` suffixes are
+  now recognised from the content type, so a 4.8M-character JSON response can
+  be read in pages with `start` and `length`.
+- arXiv queries match more than the exact phrase. The query is now
+  `all:"<phrase>" OR (all:w1 AND all:w2 …)` with a small stopword list and at
+  most eight terms. Quoted and one-word queries pass through unchanged.
+- `engines(group=…)` rejects a mistyped group and lists the valid ones. It used
+  to return an empty tree.
+- `cp .env.example .env` works. The example file has comments on the same line
+  as values, and the project's `.env` loader read them as part of the value, so
+  a verbatim copy failed validation at import with four errors. The loader now
+  ends an unquoted value at a `#` that follows whitespace, which leaves URL
+  fragments and passwords containing `#` intact. The example file also keeps
+  its comments on their own lines now.
+- Browser errors arrive without Playwright's call log. A failed navigation
+  reaches the model through the `errors` map of a search and through the
+  message of a failed `fetch`, and both now stop at the first line, for example
+  `Page.goto: net::ERR_CONNECTION_CLOSED at <url>`.
+- The test suite removes provider keys from the environment, so a developer
+  who has `SEARCH_MCP_SERPER_API_KEY` exported runs the same product as CI.
+- A live test run (`SEARCH_MCP_TEST_NETWORK=1`) no longer sends a fake key to
+  Serper. A test of the `.env` loader left `SEARCH_MCP_SERPER_API_KEY=from-dotenv`
+  in `os.environ` for the rest of the process, which was invisible offline.
+  Every test now gets its `SEARCH_MCP_*` environment restored afterwards. The
+  live tests for Mojeek, Zhihu, Sogou and Serper also skip with a stated reason
+  when the site shows a detected wall, cannot be reached, or rejects the key.
+  An empty answer with no wall detected still fails.
+
+### Added
+
+- Twenty-four direct-fact sources, all keyless JSON APIs, under eight new
+  groups and three new finance sub-groups: `software` (`endoflife`,
+  `github_releases`, `pypi`, `npm`, `crates`, `registries` for Maven Central,
+  RubyGems, the Go proxy, Homebrew, Docker Hub, Packagist and NuGet,
+  `appstore`), `security` (`nvd`, `osv`, `cisakev`), `reference` (`wikidata`,
+  `rdap`), `weather` (`openmeteo`), `docs` (`mdn`, `ietf`), `gov`
+  (`federalregister`, `govuk`), `stats` (`wdi`, World Bank indicators),
+  `calendar` (`holidays`, `worldclock`), `finance.fx` (`frankfurter`, with
+  the open ExchangeRate-API endpoint for currencies the ECB lacks, and
+  `cfets` for the PBOC's RMB central parity), `finance.entity` (`gleif`) and
+  `finance.crypto` (`coingecko`). They return the record itself, dated by its
+  publisher: the current release of a package with its upload date, the
+  support end date of a Python or Ubuntu cycle, a CVE with its CVSS score and
+  whether CISA lists it as exploited, the advisories touching a package with
+  the fixed version, a Wikidata item's population or inception with the date
+  Wikidata attaches, a country's GDP or population with the revision date,
+  the ECB rate between two currencies, today's forecast for a named place,
+  this year's holidays with China's make-up working days, the time in a
+  named city from the server clock, a domain's expiry from its registry, an
+  RFC with its standards level. Package names, places, countries,
+  currencies, coins and entities are read from the words of the question in
+  English or Chinese. All stay out of the default pool; the finance
+  sub-groups are registered after the existing three so bare `finance` is
+  unchanged.
+- Claims routing: each record source declares offline whether it can answer
+  a question (`Engine.claims`), and a search with no category and no engines
+  seats the first three that say yes next to the default pool
+  (`SEARCH_MCP_CLAIM_ENGINE_LIMIT`, `SEARCH_MCP_AUTO_ROUTE_ENABLED`). An
+  agent no longer needs the category tree to reach a registry:
+  "CVE-2024-3094", "100 usd to cny", "上海明天天气", "latest fastapi version"
+  and "现在东京几点" each reach their source unasked. The claimants are listed
+  as `auto_routed` and named in the markdown. Measured 2026-09-22 on eleven
+  such questions: the record led in every one, in 2.0 to 7.2 s.
+- A search deadline (`SEARCH_MCP_SEARCH_DEADLINE_SECONDS`, 10). Once at least
+  one engine has answered with results, engines still running ten seconds
+  after the fan-out started are cancelled and reported as
+  `timed_out_engines`; their slot counts as an error, so the breaker benches
+  a source that keeps timing out. Measured 2026-09-21: the pool answers in
+  2 to 4 s and the tail was one browser-rendered engine at 15 s or more.
+  When nothing has answered by the deadline the search keeps waiting.
+- A `direct_answer` engine flag and a per-query `answers_directly(query)`
+  hook. When it claimed the question or its category was requested, the
+  first result of such an engine counts five times a general engine's in
+  the rank fusion, the rule being that one looked-up record outranks the
+  four-engine default pool agreeing on a page about it. `nvd`, `cisakev` and
+  `ietf` apply it only for a CVE id or an RFC number. A record merged with a
+  web sighting of the same page keeps the record's title. Measured 2026-09-21 on eleven category probes: with the ordinary
+  doubling the PyPI record ranked below three snippets of the PyPI project
+  page and Open-Meteo's numbers ranked third; with the weight both lead. A
+  record that won the top rank is also taken as the `Lead:` line without the
+  usual test that the snippet echoes the question, since "10000 JPY = 425.70
+  CNY" answers "1万日元等于多少人民币" without sharing a word with it.
+- Category cache caps for the record categories, applied whatever the query
+  said about freshness: `weather` and `finance.fx` answers expire after one
+  hour, `software` and `security` after six. A cached forecast or exchange
+  rate served for the default seven days would be wrong while looking exact.
+- An off-topic guard runs before rank fusion (`coherence.py`). A bucket's
+  coherence is the share of its results that mention any query term beyond the
+  first. Healthy engines measure 0.5 to 1.0 and decoys 0.00 to 0.20, so the
+  threshold is 0.3. A suspect bucket is dropped only when another bucket with
+  coherence of at least 0.5 shows that the query's words do get echoed. A lone
+  suspect triggers a rescue search for a second opinion, and two suspects that
+  agree are both kept. Short queries, thin buckets and specialist sources are
+  never judged. A dropped engine is reported as `off_topic` with a hint that a
+  proxy will not help. `SEARCH_MCP_COHERENCE_GUARD_ENABLED=false` turns the
+  guard off.
+- A circuit breaker and a reserve bench (`health.py`). A captcha, consent wall,
+  JS wall, login wall or off-topic verdict benches an engine immediately. Two
+  consecutive errors do the same, as do three empty results in a row while
+  other engines answered. The cooldown is 10 minutes, doubles up to an hour,
+  and is cleared by one success. The reserves `so360`, `brave` and `searx` are
+  used in that order, and only while fewer than three general engines are
+  healthy. The cache is keyed on the nominal pool so that it does not change
+  with engine health, a result from a degraded pool is replayed for at most an
+  hour, and the output lists `benched_engines` with the reason, the retry time
+  and the substitute. A missing local browser, a rate-limit skip and a missing
+  key never count against an engine. An open bench is written to
+  `<cache_dir>/engine_health.json` and read by the next process: Mojeek took
+  2.6 to 6.2 s to serve its captcha page, and every fresh process was paying
+  that on its first search (8.5 s, against 4.0 s once the file existed).
+- Snippet dates are checked against today. A snippet carries every date the
+  page mentions, and the FastAPI page on PyPI announced a conference "on
+  October 28, 2026", which came out as the page's publication date and put it
+  ahead of pages dated this week. A date after tomorrow is skipped and the
+  next date in the text is tried.
+- Signals for judging a result. Search output carries `retrieved_at`,
+  `cache_age_seconds` and `dated_results` ("4 of 10"). Each result has a
+  `date_source` (`structured`, `snippet` or `none`) and a `source_type` (paper,
+  code, forum, news, government or academic), which describes the kind of site
+  and says nothing about quality. A `freshness_note` appears when `freshness=`
+  was requested and half the results have no verifiable date, and a
+  `usage_note` says that snippets locate sources while details come from the
+  page. `fetch` reports the publication date, or says none was found, along
+  with the age of a cached copy. `research` keeps each source's date and type
+  and adds a `date_note` when sources are undated or more than a year apart.
+- Cache lifetimes follow the question. `freshness="day"` results are served
+  from cache for an hour, `"week"` for six hours and `"month"` for a day.
+  `category="news"` results are cached for six hours at most.
+- A `verified-research` skill in the plugin. `claude plugin details` projects
+  about 210 tokens for its description in every session and about 2.1k when it
+  is invoked. The workflow is: fix today's
+  date, use `search` only to locate URLs, read the primary page, check the
+  publication date, cache age and edition, corroborate with an independent
+  source, then report with dated citations and a "Could not verify" list. A
+  shorter form of the same rules is in the server `instructions`, the tool
+  docstrings and the four prompts, for clients that never see the skill. 0.11.0
+  advertised "no skills, no always-on prompt tokens", and this reverses that.
+  The failure it addresses is an answer assembled from snippets of last year's
+  page, which no change inside a tool can prevent.
+- A `quick-search` agent in the plugin, addressed in Claude Code as
+  `free-search:quick-search`. Every page fetched to check one date used to stay
+  in the main conversation for the rest of the session. The agent takes one
+  question, makes one `research` call and at most two more reading calls in its
+  own context, and replies with one to three sentences, up to five dated source
+  lines and a "Not verified" line. It is sized to return fast: `haiku`, at most
+  6 turns, four tools (`research`, `search`, `fetch`, `read_doc`), no skill
+  preload and no `CLAUDE.md`. It has no shell, no file tools, no `download` and
+  no other MCP server, and it does not follow instructions that appear on a
+  fetched page. A first draft preloaded the verification skill and ran on
+  `sonnet` for up to 30 turns. One delegated lookup took it 38 s and $0.22, and
+  one took this agent 25 s and $0.09 (different questions, so only the scale
+  is comparable). `claude plugin details` projects about 130 tokens
+  for its description in every session and about 560 each time it is spawned,
+  which puts the whole plugin at about 340 always-on tokens.
+- The same agent for other hosts. `search-mcp agent-file claude-code|codex|prompt`
+  prints it as a Claude Code agent file, as a Codex custom-agent TOML file
+  (`plugins/free-search/codex/agents/quick_search.toml` is that output) or as
+  bare instructions. A fifth MCP prompt, `quick_search`, returns the
+  instructions plus a question to any MCP client. All of them come from one
+  string, `agent.HOST_AGENT_PROMPT`, and the manifest test fails when a
+  committed file differs from it. Measured with Codex CLI 0.154: `codex exec`
+  exposed no parameter for choosing an agent by name, so the TOML file could
+  not be selected there, while a generic subagent given the prompt text used
+  the search tools and answered in 87 s.
+- An optional `ask` tool. It is off by default and unregistered while off, so a
+  default install still lists 11 tools. With `SEARCH_MCP_AGENT_BACKEND` set to
+  `api`, `claude-code` or `codex`, `ask(question)` has the server run one
+  `research` call, hand the pages to a model and return a few sentences with
+  dated sources, the model used and the time taken. `api` speaks the OpenAI
+  chat-completions dialect or the Anthropic messages dialect over httpx with no
+  new dependency, and a local endpoint such as Ollama needs no key.
+  `claude-code` runs one `claude -p` with built-in tools off and extended
+  thinking off, which took the same evidence from 13.7 s to 5.2 s. `codex` runs
+  one `codex exec` in a read-only sandbox, in an empty directory, with Codex's
+  own web search disabled. The model may spend `SEARCH_MCP_AGENT_MAX_STEPS`
+  (default 1) further calls on `search`, `fetch` or `read_doc` and has no other
+  tool. The child server it is given has local file reads switched off and
+  never receives the model endpoint's key, and every field of a page that a
+  site controls (title, snippet, URL, error text) is sealed before it reaches
+  the model, so a page cannot forge a second page or a server note.
+  Neither CLI can forbid tool use on the last turn, and `haiku` spent its
+  turns on tools until the run ended in `error_max_turns`, so the child server
+  enforces the limit itself through `SEARCH_MCP_TOOL_CALL_BUDGET`. When the
+  model fails or the 90 s deadline passes, `ask` returns the pages as a
+  `research` brief with the reason. The pages read before the model is called
+  share an 8 s budget (`SEARCH_MCP_AGENT_READ_SECONDS`), and a page that misses
+  it is listed as not read while its snippet is still used: one Baidu Baike
+  page had taken 25.7 s to fail while the two pages holding the answer arrived
+  in 0.5 s and 2.1 s. The deadline kills the CLI's whole process
+  group, because killing only the parent left its children holding the output
+  pipe and the wait did not return until they exited. Model part, measured
+  2026-09-21 when the first pages were enough: 6.4 s on a local Ollama
+  `qwen3:1.7b`, 4.8 s on `claude-code` with `haiku`, 13 s on `codex`. Search is
+  keyless in every mode. The only credential involved belongs to the model
+  endpoint the operator chose.
+- `search-mcp ask "question"` runs the same thing as a one-shot command, and
+  `search_mcp.agent.ask(question, answer_with=my_model)` lets a Python service
+  supply its own model with no setting at all.
+- `SEARCH_MCP_TOOLS`, an allow-list of tool names. An embedder that needs
+  `search` and `fetch` registers those two and nothing else. A bare `claude -p`
+  measured 9.3k input tokens with the full server attached against 0.7k with
+  none, nearly all of it tool definitions.
+- An MCP Registry entry (`server.json`, `io.github.sweetcornna/free-search-mcp`)
+  and a Claude Desktop bundle (`mcpb/`, MCPB 0.4 with the `uv` runtime). The
+  bundle contains no server code and pins this release. Both offer three
+  optional settings (proxy, region, cache directory) and have no key field. The
+  release workflow attaches the `.mcpb` as a third asset and publishes to the
+  registry from a job whose only credential is an OIDC token.
+- Protocol features. A truncated `fetch` carries a resource link to
+  `cache://page/…`, which is the only way to reach the rest of an HTML page. A
+  JSON `search` carries one to `cache://search/…`. Links are sent only to
+  clients on protocol 2025-06-18 or later. There are completions for prompt
+  arguments and for both `cache://` templates, a server description and icon,
+  and a cache hint for `server/discover`.
+- `tests/test_mcp_boundary.py` calls all eleven tools through a real client in
+  both protocol eras, without network, and asserts the full text of every
+  anticipated error. `scripts/smoke_mcp.py` does the same over stdio against
+  the live web. `tests/test_live_canary.py` asserts coherence on a query seeded
+  with the date, so that Bing's per-query cache cannot make a broken engine
+  look healthy.
+- Ranking evals check their own input.
+  `evals/ranking/fixtures/decoy_and_dupes.json` is a dated slice of the
+  2026-08-29 capture and is replayed in CI. `replay.py --guard` exits non-zero
+  if the guard would drop a bucket that the capture does not mark as a decoy.
+
+### Changed
+
+- The default pool is `duckduckgo`, `bing`, `anysearch`, `mojeek`. `googlenews`
+  joins only for `freshness="day"` or `"week"`. `so360` joins queries written
+  in Chinese, where it was measured returning the official site first.
+  `payload["engines"]` lists the engines that were queried. `docker-compose.yml`
+  moved from its own three-engine list to the same four.
+- No tool advertises an `outputSchema` (ten did). `format="markdown"` returns
+  one text block and no structured content. `format="json"` returns the JSON as
+  text plus the object itself as structured content. The `{"result": …}`
+  envelope is gone for objects. `fetch_batch` and `cache_search` return arrays
+  and keep it, because structured content must be an object.
+- Markdown headers changed. `_(from cache)_` is now
+  `_(cached 3 days ago · retrieved …)_`, each result gains a kind and date
+  crumb, and search output ends with the usage note.
+- The search cache key is versioned (`v: 2`) and includes region, safe-search
+  and accept-language. Rows written by earlier versions may hold up to seven
+  days of decoy results, and they are never read again.
+- Keyless operation is tested. `tests/test_no_key_positioning.py` fails if the
+  default pool, the reserves, the rescue list, a locale route or any category
+  routes to an engine that needs a key. The five opt-in engines stay available
+  by name. Asking for one without a key now returns an error that says the
+  engine did not run and the search itself is fine, names the keyless engines
+  to use, and tells the model not to ask the user for a key. `engines` lists
+  the opt-in engines on one closing line, outside the tree, and its JSON gains
+  `opt_in` and `not_auto_routed`.
+- Documentation leads with the plugin. The install order is plugin, Claude
+  Desktop bundle, MCP Registry, then `uvx`, source and Docker. The API-key
+  material moved to an optional section at the end of Configuration.
+- The version now lives in seven files. `tests/test_plugin_manifest.py` and the
+  release workflow check all of them, and `docs/RELEASING.md` lists them.
+- `evals/ranking/buckets.json` is untracked, as its `.gitignore` entry always
+  intended. The native-category weight of 2.0 was measured again on a capture
+  without decoys: three cases improved and none regressed.
+
 ## [0.11.0] - 2026-08-30
 
 `image` and `dataset` no longer replace the general pool with a single

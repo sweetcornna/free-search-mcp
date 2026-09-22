@@ -44,6 +44,58 @@ _META_TARGETS: tuple[str, ...] = (
 )
 
 
+# What this tool is FOR is the small fields: startDate, price, datePublished,
+# author, location. What publishers also put in the same blocks is the entire
+# article (`articleBody`) — measured at ~6,000 tokens for one blog post, most of
+# it a second copy of text `fetch` returns better. Long prose is clipped and
+# says so; nothing short is ever touched.
+_LONG_TEXT_KEYS = frozenset(
+    {"articleBody", "text", "description", "reviewBody", "transcript", "abstract", "content"}
+)
+_LONG_TEXT_CAP = 500
+_XHTML_VOCAB = "http://www.w3.org/1999/xhtml/vocab#"
+
+
+def _local_name(key: str) -> str:
+    """`articleBody` out of `http://schema.org/articleBody` or `og:description`."""
+    return key.rsplit("/", 1)[-1].rsplit("#", 1)[-1].rsplit(":", 1)[-1]
+
+
+def _clip_long_text(node: Any, clipped: list[int]) -> Any:
+    if isinstance(node, list):
+        return [_clip_long_text(item, clipped) for item in node]
+    if not isinstance(node, dict):
+        return node
+    out: dict[str, Any] = {}
+    for key, value in node.items():
+        if (
+            isinstance(value, str)
+            and len(value) > _LONG_TEXT_CAP
+            and _local_name(key) in _LONG_TEXT_KEYS
+        ):
+            clipped.append(len(value))
+            out[key] = (
+                value[:_LONG_TEXT_CAP].rstrip()
+                + f" … [clipped: {len(value)} characters in the page]"
+            )
+        else:
+            out[key] = _clip_long_text(value, clipped)
+    return out
+
+
+def _is_layout_noise(node: Any) -> bool:
+    """An RDFa node that only says "this <div> is a navigation landmark".
+
+    ARIA `role` attributes are valid RDFa, so extruct reports one blank node per
+    landmark: dozens of `{"@id": "_:N…", "…/xhtml/vocab#role": […]}` entries
+    that describe the page's layout and nothing about its content.
+    """
+    if not isinstance(node, dict):
+        return False
+    facts = [key for key in node if not key.startswith("@")]
+    return bool(facts) and all(key.startswith(_XHTML_VOCAB) for key in facts)
+
+
 async def extract_structured(url: str) -> dict[str, Any]:
     """Pull JSON-LD, OpenGraph, Twitter cards, microdata, microformats2 from a page.
 
@@ -94,14 +146,29 @@ def extract_structured_from_html(
     except Exception:
         data = {}
 
+    clipped: list[int] = []
+    rdfa_all = data.get("rdfa", []) or []
+    rdfa = [node for node in rdfa_all if not _is_layout_noise(node)]
     result: dict[str, Any] = {
         "url": url,
-        "json_ld": data.get("json-ld", []) or [],
-        "microdata": data.get("microdata", []) or [],
-        "opengraph": data.get("opengraph", []) or [],
-        "rdfa": data.get("rdfa", []) or [],
-        "microformat": data.get("microformat", []) or [],
+        "json_ld": _clip_long_text(data.get("json-ld", []) or [], clipped),
+        "microdata": _clip_long_text(data.get("microdata", []) or [], clipped),
+        "opengraph": _clip_long_text(data.get("opengraph", []) or [], clipped),
+        "rdfa": _clip_long_text(rdfa, clipped),
+        "microformat": _clip_long_text(data.get("microformat", []) or [], clipped),
     }
+    # Said, not done silently: a reader must be able to tell a short
+    # `articleBody` from a clipped one, and know where the rest is.
+    notes: list[str] = []
+    if clipped:
+        notes.append(
+            f"{len(clipped)} long text field(s) clipped to {_LONG_TEXT_CAP} characters "
+            f"({sum(clipped)} in the page), so use `fetch` for the full text"
+        )
+    if len(rdfa) != len(rdfa_all):
+        notes.append(f"{len(rdfa_all) - len(rdfa)} layout-only RDFa node(s) (ARIA roles) omitted")
+    if notes:
+        result["trimmed"] = "; ".join(notes) + "."
 
     # If extruct found nothing across all five syntaxes, last-ditch: pull
     # bare meta tags and emit a diagnostic hint so callers can tell apart
@@ -123,7 +190,7 @@ def extract_structured_from_html(
             )
         if not meta:
             hint += (
-                " No fallback meta tags either — the response was likely a "
+                " No fallback meta tags either, so the response was likely a "
                 "bot-block shell."
             )
         result["hint"] = hint

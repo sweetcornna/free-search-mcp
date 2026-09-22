@@ -36,7 +36,7 @@ class So360Engine(Engine):
     """360 搜索 web results (keyless HTML scrape)."""
 
     name = "so360"
-    description = "360 搜索 — third Chinese web index, with direct target URLs."
+    description = "360 搜索: third Chinese web index, with direct target URLs."
 
     def build_url(
         self, query: str, max_results: int, filters: SearchFilters | None = None

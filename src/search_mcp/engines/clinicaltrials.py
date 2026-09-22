@@ -28,7 +28,7 @@ class ClinicalTrialsEngine(JsonApiEngine):
     """ClinicalTrials.gov study search (keyless JSON API v2)."""
 
     name = "clinicaltrials"
-    description = "ClinicalTrials.gov — registered human trials with phase, status and sponsor."
+    description = "ClinicalTrials.gov: registered human trials with phase, status and sponsor."
     categories = frozenset({"paper", "paper.trial"})
 
     def build_url(

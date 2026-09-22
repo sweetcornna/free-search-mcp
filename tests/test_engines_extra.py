@@ -134,6 +134,20 @@ def test_bing_build_url_emits_safesearch_and_market(monkeypatch):
     assert "mkt=en-GB" in url
 
 
+@pytest.mark.parametrize("max_results", [1, 10, 25, 50])
+def test_bing_build_url_never_sends_count(max_results):
+    """`count=` looks like the obvious way to ask for N results. It is also,
+    measured, what flips Bing from real results to a decoy page that matches
+    only the first word of the query — with or without a warmed session.
+    `form=QBRE` is the other half of the working shape."""
+    from urllib.parse import parse_qs, urlparse
+
+    url = get_engine("bing").build_url("rust ownership borrowing", max_results)
+    params = parse_qs(urlparse(url).query)
+    assert "count" not in params
+    assert params["form"] == ["QBRE"]
+
+
 def test_brave_build_url_emits_safesearch(monkeypatch):
     monkeypatch.setattr(settings, "safesearch", "moderate")
     e = get_engine("brave")
@@ -461,3 +475,21 @@ def test_cn_indexes_inject_query_operators(name):
     assert "site%3Apython.org" in url
     assert "-site%3Aspam.example" in url
     assert "filetype%3Apdf" in url
+
+
+def test_playwright_call_logs_are_cut_from_error_text():
+    """A failed navigation reaches the model through `errors` and through a
+    failed `fetch`. The first line says what happened; the call log repeats it."""
+    from search_mcp.browser import brief_error
+
+    raw = (
+        "Page.goto: net::ERR_CONNECTION_CLOSED at https://www.zhihu.com/search?q=python\n"
+        "Call log:\n"
+        '  - navigating to "https://www.zhihu.com/search?q=python", waiting until "domcontentloaded"\n'
+    )
+    assert brief_error(RuntimeError(raw)) == (
+        "Page.goto: net::ERR_CONNECTION_CLOSED at https://www.zhihu.com/search?q=python"
+    )
+    # Anything without a call log is returned as it is.
+    assert brief_error(ValueError("query must not be empty")) == "query must not be empty"
+

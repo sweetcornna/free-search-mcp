@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, field_validator
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from .keystore import load_all_env_files
@@ -27,21 +27,47 @@ class Settings(BaseSettings):
     # vacuuming; 0 disables the cap. Expired rows are purged on the same cadence.
     cache_max_mb: int = 512
 
-    # All-HTTP, low-latency default pool. Picked for "consistently fast AND
-    # consistently returns results in 2026":
-    #   * duckduckgo  — curl_cffi chrome131 fingerprint dodges anomaly 202s
-    #   * mojeek      — independent index; intermittently IP-blocked but cheap
-    #                   to attempt and falls back fast when it is
-    #   * googlenews  — RSS, ~1s, gives news-skewed coverage that complements
-    #                   the other two on time-sensitive queries
-    #   * bing        — www4 edge serves organic results over plain HTTP in
-    #                   ~0.3s; safe as a default now that its old built-in
-    #                   searx race moved to the aggregator rescue (a gated
-    #                   bing costs one fast HTTP attempt, same as the others)
-    # Searx public instances are unreliable (often ≥10s timeouts/empties) and
-    # Startpage forces a browser render — both stay opt-in via `engines=`
-    # (searx also serves as the first rescue engine, see rescue_engines).
-    default_engines: list[str] = ["duckduckgo", "mojeek", "googlenews", "bing"]
+    # The default pool: keyless, plain-HTTP, general web indexes. Re-measured
+    # 2026-09-21, because the previous list had quietly stopped working — of
+    # its four engines only DuckDuckGo was returning usable results:
+    #   * duckduckgo  — reliable; curl_cffi's browser fingerprint avoids the
+    #                   anomaly 202s. Coherent on every query measured.
+    #   * bing        — real results again with a warmed session and the right
+    #                   request shape (engines/bing.py); ~2s. When it serves a
+    #                   decoy page instead, the off-topic guard drops it.
+    #   * anysearch   — keyless anonymous tier of a JSON API, ~2.5s, coherent.
+    #   * mojeek      — independent index, which is why it stays: when it
+    #                   answers it disagrees usefully. It was captcha-walled on
+    #                   every request when measured, so in practice the health
+    #                   tracker benches it after one attempt and re-probes it
+    #                   every 10-60 minutes.
+    # `googlenews` left this list. It answered every query, programming
+    # questions included, with ten news headlines behind opaque redirect URLs;
+    # see `fresh_engines`.
+    default_engines: list[str] = ["duckduckgo", "bing", "anysearch", "mojeek"]
+    # Stand-ins, in order, used only while fewer than `min_healthy_engines`
+    # general engines are healthy. so360 is plain HTTP and measured coherent;
+    # brave works but needs a browser render (seconds, and Chromium); public
+    # searx instances are a lottery. Not used to pad a pool that is merely one
+    # short — three good engines beat three good engines plus a browser render.
+    reserve_engines: list[str] = ["so360", "brave", "searx"]
+    min_healthy_engines: int = 3
+    # Joined to the pool when the caller asks for `freshness="day"|"week"` —
+    # the only time a news feed is the right answer to a web search.
+    fresh_engines: list[str] = ["googlenews"]
+    # Joined when the QUERY is written in that language (detected from its
+    # script, not from SEARCH_MCP_REGION). Measured: for a Chinese query so360
+    # returns the organiser's own site and the university notice that the
+    # western indexes do not have at all.
+    locale_engines: dict[str, list[str]] = {"zh": ["so360"]}
+
+    # Circuit breaker (health.py). An engine that hits a wall, or keeps
+    # failing, is benched for `engine_cooldown_seconds`, doubling on each
+    # repeat up to the maximum; one success clears it.
+    health_enabled: bool = True
+    engine_cooldown_seconds: float = 600.0
+    engine_cooldown_max_seconds: float = 3600.0
+
     max_results_per_engine: int = 10
 
     # Public SearXNG instances rot constantly (DNS death, 429 walls, disabled
@@ -65,7 +91,32 @@ class Settings(BaseSettings):
     # routing entirely and restores pure default-pool behavior.
     category_engine_limit: int = 3
 
+    # Route a question to the record sources that claim it (Engine.claims)
+    # when the caller passed no `category`: "100 usd to cny" reaches the ECB
+    # rate, "CVE-2024-3094" the NVD record, "上海明天天气" the forecast, without
+    # the agent knowing the category tree. At most `claim_engine_limit` such
+    # engines join the pool, in registry order. They answer in well under a
+    # second and run in parallel with the web engines, so the search is no
+    # slower for them.
+    auto_route_enabled: bool = True
+    claim_engine_limit: int = 3
+
+    # How long one search waits for its slowest engine once at least one
+    # engine has answered with results. The fan-out returns when every engine
+    # is done or this many seconds have passed, whichever is first; engines
+    # still running are cancelled and reported as timed out. Measured
+    # 2026-09-21: the pool answers in 2 to 4 s, and the tail was one
+    # browser-rendered engine taking 15 s or more. 0 disables the deadline.
+    search_deadline_seconds: float = 10.0
+
+    # Drop a web engine's whole bucket when its results mention nothing of the
+    # query beyond the first word while another engine's do — Bing's decoy
+    # page, or a bad public searx instance (see coherence.py). Off restores the
+    # old behaviour of merging whatever came back.
+    coherence_guard_enabled: bool = True
+
     rescue_enabled: bool = True
+    # Tried after `reserve_engines`, skipping whatever already ran or is benched.
     rescue_engines: list[str] = ["searx", "bing"]
     rescue_timeout: float = 10.0
 
@@ -115,6 +166,66 @@ class Settings(BaseSettings):
     # browser-based client is served from another origin.
     http_allowed_origins: str = ""
 
+    # --- Tool surface ------------------------------------------------------
+    # Comma or space separated allow-list of tool names; empty registers every
+    # tool. An embedder that only needs `search` and `fetch` pays for two tool
+    # schemas in its model's context instead of eleven, and the answer agent's
+    # own child server (agent.py) runs with three.
+    tools: str = ""
+
+    # Tool calls this process will run before it starts answering "budget used
+    # up, answer now" instead; 0 = no cap. It is process-wide, so it only suits
+    # a server started for one job. The answer agent sets it on the child
+    # server it hands to a CLI, because a CLI gives no way to forbid tool use
+    # on the last turn and a small model does not count its own calls.
+    tool_call_budget: int = Field(default=0, ge=0)
+
+    # --- Answer agent (agent.py) -------------------------------------------
+    # Off by default, and the `ask` tool is not registered while it is off, so
+    # a default install carries no extra tool and needs no model anywhere.
+    # Search stays keyless in every mode: this block only says which language
+    # model, if any, turns the pages that search found into a short answer.
+    #   "api"         - an OpenAI-compatible or Anthropic-compatible HTTP
+    #                   endpoint the operator names. A local one (Ollama, LM
+    #                   Studio, vLLM) needs no key.
+    #   "claude-code" - one headless `claude -p` run, on the operator's login.
+    #   "codex"       - one `codex exec` run in a read-only sandbox.
+    # A host that has its own subagents (Claude Code, Codex) needs none of
+    # this: it runs the shipped agent definition against the ordinary tools.
+    agent_backend: Literal["off", "api", "claude-code", "codex"] = "off"
+    # Required for "api". For the CLI backends an empty value means "haiku" on
+    # Claude Code and the CLI's own default on Codex.
+    agent_model: str = ""
+    agent_api_protocol: Literal["openai", "anthropic"] = "openai"
+    # "openai": the URL that ends in /v1 (https://api.openai.com/v1,
+    # http://localhost:11434/v1). "anthropic": the host, with or without /v1.
+    agent_api_base_url: str = ""
+    agent_api_key: SecretStr = SecretStr("")
+    # Path or name of the CLI binary when it is not `claude` / `codex` on PATH.
+    # GUI hosts start MCP servers with a bare PATH, so this is often needed.
+    agent_command: str = ""
+    # Extra CLI flags, shell-split, REPLACING the backend's default. For codex
+    # the default is `--ignore-user-config -c model_reasoning_effort="low"`:
+    # measured 15 s against 18.5 s, and it keeps the operator's other plugins
+    # and MCP servers out of the child. An operator whose provider lives in
+    # config.toml should keep that flag and add `-c model_provider=...`
+    # overrides here. An empty string means no extra flags at all.
+    agent_cli_args: str | None = None
+    # Pages the server reads BEFORE the model is called. The model usually
+    # answers from these in one call, which is what makes the agent fast.
+    agent_depth: int = Field(default=3, ge=1, le=8)
+    # How long those reads may take together. A page still loading after this
+    # is left out and its search snippet is used, so one slow site cannot hold
+    # the answer for the whole fetch timeout.
+    agent_read_seconds: float = Field(default=8.0, gt=0)
+    # Tool rounds the model may spend after that. 0 = answer from the seed only.
+    # Each round measured about 10 s on the CLI backends, so the default is one.
+    agent_max_steps: int = Field(default=1, ge=0, le=8)
+    # Characters of each page handed to the model.
+    agent_max_source_chars: int = Field(default=6000, ge=500)
+    # Wall clock for the model part. Past it the caller gets the pages instead.
+    agent_timeout_seconds: float = Field(default=90.0, gt=0)
+
     # --- Safety / sandbox knobs -------------------------------------------
     # SSRF guard escape hatch: when False (default) URLs that resolve to
     # loopback/link-local/private/reserved addresses are rejected.
@@ -152,7 +263,9 @@ class Settings(BaseSettings):
     # is the fetch-truncation knob for web pages).
     max_document_chars: int = 2_000_000
 
-    @field_validator("download_dir", mode="before")
+    # SEARCH_MCP_DOCUMENT_ROOT="" must mean "no local reads". Unvalidated it
+    # parsed as Path("."), which opened the launch directory instead.
+    @field_validator("download_dir", "document_root", mode="before")
     @classmethod
     def empty_download_dir_uses_default(cls, value: object) -> object:
         if isinstance(value, str):
@@ -160,6 +273,10 @@ class Settings(BaseSettings):
             if not value:
                 return None
         return value
+
+    def enabled_tools(self) -> frozenset[str]:
+        """The `tools` allow-list as a set; empty means every tool."""
+        return frozenset(self.tools.replace(",", " ").split())
 
     @field_validator("cache_dir", "download_dir")
     @classmethod

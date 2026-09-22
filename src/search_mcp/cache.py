@@ -302,6 +302,9 @@ class Cache:
                 loaded = None
             if isinstance(loaded, dict):
                 meta = loaded
+        # When the row was written — so a hit can say how old it is. Derived
+        # from the row on every read, never stored inside `meta`.
+        meta["cached_at"] = row[1]
         return json.loads(row[0]), meta
 
     async def put_search(
@@ -367,6 +370,30 @@ class Cache:
         )
         await conn.commit()
         await self._bump_writes(conn)
+
+    async def complete_page_urls(self, fragment: str, limit: int = 50) -> list[str]:
+        """Cached page URLs containing `fragment`, most recently fetched first.
+
+        For MCP completion of `cache://page/{url}`. LIKE with the wildcards
+        escaped: a fragment is text somebody typed, not a pattern.
+        """
+        needle = fragment.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        conn = await self._conn()
+        cur = await conn.execute(
+            "SELECT url FROM pages WHERE url LIKE ? ESCAPE '\\' ORDER BY fetched DESC LIMIT ?",
+            (f"%{needle}%", limit),
+        )
+        return [row[0] for row in await cur.fetchall()]
+
+    async def recent_search_keys(self, prefix: str = "", limit: int = 50) -> list[str]:
+        """Cache keys of stored searches starting with `prefix`, newest first."""
+        conn = await self._conn()
+        cur = await conn.execute(
+            "SELECT cache_key FROM search_cache WHERE cache_key LIKE ? "
+            "ORDER BY created DESC LIMIT ?",
+            (f"{prefix}%", limit),
+        )
+        return [row[0] for row in await cur.fetchall()]
 
     async def search_pages(
         self, query: str, limit: int = 10, *, _retrying: bool = False

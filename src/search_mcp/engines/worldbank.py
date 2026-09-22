@@ -32,7 +32,7 @@ class WorldBankEngine(JsonApiEngine):
     """World Bank Documents & Reports search (keyless JSON API)."""
 
     name = "worldbank"
-    description = "World Bank reports — country economic updates, macro briefs, sector studies."
+    description = "World Bank reports: country economic updates, macro briefs, sector studies."
     categories = frozenset({"finance", "finance.macro"})
 
     def build_url(

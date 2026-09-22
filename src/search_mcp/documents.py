@@ -87,6 +87,25 @@ def _ext(source: str) -> str:
     return ext if ext != name else ""
 
 
+def _structured_text_lang(ctype: str) -> str:
+    """The fence language for a structured-text media type, else "".
+
+    API endpoints are primary sources (a registry's release list, a repository's
+    metadata) and rarely carry an extension: `https://pypi.org/pypi/uv/json` is
+    `application/json` with nothing in the path to say so. Covers the `+json`
+    and `+xml` suffixes too (`application/ld+json`, `application/atom+xml`).
+    HTML and SVG are matched earlier, so they never reach this.
+    """
+    media = ctype.split(";", 1)[0].strip().lower()
+    if media.endswith(("/json", "+json", "/x-ndjson")):
+        return "json"
+    if media.endswith(("/xml", "+xml")):
+        return "xml"
+    if media.endswith(("/yaml", "/x-yaml")):
+        return "yaml"
+    return ""
+
+
 def _detect_format(source: str, content_type: str | None = None) -> str:
     # Match on the PATH, not the raw source: a query string routinely carries
     # something that looks like an extension ("...data.csv?token=abc.png"),
@@ -114,7 +133,7 @@ def _detect_format(source: str, content_type: str | None = None) -> str:
         return "html"
     if s.endswith((".md", ".markdown")):
         return "markdown"
-    if _ext(source) in _CODE_LANGS:
+    if _ext(source) in _CODE_LANGS or _structured_text_lang(ctype):
         return "code"
     if s.endswith((".txt", ".log")) or ctype.startswith("text/"):
         return "text"
@@ -214,7 +233,7 @@ def _parse_text(blob: bytes, ctype: str = "") -> str:
 
 def _parse_code(blob: bytes, source: str, ctype: str = "") -> str:
     """Source/config file, fenced with its language so it renders as code."""
-    lang = _CODE_LANGS.get(_ext(source), "")
+    lang = _CODE_LANGS.get(_ext(source), "") or _structured_text_lang(ctype)
     text = _decode_body(blob, ctype)
     # Pick a fence longer than any run of backticks inside the file, or a file
     # containing a Markdown fence would break out of ours.
@@ -553,7 +572,9 @@ def _resolve_local_path(source: str) -> Path:
             f"sandbox ({root})."
         )
     if not candidate.exists():
-        raise FileNotFoundError(source)
+        raise FileNotFoundError(
+            f"No such file under SEARCH_MCP_DOCUMENT_ROOT ({root}): {source!r}"
+        )
     return candidate
 
 

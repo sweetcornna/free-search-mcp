@@ -21,3 +21,9 @@ freesearch-promo/
 
 # Ranking-eval capture: a snapshot of a moving web, not a fixture.
 evals/ranking/buckets.json
+
+# Claude Desktop bundle: `uv run --directory mcpb` resolves a lock the bundle
+# deliberately does not ship (the package's own ranges are the constraint, as
+# with uvx), and `mcpb pack` output is a release asset, not source.
+mcpb/uv.lock
+*.mcpb

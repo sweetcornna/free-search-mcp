@@ -1,4 +1,5 @@
 from .anysearch import AnySearchEngine
+from .appstore import AppStoreEngine
 from .arxiv import ArxivEngine
 from .baidu import BaiduEngine
 from .base import (
@@ -15,8 +16,12 @@ from .bilibili import BilibiliEngine
 from .bing import BingEngine
 from .brave import BraveEngine
 from .brave_api import BraveApiEngine
+from .cfets import CfetsEngine
+from .cisakev import CisaKevEngine
 from .clinicaltrials import ClinicalTrialsEngine
 from .cninfo import CninfoEngine
+from .coingecko import CoinGeckoEngine
+from .crates import CratesEngine
 from .crossref import CrossrefEngine
 from .dataeuropa import DataEuropaEngine
 from .dataverse import DataverseEngine
@@ -24,21 +29,37 @@ from .dblp import DblpEngine
 from .doaj import DoajEngine
 from .dryad import DryadEngine
 from .duckduckgo import DuckDuckGoEngine
+from .endoflife import EndOfLifeEngine
 from .europepmc import EuropePmcEngine
+from .federalregister import FederalRegisterEngine
 from .figshare import FigshareEngine
+from .frankfurter import FrankfurterEngine
 from .gdelt import GdeltEngine
 from .github import GitHubCodeEngine, GitHubEngine
+from .github_releases import GitHubReleasesEngine
+from .gleif import GleifEngine
 from .google import GoogleEngine
 from .google_cse import GoogleCSEEngine
 from .googlenews import GoogleNewsEngine
+from .govuk import GovUkEngine
 from .hackernews import HackerNewsEngine
+from .holidays import HolidaysEngine
 from .huggingface import HuggingFaceEngine
+from .ietf import IetfEngine
 from .imf import ImfEngine
+from .mdn import MdnEngine
 from .mojeek import MojeekEngine
+from .npm import NpmEngine
+from .nvd import NvdEngine
 from .openalex import OpenAlexEngine
 from .openlibrary import OpenLibraryEngine
+from .openmeteo import OpenMeteoEngine
 from .openverse import OpenverseEngine
+from .osv import OsvEngine
 from .pubmed import PubMedEngine
+from .pypi import PyPIEngine
+from .rdap import RdapEngine
+from .registries import RegistriesEngine
 from .searx import SearxEngine
 from .sec_edgar import SecEdgarEngine
 from .semanticscholar import SemanticScholarEngine
@@ -49,9 +70,12 @@ from .sogou import SogouEngine
 from .stackexchange import StackExchangeEngine
 from .startpage import StartpageEngine
 from .tavily import TavilyEngine
+from .wdi import WdiEngine
+from .wikidata import WikidataEngine
 from .wikimedia import WikimediaEngine
 from .wikipedia import WikipediaEngine
 from .worldbank import WorldBankEngine
+from .worldclock import WorldClockEngine
 from .yahoofinance import YahooFinanceEngine
 from .zbmath import ZbMathEngine
 from .zenodo import ZenodoEngine
@@ -132,6 +156,49 @@ ENGINES: dict[str, Engine] = {
     "worldbank": WorldBankEngine(),
     "cninfo": CninfoEngine(),
     "imf": ImfEngine(),
+    # Direct-fact sources: registries and reference APIs that answer a factual
+    # question with the record itself (a version, a CVE, a rate, a forecast),
+    # dated by the publisher. None of them is a web index, so all stay out of
+    # the default pool and out of `web`.
+    # Software. Bare `software` round-robins across its sub-groups, so the cap
+    # of three seats endoflife (lifecycle), github_releases (github) and pypi
+    # (python); npm and crates are reached through `software.node` and
+    # `software.rust`, or by name.
+    "endoflife": EndOfLifeEngine(),
+    "github_releases": GitHubReleasesEngine(),
+    "pypi": PyPIEngine(),
+    "npm": NpmEngine(),
+    "crates": CratesEngine(),
+    # The other registries in one engine, chosen by the ecosystem named
+    # (Maven, RubyGems, Go, Homebrew, Docker Hub, Packagist, NuGet), and the
+    # App Store for an iOS app's current version.
+    "registries": RegistriesEngine(),
+    "appstore": AppStoreEngine(),
+    # Security: NVD for a CVE id or recent CVEs, OSV for what touches a
+    # package, KEV for whether a CVE is exploited in the wild.
+    "nvd": NvdEngine(),
+    "osv": OsvEngine(),
+    "cisakev": CisaKevEngine(),
+    # Reference, weather, documentation, statistics, the calendar.
+    "wikidata": WikidataEngine(),
+    "rdap": RdapEngine(),
+    "openmeteo": OpenMeteoEngine(),
+    "mdn": MdnEngine(),
+    "ietf": IetfEngine(),
+    "wdi": WdiEngine(),
+    "holidays": HolidaysEngine(),
+    "worldclock": WorldClockEngine(),
+    # Rates, entities and crypto sit under `finance.*` sub-groups; registered
+    # after the other finance sub-groups so the bare `finance` top three is
+    # unchanged. CFETS follows frankfurter so a Chinese 人民币 question gets
+    # the ECB fixing and the PBOC central parity, in that order.
+    "frankfurter": FrankfurterEngine(),
+    "cfets": CfetsEngine(),
+    "gleif": GleifEngine(),
+    "coingecko": CoinGeckoEngine(),
+    # Government journals and portals.
+    "federalregister": FederalRegisterEngine(),
+    "govuk": GovUkEngine(),
     # API-key engines — opt-in. Configure keys via the admin UI
     # (`uv run search-mcp-admin`) or SEARCH_MCP_*_API_KEY env vars. Each engine
     # raises an actionable error when its key is unset, so it's safe to leave

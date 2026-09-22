@@ -113,12 +113,37 @@ _ARXIV_FEED = """<?xml version='1.0' encoding='UTF-8'?>
 def test_arxiv_build_url_encodes_query_and_clamps():
     e = ArxivEngine()
     url = e.build_url("attention is all you need", 5)
-    # The `all:` field prefix stays literal; only the query text is encoded.
-    assert "search_query=all:attention+is+all+you+need" in url
+    # The exact phrase, OR every content word. Stopwords are dropped from the
+    # AND side because arXiv does not index them: one `all:is` and the whole
+    # conjunction matches nothing.
+    assert (
+        "search_query=all:%22attention+is+all+you+need%22"
+        "+OR+%28all:attention+AND+all:need%29"
+    ) in url
     assert "max_results=5" in url
     # arXiv treats 0 as "no results" and rejects huge values.
     assert "max_results=1" in e.build_url("x", 0)
     assert "max_results=100" in e.build_url("x", 9999)
+
+
+def test_arxiv_query_shapes():
+    from search_mcp.engines.arxiv import _search_query
+
+    # Every content word must match — not "any word", which is what a bare
+    # `all:a b c` means to arXiv and why "rank fusion" found image fusion.
+    assert _search_query("reciprocal rank fusion") == (
+        "all:%22reciprocal+rank+fusion%22+OR+%28all:reciprocal+AND+all:rank+AND+all:fusion%29"
+    )
+    # Short acronyms are content, not noise.
+    assert "all:GAN+AND+all:LLM" in _search_query("GAN vs LLM")
+    # One word, or a caller-written phrase expression: passed through.
+    assert _search_query("transformers") == "all:transformers"
+    assert _search_query('"residual learning" imagenet') == "all:%22residual+learning%22+imagenet"
+    # Nothing but stopwords left: fall back rather than send an empty AND.
+    assert _search_query("to be or not") == "all:to+be+or+not"
+    # A long description is capped so the conjunction stays satisfiable.
+    long = _search_query("one two three four five six seven eight nine ten")
+    assert long.count("+AND+") == 7
 
 
 def test_arxiv_freshness_switches_to_newest_first():

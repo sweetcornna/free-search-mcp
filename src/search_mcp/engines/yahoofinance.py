@@ -71,7 +71,7 @@ class YahooFinanceEngine(JsonApiEngine):
     """Yahoo Finance instrument + market-news search (keyless JSON API)."""
 
     name = "yahoofinance"
-    description = "Yahoo Finance — resolve tickers and pull recent market news for a company."
+    description = "Yahoo Finance: resolve tickers and pull recent market news for a company."
     categories = frozenset({"finance", "finance.market"})
 
     def build_url(

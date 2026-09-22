@@ -356,6 +356,10 @@ async def test_search_skips_items_missing_title_or_link(monkeypatch):
 
 @skip_offline
 async def test_live_google_cse_returns_results():
+    from search_mcp.keystore import get_secret
+
+    if not (get_secret("google_cse_api_key") and get_secret("google_cse_cx")):
+        pytest.skip("opt-in engine: no google_cse_api_key / google_cse_cx configured")
     e = GoogleCSEEngine()
     out = await e.search("python language", 5)
     if not out:

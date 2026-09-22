@@ -44,6 +44,20 @@ class MaxBytesExceededError(RuntimeError):
     """Raised when a response body grows past settings.max_response_bytes."""
 
 
+class FetchError(RuntimeError):
+    """A fetch that failed for a reason worth telling the caller about.
+
+    These used to be bare ``RuntimeError``s, which was fine while the MCP SDK
+    forwarded every exception message to the client. Since SDK 2.1 only an
+    *anticipated* failure does; anything else reaches the model as a bare
+    "Error executing tool fetch". server.py's tool boundary cannot allow-list
+    ``RuntimeError`` wholesale — that would forward the text of genuine bugs
+    too — so the failures we raise on purpose get a type of their own. It still
+    subclasses RuntimeError, so every existing ``except RuntimeError`` and
+    ``pytest.raises(RuntimeError)`` keeps matching.
+    """
+
+
 def curl_session_kwargs() -> dict[str, Any]:
     """Constructor kwargs for the curl_cffi AsyncSession used by the fetch path.
 
@@ -180,7 +194,7 @@ async def curl_stream_capped(client: Any, url: str) -> tuple[str, str]:
             await resp.aclose()
             nxt = _resolve_redirect_location(current, resp.headers.get("location"))
             if not nxt:
-                raise RuntimeError(f"redirect with no Location from {current}")
+                raise FetchError(f"redirect with no Location from {current}")
             await assert_url_allowed_async(nxt)  # re-validate EACH hop
             current = nxt
             continue
@@ -193,7 +207,7 @@ async def curl_stream_capped(client: Any, url: str) -> tuple[str, str]:
             await resp.aclose()
         ctype = resp.headers.get("content-type", "")
         return ctype, _decode_body(body, ctype)
-    raise RuntimeError(f"too many redirects (>{_MAX_REDIRECTS}) fetching {url}")
+    raise FetchError(f"too many redirects (>{_MAX_REDIRECTS}) fetching {url}")
 
 
 async def httpx_stream_capped(
@@ -211,7 +225,7 @@ async def httpx_stream_capped(
             if resp.status_code in _REDIRECT_STATUSES:
                 nxt = _resolve_redirect_location(current, resp.headers.get("location"))
                 if not nxt:
-                    raise RuntimeError(f"redirect with no Location from {current}")
+                    raise FetchError(f"redirect with no Location from {current}")
                 await assert_url_allowed_async(nxt)  # re-validate EACH hop
                 current = nxt
                 continue
@@ -220,4 +234,4 @@ async def httpx_stream_capped(
             _check_content_length(resp.headers)
             body = await _accumulate_capped(resp.aiter_bytes())
             return resp.status_code, resp.headers.get("content-type", "") or "", body
-    raise RuntimeError(f"too many redirects (>{_MAX_REDIRECTS}) fetching {url}")
+    raise FetchError(f"too many redirects (>{_MAX_REDIRECTS}) fetching {url}")

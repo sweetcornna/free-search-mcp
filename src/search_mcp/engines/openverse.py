@@ -27,7 +27,7 @@ class OpenverseEngine(JsonApiEngine):
     """Openly-licensed image search (keyless JSON API)."""
 
     name = "openverse"
-    description = "Openverse — openly-licensed images, each carrying its licence terms."
+    description = "Openverse: openly-licensed images, each carrying its licence terms."
     categories = frozenset({"image"})
 
     def build_url(

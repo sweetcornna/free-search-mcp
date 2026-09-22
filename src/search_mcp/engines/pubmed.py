@@ -31,7 +31,7 @@ class PubMedEngine(JsonApiEngine):
     """PubMed biomedical literature search (keyless NCBI E-utilities)."""
 
     name = "pubmed"
-    description = "PubMed — NCBI's biomedical and life-sciences citation index."
+    description = "PubMed: NCBI's biomedical and life-sciences citation index."
     categories = frozenset({"paper", "paper.biomed"})
 
     def _identity(self) -> list[str]:

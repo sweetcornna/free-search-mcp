@@ -1,6 +1,6 @@
 """arXiv — preprint search over the public Atom API. No key, no quota.
 
-  GET http://export.arxiv.org/api/query?search_query=all:<q>&max_results=<n>
+  GET https://export.arxiv.org/api/query?search_query=<expr>&max_results=<n>
 
 The response is an Atom feed, not JSON, so `fetch_results` is overridden to
 parse XML while everything else (session, error boundary, result tail) comes
@@ -18,6 +18,7 @@ from __future__ import annotations
 # entities and rejects internal entity *definitions* outright
 # ("ParseError: undefined entity"), which closes both XXE and billion-laughs.
 # defusedxml would add a dependency for threats this parser does not have.
+import re
 import xml.etree.ElementTree as ET
 from urllib.parse import quote_plus
 
@@ -28,6 +29,46 @@ from .jsonapi import JsonApiEngine, clip, iso_date
 # this package is https. Plaintext bought a redirect hop and nothing else.
 _ENDPOINT = "https://export.arxiv.org/api/query"
 _NS = {"a": "http://www.w3.org/2005/Atom"}
+
+
+# arXiv does not index these, so a term list that includes one matches nothing
+# at all (measured: `all:attention AND all:is AND ...` -> 0 results).
+_STOPWORDS = frozenset(
+    {
+        "a", "all", "an", "and", "are", "as", "at", "be", "by", "for", "from", "in", "is",
+        "it", "of", "on", "or", "the", "to", "versus", "via", "vs", "with", "you",
+    }
+)  # fmt: skip
+_TERM_RE = re.compile(r"[^\W_][\w.+#-]*")
+_MAX_TERMS = 8
+
+
+def _search_query(query: str) -> str:
+    """The `search_query` expression for a free-text query, URL-encoded.
+
+    `all:deep residual learning` does not mean what it looks like. The field
+    prefix binds to the first word and the rest are OR-ed, so the engine that
+    natively indexes papers — and counts double for `category="paper"` —
+    answered "reciprocal rank fusion" with an infrared image-FUSION paper, and
+    "deep residual learning for image recognition" with anything containing
+    "learning". Measured 2026-09-21, top results per shape:
+
+        all:<words>              off topic (any one word matches)
+        all:w1 AND all:w2 ...    on topic; ZERO results if a stopword is kept
+        all:"<the query>"        the exact paper for a title; zero otherwise
+
+    So: the exact phrase OR all of the content words. A title finds its paper
+    first, a description finds papers about all of its terms, and neither comes
+    back empty because of the other. A query that already carries quotes is the
+    caller's own expression and is passed through.
+    """
+    text = " ".join(query.split())
+    words = [w for w in _TERM_RE.findall(text) if w.lower() not in _STOPWORDS][:_MAX_TERMS]
+    if '"' in text or len(words) < 2:
+        return f"all:{quote_plus(text)}"
+    phrase = quote_plus(f'"{text}"')
+    every_term = "+AND+".join(f"all:{quote_plus(w)}" for w in words)
+    return f"all:{phrase}+OR+%28{every_term}%29"
 
 
 class ArxivEngine(JsonApiEngine):
@@ -43,7 +84,7 @@ class ArxivEngine(JsonApiEngine):
         # arXiv rejects max_results > 2000 and treats 0 as "no results".
         n = max(1, min(max_results, 100))
         params = [
-            f"search_query=all:{quote_plus(query)}",
+            f"search_query={_search_query(query)}",
             "start=0",
             f"max_results={n}",
         ]

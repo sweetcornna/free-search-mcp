@@ -51,6 +51,16 @@ def _is_transient_nav_error(msg: str) -> bool:
     return any(marker in msg for marker in _TRANSIENT_NAV_MARKERS)
 
 
+def brief_error(exc: BaseException) -> str:
+    """An exception's message without Playwright's call log.
+
+    Playwright appends a multi-line "Call log:" to every error. It repeats the
+    URL the first line already names, and it lands in text a model reads: the
+    `errors` map of a search and the message of a failed `fetch`.
+    """
+    return str(exc).split("\nCall log:", 1)[0].strip()
+
+
 class BrowserUnavailableError(RuntimeError):
     """The Chromium browser binary is not installed.
 
@@ -134,6 +144,12 @@ class BrowserPool:
         # Installing it requires a restart, so subsequent calls fail fast
         # instead of re-paying a ~1s driver start/stop per attempt.
         self._unavailable_reason: str | None = None
+
+    @property
+    def known_unavailable(self) -> bool:
+        """True once a launch has failed for want of a browser binary. False
+        means "not known to be missing", not "present" — nothing is probed."""
+        return self._unavailable_reason is not None
 
     def _launch_args(self) -> list[str]:
         args = [

@@ -18,19 +18,38 @@ from search_mcp.aggregator import (  # noqa: E402
     _NATIVE_CATEGORY_WEIGHT,
     _RRF_K,
     _dedup_by_title,
+    _is_guarded,
     _native_engines,
     _normalize_url,
+    _url_key,
+)
+from search_mcp.coherence import (  # noqa: E402
+    COHERENCE_MIN,
+    bucket_coherence,
+    is_witness,
+    looks_like_decoy,
 )
 
-DATA_PATH = pathlib.Path(__file__).parent / "buckets.json"
+HERE = pathlib.Path(__file__).parent
+DATA_PATH = HERE / "buckets.json"
+FIXTURE_PATH = HERE / "fixtures" / "decoy_and_dupes.json"
 
 
-def load():
-    if not DATA_PATH.exists():
+def load(path: pathlib.Path = DATA_PATH):
+    """The cases of a capture, plus when it was taken.
+
+    Accepts both shapes: the dated `{"captured_at", "cases"}` one, and the bare
+    list that captures before 2026-09 were written as.
+    """
+    if not path.exists():
         raise SystemExit(
-            f"{DATA_PATH} not found — run `python evals/ranking/capture.py` first."
+            f"{path} not found — run `python evals/ranking/capture.py` first, or pass "
+            f"`--data {FIXTURE_PATH.relative_to(HERE.parents[1])}` for the committed slice."
         )
-    return json.loads(DATA_PATH.read_text())
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    if isinstance(raw, list):
+        return raw, "unknown (pre-2026-09 capture)"
+    return raw["cases"], raw.get("captured_at", "unknown")
 
 
 def merge(case, *, k=_RRF_K, native_weight=_NATIVE_CATEGORY_WEIGHT, cap=50):
@@ -45,23 +64,50 @@ def merge(case, *, k=_RRF_K, native_weight=_NATIVE_CATEGORY_WEIGHT, cap=50):
     engines_for: dict[str, list[str]] = {}
     for name, rows in case["buckets"].items():
         weight = native_weight if name in native else 1.0
-        for r in rows:
+        for rank, r in enumerate(rows, 1):
             url = _normalize_url(r["url"])
             if not url:
                 continue
-            scores[url] = scores.get(url, 0.0) + weight / (k + r["rank"])
-            engines_for.setdefault(url, []).append(name)
-            if url not in rep:
-                rep[url] = dict(r) | {"url": url}
+            # Keyed on the page's identity, emitted as the URL an engine gave —
+            # the same split `_merge` makes, and for the same reason.
+            key = _url_key(url)
+            scores[key] = scores.get(key, 0.0) + weight / (k + r.get("rank", rank))
+            engines_for.setdefault(key, []).append(name)
+            if key not in rep:
+                rep[key] = dict(r) | {"url": url}
     out = []
-    for url, score in sorted(scores.items(), key=lambda kv: -kv[1]):
-        rec = rep[url]
-        rec["engines"] = sorted(set(engines_for[url]))
+    for key, score in sorted(scores.items(), key=lambda kv: -kv[1]):
+        rec = rep[key]
+        rec["engines"] = sorted(set(engines_for[key]))
         rec["score"] = score
         rec.pop("rank", None)
         rec.pop("engine", None)
         out.append(rec)
     return _dedup_by_title(out)[:cap]
+
+
+def guard(case) -> tuple[dict, list[tuple[str, float]]]:
+    """Apply the aggregator's off-topic rule to one captured case.
+
+    Returns the case without the buckets the guard would drop, and what was
+    dropped with its coherence. Same rule as `_drop_decoy_buckets`: a suspect
+    goes only when another bucket witnesses that the query's words do get
+    echoed.
+    """
+    buckets = case["buckets"]
+    suspects = [
+        name for name, rows in buckets.items()
+        if _is_guarded(name) and looks_like_decoy(case["query"], rows)
+    ]
+    witnessed = any(
+        name not in suspects and is_witness(case["query"], rows)
+        for name, rows in buckets.items()
+    )
+    if not suspects or not witnessed:
+        return case, []
+    dropped = [(name, bucket_coherence(case["query"], buckets[name])) for name in suspects]
+    kept = {name: rows for name, rows in buckets.items() if name not in suspects}
+    return case | {"buckets": kept}, dropped
 
 
 def rank_of(results, expect):
@@ -91,8 +137,41 @@ def main() -> None:
                     help="per-query before/after table")
     ap.add_argument("--sweep", action="store_true",
                     help="grid over k and the native weight")
+    ap.add_argument("--guard", action="store_true",
+                    help="report what the off-topic guard drops, and score with it applied; "
+                         "exits non-zero if it drops a bucket the capture does not mark as a decoy")
+    ap.add_argument("--data", type=pathlib.Path, default=DATA_PATH,
+                    help=f"capture to replay (default: {DATA_PATH.name}; the committed slice "
+                         f"is {FIXTURE_PATH.relative_to(HERE)})")
     args = ap.parse_args()
-    data = load()
+    data, captured_at = load(args.data)
+    print(f"capture: {args.data.name}, taken {captured_at}, {len(data)} cases")
+
+    if args.guard:
+        # The guard has two ways to be wrong and only one is tolerable. Missing
+        # a decoy costs a few bad results; dropping a HEALTHY bucket silently
+        # halves a search. So the second is an error here, not a statistic.
+        unmarked = 0
+        guarded = []
+        print(f"\noff-topic guard (coherence < {COHERENCE_MIN}, given a witness):")
+        for case in data:
+            kept, dropped = guard(case)
+            guarded.append(kept)
+            for name, score in dropped:
+                marked = name in (case.get("decoy") or [])
+                unmarked += not marked
+                flag = "marked decoy" if marked else "NOT MARKED — read this bucket"
+                print(f"  drops {name:12} coherence={score:.2f}  {case['query'][:40]!r}  [{flag}]")
+        before, _ = evaluate(data)
+        after, _ = evaluate(guarded)
+        print(f"  without guard: {before}\n  with guard:    {after}")
+        if unmarked:
+            raise SystemExit(
+                f"\n{unmarked} dropped bucket(s) are not marked as decoys. Either the guard is "
+                'wrong, or the capture is missing a `"decoy": [...]` annotation — read the '
+                "bucket and decide which."
+            )
+        data = guarded
 
     shipped, shipped_detail = evaluate(data)
     print(f"shipped (k={_RRF_K}, native_weight={_NATIVE_CATEGORY_WEIGHT}): {shipped}")

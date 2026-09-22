@@ -54,7 +54,7 @@ class SemanticScholarEngine(JsonApiEngine):
     """Semantic Scholar paper search (works keyless in theory, needs a key in practice)."""
 
     name = "semanticscholar"
-    description = "Semantic Scholar — abstracts, citation counts, open-access PDFs (key advised)."
+    description = "Semantic Scholar: abstracts, citation counts, open-access PDFs (key advised)."
     categories = frozenset({"paper", "paper.index"})
     # The anonymous pool answers 429; identify honestly rather than pretending
     # to be a browser, since the fix is a key, not a fingerprint.

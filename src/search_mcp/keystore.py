@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
@@ -44,6 +45,25 @@ def config_path() -> Path:
     return config_dir() / "config.json"
 
 
+_INLINE_COMMENT_RE = re.compile(r"\s+#")
+
+
+def _env_value(raw: str) -> str:
+    """The value of one ``KEY=value`` line, read the way dotenv files are.
+
+    A quoted value is what sits inside the quotes. An unquoted value ends at a
+    ``#`` that follows whitespace, so ``604800   # 7 days`` is ``604800``, while
+    a URL fragment (``http://host/#frag``) or a password containing ``#``
+    survives because no whitespace precedes it.
+    """
+    raw = raw.strip()
+    if raw[:1] in ('"', "'"):
+        end = raw.find(raw[0], 1)
+        if end != -1:
+            return raw[1:end]
+    return _INLINE_COMMENT_RE.split(raw, maxsplit=1)[0].strip('"').strip("'")
+
+
 def load_env_file_into_environ(path: str | Path = ".env") -> None:
     """Populate ``os.environ`` with ``SEARCH_MCP_*`` keys from a ``.env`` file.
 
@@ -62,10 +82,8 @@ def load_env_file_into_environ(path: str | Path = ".env") -> None:
             continue
         key, _, val = line.partition("=")
         key = key.strip()
-        # Strip optional surrounding quotes.
-        val = val.strip().strip('"').strip("'")
         if key.startswith("SEARCH_MCP_") and key not in os.environ:
-            os.environ[key] = val
+            os.environ[key] = _env_value(val)
 
 
 def load_all_env_files() -> None:
@@ -208,6 +226,9 @@ class Provider:
     how_to: list[str]        # numbered steps to obtain a key
     docs_url: str = ""
     optional: bool = False   # engine works without the key (e.g. anysearch)
+    # Engines other than `engine` that ONLY run once this provider is configured.
+    # The GitHub token is optional for `github` and the sole way to `github_code`.
+    unlocks: tuple[str, ...] = ()
 
 
 PROVIDERS: list[Provider] = [
@@ -318,12 +339,12 @@ PROVIDERS: list[Provider] = [
         "with HTTP 429 in practice; a free key gives 1 request/second",
         how_to=[
             "Semantic Scholar has the richest metadata of the keyless scholarly "
-            "sources — abstracts, citation counts and open-access PDF links.",
+            "sources: abstracts, citation counts and open-access PDF links.",
             "Its anonymous tier is a shared bucket that is effectively always "
             "rate-limited, so without a key this engine usually returns nothing.",
             "Request a free key at "
-            "https://www.semanticscholar.org/product/api#api-key-form — approval "
-            "is by email and takes a few days.",
+            "https://www.semanticscholar.org/product/api#api-key-form (approval "
+            "is by email and takes a few days).",
             "Paste the key here; `category=\"paper\"` will then include it.",
         ],
         docs_url="https://api.semanticscholar.org/api-docs/graph",
@@ -348,11 +369,12 @@ PROVIDERS: list[Provider] = [
             "The `github` engine searches repositories and issues with no token.",
             "A token raises the rate limit and enables `github_code`, because "
             "GitHub's code-search API rejects anonymous requests outright.",
-            "Create one at https://github.com/settings/tokens — no scopes are "
-            "needed for searching public repositories.",
+            "Create one at https://github.com/settings/tokens (no scopes are "
+            "needed for searching public repositories).",
         ],
         docs_url="https://docs.github.com/rest/search",
         optional=True,
+        unlocks=("github_code",),
     ),
     Provider(
         id="stackexchange",
@@ -371,7 +393,7 @@ PROVIDERS: list[Provider] = [
         how_to=[
             "Stack Exchange search works with no key at 300 requests/day per IP.",
             "For more, register an app at https://stackapps.com/apps/oauth/register.",
-            "Only the 'key' value is needed here — not the client secret.",
+            "Only the 'key' value is needed here. The client secret is not.",
         ],
         docs_url="https://api.stackexchange.com/docs",
         optional=True,
@@ -413,6 +435,27 @@ def is_configured(provider_id: str) -> bool:
     if not required:
         return True
     return all(get_secret(f.key) is not None for f in required)
+
+
+def opt_in_engines() -> dict[str, bool]:
+    """`{engine: configured}` for every engine that cannot run without a key.
+
+    The complement of "keyless": the engines the project's no-key promise does
+    NOT cover. Nothing in the default, reserve, rescue or category pools may
+    appear here (tests/test_no_key_positioning.py), which is what makes the
+    promise checkable rather than a line in the README.
+    """
+    out: dict[str, bool] = {}
+    for provider in PROVIDERS:
+        if not provider.optional:
+            out[provider.engine] = is_configured(provider.id)
+        # `is_configured` is vacuously True for a provider with no REQUIRED
+        # field — right for `github`, which runs anonymously, and wrong for the
+        # engine its token unlocks. That one needs the value to actually exist.
+        has_value = any(get_secret(f.key) is not None for f in provider.fields)
+        for engine in provider.unlocks:
+            out[engine] = has_value
+    return out
 
 
 def provider_status() -> dict[str, bool]:

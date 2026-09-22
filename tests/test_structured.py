@@ -294,3 +294,83 @@ async def test_extract_structured_async_uses_httpx(monkeypatch):
     assert captured["url"] == "https://example.com/article"
     assert payload["url"] == "https://example.com/article"
     assert payload["json_ld"], "json-ld parsed via async path"
+
+
+# ---------------------------------------------------------------------------
+# Output size: keep the fields, clip the prose
+# ---------------------------------------------------------------------------
+
+_ARTICLE_BODY = "A sentence of the article. " * 400  # ~10,800 characters
+
+_BLOG_HTML = f"""
+<html><head><title>Post</title>
+<script type="application/ld+json">
+{{"@context": "https://schema.org", "@type": "BlogPosting",
+  "headline": "What changed in 0.12",
+  "articleBody": "{_ARTICLE_BODY}",
+  "description": "A short summary.",
+  "datePublished": "2026-09-01", "dateModified": "2026-09-14",
+  "author": {{"@type": "Person", "name": "Ada"}}}}
+</script></head>
+<body>
+  <div role="navigation">nav</div><div role="banner">b</div><div role="main">m</div>
+  <div vocab="https://schema.org/" typeof="Event">
+    <span property="name">Finals</span><span property="startDate">2026-10-15</span>
+  </div>
+</body></html>
+"""
+
+
+def test_long_prose_is_clipped_and_every_small_field_survives():
+    from search_mcp.structured import _LONG_TEXT_CAP, extract_structured_from_html
+
+    out = extract_structured_from_html(_BLOG_HTML, "https://blog.example/post")
+    post = out["json_ld"][0]
+
+    # The reason to call this tool at all:
+    assert post["datePublished"] == "2026-09-01"
+    assert post["dateModified"] == "2026-09-14"
+    assert post["author"]["name"] == "Ada"
+    assert post["headline"] == "What changed in 0.12"
+    # Short text is never touched.
+    assert post["description"] == "A short summary."
+    # The article itself is `fetch`'s job, and the clip says how much was there.
+    body = post["articleBody"]
+    assert body.startswith("A sentence of the article.")
+    assert len(body) < _LONG_TEXT_CAP + 80
+    assert f"[clipped: {len(_ARTICLE_BODY)} characters in the page]" in body
+    assert "1 long text field(s) clipped" in out["trimmed"]
+    assert "use `fetch` for the full text" in out["trimmed"]
+
+
+def test_layout_only_rdfa_nodes_are_dropped_and_real_ones_kept():
+    import json
+
+    from search_mcp.structured import extract_structured_from_html
+
+    out = extract_structured_from_html(_BLOG_HTML, "https://blog.example/post")
+
+    flat = json.dumps(out["rdfa"])
+    assert "vocab#role" not in flat
+    assert "Finals" in flat and "2026-10-15" in flat
+    assert "layout-only RDFa node(s)" in out["trimmed"]
+
+
+def test_a_page_with_nothing_to_trim_says_nothing_about_trimming():
+    from search_mcp.structured import extract_structured_from_html
+
+    out = extract_structured_from_html(_JSONLD_HTML, "https://example.com/")
+    assert "trimmed" not in out
+
+
+def test_the_whole_payload_is_small_enough_to_be_worth_calling():
+    from search_mcp.formatting import estimate_tokens, render_structured
+    from search_mcp.structured import extract_structured_from_html
+
+    out = extract_structured_from_html(_BLOG_HTML, "https://blog.example/post")
+    md = render_structured(out)
+    assert estimate_tokens(md) < 700, estimate_tokens(md)
+    # The markdown renderer cuts each JSON block at 2,000 characters. Before the
+    # clip, `datePublished` sat behind 10 KB of articleBody and was cut off.
+    assert '"datePublished": "2026-09-01"' in md
+    assert out["trimmed"] in md

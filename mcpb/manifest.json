@@ -1,0 +1,76 @@
+{
+  "manifest_version": "0.4",
+  "name": "free-search-mcp",
+  "display_name": "Free Search",
+  "version": "0.12.0",
+  "description": "Web search, page fetching and document reading with no API key and no signup.",
+  "long_description": "Multi-engine web search, page fetching and PDF/DOCX reading that runs on your own machine. Nothing to sign up for and no API key to paste: every default, fallback and category route uses keyless sources.\n\nSearch results carry the signals needed to judge them: when they were retrieved, how old a cached copy is, which results have a verifiable date, and what kind of site each one is. Engines that are blocked or answering off-topic are benched and reported, and their results are left out.\n\nAll three settings below are optional. Leave them empty unless your network needs a proxy.",
+  "author": {
+    "name": "ymylive",
+    "url": "https://github.com/sweetcornna"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sweetcornna/free-search-mcp"
+  },
+  "homepage": "https://github.com/sweetcornna/free-search-mcp#readme",
+  "documentation": "https://github.com/sweetcornna/free-search-mcp/blob/main/docs/USAGE.md",
+  "support": "https://github.com/sweetcornna/free-search-mcp/issues",
+  "icon": "icon.png",
+  "server": {
+    "type": "uv",
+    "entry_point": "src/server.py",
+    "mcp_config": {
+      "command": "uv",
+      "args": ["run", "--directory", "${__dirname}", "src/server.py"],
+      "env": {
+        "SEARCH_MCP_PROXY": "${user_config.proxy}",
+        "SEARCH_MCP_REGION": "${user_config.region}",
+        "SEARCH_MCP_CACHE_DIR": "${user_config.cache_dir}"
+      }
+    }
+  },
+  "tools": [
+    {"name": "search", "description": "Multi-engine web search: a ranked, deduplicated link list with freshness signals."},
+    {"name": "fetch", "description": "Fetch one URL as readable text, or describe a non-text resource."},
+    {"name": "fetch_batch", "description": "Fetch several URLs in parallel; one failure does not fail the batch."},
+    {"name": "read_doc", "description": "Read a PDF, DOCX or other document into Markdown, page by page."},
+    {"name": "research", "description": "Search and read the top results in one round trip."},
+    {"name": "paper_graph", "description": "Follow one paper's citations and check for retractions and corrections."},
+    {"name": "cache_search", "description": "Full-text search over pages already fetched into the local cache."},
+    {"name": "engines", "description": "List the available sources, grouped by what they index."},
+    {"name": "compare", "description": "Fetch 2-5 URLs and return per-URL excerpts for one question."},
+    {"name": "extract_structured", "description": "Pull JSON-LD, OpenGraph and microdata (dates, prices, events) from a page."},
+    {"name": "download", "description": "Save a file from a URL to a local, auto-expiring download directory."}
+  ],
+  "prompts_generated": true,
+  "user_config": {
+    "proxy": {
+      "type": "string",
+      "title": "Proxy (optional)",
+      "description": "Outbound proxy URL (http://, https:// or socks5://), only if your network blocks the search engines. Leave empty otherwise.",
+      "required": false,
+      "sensitive": true
+    },
+    "region": {
+      "type": "string",
+      "title": "Region (optional)",
+      "description": "Default region-language for results, e.g. us-en, uk-en, cn-zh. Leave empty for us-en; a query's own language still wins.",
+      "required": false
+    },
+    "cache_dir": {
+      "type": "directory",
+      "title": "Cache directory (optional)",
+      "description": "Where fetched pages and searches are cached. Leave empty for ~/.cache/search-mcp.",
+      "required": false
+    }
+  },
+  "compatibility": {
+    "platforms": ["darwin", "linux", "win32"],
+    "runtimes": {
+      "python": ">=3.11"
+    }
+  },
+  "keywords": ["search", "web-search", "research", "fetch", "documents", "no-api-key"],
+  "license": "MIT"
+}

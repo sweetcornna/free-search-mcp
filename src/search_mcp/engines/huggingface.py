@@ -21,7 +21,7 @@ class HuggingFaceEngine(JsonApiEngine):
     """Hugging Face Hub dataset-repository search (keyless JSON API)."""
 
     name = "huggingface"
-    description = "Hugging Face Hub — machine-learning dataset repositories and dataset cards."
+    description = "Hugging Face Hub: machine-learning dataset repositories and dataset cards."
     categories = frozenset({"dataset", "dataset.ml"})
 
     def build_url(

@@ -55,6 +55,7 @@ from .base import (
     Engine,
     SearchFilters,
     SearchResult,
+    key_not_configured,
     raise_for_key_error,
 )
 
@@ -82,7 +83,7 @@ class TavilyEngine(Engine):
     """Tavily AI-search REST API — keyed, JSON POST."""
 
     name = "tavily"
-    description = "Tavily — an LLM-oriented search API that returns cleaned page content."
+    description = "Tavily: an LLM-oriented search API that returns cleaned page content."
     needs_browser = False
     # JSON API: an empty/malformed response is genuinely empty, so don't waste
     # a Playwright render trying to "recover" it (see Engine.search fallback).
@@ -161,9 +162,14 @@ class TavilyEngine(Engine):
         # per-engine errors map, surfacing it cleanly to the caller.
         key = get_secret(_KEY_FIELD)
         if not key:
-            raise ValueError(
-                "tavily not configured: add tavily_api_key in the admin UI "
-                "(run: uv run search-mcp-admin) or set SEARCH_MCP_TAVILY_API_KEY."
+            raise key_not_configured(
+                "tavily",
+                alternative=(
+                    "omit `engines=` to use the default keyless pool, or call `research` for "
+                    "search and reading in one step."
+                ),
+                env="SEARCH_MCP_TAVILY_API_KEY",
+                field="tavily_api_key",
             )
 
         # Tavily caps max_results at 20 and rejects < 1; clamp defensively.

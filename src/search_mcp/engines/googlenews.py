@@ -4,17 +4,24 @@ Independent news index that requires no API key. Hits the public RSS endpoint
 at https://news.google.com/rss/search?q=... which returns up-to-the-minute
 news articles with structured <pubDate> tags.
 
-Caveat: result URLs are news.google.com/articles/CBM... redirects, NOT direct
-publisher URLs. Decoding the wrapped URL is non-trivial (Google encodes it
-inside a base64-ish blob with anti-bot signing). For now we return the
-news.google.com link as-is; the fetcher follows the redirect and the final
-publisher URL surfaces as FetchResult.url. The original outlet name is
-appended to each title in parentheses (parsed from the <source> RSS element)
-so the LLM can identify the publisher without parsing the URL.
+Every item links to a `news.google.com/rss/articles/CBM…` redirect blob, not to
+the publisher. Handing those out as result URLs quietly disabled everything
+that reads a hostname: `include_domains` / `exclude_domains` and the category
+filters saw "news.google.com" for every item, and the same story found by a web
+engine never merged with it, so rank fusion could not reward the agreement. So
+the engine resolves the top results to publisher URLs itself (`gnews.py` replays
+the RPC Google's own client uses), inside a fixed time budget; an item that
+does not resolve in time keeps its redirect link, which `fetch` still follows.
+The outlet name is appended to each title in parentheses either way.
+
+Not part of the default pool: it answers ANY query — a programming question
+included — with ten headlines. It joins for `category="news"` and for
+`freshness="day"|"week"` (see `settings.fresh_engines`).
 """
 
 from __future__ import annotations
 
+import asyncio
 import html as html_lib
 import re
 import xml.etree.ElementTree as ET
@@ -23,6 +30,7 @@ from email.utils import parsedate_to_datetime
 from urllib.parse import quote_plus
 
 from ..config import settings
+from ..gnews import is_google_news_url, resolve_google_news_url
 from .base import (
     Engine,
     SearchFilters,
@@ -80,6 +88,40 @@ def _strip_html(s: str) -> str:
     return " ".join(decoded.split())
 
 
+# Resolving one link downloads a ~600 KB article shell, so this is bounded three
+# ways: how many at once, how long in total, and how many failures in a row
+# before concluding the RPC is down and leaving the rest alone.
+_RESOLVE_CONCURRENCY = 4
+_RESOLVE_BUDGET_SECONDS = 4.0
+_RESOLVE_MAX_FAILURES = 3
+
+
+async def _resolve_publisher_urls(results: list[SearchResult]) -> None:
+    """Rewrite redirect blobs to publisher URLs, in place, best effort."""
+    gate = asyncio.Semaphore(_RESOLVE_CONCURRENCY)
+    failures = 0
+
+    async def one(result: SearchResult) -> None:
+        nonlocal failures
+        async with gate:
+            if failures >= _RESOLVE_MAX_FAILURES:
+                return
+            resolved = await resolve_google_news_url(result.url)
+        if resolved:
+            failures = 0
+            result.url = resolved
+        else:
+            failures += 1
+
+    tasks = [asyncio.create_task(one(r)) for r in results if is_google_news_url(r.url)]
+    if not tasks:
+        return
+    _, late = await asyncio.wait(tasks, timeout=_RESOLVE_BUDGET_SECONDS)
+    for task in late:
+        task.cancel()
+    await asyncio.gather(*tasks, return_exceptions=True)
+
+
 class GoogleNewsEngine(Engine):
     """Google News RSS — independent news index, no API key, structured dates."""
 
@@ -118,6 +160,14 @@ class GoogleNewsEngine(Engine):
             # 'CN:zh-Hans'), so its ':' needs no percent-encoding.
             f"&hl={hl}&gl={gl}&ceid={ceid}"
         )
+
+    async def _raw_results(self, query, max_results, filters=None, diagnostics=None):
+        results, html = await super()._raw_results(query, max_results, filters, diagnostics)
+        # Only as many as can be returned. `site:` already scoped the feed
+        # server-side when the caller gave domains, so the head of the list is
+        # the part the host-based filters in `finalize_results` need to read.
+        await _resolve_publisher_urls(results[:max_results])
+        return results, html
 
     def parse(self, html: str) -> list[SearchResult]:
         results: list[SearchResult] = []

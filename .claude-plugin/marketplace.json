@@ -1,24 +1,26 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-marketplace-manifest.json",
   "name": "free-search-mcp",
   "owner": {
     "name": "ymylive",
     "url": "https://github.com/sweetcornna"
   },
   "metadata": {
-    "description": "The free-search-mcp project's own marketplace: one plugin, the search MCP server."
+    "description": "The free-search-mcp project's own marketplace. It holds one plugin: the keyless search MCP server, its verification skill and its quick-search agent."
   },
   "plugins": [
     {
       "name": "free-search",
       "source": "./plugins/free-search",
-      "description": "Local-first, no-API-key web search, fetching, and document reading — 11 MCP tools, no signup and no key.",
+      "description": "Local-first web search, page fetching and document reading with no API key and no signup. Ships 11 MCP tools, a source-verification skill and a quick-search agent.",
       "keywords": [
         "mcp",
         "search",
         "web-search",
         "research",
         "fetch",
-        "no-api-key"
+        "no-api-key",
+        "agent-skills"
       ]
     }
   ]

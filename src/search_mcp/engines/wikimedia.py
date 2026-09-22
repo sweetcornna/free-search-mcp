@@ -33,7 +33,7 @@ class WikimediaEngine(JsonApiEngine):
     """Wikimedia Commons image search (keyless MediaWiki API)."""
 
     name = "wikimedia"
-    description = "Wikimedia Commons — freely licensed images with attribution and source metadata."
+    description = "Wikimedia Commons: freely licensed images with attribution and source metadata."
     categories = frozenset({"image"})
     # Wikimedia asks API clients to identify themselves; browser impersonation
     # would hide the contactable User-Agent the shared API path already sends.

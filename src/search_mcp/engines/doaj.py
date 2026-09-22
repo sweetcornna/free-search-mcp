@@ -27,7 +27,7 @@ class DoajEngine(JsonApiEngine):
     """DOAJ open-access article search (keyless JSON API)."""
 
     name = "doaj"
-    description = "DOAJ — open-access journal articles; every hit is free to read in full."
+    description = "DOAJ: open-access journal articles; every hit is free to read in full."
     categories = frozenset({"paper", "paper.openaccess"})
 
     def build_url(
