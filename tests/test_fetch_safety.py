@@ -579,6 +579,8 @@ async def test_fetch_page_html_still_extracted(monkeypatch):
         "<p>This is a sufficiently long body paragraph so that the auto render "
         "heuristic treats the HTTP body as complete and does not fall back to "
         "the browser path while we verify extraction runs for markup.</p>"
+        "<p>A second paragraph keeps the heading: trafilatura 2.2 treats a page "
+        "with one paragraph as a fragment and drops everything but the text.</p>"
         "</article></body></html>"
     )
 
@@ -625,6 +627,8 @@ _FIXTURE_HTML = """\
     <p>This is a sufficiently long paragraph of body text so that trafilatura's
     content-extraction heuristics consider it the main article content and emit
     it into the markdown output without discarding it as boilerplate.</p>
+    <p>A second paragraph keeps the heading: trafilatura 2.2 treats a page with
+    one paragraph as a fragment and drops everything but the text.</p>
   </article>
 </body>
 </html>

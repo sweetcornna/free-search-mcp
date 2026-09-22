@@ -50,7 +50,11 @@ that a program parsing it would notice, all listed under Changed.
   changed handler semantics. CI gained a daily `sdk-canary` job with two legs.
   One resolves the newest SDK inside the range and is a hard gate that the
   release reuses. The other ignores the upper bound and may fail, which shows
-  in advance what the next bump will meet.
+  in advance what the next bump will meet. Its first run found two things a
+  fresh install already met: trafilatura 2.2 keeps no heading from a page
+  with a single paragraph, and curl_cffi 0.16 removed the helper a test used
+  to check impersonation profiles. The tests now hold on both the locked and
+  the newest versions.
 - Markdown is no longer delivered inside JSON. The SDK derived an output schema
   of `{"result": <str | dict>}` for the dual-format tools and sent the markdown
   twice, as a text block and as `structuredContent={"result": "…"}`. Clients
