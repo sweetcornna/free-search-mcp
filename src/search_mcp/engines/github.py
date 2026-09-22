@@ -19,7 +19,12 @@ from typing import Any
 from urllib.parse import quote_plus
 
 from ..keystore import get_secret
-from .base import EngineKeyError, SearchFilters, SearchResult, raise_for_key_error
+from .base import (
+    SearchFilters,
+    SearchResult,
+    key_not_configured,
+    raise_for_key_error,
+)
 from .jsonapi import JsonApiEngine, clip, iso_date
 
 _API = "https://api.github.com"
@@ -184,12 +189,15 @@ class GitHubCodeEngine(JsonApiEngine):
         self, query: str, max_results: int, filters: SearchFilters | None
     ) -> list[SearchResult]:
         if not _token():
-            raise EngineKeyError(
-                "github_code: GitHub's code search API rejects anonymous requests. "
-                "Add a personal access token in the admin UI "
-                "(uv run search-mcp-admin) or set SEARCH_MCP_GITHUB_TOKEN. "
-                "The keyless `github` engine searches repositories and issues "
-                "without one."
+            raise key_not_configured(
+                "github_code",
+                alternative=(
+                    "GitHub's code search API rejects anonymous requests, but the keyless "
+                    "`github` engine searches repositories and issues, and "
+                    "`search(query, include_domains=['github.com'])` finds code pages."
+                ),
+                env="SEARCH_MCP_GITHUB_TOKEN",
+                field="github_token",
             )
         url = self.build_url(query, max_results, filters)
         body = await self._request_text(url, headers=_auth_headers())

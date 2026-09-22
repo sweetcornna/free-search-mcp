@@ -1,0 +1,49 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.sweetcornna/free-search-mcp",
+  "title": "Free Search",
+  "description": "No-API-key web search, page fetching and document reading across many engines. Local-first.",
+  "version": "0.12.0",
+  "websiteUrl": "https://github.com/sweetcornna/free-search-mcp#readme",
+  "repository": {
+    "url": "https://github.com/sweetcornna/free-search-mcp",
+    "source": "github"
+  },
+  "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/sweetcornna/free-search-mcp/main/assets/icon.png",
+      "mimeType": "image/png",
+      "sizes": ["128x128"]
+    }
+  ],
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "free-search-mcp",
+      "version": "0.12.0",
+      "runtimeHint": "uvx",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "SEARCH_MCP_PROXY",
+          "description": "Optional outbound proxy URL (http://, https:// or socks5://) for engines that block your network.",
+          "isRequired": false,
+          "isSecret": true
+        },
+        {
+          "name": "SEARCH_MCP_REGION",
+          "description": "Optional default region-language for results, e.g. us-en, uk-en, cn-zh. Default: us-en.",
+          "isRequired": false
+        },
+        {
+          "name": "SEARCH_MCP_CACHE_DIR",
+          "description": "Optional directory for the local search/page cache. Default: ~/.cache/search-mcp.",
+          "isRequired": false,
+          "format": "filepath"
+        }
+      ]
+    }
+  ]
+}

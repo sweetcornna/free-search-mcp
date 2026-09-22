@@ -24,7 +24,7 @@ class DataverseEngine(JsonApiEngine):
     """Harvard Dataverse dataset search (keyless JSON API)."""
 
     name = "dataverse"
-    description = "Harvard Dataverse — public research datasets with descriptions and DOI links."
+    description = "Harvard Dataverse: public research datasets with descriptions and DOI links."
     categories = frozenset({"dataset", "dataset.repository"})
 
     def build_url(

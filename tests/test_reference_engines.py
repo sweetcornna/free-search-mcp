@@ -380,7 +380,16 @@ def test_sogou_empty_and_garbage_return_empty():
     ],
 )
 async def test_live_returns_results(name, query):
-    out = await get_engine(name).search(query, 3)
+    from search_mcp.browser import brief_error
+
+    try:
+        out = await get_engine(name).search(query, 3)
+    except Exception as exc:  # Playwright's error types are private
+        # Only the navigation itself: a site this network cannot reach says
+        # nothing about the adapter. Any later failure still fails the test.
+        if str(exc).startswith("Page.goto:"):
+            pytest.skip(f"{name} could not be reached: {brief_error(exc)}")
+        raise
     if not out:
         pytest.skip(f"{name} returned nothing (blocked or markup changed)")
     assert out[0].url.startswith("http")

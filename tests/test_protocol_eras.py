@@ -31,7 +31,7 @@ MODERN = "2026-07-28"
 
 @pytest.mark.parametrize("mode", [MODERN, "legacy"])
 async def test_tools_are_identical_across_protocol_eras(mode):
-    """A client on either era sees the same nine tools with the same titles.
+    """A client on either era sees the same eleven tools with the same titles.
 
     This is the regression that matters for existing users: upgrading the SDK
     must not strand anyone still speaking the handshake protocol.

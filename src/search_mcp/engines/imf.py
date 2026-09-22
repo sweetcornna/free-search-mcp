@@ -50,7 +50,7 @@ class ImfEngine(JsonApiEngine):
     """IMF DataMapper macro indicator lookup (keyless JSON API)."""
 
     name = "imf"
-    description = "IMF DataMapper — GDP, inflation, debt and jobs series, with WEO forecasts."
+    description = "IMF DataMapper: GDP, inflation, debt and jobs series, with WEO forecasts."
     categories = frozenset({"finance", "finance.macro"})
 
     def __init__(self) -> None:

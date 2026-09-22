@@ -27,7 +27,7 @@ class DryadEngine(JsonApiEngine):
     """Dryad research-dataset search (keyless JSON API v2)."""
 
     name = "dryad"
-    description = "Dryad — curated research datasets with abstracts, authors and DOI landing pages."
+    description = "Dryad: curated research datasets with abstracts, authors and DOI landing pages."
     categories = frozenset({"dataset", "dataset.repository"})
 
     def build_url(

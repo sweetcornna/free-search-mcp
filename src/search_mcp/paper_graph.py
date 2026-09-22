@@ -29,6 +29,7 @@ lists it.
 
 from __future__ import annotations
 
+import html
 import logging
 import re
 from typing import Any
@@ -77,6 +78,9 @@ _MAX_LIMIT = 50
 # so a retry with a DOI is one step away.
 _TITLE_CANDIDATES = 5
 _TITLE_MIN = 85.0
+# "The same title", allowing for case and punctuation. Only used when the query
+# title came from a registry rather than from someone's memory.
+_EXACT_TITLE = 97.0
 
 # Post-publication notices, most severe first. Crossref files the SAME notice
 # DOI under several types — the Lancet Surgisphere paper lists one notice as
@@ -99,6 +103,19 @@ _MAX_NOTICES = 6
 _DOI_RE = re.compile(r"\b(10\.\d{4,9}/\S+)", re.I)
 # `W` + digits, optionally as a full openalex.org URL.
 _OPENALEX_RE = re.compile(r"\b(W\d{4,12})\b")
+
+# arXiv identifiers, in the three forms a model has on hand: the DataCite DOI
+# arXiv mints for every preprint (`10.48550/arXiv.1706.03762`), an abs/pdf URL,
+# and the `arXiv:` citation form. New-style ids (`1706.03762`) and old-style
+# ones (`hep-th/9901001`), with an optional version suffix that is dropped.
+_ARXIV_ID = r"([a-z-]+(?:\.[a-z]{2})?/\d{7}|\d{4}\.\d{4,5})(?:v\d+)?"
+_ARXIV_DOI_RE = re.compile(r"^10\.48550/arxiv\." + _ARXIV_ID + r"$", re.I)
+_ARXIV_REF_RE = re.compile(r"(?:arxiv\.org/(?:abs|pdf)/|\barxiv:\s*)" + _ARXIV_ID, re.I)
+# With no prefix to mark it, an id is trusted only as the WHOLE input:
+# "1706.03762" inside a title is a number, not an identifier.
+_ARXIV_BARE_RE = re.compile(r"^" + _ARXIV_ID + r"$", re.I)
+_ARXIV_API = "https://export.arxiv.org/api/query"
+_ATOM_ENTRY_TITLE_RE = re.compile(r"<entry>.*?<title>(.*?)</title>", re.S)
 
 Direction = str  # "both" | "references" | "citations"
 
@@ -134,7 +151,8 @@ def _normalize(paper: str) -> tuple[str, str]:
     """Classify the identifier: `("doi"|"openalex"|"title", value)`.
 
     Accepts what a model actually has on hand — a bare DOI, a doi.org URL, a
-    `doi:` prefix, an OpenAlex ID or URL, or the paper's title.
+    `doi:` prefix, an OpenAlex ID or URL, an arXiv id / URL / DOI, or the
+    paper's title.
     """
     text = (paper or "").strip()
     if not text:
@@ -143,10 +161,15 @@ def _normalize(paper: str) -> tuple[str, str]:
         match = _OPENALEX_RE.search(text)
         if match:
             return ("openalex", match.group(1).upper())
+    match = _ARXIV_REF_RE.search(text) or _ARXIV_BARE_RE.match(text)
+    if match:
+        return ("arxiv", match.group(1))
     match = _DOI_RE.search(text)
     if match:
         # Trailing punctuation is common when a DOI is pasted out of prose.
-        return ("doi", match.group(1).rstrip(").,;"))
+        doi = match.group(1).rstrip(").,;")
+        arxiv = _ARXIV_DOI_RE.match(doi)
+        return ("arxiv", arxiv.group(1)) if arxiv else ("doi", doi)
     match = _OPENALEX_RE.fullmatch(text.strip())
     if match:
         return ("openalex", match.group(1).upper())
@@ -195,6 +218,52 @@ def _node(item: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+async def _arxiv_title(arxiv_id: str) -> str:
+    """The title arXiv holds for `arxiv_id`, or "" — never raises."""
+    try:
+        feed = await _api._request_text(f"{_ARXIV_API}?id_list={quote(arxiv_id)}&max_results=1")
+    except Exception:
+        log.debug("arxiv title lookup failed for %s", arxiv_id, exc_info=True)
+        return ""
+    match = _ATOM_ENTRY_TITLE_RE.search(feed or "")
+    return " ".join(html.unescape(match.group(1)).split()) if match else ""
+
+
+async def _resolve_arxiv(arxiv_id: str) -> tuple[dict[str, Any] | None, list[str], str]:
+    """`(work, near_misses, title)` for an arXiv preprint.
+
+    OpenAlex does not resolve arXiv's DataCite DOIs: `works/https://doi.org/
+    10.48550/arXiv.1706.03762` is a 404 for a paper it plainly indexes (under
+    the DOI of the published version, or none). So `paper_graph` answered the
+    most-cited preprint of the decade with "the DOI may be unregistered or
+    mistyped". The way round is the one a person would take: ask arXiv what the
+    paper is called, then find that title in OpenAlex.
+    """
+    title = await _arxiv_title(arxiv_id)
+    if not title:
+        return (None, [], "")
+    candidates = await _title_candidates(title)
+    # This title is arXiv's own, not something typed from memory, so an exact
+    # match is meaningful. OpenAlex can hold more than one record under one
+    # exact title (a preprint and its proceedings version); among those the
+    # most-cited is the one the citation graph hangs off. With a single exact
+    # match — the usual case — this is simply that record.
+    #
+    # The record's own metadata is OpenAlex's and is passed through as given:
+    # on 2026-09-21 its entry for "Attention Is All You Need" (W2626778328)
+    # carried publication_year 2025 and a non-arXiv DOI. That is upstream data,
+    # not a wrong match.
+    exact = [
+        c for c in candidates
+        if isinstance(c.get("display_name"), str)
+        and _title_score(title, c["display_name"]) >= _EXACT_TITLE
+    ]
+    if exact:
+        return (max(exact, key=lambda c: c.get("cited_by_count") or 0), [], title)
+    work, near = _pick_by_title(title, candidates)
+    return (work, near, title)
+
+
 async def _resolve(
     kind: str, value: str
 ) -> tuple[dict[str, Any] | None, list[str]]:
@@ -220,16 +289,24 @@ async def _resolve(
         return (found, [])
     if not value:
         return (None, [])
+    return _pick_by_title(value, await _title_candidates(value))
+
+
+async def _title_candidates(title: str) -> list[dict[str, Any]]:
+    """OpenAlex's first page of works for `title`, in its relevance order."""
     url = (
-        f"{_WORKS}?search={quote_plus(value)}&per-page={_TITLE_CANDIDATES}"
+        f"{_WORKS}?search={quote_plus(title)}&per-page={_TITLE_CANDIDATES}"
         f"&select={_SELECT_TARGET}{_mailto()}"
     )
     payload = await _api._get_json(url)
     items = payload.get("results") if isinstance(payload, dict) else None
-    if not isinstance(items, list):
-        return (None, [])
-    candidates = [i for i in items if isinstance(i, dict)]
-    match = _best_title_match(value, candidates)
+    return [i for i in items if isinstance(i, dict)] if isinstance(items, list) else []
+
+
+def _pick_by_title(
+    title: str, candidates: list[dict[str, Any]]
+) -> tuple[dict[str, Any] | None, list[str]]:
+    match = _best_title_match(title, candidates)
     if match is not None:
         return (match, [])
     near = [
@@ -431,16 +508,24 @@ async def paper_graph(
         direction = "both"
 
     kind, value = _normalize(paper)
-    work, near_misses = await _resolve(kind, value)
+    arxiv_title = ""
+    if kind == "arxiv":
+        work, near_misses, arxiv_title = await _resolve_arxiv(value)
+    else:
+        work, near_misses = await _resolve(kind, value)
     if not work:
-        notes = [
-            f"No work matched {paper!r} in OpenAlex."
-            + (
-                " The DOI may be unregistered or mistyped."
-                if kind == "doi"
-                else " Try the exact title, or a DOI."
+        if kind == "arxiv":
+            reason = (
+                f" arXiv calls it {arxiv_title!r}, but OpenAlex has no confident match for "
+                "that title. A very recent preprint may not be indexed yet."
+                if arxiv_title
+                else f" arXiv returned no record for {value!r}; check the identifier."
             )
-        ]
+        elif kind == "doi":
+            reason = " The DOI may be unregistered or mistyped."
+        else:
+            reason = " Try the exact title, or a DOI."
+        notes = [f"No work matched {paper!r} in OpenAlex." + reason]
         if near_misses:
             listed = "; ".join(f"{t!r}" for t in near_misses)
             notes.append(
@@ -458,6 +543,13 @@ async def paper_graph(
 
     target = _node(work)
     notes: list[str] = []
+    if kind == "arxiv":
+        # Say how it was found: a title match is a weaker identification than a
+        # DOI, and the caller should be able to see which one they got.
+        notes.append(
+            f"Resolved arXiv:{value} by its title ({arxiv_title!r}): OpenAlex does not "
+            "resolve arXiv's own DOIs. Check the paper above is the one you meant."
+        )
 
     references: list[dict[str, Any]] = []
     total_references = 0
@@ -489,7 +581,7 @@ async def paper_graph(
     retractions = [n for n in status["notices"] if n["type"] == "retraction"]
     if target["retracted"] or retractions:
         target["retracted"] = True
-        notes.insert(0, "RETRACTED — do not cite this paper as a standing result.")
+        notes.insert(0, "RETRACTED. Do not cite this paper as a standing result.")
     elif status["registered"] is False:
         # NOT the same as "fabricated": Crossref registers journal DOIs, and
         # DataCite registers most dataset and repository DOIs (Zenodo,
@@ -497,7 +589,7 @@ async def paper_graph(
         # its post-publication notices are unavailable here.
         notes.insert(
             0,
-            "Crossref has no record of this DOI — it is likely a DataCite DOI "
+            "Crossref has no record of this DOI. It is likely a DataCite DOI "
             "(dataset or repository), so retraction notices could not be checked.",
         )
 

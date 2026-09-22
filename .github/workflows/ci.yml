@@ -7,6 +7,10 @@ on:
   # Lets release.yml reuse this exact job as its gate — the test matrix is
   # defined ONCE, so releases can never be gated on a weaker check than PRs.
   workflow_call:
+  # Daily, for `sdk-canary` below: a dependency release breaks installs on the
+  # day it ships, not on the day someone next opens a PR.
+  schedule:
+    - cron: "17 5 * * *"
 
 jobs:
   test:
@@ -28,3 +32,41 @@ jobs:
       # live-network tests are gated behind SEARCH_MCP_TEST_NETWORK=1.
       - name: Test
         run: uv run pytest -q
+
+  # `test` above runs the LOCKED dependency set. No real install does: `uvx
+  # free-search-mcp==X` — the plugin, the README one-liner, the MCP Registry
+  # entry — ignores uv.lock and resolves the newest versions pyproject.toml
+  # allows. That gap is how 0.11.0 shipped green and broken: the lock held
+  # mcp 2.0 while every user ran 2.2, which had changed what a tool error
+  # looks like on the wire.
+  sdk-canary:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # What a fresh install resolves today. A hard gate, releases included.
+          - leg: range
+            allow-failure: false
+          # The newest SDK, ignoring our upper bound. Never blocks anything —
+          # it is the advance notice of what the next deliberate bump of the
+          # `mcp` pin in pyproject.toml will have to deal with.
+          - leg: next
+            allow-failure: true
+    continue-on-error: ${{ matrix.allow-failure }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - name: Resolve like a fresh install (newest versions in range, no lockfile)
+        run: uv sync --upgrade
+      - name: Lift the SDK past the declared upper bound
+        if: matrix.leg == 'next'
+        run: uv pip install --upgrade "mcp[cli]"
+      - name: Report the SDK under test
+        run: uv pip list | grep -i -E "^mcp"
+      # --no-sync: keep what the steps above installed; a plain `uv run` would
+      # put the `next` leg straight back inside the declared range.
+      - name: Test
+        run: uv run --no-sync pytest -q

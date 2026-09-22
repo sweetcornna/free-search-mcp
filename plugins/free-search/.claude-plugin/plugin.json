@@ -1,8 +1,9 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "free-search",
   "displayName": "Free Search",
-  "version": "0.11.0",
-  "description": "Local-first, no-API-key web search, fetching, and document reading — 11 MCP tools, no signup and no key.",
+  "version": "0.12.0",
+  "description": "Local-first web search, page fetching and document reading with no API key and no signup. Ships 11 MCP tools, a source-verification skill and a quick-search agent.",
   "author": {
     "name": "ymylive",
     "url": "https://github.com/sweetcornna"
@@ -10,6 +11,16 @@
   "homepage": "https://github.com/sweetcornna/free-search-mcp#readme",
   "repository": "https://github.com/sweetcornna/free-search-mcp",
   "license": "MIT",
-  "keywords": ["mcp", "search", "web-search", "research", "fetch", "documents", "no-api-key"],
+  "keywords": [
+    "mcp",
+    "search",
+    "web-search",
+    "research",
+    "fetch",
+    "documents",
+    "no-api-key",
+    "agent-skills",
+    "fact-checking"
+  ],
   "mcpServers": "./.mcp.json"
 }

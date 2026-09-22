@@ -67,6 +67,15 @@ def test_detect_format_by_extension(source, expected):
         ("image/png", "image"),
         ("image/svg+xml", "image"),
         ("text/plain; charset=utf-8", "text"),
+        # API endpoints: structured text with no extension in the path.
+        ("application/json", "code"),
+        ("application/json; charset=utf-8", "code"),
+        ("application/ld+json", "code"),
+        ("application/atom+xml", "code"),
+        ("application/yaml", "code"),
+        # ...without taking over the types that are matched before it.
+        ("application/xhtml+xml", "html"),
+        ("application/octet-stream", "unknown"),
     ],
 )
 def test_detect_format_by_content_type(ctype, expected):

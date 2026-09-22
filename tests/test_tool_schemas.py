@@ -43,9 +43,10 @@ EXPECTED_TOOL_ORDER = [
 # Every tool reads except this one — it writes an auto-expiring local file.
 WRITING_TOOLS = {"download"}
 
-# Tools whose return annotation is a union (`str | dict` / `str | list[dict]`),
-# which the SDK cannot express as a bare object schema and therefore wraps.
-UNION_RETURNING_TOOLS = [
+# Tools that answer in either format: `format="markdown"` (a str, the default)
+# or `format="json"` (a dict or a list). That is every tool except `fetch`,
+# which can additionally hand back an image.
+DUAL_FORMAT_TOOLS = [
     "search",
     "fetch_batch",
     "read_doc",
@@ -55,6 +56,7 @@ UNION_RETURNING_TOOLS = [
     "engines",
     "compare",
     "extract_structured",
+    "download",
 ]
 
 
@@ -101,16 +103,14 @@ async def test_tool_list_is_stable_across_calls():
 
 
 async def test_every_tool_has_a_human_readable_title():
-    """A title has to reach the client *somewhere*.
+    """Every tool carries a real `Tool.title`.
 
-    Today it only lives in `annotations.title`; `Tool.title` is None on all
-    nine. Those are distinct protocol fields — annotations are explicitly
-    untrusted hints — so this accepts either while the migration moves titles
-    to the real field.
+    `annotations.title` is a different protocol field — annotations are
+    explicitly untrusted hints — so a title that only lived there would not
+    count. All eleven set the real one.
     """
     for name, tool in (await _tools_by_name()).items():
-        title = tool.title or (tool.annotations.title if tool.annotations else None)
-        assert title, f"{name} exposes no title in either location"
+        assert tool.title, f"{name} has no Tool.title"
 
 
 async def test_read_only_annotations_match_what_each_tool_actually_does():
@@ -130,23 +130,19 @@ async def test_read_only_annotations_match_what_each_tool_actually_does():
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("name", UNION_RETURNING_TOOLS)
-async def test_union_returning_tools_wrap_output_in_result(name):
-    """`str | dict` cannot be one object schema, so the SDK wraps it.
+@pytest.mark.parametrize("name", DUAL_FORMAT_TOOLS)
+async def test_dual_format_tools_advertise_no_output_schema(name):
+    """A tool whose default output is prose must not promise structured output.
 
-    Pinned because it is the shape clients validate against — and because
-    `format="markdown"` vs `format="json"` returning different types is what
-    forces the wrapper in the first place.
+    The spec is explicit: a tool that declares an `outputSchema` MUST return
+    `structuredContent` conforming to it. Deriving one from `str | dict` gave
+    `{"result": <either>}`, and honouring it meant shipping the whole markdown
+    body a second time inside `structuredContent` — which is the copy clients
+    like Claude Code show the model, as one JSON string with escaped newlines.
+    Pinned so a future `structured_output=None` cannot quietly bring it back.
     """
     tool = (await _tools_by_name())[name]
-    schema = tool.output_schema
-    assert schema is not None, f"{name} lost its derived output schema"
-    assert schema["type"] == "object"
-    assert schema["required"] == ["result"]
-    assert set(schema["properties"]) == {"result"}
-    assert "anyOf" in schema["properties"]["result"], (
-        f"{name} should still admit both the markdown string and the json payload"
-    )
+    assert tool.output_schema is None, f"{name} advertises a derived output schema again"
 
 
 async def test_fetch_opts_out_of_structured_output():
@@ -217,27 +213,11 @@ async def test_engines_group_filter_narrows_to_one_group():
     assert "duckduckgo" not in payload["engines"]
 
 
-async def test_markdown_format_returns_a_string_inside_the_wrapper(tmp_path, monkeypatch):
-    """`format="markdown"` (the default) must land in the `result` slot as a
-    plain string — not as an object, and not unwrapped."""
-    from search_mcp import config, documents
+async def test_markdown_format_is_one_plain_text_block(tmp_path, monkeypatch):
+    """`format="markdown"` (the default) is a text block and nothing else.
 
-    monkeypatch.setattr(config.settings, "document_root", tmp_path)
-    monkeypatch.setattr(documents.settings, "document_root", tmp_path)
-    p = tmp_path / "doc.txt"
-    p.write_text("hello structured world", encoding="utf-8")
-
-    _blocks, structured = await call_tool("read_doc", {"source": str(p)})
-    assert set(structured) == {"result"}
-    assert isinstance(structured["result"], str)
-    assert "hello structured world" in structured["result"]
-
-
-async def test_json_format_returns_an_object_inside_the_same_wrapper(tmp_path, monkeypatch):
-    """`format="json"` on the *same* tool returns a dict in the same slot.
-
-    This is the pair that makes the union — and therefore the wrapper —
-    unavoidable. If a future SDK stops admitting both, this is where it shows.
+    No `structuredContent`: a second copy of the body there is what the model
+    ends up reading, JSON-escaped, in clients that prefer structured content.
     """
     from search_mcp import config, documents
 
@@ -246,13 +226,45 @@ async def test_json_format_returns_an_object_inside_the_same_wrapper(tmp_path, m
     p = tmp_path / "doc.txt"
     p.write_text("hello structured world", encoding="utf-8")
 
-    _blocks, structured = await call_tool(
+    blocks, structured = await call_tool("read_doc", {"source": str(p)})
+    assert structured is None
+    assert len(blocks) == 1
+    assert "hello structured world" in blocks[0].text
+    assert "\n" in blocks[0].text, "markdown should keep real newlines"
+    assert not blocks[0].text.lstrip().startswith("{")
+
+
+async def test_json_format_is_structured_and_unwrapped(tmp_path, monkeypatch):
+    """`format="json"` on the *same* tool: the payload IS the structured
+    content — no `{"result": ...}` envelope — and the text block is that same
+    JSON, for clients that only read text."""
+    import json
+
+    from search_mcp import config, documents
+
+    monkeypatch.setattr(config.settings, "document_root", tmp_path)
+    monkeypatch.setattr(documents.settings, "document_root", tmp_path)
+    p = tmp_path / "doc.txt"
+    p.write_text("hello structured world", encoding="utf-8")
+
+    blocks, structured = await call_tool(
         "read_doc", {"source": str(p), "format": "json"}
     )
-    assert set(structured) == {"result"}
-    assert isinstance(structured["result"], dict)
-    assert structured["result"]["format"] == "text"
-    assert "hello structured world" in structured["result"]["content"]
+    assert isinstance(structured, dict)
+    assert "result" not in structured
+    assert structured["format"] == "text"
+    assert "hello structured world" in structured["content"]
+    assert json.loads(blocks[0].text) == structured
+
+
+async def test_a_json_list_keeps_an_object_envelope():
+    """The wire format requires `structuredContent` to be an object, so the
+    tools whose json payload is a list are the one place the envelope stays."""
+    import json
+
+    blocks, structured = await call_tool("fetch_batch", {"urls": [], "format": "json"})
+    assert structured == {"result": []}
+    assert json.loads(blocks[0].text) == []
 
 
 # ---------------------------------------------------------------------------
@@ -269,6 +281,7 @@ async def test_prompt_list_is_deterministic_and_titled():
         "factcheck_prompt",
         "compare_sources",
         "news_brief",
+        "quick_search",
     ]
     for p in prompts:
         assert p.title, f"{p.name} has no title"

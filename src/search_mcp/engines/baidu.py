@@ -17,7 +17,7 @@ from .base import (
 
 class BaiduEngine(Engine):
     name = "baidu"
-    description = "百度 — the largest Chinese-language web index."
+    description = "百度: the largest Chinese-language web index."
     needs_browser = False
 
     def build_url(

@@ -106,3 +106,115 @@ async def test_googlenews_live_search():
     assert len(out["results"]) > 0
     # All result URLs should be news.google.com redirects at this stage.
     assert any("news.google.com" in r["url"] for r in out["results"])
+
+
+# ---------------------------------------------------------------------------
+# Publisher-URL resolution (offline: the resolver is stubbed)
+# ---------------------------------------------------------------------------
+
+
+def _feed(n: int) -> str:
+    items = "".join(
+        f"<item><title>Story {i}</title>"
+        f"<link>https://news.google.com/rss/articles/CBM{i}</link>"
+        f"<source>Outlet {i}</source></item>"
+        for i in range(n)
+    )
+    return f"<rss><channel>{items}</channel></rss>"
+
+
+def _wire_resolver(monkeypatch, resolver, feed: str):
+    from unittest.mock import AsyncMock
+
+    from search_mcp.engines import googlenews as gn
+
+    engine = gn.GoogleNewsEngine()
+    monkeypatch.setattr(engine, "_fetch", AsyncMock(return_value=feed))
+    monkeypatch.setattr(gn, "resolve_google_news_url", resolver)
+    return engine, gn
+
+
+async def test_results_carry_publisher_urls_so_host_filters_can_see_them(monkeypatch):
+    from search_mcp.engines.base import SearchFilters
+
+    async def resolver(url):
+        i = int(url.rsplit("CBM", 1)[1])
+        return f"https://{'reuters.com' if i % 2 == 0 else 'example.net'}/story/{i}"
+
+    engine, _ = _wire_resolver(monkeypatch, resolver, _feed(6))
+
+    everything = await engine.search("q", 10)
+    assert all("news.google.com" not in r.url for r in everything)
+
+    # Before this, every item's host was news.google.com and this matched nothing.
+    only_reuters = await engine.search("q", 10, SearchFilters(include_domains=["reuters.com"]))
+    assert [r.url for r in only_reuters] == [
+        "https://reuters.com/story/0",
+        "https://reuters.com/story/2",
+        "https://reuters.com/story/4",
+    ]
+
+
+async def test_resolution_is_bounded_in_parallelism(monkeypatch):
+    import asyncio
+
+    live = peak = 0
+
+    async def resolver(url):
+        nonlocal live, peak
+        live += 1
+        peak = max(peak, live)
+        await asyncio.sleep(0.01)
+        live -= 1
+        return url.replace("news.google.com", "publisher.example")
+
+    engine, gn = _wire_resolver(monkeypatch, resolver, _feed(10))
+    await engine.search("q", 10)
+    assert peak == gn._RESOLVE_CONCURRENCY
+
+
+async def test_only_the_results_that_can_be_returned_are_resolved(monkeypatch):
+    seen = []
+
+    async def resolver(url):
+        seen.append(url)  # and resolve nothing
+
+    engine, _ = _wire_resolver(monkeypatch, resolver, _feed(10))
+    monkeypatch.setattr("search_mcp.engines.googlenews._RESOLVE_MAX_FAILURES", 99)
+    await engine.search("q", 3)
+    assert len(seen) == 3
+
+
+async def test_a_slow_resolver_costs_the_budget_and_keeps_the_redirect_links(monkeypatch):
+    import asyncio
+    import time
+
+    async def resolver(url):
+        await asyncio.sleep(30)
+        return "https://never.example/"
+
+    engine, gn = _wire_resolver(monkeypatch, resolver, _feed(5))
+    monkeypatch.setattr(gn, "_RESOLVE_BUDGET_SECONDS", 0.05)
+
+    started = time.monotonic()
+    results = await engine.search("q", 10)
+
+    assert time.monotonic() - started < 2
+    assert len(results) == 5
+    assert all("news.google.com" in r.url for r in results)
+
+
+async def test_resolution_gives_up_after_consecutive_failures(monkeypatch):
+    calls = 0
+
+    async def resolver(url):
+        nonlocal calls
+        calls += 1  # and resolve nothing
+
+    engine, gn = _wire_resolver(monkeypatch, resolver, _feed(10))
+    monkeypatch.setattr(gn, "_RESOLVE_CONCURRENCY", 1)
+
+    results = await engine.search("q", 10)
+
+    assert calls == gn._RESOLVE_MAX_FAILURES
+    assert len(results) == 10

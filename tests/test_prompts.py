@@ -8,13 +8,14 @@ pytestmark = pytest.mark.asyncio
 async def test_prompts_registered():
     from search_mcp.server import mcp
     prompts = await mcp.list_prompts()
-    assert len(prompts) == 4
+    assert len(prompts) == 5
     names = {p.name for p in prompts}
     assert names == {
         "research_prompt",
         "factcheck_prompt",
         "compare_sources",
         "news_brief",
+        "quick_search",
     }
 
 
@@ -88,3 +89,15 @@ async def test_news_brief_prompt_renders():
     assert "ai regulation" in text
     assert "week" in text
     assert "search" in text and "fetch_batch" in text
+
+
+async def test_quick_search_prompt_carries_the_agent_instructions():
+    """The same text the Claude Code and Codex agent files hold, so a host
+    without agent files can still hand it to whatever subagent it has."""
+    from search_mcp.agent import HOST_AGENT_PROMPT
+    from search_mcp.server import mcp
+
+    result = await mcp.get_prompt("quick_search", {"question": "latest httpx release?"})
+    text = result.messages[0].content.text
+    assert text.startswith(HOST_AGENT_PROMPT)
+    assert text.endswith("Question: latest httpx release?")

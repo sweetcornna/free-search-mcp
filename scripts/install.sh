@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
-# One-command setup for free-search-mcp.
+# One-command setup for free-search-mcp FROM A SOURCE CHECKOUT.
+#
+# Most people want the plugin instead (no checkout, pinned version, no API key):
+#   /plugin marketplace add sweetcornna/free-search-mcp
+#   /plugin install free-search@free-search-mcp
 #
 # Local checkout:
 #   ./scripts/install.sh
@@ -32,10 +36,17 @@ usage() {
   cat <<'EOF'
 Usage: install.sh [options]
 
-Install free-search-mcp dependencies, browser runtime, smoke-test the server,
-and optionally register it with an MCP client.
+Install free-search-mcp from a source checkout: dependencies, browser runtime,
+a smoke test, and optionally registration with an MCP client. No API key is
+needed, now or later.
 
-One-line Claude Code install:
+Just want to use it? The plugin is the recommended install (pinned version,
+updates via /plugin update, no checkout):
+  /plugin marketplace add sweetcornna/free-search-mcp
+  /plugin install free-search@free-search-mcp
+  codex plugin marketplace add sweetcornna/free-search-mcp && codex plugin add free-search@free-search-mcp
+
+One-line Claude Code install (source checkout):
   curl -LsSf https://raw.githubusercontent.com/sweetcornna/free-search-mcp/main/scripts/install.sh | bash -s -- --client claude-code
 
 Local checkout:

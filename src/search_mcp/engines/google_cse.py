@@ -58,6 +58,7 @@ from .base import (
     SearchResult,
     augment_query_with_operators,
     extract_date_hint,
+    key_not_configured,
     raise_for_key_error,
 )
 
@@ -74,7 +75,7 @@ class GoogleCSEEngine(Engine):
     """Google Custom Search JSON API — keyed (api_key + cx), JSON GET."""
 
     name = "google_cse"
-    description = "Google Programmable Search — official Google results via a custom search engine."
+    description = "Google Programmable Search: official Google results via a custom search engine."
     needs_browser = False
     # JSON API: an empty/malformed response is genuinely empty, so don't waste
     # a Playwright render trying to "recover" it (see Engine.search fallback).
@@ -154,10 +155,14 @@ class GoogleCSEEngine(Engine):
         key = get_secret("google_cse_api_key")
         cx = get_secret("google_cse_cx")
         if not key or not cx:
-            raise ValueError(
-                "google_cse not configured: add google_cse_api_key AND "
-                "google_cse_cx in the admin UI (uv run search-mcp-admin) or set "
-                "SEARCH_MCP_GOOGLE_CSE_API_KEY / SEARCH_MCP_GOOGLE_CSE_CX."
+            raise key_not_configured(
+                "google_cse",
+                alternative=(
+                    "omit `engines=` to use the default keyless pool, which already covers "
+                    "the web."
+                ),
+                env="SEARCH_MCP_GOOGLE_CSE_API_KEY and SEARCH_MCP_GOOGLE_CSE_CX",
+                field="google_cse_api_key` and `google_cse_cx",
             )
 
         # CSE rejects num > 10 (and < 1); clamp defensively.

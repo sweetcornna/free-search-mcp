@@ -86,6 +86,47 @@ jobs:
               raise SystemExit(f"plugin .mcp.json runs {pin}, not free-search-mcp=={expected}")
           PY
 
+          # Same argument for the two newer install paths. The MCP Registry
+          # entry and the Claude Desktop bundle both republish this package, so
+          # each repeats the number — and the registry can only be told the
+          # truth once: an entry published with the wrong version cannot be
+          # edited, only superseded. tests/test_plugin_manifest.py checks the
+          # same files against pyproject.toml; this checks them against the tag.
+          python3 - "$version" <<'PY'
+          import json
+          import sys
+          import tomllib
+          from pathlib import Path
+
+          expected = sys.argv[1]
+          name = "io.github.sweetcornna/free-search-mcp"
+
+          entry = json.loads(Path("server.json").read_text())
+          if entry["name"] != name:
+              raise SystemExit(f"server.json is named {entry['name']}, not {name}")
+          if len(entry["description"]) > 100:
+              raise SystemExit("server.json description exceeds the registry's 100 characters")
+          claimed = [entry["version"], *(pkg.get("version") for pkg in entry["packages"])]
+          if claimed != [expected, expected]:
+              raise SystemExit(f"server.json versions {claimed} != tag {expected}, once each")
+
+          # PyPI builds the package description from this README and freezes it
+          # with the release; the registry looks there for proof of ownership.
+          if f"<!-- mcp-name: {name} -->" not in Path("README.md").read_text():
+              raise SystemExit("README.md has no mcp-name marker; the registry would reject us")
+
+          manifest = json.loads(Path("mcpb/manifest.json").read_text())
+          if manifest["version"] != expected:
+              raise SystemExit(f"mcpb/manifest.json version {manifest['version']} != tag {expected}")
+          bundle = tomllib.loads(Path("mcpb/pyproject.toml").read_text())["project"]
+          if bundle["version"] != expected:
+              raise SystemExit(f"mcpb/pyproject.toml version {bundle['version']} != tag {expected}")
+          if bundle["dependencies"] != [f"free-search-mcp=={expected}"]:
+              raise SystemExit(
+                  f"the bundle installs {bundle['dependencies']}, not free-search-mcp=={expected}"
+              )
+          PY
+
           # checkout fetches tags as lightweight refs, so the local ref may
           # point straight at the commit even when the pushed tag is annotated.
           # Re-fetch the tag object itself before judging what kind it is.
@@ -113,6 +154,19 @@ jobs:
           printf '%s\n' "$title" > release-title.txt
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
+      # Its own step so that the packer — an npm tool fetched at run time —
+      # never shares an environment with a token, and pinned for the reason the
+      # SDK is: a release must not change because a tool did. `pack` validates
+      # the manifest against the MCPB schema before it writes anything.
+      - name: Build Claude Desktop bundle
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          set -euo pipefail
+          mkdir -p bundle
+          npx --yes @anthropic-ai/mcpb@2.1.2 pack mcpb "bundle/free-search-mcp-$VERSION.mcpb"
+          test -s "bundle/free-search-mcp-$VERSION.mcpb"
+
       - name: Prepare release artifacts
         id: github_release
         env:
@@ -128,6 +182,10 @@ jobs:
             "free_search_mcp-$VERSION-py3-none-any.whl"
             "free_search_mcp-$VERSION.tar.gz"
           )
+          # A release asset, never a dist/ file: the PyPI action uploads
+          # whatever it finds in dist/, and PyPI has no use for a zip of JSON.
+          bundle="free-search-mcp-$VERSION.mcpb"
+          release_assets=("${expected[@]}" "$bundle")
           validate_dist_artifacts() {
             local name
             local -a actual wanted
@@ -159,10 +217,10 @@ jobs:
             is_draft="$(jq -r .draft "$metadata_file")"
             mapfile -t asset_names < <(jq -r '.assets[].name' "$metadata_file")
             assets_complete=true
-            if [[ "${#asset_names[@]}" -ne "${#expected[@]}" ]]; then
+            if [[ "${#asset_names[@]}" -ne "${#release_assets[@]}" ]]; then
               assets_complete=false
             else
-              for name in "${expected[@]}"; do
+              for name in "${release_assets[@]}"; do
                 if [[ ! " ${asset_names[*]} " =~ " $name " ]]; then
                   assets_complete=false
                 fi
@@ -195,7 +253,7 @@ jobs:
           if [[ "$release_exists" == "false" ]]; then
             uv build --out-dir dist
             validate_dist_artifacts
-            artifacts=("dist/${expected[0]}" "dist/${expected[1]}")
+            artifacts=("dist/${expected[0]}" "dist/${expected[1]}" "bundle/$bundle")
             gh release create "$TAG" "${artifacts[@]}" \
               --verify-tag \
               --fail-on-no-commits \
@@ -286,3 +344,117 @@ jobs:
           else
             gh release edit "$TAG" --draft=false --latest=false --verify-tag
           fi
+
+  # Last: list the release in the MCP Registry. A job of its own because it
+  # needs the one permission nothing above should hold — an OIDC token proving
+  # to the registry that this run belongs to github.com/sweetcornna — and needs
+  # neither of theirs: no write access to the repository, no PyPI secret.
+  # Everything before it is already public by now, so a failure here leaves a
+  # complete release and a job that is safe to re-run.
+  registry:
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      SERVER_NAME: io.github.sweetcornna/free-search-mcp
+      MCP_PUBLISHER_VERSION: v1.8.1
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check whether this version is already listed
+        id: listed
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          version="${TAG#v}"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          # Registry versions are immutable, so a re-run must not publish twice.
+          # 404 covers both "no such server" and "no such version".
+          status="$(curl --silent --show-error --retry 3 --output /dev/null \
+            --write-out '%{http_code}' \
+            "https://registry.modelcontextprotocol.io/v0/servers/${SERVER_NAME//\//%2F}/versions/$version")"
+          case "$status" in
+            200) echo "skip=true" >> "$GITHUB_OUTPUT" ;;
+            404) echo "skip=false" >> "$GITHUB_OUTPUT" ;;
+            *) echo "registry lookup failed with HTTP $status" >&2; exit 1 ;;
+          esac
+
+      - name: Wait for PyPI to show the ownership marker
+        if: steps.listed.outputs.skip == 'false'
+        env:
+          VERSION: ${{ steps.listed.outputs.version }}
+        run: |
+          set -euo pipefail
+          # The registry proves ownership by reading this release's description
+          # from PyPI's JSON API, which can trail a successful upload by
+          # minutes. Publishing before it catches up fails validation.
+          for attempt in $(seq 1 30); do
+            if curl --silent --fail --location --output pypi.json \
+              "https://pypi.org/pypi/free-search-mcp/$VERSION/json"; then
+              if python3 - pypi.json <<'PY'
+          import json
+          import os
+          import sys
+
+          description = json.load(open(sys.argv[1]))["info"]["description"] or ""
+          sys.exit(0 if f"mcp-name: {os.environ['SERVER_NAME']}" in description else 1)
+          PY
+              then
+                exit 0
+              fi
+            fi
+            echo "attempt $attempt: PyPI does not show the marker yet"
+            sleep 20
+          done
+          echo "PyPI never showed the mcp-name marker for $VERSION" >&2
+          exit 1
+
+      - name: Add the Claude Desktop bundle to the entry
+        if: steps.listed.outputs.skip == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          VERSION: ${{ steps.listed.outputs.version }}
+        run: |
+          set -euo pipefail
+          # Hash the asset users will actually download. Packing it again here
+          # would produce a different zip — archives carry timestamps — and a
+          # registry entry whose checksum no client could ever match.
+          bundle="free-search-mcp-$VERSION.mcpb"
+          gh release download "$TAG" --dir bundle --pattern "$bundle"
+          python3 - "bundle/$bundle" "$TAG" <<'PY'
+          import hashlib
+          import json
+          import os
+          import sys
+          from pathlib import Path
+
+          asset, tag = Path(sys.argv[1]), sys.argv[2]
+          path = Path("server.json")
+          entry = json.loads(path.read_text())
+          entry["packages"].append(
+              {
+                  "registryType": "mcpb",
+                  "identifier": (
+                      f"https://github.com/{os.environ['GITHUB_REPOSITORY']}"
+                      f"/releases/download/{tag}/{asset.name}"
+                  ),
+                  "fileSha256": hashlib.sha256(asset.read_bytes()).hexdigest(),
+                  "transport": {"type": "stdio"},
+              }
+          )
+          path.write_text(json.dumps(entry, indent=2) + "\n")
+          PY
+
+      - name: Publish to the MCP Registry
+        if: steps.listed.outputs.skip == 'false'
+        run: |
+          set -euo pipefail
+          curl --silent --show-error --fail --location --retry 3 \
+            "https://github.com/modelcontextprotocol/registry/releases/download/$MCP_PUBLISHER_VERSION/mcp-publisher_linux_amd64.tar.gz" \
+            | tar xz mcp-publisher
+          ./mcp-publisher login github-oidc
+          ./mcp-publisher publish

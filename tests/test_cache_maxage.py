@@ -216,7 +216,9 @@ async def test_cache_hit_markdown_keeps_lead_block(isolated_cache, counting_engi
     assert "> **Lead:**" in md1  # fresh path has the lead
 
     md2 = await search(q, engines=["duckduckgo"], format="markdown")
-    assert "_(from cache)_" in md2
+    # A replayed answer says so, and says how old it is.
+    assert "_(cached " in md2 and " ago · retrieved " in md2
+    assert "_(cached " not in md1 and "_(retrieved " in md1
     assert "> **Lead:**" in md2, "cached markdown must still carry the Lead block"
 
 

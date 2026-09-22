@@ -47,7 +47,7 @@ class OpenAlexEngine(JsonApiEngine):
     """OpenAlex scholarly works search (keyless JSON API)."""
 
     name = "openalex"
-    description = "OpenAlex — 250M+ scholarly works with abstracts, venues and citation counts."
+    description = "OpenAlex: 250M+ scholarly works with abstracts, venues and citation counts."
     categories = frozenset({"paper", "paper.index"})
 
     def build_url(

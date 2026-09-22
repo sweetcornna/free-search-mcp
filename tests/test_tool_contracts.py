@@ -40,14 +40,18 @@ def text_of(blocks: list[Any]) -> str:
 @pytest.mark.parametrize(
     ("tool", "args", "must_mention"),
     [
-        ("search", {"query": "   "}, "query"),
-        ("research", {"question": "  "}, "question"),
-        ("paper_graph", {"paper": " "}, "paper"),
+        # The whole phrase, not just the argument name. With the message
+        # stripped, the SDK's fallback is "Error executing tool paper_graph" —
+        # which contains "paper", so a name-only assertion passed on exactly
+        # the failure it was written to catch.
+        ("search", {"query": "   "}, "query must not be empty"),
+        ("research", {"question": "  "}, "question must not be empty"),
+        ("paper_graph", {"paper": " "}, "paper must not be empty"),
         # A blank source used to fall through to the local-file branch and come
         # back as "Local file reads are disabled; set SEARCH_MCP_DOCUMENT_ROOT"
         # — an answer to a question nobody asked, pointing the caller at a
         # sandbox they do not need.
-        ("read_doc", {"source": "  "}, "source"),
+        ("read_doc", {"source": "  "}, "source must not be empty"),
     ],
 )
 async def test_a_blank_argument_names_itself(tool, args, must_mention):

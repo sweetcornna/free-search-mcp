@@ -24,7 +24,7 @@ class ZbMathEngine(JsonApiEngine):
     """zbMATH Open mathematics-literature search (keyless JSON API)."""
 
     name = "zbmath"
-    description = "zbMATH Open — curated mathematics literature with reviews and classification."
+    description = "zbMATH Open: curated mathematics literature with reviews and classification."
     categories = frozenset({"paper", "paper.math"})
     # The HTTPS API works with an honest API client but intermittently 502s
     # during curl_cffi's browser-profile handshake. Avoid presenting a browser

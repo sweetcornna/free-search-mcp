@@ -140,6 +140,41 @@ def test_load_env_file_into_environ(tmp_path, monkeypatch):
     assert keystore.get_secret("serper_api_key") == "from-dotenv"
 
 
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        ("604800   # 7 days", "604800"),
+        ("auto        # auto | http | browser", "auto"),
+        ('"quoted # kept"   # dropped', "quoted # kept"),
+        ("'single'", "single"),
+        # No whitespace before the `#`, so it belongs to the value.
+        ("http://user:p#ss@proxy:8080", "http://user:p#ss@proxy:8080"),
+        ("https://host/path#frag", "https://host/path#frag"),
+        ("", ""),
+        ("   ", ""),
+        ('"unterminated', "unterminated"),
+    ],
+)
+def test_env_values_end_at_an_inline_comment(raw, expected):
+    """`cp .env.example .env` is a documented step, and an annotated example is
+    only safe to copy if the annotation is not read as part of the setting."""
+    assert keystore._env_value(raw) == expected
+
+
+def test_a_commented_env_file_still_yields_valid_settings(tmp_path, monkeypatch):
+    monkeypatch.delenv("SEARCH_MCP_CACHE_TTL_SECONDS", raising=False)
+    envf = tmp_path / ".env"
+    envf.write_text("SEARCH_MCP_CACHE_TTL_SECONDS=3600   # one hour\n")
+    keystore.load_env_file_into_environ(envf)
+    try:
+        assert os.environ["SEARCH_MCP_CACHE_TTL_SECONDS"] == "3600"
+        from search_mcp.config import Settings
+
+        assert Settings().cache_ttl_seconds == 3600
+    finally:
+        os.environ.pop("SEARCH_MCP_CACHE_TTL_SECONDS", None)
+
+
 def test_load_env_file_does_not_override_real_env(tmp_path, monkeypatch):
     monkeypatch.setenv("SEARCH_MCP_SERPER_API_KEY", "real-env")
     envf = tmp_path / ".env"

@@ -39,6 +39,7 @@ class WikipediaEngine(JsonApiEngine):
     """Wikipedia article search (keyless MediaWiki API)."""
 
     name = "wikipedia"
+    single_site = True
     description = "Wikipedia articles, in the language implied by SEARCH_MCP_REGION."
 
     def build_url(

@@ -43,7 +43,7 @@ class SogouEngine(Engine):
     """搜狗 web results (keyless HTML scrape, redirect URLs)."""
 
     name = "sogou"
-    description = "搜狗 — second Chinese web index; emits Sogou redirect URLs rather than targets."
+    description = "搜狗: second Chinese web index; emits Sogou redirect URLs rather than targets."
 
     def build_url(
         self, query: str, max_results: int, filters: SearchFilters | None = None

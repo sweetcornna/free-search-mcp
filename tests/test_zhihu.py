@@ -169,10 +169,18 @@ def test_parse_skips_cards_without_usable_link():
 
 @skip_offline
 async def test_live_zhihu_best_effort():
+    from search_mcp.browser import brief_error
     from search_mcp.engines.zhihu import ZhihuEngine
 
     e = ZhihuEngine()
-    out = await e.search("python", 5)
+    try:
+        out = await e.search("python", 5)
+    except Exception as exc:  # Playwright's error types are private
+        # Only the navigation itself: a site this network cannot reach says
+        # nothing about the adapter. Any later failure still fails the test.
+        if str(exc).startswith("Page.goto:"):
+            pytest.skip(f"zhihu.com could not be reached: {brief_error(exc)}")
+        raise
     # Zhihu may gate the request behind a login wall -> empty is acceptable.
     if not out:
         pytest.skip("Zhihu gated the headless request (login wall) — empty is honest")

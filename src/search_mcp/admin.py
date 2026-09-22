@@ -1,8 +1,10 @@
-"""Local admin backend for configuring API-key search providers.
+"""Local settings page: the outbound proxy, and optional provider keys.
 
 A tiny, single-page web app (Starlette + uvicorn, both pulled in by the ``mcp``
-dependency — no extra deps, no template engine) that lets you paste provider API
-keys and persist them via :mod:`search_mcp.keystore`.
+dependency — no extra deps, no template engine). The server needs none of it to
+work. The proxy card comes first because it is the one setting an install ever
+really needs; below it an operator who already has a search-API account can
+paste their own key, persisted via :mod:`search_mcp.keystore`.
 
 Security posture (this tool writes secrets, so it stays deliberately small):
   * Binds ``127.0.0.1`` ONLY — never ``0.0.0.0``. It is a local config tool.
@@ -99,7 +101,7 @@ _PROVIDER_ZH: dict[str, dict[str, object]] = {
         "free_tier": "仓库/议题搜索免令牌可用（10 次/分）；令牌提升到 30 次/分并解锁代码搜索",
         "how_to": [
             "github 引擎不带令牌也能搜索仓库和议题。",
-            "令牌会提高限额，并启用 github_code —— GitHub 的代码搜索接口直接拒绝匿名请求。",
+            "令牌会提高限额，并启用 github_code，因为 GitHub 的代码搜索接口直接拒绝匿名请求。",
             "在 github.com/settings/tokens 创建，搜索公开仓库不需要任何 scope。",
         ],
     },
@@ -272,6 +274,7 @@ body {
 }
 .wrap { max-width: 720px; margin: 0 auto; }
 header h1 { margin: 0 0 .25rem; font-size: 1.4rem; }
+h2.section { margin: 1.75rem 0 .1rem; font-size: 1.1rem; }
 .zh { color: #4b5563; }
 .label { font-weight: 600; color: #374151; }
 .note {
@@ -458,27 +461,44 @@ async function testProvider(btn) {
 
 
 def _render_page() -> str:
+    # Proxy first, keys second and labelled optional: the order is the message.
+    # Led by eight "paste your API key" cards, the page told a no-key project's
+    # users that they were missing something.
+    network = _render_network_card()
     cards = "".join(_render_provider_card(p) for p in keystore.PROVIDERS)
-    cards += _render_network_card()
     note = (
-        "Local config tool — bound to 127.0.0.1. Keys are stored at "
-        "~/.config/search-mcp/config.json (0600). "
-        "本地配置工具，仅绑定 127.0.0.1；密钥保存在上述本地文件中。"
+        "Local config tool, bound to 127.0.0.1. Nothing here is required: search "
+        "works with no key. Values are stored at ~/.config/search-mcp/config.json (0600). "
+        "本地配置工具，仅绑定 127.0.0.1；无需任何密钥即可搜索，所填内容保存在上述本地文件中。"
+    )
+    keys_note = (
+        "Search already works without any of these. They are for an operator who "
+        "has their own account with a provider: brave_api, serper, tavily, google_cse "
+        "and github_code run only when a call names them; the rest only raise a "
+        "keyless engine's limits."
+    )
+    keys_note_zh = (
+        "不填写任何密钥也能正常搜索。以下内容仅供已有服务商账号的使用者手动填写："
+        "brave_api、serper、tavily、google_cse、github_code 只有在调用中被点名时才会运行，"
+        "其余密钥只是提高免密钥引擎的额度。"
     )
     return f"""<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>search-mcp admin</title>
+  <title>search-mcp · local settings</title>
   <style>{_STYLE}</style>
 </head>
 <body>
   <div class="wrap">
     <header>
-      <h1>search-mcp · provider keys <span class="zh">/ 提供商密钥配置</span></h1>
+      <h1>search-mcp · local settings <span class="zh">/ 本地设置</span></h1>
       <p class="note">{_esc(note)}</p>
     </header>
+    {network}
+    <h2 class="section">Optional provider keys <span class="zh">/ 提供商密钥配置（可选）</span></h2>
+    <p class="free-tier">{_esc(keys_note)}<br><span class="zh">{_esc(keys_note_zh)}</span></p>
     {cards}
   </div>
   <div id="toast"></div>

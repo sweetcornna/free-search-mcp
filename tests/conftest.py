@@ -8,6 +8,14 @@ import socket
 
 import pytest
 
+# Which tools exist is decided when `search_mcp.server` is imported, which is
+# before any fixture runs. Pinned here, at conftest import, so a developer with
+# an answer backend or a narrowed tool list in the shell (or in ./.env, which a
+# real variable outranks) still tests the shipped eleven.
+os.environ["SEARCH_MCP_AGENT_BACKEND"] = "off"
+os.environ["SEARCH_MCP_TOOLS"] = ""
+os.environ["SEARCH_MCP_TOOL_CALL_BUDGET"] = "0"
+
 
 @pytest.fixture(autouse=True)
 async def _reset_browser_pool():
@@ -24,6 +32,26 @@ async def _close_global_cache():
     yield
     from search_mcp.cache import cache
     await cache.close()
+
+
+@pytest.fixture(autouse=True)
+def _restore_search_mcp_env():
+    """Undo whatever a test wrote into ``os.environ`` under ``SEARCH_MCP_``.
+
+    ``load_env_file_into_environ`` writes to ``os.environ`` directly, which is
+    its job, and ``monkeypatch.delenv(name, raising=False)`` records nothing to
+    restore when the variable was absent to begin with. So a test of the loader
+    left ``SEARCH_MCP_SERPER_API_KEY=from-dotenv`` behind for the rest of the
+    process. Offline that was invisible, because ``_hermetic_config`` clears
+    provider keys before every test. In a live run it does not, and the fake
+    key reached Serper, which answered 403.
+    """
+    before = {k: v for k, v in os.environ.items() if k.startswith("SEARCH_MCP_")}
+    yield
+    for name in [k for k in os.environ if k.startswith("SEARCH_MCP_")]:
+        if name not in before:
+            del os.environ[name]
+    os.environ.update(before)
 
 
 @pytest.fixture(autouse=True)
@@ -54,9 +82,28 @@ def _hermetic_config(tmp_path_factory, monkeypatch):
         "SEARCH_MCP_DOWNLOAD_DIR",
     ):
         monkeypatch.delenv(var, raising=False)
+    # The answer agent is off in the shipped defaults. A developer who runs it
+    # day to day has these in the shell, and the suite must not inherit a
+    # backend, a model endpoint or a narrowed tool list from them.
+    for var in [v for v in os.environ if v.startswith("SEARCH_MCP_AGENT_")] + [
+        "SEARCH_MCP_TOOLS",
+        "SEARCH_MCP_TOOL_CALL_BUDGET",
+    ]:
+        monkeypatch.delenv(var, raising=False)
 
     from search_mcp import keystore
     from search_mcp.config import Settings, settings
+
+    # Same argument, for API keys. This project's claim is that everything works
+    # with none configured, and a developer with SEARCH_MCP_SERPER_API_KEY in
+    # their shell would be running a different product from CI's: the opt-in
+    # line of `engines`, the "not configured" errors and the routing of
+    # `github_code` all change. The live suite keeps them — that is the only
+    # place a real key is meant to be exercised.
+    if os.environ.get("SEARCH_MCP_TEST_NETWORK") != "1":
+        for provider in keystore.PROVIDERS:
+            for provider_field in provider.fields:
+                monkeypatch.delenv(keystore._env_name(provider_field.key), raising=False)
 
     keystore._reset_cache()
     # `settings` is a module-level singleton built at import time, so clearing
@@ -67,6 +114,9 @@ def _hermetic_config(tmp_path_factory, monkeypatch):
         "document_root",
         "download_enabled",
         "download_dir",
+        "tools",
+        "tool_call_budget",
+        *(f for f in Settings.model_fields if f.startswith("agent_")),
     ):
         monkeypatch.setattr(settings, name, Settings.model_fields[name].default)
     monkeypatch.setattr(
@@ -135,3 +185,24 @@ def _disable_rescue(monkeypatch):
     test_rescue.py re-enables it against a fully stubbed engine registry."""
     from search_mcp.config import settings
     monkeypatch.setattr(settings, "rescue_enabled", False)
+
+
+@pytest.fixture(autouse=True)
+def _reset_bing_session():
+    """The Bing engine shares one warmed cookie jar per proxy egress for half
+    an hour. Carried across tests it would let one test's stubbed session
+    answer for the next, and hide whether a test mints one at all."""
+    from search_mcp.engines.bing import _reset_jar
+    _reset_jar()
+    yield
+    _reset_jar()
+
+
+@pytest.fixture(autouse=True)
+def _reset_engine_health():
+    """The circuit breaker is process-wide on purpose. Across tests that means
+    one test's stubbed captcha would bench `searx` for every test after it."""
+    from search_mcp.health import engine_health
+    engine_health.reset()
+    yield
+    engine_health.reset()

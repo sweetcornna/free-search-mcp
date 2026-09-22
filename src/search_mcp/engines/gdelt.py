@@ -28,7 +28,7 @@ class GdeltEngine(JsonApiEngine):
     """GDELT global news search (keyless JSON API)."""
 
     name = "gdelt"
-    description = "GDELT — worldwide news in 100+ languages; strictly rate-limited, opt-in."
+    description = "GDELT: worldwide news in 100+ languages; strictly rate-limited, opt-in."
     categories = frozenset({"news", "news.world"})
     # GDELT's 429 body says "limit requests to one every 5 seconds" (12/min).
     # We go to one per 10s: observed behavior punishes bursts with a cooldown

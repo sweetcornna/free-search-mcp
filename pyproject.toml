@@ -1,6 +1,6 @@
 [project]
 name = "free-search-mcp"
-version = "0.11.0"
+version = "0.12.0"
 description = "Local-first, no-API-key search MCP server. Multi-engine web search, smart fetching, document reading."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -14,6 +14,9 @@ keywords = [
     "scraping",
     "playwright",
     "llm",
+    "no-api-key",
+    "claude-code-plugin",
+    "agent-skills",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -25,12 +28,25 @@ classifiers = [
     "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
 ]
 dependencies = [
-    # v2 is the floor, not a preference: it is the first release that speaks
-    # protocol revision 2026-07-28, and it renamed `FastMCP` -> `MCPServer`
-    # with no compatibility alias, so server.py cannot run on 1.x either.
+    # v2 speaks protocol revision 2026-07-28 and renamed `FastMCP` ->
+    # `MCPServer` with no compatibility alias, so server.py cannot run on 1.x.
     # One MCPServer instance serves both protocol eras, so this does not drop
     # older clients.
-    "mcp[cli]>=2.0.0",
+    #
+    # The range is BOTH a floor and a per-minor cap, and each half was paid for:
+    #   * `uvx free-search-mcp==X` (what the plugin runs) ignores uv.lock, so
+    #     this declared range is the ONLY thing that bounds which SDK a user
+    #     gets. 0.11.0 said `>=2.0.0`; CI tested the locked 2.0.0 while every
+    #     install resolved 2.2.0.
+    #   * 2.1.0 was a minor release that changed handler semantics: an
+    #     exception that is not a `ToolError` now reaches the client as a bare
+    #     "Error executing tool <name>". Every actionable message this server
+    #     raises went dark in production with a green test suite.
+    # So 2.2 is the floor (it is what CI runs and what server.py's error
+    # boundary is written against), and a new minor is adopted deliberately —
+    # bump the cap, read the SDK changelog, release. The `sdk-canary` job in
+    # ci.yml says when: its `next` leg runs this suite against the newest SDK.
+    "mcp[cli]>=2.2.0,<2.3",
     # [socks] extra so the documented socks5:// proxy works with the httpx
     # clients in documents.py / structured.py (curl_cffi handles socks natively).
     "httpx[socks]>=0.27",
@@ -124,6 +140,9 @@ ignore = [
 # Long lines live inside embedded HTML/CSS/JS template strings where a noqa
 # comment would leak into the rendered page.
 "src/search_mcp/admin.py" = ["E501"]
+# The agent prompt is one bullet per line, and the Claude Code and Codex agent
+# files must hold the same text byte for byte, so its lines cannot be wrapped.
+"src/search_mcp/agent.py" = ["E501"]
 
 [dependency-groups]
 dev = [

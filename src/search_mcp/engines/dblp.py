@@ -29,7 +29,7 @@ class DblpEngine(JsonApiEngine):
     """DBLP computer-science publication search (keyless JSON API)."""
 
     name = "dblp"
-    description = "DBLP — curated computer-science bibliography: exact venues, authors and DOIs."
+    description = "DBLP: curated computer-science bibliography: exact venues, authors and DOIs."
     categories = frozenset({"paper", "paper.cs"})
     # DBLP punishes bursts: two queries in quick succession during development
     # came back throttled (an empty body, not an error), which the never-raise

@@ -124,13 +124,20 @@ def test_per_engine_impersonation_profiles():
 
 def test_impersonation_profiles_are_known_to_curl_cffi():
     """A typo here would only surface as a runtime error on a live search."""
-    from curl_cffi.requests.impersonate import normalize_browser_type
+    from curl_cffi.requests import impersonate as profiles
 
     from search_mcp.engines import get_engine
 
+    # curl_cffi 0.16 renamed the alias resolver. Both versions map "chrome"
+    # to the newest Chrome profile; 0.16 returns an unknown name unchanged
+    # instead of raising, so membership is checked after resolving.
+    resolve = getattr(profiles, "resolve_latest_browser_type", None)
+    if resolve is None:
+        resolve = profiles.normalize_browser_type
+    known = {browser.value for browser in profiles.BrowserType}
     for name in ("google", "bing"):
         profile = get_engine(name).impersonate
-        assert normalize_browser_type(profile)
+        assert resolve(profile) in known, profile
 
 
 def test_detect_gate_does_not_fire_on_a_real_serp():

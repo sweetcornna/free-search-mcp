@@ -36,7 +36,7 @@ class DataEuropaEngine(JsonApiEngine):
     """data.europa.eu public-sector dataset search (keyless JSON API)."""
 
     name = "dataeuropa"
-    description = "data.europa.eu — EU and member-state open-data catalogues in one index."
+    description = "data.europa.eu: EU and member-state open-data catalogues in one index."
     categories = frozenset({"dataset", "dataset.gov"})
 
     def build_url(

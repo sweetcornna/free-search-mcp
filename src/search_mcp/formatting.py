@@ -61,6 +61,42 @@ def smart_truncate(text: str, max_chars: int) -> tuple[str, bool]:
     return head[:best].rstrip() + "\n\n[…truncated]", True
 
 
+def _age_phrase(seconds: int | float) -> str:
+    """"3 days" / "5 hours" / "under a minute" — coarse on purpose."""
+    seconds = int(seconds)
+    if seconds < 60:
+        return "under a minute"
+    for unit, size in (("day", 86400), ("hour", 3600), ("minute", 60)):
+        if seconds >= size:
+            n = seconds // size
+            return f"{n} {unit}{'s' if n != 1 else ''}"
+    return "under a minute"
+
+
+def _retrieved_crumb(payload: dict[str, Any]) -> str:
+    """"retrieved 2026-09-21T04:30:12Z", or for a replayed answer
+    "cached 3 days ago · retrieved …". The timestamp doubles as the one
+    reliable statement of "now" a model gets from a tool result."""
+    stamp = payload.get("retrieved_at")
+    age = payload.get("cache_age_seconds")
+    if age is not None:
+        crumb = f"cached {_age_phrase(age)} ago"
+        return crumb + (f" · retrieved {stamp}" if stamp else "")
+    return f"retrieved {stamp}" if stamp else ""
+
+
+def _date_crumb(result: dict[str, Any]) -> str:
+    """How old a result is, and how far to trust that."""
+    age = result.get("published_age")
+    source = result.get("date_source")
+    if not age:
+        # Only claim "undated" when the pipeline actually looked.
+        return "undated" if source == "none" else ""
+    if source == "snippet":
+        return f"{age} (from snippet text)"
+    return f"dated {age}" if source == "structured" else str(age)
+
+
 def render_search(payload: dict[str, Any]) -> str:
     """Render aggregator output as a numbered Markdown list with provenance."""
     query = payload.get("query", "")
@@ -80,11 +116,17 @@ def render_search(payload: dict[str, Any]) -> str:
     )
     engines = ", ".join(contributed or requested)
 
-    lines = [f"# Search: {query}", "", f"_engines: {engines}_  _results: {len(results)}_"]
+    summary = f"_engines: {engines}_  _results: {len(results)}_"
+    if results and payload.get("dated_results") is not None:
+        summary += f"  _dated: {payload['dated_results']}/{len(results)}_"
+    lines = [f"# Search: {query}", "", summary]
     missing = [e for e in requested if e not in contributed]
     if contributed and missing:
         lines.append(f"_(requested but contributed nothing: {', '.join(missing)})_")
-    if cached:
+    crumb = _retrieved_crumb(payload)
+    if crumb:
+        lines.append(f"_({crumb})_")
+    elif cached:
         lines.append("_(from cache)_")
     lines.append("")
 
@@ -120,8 +162,9 @@ def render_search(payload: dict[str, Any]) -> str:
         engines_for = ", ".join(r.get("engines") or [])
         score = r.get("score")
         meta = f"_{engines_for}_" + (f" · score {score}" if score is not None else "")
-        if r.get("published_age"):
-            meta += f" · {r['published_age']}"
+        for crumb in (r.get("source_type"), _date_crumb(r)):
+            if crumb:
+                meta += f" · {crumb}"
         lines.append(f"## {i}. {title}")
         lines.append(f"<{url}>")
         if snippet:
@@ -143,6 +186,10 @@ def render_search(payload: dict[str, Any]) -> str:
     if diag:
         lines.extend(_render_filter_diagnostics(diag))
 
+    if payload.get("usage_note"):
+        lines.append("")
+        lines.append(f"_{payload['usage_note']}_")
+
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -153,6 +200,10 @@ def _render_search_hints(payload: dict[str, Any]) -> list[str]:
     blocked engine matters most exactly when the list came back empty.
     """
     lines: list[str] = []
+    freshness_note = payload.get("freshness_note")
+    if freshness_note:
+        lines.append("")
+        lines.append(f"⚠️ **Undated results:** {freshness_note}")
     gated_hint = payload.get("gated_hint")
     if gated_hint:
         lines.append("")
@@ -165,6 +216,26 @@ def _render_search_hints(payload: dict[str, Any]) -> list[str]:
     if rate_limited_hint:
         lines.append("")
         lines.append(f"⚠️ **Rate-limited engines:** {rate_limited_hint}")
+    timed_out_hint = payload.get("timed_out_hint")
+    if timed_out_hint:
+        lines.append("")
+        lines.append(f"⚠️ **Timed out:** {timed_out_hint}")
+    # Informational: record sources that claimed the question and were seated
+    # without a `category`. Their results, when any, are the dated records.
+    routed = payload.get("auto_routed")
+    if routed:
+        lines.append("")
+        lines.append(
+            f"ℹ️ **Record sources:** {', '.join(routed)} answered this question directly "
+            "(no category was needed); a result from one of them is the publisher's own record."
+        )
+    # Informational, not a warning: a benched engine was left out on purpose and
+    # the search ran normally without it. It is shown so the `engines:` header,
+    # which now lists what actually ran, never has a silent gap in it.
+    benched_hint = payload.get("benched_hint")
+    if benched_hint:
+        lines.append("")
+        lines.append(f"ℹ️ **Benched engines:** {benched_hint}")
     rescued = payload.get("rescued_via")
     if rescued:
         lines.append("")
@@ -229,13 +300,19 @@ def render_fetch(result: dict[str, Any]) -> str:
     if author:
         byline_parts.append(f"by {author}")
     if published_date:
-        byline_parts.append(published_date)
+        byline_parts.append(f"published {published_date}")
+    elif not result.get("media_type"):
+        # Said out loud, because silence reads as "current". Most pages carry no
+        # machine-readable date, and the reader should know this one did not.
+        byline_parts.append("no publication date found")
     byline = " · ".join(byline_parts)
 
+    crumb = _retrieved_crumb(result)
     meta_line = (
         f"_fetched via {method}_"
         + (f" · ~{tokens} tokens" if tokens else "")
         + (" · truncated" if truncated else "")
+        + (f" · {crumb}" if crumb else "")
     )
 
     header = [f"# {title}", f"<{url}>"]
@@ -296,12 +373,29 @@ def render_research(payload: dict[str, Any]) -> str:
 
     lines.append("## Sources")
     if not sources:
-        lines.append("_(none — the search returned nothing to read)_")
+        lines.append("_(none: the search returned nothing to read)_")
+    docs_by_url = {d.get("url"): d for d in docs if isinstance(d, dict)}
     for s in sources:
         lines.append(f"- [{s.get('rank')}] **{s.get('title')}** — <{s.get('url')}>")
+        # Age, kind and copy-age on one line: what a reader needs to decide how
+        # far to trust the source before reading 2,000 tokens of it.
+        doc = docs_by_url.get(s.get("url")) or {}
+        facts: list[str] = []
+        if s.get("source_type"):
+            facts.append(s["source_type"])
+        if doc.get("published_date"):
+            facts.append(f"published {doc['published_date']}")
+        else:
+            facts.append(_date_crumb(s) or "undated")
+        if doc.get("cache_age_seconds") is not None:
+            facts.append(f"page cached {_age_phrase(doc['cache_age_seconds'])} ago")
+        lines.append(f"    _{' · '.join(facts)}_")
         sn = (s.get("snippet") or "").strip()
         if sn:
             lines.append(f"    > {sn}")
+    if payload.get("date_note"):
+        lines.append("")
+        lines.append(f"⚠️ **Dates:** {payload['date_note']}")
     lines.append("")
 
     # Same reporting contract as render_search: engine errors and the
@@ -340,6 +434,45 @@ def render_research(payload: dict[str, Any]) -> str:
             lines.append("")
             lines.append("---")
             lines.append("")
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def render_ask(payload: dict[str, Any]) -> str:
+    """The answer agent's reply, then how it was produced and what it read."""
+    sources = payload.get("sources") or []
+    if payload.get("answer") is None:
+        # The model half failed and the search half did not. Give the caller
+        # what `research` would have, so the work already done is not lost.
+        return (
+            f"⚠️ The answer agent did not finish: {payload.get('agent_error')}. "
+            "The pages it was given follow, so you can answer from them yourself.\n\n"
+            + render_research(payload.get("research") or {})
+        )
+    took = payload.get("elapsed_seconds") or {}
+    facts = [f"backend: {payload.get('backend')}"]
+    if payload.get("model"):
+        facts.append(f"model: {payload['model']}")
+    read = sum(1 for s in sources if s.get("read", True))
+    facts.append(
+        f"{read} pages read first" if read == len(sources)
+        else f"{read} of {len(sources)} pages read first"
+    )
+    extra = payload.get("tool_calls") or []
+    if extra:
+        facts.append(f"{len(extra)} more tool call{'s' if len(extra) != 1 else ''}")
+    if took:
+        facts.append(
+            f"{took.get('total')} s (search {took.get('search')} s, model {took.get('model')} s)"
+        )
+    lines = [str(payload["answer"]).rstrip(), "", "---", "_" + " · ".join(facts) + "_"]
+    if sources:
+        lines.append("")
+        lines.append("Pages the server gave the model:")
+        for s in sources:
+            kind = f" · {s['source_type']}" if s.get("source_type") else ""
+            link = f"[{s.get('title')}]({s.get('url')})"
+            unread = "" if s.get("read", True) else " · not read, snippet only"
+            lines.append(f"{s.get('rank')}. {link} · {s.get('date')}{kind}{unread}")
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -398,6 +531,9 @@ def render_structured(payload: dict[str, Any]) -> str:
         lines.append(">")
         lines.append(f"> {hint}")
         lines.append("")
+    if payload.get("trimmed"):
+        lines.append(f"_{payload['trimmed']}_")
+        lines.append("")
 
     any_section = False
     for key in _STRUCTURED_KEYS:
@@ -450,7 +586,8 @@ def errors_to_hint(errors: dict[str, str] | None) -> str | None:
 def render_engines(
     taxonomy: dict[str, dict[str, list[str]]],
     descriptions: dict[str, str],
-    needs_key: set[str] | None = None,
+    opt_in: dict[str, bool] | None = None,
+    not_auto_routed: set[str] | None = None,
 ) -> str:
     """Render the source taxonomy as a `group -> sub-group -> engine` tree.
 
@@ -462,17 +599,21 @@ def render_engines(
     if not taxonomy:
         return "No engines matched that group.\n"
 
-    keyed = needs_key or set()
+    # Derived from the keystore's provider registry, not a second hand-kept
+    # list, so it can never disagree with what the settings page configures.
+    opt_in = opt_in or {}
+    unrouted = not_auto_routed or set()
 
     def _bullets(names: list[str]) -> list[str]:
         out = []
         for n in names:
+            if n in opt_in:
+                # Not in the tree. A model choosing a source reads this tree as
+                # the menu, and an engine it cannot use has no place on it.
+                continue
             line = f"- `{n}` — {descriptions.get(n, '')}".rstrip(" —")
-            # Derived from the keystore's provider registry, not a second
-            # hand-kept list, so it can never disagree with what the admin UI
-            # asks the operator to configure.
-            if n in keyed:
-                line += " **(API key required)**"
+            if n in unrouted:
+                line += " _(not auto-routed right now; name it in `engines=` to try it)_"
             out.append(line)
         return out
 
@@ -482,22 +623,35 @@ def render_engines(
         # The "" bucket holds engines that declare the group and nothing
         # narrower; it is empty whenever every engine in the group has a
         # sub-group, so it must not leave a stray blank section behind.
-        ungrouped = subs.get("") or []
+        ungrouped = _bullets(subs.get("") or [])
         if ungrouped:
             lines.append("")
-            lines.extend(_bullets(ungrouped))
+            lines.extend(ungrouped)
         for sub, names in subs.items():
-            if not sub:
+            bullets = _bullets(names) if sub else []
+            if not bullets:
                 continue
             lines.append("")
             lines.append(f"### {group}.{sub}")
             lines.append("")
-            lines.extend(_bullets(names))
+            lines.extend(bullets)
         lines.append("")
     lines.append(
         "Pass a group or sub-group as `category=` to route automatically; pass a "
         "name as `engines=[...]` to force one source."
     )
+    listed = {n for subs in taxonomy.values() for names in subs.values() for n in names}
+    shown = sorted(n for n in opt_in if n in listed)
+    if shown:
+        # One line, last, and framed as what it is: an operator's optional
+        # extra. Everything above runs with no key and no account.
+        labelled = ", ".join(f"`{n}`" + (" (configured)" if opt_in[n] else "") for n in shown)
+        lines.append("")
+        lines.append(
+            f"Every engine above is keyless. Opt-in extras that run only on the operator's "
+            f"own API key: {labelled}. They are never used unless named, and an unconfigured "
+            "one returns an error and no results, so do not ask the user for a key."
+        )
     return "\n".join(lines) + "\n"
 
 
@@ -538,7 +692,7 @@ def render_paper_graph(payload: dict[str, Any]) -> str:
 
     lines: list[str] = []
     if paper.get("retracted"):
-        lines.append("> ⚠️ **RETRACTED PAPER** — do not cite this as a standing result.")
+        lines.append("> ⚠️ **RETRACTED PAPER**: do not cite this as a standing result.")
         lines.append("")
 
     lines.append(f"# {paper.get('title') or '(untitled)'}")
@@ -559,7 +713,7 @@ def render_paper_graph(payload: dict[str, Any]) -> str:
     if crossref.get("registered") is False:
         lines.append("")
         lines.append(
-            "**Not in Crossref** — likely a DataCite DOI, so retraction notices "
+            "**Not in Crossref**: likely a DataCite DOI, so retraction notices "
             "could not be checked."
         )
     for notice in crossref.get("notices") or []:

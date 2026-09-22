@@ -37,7 +37,7 @@ class CrossrefEngine(JsonApiEngine):
     """Crossref works search (keyless JSON API)."""
 
     name = "crossref"
-    description = "Crossref — the DOI registry; authoritative metadata for published articles."
+    description = "Crossref: the DOI registry; authoritative metadata for published articles."
     categories = frozenset({"paper", "paper.index"})
 
     def build_url(

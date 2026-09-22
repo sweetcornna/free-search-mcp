@@ -62,7 +62,8 @@ def _normalize_url(href: str) -> str:
 
 class ZhihuEngine(Engine):
     name = "zhihu"
-    description = "知乎 — Chinese Q&A and long-form answers; frequently login-gated."
+    single_site = True
+    description = "知乎: Chinese Q&A and long-form answers; frequently login-gated."
     # Zhihu serves a login wall / anti-bot interstitial to plain HTTP clients,
     # so the only no-key path is a full Playwright render. Even then it is
     # best-effort: a gated page yields zero cards.

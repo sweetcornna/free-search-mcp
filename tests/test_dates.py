@@ -53,6 +53,22 @@ def test_extract_date_hint_random_text():
     assert extract_date_hint("just some random text without a date") == ""
 
 
+def test_extract_date_hint_skips_dates_a_page_cannot_have_been_published_on():
+    """The FastAPI page on PyPI announces a conference "on October 28, 2026",
+    and that came out as the page's date. A future date is an event, not a
+    publication, so the parser moves on to the next date in the text."""
+    from datetime import date, timedelta
+
+    future = (date.today() + timedelta(days=40)).strftime("%B %d, %Y")
+    assert extract_date_hint(f"FastAPI Conf is happening on {future} in Amsterdam") == ""
+    assert extract_date_hint(f"Conf on {future}. Posted Apr 28, 2026.") == "2026-04-28"
+    future_iso = (date.today() + timedelta(days=40)).isoformat()
+    assert extract_date_hint(f"deadline {future_iso}; published 2026-01-05") == "2026-01-05"
+    # Tomorrow is still allowed: the engine's clock may be a time zone ahead.
+    tomorrow = (date.today() + timedelta(days=1)).isoformat()
+    assert extract_date_hint(f"posted {tomorrow}") == tomorrow
+
+
 def test_extract_date_hint_today_yesterday_ignored():
     # Documented non-goal: too ambiguous without a timezone.
     assert extract_date_hint("Today's update from the team") == ""

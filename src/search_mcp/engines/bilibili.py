@@ -70,7 +70,8 @@ class BilibiliEngine(Engine):
     """Bilibili keyless web-search JSON API. No API key, no browser."""
 
     name = "bilibili"
-    description = "哔哩哔哩 — Chinese video search with uploader, duration and view counts."
+    single_site = True
+    description = "哔哩哔哩: Chinese video search with uploader, duration and view counts."
     needs_browser = False
     # JSON feed: a [] parse is genuinely empty, so skip the pointless
     # captcha-recovery render the base search() would otherwise attempt.

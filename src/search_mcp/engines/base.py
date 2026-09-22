@@ -5,7 +5,7 @@ import asyncio
 import random
 import re
 from dataclasses import asdict, dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Literal
 from urllib.parse import urlparse
 
@@ -44,11 +44,13 @@ Freshness = Literal["day", "week", "month", "year"]
 # sub-groups so one sub-group can't monopolise `category_engine_limit`); a
 # dotted sub-group NARROWS to the sources that index exactly that.
 CategoryGroup = Literal[
-    "news", "pdf", "github", "paper", "forum", "blog", "image", "dataset", "finance"
+    "news", "pdf", "github", "paper", "forum", "blog", "image", "dataset", "finance",
+    "software", "security", "reference", "weather", "docs", "gov", "stats", "calendar",
 ]
 Category = Literal[
     # Groups
     "news", "pdf", "github", "paper", "forum", "blog", "image", "dataset", "finance",
+    "software", "security", "reference", "weather", "docs", "gov", "stats", "calendar",
     # Sub-groups. Each must be `<group>.<name>` with `<group>` in CategoryGroup,
     # and at least one registered engine must declare it — both are asserted in
     # tests/test_source_taxonomy.py.
@@ -66,6 +68,27 @@ Category = Literal[
     "finance.filings",
     "finance.market",
     "finance.macro",
+    "finance.fx",
+    "finance.entity",
+    "finance.crypto",
+    "software.lifecycle",
+    "software.github",
+    "software.python",
+    "software.node",
+    "software.rust",
+    "software.registry",
+    "software.app",
+    "security.cve",
+    "security.package",
+    "security.exploited",
+    "reference.domain",
+    "docs.web",
+    "docs.rfc",
+    "gov.us",
+    "gov.uk",
+    "stats.indicator",
+    "calendar.holidays",
+    "calendar.clock",
 ]
 
 
@@ -96,6 +119,18 @@ _ABS_RE_2 = re.compile(r"\b(\d{4})-(\d{2})-(\d{2})\b")
 _ABS_RE_3 = re.compile(r"\b(\d{1,2})/(\d{1,2})/(\d{2,4})\b")
 
 
+def _plausible_publish_date(d: datetime) -> bool:
+    """A date a page could have been published on.
+
+    Snippets carry every date the page mentions, and a page cannot have been
+    published after today. The FastAPI page on PyPI announces a conference
+    "on October 28, 2026", and that came out as the page's date, ahead of
+    everything dated this week. One day of slack covers time zones. The lower
+    bound keeps version numbers such as 1/2/24 from reading as 1924.
+    """
+    return d.year >= 1990 and d.date() <= datetime.now().date() + timedelta(days=1)
+
+
 def extract_date_hint(text: str) -> str:
     """Return a normalised date string if one is present in ``text``.
 
@@ -119,24 +154,27 @@ def extract_date_hint(text: str) -> str:
         return f"{n} {unit}{'s' if int(n) != 1 else ''} ago"
 
     # ISO date wins next — least ambiguous.
-    iso = _ABS_RE_2.search(text)
-    if iso:
+    for iso in _ABS_RE_2.finditer(text):
         try:
             d = datetime.strptime(iso.group(0), "%Y-%m-%d")
-            return d.strftime("%Y-%m-%d")
         except ValueError:
-            pass
+            continue
+        if _plausible_publish_date(d):
+            return d.strftime("%Y-%m-%d")
 
     # "Apr 28, 2026" — only normalise when year is present.
-    abs1 = _ABS_RE_1.search(text)
-    if abs1 and abs1.group(3):
+    for abs1 in _ABS_RE_1.finditer(text):
+        if not abs1.group(3):
+            continue
         raw = f"{abs1.group(1)} {abs1.group(2)}, {abs1.group(3)}"
         for fmt in ("%b %d, %Y", "%B %d, %Y"):
             try:
                 d = datetime.strptime(raw, fmt)
-                return d.strftime("%Y-%m-%d")
             except ValueError:
                 continue
+            if _plausible_publish_date(d):
+                return d.strftime("%Y-%m-%d")
+            break
 
     # Numeric short date — try a few orderings, prefer m/d/Y (US/most engines).
     short = _ABS_RE_3.search(text)
@@ -145,8 +183,7 @@ def extract_date_hint(text: str) -> str:
         for fmt in ("%m/%d/%Y", "%m/%d/%y", "%d/%m/%Y", "%d/%m/%y"):
             try:
                 d = datetime.strptime(raw, fmt)
-                # Sanity: reject obviously bogus years (e.g. version numbers)
-                if 1990 <= d.year <= datetime.now().year + 1:
+                if _plausible_publish_date(d):
                     return d.strftime("%Y-%m-%d")
             except ValueError:
                 continue
@@ -395,6 +432,44 @@ def _is_paper_host(host: str) -> bool:
     if _host_matches(host, _NOT_PAPER_HOSTS):
         return False
     return _host_matches(host, _PAPER_HOSTS)
+
+
+# Public-sector and academic hosts, by the naming conventions registries
+# enforce: `.gov` / `.mil` and their country forms, a few national equivalents
+# that do not use the word, `.edu` and its country forms, and the `.ac.<cc>`
+# second level. A floor, like the other host tables here.
+_GOVERNMENT_HOST_RE = re.compile(
+    r"(?:^|\.)(?:gov|mil)(?:\.[a-z]{2})?$|\.(?:gouv\.fr|go\.jp|go\.kr|gc\.ca|gob\.[a-z]{2}|europa\.eu)$"
+)
+_ACADEMIC_HOST_RE = re.compile(r"(?:^|\.)edu(?:\.[a-z]{2})?$|\.ac\.[a-z]{2}$")
+
+
+def classify_source(url: str) -> str:
+    """What KIND of site a result comes from, from its hostname alone.
+
+    One of "paper", "code", "forum", "news", "government", "academic", or ""
+    when the host says nothing. It is a description, not a verdict: a
+    government page can be out of date and a forum answer can be right. It is
+    surfaced so a reader can tell a primary source from commentary about it at
+    a glance, and it must never feed the ranking — per-result scoring has been
+    measured and rejected here more than once.
+    """
+    host = _host(url)
+    if not host:
+        return ""
+    if _is_paper_host(host):
+        return "paper"
+    if _host_matches(host, _GITHUB_HOSTS):
+        return "code"
+    if _host_matches(host, _FORUM_HOSTS):
+        return "forum"
+    if _is_news_host(host):
+        return "news"
+    if _GOVERNMENT_HOST_RE.search(host):
+        return "government"
+    if _ACADEMIC_HOST_RE.search(host):
+        return "academic"
+    return ""
 
 
 def _strip_query(url: str) -> str:
@@ -932,6 +1007,39 @@ class EngineKeyError(ValueError):
     """
 
 
+# The environment variable an opt-in engine's credential lives in. Not always
+# `SEARCH_MCP_<ENGINE>_API_KEY`: `github_code` borrows the `github` token, and a
+# message naming a variable that does not exist sends an operator hunting.
+_KEY_ENV = {"github_code": "SEARCH_MCP_GITHUB_TOKEN", "github": "SEARCH_MCP_GITHUB_TOKEN"}
+
+
+def _key_env(engine: str) -> str:
+    return _KEY_ENV.get(engine, f"SEARCH_MCP_{engine.upper()}_API_KEY")
+
+
+def key_not_configured(engine: str, *, alternative: str, env: str, field: str) -> EngineKeyError:
+    """The error for an opt-in engine that was named without its key set.
+
+    Written for the reader it actually has. This text lands in a tool result, in
+    front of a model, mid-task — and the old wording ("add X in the admin UI")
+    read as an instruction, so models relayed it: "please give me a Serper API
+    key". This project's whole premise is that nobody has to. So, in order: what
+    happened, that the search itself is fine, what to use instead, an explicit
+    "do not ask", and only then — for the operator reading a log — how the
+    engine would be enabled.
+
+    The `"<engine> not configured"` prefix, the field name and the environment
+    variable are stable: tests and callers match on them.
+    """
+    return EngineKeyError(
+        f"{engine} not configured: it is an optional, opt-in engine that runs on the "
+        f"operator's own API key, none is set, so it did not run. Nothing is wrong with the "
+        f"search: {alternative} Do not ask the user for an API key, because this server is "
+        f"built to work without one. (Operator note: `{engine}` is enabled by setting {env}, or "
+        f"`{field}` on the local settings page started with `search-mcp-admin`.)"
+    )
+
+
 def raise_for_key_error(engine: str, status: int | None) -> None:
     """Turn an auth/quota HTTP status from a keyed engine into an actionable
     error, so a bad/expired key surfaces a hint instead of a silent empty.
@@ -944,18 +1052,20 @@ def raise_for_key_error(engine: str, status: int | None) -> None:
     """
     if status in (401, 403):
         raise EngineKeyError(
-            f"{engine}: the API key was rejected (HTTP {status}). Verify it in the "
-            "admin UI (uv run search-mcp-admin) or the SEARCH_MCP_*_API_KEY env var."
+            f"{engine}: the configured credential was rejected (HTTP {status}). It may be "
+            "expired, revoked or mistyped. This affects only this opt-in engine; the keyless "
+            "engines are unaffected, so continue with them. (Operator note: check the "
+            f"value in `search-mcp-admin` or the {_key_env(engine)} environment variable.)"
         )
     if status == 422:
         raise EngineKeyError(
-            f"{engine}: the API rejected the request (HTTP 422) — usually an "
+            f"{engine}: the API rejected the request (HTTP 422), usually because of an "
             "invalid key or malformed parameters."
         )
     if status == 429:
         raise EngineKeyError(
-            f"{engine}: rate limit / quota exceeded (HTTP 429). Slow down or raise "
-            "the plan's limit."
+            f"{engine}: rate limit or quota exceeded (HTTP 429). Retry later, or continue "
+            "with the keyless engines, which are not subject to this quota."
         )
 
 
@@ -1075,6 +1185,45 @@ class Engine(abc.ABC):
     # headless browser just burns ~1s for the same empty result. RSS-backed
     # engines set this False to opt out of the wasted render.
     supports_browser_fallback: bool = True
+    # True for an engine that searches ONE site's own catalogue (Wikipedia
+    # articles, Bilibili videos, Open Library books) rather than the web.
+    # Together with an empty `categories` it decides who the aggregator's
+    # off-topic guard applies to: that guard asks "do these results mention the
+    # query beyond its first word?", which is a fair question for a web index
+    # and an unfair one for a catalogue of book titles.
+    single_site: bool = False
+    # True for an engine whose FIRST result is a record looked up by the query
+    # rather than a document ranked by relevance: a registry's current version,
+    # a CVE, an exchange rate, a forecast, a Wikidata item. Such a record is
+    # the answer the caller asked the category for, and it carries the
+    # publisher's own date, so when its category is requested the aggregator
+    # ranks that first result above any consensus of the default web pool
+    # (see aggregator._DIRECT_ANSWER_WEIGHT). Later results from the same
+    # engine (other candidate names, older advisories) count as ordinary
+    # native hits.
+    direct_answer: bool = False
+
+    def claims(self, query: str) -> bool:
+        """Whether this engine can answer `query` on its own, judged offline.
+
+        The aggregator asks every engine this when a search names no
+        `category` and no `engines`, and seats the first few that say yes
+        next to the web pool (settings.claim_engine_limit). It must be cheap
+        and must not touch the network: a regex over the question, such as a
+        CVE id, two currency names, a weather word plus a place, a "latest
+        version" phrasing. A false yes costs one fast request that returns
+        nothing; a false no costs the record. Default: never.
+        """
+        return False
+
+    def answers_directly(self, query: str) -> bool:
+        """Whether this engine's first result for `query` is a looked-up record.
+
+        Defaults to `direct_answer`. An engine with two modes overrides it: NVD
+        looks a CVE id up (a record) but otherwise runs a keyword search over
+        descriptions (candidates), and only the first deserves the weight.
+        """
+        return self.direct_answer
 
     def is_available(self) -> bool:
         """Whether this engine can run right now, for AUTO-SELECTION only.
@@ -1111,6 +1260,35 @@ class Engine(abc.ABC):
         The aggregator passes a shared dict so totals merge across engines
         without changing the return signature (back-compat).
         """
+        results, html = await self._raw_results(query, max_results, filters, diagnostics)
+        # When we got nothing, check whether the page was a gate (CAPTCHA /
+        # consent / login wall) and record an honest reason so the aggregator
+        # can explain the empty result instead of silently dropping the engine.
+        # setdefault on the ENGINE key too: a browser_unavailable reason
+        # recorded above must not be clobbered by the gate classification of
+        # the very shell the browser render was supposed to get past.
+        if not results and diagnostics is not None:
+            reason = detect_gate(html)
+            if reason:
+                diagnostics.setdefault("gated", {}).setdefault(self.name, reason)
+        return self.finalize_results(results, filters, max_results, diagnostics)
+
+    async def _raw_results(
+        self,
+        query: str,
+        max_results: int,
+        filters: SearchFilters | None = None,
+        diagnostics: dict[str, Any] | None = None,
+    ) -> tuple[list[SearchResult], str]:
+        """Fetch and parse: everything `search()` does before filtering.
+
+        Returns the unfiltered results plus the HTML they came from (for gate
+        detection). This is the seam for an engine that needs to look at its
+        own results and try again — Bing re-mints its session when it is
+        handed a decoy page — without re-implementing the pipeline, and
+        without running `finalize_results` (which writes per-engine
+        diagnostics) more than once per search.
+        """
         url = self.build_url(query, max_results, filters)
         html = await self._fetch(url)
         results = self.parse(html)
@@ -1130,17 +1308,7 @@ class Engine(abc.ABC):
                 # a per-engine stack trace.
                 if diagnostics is not None:
                     diagnostics.setdefault("gated", {})[self.name] = "browser_unavailable"
-        # When we got nothing, check whether the page was a gate (CAPTCHA /
-        # consent / login wall) and record an honest reason so the aggregator
-        # can explain the empty result instead of silently dropping the engine.
-        # setdefault on the ENGINE key too: a browser_unavailable reason
-        # recorded above must not be clobbered by the gate classification of
-        # the very shell the browser render was supposed to get past.
-        if not results and diagnostics is not None:
-            reason = detect_gate(html)
-            if reason:
-                diagnostics.setdefault("gated", {}).setdefault(self.name, reason)
-        return self.finalize_results(results, filters, max_results, diagnostics)
+        return results, html
 
     def finalize_results(
         self,
@@ -1201,14 +1369,20 @@ class Engine(abc.ABC):
                 raise http_err from None
             return html
 
-    async def _http_get(self, url: str) -> str:
+    async def _http_get(self, url: str, *, cookies: dict[str, str] | None = None) -> str:
         """One HTTP GET with at most one retry for transient failures.
 
         Retry policy lives in the module-level ``_RETRYABLE_STATUSES`` /
         ``_retry_after_seconds`` helpers; timeouts are never retried. The
         session is reused across attempts so a retry doesn't re-pay the TLS
         handshake.
+
+        ``cookies`` seeds the session's jar. Every request otherwise starts
+        from an empty one — right for most engines, and exactly what Bing
+        punishes (see engines/bing.py). It is only forwarded when given, so an
+        engine that never passes it builds the same session it always did.
         """
+        extra: dict[str, Any] = {"cookies": cookies} if cookies is not None else {}
         # curl_cffi sets the User-Agent matching the impersonated browser, so
         # we deliberately do NOT pass our own UA here — sending a mismatched UA
         # would re-introduce the very fingerprint discrepancy DDG checks for.
@@ -1221,6 +1395,7 @@ class Engine(abc.ABC):
                 "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
             },
             **curl_proxy_kwargs(self.name),
+            **extra,
         ) as client:
             for attempt in range(_MAX_ATTEMPTS):
                 last = attempt + 1 >= _MAX_ATTEMPTS

@@ -491,3 +491,128 @@ async def test_live_walks_a_real_paper():
 async def test_live_detects_a_known_retraction():
     out = await pg.paper_graph("10.1016/S0140-6736(20)31180-6", limit=2)
     assert out["paper"]["retracted"] is True
+
+
+# ---------------------------------------------------------------------------
+# arXiv identifiers
+# ---------------------------------------------------------------------------
+#
+# OpenAlex answers 404 to arXiv's own DataCite DOIs, so the most natural thing
+# to paste — the DOI printed on the arXiv page — used to come back as "the DOI
+# may be unregistered or mistyped" for papers OpenAlex plainly indexes.
+
+_ARXIV_FEED = """<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>arXiv Query: id_list=1706.03762</title>
+  <entry>
+    <id>http://arxiv.org/abs/1706.03762v7</id>
+    <title>{title}</title>
+  </entry>
+</feed>"""
+
+
+@pytest.mark.parametrize(
+    ("given", "expected"),
+    [
+        ("10.48550/arXiv.1706.03762", ("arxiv", "1706.03762")),
+        ("https://doi.org/10.48550/ARXIV.1706.03762", ("arxiv", "1706.03762")),
+        ("https://arxiv.org/abs/1706.03762v7", ("arxiv", "1706.03762")),
+        ("https://arxiv.org/pdf/1706.03762", ("arxiv", "1706.03762")),
+        ("arXiv:1706.03762", ("arxiv", "1706.03762")),
+        ("arXiv:hep-th/9901001v2", ("arxiv", "hep-th/9901001")),
+        # The form people actually paste. Only when it is the whole input.
+        ("1706.03762", ("arxiv", "1706.03762")),
+        ("2401.12345v3", ("arxiv", "2401.12345")),
+        ("hep-th/9901001", ("arxiv", "hep-th/9901001")),
+        ("GPT-4 scored 1706.0376 on it", ("title", "GPT-4 scored 1706.0376 on it")),
+        ("Results for 1706.03762 tokens", ("title", "Results for 1706.03762 tokens")),
+        # Everything else is classified exactly as before.
+        ("10.1145/1571941.1572114", ("doi", "10.1145/1571941.1572114")),
+        ("W2741809807", ("openalex", "W2741809807")),
+        ("Attention Is All You Need", ("title", "Attention Is All You Need")),
+    ],
+)
+def test_arxiv_identifiers_are_recognised(given, expected):
+    assert pg._normalize(given) == expected
+
+
+def _arxiv(monkeypatch, *, title: str | None, **routes):
+    stub = _Api(**routes)
+    requested: list[str] = []
+
+    async def text(url, **kw):
+        requested.append(url)
+        return _ARXIV_FEED.format(title=title) if title is not None else "<feed></feed>"
+
+    monkeypatch.setattr(pg._api, "_get_json", stub)
+    monkeypatch.setattr(pg._api, "_request_text", text)
+    return stub, requested
+
+
+async def test_an_arxiv_doi_resolves_through_the_title(monkeypatch):
+    stub, requested = _arxiv(monkeypatch, title=_TARGET["display_name"])
+
+    out = await pg.paper_graph("10.48550/arXiv.1706.03762")
+
+    assert out["paper"]["title"] == _TARGET["display_name"]
+    assert out["resolved_as"] == "arxiv"
+    assert "id_list=1706.03762" in requested[0]
+    # Never the 404: the arXiv DOI is not sent to OpenAlex's DOI endpoint.
+    assert not any("10.48550" in url for url in stub.urls)
+    assert any("?search=" in url for url in stub.urls)
+    # A title match is a weaker identification than a DOI, and it says so.
+    assert out["notes"][0].startswith("Resolved arXiv:1706.03762 by its title")
+    assert out["references"] and out["citations"]
+
+
+async def test_an_unknown_arxiv_id_says_so(monkeypatch):
+    _arxiv(monkeypatch, title=None)
+    out = await pg.paper_graph("arXiv:9999.99999")
+    assert out["paper"] is None
+    assert "arXiv returned no record for '9999.99999'" in out["notes"][0]
+    assert "mistyped" not in out["notes"][0]
+
+
+async def test_a_preprint_openalex_has_not_indexed_yet_says_that(monkeypatch):
+    _arxiv(monkeypatch, title="A Paper From Yesterday Nobody Has Indexed", search=None)
+    out = await pg.paper_graph("https://arxiv.org/abs/2609.01234")
+    assert out["paper"] is None
+    assert "arXiv calls it 'A Paper From Yesterday Nobody Has Indexed'" in out["notes"][0]
+    assert "may not be indexed yet" in out["notes"][0]
+
+
+async def test_a_failing_arxiv_lookup_never_raises(monkeypatch):
+    async def boom(url, **kw):
+        raise RuntimeError("arxiv is down")
+
+    monkeypatch.setattr(pg._api, "_get_json", _Api())
+    monkeypatch.setattr(pg._api, "_request_text", boom)
+    out = await pg.paper_graph("arXiv:1706.03762")
+    assert out["paper"] is None and out["notes"]
+
+
+async def test_among_records_with_the_exact_arxiv_title_the_most_cited_wins(monkeypatch):
+    """OpenAlex can hold several records under one exact title — a preprint
+    and its proceedings version. The citation graph hangs off the cited one,
+    and a merely similar title must not win on citations alone."""
+    redeposit = dict(_TARGET, id="https://openalex.org/W1", cited_by_count=12)
+    canonical = dict(_TARGET, id="https://openalex.org/W2", cited_by_count=90_000)
+    other = dict(_TARGET, id="https://openalex.org/W3", cited_by_count=999_999,
+                 display_name="Reciprocal rank fusion in speech separation")  # fmt: skip
+
+    class Api(_Api):
+        async def __call__(self, url, **kw):
+            if "?search=" in url:
+                self.urls.append(url)
+                return {"results": [redeposit, other, canonical]}
+            return await super().__call__(url, **kw)
+
+    async def text(url, **kw):
+        return _ARXIV_FEED.format(title=_TARGET["display_name"])
+
+    monkeypatch.setattr(pg._api, "_get_json", Api())
+    monkeypatch.setattr(pg._api, "_request_text", text)
+
+    out = await pg.paper_graph("arXiv:1706.03762", direction="references")
+
+    assert out["paper"]["openalex_id"] == "W2"

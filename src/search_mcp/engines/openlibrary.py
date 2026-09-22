@@ -23,7 +23,8 @@ class OpenLibraryEngine(JsonApiEngine):
     """Open Library book search (keyless JSON API)."""
 
     name = "openlibrary"
-    description = "Open Library — books, editions and authors from the Internet Archive catalogue."
+    single_site = True
+    description = "Open Library: books, editions and authors from the Internet Archive catalogue."
 
     def build_url(
         self, query: str, max_results: int, filters: SearchFilters | None = None

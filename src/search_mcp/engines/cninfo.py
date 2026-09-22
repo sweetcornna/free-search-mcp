@@ -52,7 +52,7 @@ class CninfoEngine(JsonApiEngine):
     """巨潮资讯 A-share / HK announcement search (keyless form-POST JSON API)."""
 
     name = "cninfo"
-    description = "巨潮资讯 — official A-share, STAR, ChiNext and HK filings and announcements."
+    description = "巨潮资讯: official A-share, STAR, ChiNext and HK filings and announcements."
     categories = frozenset({"finance", "finance.filings"})
 
     def build_url(

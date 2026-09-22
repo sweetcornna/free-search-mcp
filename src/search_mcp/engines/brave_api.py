@@ -58,6 +58,7 @@ from .base import (
     SearchResult,
     augment_query_with_operators,
     extract_date_hint,
+    key_not_configured,
     raise_for_key_error,
 )
 
@@ -89,7 +90,7 @@ class BraveApiEngine(Engine):
     """Brave Search API — official, keyed (X-Subscription-Token), JSON GET."""
 
     name = "brave_api"
-    description = "Brave Search API — the keyed, captcha-free version of the `brave` engine."
+    description = "Brave Search API: the keyed, captcha-free version of the `brave` engine."
     needs_browser = False
     # JSON API: an empty/malformed response is genuinely empty, so don't waste
     # a Playwright render trying to "recover" it (see Engine.search fallback).
@@ -194,9 +195,14 @@ class BraveApiEngine(Engine):
     ) -> list[SearchResult]:
         key = get_secret("brave_api_key")
         if not key:
-            raise ValueError(
-                "brave_api not configured: add brave_api_key in the admin UI "
-                "(run: uv run search-mcp-admin) or set SEARCH_MCP_BRAVE_API_KEY."
+            raise key_not_configured(
+                "brave_api",
+                alternative=(
+                    "`engines=['brave']` queries the same index without a key (it needs the "
+                    "browser), and omitting `engines=` uses the default keyless pool."
+                ),
+                env="SEARCH_MCP_BRAVE_API_KEY",
+                field="brave_api_key",
             )
 
         q = self._augmented_query(query, filters)

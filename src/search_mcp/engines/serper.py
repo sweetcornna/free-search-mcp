@@ -49,6 +49,7 @@ from .base import (
     SearchResult,
     augment_query_with_operators,
     extract_date_hint,
+    key_not_configured,
     raise_for_key_error,
 )
 
@@ -66,7 +67,7 @@ class SerperEngine(Engine):
     """Serper (serper.dev) Google SERP — keyed, JSON POST."""
 
     name = "serper"
-    description = "Serper — Google results through a hosted API."
+    description = "Serper: Google results through a hosted API."
     needs_browser = False
     # JSON API: an empty/malformed response is genuinely empty, so don't waste
     # a Playwright render trying to "recover" it (see Engine.search fallback).
@@ -128,9 +129,14 @@ class SerperEngine(Engine):
     ) -> list[SearchResult]:
         key = get_secret("serper_api_key")
         if not key:
-            raise ValueError(
-                "serper not configured: add serper_api_key in the admin UI "
-                "(run: uv run search-mcp-admin) or set SEARCH_MCP_SERPER_API_KEY."
+            raise key_not_configured(
+                "serper",
+                alternative=(
+                    "omit `engines=` to use the default keyless pool, which already covers "
+                    "the web."
+                ),
+                env="SEARCH_MCP_SERPER_API_KEY",
+                field="serper_api_key",
             )
 
         # Push domain/filetype constraints into the query via Google operators —

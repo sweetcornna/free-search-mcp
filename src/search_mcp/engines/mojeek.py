@@ -21,7 +21,7 @@ class MojeekEngine(Engine):
 
     name = "mojeek"
     description = (
-        "Independent web crawler — surfaces pages the Google/Bing-derived engines never show."
+        "Independent web crawler that surfaces pages the Google/Bing-derived engines never show."
     )
     needs_browser = False
 

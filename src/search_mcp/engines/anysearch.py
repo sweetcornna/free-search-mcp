@@ -28,7 +28,14 @@ Strategy:
 
 Caveats: the anonymous tier is IP rate-limited; on a 429/5xx, a network
 error, or malformed JSON we return ``[]`` rather than raise, so a flaky
-endpoint never poisons the aggregator.
+endpoint never poisons the aggregator. A refusal is still REPORTED, through
+``diagnostics["http_status"]``: this engine is in the default pool, and "it
+said 429" must not be indistinguishable from "it found nothing".
+
+Search operators are not sent. Measured 2026-09-21: ``site:``, ``-site:`` and
+``filetype:`` are treated as ordinary keywords (``-site:stackoverflow.com``
+returned stackoverflow.com first), so domain and category filters are applied
+to the results afterwards like for any engine without native support.
 """
 
 from __future__ import annotations
@@ -182,6 +189,8 @@ class AnySearchEngine(Engine):
                         payload = None
                     if payload is not None:
                         results = self._map_results(payload)
+                elif diagnostics is not None:
+                    diagnostics.setdefault("http_status", {})[self.name] = resp.status_code
         except RequestException:
             results = []
         except Exception:

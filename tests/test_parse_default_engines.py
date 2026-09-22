@@ -167,6 +167,45 @@ _BING_HTML = """
 </body></html>
 """
 
+# The failure no parser test can catch. This is the SHAPE of what Bing returned
+# for "rust ownership borrowing" when it disliked the request: HTTP 200, ten
+# well-formed `li.b_algo` rows, every selector satisfied — and every row about
+# the word "rust" rather than about the query. Titles are from the committed
+# 2026-08-29 ranking capture.
+_BING_DECOY_TITLES = [
+    ("Rust on Steam", "The only aim in Rust is to survive. Everything wants you to die."),
+    ("Rust — Explore, Build and Survive", "The only aim in Rust is to survive."),
+    ("Rust Programming Language", "Rust in production. Hundreds of companies use Rust."),
+    ("Install Rust - Rust Programming Language", "A language empowering everyone."),
+    ("Rust (programming language) - Wikipedia", "Rust is a general-purpose language."),
+    ("rust-lang/rust: Empowering everyone", "The Rust Foundation owns the Rust trademarks."),
+    ("Rust (video game) - Wikipedia", "Rust is a 2018 multiplayer survival video game."),
+    ("Rust+ - Official Companion App", "The official Rust companion app."),
+    ("Rust - Download", "May 7, 2026 · Rust is a PvP-driven game with deep crafting."),
+    ("Introduction to Rust - GeeksforGeeks", "Rust is a blazing fast systems language."),
+]
+_BING_DECOY_HTML = (
+    '<html><body><ol id="b_results">'
+    + "".join(
+        f'<li class="b_algo"><h2><a href="https://decoy.example/{i}">{title}</a></h2>'
+        f'<div class="b_caption"><p>{snippet}</p></div></li>'
+        for i, (title, snippet) in enumerate(_BING_DECOY_TITLES)
+    )
+    + "</ol></body></html>"
+)
+
+
+def test_a_decoy_page_parses_perfectly_and_only_coherence_sees_it():
+    from search_mcp.coherence import looks_like_decoy
+
+    results = BingEngine().parse(_BING_DECOY_HTML)
+    # Everything a structural test could assert holds...
+    assert len(results) == 10
+    assert all(r.title and r.url.startswith("https://") and r.snippet for r in results)
+    # ...and the page is still worthless for the query that produced it.
+    assert looks_like_decoy("rust ownership borrowing", results)
+
+
 # What Bing actually serves today: every organic href is a click-tracking
 # redirect carrying the target base64url-encoded behind an "a1" tag.
 _BING_REDIRECT_HTML = """

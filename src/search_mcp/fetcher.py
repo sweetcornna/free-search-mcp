@@ -4,7 +4,9 @@ import asyncio
 import io
 import json
 import logging
+import time
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import urlparse
 
@@ -14,7 +16,7 @@ from curl_cffi.requests import AsyncSession
 from markdownify import markdownify as html_to_md
 from selectolax.parser import HTMLParser
 
-from .browser import pool
+from .browser import brief_error, pool
 from .cache import cache
 from .config import settings
 from .formatting import estimate_tokens, smart_truncate
@@ -24,6 +26,7 @@ from .gnews import is_google_news_url, resolve_google_news_url
 # re-exported for the tests that exercise them through this module
 # (fetch_safety, charset); everything else imports from httpfetch directly.
 from .httpfetch import (  # noqa: F401
+    FetchError,
     MaxBytesExceededError,
     _accumulate_capped,
     _decode_body,
@@ -80,6 +83,11 @@ class FetchResult:
     # base64 the caller didn't request.
     data: bytes | None = None
     saved_path: str = ""
+    # When THIS COPY was taken off the network, epoch seconds. For a cache hit
+    # that is when the row was written, which can be a week ago — the one fact
+    # that tells a reader whether a deadline or a price on the page might have
+    # moved since. 0.0 means unknown.
+    fetched_at: float = 0.0
 
     def to_dict(self) -> dict[str, Any]:
         out: dict[str, Any] = {
@@ -102,6 +110,12 @@ class FetchResult:
                 out["height"] = self.height
         if self.saved_path:
             out["saved_path"] = self.saved_path
+        if self.fetched_at:
+            out["retrieved_at"] = datetime.fromtimestamp(self.fetched_at, UTC).strftime(
+                "%Y-%m-%dT%H:%M:%SZ"
+            )
+            if self.method == "cache":
+                out["cache_age_seconds"] = max(0, int(time.time() - self.fetched_at))
         return out
 
 
@@ -476,6 +490,7 @@ async def fetch_page(
                 author=author,
                 published_date=date,
                 sitename=sitename,
+                fetched_at=float(cached.get("fetched") or 0.0),
             )
 
     # Binary documents (PDF/DOCX) must be parsed by the document reader, not
@@ -542,11 +557,11 @@ async def fetch_page(
             method = "browser"
         except Exception as e:
             if not html:
-                raise RuntimeError(f"fetch failed for {url}: {e}") from e
+                raise FetchError(f"fetch failed for {url}: {brief_error(e)}") from e
             log.warning("browser fallback failed for %s, using http body: %s", url, e)
 
     if not html:
-        raise RuntimeError(f"empty response for {url}: {last_err}")
+        raise FetchError(f"empty response for {url}: {last_err}")
 
     # Content-type contract: only HTML/XML payloads go through trafilatura
     # extraction. JSON / plain-text / other content-types are returned VERBATIM
@@ -571,6 +586,7 @@ async def fetch_page(
         author=author,
         published_date=date,
         sitename=sitename,
+        fetched_at=time.time(),
     )
 
 
