@@ -4,7 +4,16 @@ All notable changes to this project are documented here. The format is loosely
 based on [Keep a Changelog](https://keepachangelog.com/), and the project follows
 semantic versioning.
 
-## [Unreleased]
+## [0.13.0] - 2026-09-26
+
+Two opt-in engines that search on an account sign-in instead of an API key.
+`codex` runs OpenAI's own web search on a ChatGPT plan, a use OpenAI allows
+from third-party tools. `antigravity` runs Google Search through a Gemini model
+on the sign-in of Google's Antigravity IDE, a use Google's terms forbid, with
+account suspension as the stated consequence: read docs/ANTIGRAVITY_SEARCH.md
+before signing in. Neither is in any default pool or route, so a search
+reaches one only when a call names it, and both follow their backend's model
+catalogue so a new model is used as soon as it is listed.
 
 ### Added
 
@@ -52,7 +61,6 @@ semantic versioning.
   `SEARCH_MCP_CODEX_BASE_URL`, `SEARCH_MCP_CODEX_AUTO_SIGNIN`,
   `SEARCH_MCP_CODEX_SIGNIN_WAIT_SECONDS`. The guide, with a Chinese summary, is
   docs/CODEX_SEARCH.md.
-
 - An opt-in `antigravity` engine that runs Google Search through a Gemini
   model on the sign-in of Google's Antigravity IDE, at the operator's own
   risk: Google's Antigravity terms forbid using that sign-in from third-party
@@ -80,7 +88,9 @@ semantic versioning.
   backend lists it. `codex` takes the newest generation's lightest model that
   can search and is not being retired; `antigravity` takes the flash model
   Antigravity offers, and asks Antigravity's own web-search model when that
-  one answers without searching. A model name pins it, as before.
+  one answers without searching. Each account has its own lookup, and a
+  model the service refuses is looked up again on the next search. A model
+  name pins it, as before.
 - The sign-in listener takes both `127.0.0.1` and `::1` when the registered
   redirect says `localhost`, because a browser may try IPv6 first.
 
