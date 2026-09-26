@@ -38,7 +38,7 @@ is in Claude Code's format, and Codex gets the same agent another way (see
 
 - The stdio MCP server `search`, started as
   `uvx free-search-mcp==<plugin version>`. Because of that pin the plugin
-  version matches the package version: plugin `0.13.0` runs package `0.13.0`,
+  version matches the package version: plugin `X.Y.Z` runs package `X.Y.Z`,
   and `/plugin update free-search` is what moves you to a newer server.
 - One skill, `verified-research`. Search snippets are only leads, yet agents
   tend to answer from them: they quote a prize, a deadline or a version out of

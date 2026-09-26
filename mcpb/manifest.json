@@ -2,7 +2,7 @@
   "manifest_version": "0.4",
   "name": "free-search-mcp",
   "display_name": "Free Search",
-  "version": "0.13.0",
+  "version": "0.13.1",
   "description": "Web search, page fetching and document reading with no API key and no signup.",
   "long_description": "Multi-engine web search, page fetching and PDF/DOCX reading that runs on your own machine. Nothing to sign up for and no API key to paste: every default, fallback and category route uses keyless sources.\n\nSearch results carry the signals needed to judge them: when they were retrieved, how old a cached copy is, which results have a verifiable date, and what kind of site each one is. Engines that are blocked or answering off-topic are benched and reported, and their results are left out.\n\nAll three settings below are optional. Leave them empty unless your network needs a proxy.",
   "author": {

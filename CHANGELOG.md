@@ -4,6 +4,21 @@ All notable changes to this project are documented here. The format is loosely
 based on [Keep a Changelog](https://keepachangelog.com/), and the project follows
 semantic versioning.
 
+## [0.13.1] - 2026-09-26
+
+Documentation only; the server is the same as 0.13.0. This release exists so
+that the package page shows the new README.
+
+### Changed
+
+- The README is a quarter of its former length and says how to set up the two
+  sign-in engines, `codex` and `antigravity`: what each needs and spends, the
+  Antigravity warning, signing in, naming the engine, the settings, servers,
+  SSH and Docker, signing out, and the errors people meet with what to do.
+- The longer sections moved unchanged into `docs/HOW_IT_WORKS.md`,
+  `docs/INSTALL.md`, `docs/DELEGATION.md` and `docs/CONFIGURATION.md`. The
+  settings table now lists the `SEARCH_MCP_ANTIGRAVITY_*` settings as well.
+
 ## [0.13.0] - 2026-09-26
 
 Two opt-in engines that search on an account sign-in instead of an API key.

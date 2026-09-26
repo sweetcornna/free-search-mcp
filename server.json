@@ -3,7 +3,7 @@
   "name": "io.github.sweetcornna/free-search-mcp",
   "title": "Free Search",
   "description": "No-API-key web search, page fetching and document reading across many engines. Local-first.",
-  "version": "0.13.0",
+  "version": "0.13.1",
   "websiteUrl": "https://github.com/sweetcornna/free-search-mcp#readme",
   "repository": {
     "url": "https://github.com/sweetcornna/free-search-mcp",
@@ -20,7 +20,7 @@
     {
       "registryType": "pypi",
       "identifier": "free-search-mcp",
-      "version": "0.13.0",
+      "version": "0.13.1",
       "runtimeHint": "uvx",
       "transport": {
         "type": "stdio"

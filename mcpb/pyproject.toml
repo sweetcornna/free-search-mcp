@@ -5,11 +5,11 @@
 # tests/test_plugin_manifest.py holds both numbers to pyproject.toml's.
 [project]
 name = "free-search-mcp-bundle"
-version = "0.13.0"
+version = "0.13.1"
 description = "Claude Desktop bundle for free-search-mcp"
 requires-python = ">=3.11"
 dependencies = [
-    "free-search-mcp==0.13.0",
+    "free-search-mcp==0.13.1",
 ]
 
 [tool.uv]
