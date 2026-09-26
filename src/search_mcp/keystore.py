@@ -401,6 +401,26 @@ PROVIDERS: list[Provider] = [
 ]
 
 
+# Antigravity's OAuth client, for a machine without Antigravity installed
+# (oauth.antigravity_client). Rendered on the Antigravity sign-in card.
+ANTIGRAVITY_CLIENT_FIELDS: list[ProviderField] = [
+    ProviderField(
+        "antigravity_client_id",
+        "Client ID",
+        secret=False,
+        required=False,
+        placeholder="blank = read from the Antigravity install",
+    ),
+    ProviderField(
+        "antigravity_client_secret",
+        "Client secret",
+        secret=True,
+        required=False,
+        placeholder="blank = read from the Antigravity install",
+    ),
+]
+
+
 # Network / proxy config (rendered as its own card in the admin UI). The proxy
 # may embed credentials, so it is treated as a secret. Read via net.proxy_url().
 NETWORK_FIELDS: list[ProviderField] = [
@@ -476,6 +496,7 @@ def _reset_cache() -> None:  # pragma: no cover - trivial test hook
 
 
 __all__ = [
+    "ANTIGRAVITY_CLIENT_FIELDS",
     "Provider",
     "ProviderField",
     "PROVIDERS",

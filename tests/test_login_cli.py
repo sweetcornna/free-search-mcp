@@ -1,4 +1,4 @@
-"""`search-mcp-login codex | status | logout`, offline.
+"""`search-mcp-login codex | antigravity | status | logout`, offline.
 
 The browser flow itself is covered in test_oauth.py; here `oauth.login` is a
 fake, and what is checked is what the command prints and returns.
@@ -78,3 +78,33 @@ def test_logout(monkeypatch, capsys):
     assert oauth.load("codex") is None
     assert _run(monkeypatch, "logout", "codex") == 0
     assert "was not signed in" in capsys.readouterr().out
+
+
+def test_an_antigravity_sign_in_warns_before_the_link(monkeypatch, capsys):
+    async def fake_login(provider_id, *, open_browser, paste, on_url, **kwargs):
+        assert (provider_id, open_browser, paste) == ("antigravity", False, True)
+        on_url("https://accounts.google.com/o/oauth2/v2/auth?redirect_uri="
+               "http%3A%2F%2Flocalhost%3A51121%2Foauth-callback&state=s")
+        cred = oauth.Credential(provider="antigravity", access_token="SECRET",
+                                refresh_token="r", expires_at=time.time() + 3600,
+                                account_id="proj", email="me@gmail.com", plan="Google AI Pro")
+        oauth.save(cred)
+        return cred
+
+    monkeypatch.setattr(oauth, "login", fake_login)
+    assert _run(monkeypatch, "antigravity", "--no-browser") == 0
+    out = capsys.readouterr().out
+    assert out.index("Warning:") < out.index("suspension") < out.index("accounts.google.com")
+    assert "http://localhost:51121/oauth-callback?code=" in out
+    assert "signed in as me@gmail.com" in out and "plan: Google AI Pro" in out
+    assert 'engines=["antigravity"]' in out
+    assert "SECRET" not in out
+
+
+def test_status_and_logout_cover_antigravity(monkeypatch, capsys):
+    assert _run(monkeypatch, "status") == 0
+    assert "search-mcp-login antigravity" in capsys.readouterr().out
+    oauth.save(oauth.Credential(provider="antigravity", access_token="a", refresh_token="r"))
+    assert _run(monkeypatch, "logout", "antigravity") == 0
+    assert "Signed out of antigravity" in capsys.readouterr().out
+    assert oauth.load("antigravity") is None

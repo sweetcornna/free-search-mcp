@@ -1,4 +1,4 @@
-"""The settings page's sign-in card for the `codex` engine.
+"""The settings page's sign-in cards for the `codex` and `antigravity` engines.
 
 Offline: `oauth.login` is replaced by a fake that plays the browser, so no
 port is opened and no token endpoint is called.
@@ -46,8 +46,33 @@ def test_the_page_has_a_sign_in_card_and_never_a_token(client):
     assert "Sign in / 登录" in page and "Sign out / 退出登录" in page
     assert "me@example.com" in page
     assert "search-mcp-login codex" in page
-    assert "Antigravity" not in page
     assert "SECRET-ACCESS" not in page and "SECRET-REFRESH" not in page
+
+
+def test_the_antigravity_card_carries_the_warning(client):
+    page = client.get("/").text
+    assert 'data-oauth="antigravity"' in page
+    # Said on the card, before the button, in both languages.
+    card = page[page.index('data-oauth="antigravity"'):]
+    assert card.index("suspension") < card.index("Sign in / 登录")
+    assert "封禁" in card
+
+
+def test_the_antigravity_card_takes_a_client_and_never_shows_it(client):
+    saved = client.post("/api/save", json={"antigravity_client_id": "SAVED-ID",
+                                           "antigravity_client_secret": "SAVED-SECRET"})
+    assert saved.json()["ok"]
+    assert oauth.antigravity_client() == ("SAVED-ID", "SAVED-SECRET")
+    page = client.get("/").text
+    card = page[page.index('data-oauth="antigravity"'):]
+    assert 'data-key="antigravity_client_id"' in card
+    assert 'data-key="antigravity_client_secret"' in card
+    assert "SAVED-ID" not in page and "SAVED-SECRET" not in page
+    # A set value outranks the install, so the card says it is set.
+    assert card.count("set, not shown") == 2
+    # The Codex card has no client to set.
+    codex = page[page.index('data-oauth="codex"'):page.index('data-oauth="antigravity"')]
+    assert "data-key=" not in codex
 
 
 def test_status_lists_the_provider(client):
@@ -118,9 +143,9 @@ def test_sign_out_forgets_the_sign_in(client):
 
 
 def test_an_unknown_provider_is_a_404(client):
-    assert client.post("/api/oauth/antigravity/start").status_code == 404
-    assert client.get("/api/oauth/antigravity/progress").status_code == 404
-    assert client.post("/api/oauth/antigravity/logout").status_code == 404
+    assert client.post("/api/oauth/gemini-cli/start").status_code == 404
+    assert client.get("/api/oauth/gemini-cli/progress").status_code == 404
+    assert client.post("/api/oauth/gemini-cli/logout").status_code == 404
 
 
 def test_the_test_button_reports_the_missing_sign_in(client, monkeypatch):
@@ -135,3 +160,6 @@ def test_the_test_button_reports_the_missing_sign_in(client, monkeypatch):
     body = client.get("/api/test/codex").json()
     assert body["ok"] is False
     assert body["error"].startswith("codex not configured")
+    body = client.get("/api/test/antigravity").json()
+    assert body["ok"] is False
+    assert body["error"].startswith("antigravity not configured")

@@ -41,6 +41,7 @@ from __future__ import annotations
 
 import json
 import re
+import time
 from dataclasses import dataclass
 from typing import Any
 from urllib.parse import unquote_plus, urlparse, urlunparse
@@ -89,6 +90,10 @@ class _Unauthorized(Exception):
 
 class _Unsupported(Exception):
     """This deployment has no structured search endpoint; use /responses."""
+
+
+class _ModelRefused(EngineKeyError):
+    """The service refused the model the search ran on."""
 
 
 @dataclass
@@ -143,7 +148,9 @@ def _one_line(text: Any) -> str:
 # --- 1. the search endpoint --------------------------------------------------------
 
 
-def search_body(query: str, filters: SearchFilters | None, session: str) -> dict[str, Any]:
+def search_body(
+    query: str, filters: SearchFilters | None, session: str, model: str
+) -> dict[str, Any]:
     command: dict[str, Any] = {"q": query}
     if filters is not None and filters.freshness:
         command["recency"] = _RECENCY_DAYS[filters.freshness]
@@ -151,7 +158,7 @@ def search_body(query: str, filters: SearchFilters | None, session: str) -> dict
         command["domains"] = list(filters.include_domains)
     return {
         "id": session,
-        "model": settings.codex_model,
+        "model": model,
         "commands": {"search_query": [command]},
         "settings": {
             "external_web_access": True,
@@ -208,7 +215,9 @@ def build_prompt(query: str, max_results: int, filters: SearchFilters | None) ->
     return "\n".join(lines)
 
 
-def responses_body(prompt: str, filters: SearchFilters | None, session: str) -> dict[str, Any]:
+def responses_body(
+    prompt: str, filters: SearchFilters | None, session: str, model: str
+) -> dict[str, Any]:
     tool: dict[str, Any] = {
         "type": "web_search",
         "external_web_access": True,
@@ -217,7 +226,7 @@ def responses_body(prompt: str, filters: SearchFilters | None, session: str) -> 
     if filters is not None and filters.include_domains:
         tool["filters"] = {"allowed_domains": list(filters.include_domains)}
     return {
-        "model": settings.codex_model,
+        "model": model,
         "instructions": _INSTRUCTIONS,
         "input": [
             {"type": "message", "role": "user",
@@ -381,6 +390,72 @@ def _hits_from_text(text: str, annotations: list[Any]) -> list[Hit]:
     return hits
 
 
+# --- the model -------------------------------------------------------------------------
+# SEARCH_MCP_CODEX_MODEL=latest (the default) follows the plan's catalogue, so
+# a new model generation is used as soon as the backend lists it.
+
+# When the catalogue cannot be read.
+_FALLBACK_MODEL = "gpt-6-luna"
+# The backend lists a model only to clients at least as new as the one it
+# needs (on 2026-09-26, 0.140.0 was shown gpt-5.5 only and 0.155.0 the GPT-6
+# models), so the catalogue is asked as the newer of the Codex CLI installed
+# here and this release.
+_CLIENT_VERSION_FLOOR = "0.155.0"
+_CATALOGUE_TTL = 6 * 3600.0
+_GENERATION = re.compile(r"^gpt-(\d+(?:\.\d+)?)(?:-|$)")
+# `(expires, model)` per ChatGPT account, per process.
+_latest: dict[str, tuple[float, str]] = {}
+
+
+def _follows_catalogue() -> bool:
+    return settings.codex_model.strip().lower() == "latest"
+
+
+def _semver(text: str) -> tuple[int, ...]:
+    return tuple(int(part) for part in text.split("."))
+
+
+def client_version() -> str:
+    """The Codex CLI version the catalogue is asked as."""
+    try:
+        cache = oauth.codex_cli_auth_path().parent / "models_cache.json"
+        installed = str(json.loads(cache.read_text(encoding="utf-8")).get("client_version"))
+    except (OSError, ValueError, AttributeError):
+        installed = ""
+    if re.fullmatch(r"\d+\.\d+\.\d+", installed):
+        return max(installed, _CLIENT_VERSION_FLOOR, key=_semver)
+    return _CLIENT_VERSION_FLOOR
+
+
+def pick_model(models: Any) -> str:
+    """The newest generation's lightest model that can search, or "".
+
+    Only models the catalogue lists (`visibility: list`), that can search, and
+    that are not being retired (`upgrade` names their successor). Within a
+    generation the catalogue lists the frontier model first and the fast,
+    affordable one last; a search returned the same results on each of the
+    three GPT-6 models, so the last one, which answers fastest and spends the
+    least of the plan, is the one used. That is the highest `priority`, and
+    among equal or missing priorities the one listed last.
+    """
+    usable: list[tuple[tuple[int, ...], float, int, str]] = []
+    for index, model in enumerate(models if isinstance(models, list) else []):
+        if not isinstance(model, dict):
+            continue
+        slug = model.get("slug")
+        match = _GENERATION.match(slug) if isinstance(slug, str) else None
+        if (match is None or model.get("visibility") != "list"
+                or model.get("supports_search_tool") is False or model.get("upgrade")):
+            continue
+        priority = model.get("priority")
+        usable.append((_semver(match.group(1)),
+                       priority if isinstance(priority, (int, float)) else 0, index, slug))
+    if not usable:
+        return ""
+    newest = max(u[0] for u in usable)
+    return max((u for u in usable if u[0] == newest), key=lambda u: (u[1], u[2]))[3]
+
+
 # --- shared ---------------------------------------------------------------------------
 
 
@@ -426,7 +501,7 @@ def _error_detail(raw: str) -> tuple[str, str]:
     return raw.strip()[:300], ""
 
 
-def _http_failure(status: int, raw: str) -> Exception:
+def _http_failure(status: int, raw: str, model: str = "") -> Exception:
     """The exception for a non-200 reply that is not an expired token."""
     detail, kind = _error_detail(raw)
     detail = detail.strip()[:300]
@@ -441,13 +516,17 @@ def _http_failure(status: int, raw: str) -> Exception:
         # Configuration: a model the plan does not include, a workspace the
         # service has not enabled. Waiting does not fix it, so it is not a
         # health failure (EngineKeyError is a ValueError).
-        hint = ""
-        if "model" in detail.lower():
-            hint = (f" (Operator note: SEARCH_MCP_CODEX_MODEL is {settings.codex_model!r}; set "
-                    "it to a model the plan offers.)")
-        return EngineKeyError(
-            f"codex: the service refused the request (HTTP {status}{suffix}).{hint}"
-        )
+        message = f"codex: the service refused the request (HTTP {status}{suffix})."
+        if "model" not in detail.lower():
+            return EngineKeyError(message)
+        if _follows_catalogue():
+            hint = (f" (Operator note: the search ran on {model!r}, the catalogue's pick; the "
+                    "next search reads the catalogue again. SEARCH_MCP_CODEX_MODEL can name a "
+                    "model the plan offers instead.)")
+        else:
+            hint = (f" (Operator note: the search ran on {model or settings.codex_model!r}; "
+                    "set SEARCH_MCP_CODEX_MODEL to a model the plan offers, or to latest.)")
+        return _ModelRefused(message + hint)
     return RuntimeError(f"codex: the service answered HTTP {status}{suffix}")
 
 
@@ -554,12 +633,46 @@ class CodexEngine(Engine):
         max_results: int,
         filters: SearchFilters | None,
     ) -> list[Hit]:
+        model = await self._model(client, cred)
         session = oauth.new_session_id()
         try:
-            return await self._search_endpoint(client, cred, query, filters, session)
-        except _Unsupported:
-            prompt = build_prompt(query, max_results, filters)
-            return await self._responses(client, cred, prompt, filters, session)
+            try:
+                return await self._search_endpoint(client, cred, query, filters, session, model)
+            except _Unsupported:
+                prompt = build_prompt(query, max_results, filters)
+                return await self._responses(client, cred, prompt, filters, session, model)
+        except _ModelRefused:
+            # A pick the service refuses is not kept for six hours.
+            _latest.pop(cred.account_id, None)
+            raise
+
+    async def _model(self, client: httpx.AsyncClient, cred: oauth.Credential) -> str:
+        """The model named by SEARCH_MCP_CODEX_MODEL, or with `latest`, the
+        catalogue's newest (see `pick_model`), looked up once per six hours
+        for each account."""
+        if not _follows_catalogue():
+            return settings.codex_model
+        now = time.monotonic()
+        cached = _latest.get(cred.account_id)
+        if cached is not None and cached[0] > now:
+            return cached[1]
+        slug = ""
+        try:
+            response = await client.get(
+                settings.codex_base_url.rstrip("/") + "/models",
+                params={"client_version": client_version()},
+                headers=self._headers(cred, oauth.new_session_id(), stream=False),
+            )
+            if response.status_code == 401:
+                raise _Unauthorized
+            if response.status_code == 200:
+                slug = pick_model(response.json().get("models"))
+        except (httpx.HTTPError, ValueError, AttributeError):
+            pass
+        # A failed lookup is tried again in five minutes, not six hours.
+        _latest[cred.account_id] = (now + (_CATALOGUE_TTL if slug else 300.0),
+                                    slug or _FALLBACK_MODEL)
+        return slug or _FALLBACK_MODEL
 
     def _headers(self, cred: oauth.Credential, session: str, *, stream: bool) -> dict[str, str]:
         return {
@@ -579,10 +692,11 @@ class CodexEngine(Engine):
         query: str,
         filters: SearchFilters | None,
         session: str,
+        model: str,
     ) -> list[Hit]:
         response = await client.post(
             self.build_url(query, 0, filters),
-            json=search_body(query, filters, session),
+            json=search_body(query, filters, session, model),
             headers=self._headers(cred, session, stream=False),
         )
         if response.status_code == 401:
@@ -590,7 +704,7 @@ class CodexEngine(Engine):
         if response.status_code in (404, 405, 501) and "usage_limit" not in response.text:
             raise _Unsupported
         if response.status_code != 200:
-            raise _http_failure(response.status_code, response.text)
+            raise _http_failure(response.status_code, response.text, model)
         try:
             data = response.json()
         except ValueError:
@@ -604,9 +718,10 @@ class CodexEngine(Engine):
         prompt: str,
         filters: SearchFilters | None,
         session: str,
+        model: str,
     ) -> list[Hit]:
         url = settings.codex_base_url.rstrip("/") + "/responses"
-        body = responses_body(prompt, filters, session)
+        body = responses_body(prompt, filters, session, model)
         async with client.stream(
             "POST", url, json=body, headers=self._headers(cred, session, stream=True)
         ) as response:
@@ -614,6 +729,6 @@ class CodexEngine(Engine):
                 raise _Unauthorized
             if response.status_code != 200:
                 raw = (await response.aread()).decode("utf-8", errors="replace")
-                raise _http_failure(response.status_code, raw)
+                raise _http_failure(response.status_code, raw, model)
             lines = [line async for line in response.aiter_lines()]
         return hits_from_items(output_items(sse_events(lines)))

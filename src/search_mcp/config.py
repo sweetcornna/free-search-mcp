@@ -233,10 +233,12 @@ class Settings(BaseSettings):
     # model turn, on a deployment without the search endpoint), so it gets a
     # timeout of its own.
     codex_timeout: float = Field(default=60.0, gt=0)
-    # Any model the ChatGPT plan's Codex backend serves. The search is
-    # OpenAI's; the model only runs it, so the catalogue's "fast and
-    # affordable" one is the default.
-    codex_model: str = "gpt-6-luna"
+    # `latest` follows the plan's model catalogue: the newest generation's
+    # fast, affordable model, looked up at most every six hours, so a new
+    # generation is used as soon as the backend lists it (engines/codex.py,
+    # pick_model). The search is OpenAI's and returned the same results on
+    # every GPT-6 model. Any model name the plan offers pins that model.
+    codex_model: str = "latest"
     codex_reasoning_effort: Literal["low", "medium", "high"] = "low"
     codex_base_url: str = "https://chatgpt.com/backend-api/codex"
     # Named with no sign-in stored, open the ChatGPT sign-in page in this
@@ -250,6 +252,31 @@ class Settings(BaseSettings):
     # for ten minutes, and a search that stops waiting leaves it open for the
     # next. Kept under the 60 s tool timeout some hosts apply.
     codex_signin_wait_seconds: float = Field(default=45.0, ge=0)
+
+    # --- The `antigravity` sign-in engine (oauth.py, engines/antigravity.py) --
+    # Google Search run by a Gemini model on the operator's own Antigravity
+    # sign-in (`search-mcp-login antigravity`). Opt-in like `codex`, and never
+    # opened by itself: Google's terms forbid this use of the sign-in and
+    # suspend accounts for it, so an operator signs in on purpose or not at all.
+    antigravity_timeout: float = Field(default=60.0, gt=0)
+    # `latest` follows the account's Antigravity catalogue: the flash model it
+    # currently offers, then the model Antigravity runs its own web search on
+    # when the first answers without searching (engines/antigravity.py,
+    # pick_models). Looked up at most every six hours. A model name pins that
+    # model; some answer from memory instead of searching (on 2026-09-26
+    # gemini-3.5-flash-low never searched), and yield no results here.
+    antigravity_model: str = "latest"
+    # Tried in order: the next one is used when one is out of quota (429),
+    # failing (5xx) or unreachable. On 2026-09-26 the production host refused
+    # every search with 429 for a free-tier account the sandbox served.
+    antigravity_base_urls: list[str] = [
+        "https://daily-cloudcode-pa.sandbox.googleapis.com",
+        "https://cloudcode-pa.googleapis.com",
+    ]
+    # The backend licenses only requests that identify as the Antigravity
+    # client, by user agent. This is the release the user agent names; raise
+    # it when Antigravity updates and the backend starts refusing older ones.
+    antigravity_version: str = "2.1.4"
 
     # --- Safety / sandbox knobs -------------------------------------------
     # SSRF guard escape hatch: when False (default) URLs that resolve to

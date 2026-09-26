@@ -8,6 +8,10 @@ the operator's plan. A browser opens, you approve, and the tokens are stored
 under ``<config_dir>/oauth/``. When the browser runs on another machine, paste
 the address it lands on into the terminal instead.
 
+``search-mcp-login antigravity`` signs in with a Google account the way the
+Antigravity IDE does, for the opt-in `antigravity` engine. Google's terms
+forbid that use of the sign-in, and the command says so before it starts.
+
 ``search-mcp-login [zhihu|<url>]`` opens a real browser window so you can log in
 to a site that the headless engines can't authenticate to with an API key (e.g.
 zhihu). The persisted session is then reused by the browser pool.
@@ -16,6 +20,7 @@ Usage::
 
     search-mcp-login codex                   # sign in with ChatGPT (Codex)
     search-mcp-login codex --use-codex-cli   # reuse the Codex CLI's sign-in, read-only
+    search-mcp-login antigravity             # sign in with Google (Antigravity)
     search-mcp-login status                  # who is signed in
     search-mcp-login logout codex            # forget a sign-in
     search-mcp-login                         # defaults to zhihu
@@ -34,7 +39,7 @@ from urllib.parse import parse_qs, urlparse
 # Friendly aliases -> the URL the login flow opens.
 _ALIASES: dict[str, str] = {"zhihu": "https://www.zhihu.com"}
 
-_OAUTH_COMMANDS = ("codex", "status", "logout")
+_OAUTH_COMMANDS = ("codex", "antigravity", "status", "logout")
 
 
 def _resolve(arg: str) -> str:
@@ -88,8 +93,13 @@ def _sign_in(provider_id: str, *, open_browser: bool, codex_cli: str | None) -> 
         if codex_cli is not None:
             oauth.link_codex_cli(codex_cli or None)
         else:
+            if spec.id == oauth.ANTIGRAVITY.id:
+                print(f"Warning: {oauth.ANTIGRAVITY_WARNING}\n", flush=True)
+                usage = "your account's Antigravity quota"
+            else:
+                usage = "your plan's Codex usage"
             print(f"Signing in to {spec.id} with your {spec.account} account. Searches "
-                  "will count against your plan's Codex usage.")
+                  f"will count against {usage}.")
 
             def show(url: str) -> None:
                 redirect = parse_qs(urlparse(url).query).get("redirect_uri", [""])[0]
@@ -120,11 +130,22 @@ def _sign_in(provider_id: str, *, open_browser: bool, codex_cli: str | None) -> 
 def _oauth_main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(
         prog="search-mcp-login",
-        description="Sign in so the opt-in codex engine can search on your ChatGPT plan.",
+        description="Sign in so an opt-in engine (codex, antigravity) can search on your own "
+        "account.",
     )
     sub = parser.add_subparsers(dest="command", required=True)
     cmd = sub.add_parser("codex", help="sign in with your ChatGPT account")
     cmd.add_argument(
+        "--no-browser",
+        action="store_true",
+        help="print the sign-in address instead of opening a browser",
+    )
+    google = sub.add_parser(
+        "antigravity",
+        help="sign in with your Google account the way Antigravity does "
+        "(against Google's terms; see the warning it prints)",
+    )
+    google.add_argument(
         "--no-browser",
         action="store_true",
         help="print the sign-in address instead of opening a browser",
@@ -140,7 +161,7 @@ def _oauth_main(argv: list[str]) -> int:
     )
     sub.add_parser("status", help="show which accounts are signed in")
     out = sub.add_parser("logout", help="forget a stored sign-in")
-    out.add_argument("provider", choices=["codex"])
+    out.add_argument("provider", choices=["codex", "antigravity"])
     args = parser.parse_args(argv)
 
     if args.command == "status":

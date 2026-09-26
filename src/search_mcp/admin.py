@@ -128,6 +128,8 @@ _FIELD_ZH: dict[str, str] = {
     "semanticscholar_api_key": "API 密钥（可选，强烈建议填写）",
     "github_token": "个人访问令牌（可选）",
     "stackexchange_key": "API 密钥（可选）",
+    "antigravity_client_id": "客户端 ID",
+    "antigravity_client_secret": "客户端密钥",
     "proxy": "代理 URL",
     "proxy_engines": "仅代理这些引擎（可选，逗号分隔）",
 }
@@ -236,6 +238,18 @@ _OAUTH_COPY: dict[str, dict[str, str]] = {
         "note_zh": "已经登录过 Codex CLI？运行 search-mcp-login codex --use-codex-cli "
         "可以只读复用那份登录。",
     },
+    "antigravity": {
+        "title_zh": "Antigravity（Google 账号登录）",
+        "about": "Google Search run by a Gemini model on your Google account, through the "
+        "sign-in the Antigravity IDE uses. It runs only when a call names "
+        'engines=["antigravity"], and each search counts against your Antigravity quota.',
+        "about_zh": "用你的 Google 账号，借 Antigravity IDE 的登录方式，让 Gemini 模型调用 "
+        "Google 搜索。只有调用中写明 engines=[\"antigravity\"] 时才会运行，"
+        "每次搜索消耗你自己账号的 Antigravity 额度。",
+        "note": "Warning: " + oauth.ANTIGRAVITY_WARNING,
+        "note_zh": "警告：Google 的 Antigravity 条款禁止第三方工具使用它的登录，后果是封禁 "
+        "Antigravity 和 Gemini CLI 账号，而且已经有账号因此被封。只用你愿意承担这个风险的账号登录。",
+    },
 }
 
 
@@ -244,6 +258,45 @@ def _oauth_badge(info: dict[str, Any]) -> tuple[str, str]:
         return "no", "Not signed in / 未登录"
     who = info.get("email") or "?"
     return "ok", f"Signed in / 已登录 · {who}"
+
+
+def _render_client_fields(spec: oauth.OAuthProvider) -> str:
+    """Antigravity's own client, for a machine without Antigravity installed.
+
+    Saved like a provider key (``/api/save``) and never echoed back."""
+    if spec.id != oauth.ANTIGRAVITY.id:
+        return ""
+
+    def placeholder(field: keystore.ProviderField) -> str:
+        # A value that is set wins over the install, so say that it is set
+        # (never what it is).
+        if keystore.get_secret(field.key) is not None:
+            return "set, not shown · 已设置（不显示）"
+        return field.placeholder
+
+    inputs = "".join(
+        f'<label class="field">'
+        f'<span class="field-label">{_bilingual(f.label, _FIELD_ZH.get(f.key))}</span>'
+        f'<input type="{"password" if f.secret else "text"}" data-key="{_esc(f.key)}" '
+        f'placeholder="{_esc(placeholder(f))}" autocomplete="off" spellcheck="false" />'
+        f"</label>"
+        for f in keystore.ANTIGRAVITY_CLIENT_FIELDS
+    )
+    return f"""
+      <details class="client">
+        <summary>Antigravity's OAuth client <span class="zh">/ Antigravity 的 OAuth 客户端</span>
+        </summary>
+        <p class="free-tier">Leave these blank: the sign-in reads them from the Antigravity
+          install on this machine. Fill them in only where Antigravity is not installed.
+          A signed-in account keeps the client it signed in with.<br>
+          <span class="zh">一般留空：登录时会从本机安装的 Antigravity 读取。只有本机没装
+          Antigravity 时才需要填写。已登录的账号继续使用登录时的客户端。</span></p>
+        <div class="fields">{inputs}</div>
+        <div class="actions">
+          <button class="save" onclick="saveProvider(this)">Save / 保存</button>
+          <button class="clear" onclick="clearProvider(this)">Clear / 清除</button>
+        </div>
+      </details>"""
 
 
 def _render_oauth_card(spec: oauth.OAuthProvider) -> str:
@@ -265,7 +318,7 @@ def _render_oauth_card(spec: oauth.OAuthProvider) -> str:
         <button class="test" onclick="oauthTest(this)">Test / 测试</button>
         <button class="clear" onclick="oauthSignOut(this)">Sign out / 退出登录</button>
         <span class="result" data-result></span>
-      </div>
+      </div>{_render_client_fields(spec)}
     </section>
     """
 
@@ -348,6 +401,8 @@ h2.section { margin: 1.75rem 0 .1rem; font-size: 1.1rem; }
 .howto li { margin: .25rem 0; }
 .howto .links a { color: #2563eb; text-decoration: none; }
 .fields { display: flex; flex-direction: column; gap: .5rem; }
+details.client { margin-top: .75rem; }
+details.client summary { cursor: pointer; color: #4b5563; }
 .field { display: flex; flex-direction: column; gap: .2rem; }
 .field-label { font-size: .8rem; color: #5a6270; }
 .field input {
@@ -611,13 +666,16 @@ def _render_page() -> str:
     cards = "".join(_render_provider_card(p) for p in keystore.PROVIDERS)
     oauth_cards = "".join(_render_oauth_card(p) for p in oauth.PROVIDERS.values())
     oauth_note = (
-        "One more opt-in engine runs OpenAI's own web search on a ChatGPT account you "
-        "sign in with, instead of a key. Sign in here or with `search-mcp-login codex`. "
-        "Tokens are stored at ~/.config/search-mcp/oauth/ (0600)."
+        "Two more opt-in engines run on an account you sign in with, instead of a key: "
+        "`codex` on a ChatGPT plan, and `antigravity` on a Google account, which Google's "
+        "terms forbid (see its card). Sign in here or with `search-mcp-login codex` / "
+        "`search-mcp-login antigravity`. Tokens are stored at ~/.config/search-mcp/oauth/ "
+        "(0600)."
     )
     oauth_note_zh = (
-        "另一个可选引擎不用密钥，而是用你登录的 ChatGPT 账号调用 OpenAI 官方的网页搜索。"
-        "可在此处登录，也可以运行 search-mcp-login codex。"
+        "另外两个可选引擎不用密钥，而是用你登录的账号：codex 用 ChatGPT 套餐，antigravity "
+        "用 Google 账号，后者违反 Google 条款（见其卡片说明）。可在此处登录，也可以运行 "
+        "search-mcp-login codex 或 search-mcp-login antigravity。"
         "令牌保存在 ~/.config/search-mcp/oauth/（0600）。"
     )
     note = (

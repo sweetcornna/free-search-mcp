@@ -12,7 +12,9 @@ import json
 import os
 import socket
 import stat
+import subprocess
 import time
+from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 import httpx
@@ -210,8 +212,8 @@ def test_sign_out_deletes_the_file():
 
 
 def test_an_unknown_provider_is_a_value_error():
-    with pytest.raises(ValueError, match="use codex"):
-        oauth.provider("antigravity")
+    with pytest.raises(ValueError, match="use codex, antigravity"):
+        oauth.provider("gemini-cli")
 
 
 def test_opt_in_engines_reports_a_sign_in():
@@ -708,3 +710,295 @@ def test_a_browser_is_only_assumed_where_one_can_start(monkeypatch, platform, en
         monkeypatch.setenv(name, value)
     monkeypatch.setattr(oauth.shutil, "which", lambda name: xdg)
     assert oauth.can_open_browser() is expected
+
+
+# --- the Antigravity (Google) sign-in ----------------------------------------------------
+
+
+def _google_tokens(*, refresh: str | None = "g-r1", email: str = "me@gmail.com") -> dict:
+    tokens = {"access_token": "ya29.opaque", "expires_in": 3599, "token_type": "Bearer",
+              "id_token": _jwt({"email": email})}
+    if refresh:
+        tokens["refresh_token"] = refresh
+    return tokens
+
+
+_LOAD_CODE_ASSIST = {
+    "cloudaicompanionProject": "proj-123",
+    "currentTier": {"id": "free-tier", "name": "Antigravity"},
+    "paidTier": {"id": "g1-pro-tier", "name": "Google AI Pro"},
+}
+
+
+def _google(load_status: int = 200):
+    def handle(request: httpx.Request) -> httpx.Response:
+        if request.url.host == "oauth2.googleapis.com":
+            return httpx.Response(200, json=_google_tokens())
+        if request.url.path.endswith(":loadCodeAssist"):
+            return httpx.Response(load_status, json=_LOAD_CODE_ASSIST)
+        raise AssertionError(f"unexpected request {request.url}")
+
+    return handle
+
+
+# Assembled from pieces, so nothing in this file has the shape of a Google
+# client for a secret scanner to flag.
+_G_ID = "123456789012-" + "a" * 32 + ".apps.googleusercontent" + ".com"
+_G_SECRET = "GOC" + "SPX-" + "b" * 28
+
+
+@pytest.fixture
+def google_client(monkeypatch):
+    """Antigravity's client as the operator would set it."""
+    monkeypatch.setenv("SEARCH_MCP_ANTIGRAVITY_CLIENT_ID", _G_ID)
+    monkeypatch.setenv("SEARCH_MCP_ANTIGRAVITY_CLIENT_SECRET", _G_SECRET)
+
+
+@pytest.fixture
+def google_port(monkeypatch, google_client):
+    """Point the Antigravity provider at a free port; 51121 may be taken."""
+    (port,) = _free_ports(1)
+    spec = oauth.OAuthProvider(**{**oauth.ANTIGRAVITY.__dict__, "redirect_ports": (port,)})
+    monkeypatch.setitem(oauth.PROVIDERS, "antigravity", spec)
+    return port
+
+
+def test_the_antigravity_link_asks_google_for_a_refresh_token(google_client):
+    spec = oauth._with_client(oauth.ANTIGRAVITY)
+    link = urlparse(spec.authorize_link("CHALLENGE", "STATE", spec.redirect_uri(51121)))
+    query = {k: v[0] for k, v in parse_qs(link.query).items()}
+    assert f"{link.scheme}://{link.netloc}{link.path}" == (
+        "https://accounts.google.com/o/oauth2/v2/auth"
+    )
+    assert query["client_id"] == _G_ID
+    assert query["redirect_uri"] == "http://localhost:51121/oauth-callback"
+    assert query["access_type"] == "offline" and query["prompt"] == "consent"
+    assert "https://www.googleapis.com/auth/cloud-platform" in query["scope"].split()
+    assert query["code_challenge_method"] == "S256"
+    assert "client_secret" not in query
+
+
+async def test_an_antigravity_sign_in_stores_the_account_project_and_tier(mock_http,
+                                                                         google_port):
+    state, calls = mock_http
+    state["handler"] = _google()
+    on_url, seen = _browser(lambda s: f"/oauth-callback?code=G-CODE&state={s}")
+
+    await oauth.login("antigravity", open_browser=False, on_url=on_url, wait_seconds=5)
+    await on_url.closed()
+
+    assert seen[1][0].endswith("200 OK") and "Signed in" in seen[1][1]
+    exchange, load = calls
+    assert exchange.headers["content-type"] == "application/x-www-form-urlencoded"
+    body = _body(exchange)
+    assert body["code"] == "G-CODE"
+    assert (body["client_id"], body["client_secret"]) == (_G_ID, _G_SECRET)
+    assert body["redirect_uri"] == f"http://localhost:{google_port}/oauth-callback"
+    assert load.headers["user-agent"].startswith("antigravity/")
+    assert load.headers["authorization"] == "Bearer ya29.opaque"
+    stored = oauth.load("antigravity")
+    assert (stored.email, stored.account_id, stored.plan) == (
+        "me@gmail.com", "proj-123", "Google AI Pro"
+    )
+    assert stored.refresh_token == "g-r1" and stored.expires_at > time.time() + 3000
+    # The refresh token belongs to this client, so the sign-in keeps it.
+    assert (stored.client_id, stored.client_secret) == (_G_ID, _G_SECRET)
+    shown = json.dumps(oauth.status("antigravity"))
+    assert "ya29" not in shown and _G_SECRET not in shown
+
+
+async def test_a_failed_project_lookup_still_signs_in(mock_http, google_port):
+    state, _ = mock_http
+    state["handler"] = _google(load_status=500)
+    on_url, _ = _browser(lambda s: f"/oauth-callback?code=G&state={s}")
+
+    cred = await oauth.login("antigravity", open_browser=False, on_url=on_url, wait_seconds=5)
+    await on_url.closed()
+
+    assert cred.email == "me@gmail.com" and cred.account_id == "" and cred.plan == ""
+    assert oauth.is_signed_in("antigravity")
+
+
+def _ipv6_loopback() -> bool:
+    try:
+        with socket.socket(socket.AF_INET6) as sock:
+            sock.bind(("::1", 0))
+        return True
+    except OSError:
+        return False
+
+
+@pytest.mark.skipif(not _ipv6_loopback(), reason="no IPv6 loopback here")
+async def test_a_browser_that_reaches_localhost_over_ipv6_is_answered(mock_http, google_port):
+    state, _ = mock_http
+    state["handler"] = _google()
+    link: asyncio.Future[str] = asyncio.get_running_loop().create_future()
+    task = asyncio.create_task(oauth.login("antigravity", open_browser=False,
+                                           on_url=link.set_result, wait_seconds=5))
+    returned = parse_qs(urlparse(await link).query)["state"][0]
+
+    reader, writer = await asyncio.open_connection("::1", google_port)
+    writer.write(f"GET /oauth-callback?code=C&state={returned} HTTP/1.1\r\n"
+                 "Host: localhost\r\n\r\n".encode())
+    await writer.drain()
+    status = (await reader.read()).decode().split("\r\n", 1)[0]
+    writer.close()
+
+    await task
+    assert status.endswith("200 OK")
+
+
+async def test_a_google_refresh_is_a_form_with_the_secret_and_keeps_the_token(mock_http,
+                                                                             google_client):
+    state, calls = mock_http
+    state["handler"] = lambda request: httpx.Response(200, json=_google_tokens(refresh=None))
+    oauth.save(oauth.Credential(provider="antigravity", access_token="old", refresh_token="g-r1",
+                                expires_at=time.time() + 10, email="me@gmail.com",
+                                account_id="proj-123", plan="Google AI Pro",
+                                client_id="signed-in-id", client_secret="signed-in-secret"))
+
+    cred = await oauth.credential("antigravity")
+
+    (sent,) = calls
+    assert str(sent.url) == "https://oauth2.googleapis.com/token"
+    assert sent.headers["content-type"] == "application/x-www-form-urlencoded"
+    # The client the token was issued to, not the one set since.
+    assert _body(sent) == {
+        "client_id": "signed-in-id",
+        "client_secret": "signed-in-secret",
+        "grant_type": "refresh_token",
+        "refresh_token": "g-r1",
+    }
+    assert cred.access_token == "ya29.opaque"
+    stored = oauth.load("antigravity")
+    # Google sends no new refresh token, and the project outlives the refresh.
+    assert (stored.refresh_token, stored.account_id, stored.plan) == (
+        "g-r1", "proj-123", "Google AI Pro"
+    )
+
+
+async def test_a_sign_in_stored_without_its_client_is_given_one_on_refresh(mock_http,
+                                                                          google_client):
+    state, calls = mock_http
+    state["handler"] = lambda request: httpx.Response(200, json=_google_tokens(refresh=None))
+    oauth.save(oauth.Credential(provider="antigravity", access_token="old", refresh_token="g-r1",
+                                expires_at=time.time() + 10))
+
+    await oauth.credential("antigravity")
+
+    (sent,) = calls
+    assert (_body(sent)["client_id"], _body(sent)["client_secret"]) == (_G_ID, _G_SECRET)
+    stored = oauth.load("antigravity")
+    assert (stored.client_id, stored.client_secret) == (_G_ID, _G_SECRET)
+
+
+# --- where Antigravity's client comes from ------------------------------------------------
+
+_OTHER_ID = "987654321098-" + "c" * 32 + ".apps.googleusercontent" + ".com"
+_OTHER_SECRET = "GOC" + "SPX-" + "d" * 28
+
+
+def _sha(value: str) -> str:
+    return hashlib.sha256(value.encode()).hexdigest()
+
+
+@pytest.fixture
+def install(tmp_path, monkeypatch):
+    """A binary laid out like Antigravity's: two Google clients, the IDs apart
+    from the secrets, the secrets back to back."""
+    binary = tmp_path / "language_server"
+    # Strings sit back to back there, so digits may run into an ID.
+    binary.write_bytes(
+        b"\x00" * 4096 + _OTHER_ID.encode() + b"\x00proto3.21.12" + _G_ID.encode()
+        + b"\x00" * 4096 + _G_SECRET.encode() + _OTHER_SECRET.encode() + b"\x00" * 64
+    )
+    monkeypatch.setattr(oauth, "antigravity_install_paths", lambda: [binary])
+    monkeypatch.setattr(oauth, "_ANTIGRAVITY_CLIENT_SHA256", (_sha(_G_ID), _sha(_G_SECRET)))
+    return binary
+
+
+def test_the_client_is_read_from_the_antigravity_install(install):
+    assert oauth.antigravity_client() == (_G_ID, _G_SECRET)
+
+
+def test_the_client_on_the_settings_page_wins_over_the_install(install):
+    from search_mcp import keystore
+
+    keystore.set_secrets({"antigravity_client_id": "set-id",
+                          "antigravity_client_secret": "set-secret"})
+    assert oauth.antigravity_client() == ("set-id", "set-secret")
+
+
+def test_half_a_client_is_refused(install, monkeypatch):
+    monkeypatch.setenv("SEARCH_MCP_ANTIGRAVITY_CLIENT_ID", _G_ID)
+    with pytest.raises(oauth.OAuthError, match="only one of"):
+        oauth.antigravity_client()
+
+
+def test_an_install_without_the_known_client_is_named(install, monkeypatch):
+    monkeypatch.setattr(oauth, "_ANTIGRAVITY_CLIENT_SHA256", ("0" * 64, "0" * 64))
+    with pytest.raises(oauth.OAuthError) as caught:
+        oauth.antigravity_client()
+    message = str(caught.value)
+    assert str(install) in message and "may have changed it" in message
+    assert "SEARCH_MCP_ANTIGRAVITY_CLIENT_SECRET" in message
+
+
+def test_an_install_that_cannot_be_read_is_not_called_a_new_version(install, tmp_path,
+                                                                    monkeypatch):
+    folder = tmp_path / "language_server_x"
+    folder.mkdir()
+    monkeypatch.setattr(oauth, "antigravity_install_paths", lambda: [folder])
+    with pytest.raises(oauth.OAuthError, match="could not be read") as caught:
+        oauth.antigravity_client()
+    assert str(folder) in str(caught.value) and "changed" not in str(caught.value)
+
+
+async def test_without_a_client_the_sign_in_stops_before_its_page(monkeypatch):
+    opened: list[str] = []
+    with pytest.raises(oauth.OAuthError) as caught:
+        await oauth.login("antigravity", open_browser=False, on_url=opened.append,
+                          wait_seconds=5)
+    message = str(caught.value)
+    assert "no Antigravity install was found" in message
+    assert "SEARCH_MCP_ANTIGRAVITY_CLIENT_ID" in message
+    assert opened == []
+
+
+def test_the_repository_carries_no_google_client():
+    root = Path(__file__).resolve().parents[1]
+    listed = subprocess.run(["git", "ls-files", "-z"], cwd=root, capture_output=True,
+                            check=False)
+    if listed.returncode != 0:
+        pytest.skip("not a git checkout")
+    names = [name for name in listed.stdout.decode().split("\0") if name]
+    assert "src/search_mcp/oauth.py" in names
+    for path in (root / name for name in names):
+        if not path.is_file():
+            continue
+        data = path.read_bytes()
+        assert not oauth._GOOGLE_CLIENT_ID.search(data), path
+        assert not oauth._GOOGLE_CLIENT_SECRET.search(data), path
+
+
+@pytest.mark.parametrize(
+    ("platform", "machine", "agent", "metadata"),
+    [
+        ("darwin", "arm64", "darwin/arm64", "DARWIN_ARM64"),
+        ("linux", "x86_64", "linux/amd64", "LINUX_AMD64"),
+        ("linux", "aarch64", "linux/arm64", "LINUX_ARM64"),
+        ("win32", "AMD64", "windows/amd64", "WINDOWS_AMD64"),
+    ],
+)
+def test_the_antigravity_headers_name_this_platform(monkeypatch, platform, machine, agent,
+                                                    metadata):
+    import platform as platform_module
+
+    monkeypatch.setattr(oauth.sys, "platform", platform)
+    monkeypatch.setattr(platform_module, "machine", lambda: machine)
+    headers = oauth.antigravity_headers("TOKEN")
+    assert headers["User-Agent"] == f"antigravity/{oauth.settings.antigravity_version} {agent}"
+    assert json.loads(headers["Client-Metadata"]) == {
+        "ideType": "ANTIGRAVITY", "platform": metadata, "pluginType": "GEMINI",
+    }
+    assert headers["Authorization"] == "Bearer TOKEN"
