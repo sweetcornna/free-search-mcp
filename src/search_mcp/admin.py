@@ -20,15 +20,17 @@ Run with ``main()`` (the ``search-mcp-admin`` console script) or
 
 from __future__ import annotations
 
+import asyncio
 import html
 import os
+from typing import Any
 
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import HTMLResponse, JSONResponse
 from starlette.routing import Route
 
-from . import keystore
+from . import keystore, oauth
 
 # --- HTML rendering (no template engine; build the page as a string) --------
 
@@ -214,6 +216,54 @@ def _render_provider_card(provider: keystore.Provider) -> str:
         <button class="test" onclick="testProvider(this)">Test / 测试</button>
         {login_btn}
         <button class="clear" onclick="clearProvider(this)">Clear / 清除</button>
+        <span class="result" data-result></span>
+      </div>
+    </section>
+    """
+
+
+_OAUTH_COPY: dict[str, dict[str, str]] = {
+    "codex": {
+        "title_zh": "Codex（ChatGPT 账号登录）",
+        "about": "OpenAI's own web search, run on your ChatGPT plan (Plus, Pro, Business, …) "
+        "through the sign-in the Codex CLI uses. It runs only when a call names "
+        'engines=["codex"], and each search counts against your plan\'s Codex usage.',
+        "about_zh": "用你的 ChatGPT 账号（Plus、Pro、Business 等套餐）调用 OpenAI 官方的网页搜索，"
+        "登录方式与 Codex CLI 相同。只有调用中写明 engines=[\"codex\"] 时才会运行，"
+        "每次搜索消耗你自己套餐的 Codex 额度。",
+        "note": "Already signed in to the Codex CLI? `search-mcp-login codex --use-codex-cli` "
+        "reuses that sign-in read-only instead.",
+        "note_zh": "已经登录过 Codex CLI？运行 search-mcp-login codex --use-codex-cli "
+        "可以只读复用那份登录。",
+    },
+}
+
+
+def _oauth_badge(info: dict[str, Any]) -> tuple[str, str]:
+    if not info.get("signed_in"):
+        return "no", "Not signed in / 未登录"
+    who = info.get("email") or "?"
+    return "ok", f"Signed in / 已登录 · {who}"
+
+
+def _render_oauth_card(spec: oauth.OAuthProvider) -> str:
+    info = oauth.status(spec.id)
+    badge_cls, badge_txt = _oauth_badge(info)
+    copy = _OAUTH_COPY.get(spec.id, {})
+    return f"""
+    <section class="card oauth" data-oauth="{_esc(spec.id)}">
+      <div class="card-head">
+        <h2>{_bilingual(spec.label, copy.get("title_zh"))}</h2>
+        <span class="badge {badge_cls}" data-badge>{_esc(badge_txt)}</span>
+      </div>
+      <p class="free-tier">{_esc(copy.get("about", ""))}<br>
+        <span class="zh">{_esc(copy.get("about_zh", ""))}</span></p>
+      <p class="free-tier">{_esc(copy.get("note", ""))}<br>
+        <span class="zh">{_esc(copy.get("note_zh", ""))}</span></p>
+      <div class="actions">
+        <button class="save" onclick="oauthSignIn(this)">Sign in / 登录</button>
+        <button class="test" onclick="oauthTest(this)">Test / 测试</button>
+        <button class="clear" onclick="oauthSignOut(this)">Sign out / 退出登录</button>
         <span class="result" data-result></span>
       </div>
     </section>
@@ -436,6 +486,99 @@ async function loginProvider(btn) {
   }
 }
 
+function oauthCard(btn) { return btn.closest('.card'); }
+
+function oauthShow(card, info) {
+  if (!info) return;
+  var badge = card.querySelector('[data-badge]');
+  if (info.signed_in) {
+    badge.textContent = 'Signed in / 已登录 · ' + (info.email || '?');
+    badge.className = 'badge ok';
+  } else {
+    badge.textContent = 'Not signed in / 未登录';
+    badge.className = 'badge no';
+  }
+}
+
+async function oauthSignIn(btn) {
+  var card = oauthCard(btn);
+  var id = card.getAttribute('data-oauth');
+  var out = card.querySelector('[data-result]');
+  // Opened now, inside the click, so a popup blocker lets it through.
+  var tab = window.open('', '_blank');
+  out.textContent = 'Starting… / 正在启动…';
+  out.className = 'result';
+  btn.disabled = true;
+  try {
+    var res = await fetch('/api/oauth/' + encodeURIComponent(id) + '/start', { method: 'POST' });
+    var data = await res.json();
+    if (!(res.ok && data.ok)) {
+      if (tab) tab.close();
+      out.textContent = data.error || 'failed / 失败';
+      out.className = 'result err';
+      btn.disabled = false;
+      return;
+    }
+    if (tab) {
+      tab.location = data.url;
+      out.textContent = 'Finish signing in in the new tab… / 请在新标签页完成登录…';
+    } else {
+      out.innerHTML = '';
+      var a = document.createElement('a');
+      a.href = data.url; a.target = '_blank'; a.rel = 'noopener';
+      a.textContent = 'Open the sign-in page / 打开登录页面';
+      out.appendChild(a);
+    }
+    for (var i = 0; i < 400; i++) {
+      await new Promise(function (r) { setTimeout(r, 1500); });
+      var p = await (await fetch('/api/oauth/' + encodeURIComponent(id) + '/progress')).json();
+      if (p.state === 'done') {
+        oauthShow(card, p.status);
+        out.textContent = 'Signed in / 登录成功';
+        out.className = 'result ok';
+        break;
+      }
+      if (p.state === 'error' || p.state === 'idle') {
+        out.textContent = p.error || 'sign-in stopped / 登录已中止';
+        out.className = 'result err';
+        break;
+      }
+    }
+  } catch (e) {
+    out.textContent = String(e);
+    out.className = 'result err';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function oauthSignOut(btn) {
+  var card = oauthCard(btn);
+  var id = card.getAttribute('data-oauth');
+  if (!confirm('Forget this sign-in on this machine?\\n确认删除本机保存的这份登录吗？')) return;
+  var res = await fetch('/api/oauth/' + encodeURIComponent(id) + '/logout', { method: 'POST' });
+  var data = await res.json();
+  oauthShow(card, data.status);
+  showToast('Signed out / 已退出登录', true);
+}
+
+async function oauthTest(btn) {
+  var card = oauthCard(btn);
+  var id = card.getAttribute('data-oauth');
+  var out = card.querySelector('[data-result]');
+  out.textContent = 'Searching… / 正在搜索…';
+  out.className = 'result';
+  try {
+    var res = await fetch('/api/test/' + encodeURIComponent(id));
+    var data = await res.json();
+    out.textContent = data.ok ? data.count + ' result(s) / 条结果' : (data.error || 'failed / 测试失败');
+    out.className = 'result ' + (data.ok ? 'ok' : 'err');
+  } catch (e) {
+    out.textContent = String(e);
+    out.className = 'result err';
+  }
+}
+
 async function testProvider(btn) {
   var card = btn.closest('.card');
   var id = card.getAttribute('data-provider');
@@ -466,6 +609,17 @@ def _render_page() -> str:
     # users that they were missing something.
     network = _render_network_card()
     cards = "".join(_render_provider_card(p) for p in keystore.PROVIDERS)
+    oauth_cards = "".join(_render_oauth_card(p) for p in oauth.PROVIDERS.values())
+    oauth_note = (
+        "One more opt-in engine runs OpenAI's own web search on a ChatGPT account you "
+        "sign in with, instead of a key. Sign in here or with `search-mcp-login codex`. "
+        "Tokens are stored at ~/.config/search-mcp/oauth/ (0600)."
+    )
+    oauth_note_zh = (
+        "另一个可选引擎不用密钥，而是用你登录的 ChatGPT 账号调用 OpenAI 官方的网页搜索。"
+        "可在此处登录，也可以运行 search-mcp-login codex。"
+        "令牌保存在 ~/.config/search-mcp/oauth/（0600）。"
+    )
     note = (
         "Local config tool, bound to 127.0.0.1. Nothing here is required: search "
         "works with no key. Values are stored at ~/.config/search-mcp/config.json (0600). "
@@ -500,6 +654,9 @@ def _render_page() -> str:
     <h2 class="section">Optional provider keys <span class="zh">/ 提供商密钥配置（可选）</span></h2>
     <p class="free-tier">{_esc(keys_note)}<br><span class="zh">{_esc(keys_note_zh)}</span></p>
     {cards}
+    <h2 class="section">Optional: sign in with an account (OAuth) <span class="zh">/ 账号登录（OAuth，可选）</span></h2>
+    <p class="free-tier">{_esc(oauth_note)}<br><span class="zh">{_esc(oauth_note_zh)}</span></p>
+    {oauth_cards}
   </div>
   <div id="toast"></div>
   <script>{_SCRIPT}</script>
@@ -560,6 +717,8 @@ async def api_test(request: Request) -> JSONResponse:
 
     provider_id = request.path_params["provider_id"]
     provider = keystore.provider_by_id(provider_id)
+    if provider is None and provider_id in oauth.PROVIDERS:
+        provider = oauth.PROVIDERS[provider_id]
     if provider is None:
         return JSONResponse(
             {"ok": False, "count": 0, "error": f"unknown provider: {provider_id}"},
@@ -597,6 +756,75 @@ async def api_login(request: Request) -> JSONResponse:
         return JSONResponse({"ok": False, "error": str(exc)})
 
 
+# --- OAuth sign-in ------------------------------------------------------------
+# One sign-in per provider at a time. The page starts it, opens the returned
+# link in a tab, and polls /progress until the loopback callback (served by
+# oauth.login in this same process) has stored the tokens.
+
+_oauth_jobs: dict[str, dict[str, Any]] = {}
+
+
+def _job_state(provider_id: str) -> dict[str, Any]:
+    job = _oauth_jobs.get(provider_id)
+    if job is None:
+        return {"state": "idle"}
+    task: asyncio.Task[Any] = job["task"]
+    if not task.done():
+        return {"state": "waiting"}
+    if task.cancelled():
+        return {"state": "error", "error": "the sign-in was cancelled / 登录已取消"}
+    exc = task.exception()
+    if exc is not None:
+        return {"state": "error", "error": str(exc)}
+    return {"state": "done"}
+
+
+async def api_oauth_start(request: Request) -> JSONResponse:
+    provider_id = request.path_params["provider_id"]
+    if provider_id not in oauth.PROVIDERS:
+        return JSONResponse({"ok": False, "error": f"unknown provider: {provider_id}"},
+                            status_code=404)
+    previous = _oauth_jobs.pop(provider_id, None)
+    if previous is not None and not previous["task"].done():
+        # Frees the callback port for the new attempt.
+        previous["task"].cancel()
+        await asyncio.gather(previous["task"], return_exceptions=True)
+    link: asyncio.Future[str] = asyncio.get_running_loop().create_future()
+
+    def on_url(url: str) -> None:
+        if not link.done():
+            link.set_result(url)
+
+    task = asyncio.create_task(
+        oauth.login(provider_id, open_browser=False, paste=False, on_url=on_url)
+    )
+    _oauth_jobs[provider_id] = {"task": task}
+    await asyncio.wait({task, link}, return_when=asyncio.FIRST_COMPLETED)
+    if link.done():
+        return JSONResponse({"ok": True, "url": link.result()})
+    exc = task.exception() if not task.cancelled() else None
+    return JSONResponse({"ok": False, "error": str(exc) if exc else "sign-in did not start"})
+
+
+async def api_oauth_progress(request: Request) -> JSONResponse:
+    provider_id = request.path_params["provider_id"]
+    if provider_id not in oauth.PROVIDERS:
+        return JSONResponse({"state": "error", "error": "unknown provider"}, status_code=404)
+    return JSONResponse({**_job_state(provider_id), "status": oauth.status(provider_id)})
+
+
+async def api_oauth_logout(request: Request) -> JSONResponse:
+    provider_id = request.path_params["provider_id"]
+    if provider_id not in oauth.PROVIDERS:
+        return JSONResponse({"ok": False, "error": "unknown provider"}, status_code=404)
+    oauth.sign_out(provider_id)
+    return JSONResponse({"ok": True, "status": oauth.status(provider_id)})
+
+
+async def api_oauth_status(request: Request) -> JSONResponse:
+    return JSONResponse({pid: oauth.status(pid) for pid in oauth.PROVIDERS})
+
+
 app = Starlette(
     routes=[
         Route("/", index, methods=["GET"]),
@@ -605,6 +833,10 @@ app = Starlette(
         Route("/api/clear", api_clear, methods=["POST"]),
         Route("/api/test/{provider_id}", api_test, methods=["GET"]),
         Route("/api/login/{provider_id}", api_login, methods=["POST"]),
+        Route("/api/oauth/status", api_oauth_status, methods=["GET"]),
+        Route("/api/oauth/{provider_id}/start", api_oauth_start, methods=["POST"]),
+        Route("/api/oauth/{provider_id}/progress", api_oauth_progress, methods=["GET"]),
+        Route("/api/oauth/{provider_id}/logout", api_oauth_logout, methods=["POST"]),
     ]
 )
 

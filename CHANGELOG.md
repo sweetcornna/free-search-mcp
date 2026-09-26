@@ -4,6 +4,50 @@ All notable changes to this project are documented here. The format is loosely
 based on [Keep a Changelog](https://keepachangelog.com/), and the project follows
 semantic versioning.
 
+## [Unreleased]
+
+### Added
+
+- An opt-in `codex` engine that runs OpenAI's own web search, the one Codex
+  uses, on the operator's ChatGPT plan. It needs no API key and no API
+  billing; each search counts against the plan's Codex usage. OpenAI supports
+  signing in with ChatGPT from third-party tools. The engine follows the rules
+  the key engines follow: it is in no pool, reserve or route, and named before
+  a sign-in it returns the usual "not configured" error, which now also tells
+  the agent not to ask for a sign-in. It calls the backend the way the current
+  Codex CLI does (openai/codex, read on 2026-09-26). The first choice is
+  `alpha/search`, whose structured results supply every title, URL and
+  snippet. On a deployment without that endpoint it uses `/responses` with the
+  hosted `web_search` tool, and keeps only URLs the search itself cited. An
+  expired token is refreshed once and the search retried. A spent usage window
+  is reported with its reset time, and a model the plan lacks names
+  `SEARCH_MCP_CODEX_MODEL`. Neither counts against the engine in the breaker.
+- `search-mcp-login codex` signs in the way `codex login` does: OAuth with
+  PKCE, returning to `127.0.0.1:1455`, or 1457 when 1455 is taken. Over SSH,
+  paste the address the browser lands on into the terminal. `--use-codex-cli`
+  links the Codex CLI's `auth.json` read-only instead, and never refreshes or
+  rewrites it. `search-mcp-login status` and `search-mcp-login logout codex`
+  show and forget the sign-in. Tokens live in
+  `<config_dir>/oauth/codex.json` (`0600`). OpenAI rotates refresh tokens, so
+  refreshes are serialised per process and, where `fcntl` exists, across
+  processes.
+- The settings page has a Codex card with Sign in, Test and Sign out.
+- New settings: `SEARCH_MCP_CODEX_MODEL` (`gpt-6-luna`),
+  `SEARCH_MCP_CODEX_TIMEOUT`, `SEARCH_MCP_CODEX_REASONING_EFFORT`,
+  `SEARCH_MCP_CODEX_BASE_URL`. The guide, with a Chinese summary, is
+  docs/CODEX_SEARCH.md.
+
+There is no Antigravity equivalent, on purpose. Google's Antigravity terms call
+third-party use of Antigravity OAuth a breach, and Google suspends accounts for
+it. The Gemini API's Grounding with Google Search forbids caching grounded
+results and collecting their links.
+
+### Changed
+
+- The `engines` tree's closing line says the opt-in extras run on the
+  operator's own API key *or account sign-in*, and asks the agent not to
+  request either.
+
 ## [0.12.0] - 2026-09-22
 
 Three of the four default engines had stopped contributing, and no structural

@@ -71,6 +71,8 @@ def _hermetic_config(tmp_path_factory, monkeypatch):
     layer everywhere and never know.
     """
     monkeypatch.setenv("SEARCH_MCP_CONFIG_DIR", str(tmp_path_factory.mktemp("cfg")))
+    # A developer signed in to the Codex CLI must not have it linked or read.
+    monkeypatch.setenv("CODEX_HOME", str(tmp_path_factory.mktemp("codex-home")))
     for var in (
         "SEARCH_MCP_ALLOW_PRIVATE_HOSTS",
         "SEARCH_MCP_SSRF_RESOLVE_ADDRESSES",
