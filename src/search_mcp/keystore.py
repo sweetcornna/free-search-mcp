@@ -438,7 +438,8 @@ def is_configured(provider_id: str) -> bool:
 
 
 def opt_in_engines() -> dict[str, bool]:
-    """`{engine: configured}` for every engine that cannot run without a key.
+    """`{engine: configured}` for every engine that cannot run without a key or
+    the operator's own sign-in (`codex`).
 
     The complement of "keyless": the engines the project's no-key promise does
     NOT cover. Nothing in the default, reserve, rescue or category pools may
@@ -455,6 +456,12 @@ def opt_in_engines() -> dict[str, bool]:
         has_value = any(get_secret(f.key) is not None for f in provider.fields)
         for engine in provider.unlocks:
             out[engine] = has_value
+    # The engines that run on a browser sign-in instead of a key (oauth.py).
+    # Imported here, not at the top: oauth imports this module for config_dir.
+    from . import oauth
+
+    for spec in oauth.PROVIDERS.values():
+        out[spec.engine] = oauth.is_signed_in(spec.id)
     return out
 
 

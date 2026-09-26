@@ -293,7 +293,7 @@ process, so new and old clients both work unchanged. What a client sees:
 
 ### Engines
 
-The registry holds 73 engines. A search that names none of them runs a small
+The registry holds 74 engines. A search that names none of them runs a small
 pool chosen for it, and the pool depends on which engines are healthy at that
 moment.
 
@@ -649,7 +649,8 @@ CAPTCHAs (ToS). The server handles a blocked engine in these ways:
   and for how long.
 - For Zhihu, log in once: run `uv run search-mcp-login zhihu`. A browser opens,
   you log in, the cookies persist, and `zhihu` search then works. This requires
-  a desktop session.
+  a desktop session. (`search-mcp-login codex` is a different sign-in: see
+  [search on your ChatGPT plan](#optional-search-on-your-chatgpt-plan-codex).)
 
 When results are thin, the remedies are, in order: rephrase the query, pass
 `category=`, name `engines=["so360","baidu"]` for Chinese content or
@@ -1187,6 +1188,12 @@ Available settings:
 | `SEARCH_MCP_TOOLS` | *(empty)* | comma/space separated allow-list of tool names; empty registers all of them |
 | `SEARCH_MCP_TOOL_CALL_BUDGET` | `0` | tool calls this process runs before it answers "budget used up" instead; `0` = no cap. Meant for a server started for one job |
 | `SEARCH_MCP_AGENT_*` | off | the optional answer agent; see [Delegating a lookup](#delegating-a-lookup) |
+| `SEARCH_MCP_CODEX_MODEL` | `gpt-6-luna` | model for the opt-in `codex` engine; see [search on your ChatGPT plan](#optional-search-on-your-chatgpt-plan-codex) |
+| `SEARCH_MCP_CODEX_TIMEOUT` | `60` | seconds for one `codex` search |
+| `SEARCH_MCP_CODEX_REASONING_EFFORT` | `low` | `low` / `medium` / `high`; used only when the backend has no search endpoint |
+| `SEARCH_MCP_CODEX_BASE_URL` | `https://chatgpt.com/backend-api/codex` | the Codex backend |
+| `SEARCH_MCP_CODEX_AUTO_SIGNIN` | `true` | named with no sign-in stored, open the sign-in page in the local browser and finish the search once it is approved (stdio on a desktop only) |
+| `SEARCH_MCP_CODEX_SIGNIN_WAIT_SECONDS` | `45` | how long one search waits for that approval |
 
 ### Optional: bring your own key (manual)
 
@@ -1229,6 +1236,43 @@ fields with **Save / 保存** (applies live, with no server restart),
 `~/.config/search-mcp/config.json` (`0600`) and never echoed back to the page.
 Set `SEARCH_MCP_ADMIN_NO_BROWSER=1` to stop it opening a browser tab.
 The per-provider walkthrough is [docs/API_KEYS.md](docs/API_KEYS.md).
+
+### Optional: search on your ChatGPT plan (`codex`)
+
+You do not need this either. If you already have a ChatGPT plan that includes
+Codex, the opt-in `codex` engine runs OpenAI's own web search, the one Codex
+uses, on that plan. There is no API key and no API bill; each search counts
+against the plan's Codex usage. OpenAI supports signing in with ChatGPT from
+third-party tools.
+
+```bash
+uvx --from free-search-mcp search-mcp-login codex   # browser sign-in, the same page as `codex login`
+uvx --from free-search-mcp search-mcp-login status
+```
+
+(`uv run search-mcp-login codex` in a source checkout, or **Sign in / 登录** on
+the settings page.) Then name it: `search("...", engines=["codex"])`. You can
+also skip the sign-in step: the first time `codex` is named with no sign-in
+stored, the server opens the ChatGPT sign-in page in your browser by itself and
+finishes the search once you approve it (stdio on a desktop only;
+`SEARCH_MCP_CODEX_AUTO_SIGNIN=false` turns that off).
+
+- The tokens are stored at `~/.config/search-mcp/oauth/codex.json` (`0600`)
+  and refreshed automatically.
+- Already signed in to the Codex CLI? `search-mcp-login codex --use-codex-cli`
+  links to its `auth.json` read-only instead.
+- On a remote machine, use `--no-browser`, sign in anywhere, and paste the
+  address the browser lands on (`http://127.0.0.1:1455/auth/callback?code=…`)
+  back into the terminal.
+- It is opt-in exactly like the key engines: in no pool and no route, and
+  named before a sign-in it returns an error, not results. The sign-in and the
+  searches honour `SEARCH_MCP_PROXY`.
+
+There is no Antigravity equivalent. Google's Antigravity terms call any
+third-party use of Antigravity OAuth a breach and Google suspends accounts for
+it, and the Gemini API's search-grounding terms forbid collecting and caching
+the links. The full guide, with a Chinese summary (中文速览), is
+[docs/CODEX_SEARCH.md](docs/CODEX_SEARCH.md).
 
 ## Architecture
 

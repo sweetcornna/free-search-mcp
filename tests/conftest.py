@@ -71,6 +71,8 @@ def _hermetic_config(tmp_path_factory, monkeypatch):
     layer everywhere and never know.
     """
     monkeypatch.setenv("SEARCH_MCP_CONFIG_DIR", str(tmp_path_factory.mktemp("cfg")))
+    # A developer signed in to the Codex CLI must not have it linked or read.
+    monkeypatch.setenv("CODEX_HOME", str(tmp_path_factory.mktemp("codex-home")))
     for var in (
         "SEARCH_MCP_ALLOW_PRIVATE_HOSTS",
         "SEARCH_MCP_SSRF_RESOLVE_ADDRESSES",
@@ -122,6 +124,10 @@ def _hermetic_config(tmp_path_factory, monkeypatch):
     monkeypatch.setattr(
         settings, "cache_dir", tmp_path_factory.mktemp("download-cache")
     )
+    # The one shipped default the suite does not run with: naming `codex`
+    # unsigned would open a real browser on a developer's desktop. The tests
+    # of that path switch it back on against a fake browser.
+    monkeypatch.setattr(settings, "codex_auto_signin", False)
     # The singleton captures its database path when modules are imported during
     # collection, before this fixture can replace cache_dir. Point it at the
     # per-test cache root too so no test attempts to write the developer's

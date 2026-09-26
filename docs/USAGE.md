@@ -144,7 +144,7 @@ page, check the date, and corroborate what matters.
 picks a small pool for you. Every engine a search reaches on its own is keyless
 (no API key, no account).
 
-The registry contains 73 engines in total.
+The registry contains 74 engines in total.
 
 The default pool is `duckduckgo`, `bing`, `anysearch` and `mojeek`. All four
 are plain HTTP and need no browser.
@@ -483,6 +483,19 @@ steps and Save/Test/Clear buttons, and a saved value applies live. An opt-in
 engine named without a key returns an error saying the search itself is fine,
 what to use instead, and that the user should not be asked for a key. For a
 per-provider walkthrough, see [API_KEYS.md](API_KEYS.md).
+
+### Optional: search on your ChatGPT plan (`codex`)
+
+One more opt-in engine runs on an account sign-in rather than a key. `codex`
+runs OpenAI's own web search, the one Codex uses, on the operator's ChatGPT
+plan: sign in once with `search-mcp-login codex` (or **Sign in / 登录** on the
+settings page), then name it with `engines=["codex"]`. Naming it before any
+sign-in opens the ChatGPT sign-in page in the local browser and finishes the
+search once it is approved (stdio on a desktop; `SEARCH_MCP_CODEX_AUTO_SIGNIN`). Each search counts
+against the plan's Codex usage. It follows the same rules as the key engines:
+never selected on its own, and an error rather than results when no sign-in can
+be made. See [CODEX_SEARCH.md](CODEX_SEARCH.md), which also explains why there
+is no Antigravity equivalent.
 
 ## Testing
 
