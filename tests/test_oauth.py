@@ -522,6 +522,24 @@ async def test_the_browser_tab_shows_a_failed_exchange_not_success(mock_http, po
     assert "Sign-in failed" in page and "Could not validate your token" in page
 
 
+async def test_a_slow_exchange_leaves_the_tab_undecided_not_signed_in(mock_http, ports,
+                                                                    monkeypatch):
+    monkeypatch.setattr(oauth, "_REPLY_WAIT", 0.05)
+
+    async def slow_then_failing(client, spec, form):
+        await asyncio.sleep(0.3)
+        raise oauth.OAuthError("token endpoint answered HTTP 500")
+
+    monkeypatch.setattr(oauth, "_token_request", slow_then_failing)
+    on_url, seen = _browser(lambda s: f"/auth/callback?code=C&state={s}")
+    with pytest.raises(oauth.OAuthError, match="HTTP 500"):
+        await oauth.login("codex", open_browser=False, on_url=on_url, wait_seconds=5)
+    await on_url.closed()
+    status, page = seen[1]
+    assert status.endswith("202 Accepted")
+    assert "Signed in" not in page and "Still finishing" in page
+
+
 async def test_a_sign_in_without_a_workspace_id_is_refused(mock_http, ports):
     state, _ = mock_http
     tokens = _tokens(time.time() + 3600)

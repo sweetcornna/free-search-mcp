@@ -724,6 +724,13 @@ async def api_test(request: Request) -> JSONResponse:
             {"ok": False, "count": 0, "error": f"unknown provider: {provider_id}"},
             status_code=404,
         )
+    if provider_id in oauth.PROVIDERS and not oauth.is_signed_in(provider_id):
+        # Answered here, not by a search: an unsigned engine may open its own
+        # sign-in page when searched (codex over stdio), and this process has
+        # a Sign in button for that.
+        return JSONResponse({"ok": False, "count": 0, "error": (
+            f"{provider_id} not configured: not signed in. Use Sign in / 登录 on this card."
+        )})
     try:
         engine = get_engine(provider.engine)
         results = await engine.search("openai", 2)

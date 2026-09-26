@@ -14,7 +14,7 @@ import pytest
 from search_mcp import oauth
 from search_mcp.config import settings
 from search_mcp.engines import ENGINES, get_engine
-from search_mcp.engines.base import EngineKeyError, SearchFilters
+from search_mcp.engines.base import EngineKeyError, EngineSignInPending, SearchFilters
 from search_mcp.engines.codex import (
     CodexEngine,
     clean_url,
@@ -290,6 +290,10 @@ def test_clean_url_keeps_other_parameters_and_refuses_non_http():
         "https://a.example/p?utm_source=newsletter"
     )
     assert clean_url("javascript:alert(1)") == ""
+    # Nothing else in the query is re-encoded.
+    for url in ("https://a.example/p?print", "https://a.example/s?q=a/b%20c&x=",
+                "https://a.example/s?q=a+b&utm_source=openai&z=%2F"):
+        assert clean_url(url) == url.replace("&utm_source=openai", "")
 
 
 # --- failures ------------------------------------------------------------------------------
@@ -433,7 +437,7 @@ async def test_an_unanswered_sign_in_says_so_and_how_to_retry(backend, auto_sign
         await CodexEngine().search("q", 5)
     message = str(excinfo.value)
     assert "sign-in page was opened in the browser" in message
-    assert "use_cache=false" in message and "10 minutes" in message
+    assert isinstance(excinfo.value, EngineSignInPending) and "10 minutes" in message
     assert calls == []
 
 
@@ -462,3 +466,54 @@ async def test_no_page_is_opened_where_nobody_would_see_it(backend, auto_signin,
     with pytest.raises(EngineKeyError, match="^codex not configured"):
         await CodexEngine().search("q", 5)
     assert asked == []
+
+
+def test_an_ordinary_search_does_not_read_the_sign_in(monkeypatch):
+    from search_mcp import aggregator
+
+    reads: list[str] = []
+    real_load = oauth.load
+    monkeypatch.setattr(oauth, "load", lambda pid: reads.append(pid) or real_load(pid))
+    aggregator.claimants("python asyncio taskgroup")
+    assert reads == []
+
+
+async def test_a_run_waiting_on_a_sign_in_is_not_cached(monkeypatch):
+    from search_mcp import aggregator
+    from search_mcp.engines.base import SearchResult
+
+    class Waiting:
+        name = "codex"
+        categories = frozenset()
+        single_site = False
+        rate_limit_per_minute = None
+        rate_limit_max_wait = None
+
+        async def search(self, query, n, filters=None, diagnostics=None):
+            raise EngineSignInPending("codex: a ChatGPT sign-in page was opened ...")
+
+    class Answering(Waiting):
+        name = "duckduckgo"
+
+        async def search(self, query, n, filters=None, diagnostics=None):
+            return [SearchResult(title=f"Result {i} about asyncio taskgroup",
+                                 url=f"https://example.com/{i}",
+                                 snippet="asyncio taskgroup runs tasks together",
+                                 engine="duckduckgo", rank=i) for i in range(4)]
+
+    stubs = {"codex": Waiting(), "duckduckgo": Answering()}
+    monkeypatch.setattr(aggregator, "get_engine", lambda name: stubs[name])
+    stored: list = []
+
+    class Cache:
+        async def get_search(self, key, max_age_seconds=None):
+            return None
+
+        async def put_search(self, key, query, engines, results, meta=None):
+            stored.append(key)
+
+    monkeypatch.setattr(aggregator, "cache", Cache())
+    out = await aggregator.aggregate_search("asyncio taskgroup",
+                                            engines=["codex", "duckduckgo"])
+    assert out["results"] and "codex" in out["errors"]
+    assert stored == []
