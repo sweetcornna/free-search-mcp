@@ -405,22 +405,38 @@ def ports(monkeypatch):
     return chosen
 
 
-def _browser(visit_path):
-    """An `on_url` that plays the browser: it follows the link's redirect."""
-    seen: list = []
+class _Browser:
+    """An `on_url` that plays the browser: it follows the link's redirect.
 
-    def on_url(url: str) -> None:
-        seen.append(url)
+    `seen` holds the link, then each reply as `(status line, page)`. The tab's
+    reply comes only after the token exchange, so a test awaits `closed()`
+    rather than guessing how long that takes.
+    """
+
+    def __init__(self, *visit_paths):
+        self.visit_paths = visit_paths
+        self.seen: list = []
+        self.tasks: list[asyncio.Task] = []
+
+    def __call__(self, url: str) -> None:
+        self.seen.append(url)
         query = parse_qs(urlparse(url).query)
-        redirect = urlparse(query["redirect_uri"][0])
+        port = urlparse(query["redirect_uri"][0]).port
 
         async def visit() -> None:
             await asyncio.sleep(0.05)
-            seen.append(await _get(redirect.port, visit_path(query["state"][0])))
+            for path in self.visit_paths:
+                self.seen.append(await _get(port, path(query["state"][0])))
 
-        asyncio.get_running_loop().create_task(visit())
+        self.tasks.append(asyncio.get_running_loop().create_task(visit()))
 
-    return on_url, seen
+    async def closed(self) -> None:
+        await asyncio.wait_for(asyncio.gather(*self.tasks), 5)
+
+
+def _browser(visit_path):
+    browser = _Browser(visit_path)
+    return browser, browser.seen
 
 
 async def test_the_loopback_callback_completes_a_sign_in(mock_http, ports):
@@ -429,7 +445,7 @@ async def test_the_loopback_callback_completes_a_sign_in(mock_http, ports):
     on_url, seen = _browser(lambda s: f"/auth/callback?code=THE-CODE&state={s}")
 
     cred = await oauth.login("codex", open_browser=False, on_url=on_url, wait_seconds=5)
-    await asyncio.sleep(0.05)
+    await on_url.closed()
 
     assert cred.email == "me@example.com" and cred.account_id == "acct-1"
     link, (status, page) = seen[0], seen[1]
@@ -453,6 +469,7 @@ async def test_a_busy_first_port_falls_back_to_the_second(mock_http, ports):
     try:
         on_url, _ = _browser(lambda s: f"/auth/callback?code=C&state={s}")
         await oauth.login("codex", open_browser=False, on_url=on_url, wait_seconds=5)
+        await on_url.closed()
     finally:
         blocker.close()
     assert _body(calls[0])["redirect_uri"] == f"http://127.0.0.1:{ports[1]}/auth/callback"
@@ -463,22 +480,15 @@ async def test_a_stray_callback_is_refused_and_the_sign_in_keeps_waiting(mock_ht
     # with the wrong state must not end the sign-in the operator is doing.
     state, calls = mock_http
     state["handler"] = lambda request: httpx.Response(200, json=_tokens(time.time() + 3600))
-    seen: list = []
+    browser = _Browser(
+        lambda s: "/auth/callback?code=FORGED&state=forged",
+        lambda s: "/auth/callback?error=access_denied&state=forged",
+        lambda s: f"/auth/callback?code=REAL&state={s}",
+    )
 
-    def on_url(url: str) -> None:
-        query = parse_qs(urlparse(url).query)
-        port = urlparse(query["redirect_uri"][0]).port
-
-        async def visit() -> None:
-            await asyncio.sleep(0.05)
-            seen.append(await _get(port, "/auth/callback?code=FORGED&state=forged"))
-            seen.append(await _get(port, "/auth/callback?error=access_denied&state=forged"))
-            seen.append(await _get(port, f"/auth/callback?code=REAL&state={query['state'][0]}"))
-
-        asyncio.get_running_loop().create_task(visit())
-
-    cred = await oauth.login("codex", open_browser=False, on_url=on_url, wait_seconds=5)
-    await asyncio.sleep(0.05)
+    cred = await oauth.login("codex", open_browser=False, on_url=browser, wait_seconds=5)
+    await browser.closed()
+    seen = browser.seen[1:]
     assert [status.split(" ", 1)[1] for status, _ in seen] == [
         "400 Bad Request", "400 Bad Request", "200 OK"
     ]
@@ -492,7 +502,7 @@ async def test_a_refusal_with_the_right_state_ends_the_sign_in(mock_http, ports)
     on_url, seen = _browser(lambda s: f"/auth/callback?error=access_denied&state={s}")
     with pytest.raises(oauth.OAuthError, match="access_denied"):
         await oauth.login("codex", open_browser=False, on_url=on_url, wait_seconds=5)
-    await asyncio.sleep(0.05)
+    await on_url.closed()
     assert seen[1][0].endswith("400 Bad Request")
     assert calls == []
     assert not oauth.is_signed_in("codex")
@@ -506,10 +516,7 @@ async def test_the_browser_tab_shows_a_failed_exchange_not_success(mock_http, po
     on_url, seen = _browser(lambda s: f"/auth/callback?code=BAD&state={s}")
     with pytest.raises(oauth.OAuthError, match="HTTP 401"):
         await oauth.login("codex", open_browser=False, on_url=on_url, wait_seconds=5)
-    for _ in range(50):
-        if len(seen) > 1:
-            break
-        await asyncio.sleep(0.02)
+    await on_url.closed()
     status, page = seen[1]
     assert status.endswith("400 Bad Request")
     assert "Sign-in failed" in page and "Could not validate your token" in page
@@ -523,6 +530,7 @@ async def test_a_sign_in_without_a_workspace_id_is_refused(mock_http, ports):
     on_url, _ = _browser(lambda s: f"/auth/callback?code=C&state={s}")
     with pytest.raises(oauth.OAuthError, match="workspace id"):
         await oauth.login("codex", open_browser=False, on_url=on_url, wait_seconds=5)
+    await on_url.closed()
     assert not oauth.is_signed_in("codex")
 
 
