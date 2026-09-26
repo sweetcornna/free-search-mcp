@@ -20,6 +20,7 @@ from .cfets import CfetsEngine
 from .cisakev import CisaKevEngine
 from .clinicaltrials import ClinicalTrialsEngine
 from .cninfo import CninfoEngine
+from .codex import CodexEngine
 from .coingecko import CoinGeckoEngine
 from .crates import CratesEngine
 from .crossref import CrossrefEngine
@@ -210,6 +211,10 @@ ENGINES: dict[str, Engine] = {
     # GitHub's code-search endpoint 401s anonymous callers, so unlike the
     # keyless `github` engine above this one needs a token.
     "github_code": GitHubCodeEngine(),
+    # Opt-in like the keyed engines above, but enabled by an OAuth sign-in
+    # (`search-mcp-login codex`) instead of a key: OpenAI's own web search,
+    # the one Codex uses, on the operator's ChatGPT plan.
+    "codex": CodexEngine(),
 }
 
 

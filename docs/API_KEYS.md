@@ -15,6 +15,10 @@ wants to point this server at it by hand. Two rules hold throughout:
 - An agent never asks a user for a key. Setting one is something the operator
   of the machine does, outside any conversation.
 
+`codex` is opt-in on the same terms but runs on the operator's ChatGPT
+sign-in instead of a key (`search-mcp-login codex`). It is covered in
+[CODEX_SEARCH.md](CODEX_SEARCH.md).
+
 Three keyless engines (`anysearch`, `stackexchange`, `semanticscholar`) accept
 an optional credential that changes only their limits. A GitHub token does the
 same for `github` (from 10 to 30 requests/min) and also enables `github_code`,

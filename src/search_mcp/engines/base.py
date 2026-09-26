@@ -1040,6 +1040,23 @@ def key_not_configured(engine: str, *, alternative: str, env: str, field: str) -
     )
 
 
+def not_signed_in(engine: str, *, account: str, alternative: str) -> EngineKeyError:
+    """`key_not_configured` for an engine that runs on a sign-in, not a key.
+
+    Same order and the same stable prefix, for the same reader: what happened,
+    that the search is fine, what to use instead, do not ask, and only then the
+    operator's command.
+    """
+    return EngineKeyError(
+        f"{engine} not configured: it is an optional, opt-in engine that runs on the "
+        f"operator's own {account} sign-in, none is stored, so it did not run. Nothing is "
+        f"wrong with the search: {alternative} Do not ask the user for an API key or a "
+        f"sign-in, because this server is built to work without one. (Operator note: "
+        f"`{engine}` is enabled by running `search-mcp-login {engine}` once, or with the "
+        f"sign-in button on the local settings page started with `search-mcp-admin`.)"
+    )
+
+
 def raise_for_key_error(engine: str, status: int | None) -> None:
     """Turn an auth/quota HTTP status from a keyed engine into an actionable
     error, so a bad/expired key surfaces a hint instead of a silent empty.

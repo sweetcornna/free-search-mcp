@@ -12,7 +12,7 @@ from typing import get_args
 
 import pytest
 
-from search_mcp import keystore
+from search_mcp import keystore, oauth
 from search_mcp.aggregator import _nominal_pool, engines_for_category
 from search_mcp.config import Settings
 from search_mcp.engines import ENGINES, Category, get_engine
@@ -43,7 +43,9 @@ def _no_provider_keys(monkeypatch):
 
 
 def test_the_opt_in_set_is_exactly_the_engines_that_cannot_run_keyless():
-    assert opt_in == {"brave_api", "serper", "tavily", "google_cse", "github_code"}
+    # `codex` runs on the operator's ChatGPT sign-in rather than a key; it is
+    # held to exactly the same rules.
+    assert opt_in == {"brave_api", "serper", "tavily", "google_cse", "github_code", "codex"}
     assert opt_in <= set(ENGINES)
 
 
@@ -98,7 +100,11 @@ async def test_naming_an_unconfigured_opt_in_engine_points_away_from_keys(name):
     assert fine < do_not_ask < operator
     # `uv run` is wrong for every real install (uvx, the plugin, the bundle).
     assert "uv run" not in message
-    # The operator's half still names the exact knob.
+    # The operator's half still names the exact knob: a key field, or the
+    # sign-in command for an engine that runs on a sign-in.
+    if name in oauth.PROVIDERS:
+        assert f"search-mcp-login {name}" in message
+        return
     provider = next(p for p in PROVIDERS if name == p.engine or name in p.unlocks)
     assert any(field.key in message for field in provider.fields)
 
