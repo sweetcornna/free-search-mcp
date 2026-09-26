@@ -30,8 +30,7 @@ One setting with "key" in its name is outside this page.
 `SEARCH_MCP_AGENT_API_KEY` belongs to the optional answer agent and is the
 credential of a language-model endpoint you chose. It is never sent to a search
 engine, the agent is off unless you turn it on, and a local endpoint such as
-Ollama has no key to set. The README's
-[Delegating a lookup](../README.md#delegating-a-lookup) covers it.
+Ollama has no key to set. [DELEGATION.md](DELEGATION.md) covers it.
 
 ## Two ways to set a key
 

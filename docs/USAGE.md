@@ -13,8 +13,7 @@ in Codex (checked with Codex CLI 0.154). In Claude Code the
 `free-search:quick-search` agent answers one lookup in its own context on
 `haiku` and returns a few sentences with dated source URLs. Other hosts get the
 same agent as a file or a prompt, and an optional `ask` tool lets the server do
-the delegating. The README's
-[Delegating a lookup](../README.md#delegating-a-lookup) covers every route.
+the delegating. [DELEGATION.md](DELEGATION.md) covers every route.
 
 Claude Code:
 
@@ -36,8 +35,7 @@ earlier `codex mcp add`, it silently shadows the plugin's server. Run
 
 From 0.12.0, each GitHub Release carries a one-click `.mcpb` bundle for Claude
 Desktop, and the release workflow publishes the server to the MCP Registry as
-`io.github.sweetcornna/free-search-mcp`. The [README](../README.md#install)
-describes both.
+`io.github.sweetcornna/free-search-mcp`. [INSTALL.md](INSTALL.md) describes both.
 
 The rest of this section is the source-checkout route, for working on the
 code:
@@ -451,7 +449,7 @@ ones:
 | `SEARCH_MCP_TRANSPORT` | `stdio` | `stdio` / `streamable-http` |
 | `SEARCH_MCP_HTTP_HOST` / `_PORT` / `_PATH` | `127.0.0.1` / `8000` / `/mcp` | streamable-http bind settings |
 | `SEARCH_MCP_TOOLS` | *(empty)* | comma/space separated allow-list of tool names; empty registers all 11 |
-| `SEARCH_MCP_AGENT_BACKEND` | `off` | `api`, `claude-code` or `codex` registers the `ask` tool; the other `SEARCH_MCP_AGENT_*` settings are in the README's [Delegating a lookup](../README.md#delegating-a-lookup) |
+| `SEARCH_MCP_AGENT_BACKEND` | `off` | `api`, `claude-code` or `codex` registers the `ask` tool; the other `SEARCH_MCP_AGENT_*` settings are in [DELEGATION.md](DELEGATION.md) |
 
 ### Optional: bring your own key (manual)
 

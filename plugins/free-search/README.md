@@ -73,9 +73,9 @@ Codex documents custom agents as TOML files under `~/.codex/agents/`, and
 generated from one prompt (`search-mcp agent-file claude-code|codex|prompt`),
 and a test fails when either drifts from it. With Codex CLI 0.154, `codex exec`
 gave no way to select a custom agent by name, so the route that worked there
-was the `quick_search` MCP prompt handed to a generic subagent. The main
-README's "Delegating a lookup" section has the details, along with the optional
-`ask` tool that lets the server dispatch the lookup itself.
+was the `quick_search` MCP prompt handed to a generic subagent.
+[docs/DELEGATION.md](../../docs/DELEGATION.md) has the details, along with the
+optional `ask` tool that lets the server dispatch the lookup itself.
 
 ## What it costs
 
@@ -92,9 +92,10 @@ Nothing is required, and nothing the server selects on its own uses an API key.
 Optional settings such as the engine pools and a proxy live in
 `~/.config/search-mcp/.env`, as for any other install method, and the plugin
 adds no config of its own. See
-[Configuration](../../README.md#configuration). Bringing your own key for one
-of the five opt-in engines is possible and manual. The end of that section
-describes it, and an agent should never ask you for one.
+[docs/CONFIGURATION.md](../../docs/CONFIGURATION.md). Bringing your own key for one
+of the five opt-in engines is possible and manual, as
+[docs/API_KEYS.md](../../docs/API_KEYS.md) describes, and an agent should never
+ask you for one.
 
 Browser-rendered engines (`brave`, `startpage`, `zhihu`, …) and JS-heavy page
 fetches need Chromium once:
@@ -111,5 +112,5 @@ browser returns that install command.
 Claude Desktop has a one-click `.mcpb` bundle on each GitHub Release, the MCP
 Registry entry is `io.github.sweetcornna/free-search-mcp`, and every other
 client can run `uvx free-search-mcp` over stdio. See the
-[project README](../../README.md#install) and
+[install guide](../../docs/INSTALL.md) and
 [docs/AGENT_USAGE.md](../../docs/AGENT_USAGE.md).
