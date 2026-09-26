@@ -219,8 +219,7 @@ server search, read the top pages and get an answer from the model the operator
 configured. It returns the answer, the model and the time taken, and the pages
 that were read. When that model fails, the result says so and carries the pages
 as a `research` brief, so answer from those. Ask one question per call and pass
-the source URLs and dates on with the answer. The
-[README](../README.md#delegating-a-lookup) lists the settings and the measured
+the source URLs and dates on with the answer. [DELEGATION.md](DELEGATION.md) lists the settings and the measured
 timings.
 
 ## Agent operating rules
