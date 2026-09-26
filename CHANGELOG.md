@@ -39,7 +39,9 @@ semantic versioning.
   desktop browser can be started, and at most one unanswered page per server
   run. The browser is launched with its output detached, because over stdio
   stdout is the MCP connection. `SEARCH_MCP_CODEX_AUTO_SIGNIN=false` turns it
-  off.
+  off. A search that stopped waiting for that approval is not cached, so the
+  same search repeated after the approval reaches `codex`. The settings page's
+  Test button never starts a sign-in; it says the engine is not signed in.
 - A callback with the wrong `state` is refused and the sign-in keeps waiting,
   as in the Codex CLI, so a web page cannot abort a sign-in in progress. The
   browser tab says "Signed in" only once the tokens are stored, and shows the

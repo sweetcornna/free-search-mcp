@@ -547,13 +547,22 @@ _PAGE = (
 )
 
 
-def _page(ok: bool, detail: str = "") -> bytes:
+# How long the browser's tab waits for the token exchange before it answers.
+_REPLY_WAIT = 60.0
+
+
+def _page(ok: bool | None, detail: str = "") -> bytes:
     import html
 
     if ok:
         title = "Signed in / 登录成功"
         body = ("You can close this tab and go back to the terminal or the settings page. "
                 "可以关闭此页面，回到终端或设置页。")
+    elif ok is None:
+        title = "Still finishing / 仍在完成登录"
+        body = ("The sign-in was received but is taking long to complete. The terminal or the "
+                "settings page shows whether it succeeded. 已收到授权，但完成得较慢，"
+                "请在终端或设置页查看是否成功。")
     else:
         title = "Sign-in failed / 登录失败"
         body = html.escape(detail or "unknown error")
@@ -640,13 +649,17 @@ async def _serve_callback(
                         if not outcome.done():
                             outcome.set_result(code)
                         try:
-                            problem = await asyncio.wait_for(asyncio.shield(finished), 60)
+                            problem = await asyncio.wait_for(
+                                asyncio.shield(finished), _REPLY_WAIT
+                            )
                         except TimeoutError:
-                            problem = ""
-                        if problem:
-                            status, page = "400 Bad Request", _page(False, problem)
+                            # Not known yet, so neither success nor failure.
+                            status, page = "202 Accepted", _page(None)
                         else:
-                            status, page = "200 OK", _page(True)
+                            if problem:
+                                status, page = "400 Bad Request", _page(False, problem)
+                            else:
+                                status, page = "200 OK", _page(True)
         except (TimeoutError, ConnectionError, UnicodeError):
             return
         finally:

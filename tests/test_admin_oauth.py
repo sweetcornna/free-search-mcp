@@ -12,6 +12,7 @@ import pytest
 from starlette.testclient import TestClient
 
 from search_mcp import admin, oauth
+from search_mcp.config import settings
 
 
 @pytest.fixture
@@ -122,7 +123,15 @@ def test_an_unknown_provider_is_a_404(client):
     assert client.post("/api/oauth/antigravity/logout").status_code == 404
 
 
-def test_the_test_button_reports_the_missing_sign_in(client):
+def test_the_test_button_reports_the_missing_sign_in(client, monkeypatch):
+    # With automatic sign-in on, as shipped: the button must not start one.
+    monkeypatch.setattr(settings, "codex_auto_signin", True)
+    monkeypatch.setattr(oauth, "can_open_browser", lambda: True)
+
+    async def sign_in(*args, **kwargs):
+        raise AssertionError("the Test button started a sign-in")
+
+    monkeypatch.setattr(oauth, "sign_in_on_first_use", sign_in)
     body = client.get("/api/test/codex").json()
     assert body["ok"] is False
     assert body["error"].startswith("codex not configured")

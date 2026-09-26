@@ -43,7 +43,7 @@ import json
 import re
 from dataclasses import dataclass
 from typing import Any
-from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
+from urllib.parse import unquote_plus, urlparse, urlunparse
 
 import httpx
 
@@ -52,6 +52,7 @@ from ..config import settings
 from .base import (
     Engine,
     EngineKeyError,
+    EngineSignInPending,
     SearchFilters,
     SearchResult,
     extract_date_hint,
@@ -105,18 +106,28 @@ class Hit:
 _TRACKING = {("utm_source", "openai"), ("utm_source", "chatgpt.com")}
 
 
+def _is_tracking(pair: str) -> bool:
+    key, _, value = pair.partition("=")
+    return (unquote_plus(key), unquote_plus(value)) in _TRACKING
+
+
 def clean_url(url: str) -> str:
-    """Drop the tracking parameter the service appends to every cited URL."""
+    """Drop the tracking parameter the service appends to every cited URL.
+
+    Every other parameter is kept byte for byte: re-encoding the query would
+    turn `?print` into `?print=` and `%20` into `+`, a different address for
+    some sites and a missed duplicate against other engines.
+    """
     try:
         parts = urlparse(url.strip())
     except ValueError:
         return ""
     if parts.scheme not in ("http", "https") or not parts.netloc:
         return ""
-    if parts.query:
-        kept = [(k, v) for k, v in parse_qsl(parts.query, keep_blank_values=True)
-                if (k, v) not in _TRACKING]
-        parts = parts._replace(query=urlencode(kept))
+    pairs = parts.query.split("&") if parts.query else []
+    kept = [pair for pair in pairs if not _is_tracking(pair)]
+    if len(kept) != len(pairs):
+        parts = parts._replace(query="&".join(kept))
     return urlunparse(parts)
 
 
@@ -500,11 +511,11 @@ class CodexEngine(Engine):
         try:
             return await oauth.sign_in_on_first_use("codex", settings.codex_signin_wait_seconds)
         except oauth.SignInPending:
-            raise EngineKeyError(
+            raise EngineSignInPending(
                 "codex: a ChatGPT sign-in page was opened in the browser on this machine and "
                 "has not been approved yet, so this search did not run. Let the user know that "
                 "a browser tab is waiting for their ChatGPT sign-in, which enables the `codex` "
-                "engine; once they approve it, repeat this search with use_cache=false. The page "
+                "engine; once they approve it, repeat this search. The page "
                 "stays open for 10 minutes. Nothing is wrong with the search itself: omit "
                 "`engines=` to use the default keyless pool meanwhile."
             ) from None

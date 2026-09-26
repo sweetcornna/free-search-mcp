@@ -1007,6 +1007,15 @@ class EngineKeyError(ValueError):
     """
 
 
+class EngineSignInPending(EngineKeyError):
+    """An opt-in engine's sign-in page is open and not yet approved.
+
+    Not a final answer for the search it interrupted: the aggregator does not
+    cache a run in which a named engine was waiting on a sign-in, so the same
+    search repeated after the approval reaches the engine.
+    """
+
+
 # The environment variable an opt-in engine's credential lives in. Not always
 # `SEARCH_MCP_<ENGINE>_API_KEY`: `github_code` borrows the `github` token, and a
 # message naming a variable that does not exist sends an operator hunting.

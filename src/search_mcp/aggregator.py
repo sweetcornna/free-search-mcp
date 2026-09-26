@@ -35,7 +35,7 @@ from .engines import (
     category_group,
     get_engine,
 )
-from .engines.base import classify_source, detect_query_region
+from .engines.base import EngineSignInPending, classify_source, detect_query_region
 from .health import SILENT_THRESHOLD, engine_health
 from .ratelimit import RateLimiter
 
@@ -450,7 +450,9 @@ def claimants(query: str) -> list[str]:
     picks: list[str] = []
     for name, engine in ENGINES.items():
         try:
-            if engine.is_available() and engine.claims(query):
+            # claims() first: it is a regex, while is_available() can read a
+            # file (a sign-in engine's stored credential) on every search.
+            if engine.claims(query) and engine.is_available():
                 picks.append(name)
         except Exception:  # noqa: BLE001 - a claim test must never break a search
             log.warning("engine %s: claims() raised", name, exc_info=True)
@@ -1421,7 +1423,10 @@ async def aggregate_search(
     }
     gated_hint = _gate_hint(gated, fallback) if gated_engines else ""
 
-    if use_cache and merged:
+    # A named engine waiting on its sign-in page did not get to answer; a
+    # cached run without it would be replayed after the approval.
+    sign_in_pending = any(isinstance(e, EngineSignInPending) for e in raised.values())
+    if use_cache and merged and not sign_in_pending:
         meta: dict[str, Any] = {}
         if gated_engines:
             meta["gated_engines"] = gated_engines
