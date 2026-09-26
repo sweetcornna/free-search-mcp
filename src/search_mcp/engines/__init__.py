@@ -1,3 +1,4 @@
+from .antigravity import AntigravityEngine
 from .anysearch import AnySearchEngine
 from .appstore import AppStoreEngine
 from .arxiv import ArxivEngine
@@ -215,6 +216,10 @@ ENGINES: dict[str, Engine] = {
     # (`search-mcp-login codex`) instead of a key: OpenAI's own web search,
     # the one Codex uses, on the operator's ChatGPT plan.
     "codex": CodexEngine(),
+    # The same, on the sign-in of Google's Antigravity IDE: Google Search run
+    # by a Gemini model. Google's terms forbid this use of that sign-in; it is
+    # enabled only by `search-mcp-login antigravity`, which says so.
+    "antigravity": AntigravityEngine(),
 }
 
 

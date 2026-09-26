@@ -1,4 +1,4 @@
-"""Sign-in for the opt-in engine that searches on the operator's own account.
+"""Sign-in for the opt-in engines that search on the operator's own account.
 
 `codex` runs OpenAI's web search through the ChatGPT sign-in that the Codex CLI
 uses. OpenAI supports that sign-in in third-party tools (OpenClaw uses the same
@@ -7,26 +7,31 @@ It is not an API key: the operator signs in once in a browser
 (`search-mcp-login codex`, or the button on the `search-mcp-admin` page), and
 this module keeps the tokens fresh from then on.
 
-Like the API-key engines, it is opt-in. No pool, reserve or category route
-contains it (tests/test_no_key_positioning.py), so a search only reaches it
+`antigravity` runs Google Search through a Gemini model on the sign-in of
+Google's Antigravity IDE. Google does not allow that: its Antigravity terms
+call any third-party use of Antigravity OAuth a breach and name suspension of
+the Antigravity and Gemini CLI accounts as the consequence, and Google has
+suspended accounts for it. It is here because an operator asked for it on
+their own account. Nothing opens its sign-in by itself, and the sign-in says
+what it risks before it starts.
+
+Like the API-key engines, both are opt-in. No pool, reserve or category route
+contains them (tests/test_no_key_positioning.py), so a search only reaches one
 when a call names it, and every search spends the operator's own plan quota.
 
-The flow is the one the Codex CLI uses: OAuth 2.0 authorization code with
-PKCE, redirected to a listener on a fixed loopback port. The port is part of
-the redirect URI the client registered, so it cannot be changed. When the
-browser runs on another machine (SSH), the redirect fails to load, and the
-address bar still holds the code: `search-mcp-login` reads that URL when it is
-pasted into the terminal.
-
-Google's Antigravity sign-in is deliberately absent. Its terms call any
-third-party use of Antigravity OAuth a breach, and Google suspends accounts
-for it.
+The flow is the one the Codex CLI and the Antigravity IDE use: OAuth 2.0
+authorization code with PKCE, redirected to a listener on a fixed loopback
+port. The port is part of the redirect URI the client registered, so it cannot
+be changed. When the browser runs on another machine (SSH), the redirect fails
+to load, and the address bar still holds the code: `search-mcp-login` reads
+that URL when it is pasted into the terminal.
 
 Tokens live in ``<config_dir>/oauth/<provider>.json``, written atomically with
 ``0600`` permissions, and never reach a log line or a tool result. A refresh
 runs under a per-process lock and, where the platform has ``fcntl``, a file
 lock, because OpenAI rotates refresh tokens: two servers refreshing the same
-token at once would leave one of them holding a revoked token.
+token at once would leave one of them holding a revoked token. Google does not
+rotate them, and gets the same lock anyway.
 
 A machine that already has the Codex CLI signed in can link to its
 ``auth.json`` instead (``search-mcp-login codex --use-codex-cli``). The link is
@@ -43,7 +48,9 @@ import contextlib
 import hashlib
 import inspect
 import json
+import mmap
 import os
+import re
 import secrets
 import shutil
 import subprocess
@@ -54,14 +61,15 @@ import time
 import uuid
 import weakref
 from collections.abc import AsyncIterator, Callable
-from dataclasses import asdict, dataclass, field, fields
+from dataclasses import asdict, dataclass, field, fields, replace
 from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, quote, urlencode, urlparse
 
 import httpx
 
-from .keystore import config_dir
+from .config import settings
+from .keystore import config_dir, get_secret
 from .net import proxy_for
 
 # --- errors -------------------------------------------------------------------
@@ -94,9 +102,18 @@ class OAuthProvider:
     extra_authorize_params: tuple[tuple[str, str], ...] = ()
     # What the account is called in messages.
     account: str = ""
+    # A desktop client's secret is shipped inside the app and is not a secret;
+    # Google's token endpoint still requires it. Empty for a public client.
+    client_secret: str = ""
+    # The host part of the registered redirect URI. With "localhost" the
+    # browser may try ::1 first, so the listener takes both loopbacks.
+    redirect_host: str = "127.0.0.1"
+    # The Codex CLI refreshes with a JSON body; a standard token endpoint
+    # takes a form, as for the code exchange.
+    json_refresh: bool = False
 
     def redirect_uri(self, port: int) -> str:
-        return f"http://127.0.0.1:{port}{self.redirect_path}"
+        return f"http://{self.redirect_host}:{port}{self.redirect_path}"
 
     def authorize_link(self, challenge: str, state: str, redirect_uri: str) -> str:
         params = {
@@ -133,10 +150,47 @@ CODEX = OAuthProvider(
         ("originator", "codex_cli_rs"),
     ),
     account="ChatGPT",
+    json_refresh=True,
 )
 
 
-PROVIDERS: dict[str, OAuthProvider] = {p.id: p for p in (CODEX,)}
+# The Antigravity IDE's Google client. Its ID and secret are not written here:
+# a sign-in finds them at run time (`antigravity_client` below). The IDE itself
+# returns to antigravity.google; this loopback address is also on the client's
+# list and is what other third-party tools use. `access_type=offline` with
+# `prompt=consent` is what makes Google issue a refresh token.
+ANTIGRAVITY = OAuthProvider(
+    id="antigravity",
+    label="Antigravity (Google sign-in)",
+    engine="antigravity",
+    authorize_url="https://accounts.google.com/o/oauth2/v2/auth",
+    token_url="https://oauth2.googleapis.com/token",
+    client_id="",
+    scopes=(
+        "https://www.googleapis.com/auth/cloud-platform",
+        "https://www.googleapis.com/auth/userinfo.email",
+        "https://www.googleapis.com/auth/userinfo.profile",
+        "https://www.googleapis.com/auth/cclog",
+        "https://www.googleapis.com/auth/experimentsandconfigs",
+    ),
+    redirect_ports=(51121,),
+    redirect_path="/oauth-callback",
+    redirect_host="localhost",
+    extra_authorize_params=(("access_type", "offline"), ("prompt", "consent")),
+    account="Google",
+)
+
+
+PROVIDERS: dict[str, OAuthProvider] = {p.id: p for p in (CODEX, ANTIGRAVITY)}
+
+# What an Antigravity sign-in risks, said before it starts (the CLI, the
+# settings page) and in the docs.
+ANTIGRAVITY_WARNING = (
+    "Google's Antigravity terms forbid using its sign-in from third-party tools and "
+    "name suspension of the Antigravity and Gemini CLI accounts as the consequence; "
+    "Google has suspended accounts for it. Sign in only with an account you accept "
+    "that risk for."
+)
 
 
 def provider(provider_id: str) -> OAuthProvider:
@@ -146,6 +200,125 @@ def provider(provider_id: str) -> OAuthProvider:
         raise ValueError(
             f"unknown sign-in provider {provider_id!r}: use {', '.join(PROVIDERS)}"
         ) from None
+
+
+# --- Antigravity's OAuth client ---------------------------------------------------
+# This repository does not carry Antigravity's client ID and secret. A sign-in
+# takes them from SEARCH_MCP_ANTIGRAVITY_CLIENT_ID and
+# SEARCH_MCP_ANTIGRAVITY_CLIENT_SECRET (the environment or the settings page),
+# or else reads them from the Antigravity install on this machine, whose
+# language server and `agy` CLI carry them. Those binaries hold two Google
+# clients, so Antigravity's is recognised by the SHA-256 of its ID and of its
+# secret (Antigravity 2.1.4, checked 2026-09-26). A stored sign-in keeps the
+# pair it was issued to (`Credential.client_id`).
+
+_ANTIGRAVITY_CLIENT_SHA256 = (
+    "bf00c418024ba6bf606ccdc37120976e41bc429dd1d46ecf16a729aa532626ea",
+    "1d2f041093fd95aa8995a038c711d50a7960da09a505381c09a745d6ad0ecc60",
+)
+_GOOGLE_CLIENT_ID = re.compile(rb"[0-9]{6,}-[a-z0-9]{32}\.apps\.googleusercontent\.com")
+_GOOGLE_CLIENT_SECRET = re.compile(rb"GOCSPX-[A-Za-z0-9_-]{28}")
+
+
+def antigravity_install_paths() -> list[Path]:
+    """The files of an Antigravity install that may carry its client.
+
+    The macOS app and `agy` were checked. The Linux and Windows folders assume
+    the layout the macOS app has, and were not.
+    """
+    home = Path.home()
+    apps = [
+        Path("/Applications/Antigravity.app/Contents/Resources"),
+        home / "Applications/Antigravity.app/Contents/Resources",
+        Path("/usr/share/antigravity/resources"),
+        Path("/opt/Antigravity/resources"),
+    ]
+    if os.environ.get("LOCALAPPDATA"):
+        apps.append(Path(os.environ["LOCALAPPDATA"]) / "Programs/Antigravity/resources")
+    paths = [path for app in apps for path in sorted((app / "bin").glob("language_server*"))]
+    for cli in (shutil.which("agy"), home / ".local/bin/agy"):
+        if cli and Path(cli).is_file() and Path(cli) not in paths:
+            paths.append(Path(cli))
+    return paths
+
+
+def _strings_near(
+    data: mmap.mmap, anchor: bytes, pattern: re.Pattern[bytes], before: int, after: int
+) -> set[str]:
+    # Finding the anchor first is what keeps a scan of a 150 MB binary fast.
+    found: set[str] = set()
+    at = data.find(anchor)
+    while at != -1:
+        window = data[max(0, at - before) : at + after]
+        found.update(match.group().decode("ascii") for match in pattern.finditer(window))
+        at = data.find(anchor, at + 1)
+    return found
+
+
+def _client_in(path: Path) -> tuple[str, str] | None:
+    """Antigravity's client ID and secret, when `path` carries them."""
+    try:
+        with path.open("rb") as fh, mmap.mmap(fh.fileno(), 0, access=mmap.ACCESS_READ) as data:
+            ids = _strings_near(data, b".apps.googleusercontent.com", _GOOGLE_CLIENT_ID, 64, 27)
+            found_secrets = _strings_near(data, b"GOCSPX-", _GOOGLE_CLIENT_SECRET, 0, 35)
+    except (OSError, ValueError):
+        return None
+    want_id, want_secret = _ANTIGRAVITY_CLIENT_SHA256
+
+    def pick(candidates: set[str], want: str) -> str:
+        return next((c for c in candidates if hashlib.sha256(c.encode()).hexdigest() == want), "")
+
+    client_id, client_secret = pick(ids, want_id), pick(found_secrets, want_secret)
+    return (client_id, client_secret) if client_id and client_secret else None
+
+
+def antigravity_client() -> tuple[str, str]:
+    """Antigravity's OAuth client ID and secret, from the settings or the install.
+
+    Raises `OAuthError`, saying what to set, when neither has them.
+    """
+    client_id = get_secret("antigravity_client_id") or ""
+    client_secret = get_secret("antigravity_client_secret") or ""
+    if client_id and client_secret:
+        return client_id, client_secret
+    if client_id or client_secret:
+        raise OAuthError(
+            "only one of SEARCH_MCP_ANTIGRAVITY_CLIENT_ID and "
+            "SEARCH_MCP_ANTIGRAVITY_CLIENT_SECRET is set. Set both, or neither to have "
+            "them read from the Antigravity install on this machine."
+        )
+    paths = antigravity_install_paths()
+    for path in paths:
+        found = _client_in(path)
+        if found:
+            return found
+    if paths:
+        where = (
+            f"the Antigravity install here ({', '.join(map(str, paths))}) does not carry "
+            "the client this version knows; a newer Antigravity may have changed it"
+        )
+    else:
+        where = "no Antigravity install was found on this machine"
+    raise OAuthError(
+        f"the Antigravity sign-in needs Antigravity's OAuth client, and {where}. Set "
+        "SEARCH_MCP_ANTIGRAVITY_CLIENT_ID and SEARCH_MCP_ANTIGRAVITY_CLIENT_SECRET in the "
+        "environment or on the settings page (docs/ANTIGRAVITY_SEARCH.md says where "
+        "they come from)."
+    )
+
+
+def _with_client(spec: OAuthProvider, cred: Credential | None = None) -> OAuthProvider:
+    """`spec` with its OAuth client filled in.
+
+    Only Antigravity's is found at run time: the pair a stored sign-in was
+    issued to, or else `antigravity_client()`.
+    """
+    if spec.id != ANTIGRAVITY.id:
+        return spec
+    if cred is not None and cred.client_id and cred.client_secret:
+        return replace(spec, client_id=cred.client_id, client_secret=cred.client_secret)
+    client_id, client_secret = antigravity_client()
+    return replace(spec, client_id=client_id, client_secret=client_secret)
 
 
 # --- stored credential --------------------------------------------------------
@@ -160,13 +333,19 @@ class Credential:
     expires_at: float = 0.0
     id_token: str = ""
     email: str = ""
-    # The ChatGPT workspace the requests are billed to, and its plan.
+    # What the requests are billed to, and its plan: the ChatGPT workspace
+    # (codex), or the Cloud Code project and the Google tier (antigravity).
     account_id: str = ""
     plan: str = ""
     # "login" (this server's own token chain) or "codex-cli" (a read-only link
     # to the Codex CLI's auth.json, whose path is `linked_path`).
     source: str = "login"
     linked_path: str = ""
+    # The OAuth client an Antigravity sign-in used. Google refreshes a token
+    # only for the client it was issued to. Empty for codex, whose client is
+    # the one above.
+    client_id: str = ""
+    client_secret: str = ""
     updated_at: float = field(default_factory=time.time)
 
     def expiring(self, margin: float = 300.0) -> bool:
@@ -386,10 +565,12 @@ async def _token_request(
     client: httpx.AsyncClient, spec: OAuthProvider, form: dict[str, str]
 ) -> dict[str, Any]:
     body = {"client_id": spec.client_id, **form}
-    # The CLI exchanges a code form-encoded and refreshes with a JSON body.
-    encoding: dict[str, Any] = (
-        {"json": body} if form.get("grant_type") == "refresh_token" else {"data": body}
-    )
+    if spec.client_secret:
+        body["client_secret"] = spec.client_secret
+    # The Codex CLI exchanges a code form-encoded and refreshes with a JSON
+    # body; Google takes a form for both.
+    json_body = spec.json_refresh and form.get("grant_type") == "refresh_token"
+    encoding: dict[str, Any] = {"json": body} if json_body else {"data": body}
     try:
         response = await client.post(
             spec.token_url, headers={"Accept": "application/json"}, **encoding
@@ -433,12 +614,18 @@ def _credential_from_tokens(
     cred = Credential(provider=spec.id) if previous is None else previous
     cred.access_token = str(data["access_token"])
     # OpenAI rotates the refresh token on every refresh; a reply without one
-    # keeps the old.
+    # (Google's never has one) keeps the old.
     cred.refresh_token = str(data.get("refresh_token") or cred.refresh_token or "")
     cred.id_token = str(data.get("id_token") or cred.id_token or "")
     cred.expires_at = _expiry(data, cred.access_token)
     cred.source = "login"
-    _apply_codex_claims(cred)
+    if spec.id == CODEX.id:
+        _apply_codex_claims(cred)
+    else:
+        # Google's id token names the account; its access token is opaque.
+        cred.email = str(jwt_claims(cred.id_token).get("email") or cred.email or "")
+    if spec.id == ANTIGRAVITY.id:
+        cred.client_id, cred.client_secret = spec.client_id, spec.client_secret
     return cred
 
 
@@ -449,6 +636,80 @@ def _check_account(cred: Credential) -> None:
             "the ChatGPT sign-in carried no workspace id, so the Codex backend would "
             "refuse it. Sign in with an account that has a ChatGPT plan."
         )
+
+
+async def _complete_sign_in(
+    client: httpx.AsyncClient, spec: OAuthProvider, cred: Credential
+) -> None:
+    """What a provider needs, beyond the tokens, before its first search."""
+    if spec.id == CODEX.id:
+        _check_account(cred)
+    elif spec.id == ANTIGRAVITY.id:
+        await load_code_assist(client, cred)
+
+
+# --- the Antigravity client --------------------------------------------------------
+# The Cloud Code backend serves only requests that identify as the Antigravity
+# IDE: with another user agent every call is refused as "You do not have a
+# valid license of this product" (checked 2026-09-26). So these requests say
+# what Antigravity says, for the platform this server runs on.
+
+CLOUD_CODE_PROD = "https://cloudcode-pa.googleapis.com"
+
+
+def _antigravity_platform() -> tuple[str, str]:
+    """`(os, arch)` as Antigravity names them, e.g. ("darwin", "arm64")."""
+    import platform
+
+    system = {"darwin": "darwin", "win32": "windows"}.get(sys.platform, "linux")
+    machine = platform.machine().lower()
+    arch = "arm64" if machine in ("arm64", "aarch64") else "amd64"
+    return system, arch
+
+
+def antigravity_headers(access_token: str) -> dict[str, str]:
+    system, arch = _antigravity_platform()
+    metadata = {
+        "ideType": "ANTIGRAVITY",
+        "platform": f"{system}_{arch}".upper(),
+        "pluginType": "GEMINI",
+    }
+    return {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json",
+        "User-Agent": f"antigravity/{settings.antigravity_version} {system}/{arch}",
+        "Client-Metadata": json.dumps(metadata, separators=(",", ":")),
+    }
+
+
+async def load_code_assist(client: httpx.AsyncClient, cred: Credential) -> None:
+    """Fill in the account's Cloud Code project and tier, best effort.
+
+    A search runs without the project too (the sandbox backend accepts an
+    empty one), so a failure here does not fail the sign-in.
+    """
+    headers = antigravity_headers(cred.access_token)
+    try:
+        response = await client.post(
+            f"{CLOUD_CODE_PROD}/v1internal:loadCodeAssist",
+            headers=headers,
+            json={"metadata": json.loads(headers["Client-Metadata"])},
+        )
+        data = response.json() if response.status_code == 200 else {}
+    except (httpx.HTTPError, ValueError):
+        return
+    if not isinstance(data, dict):
+        return
+    project = data.get("cloudaicompanionProject")
+    if isinstance(project, dict):
+        project = project.get("id")
+    if isinstance(project, str) and project:
+        cred.account_id = project
+    for key in ("paidTier", "currentTier"):
+        tier = data.get(key)
+        if isinstance(tier, dict) and (tier.get("name") or tier.get("id")):
+            cred.plan = str(tier.get("name") or tier.get("id"))
+            break
 
 
 # --- refresh ---------------------------------------------------------------------
@@ -530,9 +791,10 @@ async def credential(provider_id: str, *, force_refresh: bool = False) -> Creden
                 f"Sign in again with `search-mcp-login {spec.id}`."
             )
         form = {"grant_type": "refresh_token", "refresh_token": cred.refresh_token}
+        client_spec = await asyncio.to_thread(_with_client, spec, cred)
         async with http_client(spec.engine) as client:
-            data = await _token_request(client, spec, form)
-        cred = _credential_from_tokens(spec, data, cred)
+            data = await _token_request(client, client_spec, form)
+        cred = _credential_from_tokens(client_spec, data, cred)
         save(cred)
         return cred
 
@@ -672,12 +934,19 @@ async def _serve_callback(
                 await writer.drain()
             writer.close()
 
+    # A browser sent to "localhost" may try ::1 first. Where IPv6 is off,
+    # binding ::1 fails and 127.0.0.1 alone is what the browser reaches.
+    host_sets: list[str | list[str]] = (
+        [["127.0.0.1", "::1"], "127.0.0.1"] if spec.redirect_host == "localhost"
+        else ["127.0.0.1"]
+    )
     last: OSError | None = None
     for port in spec.redirect_ports:
-        try:
-            return await asyncio.start_server(handle, "127.0.0.1", port), port
-        except OSError as exc:
-            last = exc
+        for hosts in host_sets:
+            try:
+                return await asyncio.start_server(handle, hosts, port), port
+            except OSError as exc:
+                last = exc
     raise last or OSError("no redirect port to listen on")
 
 
@@ -727,7 +996,9 @@ async def login(
     a redirect URL typed into stdin is accepted as well as the loopback
     callback, which is what makes a sign-in over SSH possible.
     """
-    spec = provider(provider_id)
+    # Before the listener starts, so a missing Antigravity client is reported
+    # without a sign-in page to abandon.
+    spec = await asyncio.to_thread(_with_client, provider(provider_id))
     verifier, challenge = pkce_pair()
     state = secrets.token_urlsafe(32)
     loop = asyncio.get_running_loop()
@@ -781,8 +1052,8 @@ async def login(
                     "code_verifier": verifier,
                 },
             )
-        cred = _credential_from_tokens(spec, data)
-        _check_account(cred)
+            cred = _credential_from_tokens(spec, data)
+            await _complete_sign_in(client, spec, cred)
         save(cred)
     except BaseException as exc:
         if not finished.done():
@@ -918,8 +1189,15 @@ def new_session_id() -> str:
 
 
 __all__ = [
+    "ANTIGRAVITY",
+    "ANTIGRAVITY_WARNING",
+    "CLOUD_CODE_PROD",
     "CODEX",
     "PROVIDERS",
+    "antigravity_client",
+    "antigravity_headers",
+    "antigravity_install_paths",
+    "load_code_assist",
     "Credential",
     "NotSignedIn",
     "OAuthError",

@@ -494,8 +494,14 @@ sign-in opens the ChatGPT sign-in page in the local browser and finishes the
 search once it is approved (stdio on a desktop; `SEARCH_MCP_CODEX_AUTO_SIGNIN`). Each search counts
 against the plan's Codex usage. It follows the same rules as the key engines:
 never selected on its own, and an error rather than results when no sign-in can
-be made. See [CODEX_SEARCH.md](CODEX_SEARCH.md), which also explains why there
-is no Antigravity equivalent.
+be made. See [CODEX_SEARCH.md](CODEX_SEARCH.md).
+
+`antigravity` runs Google Search through a Gemini model on the sign-in of
+Google's Antigravity IDE (`search-mcp-login antigravity`, then
+`engines=["antigravity"]`). Google's terms forbid that use of the sign-in and
+Google has suspended accounts for it, so it never opens a sign-in by itself and
+the sign-in prints that warning first. See
+[ANTIGRAVITY_SEARCH.md](ANTIGRAVITY_SEARCH.md).
 
 ## Testing
 

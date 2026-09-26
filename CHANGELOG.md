@@ -47,16 +47,42 @@ semantic versioning.
   browser tab says "Signed in" only once the tokens are stored, and shows the
   error when the exchange fails.
 - The settings page has a Codex card with Sign in, Test and Sign out.
-- New settings: `SEARCH_MCP_CODEX_MODEL` (`gpt-6-luna`),
+- New settings: `SEARCH_MCP_CODEX_MODEL` (`latest`),
   `SEARCH_MCP_CODEX_TIMEOUT`, `SEARCH_MCP_CODEX_REASONING_EFFORT`,
   `SEARCH_MCP_CODEX_BASE_URL`, `SEARCH_MCP_CODEX_AUTO_SIGNIN`,
   `SEARCH_MCP_CODEX_SIGNIN_WAIT_SECONDS`. The guide, with a Chinese summary, is
   docs/CODEX_SEARCH.md.
 
-There is no Antigravity equivalent, on purpose. Google's Antigravity terms call
-third-party use of Antigravity OAuth a breach, and Google suspends accounts for
-it. The Gemini API's Grounding with Google Search forbids caching grounded
-results and collecting their links.
+- An opt-in `antigravity` engine that runs Google Search through a Gemini
+  model on the sign-in of Google's Antigravity IDE, at the operator's own
+  risk: Google's Antigravity terms forbid using that sign-in from third-party
+  tools and Google has suspended accounts for it. The backend licenses only
+  requests that identify as Antigravity, so the engine sends Antigravity's user
+  agent. It never opens a sign-in by itself; `search-mcp-login antigravity`
+  and the settings page card say what it risks before the sign-in starts. It
+  calls `v1internal:generateContent` with the `googleSearch` tool, and every
+  result URL comes from the reply's grounding, resolved from Google's redirect
+  to the page. A reply without search results is asked once more and then
+  yields nothing, because some models answer from memory. The daily sandbox
+  host is tried before production, which refused every search with 429 for a
+  free-tier account. Antigravity's OAuth client is not in the package: the
+  sign-in reads it from the Antigravity install on the machine, recognised by
+  a fingerprint, or from `SEARCH_MCP_ANTIGRAVITY_CLIENT_ID` and
+  `SEARCH_MCP_ANTIGRAVITY_CLIENT_SECRET`, and stores it with the tokens. New
+  settings: `SEARCH_MCP_ANTIGRAVITY_MODEL` (`latest`),
+  `SEARCH_MCP_ANTIGRAVITY_TIMEOUT`, `SEARCH_MCP_ANTIGRAVITY_BASE_URLS`,
+  `SEARCH_MCP_ANTIGRAVITY_VERSION`, `SEARCH_MCP_ANTIGRAVITY_CLIENT_ID`,
+  `SEARCH_MCP_ANTIGRAVITY_CLIENT_SECRET`. The guide is
+  docs/ANTIGRAVITY_SEARCH.md.
+- Both sign-in engines follow their model catalogue by default
+  (`SEARCH_MCP_CODEX_MODEL=latest`, `SEARCH_MCP_ANTIGRAVITY_MODEL=latest`),
+  looked up at most every six hours, so a new model is used as soon as the
+  backend lists it. `codex` takes the newest generation's lightest model that
+  can search and is not being retired; `antigravity` takes the flash model
+  Antigravity offers, and asks Antigravity's own web-search model when that
+  one answers without searching. A model name pins it, as before.
+- The sign-in listener takes both `127.0.0.1` and `::1` when the registered
+  redirect says `localhost`, because a browser may try IPv6 first.
 
 ### Changed
 

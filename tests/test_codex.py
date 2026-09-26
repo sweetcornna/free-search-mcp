@@ -517,3 +517,87 @@ async def test_a_run_waiting_on_a_sign_in_is_not_cached(monkeypatch):
                                             engines=["codex", "duckduckgo"])
     assert out["results"] and "codex" in out["errors"]
     assert stored == []
+
+
+# --- the model: `latest` follows the catalogue --------------------------------------------
+
+# The plan's catalogue as the backend listed it on 2026-09-26 (fields trimmed).
+_CATALOGUE = [
+    {"slug": "gpt-6-astra", "visibility": "list", "priority": 1, "supports_search_tool": True,
+     "upgrade": None},
+    {"slug": "gpt-6-sol", "visibility": "list", "priority": 2, "supports_search_tool": True,
+     "upgrade": None},
+    {"slug": "gpt-6-luna", "visibility": "list", "priority": 3, "supports_search_tool": True,
+     "upgrade": None},
+    {"slug": "gpt-reserve", "visibility": "hide", "priority": 3, "supports_search_tool": True},
+    {"slug": "gpt-5.6-luna", "visibility": "list", "priority": 8, "supports_search_tool": True},
+    {"slug": "gpt-5.5", "visibility": "list", "priority": 12, "supports_search_tool": True,
+     "upgrade": {"model": "gpt-5.6-sol", "retirement_at": "2026-10-14T19:00:00Z"}},
+    {"slug": "codex-auto-review", "visibility": "hide", "priority": 43},
+]
+
+
+def test_latest_is_the_newest_generations_lightest_model():
+    from search_mcp.engines.codex import pick_model
+
+    assert pick_model(_CATALOGUE) == "gpt-6-luna"
+    # A new generation is taken as soon as it is listed.
+    newer = _CATALOGUE + [
+        {"slug": "gpt-7-nova", "visibility": "list", "priority": 1},
+        {"slug": "gpt-7-mini", "visibility": "list", "priority": 2},
+    ]
+    assert pick_model(newer) == "gpt-7-mini"
+    # Not a model on its way out, one that cannot search, or a hidden one.
+    assert pick_model([{"slug": "gpt-8", "visibility": "list", "upgrade": {"model": "x"}},
+                       {"slug": "gpt-8-a", "visibility": "list",
+                        "supports_search_tool": False},
+                       {"slug": "gpt-8-b", "visibility": "hide"}] + _CATALOGUE) == "gpt-6-luna"
+    assert pick_model([]) == pick_model(None) == ""
+
+
+def test_the_catalogue_is_asked_as_the_newer_of_the_installed_cli_and_the_floor():
+    from search_mcp.engines.codex import _CLIENT_VERSION_FLOOR, client_version
+
+    cache = oauth.codex_cli_auth_path().parent / "models_cache.json"
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    assert client_version() == _CLIENT_VERSION_FLOOR
+    cache.write_text(json.dumps({"client_version": "0.170.2"}))
+    assert client_version() == "0.170.2"
+    cache.write_text(json.dumps({"client_version": "0.99.0"}))
+    assert client_version() == _CLIENT_VERSION_FLOOR
+
+
+@pytest.fixture
+def latest(monkeypatch):
+    from search_mcp.engines import codex as codex_module
+
+    monkeypatch.setattr(settings, "codex_model", "latest")
+    monkeypatch.setattr(codex_module, "_latest", {})
+
+
+async def test_latest_searches_with_the_catalogue_pick_and_asks_once(backend, latest):
+    routes, calls = backend
+    routes["/models"] = httpx.Response(200, json={"models": _CATALOGUE})
+    routes["/alpha/search"] = httpx.Response(200, json=_SEARCH_REPLY)
+    _sign_in()
+
+    await CodexEngine().search("q1", 5)
+    await CodexEngine().search("q2", 5)
+
+    listing = [c for c in calls if c.url.path.endswith("/models")]
+    assert len(listing) == 1 and listing[0].url.params["client_version"]
+    searches = [json.loads(c.content) for c in calls if c.url.path.endswith("/alpha/search")]
+    assert [s["model"] for s in searches] == ["gpt-6-luna", "gpt-6-luna"]
+
+
+async def test_an_unreadable_catalogue_falls_back_and_the_search_still_runs(backend, latest):
+    from search_mcp.engines.codex import _FALLBACK_MODEL
+
+    routes, calls = backend
+    routes["/models"] = httpx.Response(500, json={"detail": "down"})
+    routes["/alpha/search"] = httpx.Response(200, json=_SEARCH_REPLY)
+    _sign_in()
+
+    assert await CodexEngine().search("q", 5)
+    search = next(c for c in calls if c.url.path.endswith("/alpha/search"))
+    assert json.loads(search.content)["model"] == _FALLBACK_MODEL

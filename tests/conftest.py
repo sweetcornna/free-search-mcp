@@ -107,6 +107,14 @@ def _hermetic_config(tmp_path_factory, monkeypatch):
             for provider_field in provider.fields:
                 monkeypatch.delenv(keystore._env_name(provider_field.key), raising=False)
 
+    # Nor may a developer's Antigravity install, or a client set for it, reach
+    # a sign-in under test. The tests of that lookup give it files of their own.
+    from search_mcp import oauth
+
+    for client_field in keystore.ANTIGRAVITY_CLIENT_FIELDS:
+        monkeypatch.delenv(keystore._env_name(client_field.key), raising=False)
+    monkeypatch.setattr(oauth, "antigravity_install_paths", lambda: [])
+
     keystore._reset_cache()
     # `settings` is a module-level singleton built at import time, so clearing
     # the env is not enough — reset the fields that were already read from it.
@@ -128,6 +136,10 @@ def _hermetic_config(tmp_path_factory, monkeypatch):
     # unsigned would open a real browser on a developer's desktop. The tests
     # of that path switch it back on against a fake browser.
     monkeypatch.setattr(settings, "codex_auto_signin", False)
+    # Likewise `latest`, the shipped model choice: it asks the backend for its
+    # model catalogue. The tests of that lookup switch it back on.
+    monkeypatch.setattr(settings, "codex_model", "gpt-6-luna")
+    monkeypatch.setattr(settings, "antigravity_model", "gemini-3.8-flash-tiered")
     # The singleton captures its database path when modules are imported during
     # collection, before this fixture can replace cache_dir. Point it at the
     # per-test cache root too so no test attempts to write the developer's

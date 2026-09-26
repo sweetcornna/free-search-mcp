@@ -26,10 +26,13 @@ in with ChatGPT from third-party tools.
 - 在远程机器（SSH）上：浏览器最后跳转到 `http://127.0.0.1:1455/auth/callback?code=...`
   时页面会打不开，这是正常的。复制地址栏里的完整地址，粘贴回终端并回车即可。
 - 使用：`search("...", engines=["codex"])`。不写 `engines` 时它永远不会自动参与搜索。
+- 模型：默认 `latest`，跟随套餐的模型目录，用最新一代里最轻的、能搜索且未退役的模型
+  （2026-09-26 为 gpt-6-luna；同一代三个模型的搜索结果相同，最轻的最快、最省额度）。
+  新一代模型上线后自动跟上。写具体模型名则固定使用该模型。
 - 网络受限地区：登录和搜索都会走 `SEARCH_MCP_PROXY` 设置的代理。
-- 为什么没有 Antigravity：Antigravity 的服务条款明确禁止第三方工具使用它的 OAuth
-  登录，Google 会因此封禁账号（连带 Gemini CLI）。Gemini API 的 Google 搜索
-  grounding 条款也禁止把结果链接抽取出来缓存或建索引。所以这里不提供 Google 的对应功能。
+- Google 的对应功能：另有一个 `antigravity` 引擎，用 Antigravity IDE 的登录调用
+  Google 搜索。它违反 Google 的 Antigravity 条款，有封号风险（连带 Gemini CLI），
+  使用前务必先读 [ANTIGRAVITY_SEARCH.md](ANTIGRAVITY_SEARCH.md)。
 
 ## Sign in
 
@@ -120,7 +123,7 @@ resets. Neither counts as an engine failure in the circuit breaker.
 
 | Var | Default | Meaning |
 |---|---|---|
-| `SEARCH_MCP_CODEX_MODEL` | `gpt-6-luna` | the model the search runs under; any model the plan offers |
+| `SEARCH_MCP_CODEX_MODEL` | `latest` | the model the search runs under; `latest` follows the plan's catalogue (below), any model name the plan offers pins it |
 | `SEARCH_MCP_CODEX_REASONING_EFFORT` | `low` | only used by the fallback below |
 | `SEARCH_MCP_CODEX_TIMEOUT` | `60` | seconds for one search |
 | `SEARCH_MCP_CODEX_BASE_URL` | `https://chatgpt.com/backend-api/codex` | the Codex backend |
@@ -143,16 +146,22 @@ The engine calls the Codex backend the way the current Codex CLI does
    every result URL comes from a citation the search attached to its line. A
    URL that appears only in the model's own words is dropped.
 
+With `SEARCH_MCP_CODEX_MODEL=latest`, the engine reads the plan's model
+catalogue (`GET /models`) at most every six hours and uses the newest
+generation's lightest model that can search and is not being retired
+(`gpt-6-luna` on 2026-09-26). The three GPT-6 models returned the same results
+for the same searches, so the lightest one, the fastest and the one that spends
+least of the plan, is the one used; a new generation is used as soon as the
+catalogue lists it. The backend lists a model only to clients new enough for
+it, so the catalogue is asked as the newer of the Codex CLI installed on the
+machine and 0.155.0. When the catalogue cannot be read, `gpt-6-luna` is used.
+
 This is an undocumented backend that OpenAI can change at any time. When it
 changes, the engine returns an error and the keyless engines are unaffected.
 
-## Why there is no Antigravity engine
+## Google's counterpart
 
-Google's Antigravity terms say: "Using third party software, tools, or services
-to access the Service (e.g. using OpenClaw with Antigravity OAuth) is a breach
-of this Agreement. Such actions may be grounds for suspension or termination of
-your Antigravity and/or Gemini CLI accounts." Google has suspended accounts for
-exactly this. The supported alternative, Grounding with Google Search on the
-Gemini API, forbids caching grounded results and using automated means to
-collect their links, which is what a search engine in this server would have
-to do. So this server does not offer either.
+There is an `antigravity` engine that runs Google Search on the sign-in of
+Google's Antigravity IDE. Google's terms forbid that use of the sign-in and
+Google has suspended accounts for it, so it never opens a sign-in by itself.
+Read [ANTIGRAVITY_SEARCH.md](ANTIGRAVITY_SEARCH.md) before using it.

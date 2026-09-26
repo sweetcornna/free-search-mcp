@@ -1188,7 +1188,7 @@ Available settings:
 | `SEARCH_MCP_TOOLS` | *(empty)* | comma/space separated allow-list of tool names; empty registers all of them |
 | `SEARCH_MCP_TOOL_CALL_BUDGET` | `0` | tool calls this process runs before it answers "budget used up" instead; `0` = no cap. Meant for a server started for one job |
 | `SEARCH_MCP_AGENT_*` | off | the optional answer agent; see [Delegating a lookup](#delegating-a-lookup) |
-| `SEARCH_MCP_CODEX_MODEL` | `gpt-6-luna` | model for the opt-in `codex` engine; see [search on your ChatGPT plan](#optional-search-on-your-chatgpt-plan-codex) |
+| `SEARCH_MCP_CODEX_MODEL` | `latest` | model for the opt-in `codex` engine (`latest` follows the plan's catalogue); see [search on your ChatGPT plan](#optional-search-on-your-chatgpt-plan-codex) |
 | `SEARCH_MCP_CODEX_TIMEOUT` | `60` | seconds for one `codex` search |
 | `SEARCH_MCP_CODEX_REASONING_EFFORT` | `low` | `low` / `medium` / `high`; used only when the backend has no search endpoint |
 | `SEARCH_MCP_CODEX_BASE_URL` | `https://chatgpt.com/backend-api/codex` | the Codex backend |
@@ -1268,11 +1268,31 @@ finishes the search once you approve it (stdio on a desktop only;
   named before a sign-in it returns an error, not results. The sign-in and the
   searches honour `SEARCH_MCP_PROXY`.
 
-There is no Antigravity equivalent. Google's Antigravity terms call any
-third-party use of Antigravity OAuth a breach and Google suspends accounts for
-it, and the Gemini API's search-grounding terms forbid collecting and caching
-the links. The full guide, with a Chinese summary (中文速览), is
+The full guide, with a Chinese summary (中文速览), is
 [docs/CODEX_SEARCH.md](docs/CODEX_SEARCH.md).
+
+### Optional, at your own risk: Google Search on an Antigravity sign-in (`antigravity`)
+
+The opt-in `antigravity` engine runs Google Search through a Gemini model on
+the sign-in of Google's Antigravity IDE, drawing on that account's Antigravity
+quota. Google's Antigravity terms forbid using that sign-in from third-party
+tools and name suspension of the Antigravity and Gemini CLI accounts as the
+consequence, and Google has suspended accounts for it. The backend only
+answers requests that identify as Antigravity, so this engine sends
+Antigravity's user agent. Use it only with an account you accept that risk for.
+
+```bash
+uvx --from free-search-mcp search-mcp-login antigravity   # prints the warning, then the Google sign-in
+```
+
+Then name it: `search("...", engines=["antigravity"])`. It never opens a
+sign-in page by itself, and like `codex` it is in no pool and no route. Every
+result URL comes from Google Search's own results, never from the model's
+text. The sign-in reads Antigravity's OAuth client from the Antigravity install
+on the machine; where Antigravity is not installed, set
+`SEARCH_MCP_ANTIGRAVITY_CLIENT_ID` and `SEARCH_MCP_ANTIGRAVITY_CLIENT_SECRET`.
+The guide, with a Chinese summary, is
+[docs/ANTIGRAVITY_SEARCH.md](docs/ANTIGRAVITY_SEARCH.md).
 
 ## Architecture
 

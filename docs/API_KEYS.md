@@ -17,7 +17,9 @@ wants to point this server at it by hand. Two rules hold throughout:
 
 `codex` is opt-in on the same terms but runs on the operator's ChatGPT
 sign-in instead of a key (`search-mcp-login codex`). It is covered in
-[CODEX_SEARCH.md](CODEX_SEARCH.md).
+[CODEX_SEARCH.md](CODEX_SEARCH.md). `antigravity` does the same on a Google
+Antigravity sign-in, against Google's terms; read
+[ANTIGRAVITY_SEARCH.md](ANTIGRAVITY_SEARCH.md) first.
 
 Three keyless engines (`anysearch`, `stackexchange`, `semanticscholar`) accept
 an optional credential that changes only their limits. A GitHub token does the
