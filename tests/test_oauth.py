@@ -12,6 +12,7 @@ import json
 import os
 import socket
 import stat
+import subprocess
 import time
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
@@ -906,8 +907,9 @@ def install(tmp_path, monkeypatch):
     """A binary laid out like Antigravity's: two Google clients, the IDs apart
     from the secrets, the secrets back to back."""
     binary = tmp_path / "language_server"
+    # Strings sit back to back there, so digits may run into an ID.
     binary.write_bytes(
-        b"\x00" * 4096 + _OTHER_ID.encode() + b"\x00go.string" + _G_ID.encode()
+        b"\x00" * 4096 + _OTHER_ID.encode() + b"\x00proto3.21.12" + _G_ID.encode()
         + b"\x00" * 4096 + _G_SECRET.encode() + _OTHER_SECRET.encode() + b"\x00" * 64
     )
     monkeypatch.setattr(oauth, "antigravity_install_paths", lambda: [binary])
@@ -942,6 +944,16 @@ def test_an_install_without_the_known_client_is_named(install, monkeypatch):
     assert "SEARCH_MCP_ANTIGRAVITY_CLIENT_SECRET" in message
 
 
+def test_an_install_that_cannot_be_read_is_not_called_a_new_version(install, tmp_path,
+                                                                    monkeypatch):
+    folder = tmp_path / "language_server_x"
+    folder.mkdir()
+    monkeypatch.setattr(oauth, "antigravity_install_paths", lambda: [folder])
+    with pytest.raises(oauth.OAuthError, match="could not be read") as caught:
+        oauth.antigravity_client()
+    assert str(folder) in str(caught.value) and "changed" not in str(caught.value)
+
+
 async def test_without_a_client_the_sign_in_stops_before_its_page(monkeypatch):
     opened: list[str] = []
     with pytest.raises(oauth.OAuthError) as caught:
@@ -955,11 +967,15 @@ async def test_without_a_client_the_sign_in_stops_before_its_page(monkeypatch):
 
 def test_the_repository_carries_no_google_client():
     root = Path(__file__).resolve().parents[1]
-    files = [root / name for name in ("README.md", "CHANGELOG.md", ".env.example")]
-    for folder in ("src", "docs", "tests"):
-        files += [p for p in (root / folder).rglob("*") if p.is_file() and "__pycache__"
-                  not in p.parts]
-    for path in files:
+    listed = subprocess.run(["git", "ls-files", "-z"], cwd=root, capture_output=True,
+                            check=False)
+    if listed.returncode != 0:
+        pytest.skip("not a git checkout")
+    names = [name for name in listed.stdout.decode().split("\0") if name]
+    assert "src/search_mcp/oauth.py" in names
+    for path in (root / name for name in names):
+        if not path.is_file():
+            continue
         data = path.read_bytes()
         assert not oauth._GOOGLE_CLIENT_ID.search(data), path
         assert not oauth._GOOGLE_CLIENT_SECRET.search(data), path

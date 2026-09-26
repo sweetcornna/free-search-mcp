@@ -68,6 +68,8 @@ def test_the_antigravity_card_takes_a_client_and_never_shows_it(client):
     assert 'data-key="antigravity_client_id"' in card
     assert 'data-key="antigravity_client_secret"' in card
     assert "SAVED-ID" not in page and "SAVED-SECRET" not in page
+    # A set value outranks the install, so the card says it is set.
+    assert card.count("set, not shown") == 2
     # The Codex card has no client to set.
     codex = page[page.index('data-oauth="codex"'):page.index('data-oauth="antigravity"')]
     assert "data-key=" not in codex

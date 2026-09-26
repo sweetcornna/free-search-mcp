@@ -537,16 +537,22 @@ _CATALOGUE = [
 ]
 
 
+# The next generation, listed: `latest` has to move to it.
+_NEWER = _CATALOGUE + [
+    {"slug": "gpt-7-nova", "visibility": "list", "priority": 1},
+    {"slug": "gpt-7-mini", "visibility": "list", "priority": 2},
+]
+
+
 def test_latest_is_the_newest_generations_lightest_model():
     from search_mcp.engines.codex import pick_model
 
     assert pick_model(_CATALOGUE) == "gpt-6-luna"
     # A new generation is taken as soon as it is listed.
-    newer = _CATALOGUE + [
-        {"slug": "gpt-7-nova", "visibility": "list", "priority": 1},
-        {"slug": "gpt-7-mini", "visibility": "list", "priority": 2},
-    ]
-    assert pick_model(newer) == "gpt-7-mini"
+    assert pick_model(_NEWER) == "gpt-7-mini"
+    # Without priorities, the lightest is the one listed last.
+    assert pick_model([{"slug": "gpt-9-max", "visibility": "list"},
+                       {"slug": "gpt-9-mini", "visibility": "list"}]) == "gpt-9-mini"
     # Not a model on its way out, one that cannot search, or a hidden one.
     assert pick_model([{"slug": "gpt-8", "visibility": "list", "upgrade": {"model": "x"}},
                        {"slug": "gpt-8-a", "visibility": "list",
@@ -575,19 +581,91 @@ def latest(monkeypatch):
     monkeypatch.setattr(codex_module, "_latest", {})
 
 
+def _listings(calls: list[httpx.Request]) -> list[httpx.Request]:
+    return [c for c in calls if c.url.path.endswith("/models")]
+
+
+def _search_models(calls: list[httpx.Request]) -> list[str]:
+    return [json.loads(c.content)["model"] for c in calls
+            if c.url.path.endswith("/alpha/search")]
+
+
 async def test_latest_searches_with_the_catalogue_pick_and_asks_once(backend, latest):
     routes, calls = backend
-    routes["/models"] = httpx.Response(200, json={"models": _CATALOGUE})
+    routes["/models"] = httpx.Response(200, json={"models": _NEWER})
     routes["/alpha/search"] = httpx.Response(200, json=_SEARCH_REPLY)
     _sign_in()
 
     await CodexEngine().search("q1", 5)
     await CodexEngine().search("q2", 5)
 
-    listing = [c for c in calls if c.url.path.endswith("/models")]
+    listing = _listings(calls)
     assert len(listing) == 1 and listing[0].url.params["client_version"]
-    searches = [json.loads(c.content) for c in calls if c.url.path.endswith("/alpha/search")]
-    assert [s["model"] for s in searches] == ["gpt-6-luna", "gpt-6-luna"]
+    assert _search_models(calls) == ["gpt-7-mini", "gpt-7-mini"]
+
+
+async def test_the_catalogue_is_read_again_when_its_answer_expires(backend, latest):
+    from search_mcp.engines import codex as codex_module
+
+    routes, calls = backend
+    routes["/models"] = httpx.Response(503, json={"detail": "down"})
+    routes["/alpha/search"] = httpx.Response(200, json=_SEARCH_REPLY)
+    _sign_in()
+
+    await CodexEngine().search("q1", 5)
+    # A failed lookup is kept for five minutes.
+    expires, _ = codex_module._latest["acct-1"]
+    assert 290 < expires - time.monotonic() <= 300
+    codex_module._latest["acct-1"] = (time.monotonic() - 1, "gpt-6-luna")
+    routes["/models"] = httpx.Response(200, json={"models": _NEWER})
+    await CodexEngine().search("q2", 5)
+    # A good one for six hours.
+    expires, _ = codex_module._latest["acct-1"]
+    assert 6 * 3600 - 10 < expires - time.monotonic() <= 6 * 3600
+    # Each account has its own.
+    _sign_in(account_id="acct-2")
+    await CodexEngine().search("q3", 5)
+
+    assert len(_listings(calls)) == 3
+    assert _search_models(calls) == ["gpt-6-luna", "gpt-7-mini", "gpt-7-mini"]
+
+
+async def test_a_pick_the_service_refuses_is_looked_up_again(backend, latest):
+    routes, calls = backend
+    routes["/models"] = httpx.Response(200, json={"models": _NEWER})
+    routes["/alpha/search"] = httpx.Response(
+        400, json={"detail": "The 'gpt-7-mini' model is not supported with this account."}
+    )
+    _sign_in()
+
+    with pytest.raises(EngineKeyError, match="the catalogue's pick") as caught:
+        await CodexEngine().search("q1", 5)
+    assert "or to latest" not in str(caught.value)
+    routes["/alpha/search"] = httpx.Response(200, json=_SEARCH_REPLY)
+    await CodexEngine().search("q2", 5)
+
+    assert len(_listings(calls)) == 2
+
+
+async def test_a_refused_token_on_the_catalogue_is_refreshed_not_worked_around(backend, latest,
+                                                                              monkeypatch):
+    routes, calls = backend
+    listings = iter([httpx.Response(401, json={"detail": "Unauthorized"}),
+                     httpx.Response(200, json={"models": _NEWER})])
+    routes["/models"] = lambda request: next(listings)
+    routes["/alpha/search"] = httpx.Response(200, json=_SEARCH_REPLY)
+    forced: list[bool] = []
+
+    async def credential(provider_id, *, force_refresh=False):
+        forced.append(force_refresh)
+        return oauth.Credential(provider="codex", access_token="NEW" if force_refresh else "OLD",
+                                account_id="acct-1", expires_at=time.time() + 3600)
+
+    monkeypatch.setattr(oauth, "credential", credential)
+    assert await CodexEngine().search("q", 5)
+
+    assert forced == [False, True]
+    assert _search_models(calls) == ["gpt-7-mini"]
 
 
 async def test_an_unreadable_catalogue_falls_back_and_the_search_still_runs(backend, latest):

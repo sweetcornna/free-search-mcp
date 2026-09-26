@@ -75,6 +75,10 @@ class _Unauthorized(Exception):
     """The backend refused the access token; refresh once and retry."""
 
 
+class _ModelRefused(EngineKeyError):
+    """The service refused the model the search ran on."""
+
+
 # --- the request ------------------------------------------------------------------
 
 
@@ -313,15 +317,19 @@ def _http_failure(status: int, raw: str, model: str = "") -> Exception:
             "release. It can also mean Google has restricted the account.)"
         )
     if status in (400, 404):
-        hint = ""
-        if "model" in detail.lower():
+        message = f"antigravity: the service refused the request (HTTP {status}{suffix})."
+        if "model" not in detail.lower():
+            return EngineKeyError(message)
+        if _follows_catalogue():
+            hint = (f" (Operator note: the search ran on {model!r}, the catalogue's pick; the "
+                    "next search reads the catalogue again. SEARCH_MCP_ANTIGRAVITY_MODEL can "
+                    "name a model in the account's Antigravity catalogue instead.)")
+        else:
             hint = (f" (Operator note: the search ran on "
                     f"{model or settings.antigravity_model!r}; set "
                     "SEARCH_MCP_ANTIGRAVITY_MODEL to a model in the account's Antigravity "
                     "catalogue, or to latest.)")
-        return EngineKeyError(
-            f"antigravity: the service refused the request (HTTP {status}{suffix}).{hint}"
-        )
+        return _ModelRefused(message + hint)
     return RuntimeError(f"antigravity: the service answered HTTP {status}{suffix}")
 
 
@@ -332,8 +340,12 @@ def _http_failure(status: int, raw: str, model: str = "") -> Exception:
 _FALLBACK_MODEL = "gemini-3.8-flash-tiered"
 _CATALOGUE_TTL = 6 * 3600.0
 _FLASH = re.compile(r"^gemini-(\d+(?:\.\d+)?)-flash(?:-[a-z-]+)?$")
-# `(expires, (first, second))`, per process.
+# `(expires, (first, second))` per Cloud Code project, per process.
 _latest: dict[str, tuple[float, tuple[str, str]]] = {}
+
+
+def _follows_catalogue() -> bool:
+    return settings.antigravity_model.strip().lower() == "latest"
 
 
 def _first(value: Any) -> str:
@@ -348,7 +360,8 @@ def pick_models(catalogue: Any) -> tuple[str, str]:
 
     The first is the catalogue's current flash model (`tieredModelIds.flash`),
     or failing that the newest recommended `gemini-N-flash` that is not a lite
-    or image model. The second is the model Antigravity runs its own web
+    or image model, nor a `-low` one (gemini-3.5-flash-low never searched in
+    testing). The second is the model Antigravity runs its own web
     search on (`webSearchModelIds`): faster, and it searched where a flash
     model did not, though less often overall (6 queries in 8 against 8).
     """
@@ -361,6 +374,7 @@ def pick_models(catalogue: Any) -> tuple[str, str]:
         for name, info in models.items():
             match = _FLASH.match(name) if isinstance(name, str) else None
             if (match and "lite" not in name and "image" not in name
+                    and not name.endswith("-low")
                     and isinstance(info, dict) and info.get("recommended")):
                 flash.append((tuple(int(p) for p in match.group(1).split(".")), name))
         first = max(flash)[1] if flash else ""
@@ -445,9 +459,19 @@ class AntigravityEngine(Engine):
     ) -> list[Hit]:
         # A model may answer from memory instead of searching; ask once more,
         # with `latest` of the model Antigravity searches with.
-        for model in await self._models(client, cred):
+        first, second = await self._models(client, cred)
+        for model in (first, second):
             body = request_body(query, max_results, filters, cred.account_id, model)
-            hits = hits_from_reply(await self._generate(client, cred, body, model))
+            try:
+                reply = await self._generate(client, cred, body, model)
+            except _ModelRefused:
+                # A pick the service refuses is not kept for six hours, and
+                # the other pick may still be served.
+                _latest.pop(cred.account_id, None)
+                if model == second or first == second:
+                    raise
+                continue
+            hits = hits_from_reply(reply)
             if hits:
                 return hits
         return []
@@ -456,11 +480,12 @@ class AntigravityEngine(Engine):
         self, client: httpx.AsyncClient, cred: oauth.Credential
     ) -> tuple[str, str]:
         """The two models `_grounded` asks: the configured one twice, or with
-        `latest`, `pick_models` of the catalogue, looked up once per six hours."""
-        if settings.antigravity_model.strip().lower() != "latest":
+        `latest`, `pick_models` of the catalogue, looked up once per six hours
+        for each project."""
+        if not _follows_catalogue():
             return settings.antigravity_model, settings.antigravity_model
         now = time.monotonic()
-        cached = _latest.get("models")
+        cached = _latest.get(cred.account_id)
         if cached is not None and cached[0] > now:
             return cached[1]
         picked = ("", "")
@@ -471,6 +496,8 @@ class AntigravityEngine(Engine):
                     json={"project": cred.account_id},
                     headers=oauth.antigravity_headers(cred.access_token),
                 )
+                if response.status_code == 401:
+                    raise _Unauthorized
                 if response.status_code == 200:
                     picked = pick_models(response.json())
             except (httpx.HTTPError, ValueError):
@@ -479,9 +506,9 @@ class AntigravityEngine(Engine):
                 break
         if not picked[0]:
             # A failed lookup is tried again in five minutes, not six hours.
-            _latest["models"] = (now + 300.0, (_FALLBACK_MODEL, _FALLBACK_MODEL))
+            _latest[cred.account_id] = (now + 300.0, (_FALLBACK_MODEL, _FALLBACK_MODEL))
             return _FALLBACK_MODEL, _FALLBACK_MODEL
-        _latest["models"] = (now + _CATALOGUE_TTL, picked)
+        _latest[cred.account_id] = (now + _CATALOGUE_TTL, picked)
         return picked
 
     async def _generate(

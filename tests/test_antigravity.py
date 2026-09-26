@@ -62,7 +62,8 @@ def backend(monkeypatch):
             if request.url.host == "vertexaisearch.cloud.google.com":
                 return _redirect(request)
             if request.url.path.endswith(":fetchAvailableModels"):
-                return state["catalogue"]
+                listing = state["catalogue"]
+                return listing(request) if callable(listing) else listing
             reply = state["generate"]
             return reply(request) if callable(reply) else reply
 
@@ -421,6 +422,10 @@ def test_latest_is_the_catalogues_flash_model_then_its_search_model():
     # Without the pointer, the newest recommended flash that is not lite or image.
     bare = {"models": CATALOGUE["models"]}
     assert pick_models(bare) == ("gemini-3.8-flash-tiered", "gemini-3.8-flash-tiered")
+    # Nor a `-low` one, the kind that never searched.
+    same = {"models": {"gemini-3.9-flash-high": {"recommended": True},
+                       "gemini-3.9-flash-low": {"recommended": True}}}
+    assert pick_models(same)[0] == "gemini-3.9-flash-high"
     assert pick_models({}) == pick_models(None) == ("", "")
 
 
@@ -460,3 +465,76 @@ async def test_an_unreadable_catalogue_falls_back_and_the_search_still_runs(back
 
     assert await AntigravityEngine().search("q", 5)
     assert json.loads(_generated(calls)[0].content)["model"] == _FALLBACK_MODEL
+
+
+def _listings(calls: list[httpx.Request]) -> list[httpx.Request]:
+    return [c for c in calls if c.url.path.endswith(":fetchAvailableModels")]
+
+
+async def test_a_refused_pick_hands_over_to_the_other_and_is_looked_up_again(backend, latest):
+    state, calls = backend
+    state["catalogue"] = httpx.Response(200, json=CATALOGUE)
+    replies = iter([_error(400, "Model gemini-3.8-flash-tiered is not found for this project."),
+                    httpx.Response(200, json=GROUNDED), httpx.Response(200, json=GROUNDED)])
+    state["generate"] = lambda request: next(replies)
+    _sign_in()
+
+    assert await AntigravityEngine().search("q1", 5)
+    assert await AntigravityEngine().search("q2", 5)
+
+    models = [json.loads(c.content)["model"] for c in _generated(calls)]
+    assert models == ["gemini-3.8-flash-tiered", "gemini-3.1-flash-lite",
+                      "gemini-3.8-flash-tiered"]
+    assert len(_listings(calls)) == 2
+
+
+async def test_a_refused_pinned_model_is_reported_once(backend):
+    state, calls = backend
+    state["generate"] = _error(404, "Requested entity was not found: model gemini-x.")
+    _sign_in()
+
+    with pytest.raises(EngineKeyError, match="or to latest"):
+        await AntigravityEngine().search("q", 5)
+    assert len(_generated(calls)) == 1
+
+
+async def test_each_project_has_its_own_catalogue_answer(backend, latest):
+    from search_mcp.engines import antigravity as antigravity_module
+
+    state, calls = backend
+    state["catalogue"] = _error(503, "unavailable")
+    state["generate"] = httpx.Response(200, json=GROUNDED)
+    _sign_in()
+
+    await AntigravityEngine().search("q1", 5)
+    # A failed lookup is kept for five minutes, a good one for six hours.
+    expires, _ = antigravity_module._latest["proj-9"]
+    assert 290 < expires - time.monotonic() <= 300
+    state["catalogue"] = httpx.Response(200, json=CATALOGUE)
+    _sign_in(account_id="proj-10")
+    await AntigravityEngine().search("q2", 5)
+    expires, _ = antigravity_module._latest["proj-10"]
+    assert 6 * 3600 - 10 < expires - time.monotonic() <= 6 * 3600
+
+    assert [json.loads(c.content) for c in _listings(calls)][-1] == {"project": "proj-10"}
+
+
+async def test_a_refused_token_on_the_catalogue_is_refreshed(backend, latest, monkeypatch):
+    state, calls = backend
+    listings = iter([_error(401, "Request had invalid authentication credentials."),
+                     httpx.Response(200, json=CATALOGUE)])
+    state["catalogue"] = lambda request: next(listings)
+    state["generate"] = httpx.Response(200, json=GROUNDED)
+    forced: list[bool] = []
+
+    async def credential(provider_id, *, force_refresh=False):
+        forced.append(force_refresh)
+        return oauth.Credential(provider="antigravity",
+                                access_token="NEW" if force_refresh else "OLD",
+                                account_id="proj-9", expires_at=time.time() + 3600)
+
+    monkeypatch.setattr(oauth, "credential", credential)
+    assert await AntigravityEngine().search("q", 5)
+
+    assert forced == [False, True]
+    assert json.loads(_generated(calls)[0].content)["model"] == "gemini-3.8-flash-tiered"

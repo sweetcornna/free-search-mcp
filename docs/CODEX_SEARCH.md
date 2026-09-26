@@ -154,7 +154,10 @@ for the same searches, so the lightest one, the fastest and the one that spends
 least of the plan, is the one used; a new generation is used as soon as the
 catalogue lists it. The backend lists a model only to clients new enough for
 it, so the catalogue is asked as the newer of the Codex CLI installed on the
-machine and 0.155.0. When the catalogue cannot be read, `gpt-6-luna` is used.
+machine and 0.155.0. When the catalogue cannot be read, `gpt-6-luna` is used
+and the catalogue is asked again five minutes later. Each ChatGPT account has
+its own lookup, and a model the service refuses is not kept: that search
+returns the refusal and the next one reads the catalogue again.
 
 This is an undocumented backend that OpenAI can change at any time. When it
 changes, the engine returns an error and the keyless engines are unaffected.

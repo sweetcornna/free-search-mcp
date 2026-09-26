@@ -266,11 +266,19 @@ def _render_client_fields(spec: oauth.OAuthProvider) -> str:
     Saved like a provider key (``/api/save``) and never echoed back."""
     if spec.id != oauth.ANTIGRAVITY.id:
         return ""
+
+    def placeholder(field: keystore.ProviderField) -> str:
+        # A value that is set wins over the install, so say that it is set
+        # (never what it is).
+        if keystore.get_secret(field.key) is not None:
+            return "set, not shown · 已设置（不显示）"
+        return field.placeholder
+
     inputs = "".join(
         f'<label class="field">'
         f'<span class="field-label">{_bilingual(f.label, _FIELD_ZH.get(f.key))}</span>'
         f'<input type="{"password" if f.secret else "text"}" data-key="{_esc(f.key)}" '
-        f'placeholder="{_esc(f.placeholder)}" autocomplete="off" spellcheck="false" />'
+        f'placeholder="{_esc(placeholder(f))}" autocomplete="off" spellcheck="false" />'
         f"</label>"
         for f in keystore.ANTIGRAVITY_CLIENT_FIELDS
     )

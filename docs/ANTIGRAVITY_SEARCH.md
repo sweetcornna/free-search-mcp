@@ -147,7 +147,10 @@ itself names there, so a new model is used as soon as Google ships it:
 - When that model answers without searching, the search is asked once more of
   the model Antigravity runs its own web search on (`webSearchModelIds`;
   `gemini-3.1-flash-lite` then).
-- When the catalogue cannot be read, `gemini-3.8-flash-tiered` is used.
+- When the catalogue cannot be read, `gemini-3.8-flash-tiered` is used and the
+  catalogue is asked again five minutes later.
+- When the service refuses the model the catalogue named, the search goes to
+  the other one, and the next search reads the catalogue again.
 
 The model matters because some do not search. On 2026-09-26, with the engine's
 own request over 8 queries, the flash model searched 8 times out of 8 (10 s

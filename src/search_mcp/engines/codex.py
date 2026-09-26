@@ -92,6 +92,10 @@ class _Unsupported(Exception):
     """This deployment has no structured search endpoint; use /responses."""
 
 
+class _ModelRefused(EngineKeyError):
+    """The service refused the model the search ran on."""
+
+
 @dataclass
 class Hit:
     """One grounded page: a URL the search returned, and what is known of it."""
@@ -399,8 +403,12 @@ _FALLBACK_MODEL = "gpt-6-luna"
 _CLIENT_VERSION_FLOOR = "0.155.0"
 _CATALOGUE_TTL = 6 * 3600.0
 _GENERATION = re.compile(r"^gpt-(\d+(?:\.\d+)?)(?:-|$)")
-# `(expires, model)`, per process.
+# `(expires, model)` per ChatGPT account, per process.
 _latest: dict[str, tuple[float, str]] = {}
+
+
+def _follows_catalogue() -> bool:
+    return settings.codex_model.strip().lower() == "latest"
 
 
 def _semver(text: str) -> tuple[int, ...]:
@@ -427,10 +435,11 @@ def pick_model(models: Any) -> str:
     generation the catalogue lists the frontier model first and the fast,
     affordable one last; a search returned the same results on each of the
     three GPT-6 models, so the last one, which answers fastest and spends the
-    least of the plan, is the one used.
+    least of the plan, is the one used. That is the highest `priority`, and
+    among equal or missing priorities the one listed last.
     """
-    usable: list[tuple[tuple[int, ...], float, str]] = []
-    for model in models if isinstance(models, list) else []:
+    usable: list[tuple[tuple[int, ...], float, int, str]] = []
+    for index, model in enumerate(models if isinstance(models, list) else []):
         if not isinstance(model, dict):
             continue
         slug = model.get("slug")
@@ -440,11 +449,11 @@ def pick_model(models: Any) -> str:
             continue
         priority = model.get("priority")
         usable.append((_semver(match.group(1)),
-                       priority if isinstance(priority, (int, float)) else 0, slug))
+                       priority if isinstance(priority, (int, float)) else 0, index, slug))
     if not usable:
         return ""
-    newest = max(generation for generation, _, _ in usable)
-    return max((u for u in usable if u[0] == newest), key=lambda u: u[1])[2]
+    newest = max(u[0] for u in usable)
+    return max((u for u in usable if u[0] == newest), key=lambda u: (u[1], u[2]))[3]
 
 
 # --- shared ---------------------------------------------------------------------------
@@ -507,13 +516,17 @@ def _http_failure(status: int, raw: str, model: str = "") -> Exception:
         # Configuration: a model the plan does not include, a workspace the
         # service has not enabled. Waiting does not fix it, so it is not a
         # health failure (EngineKeyError is a ValueError).
-        hint = ""
-        if "model" in detail.lower():
+        message = f"codex: the service refused the request (HTTP {status}{suffix})."
+        if "model" not in detail.lower():
+            return EngineKeyError(message)
+        if _follows_catalogue():
+            hint = (f" (Operator note: the search ran on {model!r}, the catalogue's pick; the "
+                    "next search reads the catalogue again. SEARCH_MCP_CODEX_MODEL can name a "
+                    "model the plan offers instead.)")
+        else:
             hint = (f" (Operator note: the search ran on {model or settings.codex_model!r}; "
                     "set SEARCH_MCP_CODEX_MODEL to a model the plan offers, or to latest.)")
-        return EngineKeyError(
-            f"codex: the service refused the request (HTTP {status}{suffix}).{hint}"
-        )
+        return _ModelRefused(message + hint)
     return RuntimeError(f"codex: the service answered HTTP {status}{suffix}")
 
 
@@ -623,18 +636,24 @@ class CodexEngine(Engine):
         model = await self._model(client, cred)
         session = oauth.new_session_id()
         try:
-            return await self._search_endpoint(client, cred, query, filters, session, model)
-        except _Unsupported:
-            prompt = build_prompt(query, max_results, filters)
-            return await self._responses(client, cred, prompt, filters, session, model)
+            try:
+                return await self._search_endpoint(client, cred, query, filters, session, model)
+            except _Unsupported:
+                prompt = build_prompt(query, max_results, filters)
+                return await self._responses(client, cred, prompt, filters, session, model)
+        except _ModelRefused:
+            # A pick the service refuses is not kept for six hours.
+            _latest.pop(cred.account_id, None)
+            raise
 
     async def _model(self, client: httpx.AsyncClient, cred: oauth.Credential) -> str:
         """The model named by SEARCH_MCP_CODEX_MODEL, or with `latest`, the
-        catalogue's newest (see `pick_model`), looked up once per six hours."""
-        if settings.codex_model.strip().lower() != "latest":
+        catalogue's newest (see `pick_model`), looked up once per six hours
+        for each account."""
+        if not _follows_catalogue():
             return settings.codex_model
         now = time.monotonic()
-        cached = _latest.get("model")
+        cached = _latest.get(cred.account_id)
         if cached is not None and cached[0] > now:
             return cached[1]
         slug = ""
@@ -644,12 +663,15 @@ class CodexEngine(Engine):
                 params={"client_version": client_version()},
                 headers=self._headers(cred, oauth.new_session_id(), stream=False),
             )
+            if response.status_code == 401:
+                raise _Unauthorized
             if response.status_code == 200:
                 slug = pick_model(response.json().get("models"))
         except (httpx.HTTPError, ValueError, AttributeError):
             pass
         # A failed lookup is tried again in five minutes, not six hours.
-        _latest["model"] = (now + (_CATALOGUE_TTL if slug else 300.0), slug or _FALLBACK_MODEL)
+        _latest[cred.account_id] = (now + (_CATALOGUE_TTL if slug else 300.0),
+                                    slug or _FALLBACK_MODEL)
         return slug or _FALLBACK_MODEL
 
     def _headers(self, cred: oauth.Credential, session: str, *, stream: bool) -> dict[str, str]:

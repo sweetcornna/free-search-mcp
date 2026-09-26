@@ -256,13 +256,22 @@ def _strings_near(
 
 
 def _client_in(path: Path) -> tuple[str, str] | None:
-    """Antigravity's client ID and secret, when `path` carries them."""
+    """Antigravity's client ID and secret, when `path` carries them.
+
+    Raises `OSError` when `path` cannot be read.
+    """
     try:
         with path.open("rb") as fh, mmap.mmap(fh.fileno(), 0, access=mmap.ACCESS_READ) as data:
-            ids = _strings_near(data, b".apps.googleusercontent.com", _GOOGLE_CLIENT_ID, 64, 27)
+            found = _strings_near(data, b".apps.googleusercontent.com", _GOOGLE_CLIENT_ID, 64, 27)
             found_secrets = _strings_near(data, b"GOCSPX-", _GOOGLE_CLIENT_SECRET, 0, 35)
-    except (OSError, ValueError):
+    except ValueError:  # an empty file
         return None
+    # A binary's strings sit back to back, so digits before an ID read as
+    # part of its project number: every shorter start is a candidate too.
+    ids = set()
+    for candidate in found:
+        digits = len(candidate) - len(candidate.lstrip("0123456789"))
+        ids.update(candidate[start:] for start in range(digits - 5))
     want_id, want_secret = _ANTIGRAVITY_CLIENT_SHA256
 
     def pick(candidates: set[str], want: str) -> str:
@@ -288,15 +297,26 @@ def antigravity_client() -> tuple[str, str]:
             "them read from the Antigravity install on this machine."
         )
     paths = antigravity_install_paths()
+    read: list[str] = []
+    unreadable: list[str] = []
     for path in paths:
-        found = _client_in(path)
+        try:
+            found = _client_in(path)
+        except OSError as exc:
+            unreadable.append(f"{path} ({exc.strerror or type(exc).__name__})")
+            continue
         if found:
             return found
-    if paths:
+        read.append(str(path))
+    if read:
         where = (
-            f"the Antigravity install here ({', '.join(map(str, paths))}) does not carry "
-            "the client this version knows; a newer Antigravity may have changed it"
+            f"the Antigravity install here ({', '.join(read)}) does not carry the client "
+            "this version knows; a newer Antigravity may have changed it"
         )
+        if unreadable:
+            where += f" ({', '.join(unreadable)} could not be read)"
+    elif unreadable:
+        where = f"the Antigravity install here could not be read: {', '.join(unreadable)}"
     else:
         where = "no Antigravity install was found on this machine"
     raise OAuthError(
