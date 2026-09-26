@@ -386,3 +386,79 @@ async def test_the_aggregator_reports_an_unsigned_codex_as_an_error():
     out = await aggregate_search("anything at all", engines=["codex"], use_cache=False)
     assert out["results"] == []
     assert out["errors"]["codex"].startswith("codex not configured")
+
+
+# --- sign-in on first use ---------------------------------------------------------------
+
+
+@pytest.fixture
+def auto_signin(monkeypatch):
+    """The shipped default (conftest turns it off), on a machine with a browser."""
+    monkeypatch.setattr(settings, "codex_auto_signin", True)
+    monkeypatch.setattr(oauth, "can_open_browser", lambda: True)
+    asked: list[float] = []
+
+    def install(outcome):
+        async def sign_in(provider_id, wait_seconds):
+            asked.append(wait_seconds)
+            if isinstance(outcome, Exception):
+                raise outcome
+            oauth.save(outcome)
+            return outcome
+
+        monkeypatch.setattr(oauth, "sign_in_on_first_use", sign_in)
+        return asked
+
+    return install
+
+
+async def test_naming_it_unsigned_opens_the_sign_in_and_then_searches(backend, auto_signin):
+    routes, calls = backend
+    routes["/alpha/search"] = httpx.Response(200, json=_SEARCH_REPLY)
+    asked = auto_signin(oauth.Credential(provider="codex", access_token="FRESH",
+                                         account_id="acct-9", expires_at=time.time() + 3600))
+
+    results = await CodexEngine().search("asyncio taskgroup", 5)
+
+    assert asked == [settings.codex_signin_wait_seconds]
+    assert calls[0].headers["authorization"] == "Bearer FRESH"
+    assert calls[0].headers["chatgpt-account-id"] == "acct-9"
+    assert results
+
+
+async def test_an_unanswered_sign_in_says_so_and_how_to_retry(backend, auto_signin):
+    _, calls = backend
+    auto_signin(oauth.SignInPending("open and not yet approved"))
+    with pytest.raises(EngineKeyError) as excinfo:
+        await CodexEngine().search("q", 5)
+    message = str(excinfo.value)
+    assert "sign-in page was opened in the browser" in message
+    assert "use_cache=false" in message and "10 minutes" in message
+    assert calls == []
+
+
+async def test_a_failed_automatic_sign_in_falls_back_to_the_usual_error(backend, auto_signin):
+    auto_signin(oauth.OAuthError("no browser could be opened on this machine"))
+    with pytest.raises(EngineKeyError) as excinfo:
+        await CodexEngine().search("q", 5)
+    message = str(excinfo.value)
+    assert message.startswith("codex not configured")
+    assert "Automatic sign-in: no browser could be opened" in message
+
+
+@pytest.mark.parametrize(
+    "setup",
+    ["switched off", "http transport", "no browser"],
+)
+async def test_no_page_is_opened_where_nobody_would_see_it(backend, auto_signin, monkeypatch,
+                                                         setup):
+    asked = auto_signin(oauth.OAuthError("must not be called"))
+    if setup == "switched off":
+        monkeypatch.setattr(settings, "codex_auto_signin", False)
+    elif setup == "http transport":
+        monkeypatch.setattr(settings, "transport", "streamable-http")
+    else:
+        monkeypatch.setattr(oauth, "can_open_browser", lambda: False)
+    with pytest.raises(EngineKeyError, match="^codex not configured"):
+        await CodexEngine().search("q", 5)
+    assert asked == []

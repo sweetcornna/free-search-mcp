@@ -1192,6 +1192,8 @@ Available settings:
 | `SEARCH_MCP_CODEX_TIMEOUT` | `60` | seconds for one `codex` search |
 | `SEARCH_MCP_CODEX_REASONING_EFFORT` | `low` | `low` / `medium` / `high`; used only when the backend has no search endpoint |
 | `SEARCH_MCP_CODEX_BASE_URL` | `https://chatgpt.com/backend-api/codex` | the Codex backend |
+| `SEARCH_MCP_CODEX_AUTO_SIGNIN` | `true` | named with no sign-in stored, open the sign-in page in the local browser and finish the search once it is approved (stdio on a desktop only) |
+| `SEARCH_MCP_CODEX_SIGNIN_WAIT_SECONDS` | `45` | how long one search waits for that approval |
 
 ### Optional: bring your own key (manual)
 
@@ -1249,7 +1251,11 @@ uvx --from free-search-mcp search-mcp-login status
 ```
 
 (`uv run search-mcp-login codex` in a source checkout, or **Sign in / 登录** on
-the settings page.) Then name it: `search("...", engines=["codex"])`.
+the settings page.) Then name it: `search("...", engines=["codex"])`. You can
+also skip the sign-in step: the first time `codex` is named with no sign-in
+stored, the server opens the ChatGPT sign-in page in your browser by itself and
+finishes the search once you approve it (stdio on a desktop only;
+`SEARCH_MCP_CODEX_AUTO_SIGNIN=false` turns that off).
 
 - The tokens are stored at `~/.config/search-mcp/oauth/codex.json` (`0600`)
   and refreshed automatically.

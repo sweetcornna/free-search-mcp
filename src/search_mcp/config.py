@@ -239,6 +239,17 @@ class Settings(BaseSettings):
     codex_model: str = "gpt-6-luna"
     codex_reasoning_effort: Literal["low", "medium", "high"] = "low"
     codex_base_url: str = "https://chatgpt.com/backend-api/codex"
+    # Named with no sign-in stored, open the ChatGPT sign-in page in this
+    # machine's browser and carry on with the search once it is approved,
+    # instead of failing. Only over stdio (the server runs on the operator's
+    # desktop) and only where a desktop browser can be started. At most one
+    # unanswered page per server process: after one is closed or refused, the
+    # error points at `search-mcp-login codex` instead.
+    codex_auto_signin: bool = True
+    # How long one search waits for that approval. The page stays answerable
+    # for ten minutes, and a search that stops waiting leaves it open for the
+    # next. Kept under the 60 s tool timeout some hosts apply.
+    codex_signin_wait_seconds: float = Field(default=45.0, ge=0)
 
     # --- Safety / sandbox knobs -------------------------------------------
     # SSRF guard escape hatch: when False (default) URLs that resolve to

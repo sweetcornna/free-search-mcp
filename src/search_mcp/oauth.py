@@ -45,6 +45,8 @@ import inspect
 import json
 import os
 import secrets
+import shutil
+import subprocess
 import sys
 import tempfile
 import threading
@@ -558,6 +560,12 @@ def _page(ok: bool, detail: str = "") -> bytes:
     return _PAGE.format(title=title, body=body).encode()
 
 
+def state_matches(returned: str, expected: str) -> bool:
+    # ChatGPT may append an onboarding suffix to the state it returns. A prefix
+    # match keeps the check: the random part is still unguessable.
+    return bool(expected) and returned.startswith(expected)
+
+
 def read_redirect(params: dict[str, list[str]], state: str) -> str:
     """The authorization code from a redirect's query, after checking `state`."""
     def one(name: str) -> str:
@@ -574,9 +582,7 @@ def read_redirect(params: dict[str, list[str]], state: str) -> str:
             )
         raise OAuthError(f"the sign-in was not completed: {one('error')}"
                          + (f" ({detail})" if detail else ""))
-    # ChatGPT may append an onboarding suffix to the state it returns. A prefix
-    # match keeps the check: the random part is still unguessable.
-    if not state or not one("state").startswith(state):
+    if not state_matches(one("state"), state):
         raise OAuthError("the sign-in reply did not match this attempt (state mismatch); "
                          "start the sign-in again")
     code = one("code")
@@ -597,8 +603,11 @@ def parse_pasted(text: str, state: str) -> str:
 
 
 async def _serve_callback(
-    spec: OAuthProvider, state: str, outcome: asyncio.Future[str]
+    spec: OAuthProvider, state: str, outcome: asyncio.Future[str], finished: asyncio.Future[str]
 ) -> tuple[asyncio.AbstractServer, int]:
+    """Listen for the redirect. `outcome` gets the code; the browser's page
+    then waits on `finished` ("" once the tokens are stored, else the error),
+    so the tab says "Signed in" only when that is true."""
     async def handle(reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
         status, page = "404 Not Found", b"not found"
         try:
@@ -610,16 +619,34 @@ async def _serve_callback(
             parts = line.decode("latin-1").split()
             target = urlparse(parts[1]) if len(parts) >= 2 else None
             if target is not None and target.path == spec.redirect_path:
-                try:
-                    code = read_redirect(parse_qs(target.query), state)
-                except OAuthError as exc:
-                    status, page = "400 Bad Request", _page(False, str(exc))
-                    if not outcome.done():
-                        outcome.set_exception(exc)
+                params = parse_qs(target.query)
+                if not state_matches((params.get("state") or [""])[0], state):
+                    # Not this sign-in's reply. Any web page can make the
+                    # browser request this address, so a stray one is refused
+                    # and the listener keeps waiting for the real one, as the
+                    # Codex CLI's does.
+                    status, page = "400 Bad Request", _page(
+                        False, "This reply does not belong to the sign-in in progress, so it "
+                        "was ignored. / 这个回调不属于当前的登录，已忽略。"
+                    )
                 else:
-                    status, page = "200 OK", _page(True)
-                    if not outcome.done():
-                        outcome.set_result(code)
+                    try:
+                        code = read_redirect(params, state)
+                    except OAuthError as exc:
+                        status, page = "400 Bad Request", _page(False, str(exc))
+                        if not outcome.done():
+                            outcome.set_exception(exc)
+                    else:
+                        if not outcome.done():
+                            outcome.set_result(code)
+                        try:
+                            problem = await asyncio.wait_for(asyncio.shield(finished), 60)
+                        except TimeoutError:
+                            problem = ""
+                        if problem:
+                            status, page = "400 Bad Request", _page(False, problem)
+                        else:
+                            status, page = "200 OK", _page(True)
         except (TimeoutError, ConnectionError, UnicodeError):
             return
         finally:
@@ -692,10 +719,11 @@ async def login(
     state = secrets.token_urlsafe(32)
     loop = asyncio.get_running_loop()
     outcome: asyncio.Future[str] = loop.create_future()
+    finished: asyncio.Future[str] = loop.create_future()
     server: asyncio.AbstractServer | None = None
     port = spec.redirect_ports[0]
     try:
-        server, port = await _serve_callback(spec, state, outcome)
+        server, port = await _serve_callback(spec, state, outcome, finished)
     except OSError as exc:
         # Over SSH the paste is the way back anyway, and it does not need the
         # listener; locally a sign-in cannot finish without one.
@@ -725,23 +753,135 @@ async def login(
         except TimeoutError:
             raise OAuthError(f"no sign-in within {wait_seconds:g} s") from None
     finally:
+        # Stops new connections; the browser's own request is still answered.
         if server is not None:
             server.close()
-    async with http_client(spec.engine) as client:
-        data = await _token_request(
-            client,
-            spec,
-            {
-                "grant_type": "authorization_code",
-                "code": code,
-                "redirect_uri": redirect_uri,
-                "code_verifier": verifier,
-            },
-        )
-    cred = _credential_from_tokens(spec, data)
-    _check_account(cred)
-    save(cred)
+    try:
+        async with http_client(spec.engine) as client:
+            data = await _token_request(
+                client,
+                spec,
+                {
+                    "grant_type": "authorization_code",
+                    "code": code,
+                    "redirect_uri": redirect_uri,
+                    "code_verifier": verifier,
+                },
+            )
+        cred = _credential_from_tokens(spec, data)
+        _check_account(cred)
+        save(cred)
+    except BaseException as exc:
+        if not finished.done():
+            finished.set_result(str(exc) or type(exc).__name__)
+        raise
+    finished.set_result("")
     return cred
+
+
+# --- sign-in on first use -------------------------------------------------------------
+# When an engine that needs a sign-in is named and none is stored, the MCP
+# server can open the sign-in page itself instead of failing, and the search
+# carries on once the operator approves it. The listener and the wait live in
+# the server's own event loop, so a sign-in that outlasts one tool call is
+# still there for the next.
+
+
+class SignInPending(OAuthError):
+    """The sign-in page is open in the browser and has not been approved yet."""
+
+
+def can_open_browser() -> bool:
+    """Whether a desktop browser can be started from this process."""
+    if sys.platform in ("darwin", "win32"):
+        return True
+    has_display = bool(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"))
+    return has_display and shutil.which("xdg-open") is not None
+
+
+def open_in_browser(url: str) -> bool:
+    """Start the desktop browser on `url` with every standard stream detached.
+
+    Not `webbrowser.open`. Over stdio the MCP server speaks JSON-RPC on
+    stdout, and a launched browser inherits it: whatever the browser prints
+    (and a console browser such as lynx, which `webbrowser` falls back to on a
+    Linux without a display, prints everything) would corrupt the stream.
+    """
+    try:
+        if sys.platform == "win32":
+            os.startfile(url)  # type: ignore[attr-defined]
+            return True
+        command = ["open", url] if sys.platform == "darwin" else ["xdg-open", url]
+        subprocess.Popen(
+            command,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True,
+        )
+    except OSError:
+        return False
+    return True
+
+
+@dataclass
+class _FirstUse:
+    task: asyncio.Task[Credential]
+    # Set when the attempt ended without a sign-in. The page is not opened
+    # again by itself after that, so an operator who closed it is not shown
+    # it on every search; `search-mcp-login` still works at any time.
+    failure: str = ""
+
+
+_first_use: weakref.WeakKeyDictionary[asyncio.AbstractEventLoop, dict[str, _FirstUse]] = (
+    weakref.WeakKeyDictionary()
+)
+
+# How long a first-use sign-in page stays answerable.
+FIRST_USE_WINDOW = 600.0
+
+
+async def sign_in_on_first_use(provider_id: str, wait_seconds: float) -> Credential:
+    """Open the sign-in page and wait up to `wait_seconds` for its approval.
+
+    Raises `SignInPending` while the page is open and unanswered (a later call
+    waits on the same attempt; it does not open a second page), and
+    `OAuthError` when no browser could be opened or an earlier automatic
+    attempt ended without a sign-in.
+    """
+    spec = provider(provider_id)
+    attempts = _first_use.setdefault(asyncio.get_running_loop(), {})
+    attempt = attempts.get(spec.id)
+    if attempt is not None and attempt.failure:
+        raise OAuthError(attempt.failure)
+    if attempt is None or attempt.task.done():
+
+        async def launch(url: str) -> None:
+            if not await asyncio.to_thread(open_in_browser, url):
+                raise OAuthError("no browser could be opened on this machine")
+
+        task = asyncio.get_running_loop().create_task(
+            login(spec.id, open_browser=False, paste=False, on_url=launch,
+                  wait_seconds=FIRST_USE_WINDOW)
+        )
+        attempt = attempts[spec.id] = _FirstUse(task=task)
+
+        def settle(done: asyncio.Task[Credential], record: _FirstUse = attempt) -> None:
+            if done.cancelled() or done.exception() is not None:
+                reason = "cancelled" if done.cancelled() else str(done.exception())
+                record.failure = (
+                    f"the automatic {spec.account} sign-in did not complete ({reason}), so it "
+                    f"is not opened again by itself"
+                )
+
+        task.add_done_callback(settle)
+    try:
+        # Shielded: a search that stops waiting must not end the sign-in.
+        return await asyncio.wait_for(asyncio.shield(attempt.task), wait_seconds)
+    except TimeoutError:
+        raise SignInPending(
+            f"the {spec.account} sign-in page is open in the browser and not yet approved"
+        ) from None
 
 
 def link_codex_cli(path: str | Path | None = None) -> Credential:
@@ -771,6 +911,10 @@ __all__ = [
     "NotSignedIn",
     "OAuthError",
     "OAuthProvider",
+    "SignInPending",
+    "can_open_browser",
+    "open_in_browser",
+    "sign_in_on_first_use",
     "codex_cli_auth_path",
     "credential",
     "credential_path",

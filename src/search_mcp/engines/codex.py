@@ -7,8 +7,11 @@ third-party tools, and every search counts against the plan's Codex usage, not
 against API credits.
 
 Enable it with ``search-mcp-login codex`` (or ``--use-codex-cli`` to reuse the
-CLI's own sign-in). Until then naming it returns the usual "not configured"
-error, and nothing ever routes to it on its own.
+CLI's own sign-in), or just name it: over stdio, with no sign-in stored, the
+server opens the ChatGPT sign-in page in the local browser and the search
+carries on once it is approved (``SEARCH_MCP_CODEX_AUTO_SIGNIN``). Where that
+cannot happen, naming it returns the usual "not configured" error. Nothing
+ever routes to it on its own.
 
 Two ways in, tried in this order (both read from openai/codex, 2026-09-26):
 
@@ -437,6 +440,20 @@ def _http_failure(status: int, raw: str) -> Exception:
     return RuntimeError(f"codex: the service answered HTTP {status}{suffix}")
 
 
+def _can_sign_in_here() -> bool:
+    """Whether a missing sign-in may open the browser sign-in page by itself.
+
+    Over stdio the server runs on the operator's desktop, next to the browser
+    the page opens in. Over streamable HTTP it is a shared service, and a
+    page opened on its host would reach nobody.
+    """
+    return (
+        settings.codex_auto_signin
+        and settings.transport == "stdio"
+        and oauth.can_open_browser()
+    )
+
+
 class CodexEngine(Engine):
     """OpenAI web search through the Codex backend of a ChatGPT plan."""
 
@@ -467,16 +484,33 @@ class CodexEngine(Engine):
         try:
             return await oauth.credential("codex", force_refresh=force_refresh)
         except oauth.NotSignedIn:
-            raise not_signed_in(
-                self.name,
-                account="ChatGPT",
-                alternative=(
-                    "omit `engines=` to use the default keyless pool, or call `research` for "
-                    "search and reading in one step."
-                ),
-            ) from None
+            pass
         except oauth.OAuthError as exc:
             raise EngineKeyError(f"{self.name}: {exc}") from exc
+        unconfigured = not_signed_in(
+            self.name,
+            account="ChatGPT",
+            alternative=(
+                "omit `engines=` to use the default keyless pool, or call `research` for "
+                "search and reading in one step."
+            ),
+        )
+        if not _can_sign_in_here():
+            raise unconfigured
+        try:
+            return await oauth.sign_in_on_first_use("codex", settings.codex_signin_wait_seconds)
+        except oauth.SignInPending:
+            raise EngineKeyError(
+                "codex: a ChatGPT sign-in page was opened in the browser on this machine and "
+                "has not been approved yet, so this search did not run. Let the user know that "
+                "a browser tab is waiting for their ChatGPT sign-in, which enables the `codex` "
+                "engine; once they approve it, repeat this search with use_cache=false. The page "
+                "stays open for 10 minutes. Nothing is wrong with the search itself: omit "
+                "`engines=` to use the default keyless pool meanwhile."
+            ) from None
+        except oauth.OAuthError as exc:
+            reason = str(exc).rstrip(". ")
+            raise EngineKeyError(f"{unconfigured} (Automatic sign-in: {reason}.)") from None
 
     async def search(
         self,

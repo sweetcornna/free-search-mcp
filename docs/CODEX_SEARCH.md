@@ -15,8 +15,12 @@ in with ChatGPT from third-party tools.
 - 用途：用你自己的 ChatGPT 账号（含 Codex 的套餐，如 Plus、Pro、Business）调用 OpenAI
   官方网页搜索，也就是 Codex 自己用的那个搜索。不需要 API key，也不产生 API 费用，
   消耗的是套餐里的 Codex 额度。
-- 登录：运行 `uvx --from free-search-mcp search-mcp-login codex`，浏览器会打开和
-  `codex login` 相同的授权页；或者在 `search-mcp-admin` 设置页点击「登录」。
+- 登录：最简单的方式是直接用。第一次调用 `engines=["codex"]` 而还没登录时，服务器会
+  自动在本机浏览器里打开 ChatGPT 授权页，你点同意后这次搜索会接着完成（最多等 45 秒；
+  更久的话授权页仍保留 10 分钟，批准后重新搜索即可）。也可以手动运行
+  `uvx --from free-search-mcp search-mcp-login codex`（同样会自动打开浏览器），
+  或者在 `search-mcp-admin` 设置页点击「登录」。不想自动弹出时设置
+  `SEARCH_MCP_CODEX_AUTO_SIGNIN=false`。
 - 已经登录过 Codex CLI：运行 `search-mcp-login codex --use-codex-cli`，只读复用
   `~/.codex/auth.json`，本服务不会改写那份文件。
 - 在远程机器（SSH）上：浏览器最后跳转到 `http://127.0.0.1:1455/auth/callback?code=...`
@@ -28,6 +32,24 @@ in with ChatGPT from third-party tools.
   grounding 条款也禁止把结果链接抽取出来缓存或建索引。所以这里不提供 Google 的对应功能。
 
 ## Sign in
+
+The easiest way is to use it. The first time a call names `engines=["codex"]`
+with no sign-in stored, the server opens the ChatGPT sign-in page in this
+machine's browser, and the search carries on as soon as you approve it. One
+search waits up to 45 seconds (`SEARCH_MCP_CODEX_SIGNIN_WAIT_SECONDS`). If you
+take longer, it returns a message saying the page is open, the page stays
+answerable for ten minutes, and the next search picks the sign-in up.
+
+This only happens where someone can see the page: with the default stdio
+transport (the server runs on your desktop) and where a desktop browser can be
+started (macOS, Windows, or Linux with a display and `xdg-open`). At most one
+unanswered page is opened per server run; after one is closed or refused, the
+error points at `search-mcp-login codex` instead of opening another. The
+browser is started with its output detached, because over stdio the server's
+stdout is the MCP connection. Set `SEARCH_MCP_CODEX_AUTO_SIGNIN=false` to turn
+it off.
+
+To sign in ahead of time:
 
 ```bash
 uvx --from free-search-mcp search-mcp-login codex    # plugin / uvx installs
@@ -102,6 +124,8 @@ resets. Neither counts as an engine failure in the circuit breaker.
 | `SEARCH_MCP_CODEX_REASONING_EFFORT` | `low` | only used by the fallback below |
 | `SEARCH_MCP_CODEX_TIMEOUT` | `60` | seconds for one search |
 | `SEARCH_MCP_CODEX_BASE_URL` | `https://chatgpt.com/backend-api/codex` | the Codex backend |
+| `SEARCH_MCP_CODEX_AUTO_SIGNIN` | `true` | open the sign-in page by itself on first use (stdio, desktop only) |
+| `SEARCH_MCP_CODEX_SIGNIN_WAIT_SECONDS` | `45` | how long one search waits for that approval |
 
 The sign-in and the searches go through `SEARCH_MCP_PROXY` when it is set, which
 matters where `auth.openai.com` or `chatgpt.com` is blocked.

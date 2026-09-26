@@ -31,10 +31,24 @@ semantic versioning.
   `<config_dir>/oauth/codex.json` (`0600`). OpenAI rotates refresh tokens, so
   refreshes are serialised per process and, where `fcntl` exists, across
   processes.
+- No sign-in step is needed either: the first time `codex` is named with no
+  sign-in stored, the server opens the ChatGPT sign-in page in the local
+  browser and finishes the search once it is approved. One search waits up to
+  45 s (`SEARCH_MCP_CODEX_SIGNIN_WAIT_SECONDS`), and the page stays answerable
+  for ten minutes for the next one. It happens only over stdio and where a
+  desktop browser can be started, and at most one unanswered page per server
+  run. The browser is launched with its output detached, because over stdio
+  stdout is the MCP connection. `SEARCH_MCP_CODEX_AUTO_SIGNIN=false` turns it
+  off.
+- A callback with the wrong `state` is refused and the sign-in keeps waiting,
+  as in the Codex CLI, so a web page cannot abort a sign-in in progress. The
+  browser tab says "Signed in" only once the tokens are stored, and shows the
+  error when the exchange fails.
 - The settings page has a Codex card with Sign in, Test and Sign out.
 - New settings: `SEARCH_MCP_CODEX_MODEL` (`gpt-6-luna`),
   `SEARCH_MCP_CODEX_TIMEOUT`, `SEARCH_MCP_CODEX_REASONING_EFFORT`,
-  `SEARCH_MCP_CODEX_BASE_URL`. The guide, with a Chinese summary, is
+  `SEARCH_MCP_CODEX_BASE_URL`, `SEARCH_MCP_CODEX_AUTO_SIGNIN`,
+  `SEARCH_MCP_CODEX_SIGNIN_WAIT_SECONDS`. The guide, with a Chinese summary, is
   docs/CODEX_SEARCH.md.
 
 There is no Antigravity equivalent, on purpose. Google's Antigravity terms call

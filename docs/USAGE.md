@@ -489,10 +489,12 @@ per-provider walkthrough, see [API_KEYS.md](API_KEYS.md).
 One more opt-in engine runs on an account sign-in rather than a key. `codex`
 runs OpenAI's own web search, the one Codex uses, on the operator's ChatGPT
 plan: sign in once with `search-mcp-login codex` (or **Sign in / 登录** on the
-settings page), then name it with `engines=["codex"]`. Each search counts
+settings page), then name it with `engines=["codex"]`. Naming it before any
+sign-in opens the ChatGPT sign-in page in the local browser and finishes the
+search once it is approved (stdio on a desktop; `SEARCH_MCP_CODEX_AUTO_SIGNIN`). Each search counts
 against the plan's Codex usage. It follows the same rules as the key engines:
-never selected on its own, and an error rather than results when no sign-in is
-stored. See [CODEX_SEARCH.md](CODEX_SEARCH.md), which also explains why there
+never selected on its own, and an error rather than results when no sign-in can
+be made. See [CODEX_SEARCH.md](CODEX_SEARCH.md), which also explains why there
 is no Antigravity equivalent.
 
 ## Testing

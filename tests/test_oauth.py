@@ -458,15 +458,61 @@ async def test_a_busy_first_port_falls_back_to_the_second(mock_http, ports):
     assert _body(calls[0])["redirect_uri"] == f"http://127.0.0.1:{ports[1]}/auth/callback"
 
 
-async def test_a_forged_callback_is_refused_and_stores_nothing(mock_http, ports):
+async def test_a_stray_callback_is_refused_and_the_sign_in_keeps_waiting(mock_http, ports):
+    # Any web page can make the browser request the callback address. A reply
+    # with the wrong state must not end the sign-in the operator is doing.
+    state, calls = mock_http
+    state["handler"] = lambda request: httpx.Response(200, json=_tokens(time.time() + 3600))
+    seen: list = []
+
+    def on_url(url: str) -> None:
+        query = parse_qs(urlparse(url).query)
+        port = urlparse(query["redirect_uri"][0]).port
+
+        async def visit() -> None:
+            await asyncio.sleep(0.05)
+            seen.append(await _get(port, "/auth/callback?code=FORGED&state=forged"))
+            seen.append(await _get(port, "/auth/callback?error=access_denied&state=forged"))
+            seen.append(await _get(port, f"/auth/callback?code=REAL&state={query['state'][0]}"))
+
+        asyncio.get_running_loop().create_task(visit())
+
+    cred = await oauth.login("codex", open_browser=False, on_url=on_url, wait_seconds=5)
+    await asyncio.sleep(0.05)
+    assert [status.split(" ", 1)[1] for status, _ in seen] == [
+        "400 Bad Request", "400 Bad Request", "200 OK"
+    ]
+    assert "ignored" in seen[0][1]
+    assert [_body(c)["code"] for c in calls] == ["REAL"]
+    assert cred.account_id == "acct-1" and oauth.is_signed_in("codex")
+
+
+async def test_a_refusal_with_the_right_state_ends_the_sign_in(mock_http, ports):
     _, calls = mock_http
-    on_url, seen = _browser(lambda s: "/auth/callback?code=X&state=forged")
-    with pytest.raises(oauth.OAuthError, match="state mismatch"):
+    on_url, seen = _browser(lambda s: f"/auth/callback?error=access_denied&state={s}")
+    with pytest.raises(oauth.OAuthError, match="access_denied"):
         await oauth.login("codex", open_browser=False, on_url=on_url, wait_seconds=5)
     await asyncio.sleep(0.05)
     assert seen[1][0].endswith("400 Bad Request")
     assert calls == []
     assert not oauth.is_signed_in("codex")
+
+
+async def test_the_browser_tab_shows_a_failed_exchange_not_success(mock_http, ports):
+    state, _ = mock_http
+    state["handler"] = lambda request: httpx.Response(
+        401, json={"error": {"message": "Could not validate your token."}}
+    )
+    on_url, seen = _browser(lambda s: f"/auth/callback?code=BAD&state={s}")
+    with pytest.raises(oauth.OAuthError, match="HTTP 401"):
+        await oauth.login("codex", open_browser=False, on_url=on_url, wait_seconds=5)
+    for _ in range(50):
+        if len(seen) > 1:
+            break
+        await asyncio.sleep(0.02)
+    status, page = seen[1]
+    assert status.endswith("400 Bad Request")
+    assert "Sign-in failed" in page and "Could not validate your token" in page
 
 
 async def test_a_sign_in_without_a_workspace_id_is_refused(mock_http, ports):
@@ -488,3 +534,151 @@ async def test_busy_ports_are_reported_by_number(ports):
     finally:
         for blocker in blockers:
             blocker.close()
+
+
+# --- sign-in on first use ----------------------------------------------------------------
+
+
+def _visit_blocking(port: int, target: str) -> None:
+    """A browser's GET, from a plain thread. A raw socket, because the suite's
+    DNS stub answers even `127.0.0.1` with a public address."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.settimeout(5)
+        sock.connect(("127.0.0.1", port))
+        sock.sendall(f"GET {target} HTTP/1.1\r\nHost: 127.0.0.1\r\n\r\n".encode())
+        while sock.recv(4096):
+            pass
+
+
+def _approving_browser(monkeypatch, *, approve: bool = True, delay: float = 0.05):
+    """Stand in for the desktop browser: record each open, and optionally
+    follow the link to the callback the way a signed-in user's browser does."""
+    import threading
+
+    opened: list[str] = []
+
+    def fake_open(url: str) -> bool:
+        opened.append(url)
+        if approve:
+            query = parse_qs(urlparse(url).query)
+            redirect = urlparse(query["redirect_uri"][0])
+
+            def visit() -> None:
+                time.sleep(delay)
+                _visit_blocking(redirect.port, f"{redirect.path}?code=C&state={query['state'][0]}")
+
+            threading.Thread(target=visit, daemon=True).start()
+        return True
+
+    monkeypatch.setattr(oauth, "open_in_browser", fake_open)
+    return opened
+
+
+async def test_first_use_opens_the_page_and_returns_once_it_is_approved(mock_http, ports,
+                                                                        monkeypatch):
+    state, _ = mock_http
+    state["handler"] = lambda request: httpx.Response(200, json=_tokens(time.time() + 3600))
+    opened = _approving_browser(monkeypatch)
+
+    cred = await oauth.sign_in_on_first_use("codex", wait_seconds=5)
+
+    assert len(opened) == 1 and opened[0].startswith("https://auth.openai.com/oauth/authorize?")
+    assert cred.email == "me@example.com"
+    assert oauth.is_signed_in("codex")
+
+
+async def test_a_slow_approval_is_pending_and_never_opens_a_second_page(mock_http, ports,
+                                                                        monkeypatch):
+    state, _ = mock_http
+    state["handler"] = lambda request: httpx.Response(200, json=_tokens(time.time() + 3600))
+    opened = _approving_browser(monkeypatch, delay=0.6)
+
+    with pytest.raises(oauth.SignInPending, match="not yet approved"):
+        await oauth.sign_in_on_first_use("codex", wait_seconds=0.1)
+    # The next search waits on the same page, and gets the sign-in.
+    cred = await oauth.sign_in_on_first_use("codex", wait_seconds=5)
+    assert len(opened) == 1
+    assert cred.account_id == "acct-1"
+
+
+async def test_no_browser_means_no_sign_in_and_no_retry(mock_http, ports, monkeypatch):
+    calls: list[str] = []
+
+    def no_browser(url: str) -> bool:
+        calls.append(url)
+        return False
+
+    monkeypatch.setattr(oauth, "open_in_browser", no_browser)
+    with pytest.raises(oauth.OAuthError, match="no browser could be opened"):
+        await oauth.sign_in_on_first_use("codex", wait_seconds=5)
+    with pytest.raises(oauth.OAuthError, match="not opened again by itself"):
+        await oauth.sign_in_on_first_use("codex", wait_seconds=5)
+    assert len(calls) == 1
+
+
+async def test_a_refused_first_use_is_not_opened_again(mock_http, ports, monkeypatch):
+    import threading
+
+    opened: list[str] = []
+
+    def refusing_browser(url: str) -> bool:
+        opened.append(url)
+        query = parse_qs(urlparse(url).query)
+        redirect = urlparse(query["redirect_uri"][0])
+
+        def visit() -> None:
+            time.sleep(0.05)
+            _visit_blocking(redirect.port,
+                            f"{redirect.path}?error=access_denied&state={query['state'][0]}")
+
+        threading.Thread(target=visit, daemon=True).start()
+        return True
+
+    monkeypatch.setattr(oauth, "open_in_browser", refusing_browser)
+    with pytest.raises(oauth.OAuthError, match="access_denied"):
+        await oauth.sign_in_on_first_use("codex", wait_seconds=5)
+    with pytest.raises(oauth.OAuthError, match="not opened again"):
+        await oauth.sign_in_on_first_use("codex", wait_seconds=5)
+    assert len(opened) == 1
+
+
+def test_the_browser_is_started_with_every_stream_detached(monkeypatch):
+    # Over stdio, stdout IS the MCP connection. A browser writing to it would
+    # corrupt the protocol, so nothing it prints may reach the server's streams.
+    import subprocess
+
+    launched: list = []
+
+    class FakePopen:
+        def __init__(self, command, **kwargs):
+            launched.append((command, kwargs))
+
+    monkeypatch.setattr(oauth.sys, "platform", "linux")
+    monkeypatch.setattr(subprocess, "Popen", FakePopen)
+    assert oauth.open_in_browser("https://auth.openai.com/x") is True
+    (command, kwargs), = launched
+    assert command == ["xdg-open", "https://auth.openai.com/x"]
+    assert kwargs["stdin"] is kwargs["stdout"] is kwargs["stderr"] is subprocess.DEVNULL
+    assert kwargs["start_new_session"] is True
+
+
+@pytest.mark.parametrize(
+    ("platform", "env", "xdg", "expected"),
+    [
+        ("darwin", {}, None, True),
+        ("win32", {}, None, True),
+        ("linux", {"DISPLAY": ":0"}, "/usr/bin/xdg-open", True),
+        ("linux", {"WAYLAND_DISPLAY": "wayland-0"}, "/usr/bin/xdg-open", True),
+        ("linux", {}, "/usr/bin/xdg-open", False),  # a server or a container
+        ("linux", {"DISPLAY": ":0"}, None, False),
+    ],
+)
+def test_a_browser_is_only_assumed_where_one_can_start(monkeypatch, platform, env, xdg,
+                                                        expected):
+    monkeypatch.setattr(oauth.sys, "platform", platform)
+    monkeypatch.delenv("DISPLAY", raising=False)
+    monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
+    for name, value in env.items():
+        monkeypatch.setenv(name, value)
+    monkeypatch.setattr(oauth.shutil, "which", lambda name: xdg)
+    assert oauth.can_open_browser() is expected
