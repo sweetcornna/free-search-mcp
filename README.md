@@ -1,9 +1,9 @@
 # free-search-mcp
 <!-- mcp-name: io.github.sweetcornna/free-search-mcp -->
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/sweetcornna/free-search-mcp/main/docs/search.gif" alt="free-search-mcp — one research() call returns a cited Markdown brief, no API key" width="820">
-</p>
+https://github.com/user-attachments/assets/354b522a-ef6b-4547-bb07-c80c6268a5e8
+
+<p align="center"><sub>Music: “Ethereal Space (cdk Mix)” by cdk, <a href="https://ccmixter.org/files/cdk/34151">ccmixter.org/files/cdk/34151</a>, licensed <a href="https://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.</sub></p>
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](pyproject.toml)

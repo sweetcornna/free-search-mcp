@@ -6,9 +6,9 @@ __pycache__/
 .ruff_cache/
 dist/
 build/
-# Remotion promo-video project (its own node_modules etc.); lives beside the
+# Promo film project (its own node_modules, renders); lives beside the
 # package but must never enter the git tree or the sdist.
-freesearch-promo/
+promo/
 *.db
 *.sqlite
 .env
