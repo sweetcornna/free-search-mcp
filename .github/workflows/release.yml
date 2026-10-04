@@ -84,6 +84,13 @@ jobs:
           pin = servers["search"]["args"]
           if pin != [f"free-search-mcp=={expected}"]:
               raise SystemExit(f"plugin .mcp.json runs {pin}, not free-search-mcp=={expected}")
+          # The Agent Plugins v1 copy of the same plugin (hermes plugins install).
+          portable = json.loads((plugin / "plugin.json").read_text())
+          if portable["version"] != expected:
+              raise SystemExit(f"plugin/plugin.json version {portable['version']} != tag {expected}")
+          pin = json.loads((plugin / "mcp.json").read_text())["mcpServers"]["search"]["args"]
+          if pin != [f"free-search-mcp=={expected}"]:
+              raise SystemExit(f"plugin mcp.json runs {pin}, not free-search-mcp=={expected}")
           PY
 
           # Same argument for the two newer install paths. The MCP Registry

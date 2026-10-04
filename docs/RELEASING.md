@@ -15,7 +15,7 @@ all six agree:
 A tag that reached PyPI without a GitHub Release is an unfinished release. So
 is a plugin still pinned to the previous version.
 
-## The version number lives in seven files
+## The version number lives in nine files
 
 | File | Why it has to change |
 | --- | --- |
@@ -23,6 +23,8 @@ is a plugin still pinned to the previous version.
 | `uv.lock` | records the workspace version; the release runs `uv lock --check` |
 | `plugins/free-search/.claude-plugin/plugin.json` → `version` | what `/plugin install` reports and what `/plugin update` compares against |
 | `plugins/free-search/.mcp.json` → `mcpServers.search.args` | the `free-search-mcp==X.Y.Z` pin the installed plugin runs |
+| `plugins/free-search/plugin.json` → `version` | the same plugin as an Agent Plugins v1 package, which `hermes plugins install` reads |
+| `plugins/free-search/mcp.json` → `mcpServers.search.args` | the pin that Agent Plugins install runs |
 | `server.json` → `version` and `packages[0].version` | what the MCP Registry lists. A published registry version cannot be edited, only superseded |
 | `mcpb/manifest.json` → `version` | what Claude Desktop shows for the installed bundle |
 | `mcpb/pyproject.toml` → `project.version` and the `free-search-mcp==X.Y.Z` dependency | the pin the installed bundle runs |
@@ -41,7 +43,7 @@ an install can advertise one version and start another.
 
 ## Checklist
 
-1. Bump the version in the seven files above (`uv lock` regenerates the lock).
+1. Bump the version in the nine files above (`uv lock` regenerates the lock).
    `uv run pytest tests/test_plugin_manifest.py` names any copy you missed.
 2. Add a `## [X.Y.Z] - YYYY-MM-DD` section to `CHANGELOG.md`. Everything
    between it and the next `## [` becomes the GitHub Release body, so write it

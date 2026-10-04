@@ -1,4 +1,4 @@
-"""One version number, written down in seven files.
+"""One version number, written down in nine files.
 
 `pyproject.toml` says what gets published to PyPI. Every other way of
 installing this server republishes that same package and repeats the number:
@@ -6,6 +6,8 @@ installing this server republishes that same package and repeats the number:
   - `uv.lock`                        what CI resolved and tested
   - the plugin's `plugin.json`       what a Claude Code / Codex user installed
   - the plugin's `.mcp.json`         the pin that install actually runs
+  - the plugin's `plugin.json`       the same plugin as an Agent Plugins v1
+    and `mcp.json`                   package (`hermes plugins install`)
   - `server.json`                    the MCP Registry entry (version, twice)
   - `mcpb/manifest.json`             the Claude Desktop bundle
   - `mcpb/pyproject.toml`            the pin that bundle actually runs
@@ -34,6 +36,15 @@ MARKETPLACE = ROOT / ".claude-plugin" / "marketplace.json"
 PLUGIN_DIR = ROOT / "plugins" / "free-search"
 PLUGIN_MANIFEST = PLUGIN_DIR / ".claude-plugin" / "plugin.json"
 PLUGIN_MCP = PLUGIN_DIR / ".mcp.json"
+PORTABLE_MANIFEST = PLUGIN_DIR / "plugin.json"
+PORTABLE_MCP = PLUGIN_DIR / "mcp.json"
+PORTABLE_PLUGIN_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
+PORTABLE_MCP_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json"
+# Agent Plugins v1 rejects any other top-level manifest field.
+PORTABLE_FIELDS = {
+    "$schema", "name", "version", "description", "author",
+    "homepage", "repository", "license", "keywords",
+}
 SKILLS_DIR = PLUGIN_DIR / "skills"
 AGENTS_DIR = PLUGIN_DIR / "agents"
 REGISTRY_ENTRY = ROOT / "server.json"
@@ -94,6 +105,31 @@ def test_plugin_runs_the_pinned_published_package():
     assert search["command"] == "uvx"
     # Pinned, not floating: installing plugin X.Y.Z must run package X.Y.Z, and
     # `/plugin update` is what moves a user to a newer server.
+    assert search["args"] == [f"{DIST_NAME}=={project_version()}"]
+
+
+def test_portable_manifest_mirrors_the_claude_manifest():
+    """The Agent Plugins v1 copy (Hermes reads it) is the same plugin."""
+    portable = read_json(PORTABLE_MANIFEST)
+    claude = read_json(PLUGIN_MANIFEST)
+
+    assert portable["$schema"] == PORTABLE_PLUGIN_SCHEMA
+    assert set(portable) <= PORTABLE_FIELDS
+    assert portable["version"] == project_version()
+    for field in PORTABLE_FIELDS - {"$schema"}:
+        assert portable[field] == claude[field], field
+
+
+def test_portable_mcp_config_runs_the_same_pinned_server():
+    portable = read_json(PORTABLE_MCP)
+
+    assert portable["$schema"] == PORTABLE_MCP_SCHEMA
+    servers = portable["mcpServers"]
+    assert list(servers) == ["search"]
+    search = servers["search"]
+    assert search["type"] == "stdio"
+    claude = read_json(PLUGIN_MCP)["mcpServers"]["search"]
+    assert (search["command"], search["args"]) == (claude["command"], claude["args"])
     assert search["args"] == [f"{DIST_NAME}=={project_version()}"]
 
 

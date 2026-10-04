@@ -159,6 +159,7 @@ run the same server:
 | MCP Registry | `io.github.sweetcornna/free-search-mcp` |
 | Claude Code, without the plugin | `claude mcp add search -s user -- uvx free-search-mcp` |
 | Codex, without the plugin | `codex mcp add search -- uvx free-search-mcp` |
+| Hermes Agent (the plugin) | `hermes plugins install sweetcornna/free-search-mcp/plugins/free-search --enable` |
 | Any other MCP client | the stdio command `uvx free-search-mcp` |
 | Docker | `docker compose build`, then `docker compose run --rm search-mcp` |
 

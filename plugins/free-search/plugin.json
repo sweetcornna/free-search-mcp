@@ -1,0 +1,24 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "free-search",
+  "version": "0.13.1",
+  "description": "Local-first web search, page fetching and document reading with no API key and no signup. Ships 11 MCP tools, a source-verification skill and a quick-search agent.",
+  "author": {
+    "name": "ymylive",
+    "url": "https://github.com/sweetcornna"
+  },
+  "homepage": "https://github.com/sweetcornna/free-search-mcp#readme",
+  "repository": "https://github.com/sweetcornna/free-search-mcp",
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "search",
+    "web-search",
+    "research",
+    "fetch",
+    "documents",
+    "no-api-key",
+    "agent-skills",
+    "fact-checking"
+  ]
+}

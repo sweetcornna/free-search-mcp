@@ -107,6 +107,19 @@ uvx --from free-search-mcp playwright install chromium
 Without it, HTTP search and fetch keep working, and any call that needs the
 browser returns that install command.
 
+## Hermes Agent
+
+The same directory is also an Agent Plugins v1 package: `plugin.json` and
+`mcp.json` sit beside the Claude Code files and pin the same server. Hermes
+loads the MCP server and the `verified-research` skill from it. It does not
+load the agent files.
+
+```bash
+hermes plugins install sweetcornna/free-search-mcp/plugins/free-search --enable
+```
+
+`uvx` has to be on the gateway's `PATH`.
+
 ## Not using Claude Code or Codex?
 
 Claude Desktop has a one-click `.mcpb` bundle on each GitHub Release, the MCP
