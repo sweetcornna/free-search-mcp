@@ -4,6 +4,15 @@ All notable changes to this project are documented here. The format is loosely
 based on [Keep a Changelog](https://keepachangelog.com/), and the project follows
 semantic versioning.
 
+## [Unreleased]
+
+### Fixed
+
+- Installs no longer break on selectolax 1.0, which removed the `selectolax.parser`
+  module the engines and the fetcher import: the dependency is now `selectolax<1`.
+  Until a release carries this, `uvx --from free-search-mcp --with "selectolax<1"
+  free-search-mcp` works around it.
+
 ## [0.13.1] - 2026-09-26
 
 Documentation only; the server is the same as 0.13.0. This release exists so

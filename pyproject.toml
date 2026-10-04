@@ -54,7 +54,9 @@ dependencies = [
     # Imported directly by zbMATH because curl_cffi's bundled CA store lacks
     # the public root its current certificate chain needs.
     "certifi>=2024.8.30",
-    "selectolax>=0.3.21",
+    # selectolax 1.0 removed the Modest backend (selectolax.parser), which the
+    # engines and fetcher import; importing it now raises ImportError.
+    "selectolax>=0.3.21,<1",
     "playwright>=1.47",
     "pypdf>=5.0",
     "python-docx>=1.1",
