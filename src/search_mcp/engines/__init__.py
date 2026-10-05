@@ -66,6 +66,7 @@ from .searx import SearxEngine
 from .sec_edgar import SecEdgarEngine
 from .semanticscholar import SemanticScholarEngine
 from .serper import SerperEngine
+from .serpbase import SerpBaseEngine
 from .serpsearch import SerpSearchEngine
 from .so360 import So360Engine
 from .sogou import SogouEngine
@@ -207,6 +208,7 @@ ENGINES: dict[str, Engine] = {
     # registered while unconfigured (the aggregator surfaces the hint).
     "brave_api": BraveApiEngine(),
     "serper": SerperEngine(),
+    "serpbase": SerpBaseEngine(),
     "tavily": TavilyEngine(),
     "google_cse": GoogleCSEEngine(),
     # GitHub's code-search endpoint 401s anonymous callers, so unlike the
