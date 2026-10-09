@@ -2,7 +2,7 @@
   "mcpServers": {
     "search": {
       "command": "uvx",
-      "args": ["free-search-mcp==0.13.1"]
+      "args": ["--with", "selectolax<1", "free-search-mcp==0.13.1"]
     }
   }
 }

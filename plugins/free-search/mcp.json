@@ -5,6 +5,8 @@
       "type": "stdio",
       "command": "uvx",
       "args": [
+        "--with",
+        "selectolax<1",
         "free-search-mcp==0.13.1"
       ]
     }
