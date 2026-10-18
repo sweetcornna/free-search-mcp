@@ -148,7 +148,7 @@ process, so new and old clients both work unchanged. What a client sees:
 
 ## Engines
 
-The registry holds 74 engines. A search that names none of them runs a small
+The registry holds 75 engines. A search that names none of them runs a small
 pool chosen for it, and the pool depends on which engines are healthy at that
 moment.
 
