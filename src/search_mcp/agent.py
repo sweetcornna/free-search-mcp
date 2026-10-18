@@ -55,7 +55,7 @@ from typing import Any
 import httpx
 
 from .aggregator import aggregate_search
-from .browser import BrowserUnavailableError
+from .browser import BrowserLaunchError, BrowserUnavailableError
 from .config import settings
 from .documents import read_document
 from .engines import Category
@@ -317,6 +317,9 @@ _TOOL_FAILURES = (
     FetchError,
     MaxBytesExceededError,
     BrowserUnavailableError,
+    # The browser start stalled past `browser_launch_timeout`. It is transient,
+    # so the model gets the message and can try again.
+    BrowserLaunchError,
     httpx.HTTPError,
     httpx.InvalidURL,
 )

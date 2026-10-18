@@ -12,6 +12,16 @@ semantic versioning.
   module the engines and the fetcher import: the dependency is now `selectolax<1`.
   Until a release carries this, `uvx --from free-search-mcp --with "selectolax<1"
   free-search-mcp` works around it.
+- A browser launch that stalls no longer blocks the whole server. Starting the
+  Playwright driver and launching the browser now give up after
+  `SEARCH_MCP_BROWSER_LAUNCH_TIMEOUT` (30 seconds). Before, a launch that never
+  returned, typically a proxy, VPN or TUN dropping the driver handshake, held
+  the browser lock, and every later `fetch` waited behind it until the client
+  timed out. Now that one request fails with a message saying the browser did
+  not start and that HTTP-only search and fetching still work. For
+  `SEARCH_MCP_BROWSER_LAUNCH_COOLDOWN` (20 seconds) after that, browser calls
+  fail at once instead of each waiting out the timeout again. A missing browser
+  binary still gets the install hint. Reported with a patch by @GTF2 in #19.
 
 ## [0.13.1] - 2026-09-26
 

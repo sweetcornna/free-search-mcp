@@ -2,6 +2,7 @@ import asyncio
 import logging
 import random
 import sys
+import time
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -71,6 +72,18 @@ class BrowserUnavailableError(RuntimeError):
     """
 
 
+class BrowserLaunchError(RuntimeError):
+    """The driver or browser did not start within ``browser_launch_timeout``.
+
+    A stalled launch (a flaky proxy, VPN or TUN dropping the Playwright driver
+    handshake, or a wedged driver) is a transport hiccup, not a missing binary.
+    So this is not a ``BrowserUnavailableError``: the gate hints must not
+    answer a network blip with "install Chromium". The pool tries again after
+    ``browser_launch_cooldown``, and HTTP-only search and fetching keep working
+    meanwhile.
+    """
+
+
 # The ONE canonical install instruction — every surface (engine gate hints,
 # fetch errors) must show these exact commands; a hand-written variant like
 # a bare `playwright install chromium` does not work on uvx installs.
@@ -85,6 +98,22 @@ _MISSING_BROWSER_HINT = (
     "engines and JS-heavy fetches are unavailable (HTTP-only search and "
     "fetching keep working). " + BROWSER_INSTALL_HINT
 )
+
+
+def _launch_timeout_hint() -> str:
+    """Message for a launch that ran past ``browser_launch_timeout``.
+
+    Kept apart from ``_MISSING_BROWSER_HINT`` because the remedy differs: a
+    timeout means retry or fix the network, never "install Chromium".
+    """
+    return (
+        "The browser did not start within "
+        f"{settings.browser_launch_timeout:.0f}s. This is usually a stalled "
+        "proxy, VPN or TUN, or a wedged Playwright driver, not a missing "
+        "browser. HTTP-only search and fetching keep working, and the browser "
+        f"is tried again after {settings.browser_launch_cooldown:.0f}s."
+    )
+
 
 # Substrings Playwright's launch error always carries when the browser
 # BINARY is missing (as opposed to a crash or a bad flag).
@@ -113,6 +142,9 @@ window.navigator.permissions.query = (p) => (
       : orig(p)
 );
 """
+
+# Seconds to wait for a half-built context to close, or a driver to stop.
+_TEARDOWN_TIMEOUT = 5.0
 
 # Common desktop viewports — pick one per session to break up the trivially
 # constant-1366x800 fingerprint without straying into freakish dimensions.
@@ -144,6 +176,11 @@ class BrowserPool:
         # Installing it requires a restart, so subsequent calls fail fast
         # instead of re-paying a ~1s driver start/stop per attempt.
         self._unavailable_reason: str | None = None
+        # ``time.monotonic()`` of the last launch timeout, or None. Unlike
+        # ``_unavailable_reason`` it expires after ``browser_launch_cooldown``,
+        # so a network blip heals by itself while a missing binary stays
+        # missing until ``shutdown()``.
+        self._launch_failed_at: float | None = None
 
     @property
     def known_unavailable(self) -> bool:
@@ -163,13 +200,60 @@ class BrowserPool:
             args.append("--no-sandbox")
         return args
 
+    async def _teardown_driver(self) -> None:
+        """Close any half-built context and stop the Playwright driver.
+
+        Both are reset to ``None`` so the next ``_ensure`` starts clean instead
+        of leaking a driver (and its node process) per failed attempt. Both
+        awaits are bounded, because a driver that just stalled is the one whose
+        ``close`` or ``stop`` may block too, and an unbounded teardown would
+        bring back the hang that holds the lock forever.
+        """
+        if self._ctx is not None:
+            try:
+                await asyncio.wait_for(self._ctx.close(), _TEARDOWN_TIMEOUT)
+            except Exception:
+                log.debug("ctx close during teardown failed")
+            self._ctx = None
+        if self._playwright is not None:
+            try:
+                await asyncio.wait_for(self._playwright.stop(), _TEARDOWN_TIMEOUT)
+            except Exception:
+                log.debug("playwright stop during teardown failed")
+            self._playwright = None
+
     async def _ensure(self) -> BrowserContext:
         async with self._lock:
             if self._ctx is not None:
                 return self._ctx
             if self._unavailable_reason is not None:
                 raise BrowserUnavailableError(self._unavailable_reason)
-            self._playwright = await async_playwright().start()
+            # After a launch timeout, fail fast for the cooldown, so a burst of
+            # concurrent fetches does not each wait out the full timeout again.
+            if self._launch_failed_at is not None:
+                if (
+                    time.monotonic() - self._launch_failed_at
+                    < settings.browser_launch_cooldown
+                ):
+                    raise BrowserLaunchError(_launch_timeout_hint())
+                self._launch_failed_at = None
+
+            timeout = settings.browser_launch_timeout
+            # Both awaits below run under self._lock. Unbounded, a driver start
+            # or launch that hangs (a proxy, VPN or TUN dropping the handshake)
+            # holds the lock forever, and every later fetch in the process
+            # waits behind it until the MCP client gives up. Bounded, the
+            # stall costs one failed request.
+            try:
+                self._playwright = await asyncio.wait_for(
+                    async_playwright().start(), timeout=timeout
+                )
+            except TimeoutError as e:
+                # The driver handshake hung. Treat it like a stalled launch:
+                # tear down, cool down, and raise the network hint.
+                await self._teardown_driver()
+                self._launch_failed_at = time.monotonic()
+                raise BrowserLaunchError(_launch_timeout_hint()) from e
 
             user_data_dir = str(settings.cache_dir / "browser_profile")
             settings.cache_dir.mkdir(parents=True, exist_ok=True)
@@ -189,17 +273,11 @@ class BrowserPool:
                 **_launch_proxy_kwargs(),
             )
 
-            # Prefer a real installed Chrome (better fingerprint than bundled
-            # Chromium). Fall back transparently when Chrome isn't installed.
-            #
-            # If BOTH launch attempts (or the stealth init script) fail we must
-            # not leak the started Playwright driver — otherwise it is silently
-            # re-started on every subsequent _ensure call, piling up zombie node
-            # processes. Tear it down and reset state so the next call retries
-            # from a clean slate.
-            try:
+            async def _launch() -> BrowserContext:
+                # Prefer a real installed Chrome (better fingerprint than the
+                # bundled Chromium); fall back transparently when it's absent.
                 try:
-                    self._ctx = await self._playwright.chromium.launch_persistent_context(
+                    return await self._playwright.chromium.launch_persistent_context(
                         channel="chrome",
                         **common_kwargs,
                     )
@@ -207,29 +285,34 @@ class BrowserPool:
                     log.warning(
                         "real Chrome not found, using bundled Chromium: %s", e
                     )
-                    self._ctx = await self._playwright.chromium.launch_persistent_context(
+                    return await self._playwright.chromium.launch_persistent_context(
                         **common_kwargs,
                     )
+
+            # If the launch (or the stealth init script) fails, the started
+            # driver must not leak, or every later _ensure starts another and
+            # node processes pile up. Tear it down so the next call starts
+            # clean.
+            try:
+                self._ctx = await asyncio.wait_for(_launch(), timeout=timeout)
                 try:
                     await self._ctx.add_init_script(_STEALTH_SCRIPT)
                 except Exception:
-                    # Context launched but stealth wiring failed: close the
-                    # half-built context so the next _ensure rebuilds it.
-                    try:
-                        await self._ctx.close()
-                    except Exception:
-                        log.debug("ctx close after add_init_script failure failed")
-                    self._ctx = None
+                    # Context launched but stealth wiring failed: tear it down
+                    # so the next _ensure rebuilds it.
+                    await self._teardown_driver()
                     raise
+            except TimeoutError as e:
+                # The launch stalled past the ceiling. That is transient, not a
+                # missing binary: a network hint and a short cooldown, never
+                # "install Chromium".
+                await self._teardown_driver()
+                self._launch_failed_at = time.monotonic()
+                raise BrowserLaunchError(_launch_timeout_hint()) from e
             except Exception as e:
                 # Launch failed entirely (or stealth re-raised): stop the driver
                 # and reset so we don't leak it across retries.
-                if self._playwright is not None:
-                    try:
-                        await self._playwright.stop()
-                    except Exception:
-                        log.debug("playwright stop after launch failure failed")
-                    self._playwright = None
+                await self._teardown_driver()
                 if _is_missing_browser_error(str(e)):
                     self._unavailable_reason = _MISSING_BROWSER_HINT
                     raise BrowserUnavailableError(self._unavailable_reason) from e
@@ -297,8 +380,13 @@ class BrowserPool:
         """
         playwright = None
         ctx: BrowserContext | None = None
+        timeout = settings.browser_launch_timeout
         try:
-            playwright = await async_playwright().start()
+            # Bounded like _ensure(), so a stalled driver or launch cannot hang
+            # the login command forever.
+            playwright = await asyncio.wait_for(
+                async_playwright().start(), timeout=timeout
+            )
             user_data_dir = str(settings.cache_dir / "browser_profile")
             settings.cache_dir.mkdir(parents=True, exist_ok=True)
 
@@ -314,15 +402,19 @@ class BrowserPool:
                 extra_http_headers={"Accept-Language": settings.accept_language},
                 **_launch_proxy_kwargs(),
             )
-            try:
-                ctx = await playwright.chromium.launch_persistent_context(
-                    channel="chrome", **common_kwargs
-                )
-            except Exception as e:
-                log.warning("real Chrome not found for login, using Chromium: %s", e)
-                ctx = await playwright.chromium.launch_persistent_context(
-                    **common_kwargs
-                )
+
+            async def _launch_login() -> BrowserContext:
+                try:
+                    return await playwright.chromium.launch_persistent_context(
+                        channel="chrome", **common_kwargs
+                    )
+                except Exception as e:
+                    log.warning("real Chrome not found for login, using Chromium: %s", e)
+                    return await playwright.chromium.launch_persistent_context(
+                        **common_kwargs
+                    )
+
+            ctx = await asyncio.wait_for(_launch_login(), timeout=timeout)
             try:
                 await ctx.add_init_script(_STEALTH_SCRIPT)
             except Exception:
@@ -372,19 +464,25 @@ class BrowserPool:
         async with self._lock:
             if self._ctx:
                 try:
-                    await self._ctx.close()
+                    await asyncio.wait_for(
+                        self._ctx.close(), timeout=settings.browser_launch_timeout
+                    )
                 except Exception:
                     log.exception("context close failed")
                 self._ctx = None
             if self._playwright:
                 try:
-                    await self._playwright.stop()
+                    await asyncio.wait_for(
+                        self._playwright.stop(),
+                        timeout=settings.browser_launch_timeout,
+                    )
                 except Exception:
                     log.exception("playwright stop failed")
                 self._playwright = None
-            # A shutdown is the "restart" the install hint asks for — give the
-            # next launch attempt a clean slate.
+            # A shutdown is the "restart" the install hint asks for, so the next
+            # launch starts clean: no missing-binary memo, no cooldown.
             self._unavailable_reason = None
+            self._launch_failed_at = None
 
 
 pool = BrowserPool()

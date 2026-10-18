@@ -136,6 +136,15 @@ class Settings(BaseSettings):
     fetch_strategy: Literal["auto", "http", "browser"] = "auto"
     browser_headless: bool = True
     browser_pool_size: int = 2
+    # Ceiling, in seconds, on starting the Playwright driver and on launching
+    # the browser. Without it a launch that hangs (a proxy, VPN or TUN dropping
+    # the driver handshake) holds BrowserPool's lock forever, and every later
+    # fetch waits behind it. A healthy launch takes 1 to 3 seconds.
+    browser_launch_timeout: float = Field(default=30.0, gt=0)
+    # After a launch times out, browser calls fail at once for this many
+    # seconds, so a sustained outage does not cost every concurrent fetch the
+    # full timeout. A missing binary is not affected: that lasts until restart.
+    browser_launch_cooldown: float = Field(default=20.0, ge=0)
     max_content_chars: int = 50_000
 
     safesearch: Literal["strict", "moderate", "off"] = "moderate"
