@@ -236,10 +236,13 @@ By name only (all keyless):
   The tier is rate-limited per IP, and a 429 or 5xx degrades to an empty
   result. It does not honour `site:` / `filetype:` operators, so domain filters
   are applied to its results afterwards.
-- `youcom` calls the keyless tier of You.com's search API. It has its own
-  index and honours `site:`, `-site:` and `filetype:`. The tier allows about
-  100 searches a day per IP, so the engine stays out of every pool and runs
-  only when named; a refusal is reported as such, not as an empty result.
+- `youcom` calls the `you-search` tool on the free profile of You.com's MCP
+  server (`https://api.you.com/mcp?profile=free`), the keyless way in that
+  You.com documents; its REST search endpoints are paid per call. It has its
+  own web and news index and receives the domain filters, freshness,
+  SafeSearch and region. The profile allows 100 searches a day per IP, so the
+  engine stays out of every pool and runs only when named. A spent quota or a
+  refusal is reported as such, not as an empty result.
 - `bilibili` is keyless Bilibili (哔哩哔哩) video search through the public
   `web-interface/search/all/v2` JSON API (synthetic `buvid3` cookie, no
   login). It returns video results only.
