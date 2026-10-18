@@ -4,7 +4,12 @@ All notable changes to this project are documented here. The format is loosely
 based on [Keep a Changelog](https://keepachangelog.com/), and the project follows
 semantic versioning.
 
-## [Unreleased]
+## [0.14.0] - 2026-10-18
+
+Fresh installs of 0.13.1 crash at startup since selectolax 1.0 came out; this
+release starts again. It also stops a stalled browser launch from blocking
+every later fetch, adds an opt-in `youcom` engine, and makes the plugin
+installable in Hermes Agent.
 
 ### Added
 
@@ -14,13 +19,18 @@ semantic versioning.
   is in no pool and runs only when a search names it (`engines=["youcom"]`). A
   refusal is reported as one, not as an empty result. Suggested by
   @valueadd-lgtm in #23.
+- `plugins/free-search` is also an Agent Plugins v1 package: `plugin.json` and
+  `mcp.json` sit beside the Claude Code files and pin the same server version.
+  `hermes plugins install sweetcornna/free-search-mcp/plugins/free-search
+  --enable` installs the MCP server and the `verified-research` skill.
 
 ### Fixed
 
 - Installs no longer break on selectolax 1.0, which removed the `selectolax.parser`
   module the engines and the fetcher import: the dependency is now `selectolax<1`.
-  Until a release carries this, `uvx --from free-search-mcp --with "selectolax<1"
-  free-search-mcp` works around it.
+  0.13.1 and earlier still resolve 1.0 and fail on import. Upgrade, or run an
+  old version with `uvx --from free-search-mcp==0.13.1 --with "selectolax<1"
+  free-search-mcp`. Reported in #21, with the plugin's side traced in #22.
 - A browser launch that stalls no longer blocks the whole server. Starting the
   Playwright driver and launching the browser now give up after
   `SEARCH_MCP_BROWSER_LAUNCH_TIMEOUT` (30 seconds). Before, a launch that never
