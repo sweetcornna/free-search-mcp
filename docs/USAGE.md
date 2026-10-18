@@ -176,7 +176,7 @@ Engines outside the default pool, reached by name:
 | `searx` | public SearXNG instances | meta-search; public instances often slow |
 | `google` | Google web SERP scrape | falls back from HTTP to the browser; hit a JavaScript wall on every request when measured on 2026-09-21, so it is no use as a recovery path |
 | `serpsearch` | alias of `google` | identical behavior (all real SERP APIs need a key) |
-| `youcom` | You.com JSON API, keyless tier | its own web index; honours `site:` and `filetype:`; about 100 searches a day per IP, so it is not pooled |
+| `youcom` | You.com, free profile of its MCP server | its own web and news index; domain filters, freshness, SafeSearch and region are sent to it; 100 searches a day per IP, so it is not pooled |
 | `bilibili` | Bilibili (哔哩哔哩) JSON API | keyless video search (synthetic `buvid3` cookie); video results only |
 | `zhihu` | Zhihu (知乎) search page | best effort, browser-rendered; Zhihu hard-gates bots, so a login wall or an empty result is common and is reported as such |
 | `sogou` | 搜狗 HTML scrape | best effort; returns redirect URLs (`sogou.com/link?url=…`) instead of target URLs |
