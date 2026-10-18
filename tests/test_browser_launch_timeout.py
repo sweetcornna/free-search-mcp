@@ -46,10 +46,14 @@ class _Playwright:
 class _AsyncPlaywright:
     """Stands in for ``async_playwright()``; counts driver starts."""
 
-    def __init__(self, *, hang_start: bool = False, hang_launch: bool = True):
+    def __init__(
+        self, *, hang_start: bool = False, hang_launch: bool = True, hang_exit: bool = False
+    ):
         self.hang_start = hang_start
         self.hang_launch = hang_launch
+        self.hang_exit = hang_exit
         self.starts = 0
+        self.exits = 0
         self.drivers: list[_Playwright] = []
 
     def __call__(self):
@@ -62,6 +66,13 @@ class _AsyncPlaywright:
         driver = _Playwright(hang=self.hang_launch)
         self.drivers.append(driver)
         return driver
+
+    async def __aexit__(self, *exc):
+        # What Playwright.stop() calls, and the only way to stop a driver whose
+        # start() never returned.
+        self.exits += 1
+        if self.hang_exit:
+            await asyncio.Event().wait()
 
 
 @pytest.fixture
@@ -102,6 +113,8 @@ async def test_stalled_driver_start_times_out(monkeypatch, fast_timeouts):
     with pytest.raises(BrowserLaunchError):
         await asyncio.wait_for(pool.fetch_html("https://example.com"), timeout=5)
     assert not pool._lock.locked()
+    # start() never returned a handle, so the manager is what gets stopped.
+    assert fake.exits == 1
 
 
 async def test_concurrent_fetches_do_not_queue_forever(monkeypatch, fast_timeouts):
@@ -202,3 +215,32 @@ def test_tool_layers_treat_a_stall_as_an_expected_failure():
 
     assert BrowserLaunchError in server._ANTICIPATED
     assert BrowserLaunchError in agent._TOOL_FAILURES
+
+
+async def test_login_gives_up_on_a_stalled_launch_and_a_stalled_stop(monkeypatch, fast_timeouts):
+    monkeypatch.setattr(browser_mod, "_TEARDOWN_TIMEOUT", 0.1)
+    fake = _AsyncPlaywright(hang_exit=True)
+    monkeypatch.setattr(browser_mod, "async_playwright", fake)
+
+    ok = await asyncio.wait_for(BrowserPool().login("https://example.com"), timeout=5)
+    assert ok is False
+    assert fake.exits == 1
+
+
+def test_browser_trouble_does_not_bench_the_engine():
+    """A stall or a missing browser is the machine's problem. Counting it would
+    bench browser engines for the breaker's 10 minutes, long after the pool's
+    own 20-second cooldown let the browser start again."""
+    from search_mcp.aggregator import _record_health
+    from search_mcp.health import engine_health
+
+    raised = {
+        "startpage": BrowserLaunchError("did not start"),
+        "brave": BrowserUnavailableError("not installed"),
+        "zhihu": RuntimeError("boom"),
+    }
+    for _ in range(3):
+        _record_health(list(raised), [], raised, {})
+    assert not engine_health.is_open("startpage")
+    assert not engine_health.is_open("brave")
+    assert engine_health.is_open("zhihu")
