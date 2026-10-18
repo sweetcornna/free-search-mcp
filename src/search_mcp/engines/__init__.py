@@ -79,6 +79,7 @@ from .wikipedia import WikipediaEngine
 from .worldbank import WorldBankEngine
 from .worldclock import WorldClockEngine
 from .yahoofinance import YahooFinanceEngine
+from .youcom import YouComEngine
 from .zbmath import ZbMathEngine
 from .zenodo import ZenodoEngine
 from .zhihu import ZhihuEngine
@@ -95,11 +96,14 @@ ENGINES: dict[str, Engine] = {
     # Engines added per integration request — all keyless, all opt-in (not in
     # the fast default pool). google/serpsearch scrape Google web SERP;
     # serpsearch is a pure alias of google. anysearch is a JSON REST aggregator
-    # (anonymous tier). bilibili is a JSON video-search API. zhihu is
-    # browser-rendered + best-effort (Zhihu hard-gates headless clients).
+    # (anonymous tier). youcom is You.com's keyless JSON tier, about 100
+    # searches a day per IP, which is why it is not pooled. bilibili is a JSON
+    # video-search API. zhihu is browser-rendered + best-effort (Zhihu
+    # hard-gates headless clients).
     "google": GoogleEngine(),
     "serpsearch": SerpSearchEngine(),
     "anysearch": AnySearchEngine(),
+    "youcom": YouComEngine(),
     "bilibili": BilibiliEngine(),
     "zhihu": ZhihuEngine(),
     # Vertical sources — all keyless JSON/feed APIs. They declare a `categories`
