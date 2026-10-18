@@ -33,7 +33,7 @@ from . import __version__, downloads
 from .agent import HOST_AGENT_PROMPT, AgentError, config_problem
 from .agent import ask as run_ask
 from .aggregator import aggregate_search, list_engines
-from .browser import BrowserUnavailableError, pool
+from .browser import BrowserLaunchError, BrowserUnavailableError, pool
 from .cache import cache
 from .compare import compare_urls
 from .config import settings
@@ -255,6 +255,9 @@ _ANTICIPATED: tuple[type[BaseException], ...] = (
     FetchError,
     MaxBytesExceededError,
     BrowserUnavailableError,
+    # The browser did not start within `browser_launch_timeout`: a transport
+    # stall, not a bug. Its message carries the remedy.
+    BrowserLaunchError,
     # read_doc, download and extract_structured fetch over httpx.
     httpx.HTTPError,
     httpx.InvalidURL,

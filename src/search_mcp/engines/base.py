@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import abc
 import asyncio
+import logging
 import random
 import re
 from dataclasses import asdict, dataclass, field
@@ -13,7 +14,7 @@ from curl_cffi.requests import AsyncSession
 from curl_cffi.requests.exceptions import RequestException, Timeout
 from selectolax.parser import HTMLParser
 
-from ..browser import BrowserUnavailableError, pool
+from ..browser import BrowserLaunchError, BrowserUnavailableError, pool
 from ..config import settings
 
 # Shared with the fetch path so search and fetch traffic always present the
@@ -21,6 +22,8 @@ from ..config import settings
 # inconsistency naive headless detection (DDG anomaly page) looks for.
 from ..httpfetch import IMPERSONATE
 from ..net import curl_proxy_kwargs
+
+log = logging.getLogger(__name__)
 
 Freshness = Literal["day", "week", "month", "year"]
 
@@ -1334,6 +1337,11 @@ class Engine(abc.ABC):
                 # a per-engine stack trace.
                 if diagnostics is not None:
                     diagnostics.setdefault("gated", {})[self.name] = "browser_unavailable"
+            except BrowserLaunchError as e:
+                # The browser start stalled. That is transient, so neither the
+                # install hint nor a "browser missing" gate applies: keep the
+                # (empty) HTTP outcome and let the other engines answer.
+                log.info("browser fallback for %s skipped: %s", self.name, e)
         return results, html
 
     def finalize_results(
@@ -1389,9 +1397,10 @@ class Engine(abc.ABC):
                 raise
             try:
                 _, html = await pool.fetch_html(url, wait_selector=self.wait_selector)
-            except BrowserUnavailableError:
-                # The browser can't rescue this and its absence is not the
-                # cause — surface the real network error, not an install hint.
+            except (BrowserUnavailableError, BrowserLaunchError):
+                # The browser cannot rescue this (no binary, or its start
+                # stalled), and it is not the cause: surface the real network
+                # error, not an install or retry hint.
                 raise http_err from None
             return html
 
