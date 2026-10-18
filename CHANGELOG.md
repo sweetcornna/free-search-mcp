@@ -4,10 +4,23 @@ All notable changes to this project are documented here. The format is loosely
 based on [Keep a Changelog](https://keepachangelog.com/), and the project follows
 semantic versioning.
 
-## [Unreleased]
+## [0.14.1] - 2026-10-18
+
+Fixes to two 0.14.0 changes, found in review after they were merged: the
+`youcom` engine now uses the free access You.com documents, and the bounded
+browser launch cleans up after itself.
 
 ### Fixed
 
+- `youcom` now searches through the `you-search` tool on the free profile of
+  You.com's MCP server (`https://api.you.com/mcp?profile=free`, 100 searches a
+  day), the keyless access You.com documents. 0.14.0 called a REST endpoint
+  that You.com documents as paid per call; it answered unpaid requests, but
+  nothing promised it would keep doing so. The engine also maps news results
+  now, and forwards freshness, SafeSearch and `SEARCH_MCP_REGION`. A web
+  result's date is shown but no longer used to drop it as stale, because it
+  can be a crawl date. A spent quota or a rejected argument now shows up in
+  the errors map with You.com's own message.
 - A browser start that stalls no longer leaves its driver process behind. When
   Playwright's driver had not finished starting, the timeout added in 0.14.0
   gave up without stopping it; now the timeout path stops it.
