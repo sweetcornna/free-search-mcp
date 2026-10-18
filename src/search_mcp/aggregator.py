@@ -13,7 +13,12 @@ from urllib.parse import urlparse, urlsplit
 
 from rapidfuzz import fuzz
 
-from .browser import BROWSER_INSTALL_HINT, brief_error
+from .browser import (
+    BROWSER_INSTALL_HINT,
+    BrowserLaunchError,
+    BrowserUnavailableError,
+    brief_error,
+)
 from .browser import pool as browser_pool
 from .cache import cache
 from .coherence import (  # noqa: F401
@@ -539,6 +544,10 @@ def _active_pool(nominal: list[str]) -> tuple[list[str], dict[str, dict[str, Any
     return active, benched
 
 
+# Raised by an engine without saying anything about the engine itself.
+_NOT_THE_ENGINES_FAULT = (ValueError, BrowserUnavailableError, BrowserLaunchError)
+
+
 def _record_health(
     ran: list[str],
     named: list[tuple[str, list[SearchResult]]],
@@ -547,11 +556,12 @@ def _record_health(
 ) -> None:
     """Tell the breaker how each engine that ran did.
 
-    Called after the off-topic guard, so `off_topic` counts. Three outcomes are
+    Called after the off-topic guard, so `off_topic` counts. Four outcomes are
     deliberately NOT failures: a missing local browser (the machine's problem,
-    and the install hint must keep appearing), a rate-limit skip (ours), and a
-    ValueError (an unknown engine name or a missing API key — configuration,
-    which no amount of waiting repairs).
+    and the install hint must keep appearing), a browser that did not start (a
+    local network stall, which the pool's own cooldown already retries), a
+    rate-limit skip (ours), and a ValueError (an unknown engine name or a
+    missing API key — configuration, which no amount of waiting repairs).
     """
     if not settings.health_enabled:
         return
@@ -568,7 +578,7 @@ def _record_health(
         if name in skipped:
             continue
         if name in raised:
-            if not isinstance(raised[name], ValueError):
+            if not isinstance(raised[name], _NOT_THE_ENGINES_FAULT):
                 engine_health.record_failure(name, "error")
             continue
         reason = gated.get(name)

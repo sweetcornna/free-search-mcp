@@ -4,6 +4,19 @@ All notable changes to this project are documented here. The format is loosely
 based on [Keep a Changelog](https://keepachangelog.com/), and the project follows
 semantic versioning.
 
+## [Unreleased]
+
+### Fixed
+
+- A browser start that stalls no longer leaves its driver process behind. When
+  Playwright's driver had not finished starting, the timeout added in 0.14.0
+  gave up without stopping it; now the timeout path stops it.
+  `search-mcp-login` bounds its cleanup after a stalled launch as well, so the
+  command cannot hang there either.
+- A browser that did not start, or is not installed, no longer counts against
+  an engine in the circuit breaker. Before, two browser-engine searches during
+  the 20-second browser cooldown benched those engines for 10 minutes.
+
 ## [0.14.0] - 2026-10-18
 
 Fresh installs of 0.13.1 crash at startup since selectolax 1.0 came out; this

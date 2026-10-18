@@ -146,6 +146,19 @@ window.navigator.permissions.query = (p) => (
 # Seconds to wait for a half-built context to close, or a driver to stop.
 _TEARDOWN_TIMEOUT = 5.0
 
+
+async def _close_manager(manager) -> None:
+    """Stop a Playwright driver whose ``start()`` never returned.
+
+    The manager may already own the node process by then, and only the manager
+    can stop it: the ``Playwright`` handle ``start()`` would have returned does
+    not exist yet. Bounded, and silent when there is nothing to stop.
+    """
+    try:
+        await asyncio.wait_for(manager.__aexit__(None, None, None), _TEARDOWN_TIMEOUT)
+    except Exception:
+        log.debug("playwright manager exit after a stalled start failed")
+
 # Common desktop viewports — pick one per session to break up the trivially
 # constant-1366x800 fingerprint without straying into freakish dimensions.
 _VIEWPORTS = [
@@ -244,14 +257,14 @@ class BrowserPool:
             # holds the lock forever, and every later fetch in the process
             # waits behind it until the MCP client gives up. Bounded, the
             # stall costs one failed request.
+            manager = async_playwright()
             try:
-                self._playwright = await asyncio.wait_for(
-                    async_playwright().start(), timeout=timeout
-                )
+                self._playwright = await asyncio.wait_for(manager.start(), timeout=timeout)
             except TimeoutError as e:
                 # The driver handshake hung. Treat it like a stalled launch:
-                # tear down, cool down, and raise the network hint.
-                await self._teardown_driver()
+                # stop what the manager started, cool down, and raise the
+                # network hint.
+                await _close_manager(manager)
                 self._launch_failed_at = time.monotonic()
                 raise BrowserLaunchError(_launch_timeout_hint()) from e
 
@@ -378,15 +391,14 @@ class BrowserPool:
         ``/login`` path — or until ``timeout_ms`` elapses. Returns ``True`` on
         success, ``False`` on failure.
         """
+        manager = async_playwright()
         playwright = None
         ctx: BrowserContext | None = None
         timeout = settings.browser_launch_timeout
         try:
             # Bounded like _ensure(), so a stalled driver or launch cannot hang
             # the login command forever.
-            playwright = await asyncio.wait_for(
-                async_playwright().start(), timeout=timeout
-            )
+            playwright = await asyncio.wait_for(manager.start(), timeout=timeout)
             user_data_dir = str(settings.cache_dir / "browser_profile")
             settings.cache_dir.mkdir(parents=True, exist_ok=True)
 
@@ -449,16 +461,15 @@ class BrowserPool:
             log.warning("interactive login failed: %s", e)
             return False
         finally:
+            # Bounded too: after a stall, close and stop can hang on the same
+            # driver. The manager's exit is what playwright.stop() calls, and
+            # it also covers a start() that never returned.
             if ctx is not None:
                 try:
-                    await ctx.close()
+                    await asyncio.wait_for(ctx.close(), _TEARDOWN_TIMEOUT)
                 except Exception:
                     log.debug("login ctx close failed")
-            if playwright is not None:
-                try:
-                    await playwright.stop()
-                except Exception:
-                    log.debug("login playwright stop failed")
+            await _close_manager(manager)
 
     async def shutdown(self) -> None:
         async with self._lock:
