@@ -236,6 +236,10 @@ By name only (all keyless):
   The tier is rate-limited per IP, and a 429 or 5xx degrades to an empty
   result. It does not honour `site:` / `filetype:` operators, so domain filters
   are applied to its results afterwards.
+- `youcom` calls the keyless tier of You.com's search API. It has its own
+  index and honours `site:`, `-site:` and `filetype:`. The tier allows about
+  100 searches a day per IP, so the engine stays out of every pool and runs
+  only when named; a refusal is reported as such, not as an empty result.
 - `bilibili` is keyless Bilibili (哔哩哔哩) video search through the public
   `web-interface/search/all/v2` JSON API (synthetic `buvid3` cookie, no
   login). It returns video results only.
@@ -566,6 +570,7 @@ category=forum. Try widening or removing one filter.
    │   google.py    (opt) │
    │   serpsearch.py(opt) │
    │   anysearch.py       │
+   │   youcom.py    (opt) │
    │   bilibili.py  (opt) │
    │   zhihu.py     (opt) │
    │   sogou.py     (opt) │

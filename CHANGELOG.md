@@ -6,6 +6,15 @@ semantic versioning.
 
 ## [Unreleased]
 
+### Added
+
+- An opt-in `youcom` engine for the keyless tier of You.com's search API. It
+  searches You.com's own index, honours `site:`, `-site:` and `filetype:`, and
+  needs no key. The tier allows about 100 searches a day per IP, so the engine
+  is in no pool and runs only when a search names it (`engines=["youcom"]`). A
+  refusal is reported as one, not as an empty result. Suggested by
+  @valueadd-lgtm in #23.
+
 ### Fixed
 
 - Installs no longer break on selectolax 1.0, which removed the `selectolax.parser`
