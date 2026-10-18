@@ -135,7 +135,8 @@ async def _run(era: str) -> list[tuple[str, bool, str]]:
             from urllib.parse import quote
 
             page = await client.read_resource(f"cache://page/{quote(PAGE, safe='')}")
-            check("resources/read", "Example Domain" in page.contents[0].text)
+            # The cached body is the extracted text, without the page title.
+            check("resources/read", "documentation examples" in page.contents[0].text)
     return rows
 
 
