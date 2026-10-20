@@ -240,7 +240,7 @@ they hit a JavaScript wall on every request when last measured.
 
 Never ask for an API key, and never suggest getting one as a fix. The server is
 built to work without them, and nothing it selects on its own needs one.
-`brave_api`, `serper`, `tavily`, `google_cse` and `github_code` are opt-in
+`brave_api`, `serper`, `serpbase`, `tavily`, `google_cse` and `github_code` are opt-in
 engines: they run only when a call names them and the operator has already set
 their own key. If one answers "not configured", the search itself is fine, so
 carry on with the keyless engines.

@@ -46,7 +46,8 @@ def test_the_opt_in_set_is_exactly_the_engines_that_cannot_run_keyless():
     # `codex` and `antigravity` run on the operator's own sign-in rather than
     # a key; they are held to exactly the same rules.
     assert opt_in == {
-        "brave_api", "serper", "tavily", "google_cse", "github_code", "codex", "antigravity",
+        "brave_api", "serper", "serpbase", "tavily", "google_cse", "github_code", "codex",
+        "antigravity",
     }  # fmt: skip
     assert opt_in <= set(ENGINES)
 

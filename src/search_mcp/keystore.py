@@ -263,6 +263,21 @@ PROVIDERS: list[Provider] = [
         docs_url="https://serper.dev/playground",
     ),
     Provider(
+        id="serpbase",
+        label="SerpBase (Google)",
+        engine="serpbase",
+        fields=[ProviderField("serpbase_api_key", "API key", placeholder="…")],
+        signup_url="https://serpbase.dev",
+        free_tier="100 free credits on signup, no credit card",
+        how_to=[
+            "Open https://serpbase.dev and create an account (100 free credits, no card).",
+            "Create a key at https://serpbase.dev/api-keys and copy it.",
+            "Paste it here. One key covers every SerpBase product; this engine uses "
+            "Google Web Search, billed 1 credit per request.",
+        ],
+        docs_url="https://serpbase.dev/docs",
+    ),
+    Provider(
         id="tavily",
         label="Tavily (AI search)",
         engine="tavily",

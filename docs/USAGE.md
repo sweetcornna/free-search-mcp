@@ -455,13 +455,14 @@ ones:
 ### Optional: bring your own key (manual)
 
 Nothing above needs a key, and nothing in the default, reserve, rescue, fresh,
-locale or category pools ever uses one. Five engines are **opt-in**: they run
+locale or category pools ever uses one. Six engines are **opt-in**: they run
 only when a call names them and the operator has set their own key.
 
 | Engine | Provider | Needs |
 |---|---|---|
 | `brave_api` | Brave Search API | `brave_api_key` |
 | `serper` | Serper | `serper_api_key` |
+| `serpbase` | SerpBase (Google Web Search path) | `serpbase_api_key` |
 | `tavily` | Tavily | `tavily_api_key` |
 | `google_cse` | Google Custom Search | `google_cse_api_key` + `google_cse_cx` |
 | `github_code` | GitHub code search | `github_token` (the keyless `github` engine covers repos/issues) |
