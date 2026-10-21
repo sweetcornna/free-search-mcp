@@ -4,6 +4,23 @@ All notable changes to this project are documented here. The format is loosely
 based on [Keep a Changelog](https://keepachangelog.com/), and the project follows
 semantic versioning.
 
+## [0.15.0] - 2026-10-21
+
+A new opt-in engine: `serpbase`, Google results through the SerpBase API.
+
+### Added
+
+- `serpbase`, an opt-in engine that searches Google through
+  [SerpBase](https://serpbase.dev) with your own key
+  (`SEARCH_MCP_SERPBASE_API_KEY`, or the field on the settings page). Like the
+  other keyed engines it runs only when a call names it
+  (`engines=["serpbase"]`). SerpBase answers HTTP 200 even when a request
+  fails, so the engine reads the status in the response body: a rejected key,
+  spent credits, a plan that does not cover the request and a rate limit each
+  show up in the errors map with what to do, instead of as an empty result.
+  Domain and filetype filters ride in the query as Google operators. The setup
+  steps are in `docs/API_KEYS.md`. Contributed by @gefsikatsinelou (#7).
+
 ## [0.14.1] - 2026-10-18
 
 Fixes to two 0.14.0 changes, found in review after they were merged: the
