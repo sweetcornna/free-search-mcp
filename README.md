@@ -279,13 +279,14 @@ apps and services" in the Google account.
 
 ## Optional: your own API key
 
-You do not need one, and agents should never ask for one. Five engines run
+You do not need one, and agents should never ask for one. Six engines run
 only when a call names them and the operator has set their own key:
 
 | Engine | Provider | Key |
 |---|---|---|
 | `brave_api` | [Brave Search API](https://brave.com/search/api/) | `SEARCH_MCP_BRAVE_API_KEY` |
 | `serper` | [Serper](https://serper.dev) | `SEARCH_MCP_SERPER_API_KEY` |
+| `serpbase` | [SerpBase](https://serpbase.dev) | `SEARCH_MCP_SERPBASE_API_KEY` |
 | `tavily` | [Tavily](https://app.tavily.com) | `SEARCH_MCP_TAVILY_API_KEY` |
 | `google_cse` | [Google Custom Search](https://programmablesearchengine.google.com/) | `SEARCH_MCP_GOOGLE_CSE_API_KEY` + `SEARCH_MCP_GOOGLE_CSE_CX` |
 | `github_code` | [GitHub](https://github.com/settings/tokens) | `SEARCH_MCP_GITHUB_TOKEN` |

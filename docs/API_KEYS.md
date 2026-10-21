@@ -7,8 +7,8 @@ and `tests/test_no_key_positioning.py` enforces that.
 This page is for the operator who already has an account with a search API and
 wants to point this server at it by hand. Two rules hold throughout:
 
-- Opt-in engines never run on their own. `brave_api`, `serper`, `tavily`,
-  `google_cse` and `github_code` run only when a call names them
+- Opt-in engines never run on their own. `brave_api`, `serper`, `serpbase`,
+  `tavily`, `google_cse` and `github_code` run only when a call names them
   (`engines=["serper"]`) and you have set your own key. Named without one, the
   engine returns an error that says the search itself is fine and what to use
   instead.
@@ -121,6 +121,40 @@ Use it:
 ```python
 search("...", engines=["serper"])
 ```
+
+## SerpBase (Google results, via a search-and-data API)
+
+Google web results through the SerpBase API. Free tier: 100 credits on signup,
+no credit card. This engine calls the Google Web Search product, which costs
+1 credit per request. The same key covers SerpBase's other products (DuckDuckGo,
+Maps, Amazon/Walmart/eBay and other storefronts, Reddit/X/TikTok/YouTube,
+scrape/crawl), but this package does not use them.
+
+How to get a key:
+
+1. Open https://serpbase.dev and create an account — 100 free credits, no card.
+2. Create a key at https://serpbase.dev/api-keys and copy it.
+3. Paste it into the settings page, or set `SEARCH_MCP_SERPBASE_API_KEY`.
+
+- Sign up: https://serpbase.dev
+- Docs: https://serpbase.dev/docs
+- Environment variable: `SEARCH_MCP_SERPBASE_API_KEY`
+
+Use it:
+
+```python
+search("...", engines=["serpbase"])
+```
+
+Two things worth knowing, because they are unusual:
+
+- The API answers **HTTP 200 even when a request fails**. Success is the
+  envelope's `status == 0`; a rejected key is a 200 whose body says
+  `{"status": 1001}`. This engine maps those codes, so a bad key reports
+  "credential was rejected" rather than an empty result set.
+- Credited usage is prepaid and never expires; a request costs 1–3 credits
+  depending on the product (1 for Google Web Search). Failed requests are not
+  charged.
 
 ## Tavily (AI search)
 
@@ -248,6 +282,7 @@ How to get a key:
 | --- | --- | --- |
 | Brave Search API | 2,000 queries/month | `brave_api` (opt-in) |
 | Serper (Google) | 2,500 queries (one-time) | `serper` (opt-in) |
+| SerpBase (Google + 38 more products) | 100 credits on signup, no card | `serpbase` (opt-in) |
 | Tavily (AI search) | 1,000 credits/month | `tavily` (opt-in) |
 | Google Custom Search | 100 queries/day | `google_cse` (opt-in; needs API key + cx) |
 | GitHub | Keyless 10/min; token 30/min | lifts `github`; enables `github_code` (opt-in) |

@@ -41,8 +41,8 @@ Before reaching for a proxy, check whether one of these applies:
   `gated_engines`.
 - Its answer was off-topic and discarded (§4). That is not a block, and a proxy
   does not change it.
-- An opt-in engine was named without its key. `brave_api`, `serper`, `tavily`,
-  `google_cse` and `github_code` run only on the operator's own key. Named
+- An opt-in engine was named without its key. `brave_api`, `serper`, `serpbase`,
+  `tavily`, `google_cse` and `github_code` run only on the operator's own key. Named
   without one, they raise an error, because an empty list would be
   indistinguishable from "nothing matched". The error says the search itself
   is fine, names the keyless alternative (`github` covers repositories and

@@ -262,8 +262,8 @@ def test_the_guarded_engines_are_exactly_the_web_indexes():
     be made on purpose: set `single_site = True`, or add the name here."""
     assert {name for name in ENGINES if _is_guarded(name)} == {
         "duckduckgo", "mojeek", "searx", "startpage", "brave", "bing", "baidu", "google",
-        "serpsearch", "anysearch", "sogou", "so360", "brave_api", "serper", "tavily",
-        "google_cse", "codex", "antigravity", "youcom",
+        "serpsearch", "anysearch", "sogou", "so360", "brave_api", "serper", "serpbase",
+        "tavily", "google_cse", "codex", "antigravity", "youcom",
     }  # fmt: skip
 
 

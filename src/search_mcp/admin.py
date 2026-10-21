@@ -60,6 +60,15 @@ _PROVIDER_ZH: dict[str, dict[str, object]] = {
             "复制 API Key 栏里的密钥。",
         ],
     },
+    "serpbase": {
+        "label": "SerpBase（搜索与数据 API）",
+        "free_tier": "注册即送 100 积分，无需绑定卡片",
+        "how_to": [
+            "打开 serpbase.dev 并注册，注册后立即可用 100 免费积分，不需要信用卡。",
+            "进入 https://serpbase.dev/api-keys 创建密钥并复制。",
+            "把密钥粘贴到这里。一个密钥覆盖 SerpBase 全部产品；本引擎只调用 Google 网页搜索，每次请求 1 积分。",
+        ],
+    },
     "tavily": {
         "label": "Tavily（AI 搜索）",
         "free_tier": "每月 1,000 credits 免费",
@@ -121,6 +130,7 @@ _PROVIDER_ZH: dict[str, dict[str, object]] = {
 _FIELD_ZH: dict[str, str] = {
     "brave_api_key": "API 密钥",
     "serper_api_key": "API 密钥",
+    "serpbase_api_key": "API 密钥",
     "tavily_api_key": "API 密钥",
     "google_cse_api_key": "API 密钥",
     "google_cse_cx": "搜索引擎 ID (cx)",
@@ -685,13 +695,13 @@ def _render_page() -> str:
     )
     keys_note = (
         "Search already works without any of these. They are for an operator who "
-        "has their own account with a provider: brave_api, serper, tavily, google_cse "
-        "and github_code run only when a call names them; the rest only raise a "
+        "has their own account with a provider: brave_api, serper, serpbase, tavily, "
+        "google_cse and github_code run only when a call names them; the rest only raise a "
         "keyless engine's limits."
     )
     keys_note_zh = (
         "不填写任何密钥也能正常搜索。以下内容仅供已有服务商账号的使用者手动填写："
-        "brave_api、serper、tavily、google_cse、github_code 只有在调用中被点名时才会运行，"
+        "brave_api、serper、serpbase、tavily、google_cse、github_code 只有在调用中被点名时才会运行，"
         "其余密钥只是提高免密钥引擎的额度。"
     )
     return f"""<!doctype html>
