@@ -4,7 +4,7 @@ All notable changes to this project are documented here. The format is loosely
 based on [Keep a Changelog](https://keepachangelog.com/), and the project follows
 semantic versioning.
 
-## [Unreleased]
+## [0.16.0] - 2026-10-22
 
 Faster start, searches and fetches. Measured 2026-10-22 through a fake-IP
 tunnel, a search spent about 1 to 2 % of its time in Python and the rest
