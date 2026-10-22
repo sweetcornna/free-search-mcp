@@ -26,12 +26,12 @@ import logging
 import re
 from urllib.parse import quote, urlparse
 
-from curl_cffi.requests import AsyncSession
 from curl_cffi.requests.exceptions import RequestException
 
 from .config import settings
 from .httpfetch import IMPERSONATE
 from .net import curl_proxy_kwargs
+from .sessions import AsyncSession
 
 log = logging.getLogger(__name__)
 

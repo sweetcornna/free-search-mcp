@@ -35,11 +35,10 @@ import logging
 from contextvars import ContextVar
 from typing import Any
 
-from curl_cffi.requests import AsyncSession
-
 from ..config import settings
 from ..httpfetch import IMPERSONATE
 from ..net import curl_proxy_kwargs
+from ..sessions import AsyncSession
 from .base import Engine, EngineKeyError, SearchFilters, SearchResult
 
 log = logging.getLogger(__name__)

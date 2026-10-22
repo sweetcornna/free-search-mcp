@@ -470,7 +470,7 @@ requires-dist = [
     { name = "aiosqlite", specifier = ">=0.20" },
     { name = "anyio", specifier = ">=4.4" },
     { name = "certifi", specifier = ">=2024.8.30" },
-    { name = "curl-cffi", specifier = ">=0.7" },
+    { name = "curl-cffi", specifier = ">=0.12" },
     { name = "ebooklib", specifier = ">=0.18" },
     { name = "extruct", specifier = ">=0.18" },
     { name = "httpx", extras = ["socks"], specifier = ">=0.27" },

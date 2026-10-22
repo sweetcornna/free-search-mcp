@@ -3,16 +3,19 @@ each tool says when to use it, when NOT to use it, what it returns, and the
 mistakes models commonly make when calling it."""
 from __future__ import annotations
 
+import asyncio
+import contextlib
 import functools
+import importlib
 import inspect
 import json
 import logging
-from collections.abc import Callable
+import sys
+from collections.abc import AsyncIterator, Callable
 from dataclasses import dataclass, field
 from typing import Any, Literal, get_args
 from urllib.parse import quote, unquote
 
-import httpx
 import pydantic_core
 from mcp.server.caching import CacheHint
 from mcp.server.mcpserver import Context, Image, MCPServer
@@ -30,17 +33,10 @@ from mcp.types import (
 )
 
 from . import __version__, downloads
-from .agent import HOST_AGENT_PROMPT, AgentError, config_problem
-from .agent import ask as run_ask
-from .aggregator import aggregate_search, list_engines
 from .browser import BrowserLaunchError, BrowserUnavailableError, pool
 from .cache import cache
-from .compare import compare_urls
+from .categories import Category, Freshness
 from .config import settings
-from .documents import read_document
-from .engines import ENGINES, Category, source_taxonomy
-from .engines.base import Freshness
-from .fetcher import decode_cached_title, fetch_bytes, fetch_many, fetch_page
 from .formatting import (
     errors_to_hint,
     render_ask,
@@ -55,9 +51,7 @@ from .formatting import (
 )
 from .httpfetch import FetchError, MaxBytesExceededError
 from .keystore import opt_in_engines
-from .paper_graph import paper_graph as run_paper_graph
-from .research import research as run_research
-from .structured import extract_structured as _extract_structured
+from .prewarm import prewarm
 
 logging.basicConfig(
     level=getattr(logging, settings.log_level.upper(), logging.INFO),
@@ -68,6 +62,34 @@ logging.basicConfig(
 # 2026-07-28 revision; stderr via the stdlib is the recommended replacement,
 # which is what basicConfig above already gives us on stdio.
 log = logging.getLogger(__name__)
+
+
+# The tools' implementations are imported on their first call, not with this
+# module. The handshake used to wait for all of them: the engine registry (75
+# modules, curl_cffi, selectolax), trafilatura and lxml, pypdf and Pillow,
+# extruct, Playwright, the answer agent. Measured 2026-10-22, that was 10 s of
+# a freshly installed server's 12 s start and about 1 s of every later one.
+# prewarm.py loads the search and fetch path in the background once the server
+# is up. Each name stays an attribute of this module, which is what tests patch.
+def _lazy(module: str, name: str) -> Callable[..., Any]:
+    async def call(*args: Any, **kwargs: Any) -> Any:
+        impl = getattr(importlib.import_module(module, __package__), name)
+        return await impl(*args, **kwargs)
+
+    call.__name__ = call.__qualname__ = name
+    return call
+
+
+aggregate_search = _lazy(".aggregator", "aggregate_search")
+compare_urls = _lazy(".compare", "compare_urls")
+fetch_bytes = _lazy(".fetcher", "fetch_bytes")
+fetch_many = _lazy(".fetcher", "fetch_many")
+fetch_page = _lazy(".fetcher", "fetch_page")
+read_document = _lazy(".documents", "read_document")
+run_ask = _lazy(".agent", "ask")
+run_paper_graph = _lazy(".paper_graph", "paper_graph")
+run_research = _lazy(".research", "research")
+_extract_structured = _lazy(".structured", "extract_structured")
 
 # Every list here is fixed for the life of the process — tools, prompts and
 # resource templates are all declared at import time and nothing mutates them.
@@ -87,6 +109,41 @@ _CACHE_HINTS = {
 # Keyword args throughout: MCPServer's positional order is
 # (name, title, description, instructions, ...), so a positional `instructions`
 # would silently land in the `title` slot.
+@contextlib.asynccontextmanager
+async def _lifespan(_server: MCPServer) -> AsyncIterator[dict[str, Any]]:
+    # Warm what the first search would otherwise wait for (see prewarm.py),
+    # without holding up the handshake.
+    tasks = [asyncio.ensure_future(prewarm()), asyncio.ensure_future(_report_agent_problem())]
+    try:
+        yield {}
+    finally:
+        for task in tasks:
+            task.cancel()
+        await asyncio.wait(tasks, timeout=1.0)
+
+
+async def _report_agent_problem() -> None:
+    """Log a misconfigured answer agent, off the handshake's path: checking it
+    imports the agent, and the agent imports the whole search stack."""
+    if settings.agent_backend == "off":
+        return
+
+    def check() -> str | None:
+        from .agent import config_problem
+
+        return config_problem()
+
+    try:
+        problem = await asyncio.to_thread(check)
+    except Exception:  # noqa: BLE001
+        log.exception("could not check the answer agent's configuration")
+        return
+    if problem:
+        # The tool is registered anyway: the same text is what a call returns,
+        # and an operator reading the log sees it before any model does.
+        log.warning("answer agent is misconfigured: %s", problem)
+
+
 mcp = MCPServer(
     "search-mcp",
     title="Free Search",
@@ -122,6 +179,7 @@ mcp = MCPServer(
     website_url="https://github.com/sweetcornna/free-search-mcp",
     version=__version__,
     cache_hints=_CACHE_HINTS,
+    lifespan=_lifespan,
 )
 
 Format = Literal["markdown", "json"]
@@ -258,13 +316,23 @@ _ANTICIPATED: tuple[type[BaseException], ...] = (
     # The browser did not start within `browser_launch_timeout`: a transport
     # stall, not a bug. Its message carries the remedy.
     BrowserLaunchError,
-    # read_doc, download and extract_structured fetch over httpx.
-    httpx.HTTPError,
-    httpx.InvalidURL,
-    # `ask` with a backend that cannot run as configured. The message names the
-    # setting to change.
-    AgentError,
 )
+
+
+def _anticipated() -> tuple[type[BaseException], ...]:
+    """`_ANTICIPATED` plus the types of modules loaded only with the tools
+    that use them. A module that has not been imported cannot have raised."""
+    found = list(_ANTICIPATED)
+    httpx = sys.modules.get("httpx")
+    if httpx is not None:
+        # read_doc, download and extract_structured fetch over httpx.
+        found += [httpx.HTTPError, httpx.InvalidURL]
+    agent = sys.modules.get(f"{__package__}.agent")
+    if agent is not None:
+        # `ask` with a backend that cannot run as configured. The message names
+        # the setting to change.
+        found.append(agent.AgentError)
+    return tuple(found)
 
 
 def _message(exc: BaseException) -> str:
@@ -277,7 +345,7 @@ def _message(exc: BaseException) -> str:
 def _translate(name: str, exc: Exception) -> ToolError:
     if isinstance(exc, ToolError):
         return exc
-    if isinstance(exc, _ANTICIPATED):
+    if isinstance(exc, _anticipated()):
         return ToolError(_message(exc))
     # A bug. Log everything, tell the model only what helps it decide what to
     # do next: this is not about its arguments, so retrying unchanged is wasted.
@@ -1120,6 +1188,8 @@ async def cache_search(
         if format == "json":
             return []
         return "_Empty query. Pass FTS5 terms, e.g. `asyncio` or `\"exact phrase\"`._\n"
+    from .fetcher import decode_cached_title
+
     rows = [decode_cached_title(r) for r in await cache.search_pages(query, limit=limit)]
     if format == "json":
         return rows
@@ -1182,6 +1252,9 @@ def engines(
     - Passing a key-only engine with no key configured; it returns an
       actionable error, not results.
     """
+    from .aggregator import list_engines
+    from .engines import ENGINES, source_taxonomy
+
     taxonomy = source_taxonomy()
     if group:
         key = group.split(".", 1)[0].strip().lower()
@@ -1481,12 +1554,8 @@ def enable_ask(server: MCPServer | None = None) -> None:
 _DECLARED_TOOLS.add("ask")
 
 if settings.agent_backend != "off":
+    # Its configuration is checked once the server is up (_report_agent_problem).
     enable_ask()
-    _problem = config_problem()
-    if _problem:
-        # Registered anyway: the same text is what a call returns, and an
-        # operator reading the log sees it before any model does.
-        log.warning("answer agent is misconfigured: %s", _problem)
 
 
 # ---------------------------------------------------------------------------
@@ -1578,6 +1647,8 @@ def quick_search(question: str) -> str:
     """A fast, sourced lookup: the quick-search agent's instructions plus the
     question. Run it inline, or hand the text to a subagent on a host that has
     no agent files (Codex's `spawn_agent` takes it as the message)."""
+    from .agent import HOST_AGENT_PROMPT
+
     return f"{HOST_AGENT_PROMPT}\n\nQuestion: {question}"
 
 

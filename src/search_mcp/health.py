@@ -222,3 +222,91 @@ class EngineHealth:
 
 
 engine_health = EngineHealth()
+
+
+# How long an engine's plain-HTTP request is skipped after it served a wall
+# that the browser render got past. Measured 2026-10-22: DuckDuckGo answered
+# every HTTP request from one IP with its duck captcha, 1.1 to 2.3 s each,
+# before the browser render that then succeeded. The wall did not lift between
+# searches, so asking again bought nothing. When the period runs out the next
+# search tries HTTP first again, which is the probe.
+HTTP_WALL_SECONDS = 15 * 60.0
+
+
+class HttpWalls:
+    """Engines whose HTTP path is walled while their browser render is not.
+
+    Written to `<cache_dir>/http_walls.json` (name -> wall-clock expiry) for
+    the same reason the breaker is: a fresh process would otherwise pay the
+    walled request once more before it learned. An expired wall is kept for a
+    day so that startup can tell the browser is likely to be needed (see
+    prewarm.py). The file is advisory.
+    """
+
+    def __init__(
+        self, ttl: float = HTTP_WALL_SECONDS, wall: Callable[[], float] = time.time
+    ) -> None:
+        self._ttl = ttl
+        self._wall = wall
+        self._until: dict[str, float] = {}
+        self._loaded = False
+
+    @staticmethod
+    def _path() -> Path:
+        return settings.cache_dir / "http_walls.json"
+
+    def _load(self) -> None:
+        if self._loaded:
+            return
+        self._loaded = True
+        try:
+            rows = json.loads(self._path().read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return
+        if not isinstance(rows, dict):
+            return
+        for name, until in rows.items():
+            if isinstance(until, int | float) and name not in self._until:
+                self._until[name] = float(until)
+
+    def _save(self) -> None:
+        since = self._wall() - _REMEMBER_EXPIRED_FOR
+        rows = {name: until for name, until in self._until.items() if until > since}
+        path = self._path()
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            tmp = path.with_name(f"{path.name}.{os.getpid()}.tmp")
+            tmp.write_text(json.dumps(rows, indent=1), encoding="utf-8")
+            os.replace(tmp, path)
+        except OSError as exc:
+            log.debug("http walls not saved: %s", exc)
+
+    def is_walled(self, name: str) -> bool:
+        self._load()
+        return self._until.get(name, 0.0) > self._wall()
+
+    def recently_walled(self, name: str) -> bool:
+        """Walled now, or within the last day."""
+        self._load()
+        return self._until.get(name, 0.0) > self._wall() - _REMEMBER_EXPIRED_FOR
+
+    def mark(self, name: str) -> None:
+        self._load()
+        self._until[name] = self._wall() + self._ttl
+        self._save()
+
+    def clear(self, name: str) -> None:
+        self._load()
+        if self._until.pop(name, None) is not None:
+            self._save()
+
+    def reset(self) -> None:
+        self._until.clear()
+        try:
+            self._path().unlink()
+        except OSError:
+            pass
+        self._loaded = False
+
+
+http_walls = HttpWalls()

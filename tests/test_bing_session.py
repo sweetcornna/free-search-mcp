@@ -236,6 +236,27 @@ async def test_a_decoy_is_not_paginated(monkeypatch):
     assert not any("first=11" in url for url, _ in wire.requests)
 
 
+@pytest.mark.parametrize("page", [DECOY, REAL])
+async def test_while_walled_bing_asks_http_for_no_re_mint_and_no_page_two(monkeypatch, page):
+    """The browser answered: a new cookie jar cannot change what it sees, and
+    HTTP would only read the wall again."""
+    from search_mcp.health import http_walls
+
+    wire = _Wire(monkeypatch, [REAL])
+    monkeypatch.setattr(bing_mod.settings, "fetch_strategy", "auto")
+    renders: list[str] = []
+
+    async def fetch_html(url, wait_selector=None):
+        renders.append(url)
+        return "", page
+
+    monkeypatch.setattr(base_mod.pool, "fetch_html", fetch_html)
+    http_walls.mark("bing")
+    await BingEngine().search(QUERY, 20)
+    assert len(renders) == 1
+    assert wire.warmups == 0 and wire.requests == []
+
+
 @pytest.mark.parametrize("query", ["rust", "rust ownership"])
 async def test_a_query_too_short_to_judge_is_never_retried(monkeypatch, query):
     wire = _Wire(monkeypatch, [DECOY])

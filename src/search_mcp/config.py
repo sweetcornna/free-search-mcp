@@ -145,6 +145,12 @@ class Settings(BaseSettings):
     # seconds, so a sustained outage does not cost every concurrent fetch the
     # full timeout. A missing binary is not affected: that lasts until restart.
     browser_launch_cooldown: float = Field(default=20.0, ge=0)
+    # When the server starts, load the search and fetch code, mint Bing's
+    # cookie jar and, if the default pool has needed a browser lately, launch
+    # it, in the background. Measured 2026-10-22: the first search otherwise
+    # waited 1.6 s for the jar, 2 to 3 s for the browser start, and up to 5 s
+    # for the imports in a freshly installed environment.
+    prewarm: bool = True
     max_content_chars: int = 50_000
 
     safesearch: Literal["strict", "moderate", "off"] = "moderate"

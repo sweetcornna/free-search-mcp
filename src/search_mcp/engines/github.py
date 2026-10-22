@@ -215,11 +215,10 @@ class GitHubCodeEngine(JsonApiEngine):
 
     async def _status(self, url: str) -> int | None:
         """Best-effort status probe used only to explain a failed search."""
-        from curl_cffi.requests import AsyncSession
-
         from ..config import settings
         from ..httpfetch import IMPERSONATE
         from ..net import curl_proxy_kwargs
+        from ..sessions import AsyncSession
 
         try:
             async with AsyncSession(

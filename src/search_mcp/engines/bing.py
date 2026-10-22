@@ -12,6 +12,7 @@ from curl_cffi.requests import AsyncSession
 
 from ..coherence import looks_like_decoy
 from ..config import settings
+from ..health import http_walls
 from ..httpfetch import IMPERSONATE
 from ..net import curl_proxy_kwargs
 from .base import (
@@ -277,6 +278,10 @@ class BingEngine(Engine):
             url += f"&mkt={quote_plus(_region_to_bing_market(settings.region))}"
         return url
 
+    async def warm(self) -> None:
+        """Mint the cookie jar now, so the first search does not wait for it."""
+        await _session(self.impersonate or IMPERSONATE, curl_proxy_kwargs(self.name))
+
     async def _http_get(self, url: str, *, cookies: dict[str, str] | None = None) -> str:
         if cookies is None:
             jar = await _session(self.impersonate or IMPERSONATE, curl_proxy_kwargs(self.name))
@@ -294,7 +299,10 @@ class BingEngine(Engine):
         served_by = _JARS.get(_egress_key(proxy_kwargs))
         results, html = await super()._raw_results(query, max_results, filters, diagnostics)
 
-        if looks_like_decoy(query, results):
+        # While HTTP is walled the results came from the browser, which a new
+        # cookie jar cannot help, and asking HTTP for page two reads the wall.
+        walled = http_walls.is_walled(self.name)
+        if looks_like_decoy(query, results) and not walled:
             # The session went stale, or never took. Re-mint and ask once more.
             # If that is a decoy too, return it as it is: the aggregator runs
             # the same check, drops the bucket and reports why, and doing that
@@ -307,7 +315,7 @@ class BingEngine(Engine):
             if looks_like_decoy(query, results):
                 return results, html
 
-        if max_results > 10 and results:
+        if max_results > 10 and results and not walled:
             results = await self._with_second_page(query, max_results, filters, results)
         return results, html
 
