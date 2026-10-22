@@ -132,6 +132,10 @@ _FAKE_IP_CANDIDATES = (
     ipaddress.ip_network("198.18.0.0/15"),   # IANA benchmarking; Clash/Surge default
     ipaddress.ip_network("28.0.0.0/8"),      # used by some fake-IP builds
     ipaddress.ip_network("fc00::/7"),        # v6 ULA
+    # v6 benchmarking (RFC 5180), the counterpart of 198.18/15. Measured
+    # 2026-10-22: a tunnel that used to hand out fdfe:dcba:9876::/48 moved to
+    # this range, and every fetch on that machine was refused.
+    ipaddress.ip_network("2001:2::/48"),
 )
 
 # Hostnames that are public by definition. If THESE resolve into a candidate

@@ -50,7 +50,9 @@ dependencies = [
     # [socks] extra so the documented socks5:// proxy works with the httpx
     # clients in documents.py / structured.py (curl_cffi handles socks natively).
     "httpx[socks]>=0.27",
-    "curl-cffi>=0.7",
+    # >=0.12 for `discard_cookies`: the shared sessions in sessions.py must not
+    # keep what a response sets, or one request's cookies reach the next.
+    "curl-cffi>=0.12",
     # Imported directly by zbMATH because curl_cffi's bundled CA store lacks
     # the public root its current certificate chain needs.
     "certifi>=2024.8.30",

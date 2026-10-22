@@ -132,6 +132,23 @@ def test_fake_ip_tunnel_does_not_block_public_hosts(guard, fake_ip_dns):
     assert guard("https://www.google.com/search?q=x")
 
 
+def test_fake_ip_tunnel_on_the_v6_benchmarking_range(guard, monkeypatch):
+    """A tunnel pairing 198.18/15 with 2001:2::/48 (the v6 benchmarking range)
+    is a tunnel too: both addresses are handles, so public hosts stay reachable."""
+    def _resolver(host, port, *a, **k):
+        return [
+            (socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP, "",
+             ("198.18.1.98", port or 0)),
+            (socket.AF_INET6, socket.SOCK_STREAM, socket.IPPROTO_TCP, "",
+             ("2001:2::16f", port or 0, 0, 0)),
+        ]
+
+    monkeypatch.setattr(socket, "getaddrinfo", _resolver)
+    assert guard("https://docs.python.org/3/")
+    with pytest.raises(UnsafeURLError):
+        guard("http://127.0.0.1:8080/")
+
+
 @pytest.mark.parametrize(
     "url",
     [

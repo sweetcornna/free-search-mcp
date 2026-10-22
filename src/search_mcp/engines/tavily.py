@@ -44,13 +44,13 @@ import html as html_lib
 import re
 from typing import Any
 
-from curl_cffi.requests import AsyncSession
 from curl_cffi.requests.exceptions import RequestException
 
 from ..config import settings
 from ..httpfetch import IMPERSONATE
 from ..keystore import get_secret
 from ..net import curl_proxy_kwargs
+from ..sessions import AsyncSession
 from .base import (
     Engine,
     SearchFilters,

@@ -31,11 +31,11 @@ import secrets
 from datetime import UTC, datetime
 from urllib.parse import quote_plus
 
-from curl_cffi.requests import AsyncSession
 from curl_cffi.requests.exceptions import RequestException
 
 from ..config import settings
 from ..net import curl_proxy_kwargs
+from ..sessions import AsyncSession
 from .base import Engine, SearchFilters, SearchResult
 
 _TAG_RE = re.compile(r"<[^>]+>")

@@ -39,6 +39,7 @@ Available settings:
 | `SEARCH_MCP_BROWSER_POOL_SIZE` | `2` | concurrent pages |
 | `SEARCH_MCP_BROWSER_LAUNCH_TIMEOUT` | `30` | seconds; cap on starting the browser. A launch that stalls (often a proxy, VPN or TUN) fails that one request instead of blocking every later fetch |
 | `SEARCH_MCP_BROWSER_LAUNCH_COOLDOWN` | `20` | seconds; after a stalled launch, browser calls fail at once for this long before the next attempt |
+| `SEARCH_MCP_PREWARM` | `true` | after startup, load the search and fetch code and mint Bing's cookie jar in the background, and launch the browser too when the default pool has needed it in the last day |
 | `SEARCH_MCP_MAX_CONTENT_CHARS` | `50000` | per result truncation |
 | `SEARCH_MCP_USER_AGENT` | desktop Chrome UA | used by the httpx (documents) and Playwright paths; the curl_cffi path derives its UA from browser impersonation |
 | `SEARCH_MCP_DOWNLOAD_ENABLED` | `true` | set `false` to disable local file downloads |

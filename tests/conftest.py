@@ -136,6 +136,9 @@ def _hermetic_config(tmp_path_factory, monkeypatch):
     # unsigned would open a real browser on a developer's desktop. The tests
     # of that path switch it back on against a fake browser.
     monkeypatch.setattr(settings, "codex_auto_signin", False)
+    # And `prewarm`: an in-process server would mint a real Bing jar and could
+    # start Chromium. tests/test_prewarm.py switches it back on with fakes.
+    monkeypatch.setattr(settings, "prewarm", False)
     # Likewise `latest`, the shipped model choice: it asks the backend for its
     # model catalogue. The tests of that lookup switch it back on.
     monkeypatch.setattr(settings, "codex_model", "gpt-6-luna")
@@ -220,7 +223,9 @@ def _reset_bing_session():
 def _reset_engine_health():
     """The circuit breaker is process-wide on purpose. Across tests that means
     one test's stubbed captcha would bench `searx` for every test after it."""
-    from search_mcp.health import engine_health
+    from search_mcp.health import engine_health, http_walls
     engine_health.reset()
+    http_walls.reset()
     yield
     engine_health.reset()
+    http_walls.reset()

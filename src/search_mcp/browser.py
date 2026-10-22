@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 import logging
 import random
@@ -5,13 +7,24 @@ import sys
 import time
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-
-from playwright.async_api import BrowserContext, Page, async_playwright
+from typing import TYPE_CHECKING, Any
 
 from .config import settings
 from .net import playwright_proxy
 
+if TYPE_CHECKING:
+    from playwright.async_api import BrowserContext, Page
+
 log = logging.getLogger(__name__)
+
+
+def async_playwright() -> Any:
+    """Playwright's ``async_playwright()``, imported when a browser is first
+    started rather than with this module: Playwright and greenlet are a large
+    share of what a fresh install loads, and many servers never render a page."""
+    from playwright.async_api import async_playwright as start
+
+    return start()
 
 # Cookie names that signal a completed interactive login (polled in
 # BrowserPool.login). ``z_c0`` is Zhihu's auth cookie; the rest are common
@@ -368,6 +381,17 @@ class BrowserPool:
             html = await page.content()
             title = await page.title()
             return title, html
+
+    async def launch(self) -> None:
+        """Start the browser now, so the first page does not wait for it.
+
+        A failure is not raised: the page that needs the browser meets the
+        same memoised state (missing binary, launch cooldown) and reports it.
+        """
+        try:
+            await self._ensure()
+        except Exception as e:
+            log.debug("browser launch ahead of use failed: %s", brief_error(e))
 
     async def warmup(self, url: str) -> None:
         """Open a URL once to seed cookies for an origin, ignoring failures."""

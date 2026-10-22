@@ -277,6 +277,10 @@ class BingEngine(Engine):
             url += f"&mkt={quote_plus(_region_to_bing_market(settings.region))}"
         return url
 
+    async def warm(self) -> None:
+        """Mint the cookie jar now, so the first search does not wait for it."""
+        await _session(self.impersonate or IMPERSONATE, curl_proxy_kwargs(self.name))
+
     async def _http_get(self, url: str, *, cookies: dict[str, str] | None = None) -> str:
         if cookies is None:
             jar = await _session(self.impersonate or IMPERSONATE, curl_proxy_kwargs(self.name))

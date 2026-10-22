@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import io
 import logging
 from dataclasses import dataclass
@@ -578,22 +579,13 @@ def _resolve_local_path(source: str) -> Path:
     return candidate
 
 
-async def read_document(
-    source: str,
-    *,
-    start: int = 0,
-    length: int | None = None,
-) -> DocumentResult:
-    parsed = urlparse(source)
-    if parsed.scheme in ("http", "https"):
-        blob, ctype = await _read_remote(source)
-        fmt = _detect_format(source, ctype)
-    else:
-        path = _resolve_local_path(source)
-        blob = path.read_bytes()
-        ctype = ""
-        fmt = _detect_format(str(path))
+def _parse_blob(
+    blob: bytes, ctype: str, source: str, fmt: str
+) -> tuple[str, str, str, int | None, bool]:
+    """Parse ``blob`` as ``fmt``: ``(fmt, title, text, pages, truncated)``.
 
+    ``fmt`` comes back changed when a document turned out to be an HTML page.
+    """
     title = ""
     pages: int | None = None
     doc_truncated = False
@@ -651,6 +643,30 @@ async def read_document(
             f"Unsupported document format for {source!r}. Supported: pdf, docx, "
             "xlsx, pptx, epub, csv, archive (zip/tar), code, html, text, markdown."
         )
+    return fmt, title, full, pages, doc_truncated
+
+
+async def read_document(
+    source: str,
+    *,
+    start: int = 0,
+    length: int | None = None,
+) -> DocumentResult:
+    parsed = urlparse(source)
+    if parsed.scheme in ("http", "https"):
+        blob, ctype = await _read_remote(source)
+        fmt = _detect_format(source, ctype)
+    else:
+        path = _resolve_local_path(source)
+        blob = path.read_bytes()
+        ctype = ""
+        fmt = _detect_format(str(path))
+
+    # Parsing is CPU-bound (a large PDF takes seconds) and would otherwise
+    # stall every other request on the event loop while it runs.
+    fmt, title, full, pages, doc_truncated = await asyncio.to_thread(
+        _parse_blob, blob, ctype, source, fmt
+    )
 
     content, slice_truncated, returned, clamped_start = _slice(full, start, length)
     # truncated if EITHER the parse hit a bomb-cap OR this slice withheld text.

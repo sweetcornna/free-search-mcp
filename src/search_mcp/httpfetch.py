@@ -18,14 +18,15 @@ must be disabled on the client.
 from __future__ import annotations
 
 import re
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urljoin
-
-import httpx
 
 from .config import settings
 from .net import curl_proxy_kwargs
 from .url_safety import assert_url_allowed_async
+
+if TYPE_CHECKING:
+    import httpx
 
 # Match the engine fast-path: real Chrome JA3/JA4 + H2 fingerprint so target
 # sites don't see "headless client claiming to be Chrome".

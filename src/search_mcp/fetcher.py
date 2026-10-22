@@ -12,7 +12,6 @@ from urllib.parse import urlparse
 
 import httpx
 import trafilatura
-from curl_cffi.requests import AsyncSession
 from markdownify import markdownify as html_to_md
 from selectolax.parser import HTMLParser
 
@@ -34,6 +33,7 @@ from .httpfetch import (  # noqa: F401
     curl_stream_capped,
 )
 from .ratelimit import RateLimiter
+from .sessions import AsyncSession
 from .url_safety import (
     UnsafeURLError,
     assert_url_allowed_async,
@@ -568,7 +568,12 @@ async def fetch_page(
     # (extracting them through trafilatura would mangle or drop the body).
     is_markup = ("html" in ctype) or ("xml" in ctype)
     if is_markup:
-        extracted_title, md, author, date, sitename = _extract(html, url)
+        # 30-700 ms of CPU per page (measured 2026-10-22). On the event loop it
+        # serialised fetch_batch/research and stalled concurrent searches; lxml
+        # releases the GIL for much of it, so a thread also runs pages in parallel.
+        extracted_title, md, author, date, sitename = await asyncio.to_thread(
+            _extract, html, url
+        )
         title = title or extracted_title
     else:
         md = html  # raw body, verbatim

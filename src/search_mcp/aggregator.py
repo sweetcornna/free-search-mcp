@@ -544,6 +544,12 @@ def _active_pool(nominal: list[str]) -> tuple[list[str], dict[str, dict[str, Any
     return active, benched
 
 
+def default_pool_now() -> list[str]:
+    """The engines a plain search would ask right now: the default pool with
+    benched engines out and reserves in."""
+    return _active_pool(list(settings.default_engines))[0]
+
+
 # Raised by an engine without saying anything about the engine itself.
 _NOT_THE_ENGINES_FAULT = (ValueError, BrowserUnavailableError, BrowserLaunchError)
 

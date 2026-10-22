@@ -4,6 +4,48 @@ All notable changes to this project are documented here. The format is loosely
 based on [Keep a Changelog](https://keepachangelog.com/), and the project follows
 semantic versioning.
 
+## [Unreleased]
+
+Faster start, searches and fetches. Measured 2026-10-22 through a fake-IP
+tunnel, a search spent about 1 to 2 % of its time in Python and the rest
+waiting on the network, so these changes cut waiting.
+
+### Changed
+
+- The server answers the MCP handshake without loading what its tools use.
+  The engine registry, curl_cffi, trafilatura and lxml, pypdf and Pillow,
+  extruct, Playwright and the answer agent now load on the first call that
+  needs them, and the search and fetch path loads in a background thread
+  right after startup (`SEARCH_MCP_PREWARM`). In a freshly installed
+  environment, where every native extension is loaded for the first time, the
+  handshake took 11.1 to 12.0 s and now takes 1.7 to 2.1 s; a warm start went
+  from 1.9 s to 0.5 s.
+- Outbound HTTP reuses connections. Every engine and `fetch` opened a new
+  curl_cffi session per request and paid DNS, TCP and TLS each time; they now
+  share one long-lived session per impersonation profile and proxy. A reused
+  connection answered 0.7 to 0.9 s sooner (Bing 1.64 s against 0.70 s,
+  Wikipedia 1.23 s against 0.40 s). Cookies still last only for the request
+  block that received them. This needs curl_cffi 0.12 or later
+  (`discard_cookies`), so the floor moved from 0.7.
+- An engine whose HTTP answer is walled while its browser render is not goes
+  to the browser first for 15 minutes. DuckDuckGo served its captcha to every
+  HTTP request from one IP, 1.1 to 2.3 s each, before the render that
+  succeeded. The verdict is kept in `<cache_dir>/http_walls.json`.
+- The server mints Bing's cookie jar at startup, and launches the browser when
+  the default pool needed it in the last day, both in the background. The
+  first search waited 1.6 s for the jar and 2 to 3 s for the browser start.
+  `SEARCH_MCP_PREWARM=false` turns this off.
+- Page extraction (trafilatura) and document parsing run in a worker thread.
+  They took 30 to 700 ms of CPU per page on the event loop, which serialised
+  `fetch_batch` and `research` and stalled concurrent searches; ten pages now
+  extract in about half the time.
+
+### Fixed
+
+- `fetch` refused every URL behind a fake-IP tunnel that hands out IPv6
+  addresses in `2001:2::/48`, the IPv6 benchmarking range. The tunnel
+  detection now recognises that range next to `198.18.0.0/15`.
+
 ## [0.15.0] - 2026-10-21
 
 A new opt-in engine: `serpbase`, Google results through the SerpBase API.

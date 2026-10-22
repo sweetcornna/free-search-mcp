@@ -7,103 +7,28 @@ import random
 import re
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Literal
+from typing import Any
 from urllib.parse import urlparse
 
-from curl_cffi.requests import AsyncSession
 from curl_cffi.requests.exceptions import RequestException, Timeout
 from selectolax.parser import HTMLParser
 
 from ..browser import BrowserLaunchError, BrowserUnavailableError, pool
+
+# Defined in categories.py so that server.py can type its tools without importing
+# this module; re-exported because the engines and the aggregator import them here.
+from ..categories import Category, CategoryGroup, Freshness, category_group  # noqa: F401
 from ..config import settings
+from ..health import http_walls
 
 # Shared with the fetch path so search and fetch traffic always present the
 # SAME browser fingerprint — a drift between the two is exactly the
 # inconsistency naive headless detection (DDG anomaly page) looks for.
 from ..httpfetch import IMPERSONATE
 from ..net import curl_proxy_kwargs
+from ..sessions import AsyncSession
 
 log = logging.getLogger(__name__)
-
-Freshness = Literal["day", "week", "month", "year"]
-
-# Two aliases, two jobs. Keeping them apart is what lets the dotted sub-category
-# tokens exist without every `filters.category == "pdf"` site in the engines
-# having to learn about them.
-#
-#   CategoryGroup — the INTERNAL filter predicate. `SearchFilters.category` is
-#       always one of these, never dotted: `aggregate_search` splits the caller's
-#       token at the first "." before building the filters. So the post-filter
-#       branches below, `finalize_results`, and the eleven engines that special-
-#       case `category == "pdf"` all keep comparing bare strings.
-#
-#   Category — the AGENT-FACING enum. `server.search` / `server.research` type
-#       their `category` parameter with this, so the JSON Schema the model reads
-#       lists every group AND every sub-group. That enum is the only taxonomy an
-#       LLM reliably sees at call time, which is why the sub-groups live here
-#       rather than in a lookup table it would have to go fetch.
-#
-# A bare group WIDENS (the specialists for that group, round-robined across
-# sub-groups so one sub-group can't monopolise `category_engine_limit`); a
-# dotted sub-group NARROWS to the sources that index exactly that.
-CategoryGroup = Literal[
-    "news", "pdf", "github", "paper", "forum", "blog", "image", "dataset", "finance",
-    "software", "security", "reference", "weather", "docs", "gov", "stats", "calendar",
-]
-Category = Literal[
-    # Groups
-    "news", "pdf", "github", "paper", "forum", "blog", "image", "dataset", "finance",
-    "software", "security", "reference", "weather", "docs", "gov", "stats", "calendar",
-    # Sub-groups. Each must be `<group>.<name>` with `<group>` in CategoryGroup,
-    # and at least one registered engine must declare it — both are asserted in
-    # tests/test_source_taxonomy.py.
-    "news.world",
-    "paper.index",
-    "paper.preprint",
-    "paper.biomed",
-    "paper.cs",
-    "paper.math",
-    "paper.openaccess",
-    "paper.trial",
-    "dataset.repository",
-    "dataset.ml",
-    "dataset.gov",
-    "finance.filings",
-    "finance.market",
-    "finance.macro",
-    "finance.fx",
-    "finance.entity",
-    "finance.crypto",
-    "software.lifecycle",
-    "software.github",
-    "software.python",
-    "software.node",
-    "software.rust",
-    "software.registry",
-    "software.app",
-    "security.cve",
-    "security.package",
-    "security.exploited",
-    "reference.domain",
-    "docs.web",
-    "docs.rfc",
-    "gov.us",
-    "gov.uk",
-    "stats.indicator",
-    "calendar.holidays",
-    "calendar.clock",
-]
-
-
-def category_group(category: str | None) -> str | None:
-    """The group half of a category token: `"paper.biomed"` -> `"paper"`.
-
-    Bare groups pass through unchanged, `None` stays `None`.
-    """
-    if not category:
-        return None
-    return category.split(".", 1)[0]
-
 
 # Date-extraction patterns. Order matters: relative phrases ("2 days ago")
 # are more LLM-friendly than reverse-engineering an ISO date from a vague
@@ -1319,18 +1244,35 @@ class Engine(abc.ABC):
         diagnostics) more than once per search.
         """
         url = self.build_url(query, max_results, filters)
-        html = await self._fetch(url)
-        results = self.parse(html)
-        if (
-            not results
-            and self.supports_browser_fallback
+        can_fall_back = (
+            self.supports_browser_fallback
             and not self.needs_browser
             and settings.fetch_strategy == "auto"
-        ):
+        )
+        if can_fall_back and http_walls.is_walled(self.name) and not pool.known_unavailable:
+            # The HTTP path served a wall the browser got past, recently; asking
+            # it again only reads the same wall (see health.HTTP_WALL_SECONDS).
+            try:
+                _, html = await pool.fetch_html(url, wait_selector=self.wait_selector)
+            except (BrowserUnavailableError, BrowserLaunchError) as e:
+                log.info("browser-first for %s skipped: %s", self.name, e)
+                http_walls.clear(self.name)
+            else:
+                results = self.parse(html)
+                if not results:
+                    # The browser found nothing either: the next search asks
+                    # HTTP first again rather than trusting a stale verdict.
+                    http_walls.clear(self.name)
+                return results, html
+        html = await self._fetch(url)
+        results = self.parse(html)
+        if not results and can_fall_back:
             # HTTP succeeded but the page was an interstitial/captcha shell.
             try:
                 _, html = await pool.fetch_html(url, wait_selector=self.wait_selector)
                 results = self.parse(html)
+                if results:
+                    http_walls.mark(self.name)
             except BrowserUnavailableError:
                 # No Chromium installed: keep the (empty) HTTP outcome and let
                 # the aggregator surface ONE actionable install hint instead of
