@@ -12,6 +12,7 @@ import json
 import os
 import subprocess
 import sys
+from types import SimpleNamespace
 
 import pytest
 
@@ -99,7 +100,8 @@ async def test_prewarm_loads_the_search_path(monkeypatch):
 
     imported: list[str] = []
     monkeypatch.setattr(settings, "prewarm", True)
-    monkeypatch.setattr(prewarm_mod.importlib, "import_module", imported.append)
     monkeypatch.setattr("search_mcp.aggregator.default_pool_now", lambda: [])
+    # Only prewarm's reference: pytest and the worker thread use the real one.
+    monkeypatch.setattr(prewarm_mod, "importlib", SimpleNamespace(import_module=imported.append))
     await prewarm_mod.prewarm()
     assert imported == ["search_mcp.aggregator", "search_mcp.fetcher"]
