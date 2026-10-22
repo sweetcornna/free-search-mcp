@@ -191,17 +191,18 @@ render that follows finds results, the next 15 minutes of searches go to the
 browser first and skip the HTTP request. Measured on 2026-10-22, DuckDuckGo
 served its captcha to every HTTP request from one IP, and each one cost 1.1 to
 2.3 s before the render. The verdict is written to
-`<cache_dir>/http_walls.json`. A render that finds nothing, or a browser that
-cannot start, lifts it, and after the 15 minutes the next search tries HTTP
-first again. A server that starts within a day of such a verdict launches the
+`<cache_dir>/http_walls.json`. A render that finds nothing or fails lifts it,
+and after the 15 minutes the next search tries HTTP first again. A server that starts within a day of such a verdict launches the
 browser in the background, so the first search does not wait for it
 (`SEARCH_MCP_PREWARM`).
 
-Outbound requests reuse their connections. Each engine and `fetch` used to
-open a new session per request and pay DNS, TCP and TLS each time; measured
-through a fake-IP tunnel, a reused connection answered 0.7 to 0.9 s sooner
-(Bing 1.64 s against 0.70 s). Cookies still last only for the request block
-that received them.
+Engine requests reuse their connections. Each engine used to open a new
+session per request and pay DNS, TCP and TLS each time; measured through a
+fake-IP tunnel, a reused connection answered 0.7 to 0.9 s sooner (Bing 1.64 s
+against 0.70 s). Cookies still last only for the request block that received
+them. `fetch` downloads its body through a session of its own and closes it
+when it is done, because closing is the one way to stop a transfer it has
+given up on (over the size cap, an error status, a timeout).
 
 The off-topic guard exists because Bing can answer HTTP 200 with ten
 well-formed results about the first word of the query, such as the Steam page

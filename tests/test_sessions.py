@@ -6,7 +6,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from types import SimpleNamespace
 
 import pytest
-from curl_cffi.requests import Cookies
+from curl_cffi.requests import Headers
 
 from search_mcp import sessions
 from search_mcp.sessions import AsyncSession
@@ -35,6 +35,10 @@ def server():
             self.send_response(200)
             if self.path == "/set":
                 self.send_header("Set-Cookie", "tracker=1; Path=/")
+            elif self.path == "/unset":
+                self.send_header("Set-Cookie", "tracker=; Max-Age=0; Path=/")
+            elif self.path == "/elsewhere":
+                self.send_header("Set-Cookie", "tracker=1; Domain=victim.test; Path=/")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
@@ -66,7 +70,7 @@ async def test_constructor_kwargs_become_request_defaults(monkeypatch):
 
     async def fake_request(self, method, url, **kwargs):
         seen.update(kwargs, method=method, url=url)
-        return SimpleNamespace(url=url, cookies=Cookies())
+        return SimpleNamespace(url=url, headers=Headers())
 
     monkeypatch.setattr(sessions._CurlSession, "request", fake_request)
     async with AsyncSession(
@@ -117,6 +121,22 @@ async def test_a_host_only_cookie_stays_with_its_host(server):
         await client.get(f"{base}/set")
         elsewhere = await client.get(f"{other}/echo")
     assert elsewhere.text == ""
+
+
+async def test_a_response_cannot_set_a_cookie_for_another_site(server):
+    base, _ = server
+    async with AsyncSession(impersonate="chrome131", timeout=5) as client:
+        await client.get(f"{base}/elsewhere")
+        assert list(client.cookies.jar) == []
+
+
+async def test_max_age_zero_deletes_the_cookie(server):
+    base, _ = server
+    async with AsyncSession(impersonate="chrome131", timeout=5) as client:
+        await client.get(f"{base}/set")
+        await client.get(f"{base}/unset")
+        after = await client.get(f"{base}/echo")
+    assert after.text == ""
 
 
 def test_a_new_event_loop_gets_new_sessions():

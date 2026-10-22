@@ -80,6 +80,17 @@ async def test_a_missing_browser_falls_back_to_http(monkeypatch):
     assert not http_walls.is_walled("walled")
 
 
+async def test_a_failed_render_lifts_the_wall_and_asks_http(monkeypatch):
+    engine, calls = _wire(
+        monkeypatch, http=_RESULTS, browser=RuntimeError("net::ERR_TIMED_OUT")
+    )
+    http_walls.mark("walled")
+    out = await engine.search("q", 5)
+    assert [r.url for r in out] == ["https://a.example/"]
+    assert calls == {"http": 1, "browser": 1}
+    assert not http_walls.is_walled("walled")
+
+
 async def test_engines_without_a_browser_fallback_ignore_the_wall(monkeypatch):
     engine, calls = _wire(monkeypatch, http=_RESULTS)
     monkeypatch.setattr(engine, "supports_browser_fallback", False)

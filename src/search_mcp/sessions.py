@@ -17,11 +17,20 @@ Cookies live exactly as long as the ``async with`` block, as they did when the
 block owned its session. The shared sessions keep no cookies; each block has
 its own jar, seeded with the constructor's cookies and topped up with what each
 response sets, so the hops of a manual redirect still see the cookie the
-previous hop set and the next block starts empty. A block reads cookies from
-the final response of each request: with ``allow_redirects=True`` curl carries
-the ones set on intermediate hops within that request, but they do not reach a
-later request in the block. Code that reads back the cookies a response set
-(Bing's warm-up) keeps a real ``curl_cffi`` session of its own.
+previous hop set and the next block starts empty. The jar applies the standard
+library's cookie policy, so a response cannot set a cookie for another site and
+``Max-Age=0`` deletes. A block reads cookies from the final response of each
+request: with ``allow_redirects=True`` curl carries the ones set on
+intermediate hops within that request, but they do not reach a later request in
+the block. Code that reads back the cookies a response set (Bing's warm-up)
+keeps a real ``curl_cffi`` session of its own.
+
+A streamed request (``stream=True``, the fetch path's body download) goes
+through a session the block owns and closes on exit, as before. Closing it is
+what stops a transfer nobody will read: a body over the size cap, an error
+status, or a fetch cancelled before the headers came. curl_cffi offers no other
+handle on a transfer whose response was never returned. On a shared session the
+body kept arriving into memory until it ended or timed out.
 
 A session is bound to the event loop it was made on. The server runs one loop;
 when the running loop changes (each test has its own) the old sessions are
@@ -31,8 +40,8 @@ dropped rather than closed, since their loop is already gone.
 from __future__ import annotations
 
 import asyncio
+import urllib.request
 from typing import Any
-from urllib.parse import urlsplit
 
 from curl_cffi.requests import AsyncSession as _CurlSession
 from curl_cffi.requests import Cookies
@@ -80,19 +89,16 @@ class AsyncSession:
         self._jar = Cookies(kwargs.pop("cookies", None))
         self._defaults = kwargs
         self._session: _CurlSession | None = None
+        self._owned: _CurlSession | None = None
 
     @property
     def cookies(self) -> Cookies:
         return self._jar
 
     def _keep_cookies(self, resp: Any) -> None:
-        host = urlsplit(resp.url).hostname or ""
-        for cookie in resp.cookies.jar:
-            if not cookie.domain:
-                # No Domain attribute: the cookie belongs to the host that set
-                # it alone (domain_specified stays False, so no subdomains).
-                cookie.domain = host
-            self._jar.jar.set_cookie(cookie)
+        # resp.cookies drops Domain checks and Max-Age, so read the headers
+        # through cookiejar's policy, as a session's own jar would.
+        self._jar.jar.extract_cookies(_Headers(resp.headers), urllib.request.Request(resp.url))
 
     async def __aenter__(self) -> AsyncSession:
         self._session = _shared(self._identity)
@@ -100,6 +106,14 @@ class AsyncSession:
 
     async def __aexit__(self, *exc: object) -> None:
         self._session = None
+        owned, self._owned = self._owned, None
+        if owned is not None:
+            await owned.close()
+
+    def _streaming_session(self) -> _CurlSession:
+        if self._owned is None:
+            self._owned = _CurlSession(**self._identity, discard_cookies=True)
+        return self._owned
 
     def _request_kwargs(self, kwargs: dict[str, Any]) -> dict[str, Any]:
         merged = {**self._defaults, **kwargs}
@@ -116,6 +130,8 @@ class AsyncSession:
     async def request(self, method: str, url: str, **kwargs: Any) -> Any:
         client = self._client()
         merged = self._request_kwargs(kwargs)
+        if merged.get("stream"):
+            client = self._streaming_session()
         extra = merged.pop("cookies", None)
         if extra:
             for cookie in Cookies(extra).jar:
@@ -129,6 +145,19 @@ class AsyncSession:
 
     async def post(self, url: str, **kwargs: Any) -> Any:
         return await self.request("POST", url, **kwargs)
+
+
+class _Headers:
+    """The part of a urllib response that ``CookieJar.extract_cookies`` reads."""
+
+    def __init__(self, headers: Any) -> None:
+        self._headers = headers
+
+    def info(self) -> _Headers:
+        return self
+
+    def get_all(self, name: str, default: Any = None) -> Any:
+        return self._headers.get_list(name) or default
 
 
 __all__ = ["AsyncSession", "reset"]

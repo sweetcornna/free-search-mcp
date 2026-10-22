@@ -181,6 +181,19 @@ def _decode_body(body: bytes, ctype: str) -> str:
         return body.decode("utf-8", errors="replace")
 
 
+async def _close_curl_stream(resp: Any) -> None:
+    """End a curl_cffi stream, abandoning whatever of the body is unread.
+
+    ``aclose()`` alone waits for the transfer to finish, so a body over the
+    cap or behind an error status used to download in full first. Setting
+    ``quit_now`` makes curl abort at the next chunk it receives.
+    """
+    quit_now = getattr(resp, "quit_now", None)
+    if quit_now is not None:
+        quit_now.set()
+    await resp.aclose()
+
+
 async def curl_stream_capped(client: Any, url: str) -> tuple[str, str]:
     """The curl_cffi GET loop: manual redirects, per-hop SSRF check, size caps.
 
@@ -191,8 +204,8 @@ async def curl_stream_capped(client: Any, url: str) -> tuple[str, str]:
     for _ in range(_MAX_REDIRECTS + 1):
         resp = await client.get(current, stream=True)
         if resp.status_code in _REDIRECT_STATUSES:
-            # Drain/close the redirect response without buffering its body.
-            await resp.aclose()
+            # Close the redirect response without buffering its body.
+            await _close_curl_stream(resp)
             nxt = _resolve_redirect_location(current, resp.headers.get("location"))
             if not nxt:
                 raise FetchError(f"redirect with no Location from {current}")
@@ -200,12 +213,12 @@ async def curl_stream_capped(client: Any, url: str) -> tuple[str, str]:
             current = nxt
             continue
         # Terminal response: enforce caps, then stream the body.
-        resp.raise_for_status()
-        _check_content_length(resp.headers)
         try:
+            resp.raise_for_status()
+            _check_content_length(resp.headers)
             body = await _accumulate_capped(resp.aiter_content())
         finally:
-            await resp.aclose()
+            await _close_curl_stream(resp)
         ctype = resp.headers.get("content-type", "")
         return ctype, _decode_body(body, ctype)
     raise FetchError(f"too many redirects (>{_MAX_REDIRECTS}) fetching {url}")

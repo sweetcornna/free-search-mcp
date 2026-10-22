@@ -1254,8 +1254,11 @@ class Engine(abc.ABC):
             # it again only reads the same wall (see health.HTTP_WALL_SECONDS).
             try:
                 _, html = await pool.fetch_html(url, wait_selector=self.wait_selector)
-            except (BrowserUnavailableError, BrowserLaunchError) as e:
-                log.info("browser-first for %s skipped: %s", self.name, e)
+            except Exception as e:  # noqa: BLE001
+                # Whatever stopped the render (no browser, a stalled launch, a
+                # navigation error) says nothing about the wall: ask HTTP
+                # first, as every search did before the wall was seen.
+                log.info("browser-first for %s failed, asking HTTP: %s", self.name, e)
                 http_walls.clear(self.name)
             else:
                 results = self.parse(html)

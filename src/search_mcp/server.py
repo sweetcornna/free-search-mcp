@@ -113,12 +113,35 @@ _CACHE_HINTS = {
 async def _lifespan(_server: MCPServer) -> AsyncIterator[dict[str, Any]]:
     # Warm what the first search would otherwise wait for (see prewarm.py),
     # without holding up the handshake.
-    task = asyncio.ensure_future(prewarm())
+    tasks = [asyncio.ensure_future(prewarm()), asyncio.ensure_future(_report_agent_problem())]
     try:
         yield {}
     finally:
-        task.cancel()
-        await asyncio.wait([task], timeout=1.0)
+        for task in tasks:
+            task.cancel()
+        await asyncio.wait(tasks, timeout=1.0)
+
+
+async def _report_agent_problem() -> None:
+    """Log a misconfigured answer agent, off the handshake's path: checking it
+    imports the agent, and the agent imports the whole search stack."""
+    if settings.agent_backend == "off":
+        return
+
+    def check() -> str | None:
+        from .agent import config_problem
+
+        return config_problem()
+
+    try:
+        problem = await asyncio.to_thread(check)
+    except Exception:  # noqa: BLE001
+        log.exception("could not check the answer agent's configuration")
+        return
+    if problem:
+        # The tool is registered anyway: the same text is what a call returns,
+        # and an operator reading the log sees it before any model does.
+        log.warning("answer agent is misconfigured: %s", problem)
 
 
 mcp = MCPServer(
@@ -1531,14 +1554,8 @@ def enable_ask(server: MCPServer | None = None) -> None:
 _DECLARED_TOOLS.add("ask")
 
 if settings.agent_backend != "off":
+    # Its configuration is checked once the server is up (_report_agent_problem).
     enable_ask()
-    from .agent import config_problem
-
-    _problem = config_problem()
-    if _problem:
-        # Registered anyway: the same text is what a call returns, and an
-        # operator reading the log sees it before any model does.
-        log.warning("answer agent is misconfigured: %s", _problem)
 
 
 # ---------------------------------------------------------------------------

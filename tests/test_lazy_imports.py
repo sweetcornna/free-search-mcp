@@ -9,6 +9,7 @@ for.
 from __future__ import annotations
 
 import json
+import logging
 import os
 import subprocess
 import sys
@@ -42,9 +43,9 @@ _DEFERRED = (
 )
 
 
-def _modules_loaded_by(statement: str) -> set[str]:
+def _modules_loaded_by(statement: str, backend: str = "off") -> set[str]:
     code = f"import json, sys\n{statement}\nprint(json.dumps(sorted(sys.modules)))"
-    env = {**os.environ, "SEARCH_MCP_AGENT_BACKEND": "off"}
+    env = {**os.environ, "SEARCH_MCP_AGENT_BACKEND": backend}
     out = subprocess.run(
         [sys.executable, "-c", code], capture_output=True, text=True, env=env, check=True
     )
@@ -59,6 +60,24 @@ def test_importing_the_server_loads_no_tool_dependency():
 def test_the_entry_point_loads_no_tool_dependency():
     loaded = _modules_loaded_by("import search_mcp.__main__")
     assert not {m for m in _DEFERRED if m in loaded}
+
+
+def test_a_configured_answer_agent_loads_on_first_use():
+    loaded = _modules_loaded_by("import search_mcp.server", backend="codex")
+    assert "search_mcp.server" in loaded
+    assert not {m for m in _DEFERRED if m in loaded}
+
+
+async def test_a_misconfigured_agent_is_logged_once_the_server_is_up(monkeypatch, caplog):
+    from search_mcp import server
+    from search_mcp.config import settings
+
+    monkeypatch.setattr(settings, "agent_backend", "api")
+    monkeypatch.setattr(settings, "agent_api_base_url", "")
+    with caplog.at_level(logging.WARNING, logger="search_mcp.server"):
+        await server._report_agent_problem()
+    assert "answer agent is misconfigured" in caplog.text
+    assert "SEARCH_MCP_AGENT_API_BASE_URL" in caplog.text
 
 
 async def test_a_lazy_tool_imports_its_implementation_on_call(monkeypatch):

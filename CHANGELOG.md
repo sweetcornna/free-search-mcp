@@ -20,17 +20,20 @@ waiting on the network, so these changes cut waiting.
   environment, where every native extension is loaded for the first time, the
   handshake took 11.1 to 12.0 s and now takes 1.7 to 2.1 s; a warm start went
   from 1.9 s to 0.5 s.
-- Outbound HTTP reuses connections. Every engine and `fetch` opened a new
-  curl_cffi session per request and paid DNS, TCP and TLS each time; they now
-  share one long-lived session per impersonation profile and proxy. A reused
-  connection answered 0.7 to 0.9 s sooner (Bing 1.64 s against 0.70 s,
-  Wikipedia 1.23 s against 0.40 s). Cookies still last only for the request
-  block that received them. This needs curl_cffi 0.12 or later
-  (`discard_cookies`), so the floor moved from 0.7.
+- Engines reuse connections. Each one opened a new curl_cffi session per
+  request and paid DNS, TCP and TLS each time; they now share one long-lived
+  session per impersonation profile and proxy. A reused connection answered
+  0.7 to 0.9 s sooner (Bing 1.64 s against 0.70 s, Wikipedia 1.23 s against
+  0.40 s). Cookies still last only for the request block that received them,
+  under the standard library's cookie policy. `fetch` streams its body through
+  a session of its own, as before, so a body it gives up on stops
+  downloading. This needs curl_cffi 0.12 or later (`discard_cookies`), so the
+  floor moved from 0.7.
 - An engine whose HTTP answer is walled while its browser render is not goes
   to the browser first for 15 minutes. DuckDuckGo served its captcha to every
   HTTP request from one IP, 1.1 to 2.3 s each, before the render that
-  succeeded. The verdict is kept in `<cache_dir>/http_walls.json`.
+  succeeded. The verdict is kept in `<cache_dir>/http_walls.json`, and a
+  render that finds nothing or fails lifts it.
 - The server mints Bing's cookie jar at startup, and launches the browser when
   the default pool needed it in the last day, both in the background. The
   first search waited 1.6 s for the jar and 2 to 3 s for the browser start.
@@ -42,6 +45,9 @@ waiting on the network, so these changes cut waiting.
 
 ### Fixed
 
+- A page over `SEARCH_MCP_MAX_RESPONSE_BYTES` that sent no `Content-Length`
+  kept downloading into memory after `fetch` had refused it, until the body
+  ended or the fetch timeout ran out. The transfer now stops at the cap.
 - `fetch` refused every URL behind a fake-IP tunnel that hands out IPv6
   addresses in `2001:2::/48`, the IPv6 benchmarking range. The tunnel
   detection now recognises that range next to `198.18.0.0/15`.
