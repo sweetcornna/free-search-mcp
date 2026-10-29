@@ -28,8 +28,8 @@ from typing import Any
 
 # Share of a bucket's results that must mention some query term beyond the
 # first. Measured 2026-09-21 on fresh queries: duckduckgo / anysearch 1.00,
-# brave >= 0.5, so360 >= 0.6; Bing decoys 0.00-0.20; a bad public searx
-# instance 0.0-0.2. 0.3 sits in the empty gap between the two populations.
+# brave >= 0.5, so360 >= 0.6; Bing decoys 0.00-0.20; a weak rescue
+# candidate 0.0-0.2. 0.3 sits in the empty gap between the two populations.
 COHERENCE_MIN = 0.3
 
 # A bucket this coherent proves the query CAN be echoed, which is what makes

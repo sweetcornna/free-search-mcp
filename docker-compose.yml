@@ -24,8 +24,8 @@ services:
       # No API key is needed for anything below. This is the shipped default
       # pool, all plain HTTP; googlenews joins on its own for freshness=day|week
       # and category=news, so360 for Chinese queries, and the reserves
-      # (so360, brave, searx) only while fewer than 3 general engines are healthy.
-      SEARCH_MCP_DEFAULT_ENGINES: '["duckduckgo","bing","anysearch","mojeek"]'
+      # (so360, brave) only while fewer than 3 general engines are healthy.
+      SEARCH_MCP_DEFAULT_ENGINES: '["duckduckgo","bing","anysearch"]'
       SEARCH_MCP_CACHE_DIR: /data
 
 volumes:

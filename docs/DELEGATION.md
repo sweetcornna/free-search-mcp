@@ -49,9 +49,15 @@ system-prompt field and no agent files.
 ## With the `ask` tool
 
 Set a backend and the server registers a twelfth tool,
-`ask(question, freshness, include_domains, category)`. The server first runs
-one `research` call, with no model involved, and puts the pages in the model's
-first message, so most questions take one model call. The model may then spend
+`ask(question, freshness, include_domains, category)`. The same backend also
+makes every `search` run the agent beside its engines: the agent is handed the
+very task that produces the links, so the query reaches the engines once and
+the answer appears above the result list. `SEARCH_MCP_AGENT_IN_SEARCH=false`
+keeps that to `ask` only.
+
+For `ask`, the server first runs one `research` call, with no model involved,
+and puts the pages in the model's first message, so most questions take one
+model call. The model may then spend
 `SEARCH_MCP_AGENT_MAX_STEPS` calls on `search`, `fetch` or `read_doc`, and has
 no other tool. When the model fails or the deadline passes, `ask` returns the
 pages as a `research` brief together with the reason, so the search is not
@@ -71,6 +77,8 @@ wasted. A bad configuration is reported as an error that names the setting.
 | `SEARCH_MCP_AGENT_MAX_STEPS` | `1` | Tool rounds the model may spend afterwards. `0` answers from the first pages only |
 | `SEARCH_MCP_AGENT_MAX_SOURCE_CHARS` | `6000` | Characters of each page given to the model |
 | `SEARCH_MCP_AGENT_TIMEOUT_SECONDS` | `90` | Deadline for the model part |
+| `SEARCH_MCP_AGENT_IN_SEARCH` | `true` | Run the agent on every `search` too, beside the engine fan-out |
+| `SEARCH_MCP_AGENT_SEARCH_TIMEOUT_SECONDS` | `45` | How long `search` waits for that answer before returning the links alone |
 
 The CLI backends start the child with its built-in tools off and with a
 three-tool copy of this server. That copy enforces the step limit itself, has

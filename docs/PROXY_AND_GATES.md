@@ -147,9 +147,9 @@ disable it with `SEARCH_MCP_HEALTH_ENABLED`,
 `SEARCH_MCP_ENGINE_COOLDOWN_MAX_SECONDS`.
 
 An open bench is also written to `<cache_dir>/engine_health.json`, so a new
-process starts with it. Measured on 2026-09-21, Mojeek took 2.6 to 6.2 s to
-serve its captcha page, and a search waits for its slowest engine, so a fresh
-process paid that on its first search: 8.5 s against 4.0 s for the next
+process starts with it. Measured on 2026-09-21, a captcha-walled engine took
+2.6 to 6.2 s to serve its page, and a search waits for its slowest engine, so a
+fresh process paid that on its first search: 8.5 s against 4.0 s for the next
 process, which read the file. A long-lived server paid it once a session; the
 one-shot `search-mcp ask` command and the child servers the answer agent starts
 paid it every run. The file is advisory. Delete it, or lose it, and the cost is
@@ -158,8 +158,9 @@ one failed attempt, as before.
 ### Reserves
 
 While fewer than `SEARCH_MCP_MIN_HEALTHY_ENGINES` (3) general engines are
-healthy, reserves are seated in order: `so360`, `brave`, `searx`
-(`SEARCH_MCP_RESERVE_ENGINES`). A reserve that needs Chromium is skipped while
+healthy, reserves are seated in order: `so360`, `brave`
+(`SEARCH_MCP_RESERVE_ENGINES`). The default pool is exactly three wide, so
+losing any one engine seats a reserve. A reserve that needs Chromium is skipped while
 Chromium is known to be missing. An answer that still rests on too few indexes
 is served, but it is cached for at most an hour instead of the usual week, so
 the pool's recovery shows up.
@@ -167,17 +168,16 @@ the pool's recovery shows up.
 ### The rescue pass
 
 If a search still comes back empty, or nearly empty while engines were gated or
-erroring, one bounded recovery attempt runs through the reserves, then `searx`,
-then `bing`, skipping whatever already ran or is benched. Recovered results are
+erroring, one bounded recovery attempt runs through the reserves, then
+`youcom`, then `baidu`, skipping whatever already ran or is benched. Recovered results are
 attributed to the engine that produced them. The response reports this in
 `rescued_via` and in a `fallback` entry on each gated engine
 (`was captcha-gated → served via so360`).
 
-Measured on 2026-09-21: `mojeek` is captcha-walled on every request, so in
-practice it is benched after one attempt and re-probed every 10 to 60 minutes.
-`google` and `serpsearch` hit a JavaScript wall, and `startpage` and `sogou`
-returned nothing. None of them is a recovery path, so do not name
-`engines=["google"]` because results were thin.
+Measured on 2026-10-29: `duckduckgo`, `bing`, `anysearch` and the reserves
+answer on topic. Engines that only served a wall on every request (`mojeek`,
+`google`/`serpsearch`, `startpage`, `searx`, `sogou`) were removed from the
+registry, so no pool, rescue pass or explicit name reaches them.
 
 ## 4. Off-topic answers: not a gate
 
@@ -226,8 +226,6 @@ says the same in one sentence. The reasons are:
   advice is given, because none applies.
 - `browser_unavailable`: the engine needs a browser render and Chromium is not
   installed. The hint carries the install command.
-- `no_live_instance`: `searx` only. None of the public SearXNG instances
-  answered. Pin a good one with `SEARCH_MCP_SEARX_INSTANCES`.
 
 `benched_engines` lists the engines that were *not asked* this time, each with
 its reason, `retry_in_seconds` and the reserve standing in for it.

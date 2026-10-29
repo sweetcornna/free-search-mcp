@@ -27,7 +27,7 @@ Response (200) JSON:
 
 Strategy:
   * This is a JSON GET API, so we OVERRIDE search() (the base class only knows
-    how to GET an HTML page) and mirror the anysearch.py / searx.py idioms.
+    how to GET an HTML page) and mirror the anysearch.py idiom.
   * num is clamped to 1..10 because CSE rejects num > 10.
   * published_age is derived from the snippet via base.extract_date_hint, since
     CSE does not return a structured publish date in the basic response.

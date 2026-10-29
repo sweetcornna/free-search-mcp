@@ -205,18 +205,6 @@ def test_brave_build_url_freshness():
     assert "tf=pm" in url
 
 
-def test_startpage_build_url_freshness():
-    e = get_engine("startpage")
-    url = e.build_url("hello", 10, SearchFilters(freshness="year"))
-    assert "with_date=y" in url
-
-
-def test_mojeek_build_url_freshness():
-    e = get_engine("mojeek")
-    url = e.build_url("hello", 10, SearchFilters(freshness="day"))
-    assert "since=1d" in url
-
-
 def test_baidu_build_url_no_freshness_param():
     """Baidu is documented to skip freshness; we still embed site: operators."""
     e = get_engine("baidu")

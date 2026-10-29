@@ -65,7 +65,7 @@ snippet against its page and its date) and, in Claude Code, the
 `/plugin update free-search` moves to the next release.
 
 Optionally, install Chromium once for the browser-rendered engines (`brave`,
-`startpage`, `zhihu`, …) and JavaScript-heavy pages. Everything else works
+`zhihu`, …) and JavaScript-heavy pages. Everything else works
 without it, and a call that needs it returns this command as its error:
 
 ```bash
@@ -128,8 +128,10 @@ header. `format="json"` returns structured data.
 ### How a search runs
 
 - A search that names no engines asks a small keyless pool: `duckduckgo`,
-  `bing`, `anysearch` and `mojeek`. `googlenews` joins when recency is asked
-  for, and `so360` when the query is written in Chinese.
+  `bing` and `anysearch`. `googlenews` joins when recency is asked for, and
+  `so360` when the query is written in Chinese. Sources that only served a
+  CAPTCHA or an empty shell (`mojeek`, `google`, `startpage`, `searx`,
+  `sogou`) were removed rather than left to fail on every fresh process.
 - `category=` routes to sources that index that kind of thing (papers,
   filings, datasets, packages, CVEs, …). Record sources such as `pypi`, `nvd`
   or `openmeteo` also join by themselves when the question is one they can
@@ -137,6 +139,11 @@ header. `format="json"` returns structured data.
 - An engine that serves a CAPTCHA, a login wall or an off-topic page is
   benched, a reserve takes its seat, and the response says what happened. A
   proxy (`SEARCH_MCP_PROXY`) is the fix for IP gating.
+- With an answer backend configured (`SEARCH_MCP_AGENT_BACKEND=api`,
+  `claude-code` or `codex`), `search` also runs the answer agent beside the
+  engines from the same result set and puts a short sourced answer above the
+  links. `SEARCH_MCP_AGENT_IN_SEARCH=false` turns that off; `ask` stays
+  available either way.
 - Every result says how old it is and where its date came from, so the agent
   can tell a lead from a checked fact.
 - `engines()` prints the whole source tree. `engines=["so360", "baidu"]` runs
@@ -330,7 +337,7 @@ environment first, then `./.env`, then `~/.config/search-mcp/.env`
 |---|---|---|
 | `SEARCH_MCP_PROXY` | empty | outbound proxy (`http`, `https` or `socks5`) for the engines, the browser and `fetch` |
 | `SEARCH_MCP_PROXY_ENGINES` | empty | proxy only these engines |
-| `SEARCH_MCP_DEFAULT_ENGINES` | `["duckduckgo","bing","anysearch","mojeek"]` | the pool a search uses when it names no engines |
+| `SEARCH_MCP_DEFAULT_ENGINES` | `["duckduckgo","bing","anysearch"]` | the pool a search uses when it names no engines |
 | `SEARCH_MCP_REGION` | `us-en` | locale for engines that take one |
 | `SEARCH_MCP_CACHE_DIR` | `~/.cache/search-mcp` | search and page cache |
 | `SEARCH_MCP_TOOLS` | empty | register only these tools |
@@ -365,8 +372,6 @@ This project builds on:
   FTS5 cache idea, and multi-format `read_document`
 - [`nickclyde/duckduckgo-mcp-server`](https://github.com/nickclyde/duckduckgo-mcp-server):
   per-engine rate limiting and LLM-friendly content cleanup
-- [Mojeek](https://www.mojeek.com/), an independent search index that doesn't
-  gate on User-Agent
 - [Model Context Protocol](https://modelcontextprotocol.io/) and the
   [official Python SDK](https://github.com/modelcontextprotocol/python-sdk)
 

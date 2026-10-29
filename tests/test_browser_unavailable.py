@@ -137,7 +137,7 @@ async def test_aggregate_renders_single_install_hint(monkeypatch):
     command, via aggregate_search."""
 
     class _GatedStub:
-        name = "startpage"
+        name = "brave"
 
         async def search(self, query, max_results, filters=None, diagnostics=None):
             if diagnostics is not None:
@@ -146,9 +146,9 @@ async def test_aggregate_renders_single_install_hint(monkeypatch):
             return []
 
     monkeypatch.setattr("search_mcp.aggregator.get_engine", lambda name: _GatedStub())
-    out = await aggregate_search("q", engines=["startpage"], use_cache=False)
+    out = await aggregate_search("q", engines=["brave"], use_cache=False)
     assert out["results"] == []
-    assert out["gated_engines"]["startpage"]["reason"] == "browser_unavailable"
+    assert out["gated_engines"]["brave"]["reason"] == "browser_unavailable"
     assert "playwright install chromium" in out["gated_hint"]
 
 

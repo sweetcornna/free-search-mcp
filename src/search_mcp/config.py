@@ -27,30 +27,27 @@ class Settings(BaseSettings):
     # vacuuming; 0 disables the cap. Expired rows are purged on the same cadence.
     cache_max_mb: int = 512
 
-    # The default pool: keyless, plain-HTTP, general web indexes. Re-measured
-    # 2026-09-21, because the previous list had quietly stopped working — of
-    # its four engines only DuckDuckGo was returning usable results:
+    # The default pool: keyless, plain-HTTP, general web indexes. Measured
+    # again 2026-10-29. The engines that only served a CAPTCHA, a JavaScript
+    # wall or nothing at all — mojeek, google, serpsearch, startpage, searx and
+    # sogou — were removed from the registry instead of being left for the
+    # health tracker to bench on every fresh process.
     #   * duckduckgo  — reliable; curl_cffi's browser fingerprint avoids the
     #                   anomaly 202s. Coherent on every query measured.
     #   * bing        — real results again with a warmed session and the right
-    #                   request shape (engines/bing.py); ~2s. When it serves a
-    #                   decoy page instead, the off-topic guard drops it.
-    #   * anysearch   — keyless anonymous tier of a JSON API, ~2.5s, coherent.
-    #   * mojeek      — independent index, which is why it stays: when it
-    #                   answers it disagrees usefully. It was captcha-walled on
-    #                   every request when measured, so in practice the health
-    #                   tracker benches it after one attempt and re-probes it
-    #                   every 10-60 minutes.
+    #                   request shape (engines/bing.py). When it serves a decoy
+    #                   page instead, the off-topic guard drops it.
+    #   * anysearch   — keyless anonymous tier of a JSON API, ~3s, coherent.
     # `googlenews` left this list. It answered every query, programming
     # questions included, with ten news headlines behind opaque redirect URLs;
     # see `fresh_engines`.
-    default_engines: list[str] = ["duckduckgo", "bing", "anysearch", "mojeek"]
+    default_engines: list[str] = ["duckduckgo", "bing", "anysearch"]
     # Stand-ins, in order, used only while fewer than `min_healthy_engines`
     # general engines are healthy. so360 is plain HTTP and measured coherent;
-    # brave works but needs a browser render (seconds, and Chromium); public
-    # searx instances are a lottery. Not used to pad a pool that is merely one
-    # short — three good engines beat three good engines plus a browser render.
-    reserve_engines: list[str] = ["so360", "brave", "searx"]
+    # brave works but needs a browser render (seconds, and Chromium). Not used
+    # to pad a pool that is merely one short — three good engines beat three
+    # good engines plus a browser render.
+    reserve_engines: list[str] = ["so360", "brave"]
     min_healthy_engines: int = 3
     # Joined to the pool when the caller asks for `freshness="day"|"week"` —
     # the only time a news feed is the right answer to a web search.
@@ -69,15 +66,6 @@ class Settings(BaseSettings):
     engine_cooldown_max_seconds: float = 3600.0
 
     max_results_per_engine: int = 10
-
-    # Public SearXNG instances rot constantly (DNS death, 429 walls, disabled
-    # backends). An operator can pin a known-good instance (or several) via
-    # SEARCH_MCP_SEARX_INSTANCES (comma/space separated, e.g.
-    # "https://searx.be https://priv.au"); when set it takes precedence over the
-    # built-in shortlist the searx engine races. searx is also the keyless
-    # fallback for the google/bing scrapers, so a live instance here re-arms
-    # those too.
-    searx_instances: str = ""
 
     # Aggregation-level keyless rescue. When a FRESH search comes back empty —
     # or nearly empty while demonstrably unhealthy (engine errors, gates, or a
@@ -111,13 +99,15 @@ class Settings(BaseSettings):
 
     # Drop a web engine's whole bucket when its results mention nothing of the
     # query beyond the first word while another engine's do — Bing's decoy
-    # page, or a bad public searx instance (see coherence.py). Off restores the
-    # old behaviour of merging whatever came back.
+    # page, or a weak rescue source (see coherence.py). Off restores the old
+    # behaviour of merging whatever came back.
     coherence_guard_enabled: bool = True
 
     rescue_enabled: bool = True
     # Tried after `reserve_engines`, skipping whatever already ran or is benched.
-    rescue_engines: list[str] = ["searx", "bing"]
+    # youcom is keyless but quota-limited, which fits a rare recovery pass;
+    # baidu is the second independent index and needs no key.
+    rescue_engines: list[str] = ["youcom", "baidu"]
     rescue_timeout: float = 10.0
 
     rate_limit_per_minute: int = Field(default=30, gt=0)
@@ -240,6 +230,16 @@ class Settings(BaseSettings):
     agent_max_source_chars: int = Field(default=6000, ge=500)
     # Wall clock for the model part. Past it the caller gets the pages instead.
     agent_timeout_seconds: float = Field(default=90.0, gt=0)
+    # Run the answer agent on every `search` too, beside the engine fan-out,
+    # and put its short sourced answer above the result list. This is what a
+    # configured agent is for: the caller gets both the links and the reading
+    # without spending a second turn. Set false to keep `ask` opt-in, or name
+    # engines in a call when you want a raw index result.
+    agent_in_search: bool = True
+    # `search` waits this long for the agent leg; past it the search returns
+    # its links and a note saying the answer timed out. The agent's own
+    # `agent_timeout_seconds` still caps the model turn inside this window.
+    agent_search_timeout_seconds: float = Field(default=45.0, gt=0)
 
     # --- The `codex` sign-in engine (oauth.py, engines/codex.py) ----------
     # Opt-in like the API-key engines: in no pool and no route, and it runs

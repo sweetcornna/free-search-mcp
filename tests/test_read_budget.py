@@ -47,6 +47,42 @@ async def test_slow_pages_are_dropped_and_cancelled(monkeypatch):
     assert cancelled == [urls[1]], "the slow fetch is stopped, not left running"
 
 
+async def test_research_reuses_a_search_that_already_ran(monkeypatch):
+    """`search` hands its own aggregate payload in, so the reading half must
+    read that ranked list and never call the engines again."""
+    calls: list[dict[str, Any]] = []
+
+    async def fake_search(question: str, **kwargs: Any) -> dict[str, Any]:
+        calls.append({"question": question, **kwargs})
+        return {"results": [], "engines": []}
+
+    async def fake_fetch_page(url: str, **_: Any) -> fetcher.FetchResult:
+        return _page(url)
+
+    monkeypatch.setattr(research_mod, "aggregate_search", fake_search)
+    monkeypatch.setattr(research_mod, "fetch_page", fake_fetch_page)
+
+    seeded = {
+        "results": [
+            {"title": "One", "url": "https://one.example/a", "snippet": "first"},
+            {"title": "Two", "url": "https://two.example/b", "snippet": "second"},
+            {"title": "Three", "url": "https://three.example/c", "snippet": "third"},
+        ],
+        "engines": ["duckduckgo"],
+        "retrieved_at": "2026-10-29T00:00:00Z",
+    }
+
+    brief = await research_mod.research("a question", depth=2, search_payload=seeded)
+
+    assert calls == []
+    assert [s["url"] for s in brief["sources"]] == [
+        "https://one.example/a",
+        "https://two.example/b",
+    ]
+    assert brief["engines"] == ["duckduckgo"]
+    assert brief["retrieved_at"] == "2026-10-29T00:00:00Z"
+
+
 async def test_research_uses_the_budget_only_when_asked(monkeypatch):
     async def fake_search(question: str, **_: Any) -> dict[str, Any]:
         return {

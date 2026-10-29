@@ -1,8 +1,8 @@
 """Which engines are worth asking right now.
 
 Until 0.12 the default pool was a fixed list, asked in full on every search.
-Mojeek answered every request with an ALTCHA captcha for weeks, and every
-search still paid for the attempt, still listed `mojeek` among its sources, and
+A captcha-walled engine answered every request with an ALTCHA page for weeks,
+and every search still paid for the attempt, still listed it among its sources, and
 still ran on one engine fewer than it claimed. A circuit breaker is the
 ordinary answer: an engine that keeps failing is benched for a while, a reserve
 takes its seat if the pool gets thin, and one search after the cooldown is the
@@ -10,7 +10,7 @@ probe that lets it back in.
 
 State lives in memory, and an open circuit is also written to
 `<cache_dir>/engine_health.json` so that the next process starts benched too.
-Measured 2026-09-21: Mojeek took 2.6 to 6.2 s to serve its captcha page, and
+Measured 2026-09-21: that captcha page took 2.6 to 6.2 s to arrive, and
 the pool waits for its slowest member, so a fresh process paid that on its
 first search every time. The plugin's server is long-lived and paid it once a
 session; `search-mcp ask` and the child servers the answer agent starts are

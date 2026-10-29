@@ -239,7 +239,7 @@ async def test_a_lone_suspect_is_kept_when_rescue_is_disabled(monkeypatch):
 
 
 async def test_rescue_never_recovers_into_a_decoy(monkeypatch):
-    """Public searx instances measured 0.0-0.2 coherence on a bad day."""
+    """A weak rescue candidate was measured at 0.0-0.2 coherence on a bad day."""
     monkeypatch.setattr(settings, "rescue_enabled", True)
     monkeypatch.setattr(settings, "rescue_engines", ["searx", "so360"])
     searx, so360 = _Stub("searx", decoy("searx")), _Stub("so360", healthy("so360"))
@@ -261,8 +261,8 @@ def test_the_guarded_engines_are_exactly_the_web_indexes():
     is right for a web index and wrong for a catalogue, so the decision has to
     be made on purpose: set `single_site = True`, or add the name here."""
     assert {name for name in ENGINES if _is_guarded(name)} == {
-        "duckduckgo", "mojeek", "searx", "startpage", "brave", "bing", "baidu", "google",
-        "serpsearch", "anysearch", "sogou", "so360", "brave_api", "serper", "serpbase",
+        "duckduckgo", "brave", "bing", "baidu",
+        "anysearch", "so360", "brave_api", "serper", "serpbase",
         "tavily", "google_cse", "codex", "antigravity", "youcom",
     }  # fmt: skip
 

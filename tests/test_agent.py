@@ -314,6 +314,42 @@ async def test_answer_with_needs_no_backend_and_gets_instructions_and_evidence(s
     assert "research" not in result and "agent_error" not in result
 
 
+async def test_a_shared_search_seed_is_not_searched_again(seed):
+    """`search` hands the agent the task that produces its own links. The
+    reading half must reuse that payload instead of sending the query to the
+    engines a second time."""
+
+    async def my_model(instructions: str, evidence: str) -> str:
+        return "Answer: 2.4.0."
+
+    result = await agent.ask(QUESTION, seed=SEED, answer_with=my_model)
+
+    assert seed == [
+        {
+            "question": QUESTION,
+            "depth": 3,
+            "read_budget_seconds": 8.0,
+            "search_payload": SEED,
+        }
+    ]
+    assert result["answer"] == "Answer: 2.4.0."
+    assert [s["url"] for s in result["sources"]] == [s["url"] for s in SEED["sources"]]
+
+
+async def test_an_awaitable_seed_is_resolved_before_reading(seed):
+    async def my_model(instructions: str, evidence: str) -> str:
+        return "Answer: 2.4.0."
+
+    loop = asyncio.get_running_loop()
+    pending: asyncio.Future[dict[str, Any]] = loop.create_future()
+    pending.set_result(SEED)
+
+    result = await agent.ask(QUESTION, seed=pending, answer_with=my_model)
+
+    assert seed[0]["search_payload"] is SEED
+    assert result["answer"] == "Answer: 2.4.0."
+
+
 # --- backend: api, OpenAI dialect --------------------------------------------
 
 
@@ -1048,15 +1084,15 @@ def test_the_child_env_file_survives_the_loader(monkeypatch, tmp_path):
     }
     for name, value in values.items():
         monkeypatch.setenv(name, value)
-    monkeypatch.setenv("SEARCH_MCP_SEARX_INSTANCES", "both ' and \" quotes")
+    monkeypatch.setenv("SEARCH_MCP_ACCEPT_LANGUAGE", "both ' and \" quotes")
     agent._write_child_env(tmp_path)
 
-    for name in [*values, "SEARCH_MCP_SEARX_INSTANCES"]:
+    for name in [*values, "SEARCH_MCP_ACCEPT_LANGUAGE"]:
         monkeypatch.delenv(name)
     keystore.load_env_file_into_environ(tmp_path / ".env")
     for name, value in values.items():
         assert os.environ[name] == value
-    assert "SEARCH_MCP_SEARX_INSTANCES" not in os.environ, "unquotable, so left out and logged"
+    assert "SEARCH_MCP_ACCEPT_LANGUAGE" not in os.environ, "unquotable, so left out and logged"
 
 
 # --- the MCP tool ------------------------------------------------------------

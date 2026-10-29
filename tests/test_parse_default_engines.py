@@ -1,6 +1,6 @@
 """Golden-HTML parse() tests for the default-pool HTML scrapers (offline).
 
-duckduckgo, mojeek, and bing are three of the four default engines, and HTML
+duckduckgo and bing are two of the three default engines, and HTML
 markup drift is this project's most likely silent failure mode — an engine
 whose selectors stop matching returns [] with no error. These fixtures freeze
 the markup shape each parser expects, so a selector edit that breaks parsing
@@ -13,7 +13,6 @@ import pytest
 
 from search_mcp.engines.bing import BingEngine, resolve_bing_url
 from search_mcp.engines.duckduckgo import DuckDuckGoEngine, _unwrap
-from search_mcp.engines.mojeek import MojeekEngine
 
 # ---------------------------------------------------------------------------
 # duckduckgo (html.duckduckgo.com/html)
@@ -94,49 +93,6 @@ def test_ddg_unwrap_decodes_redirect_exactly_once():
 
 def test_ddg_unwrap_passes_direct_urls_through():
     assert _unwrap("https://example.com/x") == "https://example.com/x"
-
-
-# ---------------------------------------------------------------------------
-# mojeek
-# ---------------------------------------------------------------------------
-
-_MOJEEK_HTML = """
-<html><body>
-  <ul class="results-standard">
-    <li>
-      <h2><a class="title" href="https://example.org/alpha">Alpha page</a></h2>
-      <p class="s">Alpha snippet text. Jan 5, 2024.</p>
-    </li>
-    <li>
-      <h2><a class="title" href="https://example.org/beta">Beta page</a></h2>
-      <p class="s">Beta snippet text.</p>
-    </li>
-    <li>
-      <!-- row without the title anchor must be skipped, not crash -->
-      <p class="s">Orphan snippet.</p>
-    </li>
-  </ul>
-</body></html>
-"""
-
-
-def test_mojeek_parse_extracts_results():
-    results = MojeekEngine().parse(_MOJEEK_HTML)
-    assert [(r.title, r.url) for r in results] == [
-        ("Alpha page", "https://example.org/alpha"),
-        ("Beta page", "https://example.org/beta"),
-    ]
-    assert results[0].snippet.startswith("Alpha snippet")
-    assert results[0].engine == "mojeek"
-
-
-def test_mojeek_parse_sets_date_hint():
-    results = MojeekEngine().parse(_MOJEEK_HTML)
-    assert results[0].published_age  # "Jan 5, 2024" in the snippet
-
-
-def test_mojeek_parse_empty_shell_yields_nothing():
-    assert MojeekEngine().parse("<html><body><ul></ul></body></html>") == []
 
 
 # ---------------------------------------------------------------------------

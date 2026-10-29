@@ -148,12 +148,16 @@ process, so new and old clients both work unchanged. What a client sees:
 
 ## Engines
 
-The registry holds 75 engines. A search that names none of them runs a small
+The registry holds 71 engines. A search that names none of them runs a small
 pool chosen for it, and the pool depends on which engines are healthy at that
 moment.
 
-The default pool is `duckduckgo`, `bing`, `anysearch` and `mojeek`. All four
-use plain HTTP and need no browser.
+The default pool is `duckduckgo`, `bing` and `anysearch`. All three use plain
+HTTP and need no browser. The scrapers that only ever served a CAPTCHA, a
+JavaScript shell or nothing at all (`mojeek`, `google`, `serpsearch`,
+`startpage`, `searx`, `sogou`) were removed from the registry, because leaving
+them in the pool only spent a wall's latency on the first search of every
+process.
 
 Two engines join it when the query calls for them:
 
@@ -167,10 +171,9 @@ Two engines join it when the query calls for them:
   In our measurement it returned the organiser's own site and the university
   notice for a Chinese query, neither of which the western indexes had.
 
-Reserves (`so360`, `brave`, `searx`, in that order) are seated only while
-fewer than 3 general engines are healthy. A pool that is one engine short is
-left alone, because a fourth engine that needs a browser render would add
-seconds to every search. A reserve that needs Chromium is skipped while
+Reserves (`so360`, `brave`, in that order) are seated only while fewer than 3
+general engines are healthy. The default pool is exactly three wide, so losing
+any one of them seats a reserve. A reserve that needs Chromium is skipped while
 Chromium is known to be missing.
 
 The circuit breaker benches an engine at once when it serves a wall (CAPTCHA,
@@ -215,7 +218,7 @@ words do get echoed. The engine is reported under `gated_engines` with reason
 
 The rescue pass runs when a search still comes back empty, or nearly empty
 with gated or erroring engines. The aggregator makes one bounded recovery
-attempt through the reserves and then `searx` and `bing`, in that order,
+attempt through the reserves and then `youcom` and `baidu`, in that order,
 skipping anything that already ran or is benched, and reports it as
 `rescued_via`. A wall on the default engines then costs time but still returns
 results.
@@ -225,30 +228,20 @@ fresh, locale or category pools requires one, and
 `tests/test_no_key_positioning.py` fails the build if a keyed engine is added
 to any of them.
 
-Status as measured on 2026-09-21:
+Status as measured on 2026-10-29:
 
-- `duckduckgo`, `bing`, `anysearch`, `so360` and `brave` (browser) answer on
-  topic.
-- `mojeek` serves a captcha on every request. It stays in the default list for
-  its independent index, whose results differ usefully from the others when it
-  answers. In practice it is benched after one attempt and re-probed every 10
-  to 60 minutes.
-- `google` / `serpsearch` serve a JavaScript wall on every request. They are
-  not a recovery path, so do not reach for `engines=["google"]` when results
-  are thin.
-- `startpage` and `sogou` returned nothing.
+- `duckduckgo`, `bing`, `anysearch`, `so360`, `baidu`, `youcom`, `googlenews`
+  and `brave` (browser) answer on topic.
+- `mojeek`, `google` / `serpsearch`, `startpage`, `searx` and `sogou` no longer
+  have an engine module. They were measured serving a CAPTCHA, a JavaScript
+  wall or an empty page on every request, so no pool, route or explicit name
+  can reach them.
+- `zhihu` is browser-rendered and login-gated; it works after
+  `search-mcp-login zhihu` and returns empty otherwise.
 
-By name only (all keyless):
-- `startpage` is browser-rendered (~5-10s/query).
+Other keyless engines, and how each behaves:
 - `brave` and `baidu` are browser-rendered and intermittently challenge
   headless clients.
-- `searx` is a meta-search proxy over public SearXNG instances. Most public
-  instances are slow or unreliable in 2026; pin a good one with
-  `SEARCH_MCP_SEARX_INSTANCES`.
-- `google` is a keyless scrape of the Google web SERP (HTTP first, with a
-  Playwright fallback when Google serves a JS or consent shell). `serpsearch`
-  is an alias of `google`: all dedicated "SERP APIs" require a key, so the only
-  keyless SERP is a direct scrape. See the status note above.
 - `anysearch` is in the default pool. It calls the anonymous (keyless) tier of
   the [AnySearch](https://github.com/anysearch-ai/anysearch-mcp-server)
   unified-search REST API, and one HTTP call returns fused, re-ranked results.
@@ -259,9 +252,9 @@ By name only (all keyless):
   server (`https://api.you.com/mcp?profile=free`), the keyless way in that
   You.com documents; its REST search endpoints are paid per call. It has its
   own web and news index and receives the domain filters, freshness,
-  SafeSearch and region. The profile allows 100 searches a day per IP, so the
-  engine stays out of every pool and runs only when named. A spent quota or a
-  refusal is reported as such, not as an empty result.
+  SafeSearch and region. The profile allows 100 searches a day per IP, so it is
+  a rescue source rather than a default. A spent quota or a refusal is reported
+  as such, not as an empty result.
 - `bilibili` is keyless Bilibili (哔哩哔哩) video search through the public
   `web-interface/search/all/v2` JSON API (synthetic `buvid3` cookie, no
   login). It returns video results only.
@@ -270,11 +263,8 @@ By name only (all keyless):
   no-key path is rendering the public search page in a browser. Zhihu blocks
   headless clients, so a login wall or an empty result is common. Treat it like
   `baidu`/`brave`.
-- `sogou` and `so360` are Chinese web indexes, scraped from HTML. `sogou`
-  returns redirect URLs (`sogou.com/link?url=…`) in place of target URLs, and
-  the blob can only be resolved by following it. `fetch` handles that, but
-  host-based `category` filtering discards them. `baidu` and `so360` return
-  direct URLs.
+- `so360` is a Chinese web index scraped from HTML; `baidu` is the other.
+  Both return direct URLs.
 - `wikipedia` is encyclopedia search; its language follows
   `SEARCH_MCP_REGION`.
 - `openlibrary` is book search over the Internet Archive catalogue.
@@ -419,7 +409,7 @@ no claim and ran as before. `category=` still works and still routes, and
 
 The first result of such a source counts five times a general engine's in the
 rank fusion when it claimed the question or its category was asked for. The
-rule: one looked-up record outranks the whole four-engine default pool
+rule: one looked-up record outranks the whole three-engine default pool
 agreeing on a page about it, because the page's snippet is a crawl-time
 summary and the record is the publisher's own dated value. Later results from
 the same source (other candidate names, older advisories) count as ordinary
@@ -535,7 +525,7 @@ CAPTCHAs (ToS). The server handles a blocked engine in these ways:
 
 When results are thin, the remedies are, in order: rephrase the query, pass
 `category=`, name `engines=["so360","baidu"]` for Chinese content or
-`engines=["brave"]` / `["startpage"]` if Chromium is installed, and use a proxy
+`engines=["brave"]` if Chromium is installed, and use a proxy
 if the diagnostics show a real wall. An agent should not reach for an API key
 as the fix; see
 [API_KEYS.md](API_KEYS.md).
@@ -583,20 +573,14 @@ category=forum. Try widening or removing one filter.
    ┌────▼─────────────────┐  ┌──────────────▼─────────────┐
    │  engines/            │  │  browser pool              │
    │   duckduckgo.py      │  │   - persistent context     │
-   │   mojeek.py          │  │   - stealth init script    │
-   │   searx.py           │  │   - shared cookies         │
-   │   startpage.py (opt) │  │   - semaphore-bounded pages│
-   │   brave.py     (opt) │  └────────────────────────────┘
-   │   bing.py            │
+   │   bing.py            │  │   - stealth init script    │
+   │   anysearch.py       │  │   - shared cookies         │
+   │   brave.py   (reserve)│ │   - semaphore-bounded pages│
+   │   so360.py   (reserve)│ └────────────────────────────┘
    │   baidu.py     (opt) │
-   │   google.py    (opt) │
-   │   serpsearch.py(opt) │
-   │   anysearch.py       │
-   │   youcom.py    (opt) │
+   │   youcom.py (rescue) │
    │   bilibili.py  (opt) │
    │   zhihu.py     (opt) │
-   │   sogou.py     (opt) │
-   │   so360.py  (reserve)│
    │   arxiv/openalex/    │
    │   crossref/pubmed    │
    │   github/stackexch.  │

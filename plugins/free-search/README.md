@@ -97,7 +97,7 @@ of the five opt-in engines is possible and manual, as
 [docs/API_KEYS.md](../../docs/API_KEYS.md) describes, and an agent should never
 ask you for one.
 
-Browser-rendered engines (`brave`, `startpage`, `zhihu`, …) and JS-heavy page
+Browser-rendered engines (`brave`, `zhihu`, …) and JS-heavy page
 fetches need Chromium once:
 
 ```bash

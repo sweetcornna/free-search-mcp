@@ -2,9 +2,10 @@
 
 Replaces the old per-engine SearXNG fallback tests (test_serp_fallback.py):
 the fallback now lives in ONE place — ``aggregate_search`` runs a bounded
-rescue pass (settings.rescue_engines, searx → bing) when the fresh run comes
-back empty or nearly empty with demonstrably unhealthy engines. These tests
-stub the engine registry so no I/O ever happens.
+rescue pass (settings.rescue_engines) when the fresh run comes back empty or
+nearly empty with demonstrably unhealthy engines. These tests stub the engine
+registry so no I/O ever happens; the stub names below stand in for the
+configured rescue list.
 """
 
 from __future__ import annotations
@@ -25,6 +26,8 @@ def _enable_rescue(monkeypatch):
     """conftest disables rescue suite-wide (offline safety); these tests run it
     against a fully stubbed registry, so re-enable it."""
     monkeypatch.setattr(settings, "rescue_enabled", True)
+    # The stub names below; production defaults are configured in config.py.
+    monkeypatch.setattr(settings, "rescue_engines", ["searx", "bing"])
 
 
 def _mk_results(engine: str, n: int, prefix: str = "") -> list[SearchResult]:
@@ -223,27 +226,6 @@ async def test_rescue_disabled_by_setting(monkeypatch):
 # ---------------------------------------------------------------------------
 # Engine-level behavior after the per-engine fallback removal
 # ---------------------------------------------------------------------------
-
-_GATE_HTML = "<html>/sorry/index unusual traffic</html>"
-
-
-async def test_google_gated_returns_empty_no_engine_level_fallback(monkeypatch):
-    """A gated Google now degrades to [] + a gate diagnostic; the rescue lives
-    in the aggregator, not in the engine."""
-    from unittest.mock import AsyncMock
-
-    from search_mcp.engines.google import GoogleEngine
-
-    engine = GoogleEngine()
-    monkeypatch.setattr(engine, "_fetch", AsyncMock(return_value=_GATE_HTML))
-    monkeypatch.setattr("search_mcp.engines.base.settings.fetch_strategy", "http")
-
-    diag: dict = {}
-    out = await engine.search("anything", 5, diagnostics=diag)
-    assert out == []
-    assert diag["gated"]["google"] == "captcha"
-    assert "fallback" not in diag
-
 
 async def test_bing_http_raise_propagates_like_any_engine(monkeypatch):
     """bing has no swallow-everything wrapper anymore: a raise surfaces to the

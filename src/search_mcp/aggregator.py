@@ -92,7 +92,7 @@ def engines_for_category(
 ) -> list[str]:
     """Engines that natively index `category`, in registry order.
 
-    The default pool is four general web engines; they can only honour a
+    The default pool is three general web engines; they can only honour a
     `category` by discarding results whose hostname isn't on a whitelist. An
     engine that declares the category actually searches it, so pull those in
     when the caller asked for a category but not for specific engines.
@@ -469,8 +469,8 @@ def _nominal_pool(query: str, category: str | None, freshness: str | None) -> li
     """The engines this search is entitled to, before health is considered.
 
     The cache is keyed on THIS list. Keying on what actually ran would make the
-    key wobble with the breaker: the same question would miss whenever mojeek
-    went from benched to probing and back.
+    key wobble with the breaker: the same question would miss whenever an
+    engine went from benched to probing and back.
     """
     if _is_exclusive(category):
         # For these, the general web pool is noise rather than coverage: a web
@@ -514,9 +514,10 @@ def _active_pool(nominal: list[str]) -> tuple[list[str], dict[str, dict[str, Any
     """`(engines to query, benched)`: the nominal pool minus open circuits.
 
     Reserves are seated only while fewer than `min_healthy_engines` general
-    engines remain — not to pad a pool that is merely one short. If nothing
-    general is left at all the breaker is ignored for this search: trying four
-    doubtful engines beats answering with none.
+    engines remain. The shipped default pool is exactly that wide, so losing
+    one engine seats one reserve. If nothing general is left at all the breaker
+    is ignored for this search: trying three doubtful engines beats answering
+    with none.
     """
     if not settings.health_enabled:
         return nominal, {}
@@ -769,10 +770,10 @@ async def _rescue(
 
     Sequential, first engine that yields results wins. Each candidate gets an
     equal slice of ``settings.rescue_timeout`` (rate-limiter wait included),
-    so a slow first candidate (searx races public instances) can never starve
-    a fast later one. Calls the engines directly — never re-enters
-    ``aggregate_search`` — and the candidate list excludes engines the caller
-    already ran, so there is no recursion and no self-rescue.
+    so a slow first candidate can never starve a fast later one. Calls the
+    engines directly, never re-entering ``aggregate_search``, and the candidate
+    list excludes engines the caller already ran, so there is no recursion and
+    no self-rescue.
 
     Each candidate runs with a PRIVATE diagnostics dict: rescue probes must
     never leak into the caller-facing per-engine stats (``empty_engines`` /
@@ -834,8 +835,8 @@ async def _rescue(
             and _is_guarded(name)
             and looks_like_decoy(query, results)
         ):
-            # Public searx instances were measured at 0.0-0.2 coherence on a bad
-            # day. Recovering INTO a decoy would be worse than not recovering.
+            # A weak rescue candidate was measured at 0.0-0.2 coherence on a
+            # bad day. Recovering INTO a decoy would be worse than not recovering.
             info.setdefault("gated", {})[name] = "off_topic"
             _probe_failed(name, "off_topic")
             continue
@@ -1048,7 +1049,7 @@ _NATIVE_CATEGORY_WEIGHT = 2.0
 # category was requested. Such a result is a record looked up by the query
 # (PyPI's current release, the ECB rate, today's forecast), not a page ranked
 # by relevance, and the caller asked for exactly that kind of record. The rule:
-# one looked-up record outranks the whole four-engine default pool agreeing on
+# one looked-up record outranks the whole three-engine default pool agreeing on
 # a page ABOUT it (4/60 < 5/60), because the page's snippet is a crawl-time
 # summary and the record is the publisher's own dated value. Measured
 # 2026-09-21 on the eleven category probes in the channel work: with 2.0 the
@@ -1330,7 +1331,7 @@ async def aggregate_search(
                 payload["benched_hint"] = meta.get("benched_hint") or ""
             # Provenance, unlike run statistics, describes the RESULTS — and the
             # results are exactly what we just replayed. A set that only exists
-            # because a captcha-walled engine was rescued via searx has to say so
+            # because a captcha-walled engine was rescued by a reserve has to say so
             # every time it is served, or the second identical query inside the
             # 7-day TTL silently re-labels a recovered set as a normal one.
             gated = meta.get("gated_engines")
@@ -1414,7 +1415,7 @@ async def aggregate_search(
             buckets.append(rescue_bucket)
             merged = _merge(buckets, n, category, query)
             # Attribute the recovery to the gated engines so the gate hint
-            # reads "was captcha-gated → served via searx" instead of the
+            # reads "was captcha-gated → served via <reserve>" instead of the
             # misleading "(no results)".
             if rescued_via:
                 fb = diagnostics.setdefault("fallback", {})
@@ -1531,8 +1532,8 @@ async def aggregate_search(
         }
 
     # Surface gate/fallback signals (CAPTCHA / consent / login walls) so the
-    # caller learns WHY an engine returned nothing — and whether a searx
-    # fallback covered it — instead of seeing a silent gap.
+    # caller learns WHY an engine returned nothing — and whether a rescue
+    # covered it — instead of seeing a silent gap.
     if gated_engines:
         payload["gated_engines"] = gated_engines
         payload["gated_hint"] = gated_hint

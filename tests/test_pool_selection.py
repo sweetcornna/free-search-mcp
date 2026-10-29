@@ -100,9 +100,9 @@ def world(monkeypatch):
     monkeypatch.setattr(aggregator.search_limiter, "acquire", _token)
     cache = Cache()
     monkeypatch.setattr(aggregator, "cache", cache)
-    monkeypatch.setattr(settings, "default_engines", ["duckduckgo", "bing", "anysearch", "mojeek"])
-    monkeypatch.setattr(settings, "reserve_engines", ["so360", "brave", "searx"])
-    add(*(Stub(n) for n in ["duckduckgo", "bing", "anysearch", "mojeek", "so360", "brave", "searx",
+    monkeypatch.setattr(settings, "default_engines", ["duckduckgo", "bing", "anysearch"])
+    monkeypatch.setattr(settings, "reserve_engines", ["so360", "brave"])
+    add(*(Stub(n) for n in ["duckduckgo", "bing", "anysearch", "so360", "brave",
                             "googlenews"]))  # fmt: skip
     add.cache = cache
     add.stubs = stubs
@@ -114,9 +114,9 @@ def world(monkeypatch):
 # ---------------------------------------------------------------------------
 
 
-def test_the_default_pool_is_four_general_web_engines_and_no_news_feed():
+def test_the_default_pool_is_three_general_web_engines_and_no_news_feed():
     assert _nominal_pool("python asyncio taskgroup", None, None) == [
-        "duckduckgo", "bing", "anysearch", "mojeek",
+        "duckduckgo", "bing", "anysearch",
     ]  # fmt: skip
 
 
@@ -150,42 +150,42 @@ def test_the_configured_region_does_not_add_a_locale_engine(monkeypatch):
 # ---------------------------------------------------------------------------
 
 
-def test_one_benched_engine_is_dropped_and_not_replaced(world):
-    """Three healthy indexes are enough. A reserve here would add latency — for
-    `brave`, a browser render — to every search, to restore a number."""
-    engine_health.record_failure("mojeek", "captcha")
+def test_one_benched_engine_is_replaced_by_a_reserve(world):
+    """The default pool is exactly `min_healthy_engines` wide, so losing any
+    one of them leaves the search thin and a reserve is seated."""
+    engine_health.record_failure("bing", "captcha")
     nominal = _nominal_pool(QUERY, None, None)
 
     active, benched = _active_pool(nominal)
 
-    assert active == ["duckduckgo", "bing", "anysearch"]
-    assert benched["mojeek"]["reason"] == "captcha"
-    assert benched["mojeek"]["substitute"] is None
+    assert active == ["duckduckgo", "anysearch", "so360"]
+    assert benched["bing"]["reason"] == "captcha"
+    assert benched["bing"]["substitute"] == "so360"
 
 
 def test_a_thin_pool_gets_reserves_in_order_up_to_the_minimum(world):
-    engine_health.record_failure("mojeek", "captcha")
     engine_health.record_failure("bing", "off_topic")
+    engine_health.record_failure("anysearch", "captcha")
 
     active, benched = _active_pool(_nominal_pool(QUERY, None, None))
 
-    assert active == ["duckduckgo", "anysearch", "so360"]
-    assert [benched[n]["substitute"] for n in ("bing", "mojeek")].count("so360") == 1
+    assert active == ["duckduckgo", "so360", "brave"]
+    assert [benched[n]["substitute"] for n in ("bing", "anysearch")].count("so360") == 1
 
 
 def test_a_reserve_that_is_benched_unavailable_or_cannot_render_is_skipped(world, monkeypatch):
-    for name in ("mojeek", "bing", "so360"):
+    for name in ("bing", "anysearch", "so360"):
         engine_health.record_failure(name, "captcha")
     world.stubs["brave"].needs_browser = True
     monkeypatch.setattr(type(aggregator.browser_pool), "known_unavailable", property(lambda s: True))
 
     active, _ = _active_pool(_nominal_pool(QUERY, None, None))
 
-    assert active == ["duckduckgo", "anysearch", "searx"]
+    assert active == ["duckduckgo"]
 
 
 def test_with_no_general_engine_left_the_breaker_is_ignored(world):
-    for name in ("duckduckgo", "bing", "anysearch", "mojeek", "so360", "brave", "searx"):
+    for name in ("duckduckgo", "bing", "anysearch", "so360", "brave"):
         engine_health.record_failure(name, "captcha")
     nominal = _nominal_pool(QUERY, None, None)
     assert _active_pool(nominal) == (nominal, {})
@@ -193,7 +193,7 @@ def test_with_no_general_engine_left_the_breaker_is_ignored(world):
 
 def test_the_breaker_can_be_switched_off(world, monkeypatch):
     monkeypatch.setattr(settings, "health_enabled", False)
-    engine_health.record_failure("mojeek", "captcha")
+    engine_health.record_failure("bing", "captcha")
     nominal = _nominal_pool(QUERY, None, None)
     assert _active_pool(nominal) == (nominal, {})
 
@@ -204,32 +204,33 @@ def test_the_breaker_can_be_switched_off(world, monkeypatch):
 
 
 async def test_a_walled_engine_is_asked_once_then_benched_and_reported(world):
-    world(Stub("mojeek", gate="captcha"))
+    world(Stub("bing", gate="captcha"))
 
     first = await aggregate_search(QUERY, use_cache=False)
     second = await aggregate_search(QUERY, use_cache=False)
 
-    assert world.stubs["mojeek"].calls == 1
-    assert first["engines"] == ["duckduckgo", "bing", "anysearch", "mojeek"]
+    assert world.stubs["bing"].calls == 1
+    assert first["engines"] == ["duckduckgo", "bing", "anysearch"]
     assert "benched_engines" not in first
-    # The second answer lists what actually ran, and says who was left out.
-    assert second["engines"] == ["duckduckgo", "bing", "anysearch"]
-    assert second["benched_engines"]["mojeek"]["reason"] == "captcha"
-    assert "mojeek is benched (captcha" in second["benched_hint"]
+    # The second answer lists what actually ran, including the reserve, and
+    # says who was left out.
+    assert second["engines"] == ["duckduckgo", "anysearch", "so360"]
+    assert second["benched_engines"]["bing"]["reason"] == "captcha"
+    assert "bing is benched (captcha" in second["benched_hint"]
     assert "engines=" in second["benched_hint"]
 
 
 async def test_naming_a_benched_engine_still_runs_it(world):
-    engine_health.record_failure("mojeek", "captcha")
-    out = await aggregate_search(QUERY, engines=["mojeek"], use_cache=False)
-    assert world.stubs["mojeek"].calls == 1
-    assert out["engines"] == ["mojeek"] and "benched_engines" not in out
+    engine_health.record_failure("bing", "captcha")
+    out = await aggregate_search(QUERY, engines=["bing"], use_cache=False)
+    assert world.stubs["bing"].calls == 1
+    assert out["engines"] == ["bing"] and "benched_engines" not in out
 
 
 async def test_a_named_engine_that_fails_is_still_recorded(world):
-    world(Stub("mojeek", gate="captcha"))
-    await aggregate_search(QUERY, engines=["mojeek", "duckduckgo"], use_cache=False)
-    assert engine_health.is_open("mojeek")
+    world(Stub("bing", gate="captcha"))
+    await aggregate_search(QUERY, engines=["bing", "duckduckgo"], use_cache=False)
+    assert engine_health.is_open("bing")
 
 
 async def test_an_engine_that_recovers_is_un_benched(world):
@@ -275,7 +276,7 @@ async def test_silence_counts_only_when_a_peer_found_something(world):
     assert engine_health.is_open("anysearch")
 
     engine_health.reset()
-    for name in ("duckduckgo", "bing", "mojeek"):
+    for name in ("duckduckgo", "bing", "anysearch"):
         world(Stub(name, results=[]))
     for _ in range(3):
         await aggregate_search("a query nobody has an answer for", use_cache=False)
@@ -288,7 +289,7 @@ async def test_losing_engines_mid_run_triggers_a_stand_in_even_with_plenty_of_re
     """One survivor returns ten results. The count looks fine; the answer
     rests on a single index."""
     monkeypatch.setattr(settings, "rescue_enabled", True)
-    world(Stub("bing", gate="captcha"), Stub("mojeek", gate="captcha"),
+    world(Stub("bing", gate="captcha"),
           Stub("anysearch", exc=RuntimeError("boom")))  # fmt: skip
 
     out = await aggregate_search(QUERY, use_cache=False)
@@ -322,7 +323,7 @@ async def test_rescue_skips_a_benched_candidate(world, monkeypatch):
 
 async def test_the_cache_key_does_not_wobble_with_the_breaker(world):
     await aggregate_search(QUERY)
-    engine_health.record_failure("mojeek", "captcha")
+    engine_health.record_failure("bing", "captcha")
 
     again = await aggregate_search(QUERY)
 
@@ -331,20 +332,19 @@ async def test_the_cache_key_does_not_wobble_with_the_breaker(world):
 
 
 async def test_a_cache_hit_reports_the_engines_that_produced_it(world):
-    engine_health.record_failure("mojeek", "captcha")
+    engine_health.record_failure("bing", "captcha")
     fresh = await aggregate_search(QUERY)
     engine_health.reset()
 
     hit = await aggregate_search(QUERY)
 
     assert hit["cached"] is True
-    assert hit["engines"] == fresh["engines"] == ["duckduckgo", "bing", "anysearch"]
-    assert hit["benched_engines"]["mojeek"]["reason"] == "captcha"
+    assert hit["engines"] == fresh["engines"] == ["duckduckgo", "anysearch", "so360"]
+    assert hit["benched_engines"]["bing"]["reason"] == "captcha"
 
 
 async def test_a_degraded_answer_is_replayed_for_an_hour_not_a_week(world):
-    world(Stub("bing", gate="captcha"), Stub("mojeek", gate="captcha"),
-          Stub("anysearch", gate="captcha"))  # fmt: skip
+    world(Stub("bing", gate="captcha"), Stub("anysearch", gate="captcha"))  # fmt: skip
     await aggregate_search(QUERY)
     (key, (results, meta)), = world.cache.rows.items()
     assert meta["degraded"] is True
@@ -355,7 +355,6 @@ async def test_a_degraded_answer_is_replayed_for_an_hour_not_a_week(world):
 
 
 async def test_a_healthy_answer_is_not_marked_degraded(world):
-    world(Stub("mojeek", gate="captcha"))  # three of four standing
     await aggregate_search(QUERY)
     (_, (_, meta)), = world.cache.rows.items()
     assert "degraded" not in meta

@@ -27,7 +27,7 @@ Response (200) JSON:
 Strategy:
   * This is a JSON GET API, so we OVERRIDE search() (the base class only
     knows how to GET + parse an HTML page) and mirror the anysearch.py /
-    searx.py override idioms.
+    anysearch.py override idioms.
   * A REQUIRED missing key RAISES ValueError (the aggregator catches engine
     exceptions into an errors map, so the hint surfaces cleanly). Any other
     failure (http/network/parse) returns [] so a flaky API never poisons the

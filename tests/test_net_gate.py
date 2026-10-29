@@ -26,8 +26,8 @@ def _tmp_config(tmp_path, monkeypatch):
 
 def test_no_proxy_by_default():
     assert net.proxy_url() is None
-    assert net.proxy_for("google") is None
-    assert net.curl_proxy_kwargs("google") == {}
+    assert net.proxy_for("bing") is None
+    assert net.curl_proxy_kwargs("bing") == {}
     assert net.playwright_proxy() is None
 
 
@@ -44,12 +44,12 @@ def test_env_overrides_keystore_proxy(monkeypatch):
 
 
 def test_proxy_scope_limits_to_listed_engines():
-    keystore.set_secrets({"proxy": "http://p:1", "proxy_engines": "google, bing zhihu"})
-    assert net.proxy_for("google") == "http://p:1"
+    keystore.set_secrets({"proxy": "http://p:1", "proxy_engines": "yahoo, bing zhihu"})
+    assert net.proxy_for("yahoo") == "http://p:1"
     assert net.proxy_for("bing") == "http://p:1"
-    assert net.proxy_for("mojeek") is None          # not in scope
+    assert net.proxy_for("brave") is None           # not in scope
     assert net.proxy_for(None) == "http://p:1"       # global (browser/fetch) still proxied
-    assert net.curl_proxy_kwargs("mojeek") == {}
+    assert net.curl_proxy_kwargs("brave") == {}
 
 
 def test_playwright_proxy_parses_credentials():
@@ -109,12 +109,10 @@ def test_detect_gate_classifies_js_only_shell():
 
 
 def test_per_engine_impersonation_profiles():
-    """Google is asked as Chrome and Bing as Edge; everything else inherits the
-    shared default."""
+    """Bing is asked as Edge; everything else inherits the shared default."""
     from search_mcp.engines import get_engine
     from search_mcp.httpfetch import IMPERSONATE
 
-    assert get_engine("google").impersonate == "chrome"
     assert get_engine("bing").impersonate == "edge"
     # Unset engines fall back to the shared profile at request time.
     ddg = get_engine("duckduckgo")
@@ -135,7 +133,7 @@ def test_impersonation_profiles_are_known_to_curl_cffi():
     if resolve is None:
         resolve = profiles.normalize_browser_type
     known = {browser.value for browser in profiles.BrowserType}
-    for name in ("google", "bing"):
+    for name in ("bing",):
         profile = get_engine(name).impersonate
         assert resolve(profile) in known, profile
 

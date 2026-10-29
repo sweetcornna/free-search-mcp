@@ -451,7 +451,7 @@ NETWORK_FIELDS: list[ProviderField] = [
         "Proxy only these engines (optional, comma-separated)",
         secret=False,
         required=False,
-        placeholder="blank = all engines · e.g. google bing zhihu",
+        placeholder="blank = all engines · e.g. bing baidu zhihu",
     ),
 ]
 

@@ -130,6 +130,28 @@ def render_search(payload: dict[str, Any]) -> str:
         lines.append("_(from cache)_")
     lines.append("")
 
+    # The agent leg answers from the same ranked list the caller is about to
+    # read. It goes first because a sourced sentence is what most callers do
+    # with a search anyway; the numbered list below stays the evidence.
+    agent = payload.get("agent") or {}
+    answer = str(agent.get("answer") or "").strip()
+    if answer:
+        lines.append("## Answer")
+        lines.append("")
+        lines.append(answer)
+        byline = [f"backend: {agent.get('backend')}"]
+        if agent.get("model"):
+            byline.append(f"model: {agent['model']}")
+        took = (agent.get("elapsed_seconds") or {}).get("total")
+        if took is not None:
+            byline.append(f"{took} s")
+        lines.append("")
+        lines.append(f"_({'; '.join(byline)})_")
+        lines.append("")
+    elif agent.get("error"):
+        lines.append(f"_Answer agent: {agent['error']}_")
+        lines.append("")
+
     # Extractive lead from the top result that mentions the query terms — sits
     # above the result list so the model sees an answer-shaped fragment first.
     lead = payload.get("lead_snippet")

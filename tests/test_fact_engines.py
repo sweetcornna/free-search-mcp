@@ -832,7 +832,7 @@ def _hit(engine: str, url: str, rank: int = 1) -> SearchResult:
 def test_a_direct_answer_outranks_the_whole_default_pool_agreeing():
     portal = "https://www.weather.com.cn/weather/101020100.shtml"
     buckets = [
-        [_hit(e, portal)] for e in ("duckduckgo", "bing", "anysearch", "mojeek")
+        [_hit(e, portal)] for e in ("duckduckgo", "bing", "anysearch")
     ] + [[_hit("openmeteo", "https://api.open-meteo.com/v1/forecast?latitude=31.22")]]
     ranked = _merge(buckets, 5, "weather", "上海明天天气")
     assert ranked[0]["url"].startswith("https://api.open-meteo.com/")

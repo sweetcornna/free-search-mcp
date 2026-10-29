@@ -32,25 +32,9 @@ async def test_duckduckgo_returns_results():
 
 
 @skip_offline
-async def test_mojeek_returns_results():
-    """Mojeek puts some networks behind a captcha on every request. The engine
-    detects the wall and the circuit breaker benches it, so a detected wall is
-    a skip. An empty answer with no wall detected still fails, because that is
-    what a markup change looks like."""
-    from search_mcp.engines import get_engine
-
-    diagnostics: dict = {}
-    results = await get_engine("mojeek").search("python language", 5, diagnostics=diagnostics)
-    wall = (diagnostics.get("gated") or {}).get("mojeek")
-    if not results and wall:
-        pytest.skip(f"Mojeek served a {wall} wall to this network")
-    assert len(results) > 0
-
-
-@skip_offline
 async def test_aggregate_merges_results():
     from search_mcp.aggregator import aggregate_search
-    out = await aggregate_search("openai api", engines=["duckduckgo", "mojeek"], max_results=5)
+    out = await aggregate_search("openai api", engines=["duckduckgo", "anysearch"], max_results=5)
     assert len(out["results"]) > 0
     assert "score" in out["results"][0]
 

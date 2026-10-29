@@ -1,4 +1,4 @@
-"""Wikipedia / Open Library / GDELT / Sogou / 360 engines (offline).
+"""Wikipedia / Open Library / GDELT / 360 engines (offline).
 
 Plus the rate-limit contract they motivated: GDELT publishes a much stricter
 limit than the default pool, and search is a parallel fan-out, so a slow
@@ -16,7 +16,6 @@ from search_mcp.engines.base import SearchFilters
 from search_mcp.engines.gdelt import GdeltEngine
 from search_mcp.engines.openlibrary import OpenLibraryEngine
 from search_mcp.engines.so360 import So360Engine
-from search_mcp.engines.sogou import SogouEngine
 from search_mcp.engines.wikipedia import WikipediaEngine
 
 # pytest.ini sets `asyncio_mode = auto` so async tests are auto-marked.
@@ -26,7 +25,7 @@ skip_offline = pytest.mark.skipif(
     not NETWORK, reason="set SEARCH_MCP_TEST_NETWORK=1 to run"
 )
 
-NEW = ["wikipedia", "openlibrary", "gdelt", "sogou", "so360"]
+NEW = ["wikipedia", "openlibrary", "gdelt", "so360"]
 
 
 @pytest.mark.parametrize("name", NEW)
@@ -325,45 +324,6 @@ def test_so360_empty_and_garbage_return_empty():
     assert So360Engine().parse("<html><body>nope</body></html>") == []
 
 
-_SOGOU_HTML = """
-<html><body>
-<div class="vrwrap">
-  <h3 class="vr-title"><a href="/link?url=ENCRYPTEDBLOB1">python asyncio 教程</a></h3>
-  <div class="text-layout">asyncio 是 Python 的异步 IO 库。</div>
-</div>
-<div class="vrwrap">
-  <h3 class="vr-title"><a href="javascript:void(0);">widget</a></h3>
-</div>
-<div class="vrwrap">
-  <h3 class="vr-title"><a href="?query=rewrite">related search</a></h3>
-</div>
-</body></html>
-"""
-
-
-def test_sogou_absolutizes_redirect_links():
-    out = SogouEngine().parse(_SOGOU_HTML)
-    assert len(out) == 1
-    assert out[0].url == "https://www.sogou.com/link?url=ENCRYPTEDBLOB1"
-
-
-def test_sogou_skips_widgets_and_requery_links():
-    """The page is padded with `javascript:void(0)` widgets and relative
-    re-query links that are not results."""
-    out = SogouEngine().parse(_SOGOU_HTML)
-    assert all("/link?url=" in r.url for r in out)
-
-
-def test_sogou_finds_snippet_from_an_ancestor():
-    out = SogouEngine().parse(_SOGOU_HTML)
-    assert out[0].snippet.startswith("asyncio 是 Python")
-
-
-def test_sogou_empty_and_garbage_return_empty():
-    assert SogouEngine().parse("") == []
-    assert SogouEngine().parse("<html><body>nope</body></html>") == []
-
-
 # ---------------------------------------------------------------------------
 # Live network
 # ---------------------------------------------------------------------------
@@ -376,7 +336,6 @@ def test_sogou_empty_and_garbage_return_empty():
         ("wikipedia", "model context protocol"),
         ("openlibrary", "dune frank herbert"),
         ("so360", "python asyncio"),
-        ("sogou", "python asyncio"),
     ],
 )
 async def test_live_returns_results(name, query):

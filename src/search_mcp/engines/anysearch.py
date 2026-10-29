@@ -19,7 +19,7 @@ when the item carries it (the live payload often omits it).
 
 Strategy:
   * This is a JSON POST API, so we OVERRIDE search() (the base class only
-    knows how to GET an HTML page) and mirror the searx.py override idioms.
+    knows how to GET an HTML page) and mirror the JSON-API engine idiom.
   * snippet is the longer of ``description`` / ``content`` (non-empty wins).
   * published_age is the ``YYYY-MM-DD`` date portion of ``published_at`` when
     present, else "".

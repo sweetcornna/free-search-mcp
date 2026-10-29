@@ -19,7 +19,7 @@ Response (200) JSON:
 
 Strategy:
   * JSON POST API, so we OVERRIDE search() (the base class only knows how to GET
-    an HTML page) and mirror the anysearch.py / searx.py override idioms.
+    an HTML page) and mirror the anysearch.py override idioms.
   * Domain/filetype constraints ride in the query via
     base.augment_query_with_operators (Google understands site:/-site:/filetype:).
   * supports_browser_fallback is False — a JSON API that returns nothing or

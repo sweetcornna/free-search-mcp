@@ -13,9 +13,7 @@ All offline; the network / browser boundaries are mocked.
 """
 from __future__ import annotations
 
-import asyncio
-import time
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -155,13 +153,6 @@ def test_brave_build_url_emits_safesearch(monkeypatch):
     assert "safesearch=moderate" in url
 
 
-def test_mojeek_build_url_emits_safe(monkeypatch):
-    monkeypatch.setattr(settings, "safesearch", "off")
-    e = get_engine("mojeek")
-    url = e.build_url("hello", 10)
-    assert "safe=0" in url
-
-
 def test_safesearch_region_urls_still_parse_and_keep_freshness(monkeypatch):
     """Adding the new params must not break existing freshness tokens nor URL
     well-formedness."""
@@ -173,7 +164,6 @@ def test_safesearch_region_urls_still_parse_and_keep_freshness(monkeypatch):
         ("duckduckgo", "df=w"),
         ("bing", "ex1"),
         ("brave", "tf=pm"),
-        ("mojeek", "since="),
     ):
         e = get_engine(name)
         url = e.build_url("hello", 10, SearchFilters(freshness="week" if name != "brave" else "month"))
@@ -277,89 +267,6 @@ def test_freshness_within_window_kept():
     assert drops == {}
 
 
-# ---------------------------------------------------------------------------
-# #18 — Searx instance racing is concurrent, not strictly serial
-# ---------------------------------------------------------------------------
-
-
-async def test_searx_races_instances_concurrently(monkeypatch):
-    """With several dead/slow instances, total latency must be bounded well
-    below K x per-instance-timeout because the batch is raced concurrently."""
-    from search_mcp.engines import searx as searx_mod
-
-    e = get_engine("searx")
-
-    # Five instances; each "request" sleeps for ~the per-instance timeout then
-    # raises (dead). Serial execution would take ~5 x DELAY; concurrent racing
-    # collapses it to ~DELAY per batch.
-    DELAY = 0.30
-    monkeypatch.setattr(
-        searx_mod,
-        "_INSTANCES",
-        [f"https://dead{i}.test" for i in range(5)],
-    )
-    monkeypatch.setattr(searx_mod.random, "shuffle", lambda lst: None)
-
-    def factory(*args, **kwargs):
-        async def slow_get(url):
-            await asyncio.sleep(DELAY)
-            raise searx_mod.RequestException("dead")
-
-        session = MagicMock()
-        session.get = slow_get
-        cm = MagicMock()
-        cm.__aenter__ = AsyncMock(return_value=session)
-        cm.__aexit__ = AsyncMock(return_value=None)
-        return cm
-
-    monkeypatch.setattr(searx_mod, "AsyncSession", factory)
-
-    t0 = time.monotonic()
-    out = await e.search("hello", max_results=10)
-    elapsed = time.monotonic() - t0
-
-    assert out == []  # all dead -> never raise, empty
-    # Serial would be ~5*0.30 = 1.5s. Concurrent racing should be far less.
-    assert elapsed < 5 * DELAY * 0.6, f"too slow ({elapsed:.2f}s) — not concurrent"
-
-
-async def test_searx_returns_first_nonempty_when_racing(monkeypatch):
-    """A fast instance returning results should win even when others are slow."""
-    from search_mcp.engines import searx as searx_mod
-    from tests.test_searx import _FAKE_SEARX_HTML  # reuse fixture HTML
-
-    e = get_engine("searx")
-    monkeypatch.setattr(
-        searx_mod,
-        "_INSTANCES",
-        ["https://slow.test", "https://fast.test"],
-    )
-    monkeypatch.setattr(searx_mod.random, "shuffle", lambda lst: None)
-
-    def factory(*args, **kwargs):
-        async def get(u):
-            if "slow" in u:
-                await asyncio.sleep(0.5)
-            resp = MagicMock()
-            resp.status_code = 200
-            resp.text = _FAKE_SEARX_HTML
-            return resp
-
-        session = MagicMock()
-        # url is passed to .get(), not the session ctor, so we ignore factory args
-        session.get = get
-        cm = MagicMock()
-        cm.__aenter__ = AsyncMock(return_value=session)
-        cm.__aexit__ = AsyncMock(return_value=None)
-        return cm
-
-    monkeypatch.setattr(searx_mod, "AsyncSession", factory)
-
-    out = await e.search("hello", max_results=10)
-    assert len(out) == 3
-    assert all(r.engine == "searx" for r in out)
-
-
 # --- Bing ck/a redirect unwrapping ------------------------------------------
 # Raw wrapper hrefs are unique per SERP impression, so leaving them in defeats
 # the RRF merge's URL key and the title dedup: the same page found by Bing and
@@ -452,16 +359,15 @@ def test_brave_parse_dedups_a_repeated_url():
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("name", ["sogou", "so360"])
+@pytest.mark.parametrize("name", ["so360"])
 def test_cn_indexes_inject_query_operators(name):
-    """`sogou` and `so360` were the only web engines that never called
-    `augment_query_with_operators`.
+    """`so360` has no URL parameter for domain or filetype constraints, so it
+    must inject them into the query.
 
-    Neither has a URL parameter for domain or filetype constraints, so the
-    engine returned unconstrained results and `apply_post_filters` then
-    discarded them wholesale — `include_domains` came back empty while DDG
-    returned ten, and the sparse-result hint blamed the filter rather than the
-    engine.
+    Without that the engine returned unconstrained results and
+    `apply_post_filters` then discarded them wholesale — `include_domains` came
+    back empty while DDG returned ten, and the sparse-result hint blamed the
+    filter rather than the engine.
     """
     url = get_engine(name).build_url(
         "asyncio",

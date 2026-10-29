@@ -27,7 +27,7 @@ Response (200) JSON:
 
 Strategy:
   * This is a JSON POST API, so we OVERRIDE search() (the base class only knows
-    how to GET an HTML page) and mirror the anysearch.py / searx.py overrides.
+    how to GET an HTML page) and mirror the anysearch.py overrides.
   * A MISSING key is a configuration error, so we RAISE ValueError (the
     aggregator catches it into its per-engine errors map). Any other failure
     — non-200, network error, malformed JSON — returns ``[]`` so a flaky

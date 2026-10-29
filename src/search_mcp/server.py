@@ -65,7 +65,7 @@ log = logging.getLogger(__name__)
 
 
 # The tools' implementations are imported on their first call, not with this
-# module. The handshake used to wait for all of them: the engine registry (75
+# module. The handshake used to wait for all of them: the engine registry (71
 # modules, curl_cffi, selectolax), trafilatura and lxml, pypdf and Pillow,
 # extruct, Playwright, the answer agent. Measured 2026-10-22, that was 10 s of
 # a freshly installed server's 12 s start and about 1 s of every later one.
@@ -523,6 +523,73 @@ def _tool(**kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     return register
 
 
+# Categories where a language-model answer adds nothing: the caller asked for
+# an image or a dataset, not a paragraph about one.
+_AGENTLESS_CATEGORIES = frozenset({"image", "dataset"})
+
+
+def _answers_in_search(category: str | None) -> bool:
+    """Whether this `search` should also run the configured answer agent.
+
+    A missing or broken agent configuration is not an error for `search`: the
+    links are the tool's job and the answer is an extra. `config_problem` is
+    checked here (not just at startup) so a backend that was switched on in
+    the environment but cannot run never costs every search a failed attempt.
+    """
+    if settings.agent_backend == "off" or not settings.agent_in_search:
+        return False
+    if category and category.split(".", 1)[0] in _AGENTLESS_CATEGORIES:
+        return False
+    try:
+        from .agent import config_problem
+
+        return config_problem() is None
+    except Exception:  # a broken optional dependency must not break search
+        log.warning("answer agent could not be checked", exc_info=True)
+        return False
+
+
+async def _answer_alongside(task: asyncio.Task[dict[str, Any]]) -> dict[str, Any]:
+    """Wait for the agent leg within `agent_search_timeout_seconds`.
+
+    The agent is an addition to the search, so nothing it does may fail the
+    call or hold it past the deadline. The full `research` payload the agent
+    built is dropped here: the caller already has that information as the
+    search results themselves.
+    """
+    try:
+        result = await asyncio.wait_for(
+            task, timeout=settings.agent_search_timeout_seconds
+        )
+    except TimeoutError:
+        log.warning(
+            "answer agent alongside search exceeded %s s",
+            settings.agent_search_timeout_seconds,
+        )
+        return {
+            "error": (
+                "the answer agent did not finish within "
+                f"{settings.agent_search_timeout_seconds:g} s"
+            )
+        }
+    except asyncio.CancelledError:
+        raise
+    except Exception as exc:  # a broken backend must not break search
+        log.warning("answer agent alongside search failed: %s", exc, exc_info=True)
+        return {"error": str(exc).strip() or type(exc).__name__}
+    answer = result.get("answer")
+    summary: dict[str, Any] = {
+        "backend": result.get("backend"),
+        "model": result.get("model"),
+        "answer": answer,
+        "sources": result.get("sources") or [],
+        "elapsed_seconds": result.get("elapsed_seconds"),
+    }
+    if answer is None:
+        summary["error"] = result.get("agent_error") or "the model returned no answer text"
+    return summary
+
+
 @_tool(
     title="Web search (multi-engine, no API key)",
     annotations=ToolAnnotations(
@@ -579,9 +646,14 @@ async def search(
 
     Returns:
     - markdown (default): numbered list of `n. title`, `<url>`, snippet. About 40%
-      fewer tokens than json.
+      fewer tokens than json. When an answer agent is configured
+      (`SEARCH_MCP_AGENT_BACKEND`), a short sourced `## Answer` block sits above
+      the list; it starts beside the engines and answers from the same result
+      set.
     - json: dict with `results` (list of {title,url,snippet,engines,score}),
-      `engines`, `cached`, optional `errors` map, optional `hint` string.
+      `engines`, `cached`, optional `errors` map, optional `hint` string, and
+      `agent` ({answer, backend, model, sources, elapsed_seconds} or
+      {error}) when an answer agent is configured.
       `engines` is what was actually ASKED for this answer; each result's own
       `engines` is what found it. A default engine that failed recently is not
       asked and appears under `benched_engines` instead; a rescue pass that
@@ -592,6 +664,9 @@ async def search(
       looked when crawled: it drops qualifiers and is often years old. Use
       `search` to find the URL, then read the page (`fetch`, `research`) for
       any date, amount, rule, deadline or number you will state.
+    - Treating the `## Answer` block as verified. It is one small model's
+      reading of the few pages below; read the source page yourself before
+      acting on a deadline, price or rule.
     - Treating a result as recent because `freshness=` was set. The filter keeps
       undated results; the header says how many could be dated (`dated: 3/10`)
       and each result is marked `dated …`, `… (from snippet text)` or `undated`.
@@ -603,17 +678,16 @@ async def search(
       seats a reserve when it gets thin, and naming engines switches all of
       that, and `category=` routing, off. Name engines when you want a
       specific index: `engines=["so360","baidu"]` for Chinese-language sites,
-      `engines=["brave"]` or `["startpage"]` (both need the browser) for a
-      second opinion.
+      `engines=["brave"]` (needs the browser) for a second opinion.
     - Using `category="news"` for breaking news without also setting
       `freshness="day"`: the index lags by days.
 
     Args:
         query: Natural-language query (the same string a human would type).
         engines: Subset of `engines()`. None (recommended) = the health-aware
-            default pool: duckduckgo, bing, anysearch and mojeek, plus
-            googlenews when `freshness` is "day"/"week" and a Chinese index for
-            a Chinese query.
+            default pool: duckduckgo, bing and anysearch, plus googlenews when
+            `freshness` is "day"/"week" and a Chinese index for a Chinese
+            query.
         max_results: Merged result count after dedup, clamped to 1-50. It is
             also the PER-ENGINE budget, so it multiplies across the fan-out;
             5-20 is the useful range and anything past that is duplicate noise
@@ -655,25 +729,54 @@ async def search(
     if not query.strip():
         raise ValueError("query must not be empty")
 
-    # aggregate_search owns the single cache key/read/write path. We just hand it
-    # the tighter read TTL (max_age_seconds); it tightens the cache READ but
-    # ALWAYS writes a fresh non-empty result, so caching is never disabled by a
-    # freshness request. This also keeps news-category engine routing inside the
-    # one place that computes the key, so the read key can't drift from the
-    # write key.
-    payload = await aggregate_search(
-        query,
-        engines=engines,
-        max_results=max_results,
-        use_cache=use_cache,
-        max_age_seconds=_max_age_to_seconds(max_age_hours),
-        freshness=freshness,
-        include_domains=include_domains,
-        exclude_domains=exclude_domains,
-        category=category,
-        include_text=include_text,
-        exclude_text=exclude_text,
+    # Run the answer agent beside the engines, not after them: it reads the
+    # same ranked list this search is building. `search_payload` hands the
+    # agent the very task that produces the links, so the query goes to the
+    # engines once and the two halves share one result set.
+    search_task = asyncio.create_task(
+        aggregate_search(
+            query,
+            engines=engines,
+            max_results=max_results,
+            use_cache=use_cache,
+            max_age_seconds=_max_age_to_seconds(max_age_hours),
+            freshness=freshness,
+            include_domains=include_domains,
+            exclude_domains=exclude_domains,
+            category=category,
+            include_text=include_text,
+            exclude_text=exclude_text,
+        )
     )
+    agent_task: asyncio.Task[dict[str, Any]] | None = None
+    if _answers_in_search(category):
+        agent_task = asyncio.create_task(
+            run_ask(
+                query,
+                freshness=freshness,
+                include_domains=include_domains,
+                category=category,
+                depth=settings.agent_depth,
+                seed=search_task,
+            )
+        )
+    try:
+        payload = await search_task
+    except BaseException:
+        if agent_task is not None:
+            agent_task.cancel()
+            await asyncio.gather(agent_task, return_exceptions=True)
+        raise
+    if agent_task is not None:
+        if payload.get("results"):
+            payload["agent"] = await _answer_alongside(agent_task)
+        else:
+            # No links means no evidence. Answering from an empty seed would
+            # either invent an answer or spend the full deadline saying it has
+            # nothing, so stop the leg and return the empty search at once.
+            agent_task.cancel()
+            await asyncio.gather(agent_task, return_exceptions=True)
+
     hint = errors_to_hint(payload.get("errors"))
     if hint:
         payload["hint"] = hint

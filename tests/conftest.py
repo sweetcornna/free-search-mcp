@@ -201,7 +201,7 @@ def _clear_dns_ok_cache():
 @pytest.fixture(autouse=True)
 def _disable_rescue(monkeypatch):
     """The offline suite must never hit the network. The aggregation-level
-    rescue (searx/bing) fires whenever a test stubs an engine into returning
+    rescue (youcom/baidu) fires whenever a test stubs an engine into returning
     nothing, which would send REAL requests from an otherwise-offline test.
     test_rescue.py re-enables it against a fully stubbed engine registry."""
     from search_mcp.config import settings
@@ -222,7 +222,7 @@ def _reset_bing_session():
 @pytest.fixture(autouse=True)
 def _reset_engine_health():
     """The circuit breaker is process-wide on purpose. Across tests that means
-    one test's stubbed captcha would bench `searx` for every test after it."""
+    one test's stubbed captcha would bench that engine for every test after it."""
     from search_mcp.health import engine_health, http_walls
     engine_health.reset()
     http_walls.reset()

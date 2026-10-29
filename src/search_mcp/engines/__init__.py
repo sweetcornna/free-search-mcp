@@ -40,7 +40,6 @@ from .gdelt import GdeltEngine
 from .github import GitHubCodeEngine, GitHubEngine
 from .github_releases import GitHubReleasesEngine
 from .gleif import GleifEngine
-from .google import GoogleEngine
 from .google_cse import GoogleCSEEngine
 from .googlenews import GoogleNewsEngine
 from .govuk import GovUkEngine
@@ -50,7 +49,6 @@ from .huggingface import HuggingFaceEngine
 from .ietf import IetfEngine
 from .imf import ImfEngine
 from .mdn import MdnEngine
-from .mojeek import MojeekEngine
 from .npm import NpmEngine
 from .nvd import NvdEngine
 from .openalex import OpenAlexEngine
@@ -62,16 +60,12 @@ from .pubmed import PubMedEngine
 from .pypi import PyPIEngine
 from .rdap import RdapEngine
 from .registries import RegistriesEngine
-from .searx import SearxEngine
 from .sec_edgar import SecEdgarEngine
 from .semanticscholar import SemanticScholarEngine
 from .serpbase import SerpBaseEngine
 from .serper import SerperEngine
-from .serpsearch import SerpSearchEngine
 from .so360 import So360Engine
-from .sogou import SogouEngine
 from .stackexchange import StackExchangeEngine
-from .startpage import StartpageEngine
 from .tavily import TavilyEngine
 from .wdi import WdiEngine
 from .wikidata import WikidataEngine
@@ -87,22 +81,16 @@ from .zhihu import ZhihuEngine
 
 ENGINES: dict[str, Engine] = {
     "duckduckgo": DuckDuckGoEngine(),
-    "mojeek": MojeekEngine(),
-    "searx": SearxEngine(),
     "googlenews": GoogleNewsEngine(),
-    "startpage": StartpageEngine(),
     "brave": BraveEngine(),
     "bing": BingEngine(),
     "baidu": BaiduEngine(),
     # Engines added per integration request — all keyless, all opt-in (not in
-    # the fast default pool). google/serpsearch scrape Google web SERP;
-    # serpsearch is a pure alias of google. anysearch is a JSON REST aggregator
-    # (anonymous tier). youcom is You.com's keyless JSON tier, about 100
-    # searches a day per IP, which is why it is not pooled. bilibili is a JSON
-    # video-search API. zhihu is browser-rendered + best-effort (Zhihu
-    # hard-gates headless clients).
-    "google": GoogleEngine(),
-    "serpsearch": SerpSearchEngine(),
+    # the fast default pool). anysearch is a JSON REST aggregator (anonymous
+    # tier). youcom is You.com's keyless JSON tier, about 100 searches a day
+    # per IP, which is why it is not pooled. bilibili is a JSON video-search
+    # API. zhihu is browser-rendered + best-effort (Zhihu hard-gates headless
+    # clients).
     "anysearch": AnySearchEngine(),
     "youcom": YouComEngine(),
     "bilibili": BilibiliEngine(),
@@ -151,8 +139,7 @@ ENGINES: dict[str, Engine] = {
     "dataverse": DataverseEngine(),
     "zenodo": ZenodoEngine(),
     "figshare": FigshareEngine(),
-    # Chinese-language web indexes (HTML scrapes, best-effort like zhihu).
-    "sogou": SogouEngine(),
+    # Chinese-language web index (HTML scrape, best-effort like zhihu).
     "so360": So360Engine(),
     # Finance. Ordered so `category="finance"` (which round-robins across
     # sub-groups) reaches filings, market data and macro research in that

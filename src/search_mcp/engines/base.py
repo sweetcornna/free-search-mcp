@@ -603,10 +603,6 @@ _DDG_SAFESEARCH = {"strict": "1", "moderate": "-1", "off": "-2"}
 _BING_SAFESEARCH = {"strict": "strict", "moderate": "moderate", "off": "off"}
 # Brave: safesearch=strict|moderate|off maps 1:1.
 _BRAVE_SAFESEARCH = {"strict": "strict", "moderate": "moderate", "off": "off"}
-# Mojeek: safe is binary (1 = filter on, 0 = off). Treat strict/moderate as on.
-_MOJEEK_SAFESEARCH = {"strict": "1", "moderate": "1", "off": "0"}
-# Startpage: family filter is binary (1 = on, 0 = off).
-_STARTPAGE_SAFESEARCH = {"strict": "1", "moderate": "1", "off": "0"}
 
 
 def _region_to_bing_market(region: str) -> str:
@@ -817,8 +813,6 @@ def safesearch_param(engine: str) -> str | None:
         "duckduckgo": _DDG_SAFESEARCH,
         "bing": _BING_SAFESEARCH,
         "brave": _BRAVE_SAFESEARCH,
-        "mojeek": _MOJEEK_SAFESEARCH,
-        "startpage": _STARTPAGE_SAFESEARCH,
     }.get(engine)
     if table is None:
         return None
@@ -853,7 +847,7 @@ def augment_query_with_operators(
 # --- gate detection --------------------------------------------------------
 # Substrings that mark a "gated" response — a CAPTCHA / consent / login wall
 # served INSTEAD of results. Lets engines turn a silent empty into an honest,
-# actionable reason, and lets gated SERP engines trigger a searx fallback.
+# actionable reason the aggregator can report.
 # Lower-cased haystack; order = priority (captcha > consent > login).
 _GATE_MARKERS: tuple[tuple[str, tuple[str, ...]], ...] = (
     (

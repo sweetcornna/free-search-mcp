@@ -142,10 +142,12 @@ page, check the date, and corroborate what matters.
 picks a small pool for you. Every engine a search reaches on its own is keyless
 (no API key, no account).
 
-The registry contains 75 engines in total.
+The registry contains 71 engines in total.
 
-The default pool is `duckduckgo`, `bing`, `anysearch` and `mojeek`. All four
-are plain HTTP and need no browser.
+The default pool is `duckduckgo`, `bing` and `anysearch`. All three are plain
+HTTP and need no browser. The scrapers that only served a CAPTCHA, a
+JavaScript wall or an empty page (`mojeek`, `google`, `serpsearch`,
+`startpage`, `searx`, `sogou`) were removed from the registry.
 
 Two engines join only when the query calls for it:
 
@@ -154,8 +156,9 @@ Two engines join only when the query calls for it:
   when recency was asked for.
 - `so360` joins when the query itself is written in Chinese.
 
-The reserves (`so360`, `brave`, `searx`, in that order) are seated only while
-fewer than 3 general engines are healthy.
+The reserves (`so360`, `brave`, in that order) are seated only while fewer
+than 3 general engines are healthy. With a three-engine default pool, losing
+any one of them seats a reserve.
 
 The circuit breaker benches an engine at once when it serves a wall or an
 off-topic page. Errors bench it after 2 in a row, and silent zero-result
@@ -165,21 +168,21 @@ clears it. Naming an engine in `engines=` always runs it. The response lists
 
 When the pool still comes back empty, or nearly empty with gated or erroring
 engines, the aggregator runs one bounded rescue pass (the reserves, then
-`searx`, then `bing`) and reports it as `rescued_via`.
+`youcom`, then `baidu`) and reports it as `rescued_via`.
+
+With `SEARCH_MCP_AGENT_BACKEND` configured, `search` also runs the answer agent
+beside the engines from the same result set and prints a short sourced answer
+above the links. `SEARCH_MCP_AGENT_IN_SEARCH=false` turns that off. The `ask`
+tool remains available either way.
 
 Engines outside the default pool, reached by name:
 
 | Engine | Source | Notes |
 |---|---|---|
-| `startpage` | Startpage | browser-rendered, about 5 to 10 s |
 | `brave` `baidu` | resp. engines | browser-rendered; intermittently challenge headless clients |
-| `searx` | public SearXNG instances | meta-search; public instances often slow |
-| `google` | Google web SERP scrape | falls back from HTTP to the browser; hit a JavaScript wall on every request when measured on 2026-09-21, so it is no use as a recovery path |
-| `serpsearch` | alias of `google` | identical behavior (all real SERP APIs need a key) |
-| `youcom` | You.com, free profile of its MCP server | its own web and news index; domain filters, freshness, SafeSearch and region are sent to it; 100 searches a day per IP, so it is not pooled |
+| `youcom` | You.com, free profile of its MCP server | its own web and news index; domain filters, freshness, SafeSearch and region are sent to it; 100 searches a day per IP, so it is used for rescue rather than pooling |
 | `bilibili` | Bilibili (哔哩哔哩) JSON API | keyless video search (synthetic `buvid3` cookie); video results only |
 | `zhihu` | Zhihu (知乎) search page | best effort, browser-rendered; Zhihu hard-gates bots, so a login wall or an empty result is common and is reported as such |
-| `sogou` | 搜狗 HTML scrape | best effort; returns redirect URLs (`sogou.com/link?url=…`) instead of target URLs |
 | `so360` | 360搜索 HTML scrape | returns direct URLs; joins automatically for Chinese queries |
 | `wikipedia` | MediaWiki API | language follows `SEARCH_MCP_REGION` |
 | `openlibrary` | Open Library | book search |
@@ -288,7 +291,7 @@ still routes as before; `SEARCH_MCP_AUTO_ROUTE_ENABLED=false` turns the claims
 off.
 
 The first result of such a source counts five times a general engine's in
-the rank fusion, so one looked-up record outranks the four-engine default
+the rank fusion, so one looked-up record outranks the three-engine default
 pool agreeing on a page about it, and it becomes the `Lead:` line. `nvd`,
 `cisakev` and `ietf` apply that weight only when the query holds a CVE id or
 an RFC number; `mdn`, `federalregister` and `govuk` are site searches and take
@@ -371,10 +374,10 @@ search("transformer 架构", engines=["bilibili", "zhihu", "duckduckgo"])
 search("asyncio task groups", include_domains=["python.org"])
 ```
 
-> Measured status on 2026-09-21: `duckduckgo`, `bing`, `anysearch` and `so360`
-> return live, on-topic results. `mojeek` is captcha-walled on every request,
-> so it is benched after one attempt and re-probed later. `google` and
-> `serpsearch` hit a JavaScript wall; `startpage` and `sogou` returned nothing.
+> Measured status on 2026-10-29: `duckduckgo`, `bing`, `anysearch`, `so360`,
+> `baidu`, `youcom`, `googlenews` and `brave` return live, on-topic results.
+> The engines that only served a CAPTCHA, a JavaScript wall or nothing
+> (`mojeek`, `google`/`serpsearch`, `startpage`, `searx`, `sogou`) were removed.
 > `zhihu` frequently hits a login wall and returns empty, which is the expected
 > result without a login.
 
@@ -383,7 +386,7 @@ When results are thin, try these in order:
 1. Rephrase the query.
 2. Pass `category=`.
 3. Name `engines=["so360","baidu"]` for Chinese content, or
-   `engines=["brave"]` / `["startpage"]` if Chromium is installed.
+   `engines=["brave"]` if Chromium is installed.
 4. Set a proxy (`SEARCH_MCP_PROXY`) when the diagnostics show a real wall.
 
 Zhihu needs a one-time `search-mcp-login zhihu`. The response reports
@@ -426,8 +429,8 @@ ones:
 
 | Var | Default | Meaning |
 |---|---|---|
-| `SEARCH_MCP_DEFAULT_ENGINES` | `["duckduckgo","bing","anysearch","mojeek"]` | the pool used when a search names no engines (JSON list) |
-| `SEARCH_MCP_RESERVE_ENGINES` | `["so360","brave","searx"]` | stand-ins, seated only while fewer than `SEARCH_MCP_MIN_HEALTHY_ENGINES` (default `3`) general engines are healthy |
+| `SEARCH_MCP_DEFAULT_ENGINES` | `["duckduckgo","bing","anysearch"]` | the pool used when a search names no engines (JSON list) |
+| `SEARCH_MCP_RESERVE_ENGINES` | `["so360","brave"]` | stand-ins, seated only while fewer than `SEARCH_MCP_MIN_HEALTHY_ENGINES` (default `3`) general engines are healthy |
 | `SEARCH_MCP_FRESH_ENGINES` | `["googlenews"]` | joined for `freshness="day"` / `"week"` |
 | `SEARCH_MCP_LOCALE_ENGINES` | `{"zh":["so360"]}` | JSON object: engines joined when the query is written in that language |
 | `SEARCH_MCP_HEALTH_ENABLED` | `true` | the circuit breaker |

@@ -1034,12 +1034,18 @@ async def ask(
     category: Category | None = None,
     depth: int | None = None,
     answer_with: Responder | None = None,
+    seed: Awaitable[dict[str, Any]] | dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Search, read the top pages, and have a model answer from them.
 
     `answer_with` replaces the configured backend with the caller's own model:
     an `async def (instructions, evidence) -> str`. With it, no setting has to
     be on, which is how a service that already has an LLM client embeds this.
+
+    `seed` is an already-running (or finished) `aggregate_search` payload. The
+    search half of `research` then reuses that ranked list instead of querying
+    the engines again, which is how `search` runs the agent beside its own
+    fan-out rather than paying for a second one.
 
     A bad configuration raises `AgentError`. A model that fails at run time does
     not: the result then carries `answer: None`, `agent_error`, and the full
@@ -1054,19 +1060,28 @@ async def ask(
             raise AgentError(problem)
 
     started = time.monotonic()
-    seed = await run_research(
-        question,
-        depth=depth or settings.agent_depth,
-        freshness=freshness,
-        include_domains=include_domains,
-        category=category,
-        read_budget_seconds=settings.agent_read_seconds,
-    )
+    if seed is None:
+        seed_payload = await run_research(
+            question,
+            depth=depth or settings.agent_depth,
+            freshness=freshness,
+            include_domains=include_domains,
+            category=category,
+            read_budget_seconds=settings.agent_read_seconds,
+        )
+    else:
+        search_payload = seed if isinstance(seed, dict) else await seed
+        seed_payload = await run_research(
+            question,
+            depth=depth or settings.agent_depth,
+            read_budget_seconds=settings.agent_read_seconds,
+            search_payload=search_payload,
+        )
     searched = time.monotonic()
 
     max_steps = 0 if answer_with else settings.agent_max_steps
     system = loop_prompt(max_steps)
-    evidence = build_evidence(question, seed, settings.agent_max_source_chars)
+    evidence = build_evidence(question, seed_payload, settings.agent_max_source_chars)
     outcome: Outcome | None = None
     failure = ""
     deadline = asyncio.timeout(settings.agent_timeout_seconds)
@@ -1087,7 +1102,7 @@ async def ask(
         log.warning("answer agent (%s) failed: %s", backend, failure)
     finished = time.monotonic()
 
-    docs = {d.get("url"): d for d in seed.get("documents") or [] if isinstance(d, dict)}
+    docs = {d.get("url"): d for d in seed_payload.get("documents") or [] if isinstance(d, dict)}
     result: dict[str, Any] = {
         "question": question,
         "answer": outcome.text if outcome and outcome.text else None,
@@ -1104,7 +1119,7 @@ async def ask(
                 "read": bool((docs.get(s.get("url")) or {}).get("content")),
                 **({"source_type": s["source_type"]} if s.get("source_type") else {}),
             }
-            for s in seed.get("sources") or []
+            for s in seed_payload.get("sources") or []
         ],
         "tool_calls": outcome.tool_calls if outcome else [],
         "model_calls": outcome.model_calls if outcome else None,
@@ -1114,9 +1129,9 @@ async def ask(
             "model": round(finished - searched, 2),
             "total": round(finished - started, 2),
         },
-        "retrieved_at": seed.get("retrieved_at"),
+        "retrieved_at": seed_payload.get("retrieved_at"),
     }
     if result["answer"] is None:
         result["agent_error"] = failure or "the model returned no answer text"
-        result["research"] = seed
+        result["research"] = seed_payload
     return result

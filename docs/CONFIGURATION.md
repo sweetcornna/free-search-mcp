@@ -15,8 +15,8 @@ Available settings:
 
 | Var | Default | Meaning |
 |---|---|---|
-| `SEARCH_MCP_DEFAULT_ENGINES` | `["duckduckgo","bing","anysearch","mojeek"]` | JSON list; the pool a search uses when it names no engines |
-| `SEARCH_MCP_RESERVE_ENGINES` | `["so360","brave","searx"]` | stand-ins, in order, seated only while fewer than `MIN_HEALTHY_ENGINES` general engines are healthy |
+| `SEARCH_MCP_DEFAULT_ENGINES` | `["duckduckgo","bing","anysearch"]` | JSON list; the pool a search uses when it names no engines |
+| `SEARCH_MCP_RESERVE_ENGINES` | `["so360","brave"]` | stand-ins, in order, seated only while fewer than `MIN_HEALTHY_ENGINES` general engines are healthy |
 | `SEARCH_MCP_MIN_HEALTHY_ENGINES` | `3` | below this many healthy general engines, reserves are seated |
 | `SEARCH_MCP_FRESH_ENGINES` | `["googlenews"]` | joined for `freshness="day"` / `"week"` |
 | `SEARCH_MCP_LOCALE_ENGINES` | `{"zh":["so360"]}` | JSON object: engines joined when the QUERY is written in that language |
@@ -24,9 +24,8 @@ Available settings:
 | `SEARCH_MCP_ENGINE_COOLDOWN_SECONDS` | `600` | first bench; doubles on each repeat |
 | `SEARCH_MCP_ENGINE_COOLDOWN_MAX_SECONDS` | `3600` | ceiling for the doubling |
 | `SEARCH_MCP_COHERENCE_GUARD_ENABLED` | `true` | drop a web engine's bucket when it is off-topic and another engine proves the query's words do get echoed |
-| `SEARCH_MCP_SEARX_INSTANCES` | *(empty)* | pin known-good SearXNG instance URL(s), comma/space separated; overrides the built-in shortlist |
 | `SEARCH_MCP_RESCUE_ENABLED` | `true` | auto-rescue empty searches via rescue engines |
-| `SEARCH_MCP_RESCUE_ENGINES` | `["searx","bing"]` | rescue order (JSON list), tried after the reserves |
+| `SEARCH_MCP_RESCUE_ENGINES` | `["youcom","baidu"]` | rescue order (JSON list), tried after the reserves |
 | `SEARCH_MCP_RESCUE_TIMEOUT` | `10.0` | seconds; cap on the whole rescue pass |
 | `SEARCH_MCP_MAX_RESULTS_PER_ENGINE` | `10` | |
 | `SEARCH_MCP_RATE_LIMIT_PER_MINUTE` | `30` | per engine |
@@ -61,6 +60,8 @@ Available settings:
 | `SEARCH_MCP_REGION` | `us-en` | `cc-lang` token; a query's own script still decides the locale engines |
 | `SEARCH_MCP_TOOLS` | *(empty)* | comma/space separated allow-list of tool names; empty registers all of them |
 | `SEARCH_MCP_TOOL_CALL_BUDGET` | `0` | tool calls this process runs before it answers "budget used up" instead; `0` = no cap. Meant for a server started for one job |
+| `SEARCH_MCP_AGENT_IN_SEARCH` | `true` | with a backend configured, run the answer agent beside every `search` and put its sourced answer above the links |
+| `SEARCH_MCP_AGENT_SEARCH_TIMEOUT_SECONDS` | `45` | how long `search` waits for that answer before returning the links alone |
 | `SEARCH_MCP_AGENT_*` | off | the optional answer agent; see [DELEGATION.md](DELEGATION.md) |
 | `SEARCH_MCP_CODEX_MODEL` | `latest` | model for the opt-in `codex` engine (`latest` follows the plan's catalogue); see [CODEX_SEARCH.md](CODEX_SEARCH.md) |
 | `SEARCH_MCP_CODEX_TIMEOUT` | `60` | seconds for one `codex` search |

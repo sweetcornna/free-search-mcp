@@ -12,7 +12,7 @@ hot-reloads when saved in the admin UI. It may carry credentials
 admin UI, never logged).
 
 Scoping: by default a configured proxy applies to ALL engines + the browser +
-the fetcher. Set ``proxy_engines`` (a comma/space list, e.g. ``"google bing
+the fetcher. Set ``proxy_engines`` (a comma/space list, e.g. ``"bing
 zhihu"``) to route ONLY those engines through the proxy and keep the fast
 defaults direct.
 """

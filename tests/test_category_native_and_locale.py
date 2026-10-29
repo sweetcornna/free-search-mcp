@@ -270,13 +270,3 @@ def test_googlenews_picks_edition_from_query_script():
     assert "ceid=CN:zh-Hans" in url
     # An English query on the same default config is untouched.
     assert "ceid=US:en" in engine.build_url("AI news", 5, None)
-
-
-def test_google_url_follows_region_setting():
-    from search_mcp.engines.google import GoogleEngine
-
-    engine = GoogleEngine()
-    with patch("search_mcp.engines.google.settings.region", "cn-zh"):
-        url = engine.build_url("AI", 10, None)
-    assert "hl=zh-CN" in url
-    assert "gl=cn" in url

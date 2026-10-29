@@ -4,6 +4,36 @@ All notable changes to this project are documented here. The format is loosely
 based on [Keep a Changelog](https://keepachangelog.com/), and the project follows
 semantic versioning.
 
+## [Unreleased]
+
+### Added
+
+- With an answer backend configured (`SEARCH_MCP_AGENT_BACKEND`), `search` now
+  runs the answer agent beside the engines instead of leaving it to a separate
+  `ask` call. The agent is handed the same `aggregate_search` task that
+  produces the links, so the query reaches the engines once; its short sourced
+  answer appears as `## Answer` above the list and as `agent` in `format="json"`
+  output. `SEARCH_MCP_AGENT_IN_SEARCH=false` turns it off, and
+  `SEARCH_MCP_AGENT_SEARCH_TIMEOUT_SECONDS` (45) is how long a search waits
+  before returning the links alone. Image and dataset searches skip the agent,
+  and an agent that fails or times out never fails the search.
+
+### Removed
+
+- Removed six keyless sources that served a CAPTCHA, a JavaScript wall or an
+  empty page on every request when measured on 2026-10-29: `mojeek`, `google`,
+  `serpsearch`, `startpage`, `searx` and `sogou`. Their modules, registry
+  entries, tests and documentation are gone, so no pool, rescue pass or
+  explicit `engines=` name can reach them. The default pool is now
+  `duckduckgo`, `bing` and `anysearch`; reserves are `so360` and `brave`;
+  rescue tries `youcom` then `baidu`.
+- Removed `SEARCH_MCP_SEARX_INSTANCES`, which configured the removed `searx`
+  engine.
+- A `SEARCH_MCP_DEFAULT_ENGINES`, `RESERVE_ENGINES` or `RESCUE_ENGINES` value
+  that still names one of the removed engines keeps working: the name is
+  reported as an unknown-engine error for that search instead of failing the
+  call. Remove it from the list to stop the noise.
+
 ## [0.16.0] - 2026-10-22
 
 Faster start, searches and fetches. Measured 2026-10-22 through a fake-IP

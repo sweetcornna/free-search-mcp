@@ -26,7 +26,7 @@ COPY src ./src
 RUN uv sync --frozen --no-dev
 
 # Chromium + its OS deps, matched to the installed Playwright (browser-rendered
-# engines: startpage/bing/zhihu, and the fetch browser fallback).
+# engines: brave/baidu/zhihu, and the fetch browser fallback).
 RUN uv run playwright install --with-deps chromium
 
 VOLUME /data

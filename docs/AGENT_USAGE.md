@@ -214,9 +214,11 @@ tools and returned a sourced answer in 87 s, while the custom-agent file could
 not be selected by name there.
 
 The `ask` tool. It exists only when the operator set
-`SEARCH_MCP_AGENT_BACKEND`, so check the tool list. `ask(question)` has the
-server search, read the top pages and get an answer from the model the operator
-configured. It returns the answer, the model and the time taken, and the pages
+`SEARCH_MCP_AGENT_BACKEND`, so check the tool list. With that backend also on,
+`search` returns a short sourced answer above its links, produced from the same
+result set; you do not need a second `ask` call for the same question.
+`ask(question)` has the server search, read the top pages and get an answer from
+the model the operator configured. It returns the answer, the model and the time taken, and the pages
 that were read. When that model fails, the result says so and carries the pages
 as a `research` brief, so answer from those. Ask one question per call and pass
 the source URLs and dates on with the answer. [DELEGATION.md](DELEGATION.md) lists the settings and the measured
@@ -225,18 +227,17 @@ timings.
 ## Agent operating rules
 
 Prefer the default pool: omit `engines=` and let the server choose. The pool is
-`duckduckgo`, `bing`, `anysearch` and `mojeek`, all keyless and plain HTTP.
+`duckduckgo`, `bing` and `anysearch`, all keyless and plain HTTP.
 `googlenews` joins on its own for `freshness="day"` / `"week"` or
 `category="news"`, `so360` joins when the query is written in Chinese, and the
-reserves (`so360`, `brave`, `searx`) are seated while fewer than 3 general
+reserves (`so360`, `brave`) are seated while fewer than 3 general
 engines are healthy. An engine that hit a wall recently is benched for 10 to 60
 minutes and reported under "Benched engines"; naming it in `engines=` forces an
 attempt.
 
 Name engines only when the task needs a specific source: `bilibili` for video
-search, `so360`/`baidu`/`zhihu` for Chinese content, `brave` or `startpage`
-(browser-rendered) for a second opinion. Do not use `google` or `serpsearch`:
-they hit a JavaScript wall on every request when last measured.
+search, `so360`/`baidu`/`zhihu` for Chinese content, `brave`
+(browser-rendered) for a second opinion.
 
 Never ask for an API key, and never suggest getting one as a fix. The server is
 built to work without them, and nothing it selects on its own needs one.
@@ -250,7 +251,7 @@ When results are thin, try these in order:
 1. Rephrase the query: fewer words, the official name, or the other language.
 2. Pass `category=`.
 3. Name `engines=["so360","baidu"]` for Chinese content.
-4. Name `engines=["brave"]` or `["startpage"]` if the browser is installed.
+4. Name `engines=["brave"]` if the browser is installed.
 5. Tell the user a proxy would help, but only when `gated_engines` shows a real
    wall (`captcha`, `consent`, `login`, `javascript`).
 

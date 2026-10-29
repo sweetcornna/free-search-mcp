@@ -139,24 +139,33 @@ async def research(
     include_text: str | None = None,
     exclude_text: str | None = None,
     read_budget_seconds: float | None = None,
+    search_payload: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    """Search, then read the top `depth` pages.
+
+    `search_payload` lets a caller that already ran the search hand its result
+    in, so the reading half runs against the same ranked list and the query is
+    not sent to the engines twice.
+    """
     if not question.strip():
         raise ValueError("question must not be empty")
     depth = max(1, min(depth, 8))
 
-    sr = await aggregate_search(
-        question,
-        engines=engines,
-        max_results=max(depth * 2, depth + 3),
-        use_cache=use_cache,
-        max_age_seconds=max_age_seconds,
-        freshness=freshness,
-        include_domains=include_domains,
-        exclude_domains=exclude_domains,
-        category=category,
-        include_text=include_text,
-        exclude_text=exclude_text,
-    )
+    sr = search_payload
+    if sr is None:
+        sr = await aggregate_search(
+            question,
+            engines=engines,
+            max_results=max(depth * 2, depth + 3),
+            use_cache=use_cache,
+            max_age_seconds=max_age_seconds,
+            freshness=freshness,
+            include_domains=include_domains,
+            exclude_domains=exclude_domains,
+            category=category,
+            include_text=include_text,
+            exclude_text=exclude_text,
+        )
 
     top = sr["results"][:depth]
     sources = [

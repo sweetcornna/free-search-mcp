@@ -279,7 +279,7 @@ class Cache:
         Returns `(results, meta)`; `meta` is `{}` for rows written before the
         `meta` column existed. Provenance is part of the ANSWER, not a
         statistic about the run that produced it: a result set that only exists
-        because a captcha-walled engine was rescued via searx must still say so
+        because a captcha-walled engine was rescued by a reserve must still say so
         on the cache-hit path, or the second identical query silently
         re-labels a recovered result set as a normal one.
         """
