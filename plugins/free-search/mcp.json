@@ -5,7 +5,7 @@
       "type": "stdio",
       "command": "uvx",
       "args": [
-        "free-search-mcp==0.16.0"
+        "free-search-mcp==0.17.0"
       ]
     }
   }
