@@ -990,6 +990,13 @@ class EngineKeyError(ValueError):
 
     transient: bool = False
 
+    def __init__(self, *args: object, transient: bool | None = None) -> None:
+        super().__init__(*args)
+        if transient is not None:
+            # Otherwise the class's own default holds, so a subclass can
+            # declare `transient = True` once.
+            self.transient = transient
+
 
 def is_lasting(exc: BaseException) -> bool:
     """Whether a failure is one the next search will not repair: a missing,

@@ -614,6 +614,10 @@ def _lane_nominal(nominal: list[str]) -> list[str]:
     return lane
 
 
+# Bench reasons that pass by themselves (see `lane_missing`).
+_PASSING_BENCHES = frozenset({"error", "silent"})
+
+
 def _benched_for(name: str) -> str:
     """The breaker's reason for benching `name` right now, or ""."""
     state = engine_health.describe(name)
@@ -703,16 +707,17 @@ async def _await_lane(
             # One lane engine's answer is an answer: the others get the
             # ordinary wait, not the stretched one (and never a longer one).
             wait = min(wait, ordinary)
-        remaining: float | None = started + wait - time.monotonic()
-        if remaining is not None and remaining <= 0:
+        remaining = started + wait - time.monotonic()
+        timeout: float | None = remaining
+        if remaining <= 0:
             if rescue is None or rescue.done() or _lane_found(tasks):
                 break
             # The search will wait for the early rescue anyway; a lane answer
             # that arrives meanwhile belongs in it.
-            remaining = None
+            timeout = None
         watched = pending | ({rescue} if rescue is not None else set())
         done, _ = await asyncio.wait(
-            watched, timeout=remaining, return_when=asyncio.FIRST_COMPLETED
+            watched, timeout=timeout, return_when=asyncio.FIRST_COMPLETED
         )
         # On a timeout the loop goes round again: the wait has passed, and the
         # top of the loop decides whether the early rescue still holds it open.
@@ -736,9 +741,55 @@ def _lane_found(lane: Collection[asyncio.Future[_LaneOutcome]]) -> bool:
     )
 
 
+def _settle_lane_suspects(
+    named: list[tuple[str, list[SearchResult]]],
+    suspects: list[str],
+    lane: Collection[str],
+    *,
+    solid_extra: bool = False,
+    witness: bool = False,
+) -> tuple[list[tuple[str, list[SearchResult]]], list[str], list[str]]:
+    """`(named, off-topic, doubted)`: the one rule for lane buckets the
+    off-topic guard could not judge, applied once every bucket of the run is
+    in (after the rescue on the main path, on each answer in the late merge).
+
+    `suspects` are what the guard left unconfirmed. A lane suspect is never
+    handed to the rescue (that pass is the keyless pool's, and no request is
+    spent judging an agent engine) and never becomes a keyless gate. With a
+    `witness` that arrived after the guard ran (a rescue bucket or a late
+    answer that echoes the query), it is off-topic. Otherwise it is left out
+    ("doubted") while a web bucket that is not itself a suspect remains to
+    answer with, and served when the lane's answer is all there is, as a
+    keyless suspect is. Records from specialist sources do not count as such a
+    bucket: one looked-up record does not stand in for the lane's pages.
+    `solid_extra` says such a bucket exists outside `named` (the rescue's).
+    """
+    lane_suspects = [name for name in suspects if name in lane]
+    if not lane_suspects:
+        return named, [], []
+    if witness:
+        off_topic, doubted = lane_suspects, []
+    else:
+        solid = solid_extra or any(
+            bucket
+            for name, bucket in named
+            if name not in lane and name not in suspects and _is_guarded(name)
+        )
+        off_topic, doubted = [], (lane_suspects if solid else [])
+    drop = set(off_topic) | set(doubted)
+    return [(n, b) for n, b in named if n not in drop], off_topic, doubted
+
+
 # The breaker's reason for a lane engine benched by a lasting failure. A cache
 # row is not shortened for an engine benched with it (see `lane_missing`).
 LANE_REFUSED = "refused"
+# For an answer left out because nothing could confirm it. Weak evidence
+# alone, so it takes as many in a row as a silent engine does; but an engine
+# whose answers keep being left out is spending the operator's plan for
+# nothing, and sits out a while. Counted here, apart from the breaker's
+# strikes, so a doubted answer and a timeout do not add up to a bench.
+LANE_UNCONFIRMED = "unconfirmed"
+_unconfirmed_answers: dict[str, int] = {}
 
 
 def _record_lane_health(
@@ -761,9 +812,17 @@ def _record_lane_health(
             engine_health.record_failure(name, reason or LANE_REFUSED, threshold=1)
         else:
             engine_health.record_failure(name, reason or "error")
+    elif reason == LANE_UNCONFIRMED:
+        count = _unconfirmed_answers.get(name, 0) + 1
+        if count >= SILENT_THRESHOLD:
+            _unconfirmed_answers.pop(name, None)
+            engine_health.record_failure(name, reason, threshold=1)
+        else:
+            _unconfirmed_answers[name] = count
     elif reason:
         engine_health.record_failure(name, reason)
     elif outcome:
+        _unconfirmed_answers.pop(name, None)
         engine_health.record_success(name)
 
 
@@ -774,10 +833,25 @@ def _lane_hint(
     *,
     waited: float,
     merges_later: bool,
+    off_topic: list[str] | None = None,
+    doubted: list[str] | None = None,
 ) -> str:
     """The "Agent lane" note. Called after the breaker heard about the run,
     so it can say whether a failed engine sits out the next searches."""
     parts: list[str] = []
+    if off_topic:
+        benched = settings.health_enabled and all(engine_health.is_open(n) for n in off_topic)
+        parts.append(
+            f"The answer from {', '.join(off_topic)} barely mentioned the query beyond its "
+            "first word while other engines' results did, so it was left out"
+            + (" and sits out the next searches." if benched else ".")
+        )
+    if doubted:
+        parts.append(
+            f"The answer from {', '.join(doubted)} looked off-topic and nothing in this "
+            "search could confirm it either way, so it was left out in favour of the "
+            "keyless results."
+        )
     if pending:
         who = ", ".join(pending)
         parts.append(
@@ -825,10 +899,20 @@ def _row_lock() -> asyncio.Lock:
     if lock is None:
         lock = _row_locks[loop] = asyncio.Lock()
     return lock
-# Ceiling on that background wait. Each engine's own timeout
-# (SEARCH_MCP_CODEX_TIMEOUT, SEARCH_MCP_ANTIGRAVITY_TIMEOUT, 60 s by default)
-# ends it sooner; this only guards against one that never returns.
-_LANE_LATE_SECONDS = 150.0
+
+
+def _late_ceiling(names: list[str]) -> float:
+    """Ceiling on the background wait for the lane engines `names`, against
+    one that never returns.
+
+    An engine's timeout (SEARCH_MCP_CODEX_TIMEOUT,
+    SEARCH_MCP_ANTIGRAVITY_TIMEOUT, 60 s by default) bounds each request, and
+    one search can make several in a row: a token refresh, the model
+    catalogue, the search, a fallback. Four of the longest pending engine's
+    timeout and a margin, so an operator who allows a slow engine more time
+    keeps its answer: 270 s with the defaults."""
+    timeouts = [float(getattr(settings, f"{name}_timeout", 60.0)) for name in names] or [60.0]
+    return 4 * max(timeouts) + 30.0
 
 
 def _merge_lane_later(
@@ -844,6 +928,7 @@ def _merge_lane_later(
     meta: dict[str, Any],
     missing: list[str],
     written_at: int | None,
+    pending_names: list[str],
 ) -> None:
     owner = object()
     _lane_rows[cache_key] = owner
@@ -860,6 +945,7 @@ def _merge_lane_later(
             meta=dict(meta),
             missing=list(missing),
             written_at=written_at,
+            ceiling=_late_ceiling(pending_names),
             owner=owner,
         )
     )
@@ -880,6 +966,7 @@ async def _fold_late_lane(
     meta: dict[str, Any],
     missing: list[str],
     written_at: int | None,
+    ceiling: float,
     owner: object,
 ) -> None:
     """Merge agent engines that answered after their search returned into
@@ -893,8 +980,10 @@ async def _fold_late_lane(
     `lane_missing`, and the merge stops once a newer search has rewritten the
     row.
     """
-    deadline = time.monotonic() + _LANE_LATE_SECONDS
+    deadline = time.monotonic() + ceiling
     missing_now = set(missing)
+    merged: list[dict[str, Any]] = []
+    regrouped = True  # nothing merged yet
     try:
         while pending:
             remaining = deadline - time.monotonic()
@@ -924,16 +1013,28 @@ async def _fold_late_lane(
                     _record_lane_health(name, outcome)
                     continue
                 verdict: dict[str, Any] = {}
-                kept, _ = _drop_decoy_buckets(
-                    query, [*named, (name, outcome)], verdict
+                lane_names = [n_ for n_ in asked if n_ not in keyless]
+                kept, unjudged = _drop_decoy_buckets(
+                    query, [*named, (name, outcome)], verdict, lane=lane_names
                 )
-                dropped = list(verdict.get("gated") or {})
-                if name in dropped:
-                    _record_lane_health(name, outcome, "off_topic")
-                    meta = _with_off_topic(meta, [name], tell_breaker=False)
-                else:
+                dropped_lane = verdict.pop("lane_off_topic", [])
+                kept, _, doubted = _settle_lane_suspects(kept, unjudged, lane_names)
+                if name not in doubted and name not in dropped_lane:
                     _record_lane_health(name, outcome)
-                cleared = [suspect for suspect in dropped if suspect != name]
+                for unconfirmed_name in doubted:
+                    _record_lane_health(unconfirmed_name, outcome, LANE_UNCONFIRMED)
+                for dropped in dropped_lane:
+                    # The late answer itself, or a lane engine served earlier
+                    # that it has now shown to be a decoy.
+                    _record_lane_health(dropped, outcome, "off_topic")
+                left = [n_ for n_ in dropped_lane + doubted
+                        if n_ not in (meta.get("lane_left_out") or [])]  # fmt: skip
+                if left:
+                    # Left out, as on the main path, and recorded on the row.
+                    meta = {**meta, "lane_left_out": [*(meta.get("lane_left_out") or []), *left]}
+                cleared = list(verdict.get("gated") or {})
+                if [n_ for n_, _ in kept] != [n_ for n_, _ in named]:
+                    regrouped = True
                 named = kept
                 if cleared:
                     meta = _with_off_topic(meta, cleared)
@@ -945,7 +1046,11 @@ async def _fold_late_lane(
                         meta = {**meta, "degraded": True}
             if not changed:
                 continue
-            merged = _merge([bucket for _, bucket in named], n, category, query)
+            if regrouped:
+                # Only when a bucket came or went: an answer that changed
+                # nothing but the row's notes rewrites them, not the merge.
+                merged = _merge([bucket for _, bucket in named], n, category, query)
+                regrouped = False
             if not merged:
                 continue
             stored = {**meta, "engines": asked}
@@ -970,17 +1075,15 @@ async def _fold_late_lane(
             del _lane_rows[cache_key]
 
 
-def _with_off_topic(
-    meta: dict[str, Any], names: list[str], *, tell_breaker: bool = True
-) -> dict[str, Any]:
-    """`meta` with `names` recorded as off-topic gates, and the breaker told
-    unless the caller already did. (`_drop_decoy_buckets` has logged them.)"""
+def _with_off_topic(meta: dict[str, Any], names: list[str]) -> dict[str, Any]:
+    """`meta` with the keyless engines `names` recorded as off-topic gates,
+    and the breaker told. (`_drop_decoy_buckets` has logged them.)"""
     stored = meta.get("gated_engines") or {}
     gated = {name: info.get("reason") or "gated" for name, info in stored.items()}
     fallback = {name: info["fallback"] for name, info in stored.items() if info.get("fallback")}
     for name in names:
         gated[name] = "off_topic"
-        if tell_breaker and settings.health_enabled:
+        if settings.health_enabled:
             engine_health.record_failure(name, "off_topic")
     gated_engines, gated_hint = _gate_provenance(gated, fallback)
     return {**meta, "gated_engines": gated_engines, "gated_hint": gated_hint}
@@ -1122,6 +1225,8 @@ def _drop_decoy_buckets(
     query: str,
     named: list[tuple[str, list[SearchResult]]],
     diagnostics: dict[str, Any],
+    *,
+    lane: Collection[str] = (),
 ) -> tuple[list[tuple[str, list[SearchResult]]], list[str]]:
     """Remove web-engine buckets that answer only the query's first word.
 
@@ -1133,7 +1238,9 @@ def _drop_decoy_buckets(
     caller to settle if a rescue bucket later turns up as the witness.
 
     Always judged against the caller's query, never the operator-augmented one
-    an engine actually sent.
+    an engine actually sent. A dropped `lane` engine is recorded under
+    `diagnostics["lane_off_topic"]`, never in the shared `gated`: it is the
+    lane's to report, and `gated` describes the keyless engines.
     """
     if not settings.coherence_guard_enabled:
         return named, []
@@ -1144,7 +1251,11 @@ def _drop_decoy_buckets(
         return named, []
     if not any(name not in suspects and is_witness(query, bucket) for name, bucket in named):
         return named, suspects
-    _mark_off_topic(suspects, diagnostics)
+    _mark_off_topic([name for name in suspects if name not in lane], diagnostics)
+    for name in suspects:
+        if name in lane:
+            log.info("agent engine %s returned an off-topic bucket; left out", name)
+            diagnostics.setdefault("lane_off_topic", []).append(name)
     return [(name, bucket) for name, bucket in named if name not in suspects], []
 
 
@@ -1468,11 +1579,13 @@ def _key(query: str, engines: list[str], max_results: int, filters: SearchFilter
     server restarted with SEARCH_MCP_REGION=jp-ja served a week of cached
     us-en answers. `v` is the key's own version — bump it to orphan every
     existing row. 2: rows written before the off-topic guard can hold merged
-    decoy results for up to the 7-day TTL.
+    decoy results for up to the 7-day TTL. 3: agent-lane engines enter the
+    engine list as `agent:<name>`; an older row keyed on a bare name must not
+    be replayed to a call that names that engine.
     """
     raw = json.dumps(
         {
-            "v": 2,
+            "v": 3,
             "q": query,
             "e": sorted(engines),
             "n": max_results,
@@ -1740,6 +1853,10 @@ async def _fan_out(
                 finished = more & pending
                 done |= finished
                 pending -= finished
+            if pending:
+                # Cut because a lane answer settled the search, not because
+                # another keyless engine had answered (see `aggregate_search`).
+                diagnostics["cut_by_lane"] = sorted(tasks[t] for t in pending)
     results: list[tuple[str, list[SearchResult] | Exception]] = []
     for task in pending:
         task.cancel()
@@ -1825,7 +1942,10 @@ async def aggregate_search(
         include_text=include_text,
         exclude_text=exclude_text,
     )
-    cache_key = _key(query, nominal + lane_nominal, n, filters)
+    # Lane engines enter the key marked as such, so a call that names the
+    # same engines (`engines=[..., "codex"]`) is a different search with a
+    # row of its own: only automatic searches with this lane share it.
+    cache_key = _key(query, nominal + [f"agent:{name}" for name in lane_nominal], n, filters)
 
     # Read-bypass and cache-WRITE are decoupled. `use_cache` gates BOTH the read
     # and the write; `max_age_seconds` only tightens the read TTL. So a caller
@@ -1875,16 +1995,38 @@ async def aggregate_search(
                 payload["rescued_via"] = meta["rescued_via"]
             if meta.get("auto_routed"):
                 payload["auto_routed"] = meta["auto_routed"]
-            lacked = meta.get("lane_missing")
-            missing = [n for n in lacked if n in lane_nominal] if isinstance(lacked, list) else []
+            # A row under this key was written with this very lane (the key
+            # encodes it), so its lists need no filtering.
+            missing = list(meta.get("lane_missing") or [])
+            left_out = list(meta.get("lane_left_out") or [])
+            lane_off = list(meta.get("lane_benched") or [])
+            # Only what is known of this replay: which lane engine it lacks.
+            replay: dict[str, Any] = {}
+            notes: list[str] = []
             if missing:
-                # Only what is known of this replay: which engine it lacks.
-                payload["agent_lane"] = {"missing": missing}
-                payload["agent_lane_hint"] = (
+                replay["missing"] = missing
+                notes.append(
                     f"This result set was cached without {', '.join(missing)}, which had "
                     "failed, sat out or not answered yet. It is replayed for an hour at "
                     "most; pass max_age_hours=0 to search again now."
                 )
+            if left_out:
+                replay["left_out"] = left_out
+                notes.append(
+                    f"The answer from {', '.join(left_out)} was left out of this result set "
+                    "as off-topic or unconfirmed."
+                )
+            # Not repeated for an engine the "missing" note already covers.
+            lane_off = [name for name in lane_off if name not in missing]
+            if lane_off:
+                replay["benched"] = lane_off
+                notes.append(
+                    f"{', '.join(lane_off)} was sitting out (benched by the breaker) when "
+                    "this result set was made."
+                )
+            if replay:
+                payload["agent_lane"] = replay
+                payload["agent_lane_hint"] = " ".join(notes)
             return payload
 
     # Shared accumulator the engines populate with raw/filtered counts, per-reason
@@ -1969,7 +2111,14 @@ async def aggregate_search(
 
         # Before the merge, not after: RRF has no notion of a bad bucket, and would
         # interleave a decoy's ten results at ranks 3, 6, 9 of the answer.
-        named, unconfirmed = _drop_decoy_buckets(query, named, diagnostics)
+        named, unconfirmed = _drop_decoy_buckets(query, named, diagnostics, lane=lane)
+        # The guard's verdicts on lane buckets never enter the shared `gated`,
+        # so the rescue, the census and the gate hint see keyless engines only.
+        lane_off_topic = diagnostics.pop("lane_off_topic", [])
+        # Lane suspects are settled after the rescue (`_settle_lane_suspects`);
+        # the rescue's own decisions see keyless suspects only.
+        lane_suspects = [name for name in unconfirmed if name in lane]
+        unconfirmed = [name for name in unconfirmed if name not in lane]
         buckets = [bucket for _, bucket in named]
         merged = _merge(buckets, n, category, query)
 
@@ -1981,7 +2130,19 @@ async def aggregate_search(
         # query within TTL should not re-pay the rescue.
         rescued_via: str | None = None
         rescue_pair: list[tuple[str, list[SearchResult]]] = []
-        lost, standing = _general_census(engine_names, named, raised, diagnostics)
+        rescue_witness = False
+        # Stragglers the fan-out cut short because a lane answer settled the
+        # search do not call for a rescue: the search has its answer. They did
+        # run past the deadline, so the breaker still hears of it as of any
+        # engine cut there. Engines cut by the ordinary deadline, walled,
+        # refused or failed still call for breadth.
+        cut_by_lane = set(diagnostics.get("cut_by_lane") or ())
+        lost, standing = _general_census(
+            engine_names,
+            named,
+            {k: v for k, v in raised.items() if k not in cut_by_lane},
+            diagnostics,
+        )
         # An early rescue that has already come back is used whatever the
         # lane brought: its requests are spent, and its index adds breadth.
         early_ready = (
@@ -1990,9 +2151,17 @@ async def aggregate_search(
             and not early_rescue.cancelled()
             and bool(early_rescue.result()[0])
         )
+        # Judged without the lane suspects, which are settled only after the
+        # rescue: a lane answer nothing confirmed must not make a thin,
+        # unhealthy keyless run look healthy.
+        without_suspects = (
+            _merge([b for n_, b in named if n_ not in lane_suspects], n, category, query)
+            if lane_suspects
+            else merged
+        )
         if early_ready or _needs_rescue(
-            merged,
-            errors,
+            without_suspects,
+            {k: v for k, v in errors.items() if k not in cut_by_lane},
             diagnostics,
             category,
             seek_witness=len(unconfirmed) == 1,
@@ -2008,7 +2177,8 @@ async def aggregate_search(
                     query, n, filters, engine_names, diagnostics
                 )
             if rescue_bucket:
-                if unconfirmed and is_witness(query, rescue_bucket):
+                rescue_witness = is_witness(query, rescue_bucket)
+                if unconfirmed and rescue_witness:
                     # The second opinion is in, and it echoes the query: the
                     # suspects were decoys after all.
                     _mark_off_topic(unconfirmed, diagnostics)
@@ -2028,16 +2198,37 @@ async def aggregate_search(
         elif early_rescue is not None:
             early_rescue.cancel()
 
+        # Every bucket of the run is in: settle the lane suspects, with the
+        # rescue bucket as the witness or the solid answer they may lack.
+        named, late_off_topic, doubted = _settle_lane_suspects(
+            named,
+            lane_suspects + unconfirmed,
+            lane,
+            solid_extra=bool(rescue_pair) and _is_guarded(rescued_via or ""),
+            witness=bool(rescue_pair) and rescue_witness,
+        )
+        if late_off_topic or doubted:
+            if rescue_pair:
+                buckets = [bucket for _, bucket in named + rescue_pair]
+                merged = _merge(buckets, n, category, query)
+            else:
+                # Exactly the run without the lane suspects, merged above.
+                buckets = [bucket for _, bucket in named]
+                merged = without_suspects
+        lane_off_topic += late_off_topic
+        lane_left_out = lane_off_topic + doubted
+
         # Lane buckets are left out: an engine that legitimately found nothing
         # must not take a "silent" strike because a language model's search
         # found pages no keyless index has.
         _record_health(
             engine_names, [(n, b) for n, b in named if n not in lane], raised, diagnostics
         )
-        lane_gated = diagnostics.get("gated") or {}
+        verdicts = {**dict.fromkeys(doubted, LANE_UNCONFIRMED),
+                    **dict.fromkeys(lane_off_topic, "off_topic")}  # fmt: skip
         for name, res, lane_diag in lane_done:
             if not lane_diag.get("rate_limited"):
-                _record_lane_health(name, res, lane_gated.get(name))
+                _record_lane_health(name, res, verdicts.get(name))
         if rescued_via and _is_guarded(rescued_via):
             standing += 1
         # An answer resting on too few indexes is served, and cached — but not for
@@ -2077,7 +2268,7 @@ async def aggregate_search(
         lane_benched = [name for name in lane_nominal if name not in lane]
         # The lane engines the cache key promises and these results lack for a
         # passing reason: still searching, out of tokens, a timeout or reset,
-        # or benched after one. One refused for its plan or its sign-in, or
+        # or benched after those. One refused for its plan or its sign-in, or
         # benched for that, is a lasting state; marking those too would turn
         # every cached search into an hourly re-run for as long as a plan
         # stays spent.
@@ -2087,23 +2278,34 @@ async def aggregate_search(
             if name in still_searching
             or name in lane_rate_limited
             or (name in lane_raised and not is_lasting(lane_raised[name]))
-            or (name in lane_benched and _benched_for(name) != LANE_REFUSED)
+            # Benched after timeouts, resets or silence; not for a refusal, an
+            # off-topic or unconfirmed answer, which the lane chose to leave out.
+            or (name in lane_benched and _benched_for(name) in _PASSING_BENCHES)
         ]
         if lane_missing:
             meta["lane_missing"] = lane_missing
+        if lane_left_out:
+            # So a replay can say that a lane engine was asked and its answer
+            # left out, rather than pass the set off as including its view.
+            meta["lane_left_out"] = lane_left_out
+        if lane_benched:
+            meta["lane_benched"] = lane_benched
         written_at = int(time.time())
-        if use_cache and lane_nominal:
-            # This run's row (or its absence) is the newest answer: a late
-            # merge an earlier search left running must not overwrite it. The
-            # row lock makes taking the row and writing it one step, so the
-            # merge cannot slip a write in between.
-            async with _row_lock():
-                _lane_rows.pop(cache_key, None)
-                if merged and not sign_in_pending:
+        stored_as: str | None = None
+        if use_cache and merged and not sign_in_pending:
+            stored_as = cache_key
+            if lane_nominal:
+                # A row this run writes is the newest answer: a late merge an
+                # earlier search with this key left running must not overwrite
+                # it. (Only lane searches share a lane key; see `cache_key`.)
+                # A run that writes nothing leaves the merge its row. The row
+                # lock makes taking the row and writing it one step, so the
+                # merge cannot slip a write in between.
+                async with _row_lock():
+                    _lane_rows.pop(cache_key, None)
                     await cache.put_search(cache_key, query, asked, merged, meta or None)
-        elif use_cache and merged and not sign_in_pending:
-            await cache.put_search(cache_key, query, asked, merged, meta or None)
-        stored_as = cache_key if use_cache and merged and not sign_in_pending else None
+            else:
+                await cache.put_search(cache_key, query, asked, merged, meta or None)
     except BaseException:
         # Cancelling a finished task is a no-op, so all of them will do.
         for task in lane_tasks:
@@ -2111,7 +2313,14 @@ async def aggregate_search(
         if early_rescue is not None:
             early_rescue.cancel()
         raise
-    merges_later = bool(lane_pending) and use_cache and not sign_in_pending
+    # A run that wrote no row leaves an earlier search's late merge its row
+    # rather than replace it with a merge of its own into nothing.
+    merges_later = (
+        bool(lane_pending)
+        and use_cache
+        and not sign_in_pending
+        and (stored_as is not None or cache_key not in _lane_rows)
+    )
     if merges_later:
         # Not cancelled: the request is already spent, and its answer makes
         # the next identical search better. Started after the write above, so
@@ -2128,6 +2337,7 @@ async def aggregate_search(
             meta=meta,
             missing=lane_missing,
             written_at=written_at if stored_as else None,
+            pending_names=lane_pending_names,
         )
     else:
         # Without the cache there is no row to merge a late answer into, so
@@ -2182,6 +2392,8 @@ async def aggregate_search(
             lane_report["rate_limited"] = lane_rate_limited
         if lane_benched:
             lane_report["benched"] = lane_benched
+        if lane_left_out:
+            lane_report["left_out"] = lane_left_out
         payload["agent_lane"] = lane_report
         lane_hint = _lane_hint(
             lane_pending_names,
@@ -2189,6 +2401,8 @@ async def aggregate_search(
             lane_rate_limited,
             waited=lane_waited,
             merges_later=merges_later,
+            off_topic=lane_off_topic,
+            doubted=doubted,
         )
         if lane_hint:
             payload["agent_lane_hint"] = lane_hint

@@ -356,7 +356,10 @@ async def test_an_off_topic_lane_bucket_is_dropped(world):
     ]
     payload = await aggregate_search(QUERY, use_cache=False)
     assert "codex" not in {e for r in payload["results"] for e in r["engines"]}
-    assert payload["gated_engines"]["codex"]["reason"] == "off_topic"
+    # The lane's to report, not a keyless gate.
+    assert "codex" not in (payload.get("gated_engines") or {})
+    assert payload["agent_lane"]["left_out"] == ["codex"]
+    assert "left out" in payload["agent_lane_hint"]
     assert payload["agent_lane"]["answered"] == {}
     assert engine_health.is_open("codex")
 
@@ -709,9 +712,7 @@ async def test_a_late_lasting_failure_does_not_shorten_the_row(world, monkeypatc
 
 
 def _transient(message: str) -> EngineKeyError:
-    failure = EngineKeyError(message)
-    failure.transient = True
-    return failure
+    return EngineKeyError(message, transient=True)
 
 
 async def test_a_transient_sign_in_failure_is_a_passing_one(world):
@@ -837,11 +838,366 @@ async def test_a_late_failure_is_listed_like_one_in_time(world, monkeypatch):
     assert meta["lane_missing"] == ["codex"]
 
 
-async def test_a_late_off_topic_answer_is_recorded_as_a_gate(world, monkeypatch):
+async def test_a_late_off_topic_answer_is_benched_not_reported_as_a_gate(world, monkeypatch):
     monkeypatch.setattr(settings, "agent_lane_wait_seconds", 0.05)
     world.stubs["codex"].delay = 0.2
     world.stubs["codex"].results = _decoy("codex")
     await aggregate_search(QUERY)
     await asyncio.sleep(0.4)
+    (results, meta), = world.cache.rows.values()
+    assert "codex" not in {e for r in results for e in r["engines"]}
+    assert "codex" not in (meta.get("gated_engines") or {})
+    assert engine_health.is_open("codex")
+
+
+# ---------------------------------------------------------------------------
+# Review round 9
+# ---------------------------------------------------------------------------
+
+
+async def test_a_call_naming_the_lane_engines_has_a_row_of_its_own(world, monkeypatch):
+    monkeypatch.setattr(settings, "agent_lane_wait_seconds", 0.05)
+    world.stubs["codex"].delay = 0.3
+    await aggregate_search(QUERY)  # automatic, leaves codex merging late
+    world.stubs["codex"].delay = 0
+    named = await aggregate_search(QUERY, engines=["duckduckgo", "bing", "anysearch", "codex"])
+    # Not a replay of the automatic search's row, nor a write into it.
+    assert named["cached"] is False
+    assert "agent_lane" not in named
+    await asyncio.sleep(0.5)
+    assert len(world.cache.rows) == 2
+    # The automatic search's row got its late codex answer.
+    assert any(
+        (meta.get("engines") or [])[-1:] == ["codex"] and "lane_missing" not in meta
+        for _, meta in world.cache.rows.values()
+    )
+
+
+async def test_an_off_topic_lane_bucket_alone_does_not_start_a_rescue(world, monkeypatch):
+    monkeypatch.setattr(settings, "rescue_enabled", True)
+    monkeypatch.setattr(settings, "reserve_engines", ["so360"])
+    world(Stub("so360"))
+    for name in ("duckduckgo", "bing", "anysearch"):
+        world.stubs[name].results = bucket(name, 2)  # healthy, too few to judge
+    world.stubs["codex"].results = _decoy("codex")
+    payload = await aggregate_search(QUERY, use_cache=False)
+    assert world.stubs["so360"].calls == 0
+    assert "rescued_via" not in payload
+    # Nothing could confirm it either way: left out rather than trusted.
+    assert "codex" not in {e for r in payload["results"] for e in r["engines"]}
+    assert payload["agent_lane"]["left_out"] == ["codex"]
+    assert not engine_health.is_open("codex")
+
+
+async def test_stragglers_cut_by_a_lane_answer_do_not_start_a_rescue(world, monkeypatch):
+    monkeypatch.setattr(settings, "rescue_enabled", True)
+    monkeypatch.setattr(settings, "reserve_engines", ["so360"])
+    monkeypatch.setattr(settings, "search_deadline_seconds", 0.1)
+    world(Stub("so360"))
+    for name in ("duckduckgo", "bing", "anysearch"):
+        world.stubs[name].delay = 2
+    world.stubs["codex"].results = bucket("codex", 6)
+    payload = await aggregate_search(QUERY, use_cache=False)
+    assert world.stubs["so360"].calls == 0
+    assert {e for r in payload["results"] for e in r["engines"]} == {"codex"}
+
+
+def test_the_late_ceiling_follows_the_pending_engine_s_timeout(monkeypatch):
+    assert aggregator._late_ceiling(["codex"]) == 270.0
+    monkeypatch.setattr(settings, "antigravity_timeout", 200.0)
+    # Only an engine that is pending sets it.
+    assert aggregator._late_ceiling(["codex"]) == 270.0
+    assert aggregator._late_ceiling(["codex", "antigravity"]) == 830.0
+
+
+# ---------------------------------------------------------------------------
+# Review round 10
+# ---------------------------------------------------------------------------
+
+
+async def test_a_lane_answer_does_not_hide_walled_keyless_engines(world, monkeypatch):
+    monkeypatch.setattr(settings, "rescue_enabled", True)
+    monkeypatch.setattr(settings, "reserve_engines", ["so360"])
+    world(Stub("so360"))
+
+    class _Captcha(Stub):
+        async def search(self, query, n, filters=None, diagnostics=None):
+            diagnostics.setdefault("gated", {})[self.name] = "captcha"
+            return []
+
+    world(_Captcha("bing"), _Captcha("anysearch"))
+    payload = await aggregate_search(QUERY, use_cache=False)
+    assert payload["rescued_via"] == "so360"
+
+
+async def test_a_search_that_writes_nothing_leaves_the_late_merge_its_row(world, monkeypatch):
+    monkeypatch.setattr(settings, "agent_lane_wait_seconds", 0.05)
+    world.stubs["codex"].delay = 0.3
+    await aggregate_search(QUERY)  # leaves codex merging in the background
+    for name in ("duckduckgo", "bing", "anysearch"):
+        world.stubs[name].results = []
+    world.tokens["codex"] = False
+    empty = await aggregate_search(QUERY, max_age_seconds=0)
+    assert empty["results"] == []
+    await asyncio.sleep(0.5)
+    (results, _), = world.cache.rows.values()
+    assert "codex" in {e for r in results for e in r["engines"]}
+
+
+# ---------------------------------------------------------------------------
+# Review round 11
+# ---------------------------------------------------------------------------
+
+
+async def test_stragglers_cut_by_the_ordinary_deadline_still_call_for_breadth(world, monkeypatch):
+    monkeypatch.setattr(settings, "rescue_enabled", True)
+    monkeypatch.setattr(settings, "reserve_engines", ["so360"])
+    monkeypatch.setattr(settings, "search_deadline_seconds", 0.1)
+    world(Stub("so360"))
+    world.stubs["bing"].delay = 2
+    world.stubs["anysearch"].delay = 2
+    world.stubs["codex"].delay = 0.15
+    payload = await aggregate_search(QUERY, use_cache=False)
+    assert payload["timed_out_engines"] == ["anysearch", "bing"]
+    assert payload["rescued_via"] == "so360"
+
+
+async def test_a_doubted_lane_answer_is_served_when_it_is_all_there_is(world):
+    for name in ("duckduckgo", "bing", "anysearch"):
+        world.stubs[name].results = []
+    world.stubs["codex"].results = _decoy("codex")
+    payload = await aggregate_search(QUERY, use_cache=False)
+    assert {e for r in payload["results"] for e in r["engines"]} == {"codex"}
+    assert "left_out" not in payload["agent_lane"]
+
+
+async def test_a_doubted_lane_answer_scores_nothing_with_the_breaker(world):
+    for name in ("duckduckgo", "bing", "anysearch"):
+        world.stubs[name].results = bucket(name, 2)
+    world.stubs["codex"].results = _decoy("codex")
+    engine_health.record_failure("codex", "error")  # one strike to keep
+    await aggregate_search(QUERY, use_cache=False)
+    engine_health.record_failure("codex", "error")
+    # A success in between would have cleared the first strike.
+    assert engine_health.is_open("codex")
+
+
+async def test_a_replay_says_a_lane_answer_was_left_out(world):
+    world.stubs["codex"].results = _decoy("codex")
+    first = await aggregate_search(QUERY)
+    assert first["agent_lane"]["left_out"] == ["codex"]
+    assert "barely mentioned the query" in first["agent_lane_hint"]
+    again = await aggregate_search(QUERY)
+    assert again["cached"] is True
+    assert again["agent_lane"] == {"left_out": ["codex"]}
+    assert "left out" in again["agent_lane_hint"]
+
+
+# ---------------------------------------------------------------------------
+# Review round 12
+# ---------------------------------------------------------------------------
+
+
+async def test_a_lane_answer_that_is_all_there_is_is_never_sent_to_the_rescue(world, monkeypatch):
+    monkeypatch.setattr(settings, "rescue_enabled", True)
+    monkeypatch.setattr(settings, "reserve_engines", ["so360"])
+    world(Stub("so360", results=[]))
+    for name in ("duckduckgo", "bing", "anysearch"):
+        world.stubs[name].results = []
+    world.stubs["codex"].results = _decoy("codex")
+    payload = await aggregate_search(QUERY, use_cache=False)
+    assert "codex" not in (payload.get("gated_engines") or {})
+    assert {e for r in payload["results"] for e in r["engines"]} == {"codex"}
+
+
+async def test_a_suspect_keyless_bucket_does_not_outrank_a_suspect_lane_one(world):
+    world.stubs["duckduckgo"].results = _decoy("duckduckgo")
+    world.stubs["bing"].results = []
+    world.stubs["anysearch"].results = []
+    world.stubs["codex"].results = _decoy("codex")
+    payload = await aggregate_search(QUERY, use_cache=False)
+    assert "codex" in {e for r in payload["results"] for e in r["engines"]}
+    assert "left_out" not in payload["agent_lane"]
+
+
+async def test_a_doubted_answer_keeps_the_row_s_lifetime(world):
+    """An unconfirmable answer is likely unconfirmable next time too: marking
+    the row would only re-run the lane engine every hour for the same verdict."""
+    for name in ("duckduckgo", "bing", "anysearch"):
+        world.stubs[name].results = bucket(name, 2)
+    world.stubs["codex"].results = _decoy("codex")
+    await aggregate_search(QUERY)
     (_, meta), = world.cache.rows.values()
-    assert meta["gated_engines"]["codex"]["reason"] == "off_topic"
+    assert meta["lane_left_out"] == ["codex"]
+    assert "lane_missing" not in meta
+
+
+async def test_stragglers_cut_by_a_sparse_lane_answer_do_not_start_a_rescue(world, monkeypatch):
+    monkeypatch.setattr(settings, "rescue_enabled", True)
+    monkeypatch.setattr(settings, "reserve_engines", ["so360"])
+    monkeypatch.setattr(settings, "search_deadline_seconds", 0.1)
+    world(Stub("so360"))
+    for name in ("duckduckgo", "bing", "anysearch"):
+        world.stubs[name].delay = 2
+    world.stubs["codex"].results = bucket("codex", 4)
+    payload = await aggregate_search(QUERY, max_results=3, use_cache=False)
+    assert world.stubs["so360"].calls == 0
+    assert "rescued_via" not in payload
+
+
+# ---------------------------------------------------------------------------
+# Review round 13
+# ---------------------------------------------------------------------------
+
+
+async def test_a_rescue_witness_drops_a_served_lane_suspect(world, monkeypatch):
+    monkeypatch.setattr(settings, "rescue_enabled", True)
+    monkeypatch.setattr(settings, "reserve_engines", ["so360"])
+    monkeypatch.setattr(settings, "search_deadline_seconds", 2.0)
+    world(Stub("so360", delay=0.05))
+    for name in ("duckduckgo", "bing", "anysearch"):
+        world.stubs[name].results = []
+    world.stubs["codex"].results = _decoy("codex")
+    world.stubs["codex"].delay = 0.2
+    payload = await aggregate_search(QUERY, use_cache=False)
+    assert {e for r in payload["results"] for e in r["engines"]} == {"so360"}
+    assert payload["agent_lane"]["left_out"] == ["codex"]
+    assert engine_health.is_open("codex")
+
+
+async def test_one_record_does_not_stand_in_for_the_lane_s_pages(world, monkeypatch):
+    class _Record(Stub):
+        categories = frozenset({"software"})
+
+    monkeypatch.setattr(
+        settings, "default_engines", ["duckduckgo", "bing", "anysearch", "pypi"]
+    )
+    world(_Record("pypi", results=bucket("pypi", 1)))
+    for name in ("duckduckgo", "bing", "anysearch"):
+        world.stubs[name].results = []
+    world.stubs["codex"].results = _decoy("codex")
+    payload = await aggregate_search(QUERY, use_cache=False)
+    assert "codex" in {e for r in payload["results"] for e in r["engines"]}
+
+
+async def test_a_late_witness_benches_a_lane_decoy_served_earlier(world, monkeypatch):
+    monkeypatch.setattr(settings, "agent_engines", "codex,antigravity")
+    monkeypatch.setattr(settings, "agent_lane_wait_seconds", 0.05)
+    # Nothing keyless answers, so the lane wait stretches to the deadline.
+    monkeypatch.setattr(settings, "search_deadline_seconds", 0.05)
+    for name in ("duckduckgo", "bing", "anysearch"):
+        world.stubs[name].results = []
+    world.stubs["codex"].results = _decoy("codex")
+    world.stubs["antigravity"].delay = 0.2
+    first = await aggregate_search(QUERY)
+    assert "codex" in {e for r in first["results"] for e in r["engines"]}
+    await asyncio.sleep(0.4)
+    (results, meta), = world.cache.rows.values()
+    assert {e for r in results for e in r["engines"]} == {"antigravity"}
+    assert meta["lane_left_out"] == ["codex"]
+    assert engine_health.is_open("codex")
+
+
+# ---------------------------------------------------------------------------
+# Review round 14
+# ---------------------------------------------------------------------------
+
+
+async def test_a_lane_suspect_does_not_make_a_thin_unhealthy_run_look_healthy(world, monkeypatch):
+    monkeypatch.setattr(settings, "rescue_enabled", True)
+    monkeypatch.setattr(settings, "reserve_engines", ["so360"])
+    world(Stub("so360"))
+    world.stubs["duckduckgo"].results = bucket("duckduckgo", 2)
+    world.stubs["bing"].results = []
+    world.stubs["anysearch"].results = []
+    world.stubs["codex"].results = _decoy("codex")
+    payload = await aggregate_search(QUERY, use_cache=False)
+    assert payload["rescued_via"] == "so360"
+
+
+async def test_a_call_naming_the_lane_engines_does_not_replay_the_lane_row(world):
+    world.stubs["codex"].results = _decoy("codex")
+    await aggregate_search(QUERY)
+    again = await aggregate_search(QUERY, engines=["duckduckgo", "bing", "anysearch", "codex"])
+    assert again["cached"] is False
+
+
+async def test_a_run_that_writes_nothing_does_not_take_the_merge_from_a_live_row(world, monkeypatch):
+    monkeypatch.setattr(settings, "agent_lane_wait_seconds", 0.05)
+    monkeypatch.setattr(settings, "search_deadline_seconds", 0.05)
+    world.stubs["codex"].delay = 0.4
+    await aggregate_search(QUERY)  # A: row written, codex merging late
+    (key,) = world.cache.rows
+    owner = aggregator._lane_rows[key]
+    for name in ("duckduckgo", "bing", "anysearch"):
+        world.stubs[name].results = []
+    await aggregate_search(QUERY, max_age_seconds=0)  # B: nothing to write
+    assert aggregator._lane_rows.get(key) is owner
+    await asyncio.sleep(0.8)
+    (results, _), = world.cache.rows.values()
+    # A's row, with A's keyless results and codex's late answer merged in.
+    assert "codex" in {e for r in results for e in r["engines"]}
+    assert any(r["url"].startswith("https://duckduckgo.example/") for r in results)
+
+
+async def test_an_engine_whose_answers_keep_being_left_out_sits_out(world):
+    for name in ("duckduckgo", "bing", "anysearch"):
+        world.stubs[name].results = bucket(name, 2)
+    world.stubs["codex"].results = _decoy("codex")
+    for _ in range(3):
+        await aggregate_search(QUERY, use_cache=False)
+    assert engine_health.is_open("codex")
+
+
+# ---------------------------------------------------------------------------
+# Review round 15
+# ---------------------------------------------------------------------------
+
+
+async def test_a_lane_bench_for_an_unconfirmed_answer_does_not_shorten_rows(world):
+    for _ in range(3):
+        engine_health.record_failure("codex", aggregator.LANE_UNCONFIRMED, threshold=3)
+    assert engine_health.is_open("codex")
+    await aggregate_search(QUERY)
+    (_, meta), = world.cache.rows.values()
+    assert "lane_missing" not in meta
+
+
+async def test_an_off_topic_hint_says_the_engine_sits_out(world):
+    world.stubs["codex"].results = _decoy("codex")
+    payload = await aggregate_search(QUERY, use_cache=False)
+    assert "sits out the next searches" in payload["agent_lane_hint"]
+
+
+def test_a_subclass_can_declare_itself_transient():
+    from search_mcp.engines.base import is_lasting
+
+    class _Passing(EngineKeyError):
+        transient = True
+
+    assert not is_lasting(_Passing("x"))
+    assert is_lasting(_Passing("x", transient=False))
+
+
+# ---------------------------------------------------------------------------
+# Review round 16
+# ---------------------------------------------------------------------------
+
+
+async def test_an_unconfirmed_answer_and_one_timeout_do_not_add_up_to_a_bench(world):
+    for name in ("duckduckgo", "bing", "anysearch"):
+        world.stubs[name].results = bucket(name, 2)
+    world.stubs["codex"].results = _decoy("codex")
+    await aggregate_search(QUERY, use_cache=False)  # left out as unconfirmed
+    world.stubs["codex"].exc = RuntimeError("connection reset")
+    await aggregate_search(QUERY, use_cache=False)  # one blip
+    assert not engine_health.is_open("codex")
+
+
+async def test_a_replay_says_a_lane_engine_was_sitting_out(world):
+    engine_health.record_failure("codex", aggregator.LANE_REFUSED, threshold=1)
+    await aggregate_search(QUERY)
+    again = await aggregate_search(QUERY)
+    assert again["cached"] is True
+    assert again["agent_lane"] == {"benched": ["codex"]}
+    assert "sitting out" in again["agent_lane_hint"]

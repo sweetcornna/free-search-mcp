@@ -257,4 +257,6 @@ def _full_rate_limit_buckets():
         for bucket in aggregator.search_limiter._buckets.values():
             bucket.tokens = float(bucket.capacity)
             bucket.last = time.monotonic()
+        # The agent lane's count of unconfirmed answers is process-wide too.
+        aggregator._unconfirmed_answers.clear()
     yield

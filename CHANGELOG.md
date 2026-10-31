@@ -14,7 +14,10 @@ Google's index, and five keyless sources join the registry.
 - The agent lane. Once the operator has signed in to `codex`
   (`search-mcp-login codex`), every search that names no engines asks it at
   the same moment as the keyless engines. Its results go through the same
-  off-topic guard and are fused into the same ranking; until now `codex` ran
+  off-topic guard (an answer that fails it, or that nothing can confirm while
+  keyless results remain, is left out and listed under `agent_lane.left_out`;
+  when it is all there is, it is served) and are fused into the same ranking;
+  until now `codex` ran
   only when a call named it, and naming it switched the keyless pool, its
   breaker, routing and rescue off for that call.
   - The links wait for the lane at most `SEARCH_MCP_AGENT_LANE_WAIT_SECONDS`

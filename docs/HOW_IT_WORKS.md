@@ -555,7 +555,13 @@ engine that `SEARCH_MCP_AGENT_ENGINES` seats at the same moment as the keyless
 engines, puts each answer through the same off-topic guard, and fuses it into
 the same reciprocal-rank ranking. A page OpenAI's search and DuckDuckGo both
 found outranks a page only one of them found, and a lane bucket can be the
-witness that exposes a keyless engine's decoy page.
+witness that exposes a keyless engine's decoy page. A lane answer the guard
+drops, or one that looks off-topic with nothing to confirm it either way while
+other web results remain, is left out and reported under `agent_lane.left_out`
+(a replay of the cached set says so too), never as a keyless gate, and the
+rescue pass, which belongs to the keyless pool, is never spent judging it. A
+rescue that comes back on topic is the witness that drops it. When the lane's
+answer is all there is, it is served.
 
 - `auto` (the default) seats `codex` once it is signed in. `antigravity` is
   seated only when the setting names it, because Google's terms forbid this
@@ -607,8 +613,13 @@ witness that exposes a keyless engine's decoy page.
   count only keyless engines, so the pool stays able to answer alone, and a
   keyless engine that found nothing takes no "silent" strike because a lane
   engine did. A lane search never opens a sign-in page.
-- The cache key includes the seated lane, so signing in turns a cached
-  keyless-only answer into a fresh search instead of replaying it.
+- The cache key includes the seated lane, marked as the lane, so signing in
+  turns a cached keyless-only answer into a fresh search instead of replaying
+  it, and a call that names the same engines (`engines=[..., "codex"]`) is a
+  search with a row of its own.
+- An answer left out as unconfirmed is weak evidence; three in a row bench
+  the engine for a while, so one whose answers keep being discarded stops
+  spending the plan.
 - The server's startup warm-up refreshes a signed-in lane engine's token and
   looks its model up, which the first search would otherwise wait for.
 
