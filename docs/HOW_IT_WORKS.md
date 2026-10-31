@@ -557,10 +557,11 @@ the same reciprocal-rank ranking. A page OpenAI's search and DuckDuckGo both
 found outranks a page only one of them found, and a lane bucket can be the
 witness that exposes a keyless engine's decoy page. A lane answer the guard
 drops, or one that looks off-topic with nothing to confirm it either way while
-keyless results remain, is left out and reported under `agent_lane.left_out`
+other web results remain, is left out and reported under `agent_lane.left_out`
 (a replay of the cached set says so too), never as a keyless gate, and the
-rescue pass, which belongs to the keyless pool, is never spent judging it.
-When the lane's answer is all there is, it is served.
+rescue pass, which belongs to the keyless pool, is never spent judging it. A
+rescue that comes back on topic is the witness that drops it. When the lane's
+answer is all there is, it is served.
 
 - `auto` (the default) seats `codex` once it is signed in. `antigravity` is
   seated only when the setting names it, because Google's terms forbid this

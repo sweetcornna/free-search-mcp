@@ -744,26 +744,39 @@ def _lane_found(lane: Collection[asyncio.Future[_LaneOutcome]]) -> bool:
 
 def _settle_lane_suspects(
     named: list[tuple[str, list[SearchResult]]],
-    unconfirmed: list[str],
+    suspects: list[str],
     lane: Collection[str],
+    *,
+    witness: bool = False,
 ) -> tuple[list[tuple[str, list[SearchResult]]], list[str], list[str]]:
-    """`(named, keyless suspects, doubted lane engines)`: the one rule for a
-    lane bucket the off-topic guard could not judge, on both the main path and
-    the late merge.
+    """`(named, off-topic, doubted)`: the one rule for lane buckets the
+    off-topic guard could not judge, applied once every bucket of the run is
+    in (after the rescue on the main path, on each answer in the late merge).
 
-    It is never handed to the rescue (that pass is the keyless pool's, and no
-    request is spent judging an agent engine) and never becomes a keyless
-    gate. It is left out ("doubted") while a keyless bucket that is not itself
-    a suspect remains to answer with; when it is not, the lane's answer is all
-    there is and is served, as a keyless suspect is.
+    `suspects` are what the guard left unconfirmed. A lane suspect is never
+    handed to the rescue (that pass is the keyless pool's, and no request is
+    spent judging an agent engine) and never becomes a keyless gate. With a
+    `witness` that arrived after the guard ran (a rescue bucket or a late
+    answer that echoes the query), it is off-topic. Otherwise it is left out
+    ("doubted") while a web bucket that is not itself a suspect remains to
+    answer with, and served when the lane's answer is all there is, as a
+    keyless suspect is. Records from specialist sources do not count as such a
+    bucket: one looked-up record does not stand in for the lane's pages.
     """
-    lane_suspects = [name for name in unconfirmed if name in lane]
-    keyless_suspects = [name for name in unconfirmed if name not in lane]
-    solid = any(
-        bucket for name, bucket in named if name not in lane and name not in keyless_suspects
-    )
-    doubted = lane_suspects if solid else []
-    return [(n, b) for n, b in named if n not in doubted], keyless_suspects, doubted
+    lane_suspects = [name for name in suspects if name in lane]
+    if not lane_suspects:
+        return named, [], []
+    if witness:
+        off_topic, doubted = lane_suspects, []
+    else:
+        solid = any(
+            bucket
+            for name, bucket in named
+            if name not in lane and name not in suspects and _is_guarded(name)
+        )
+        off_topic, doubted = [], (lane_suspects if solid else [])
+    drop = set(off_topic) | set(doubted)
+    return [(n, b) for n, b in named if n not in drop], off_topic, doubted
 
 
 def _take_lane_verdicts(diagnostics: dict[str, Any], lane: list[str]) -> list[str]:
@@ -996,17 +1009,17 @@ async def _fold_late_lane(
                 lane_names = [n_ for n_ in asked if n_ not in keyless]
                 dropped_lane = _take_lane_verdicts(verdict, lane_names)
                 kept, _, doubted = _settle_lane_suspects(kept, unjudged, lane_names)
-                if name in dropped_lane:
-                    _record_lane_health(name, outcome, "off_topic")
-                elif name not in doubted:
+                if name not in dropped_lane and name not in doubted:
                     _record_lane_health(name, outcome)
+                for dropped in dropped_lane:
+                    # The late answer itself, or a lane engine served earlier
+                    # that it has now shown to be a decoy.
+                    _record_lane_health(dropped, outcome, "off_topic")
                 left = [n_ for n_ in dropped_lane + doubted
                         if n_ not in (meta.get("lane_left_out") or [])]  # fmt: skip
                 if left:
                     # Left out, as on the main path, and recorded on the row.
                     meta = {**meta, "lane_left_out": [*(meta.get("lane_left_out") or []), *left]}
-                if doubted:
-                    missing_now.update(doubted)
                 cleared = list(verdict.get("gated") or {})
                 named = kept
                 if cleared:
@@ -1960,9 +1973,8 @@ async def aggregate_search(
                 replay["missing"] = missing
                 notes.append(
                     f"This result set was cached without {', '.join(missing)}, which had "
-                    "failed, sat out, not answered yet or given an answer nothing could "
-                    "confirm. It is replayed for an hour at most; pass max_age_hours=0 to "
-                    "search again now."
+                    "failed, sat out or not answered yet. It is replayed for an hour at "
+                    "most; pass max_age_hours=0 to search again now."
                 )
             if left_out:
                 replay["left_out"] = left_out
@@ -2062,8 +2074,10 @@ async def aggregate_search(
         # never the keyless pool's: they leave the shared `gated` here, so the
         # rescue, the census and the gate hint see keyless engines only.
         lane_off_topic = _take_lane_verdicts(diagnostics, lane)
-        named, unconfirmed, doubted = _settle_lane_suspects(named, unconfirmed, lane)
-        lane_left_out = lane_off_topic + doubted
+        # Lane suspects are settled after the rescue (`_settle_lane_suspects`);
+        # the rescue's own decisions see keyless suspects only.
+        lane_suspects = [name for name in unconfirmed if name in lane]
+        unconfirmed = [name for name in unconfirmed if name not in lane]
         buckets = [bucket for _, bucket in named]
         merged = _merge(buckets, n, category, query)
 
@@ -2133,6 +2147,19 @@ async def aggregate_search(
         elif early_rescue is not None:
             early_rescue.cancel()
 
+        # Every bucket of the run is in: settle the lane suspects, with the
+        # rescue bucket as the witness or the solid answer they may lack.
+        rescue_witness = bool(rescue_pair) and is_witness(query, rescue_pair[0][1])
+        settled, late_off_topic, doubted = _settle_lane_suspects(
+            named + rescue_pair, lane_suspects + unconfirmed, lane, witness=rescue_witness
+        )
+        if late_off_topic or doubted:
+            named = [pair for pair in settled if pair not in rescue_pair]
+            buckets = [bucket for _, bucket in settled]
+            merged = _merge(buckets, n, category, query)
+        lane_off_topic += late_off_topic
+        lane_left_out = lane_off_topic + doubted
+
         # Lane buckets are left out: an engine that legitimately found nothing
         # must not take a "silent" strike because a language model's search
         # found pages no keyless index has.
@@ -2191,7 +2218,6 @@ async def aggregate_search(
             for name in lane_nominal
             if name in still_searching
             or name in lane_rate_limited
-            or name in doubted  # nothing judged it bad; the next search may keep it
             or (name in lane_raised and not is_lasting(lane_raised[name]))
             or (name in lane_benched and _benched_for(name) != LANE_REFUSED)
         ]
@@ -2202,17 +2228,21 @@ async def aggregate_search(
             # left out, rather than pass the set off as including its view.
             meta["lane_left_out"] = lane_left_out
         written_at = int(time.time())
-        if use_cache:
-            # A row this run writes is the newest answer: a late merge an
-            # earlier search left running must not overwrite it. That holds
-            # for any search with the same key, a call naming the very engines
-            # an automatic search asked included. A run that writes nothing
-            # leaves the merge its row. The row lock makes taking the row and
-            # writing it one step, so the merge cannot slip a write in between.
-            async with _row_lock():
-                if merged and not sign_in_pending:
+        if use_cache and merged and not sign_in_pending:
+            if lane_nominal or cache_key in _lane_rows:
+                # A row this run writes is the newest answer: a late merge an
+                # earlier search left running must not overwrite it. That holds
+                # for any search with the same key, a call naming the very
+                # engines an automatic search asked included. A run that writes
+                # nothing leaves the merge its row. The row lock makes taking
+                # the row and writing it one step, so the merge cannot slip a
+                # write in between; a search with no lane and no merge for its
+                # key has nothing to take and skips it.
+                async with _row_lock():
                     _lane_rows.pop(cache_key, None)
                     await cache.put_search(cache_key, query, asked, merged, meta or None)
+            else:
+                await cache.put_search(cache_key, query, asked, merged, meta or None)
         stored_as = cache_key if use_cache and merged and not sign_in_pending else None
     except BaseException:
         # Cancelling a finished task is a no-op, so all of them will do.
