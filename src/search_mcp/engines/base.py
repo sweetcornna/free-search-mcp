@@ -1150,6 +1150,18 @@ class Engine(abc.ABC):
     # engine (other candidate names, older advisories) count as ordinary
     # native hits.
     direct_answer: bool = False
+    # True for an engine whose search a language model runs on the operator's
+    # own account (`codex`, `antigravity`) instead of a results page this
+    # process reads. Such an engine sits in no pool and no route. Once its
+    # sign-in is stored it can join automatic searches as the AGENT LANE: it is
+    # asked at the same moment as the keyless engines and its results are
+    # fused into the same ranking (aggregator._lane_nominal,
+    # settings.agent_engines).
+    agent_search: bool = False
+    # Whether `SEARCH_MCP_AGENT_ENGINES=auto` seats it. True only where the
+    # provider allows its sign-in to be used by a third-party tool; an
+    # operator can still list any agent engine by name.
+    agent_lane_auto: bool = False
 
     def claims(self, query: str) -> bool:
         """Whether this engine can answer `query` on its own, judged offline.

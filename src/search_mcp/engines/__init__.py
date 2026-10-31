@@ -205,13 +205,15 @@ ENGINES: dict[str, Engine] = {
     # GitHub's code-search endpoint 401s anonymous callers, so unlike the
     # keyless `github` engine above this one needs a token.
     "github_code": GitHubCodeEngine(),
-    # Opt-in like the keyed engines above, but enabled by an OAuth sign-in
-    # (`search-mcp-login codex`) instead of a key: OpenAI's own web search,
-    # the one Codex uses, on the operator's ChatGPT plan.
+    # Agent engines, enabled by an OAuth sign-in (`search-mcp-login codex`)
+    # instead of a key: OpenAI's own web search, the one Codex uses, on the
+    # operator's ChatGPT plan. In no pool or route; once signed in it joins
+    # automatic searches as the agent lane (settings.agent_engines).
     "codex": CodexEngine(),
     # The same, on the sign-in of Google's Antigravity IDE: Google Search run
     # by a Gemini model. Google's terms forbid this use of that sign-in; it is
-    # enabled only by `search-mcp-login antigravity`, which says so.
+    # enabled only by `search-mcp-login antigravity`, which says so, and the
+    # lane seats it only when SEARCH_MCP_AGENT_ENGINES names it.
     "antigravity": AntigravityEngine(),
 }
 

@@ -558,11 +558,25 @@ class CodexEngine(Engine):
     # repeats down; this keeps a looping agent from spending the plan's usage
     # window in a minute.
     rate_limit_per_minute = 10
+    # OpenAI supports this sign-in in third-party tools, so a stored sign-in
+    # seats it in the agent lane of every automatic search.
+    agent_search = True
+    agent_lane_auto = True
 
     def build_url(
         self, query: str, max_results: int, filters: SearchFilters | None = None
     ) -> str:
         return settings.codex_base_url.rstrip("/") + "/alpha/search"
+
+    async def warm(self) -> None:
+        """Refresh an expiring token and look the model up before the first
+        search needs them. Only with a sign-in stored: warming never opens a
+        sign-in page."""
+        if not self.is_available():
+            return
+        cred = await oauth.credential("codex")
+        async with oauth.http_client(self.name, timeout=settings.codex_timeout) as client:
+            await self._model(client, cred)
 
     def parse(self, html: str) -> list[SearchResult]:
         return []

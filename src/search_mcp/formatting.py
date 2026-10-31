@@ -258,6 +258,12 @@ def _render_search_hints(payload: dict[str, Any]) -> list[str]:
     if benched_hint:
         lines.append("")
         lines.append(f"ℹ️ **Benched engines:** {benched_hint}")
+    # The signed-in agent engines that ran beside the keyless pool, when one
+    # of them is still searching, failed or sat out.
+    lane_hint = payload.get("agent_lane_hint")
+    if lane_hint:
+        lines.append("")
+        lines.append(f"ℹ️ **Agent lane:** {lane_hint}")
     rescued = payload.get("rescued_via")
     if rescued:
         lines.append("")

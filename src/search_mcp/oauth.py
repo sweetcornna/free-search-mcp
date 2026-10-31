@@ -15,9 +15,11 @@ suspended accounts for it. It is here because an operator asked for it on
 their own account. Nothing opens its sign-in by itself, and the sign-in says
 what it risks before it starts.
 
-Like the API-key engines, both are opt-in. No pool, reserve or category route
-contains them (tests/test_no_key_positioning.py), so a search only reaches one
-when a call names it, and every search spends the operator's own plan quota.
+Both are opt-in, and every search spends the operator's own plan quota. No
+pool, reserve or category route contains them (tests/test_no_key_positioning.py).
+A call can name one, and once signed in they can join automatic searches as the
+agent lane (aggregator._lane_nominal): `codex` by default, `antigravity` only
+when SEARCH_MCP_AGENT_ENGINES names it.
 
 The flow is the one the Codex CLI and the Antigravity IDE use: OAuth 2.0
 authorization code with PKCE, redirected to a listener on a fixed loopback

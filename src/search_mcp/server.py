@@ -657,7 +657,11 @@ async def search(
       `engines` is what was actually ASKED for this answer; each result's own
       `engines` is what found it. A default engine that failed recently is not
       asked and appears under `benched_engines` instead; a rescue pass that
-      substituted a source appears as `rescued_via`.
+      substituted a source appears as `rescued_via`. When the operator has
+      signed in to an agent engine (`codex`), it searches beside the keyless
+      engines and `agent_lane` reports it ({engines, answered, pending, errors});
+      one still searching when the links return is merged into the cached
+      result set, so the same call repeated later carries its results too.
 
     Common mistakes:
     - Answering from snippets. A snippet is an engine's summary of a page as it

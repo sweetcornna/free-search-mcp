@@ -238,10 +238,13 @@ _OAUTH_COPY: dict[str, dict[str, str]] = {
     "codex": {
         "title_zh": "Codex（ChatGPT 账号登录）",
         "about": "OpenAI's own web search, run on your ChatGPT plan (Plus, Pro, Business, …) "
-        "through the sign-in the Codex CLI uses. It runs only when a call names "
-        'engines=["codex"], and each search counts against your plan\'s Codex usage.',
+        "through the sign-in the Codex CLI uses. Once signed in, it searches beside the "
+        "keyless engines on every automatic search (SEARCH_MCP_AGENT_ENGINES=off keeps it to "
+        'calls that name engines=["codex"]), and each search counts against your plan\'s '
+        "Codex usage.",
         "about_zh": "用你的 ChatGPT 账号（Plus、Pro、Business 等套餐）调用 OpenAI 官方的网页搜索，"
-        "登录方式与 Codex CLI 相同。只有调用中写明 engines=[\"codex\"] 时才会运行，"
+        "登录方式与 Codex CLI 相同。登录后，每次自动搜索都会让它与无 key 引擎并行搜索"
+        "（设 SEARCH_MCP_AGENT_ENGINES=off 则只在调用写明 engines=[\"codex\"] 时运行），"
         "每次搜索消耗你自己套餐的 Codex 额度。",
         "note": "Already signed in to the Codex CLI? `search-mcp-login codex --use-codex-cli` "
         "reuses that sign-in read-only instead.",
@@ -251,11 +254,12 @@ _OAUTH_COPY: dict[str, dict[str, str]] = {
     "antigravity": {
         "title_zh": "Antigravity（Google 账号登录）",
         "about": "Google Search run by a Gemini model on your Google account, through the "
-        "sign-in the Antigravity IDE uses. It runs only when a call names "
-        'engines=["antigravity"], and each search counts against your Antigravity quota.',
+        "sign-in the Antigravity IDE uses. It runs when a call names "
+        'engines=["antigravity"], or on every automatic search if SEARCH_MCP_AGENT_ENGINES '
+        "lists it, and each search counts against your Antigravity quota.",
         "about_zh": "用你的 Google 账号，借 Antigravity IDE 的登录方式，让 Gemini 模型调用 "
-        "Google 搜索。只有调用中写明 engines=[\"antigravity\"] 时才会运行，"
-        "每次搜索消耗你自己账号的 Antigravity 额度。",
+        "Google 搜索。调用写明 engines=[\"antigravity\"] 时运行；SEARCH_MCP_AGENT_ENGINES "
+        "列出它时，每次自动搜索都会并行运行它。每次搜索消耗你自己账号的 Antigravity 额度。",
         "note": "Warning: " + oauth.ANTIGRAVITY_WARNING,
         "note_zh": "警告：Google 的 Antigravity 条款禁止第三方工具使用它的登录，后果是封禁 "
         "Antigravity 和 Gemini CLI 账号，而且已经有账号因此被封。只用你愿意承担这个风险的账号登录。",

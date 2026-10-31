@@ -108,7 +108,15 @@ class Settings(BaseSettings):
     # youcom is keyless but quota-limited, which fits a rare recovery pass;
     # baidu is the second independent index and needs no key.
     rescue_engines: list[str] = ["youcom", "baidu"]
+    # Wall clock for the whole rescue pass.
     rescue_timeout: float = 10.0
+    # The pass is a staggered race (hedged requests): the first candidate is
+    # asked at once, the next one this many seconds later or as soon as the one
+    # before it fails, and the first usable answer wins and cancels the rest.
+    # It used to try one candidate at a time, each in an equal slice of
+    # `rescue_timeout`, so a slow first candidate cost its whole slice before
+    # the next was asked. 0 asks every candidate at once.
+    rescue_stagger_seconds: float = Field(default=1.0, ge=0)
 
     rate_limit_per_minute: int = Field(default=30, gt=0)
     fetch_rate_limit_per_minute: int = Field(default=20, gt=0)
@@ -241,12 +249,38 @@ class Settings(BaseSettings):
     # `agent_timeout_seconds` still caps the model turn inside this window.
     agent_search_timeout_seconds: float = Field(default=45.0, gt=0)
 
+    # --- The agent lane (aggregator.py) -------------------------------------
+    # Agent engines search with a language model on the operator's own sign-in
+    # (`codex`: OpenAI's web search; `antigravity`: Google Search via Gemini).
+    # Those named here join every automatic search (no `engines=`, no
+    # image/dataset category) as a lane of their own: they are asked at the
+    # same moment as the keyless engines, and what they find is fused into the
+    # same ranking. The keyless pool is never held back for them past
+    # `agent_lane_wait_seconds`.
+    #   "auto" - every signed-in agent engine whose provider allows this use,
+    #            which today is `codex`. `antigravity` is never seated by
+    #            `auto`, because Google's terms forbid this use of its sign-in;
+    #            name it to accept that.
+    #   "off"  - none; an agent engine runs only when a call names it.
+    #   names  - comma or space separated, e.g. "codex,antigravity".
+    # An agent engine with no stored sign-in is never seated and never opens a
+    # sign-in page, so nothing changes for an operator who never signed in.
+    agent_engines: str = "auto"
+    # How long a search waits for the agent lane, counted from the moment the
+    # engines were asked. Measured 2026-09-26: `codex` answers in about 3 s and
+    # the keyless pool in 2 to 4 s, so the two usually land together; an
+    # `antigravity` search takes 10 to 20 s. A lane engine still searching at
+    # this point is not cancelled: it finishes in the background and its
+    # results are merged into the cached result set, which the next identical
+    # search (and `cache://search/...`) returns. When the keyless engines found
+    # nothing, the wait stretches to `search_deadline_seconds`.
+    agent_lane_wait_seconds: float = Field(default=6.0, ge=0)
+
     # --- The `codex` sign-in engine (oauth.py, engines/codex.py) ----------
-    # Opt-in like the API-key engines: in no pool and no route, and it runs
-    # only when a call names it after the operator signed in with
-    # `search-mcp-login codex`. A search can take several seconds (and a
-    # model turn, on a deployment without the search endpoint), so it gets a
-    # timeout of its own.
+    # Never in a pool or a route. It runs when a call names it, and, once the
+    # operator signed in with `search-mcp-login codex`, in the agent lane above.
+    # A search can take several seconds (and a model turn, on a deployment
+    # without the search endpoint), so it gets a timeout of its own.
     codex_timeout: float = Field(default=60.0, gt=0)
     # `latest` follows the plan's model catalogue: the newest generation's
     # fast, affordable model, looked up at most every six hours, so a new
@@ -344,6 +378,10 @@ class Settings(BaseSettings):
     def enabled_tools(self) -> frozenset[str]:
         """The `tools` allow-list as a set; empty means every tool."""
         return frozenset(self.tools.replace(",", " ").split())
+
+    def agent_engine_tokens(self) -> list[str]:
+        """`agent_engines` split into lower-case words, in order."""
+        return self.agent_engines.replace(",", " ").lower().split()
 
     @field_validator("cache_dir", "download_dir")
     @classmethod

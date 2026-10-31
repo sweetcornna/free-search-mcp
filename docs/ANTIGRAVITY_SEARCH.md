@@ -14,7 +14,10 @@ sends Antigravity's user agent.
 It exists because an operator asked for it on their own account. Nothing in
 free-search-mcp needs it, no pool, reserve or `category=` route ever reaches it
 (`tests/test_no_key_positioning.py` enforces that), and unlike `codex` it never
-opens a sign-in page by itself. If you are not sure you accept the risk for the
+opens a sign-in page by itself. The agent lane, which runs a signed-in `codex`
+beside every automatic search, leaves `antigravity` out unless
+`SEARCH_MCP_AGENT_ENGINES` names it (`codex,antigravity`), so a sign-in alone
+never makes it search on its own. If you are not sure you accept the risk for the
 Google account you would sign in with, do not sign in.
 
 ## 中文速览
@@ -126,6 +129,14 @@ not spend quota again.
 Naming it before signing in returns an error that says the search itself is
 fine, what to use instead, and that the user should not be asked for a key or a
 sign-in. A spent quota is reported with its reset time when Google gives one.
+
+`SEARCH_MCP_AGENT_ENGINES=codex,antigravity` puts it in the agent lane, where
+it searches beside the keyless pool on every automatic search (see
+[CODEX_SEARCH.md](CODEX_SEARCH.md#the-agent-lane)). It takes longer than the
+lane's 6 s wait, so its results usually reach the cached result set after the
+links were returned, and the next identical search carries them. Every
+automatic search then spends quota and is traffic Google can see, which is why
+`auto` never seats it.
 
 ## Settings
 

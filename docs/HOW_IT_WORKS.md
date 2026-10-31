@@ -489,6 +489,56 @@ takes seconds; the search waits one second for it and moves on. When nothing
 has answered by the deadline the search keeps waiting, because an empty answer
 delivered on time is worth less than a late one. `0` disables the deadline.
 
+## The agent lane
+
+An agent engine searches with a language model on the operator's own account:
+`codex` runs OpenAI's web search on a ChatGPT plan, `antigravity` Google Search
+through Gemini. Neither needs a key, both need a sign-in, and neither sits in a
+pool or a route. Until 0.18 one ran only when a call named it, and naming it
+switched the keyless pool, its breaker, its routing and its rescue off for
+that call.
+
+The agent lane runs them beside the pool instead. A search that names no
+engines (and is not an `image` or `dataset` search) asks every signed-in agent
+engine that `SEARCH_MCP_AGENT_ENGINES` seats at the same moment as the keyless
+engines, puts each answer through the same off-topic guard, and fuses it into
+the same reciprocal-rank ranking. A page OpenAI's search and DuckDuckGo both
+found outranks a page only one of them found, and a lane bucket can be the
+witness that exposes a keyless engine's decoy page.
+
+- `auto` (the default) seats `codex` once it is signed in. `antigravity` is
+  seated only when the setting names it, because Google's terms forbid this
+  use of its sign-in. Without a sign-in nothing is seated and no sign-in page
+  opens, so nothing changes for an operator who never signed in.
+- The keyless results are never held back past
+  `SEARCH_MCP_AGENT_LANE_WAIT_SECONDS` (6), counted from when the engines were
+  asked, so the keyless fan-out's own time is not added to it. Measured
+  2026-09-26: `codex` answered in about 3 s and the pool in 2 to 4 s, so the
+  two usually land together; `antigravity` took 10 to 20 s. When the keyless
+  engines found nothing, the wait stretches to the search deadline, and the
+  rescue pass starts beside it rather than after it; it is cancelled if the
+  lane's answer turns out to be enough.
+- A lane engine still searching when the wait ends is not cancelled. It
+  finishes in the background, and its results are merged into the cached
+  result set of that search, so the same call a little later (or
+  `cache://search/...`) returns the fused set. `agent_lane.pending` and the
+  "Agent lane" note say so.
+- The lane never queues for a rate-limit token. Past its per-minute limit (10
+  for both engines, which protects the account's usage) an engine sits the
+  search out and `agent_lane.rate_limited` says so.
+- A failure benches a lane engine at once (a spent usage window, a revoked
+  sign-in or a refused model does not clear on the next search, and every
+  attempt draws on the plan), and is reported under `agent_lane.errors`, never
+  under `errors`. The keyless pool's breaker, census and rescue decisions
+  count only keyless engines, so the pool stays able to answer alone.
+- The cache key includes the seated lane, so signing in turns a cached
+  keyless-only answer into a fresh search instead of replaying it.
+- The server's startup warm-up refreshes a signed-in lane engine's token and
+  looks its model up, which the first search would otherwise wait for.
+
+`SEARCH_MCP_AGENT_ENGINES=off` turns the lane off. Naming engines in a call
+(`engines=["codex"]`, `engines=["duckduckgo"]`) still runs exactly those.
+
 `engines()` prints this tree live from the registry. The tree is derived from
 what each engine declares, so it cannot drift from what runs.
 

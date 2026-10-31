@@ -397,6 +397,20 @@ class AntigravityEngine(Engine):
     # Every search draws on the account's quota, and a burst is the kind of
     # traffic that gets noticed.
     rate_limit_per_minute = 10
+    # It can join the agent lane, but `auto` never seats it: Google's terms
+    # forbid this use of the sign-in, so every search it runs has to be one the
+    # operator asked for, by naming it in a call or in SEARCH_MCP_AGENT_ENGINES.
+    agent_search = True
+    agent_lane_auto = False
+
+    async def warm(self) -> None:
+        """Refresh an expiring token and look the models up ahead of the
+        first search. Only with a sign-in stored."""
+        if not self.is_available():
+            return
+        cred = await oauth.credential("antigravity")
+        async with oauth.http_client(self.name, timeout=settings.antigravity_timeout) as client:
+            await self._models(client, cred)
 
     def build_url(
         self, query: str, max_results: int, filters: SearchFilters | None = None

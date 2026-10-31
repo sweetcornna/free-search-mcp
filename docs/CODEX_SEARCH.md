@@ -1,8 +1,13 @@
 # Searching on your ChatGPT plan: the `codex` engine
 
 You can skip this page. Nothing in free-search-mcp needs an account, and no
-pool, reserve or `category=` route ever reaches this engine on its own
-(`tests/test_no_key_positioning.py` enforces that).
+pool, reserve or `category=` route ever reaches this engine
+(`tests/test_no_key_positioning.py` enforces that). Without a sign-in it runs
+nowhere.
+
+Once you have signed in, it joins every automatic search as the agent lane: it
+is asked at the same moment as the keyless engines, and what it finds is fused
+into the same ranking. See [The agent lane](#the-agent-lane) below.
 
 It is for an operator who already has a ChatGPT plan that includes Codex and
 wants the server to use OpenAI's own web search, the one Codex itself uses.
@@ -25,7 +30,10 @@ in with ChatGPT from third-party tools.
   `~/.codex/auth.json`，本服务不会改写那份文件。
 - 在远程机器（SSH）上：浏览器最后跳转到 `http://127.0.0.1:1455/auth/callback?code=...`
   时页面会打不开，这是正常的。复制地址栏里的完整地址，粘贴回终端并回车即可。
-- 使用：`search("...", engines=["codex"])`。不写 `engines` 时它永远不会自动参与搜索。
+- 使用：登录后，每次不写 `engines` 的搜索都会让它与无 key 引擎同时出发（agent 并行通道），
+  结果合并进同一个排名；最多等它 `SEARCH_MCP_AGENT_LANE_WAIT_SECONDS`（默认 6 秒），
+  来不及的结果在后台写进这次搜索的缓存，稍后重复同一搜索即可拿到。设
+  `SEARCH_MCP_AGENT_ENGINES=off` 则只在写明 `engines=["codex"]` 时运行。
 - 模型：默认 `latest`，跟随套餐的模型目录，用最新一代里最轻的、能搜索且未退役的模型
   （2026-09-26 为 gpt-6-luna；同一代三个模型的搜索结果相同，最轻的最快、最省额度）。
   新一代模型上线后自动跟上。写具体模型名则固定使用该模型。
@@ -119,6 +127,35 @@ fine, what to use instead, and that the user should not be asked for a key or a
 sign-in. When the plan's usage window is used up, the error says so and when it
 resets. Neither counts as an engine failure in the circuit breaker.
 
+## The agent lane
+
+A call does not have to name it. With a sign-in stored, every search that
+names no engines (and is not an `image` or `dataset` search) asks `codex` at the
+same moment as the keyless pool, and its results are fused into the same
+ranking: a page both OpenAI's search and DuckDuckGo found ranks above a page
+only one of them found. The keyless pool keeps its breaker, reserves, routing
+and rescue, which naming `engines=["codex", ...]` switches off.
+
+- The search waits for the lane at most `SEARCH_MCP_AGENT_LANE_WAIT_SECONDS`
+  (6 s), counted from when the engines were asked. `codex` answered in about
+  3 s and the keyless pool in 2 to 4 s when measured, so the two usually land
+  together. When the keyless engines found nothing, the wait stretches to
+  `SEARCH_MCP_SEARCH_DEADLINE_SECONDS`, and the rescue pass starts beside it
+  instead of after it.
+- A lane engine still searching at that point is not cancelled. It finishes in
+  the background, and its results are merged into the cached result set for
+  that search, so the same call a little later (or `cache://search/...`)
+  returns them. The response says so under `agent_lane` and in an
+  "Agent lane" note.
+- The lane never waits for a rate-limit token: past 10 searches a minute,
+  `codex` sits a search out instead of holding it.
+- In the lane, a failure (a spent usage window, a refused sign-in) benches it
+  at once, for 10 minutes doubling up to an hour, so a spent plan costs no
+  request per search. It is reported under `agent_lane.errors`, never under
+  `errors`, and the keyless results are unaffected.
+- `SEARCH_MCP_AGENT_ENGINES=off` turns the lane off; `codex` then runs only
+  when a call names it.
+
 ## Settings
 
 | Var | Default | Meaning |
@@ -129,6 +166,8 @@ resets. Neither counts as an engine failure in the circuit breaker.
 | `SEARCH_MCP_CODEX_BASE_URL` | `https://chatgpt.com/backend-api/codex` | the Codex backend |
 | `SEARCH_MCP_CODEX_AUTO_SIGNIN` | `true` | open the sign-in page by itself on first use (stdio, desktop only) |
 | `SEARCH_MCP_CODEX_SIGNIN_WAIT_SECONDS` | `45` | how long one search waits for that approval |
+| `SEARCH_MCP_AGENT_ENGINES` | `auto` | the agent lane; `auto` seats a signed-in `codex`, `off` turns the lane off |
+| `SEARCH_MCP_AGENT_LANE_WAIT_SECONDS` | `6` | how long a search waits for the lane |
 
 The sign-in and the searches go through `SEARCH_MCP_PROXY` when it is set, which
 matters where `auth.openai.com` or `chatgpt.com` is blocked.
