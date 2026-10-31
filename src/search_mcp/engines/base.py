@@ -54,10 +54,11 @@ _ABS_RE_YMD = re.compile(
 )
 # Relative dates in Japanese ("5日前", "15時間前"), Chinese ("3天前", "5小时前")
 # and Korean ("3일 전"). Yahoo! JAPAN, Quark and Naver lead snippets with them.
-# Not after a month: "10月1日前" and "10월 1일 전" mean "before 1 October".
+# Not after a month: "10月1日前" and "10월 1일 전" mean "before 1 October". At
+# most three digits, and not "前半"/"前后": "2024年前半" is the first half of 2024.
 _REL_CJK_RE = re.compile(
-    r"(?<![\d月월])(?<!月\s)(?<!월\s)(\d+)\s*(分钟|分鐘|分|時間|小时|小時|日|天|週間|周|週|か月|ヶ月|ケ月|个月|個月|年|"
-    r"분|시간|일|주|개월|년)\s*(?:前|전)"
+    r"(?<![\d月월])(?<!月\s)(?<!월\s)(\d{1,3})\s*(分钟|分鐘|分|時間|小时|小時|日|天|週間|周|週|か月|ヶ月|ケ月|个月|個月|年|"
+    r"분|시간|일|주|개월|년)\s*(?:前(?![半后後])|전)"
 )
 _CJK_UNITS = {
     "分": "minute", "分钟": "minute", "分鐘": "minute", "분": "minute",
@@ -380,17 +381,24 @@ class SearchResult:
         return d
 
 
-def _host(url: str) -> str:
+def host_of(url: str) -> str:
+    """The URL's lower-cased hostname, or "" when it has none or is malformed."""
     try:
         return (urlparse(url).hostname or "").lower()
     except ValueError:
         return ""
 
 
-def _host_matches(host: str, suffixes: tuple[str, ...] | list[str]) -> bool:
+def host_matches(host: str, suffixes: tuple[str, ...] | list[str]) -> bool:
+    """Whether `host` is one of `suffixes` or a subdomain of one."""
     if not host:
         return False
     return any(host == s or host.endswith("." + s) for s in suffixes)
+
+
+# The names this module has always used.
+_host = host_of
+_host_matches = host_matches
 
 
 def _is_paper_host(host: str) -> bool:

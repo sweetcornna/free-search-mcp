@@ -180,6 +180,8 @@ def test_extract_date_hint_east_asian_forms(text, expected):
         "数年前",
         "请于10月1日前提交",
         "10월 1일 전까지 신청",
+        "2024年前半の動向",
+        "2020年前后",
     ],
 )
 def test_extract_date_hint_ignores_year_first_lookalikes(text):

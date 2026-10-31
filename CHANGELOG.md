@@ -22,11 +22,15 @@ Google's index, and five keyless sources join the registry.
     searching then finishes in the background, and its results are merged
     into the cached result set, so the same search a little later returns
     them.
-  - The lane never queues for a rate-limit token, one failure (a spent usage
-    window, a revoked sign-in) benches it, and its problems are reported under
-    `agent_lane` and an "Agent lane" note, never in `errors`. A result set
-    missing a lane engine is replayed from the cache for an hour at most, and
-    a late merge never overwrites a newer search's row.
+  - The lane never queues for a rate-limit token. A spent usage window or a
+    revoked sign-in benches it at once, a timeout or a reset after two in a
+    row, and its problems are reported under `agent_lane` and an "Agent lane"
+    note, never in `errors`. A result set missing a lane engine is replayed
+    from the cache for an hour at most and says so, and a late merge never
+    overwrites a newer search's row.
+  - A lane answer counts as an answer for the search deadline: when every
+    keyless engine came back empty, the stragglers are cut at the deadline
+    instead of being waited for.
   - `SEARCH_MCP_AGENT_ENGINES` picks the lane: `auto` (default) seats a
     signed-in `codex`; `antigravity` joins only when listed
     (`codex,antigravity`), because Google's terms forbid this use of its

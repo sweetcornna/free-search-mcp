@@ -1002,3 +1002,13 @@ def test_the_antigravity_headers_name_this_platform(monkeypatch, platform, machi
         "ideType": "ANTIGRAVITY", "platform": metadata, "pluginType": "GEMINI",
     }
     assert headers["Authorization"] == "Bearer TOKEN"
+
+
+
+def test_is_signed_in_follows_the_file():
+    assert oauth.is_signed_in("antigravity") is False
+    oauth.save(oauth.Credential(provider="antigravity", access_token="A", refresh_token="R",
+                                account_id="", expires_at=time.time() + 3600))
+    assert oauth.is_signed_in("antigravity") is True
+    assert oauth.sign_out("antigravity") is True
+    assert oauth.is_signed_in("antigravity") is False

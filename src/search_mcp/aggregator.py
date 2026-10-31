@@ -6,6 +6,7 @@ import json
 import logging
 import re
 import time
+from collections.abc import Collection
 from dataclasses import asdict
 from datetime import UTC, datetime
 from typing import Any, Literal
@@ -40,6 +41,7 @@ from .engines import (
     get_engine,
 )
 from .engines.base import (
+    EngineKeyError,
     EngineSignInPending,
     classify_source,
     detect_query_region,
@@ -610,12 +612,16 @@ def _lane_nominal(nominal: list[str]) -> list[str]:
     return lane
 
 
+def _seated(lane_nominal: list[str]) -> list[str]:
+    """The lane engines asked right now: the nominal lane minus open circuits."""
+    if not settings.health_enabled:
+        return list(lane_nominal)
+    return [name for name in lane_nominal if not engine_health.is_open(name)]
+
+
 def agent_lane_now() -> list[str]:
     """The agent engines a plain search would ask right now."""
-    lane = _lane_nominal(list(settings.default_engines))
-    if settings.health_enabled:
-        lane = [name for name in lane if not engine_health.is_open(name)]
-    return lane
+    return _seated(_lane_nominal(list(settings.default_engines)))
 
 
 _LaneOutcome = tuple[str, list[SearchResult] | Exception, dict[str, Any]]
@@ -690,21 +696,37 @@ async def _await_lane(
     return finished, pending, wait
 
 
+def _lane_found(lane: Collection[asyncio.Future[_LaneOutcome]]) -> bool:
+    """Whether an agent engine of the lane has answered with results."""
+    return any(
+        task.done()
+        and not task.cancelled()
+        and isinstance(task.result()[1], list)
+        and bool(task.result()[1])
+        for task in lane
+    )
+
+
 def _record_lane_health(
     name: str, outcome: list[SearchResult] | Exception, reason: str | None = None
 ) -> None:
     """Tell the breaker how an agent engine did.
 
-    Stricter than `_record_health`: one failure benches it. What fails an
-    agent engine is a spent usage window, a refused or revoked sign-in or a
-    model the service will not serve, none of which the next search repairs,
-    and every attempt draws on the operator's plan. An empty answer is not
-    held against it.
+    Stricter than `_record_health` where it counts: an `EngineKeyError` (a
+    spent usage window, a refused or revoked sign-in, a model the service
+    will not serve) benches it at once, since the next search does not repair
+    any of those and every attempt draws on the operator's plan. Anything
+    else, a timeout or a reset, gets the ordinary two strikes. An empty answer
+    is not held against it.
     """
     if not settings.health_enabled:
         return
     if isinstance(outcome, Exception):
-        engine_health.record_failure(name, reason or "error", threshold=1)
+        engine_health.record_failure(
+            name,
+            reason or "error",
+            threshold=1 if isinstance(outcome, EngineKeyError) else None,
+        )
     elif reason:
         engine_health.record_failure(name, reason)
     elif outcome:
@@ -768,7 +790,7 @@ def _merge_lane_later(
     asked: list[str],
     cache_key: str,
     meta: dict[str, Any],
-    incomplete: bool,
+    missing: list[str],
 ) -> None:
     owner = object()
     _lane_rows[cache_key] = owner
@@ -782,7 +804,7 @@ def _merge_lane_later(
             asked=list(asked),
             cache_key=cache_key,
             meta=dict(meta),
-            incomplete=incomplete,
+            missing=list(missing),
             owner=owner,
         )
     )
@@ -800,18 +822,19 @@ async def _fold_late_lane(
     asked: list[str],
     cache_key: str,
     meta: dict[str, Any],
-    incomplete: bool,
+    missing: list[str],
     owner: object,
 ) -> None:
     """Merge agent engines that answered after their search returned into
-    that search's cached result set, one cache write per engine that adds
-    results. Stops once a newer search has rewritten the row. Never raises.
+    that search's cached result set. Never raises.
 
-    `incomplete` says another lane engine of the search failed, sat out or
-    was benched; the row keeps `lane_missing` until every lane engine is in.
+    The row is rewritten each time an engine adds results, or answers empty
+    and so completes the lane, which takes it off the row's `lane_missing`
+    list. It stops once a newer search has rewritten the row. `missing` holds
+    the lane engines the row lacks, the pending ones included.
     """
     deadline = time.monotonic() + _LANE_LATE_SECONDS
-    failed = False
+    missing_now = set(missing)
     try:
         while pending:
             remaining = deadline - time.monotonic()
@@ -820,34 +843,39 @@ async def _fold_late_lane(
             done, pending = await asyncio.wait(
                 pending, timeout=remaining, return_when=asyncio.FIRST_COMPLETED
             )
-            added = False
+            changed = False
             for task in done:
-                name, outcome, _ = task.result()
-                if isinstance(outcome, Exception) or not outcome:
+                name, outcome, lane_diag = task.result()
+                if isinstance(outcome, Exception) or lane_diag.get("rate_limited"):
                     _record_lane_health(name, outcome)
-                    failed = True
                     continue
                 if (
-                    settings.coherence_guard_enabled
+                    outcome
+                    and settings.coherence_guard_enabled
+                    and _is_guarded(name)
                     and looks_like_decoy(query, outcome)
                     and any(is_witness(query, bucket) for bucket in buckets)
                 ):
                     _record_lane_health(name, outcome, "off_topic")
-                    failed = True
                     continue
                 _record_lane_health(name, outcome)
-                buckets.append(outcome)
+                missing_now.discard(name)
                 asked.append(name)
-                added = True
-            if added:
-                if _lane_rows.get(cache_key) is not owner:
-                    break
-                merged = _merge(buckets, n, category, query)
-                stored = {**meta, "engines": asked}
-                stored.pop("lane_missing", None)
-                if incomplete or failed or pending:
-                    stored["lane_missing"] = True
-                await cache.put_search(cache_key, query, asked, merged, stored)
+                if outcome:
+                    buckets.append(outcome)
+                changed = True
+            if not changed:
+                continue
+            if _lane_rows.get(cache_key) is not owner:
+                break
+            merged = _merge(buckets, n, category, query)
+            if not merged:
+                continue
+            stored = {**meta, "engines": asked}
+            stored.pop("lane_missing", None)
+            if missing_now:
+                stored["lane_missing"] = sorted(missing_now)
+            await cache.put_search(cache_key, query, asked, merged, stored)
     except Exception:  # noqa: BLE001 - nobody is waiting on this to fail
         log.warning("merging the agent lane's late results failed", exc_info=True)
     finally:
@@ -1531,7 +1559,10 @@ _MAX_RESULTS = 50
 
 
 async def _fan_out(
-    run: Any, engine_names: list[str], diagnostics: dict[str, Any]
+    run: Any,
+    engine_names: list[str],
+    diagnostics: dict[str, Any],
+    lane: Collection[asyncio.Future[_LaneOutcome]] = (),
 ) -> list[tuple[str, list[SearchResult] | Exception]]:
     """Query every engine in parallel, bounded by `settings.search_deadline_seconds`.
 
@@ -1540,7 +1571,9 @@ async def _fan_out(
     cancelled and listed in `diagnostics["timed_out"]`; their slot in the
     answer is an error, so the breaker sees it and the caller reads it. When
     nothing has answered yet the wait continues, because an empty answer
-    delivered on time is worth less than a late one.
+    delivered on time is worth less than a late one, unless an agent engine
+    of the `lane` running beside the fan-out has found results: then the
+    search has its answer, and the stragglers are cut like any other.
     """
     deadline = settings.search_deadline_seconds
     tasks = {asyncio.ensure_future(run(name)): name for name in engine_names}
@@ -1554,8 +1587,15 @@ async def _fan_out(
             isinstance(t.result()[1], list) and t.result()[1] for t in done if not t.cancelled()
         )
         if not answered:
-            more, pending = await asyncio.wait(pending)
-            done |= more
+            lane_open = {task for task in lane if not task.done()}
+            while pending and not _lane_found(lane):
+                more, _ = await asyncio.wait(
+                    pending | lane_open, return_when=asyncio.FIRST_COMPLETED
+                )
+                lane_open -= more
+                finished = more & pending
+                done |= finished
+                pending -= finished
     results: list[tuple[str, list[SearchResult] | Exception]] = []
     for task in pending:
         task.cancel()
@@ -1608,11 +1648,7 @@ async def aggregate_search(
     # The agent lane joins the automatic pool only: naming engines is an
     # instruction, and an image or dataset search wants records, not pages.
     lane_nominal = _lane_nominal(nominal) if auto_pool else []
-    lane = [
-        name
-        for name in lane_nominal
-        if not (settings.health_enabled and engine_health.is_open(name))
-    ]
+    lane = _seated(lane_nominal)
     routed = (
         [name for name in engine_names if name not in settings.default_engines]
         if auto_pool and not category
@@ -1695,6 +1731,15 @@ async def aggregate_search(
                 payload["rescued_via"] = meta["rescued_via"]
             if meta.get("auto_routed"):
                 payload["auto_routed"] = meta["auto_routed"]
+            lacked = meta.get("lane_missing")
+            missing = [n for n in lacked if n in lane_nominal] if isinstance(lacked, list) else []
+            if missing:
+                payload["agent_lane"] = {"engines": lane_nominal, "missing": missing}
+                payload["agent_lane_hint"] = (
+                    f"This result set was cached without {', '.join(missing)}, which had "
+                    "failed, sat out or not answered yet. It is replayed for an hour at "
+                    "most; pass max_age_hours=0 to search again now."
+                )
             return payload
 
     # Shared accumulator the engines populate with raw/filtered counts, per-reason
@@ -1727,7 +1772,7 @@ async def aggregate_search(
     }
     early_rescue: asyncio.Future[tuple[list[SearchResult], str | None]] | None = None
     try:
-        results = await _fan_out(run, engine_names, diagnostics)
+        results = await _fan_out(run, engine_names, diagnostics, lane_tasks)
         answered = any(isinstance(res, list) and res for _, res in results)
         if (
             not answered
@@ -1795,7 +1840,15 @@ async def aggregate_search(
         # query within TTL should not re-pay the rescue.
         rescued_via: str | None = None
         lost, standing = _general_census(engine_names, named, raised, diagnostics)
-        if _needs_rescue(
+        # An early rescue that has already come back is used whatever the
+        # lane brought: its requests are spent, and its index adds breadth.
+        early_ready = (
+            early_rescue is not None
+            and early_rescue.done()
+            and not early_rescue.cancelled()
+            and bool(early_rescue.result()[0])
+        )
+        if early_ready or _needs_rescue(
             merged,
             errors,
             diagnostics,
@@ -1882,10 +1935,17 @@ async def aggregate_search(
         if routed:
             meta["auto_routed"] = routed
         lane_benched = [name for name in lane_nominal if name not in lane]
-        # A lane engine the key promises but that is not in these results.
-        lane_incomplete = bool(lane_errors or lane_rate_limited or lane_benched)
-        if lane_incomplete or lane_pending:
-            meta["lane_missing"] = True
+        # The lane engines the cache key promises and these results lack.
+        lane_missing = [
+            name
+            for name in lane_nominal
+            if name in lane_errors
+            or name in lane_rate_limited
+            or name in lane_benched
+            or name in still_searching
+        ]
+        if lane_missing:
+            meta["lane_missing"] = lane_missing
         if use_cache and merged and not sign_in_pending:
             await cache.put_search(cache_key, query, asked, merged, meta or None)
             stored_as = cache_key
@@ -1915,7 +1975,7 @@ async def aggregate_search(
             asked=asked,
             cache_key=cache_key,
             meta=meta,
-            incomplete=lane_incomplete,
+            missing=lane_missing,
         )
     else:
         for task in lane_pending:

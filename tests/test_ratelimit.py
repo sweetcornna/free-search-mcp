@@ -99,3 +99,15 @@ async def test_waiters_are_served_in_arrival_order():
 
     await asyncio.gather(*(take(i) for i in range(3)))
     assert order == [0, 1, 2]
+
+
+async def test_a_cancelled_waiter_gives_its_reservation_back():
+    bucket = TokenBucket(60, burst=1)
+    await bucket.acquire(1)
+    waiter = asyncio.ensure_future(bucket.acquire(1))
+    await asyncio.sleep(0)
+    waiter.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await waiter
+    # The bucket is back to one token owed, not two: a 1.5 s wait is enough.
+    assert await bucket.acquire(1, max_wait=1.5) is True

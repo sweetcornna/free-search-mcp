@@ -39,7 +39,7 @@ page yields `[]` rather than an error, per the keyless-engine contract.
 
 from __future__ import annotations
 
-from urllib.parse import quote_plus, urlparse
+from urllib.parse import quote_plus
 
 from .base import (
     Engine,
@@ -48,6 +48,7 @@ from .base import (
     augment_query_with_operators,
     enclosing_anchor,
     extract_date_hint,
+    host_of,
     inline_text,
     parse_html,
 )
@@ -109,11 +110,9 @@ class NaverEngine(Engine):
             title = _text(head)
             if not title or not url.startswith(("http://", "https://")):
                 continue
-            try:
-                host = (urlparse(url).hostname or "").lower()
-            except ValueError:  # a malformed href costs that row, not the page
-                continue
-            if host in _AD_HOSTS or url in seen:
+            host = host_of(url)
+            # A malformed href costs that row, not the page.
+            if not host or host in _AD_HOSTS or url in seen:
                 continue
             seen.add(url)
 

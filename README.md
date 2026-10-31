@@ -279,9 +279,9 @@ switch off.
   (`SEARCH_MCP_AGENT_LANE_WAIT_SECONDS`). A lane engine still searching then
   finishes in the background, and its results are merged into the cached
   result set, so the same search a little later returns them.
-- The lane never queues for a rate-limit token, a failure (a spent usage
-  window) benches it at once, and its problems are reported under
-  `agent_lane`, never as a failed search.
+- The lane never queues for a rate-limit token, a spent usage window benches
+  it at once, and its problems are reported under `agent_lane`, never as a
+  failed search.
 - `SEARCH_MCP_AGENT_ENGINES=off` turns it off; `codex,antigravity` adds
   `antigravity` to it.
 

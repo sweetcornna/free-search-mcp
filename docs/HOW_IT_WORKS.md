@@ -576,14 +576,20 @@ witness that exposes a keyless engine's decoy page.
 - A result set that lacks a lane engine the search is keyed on (it failed,
   sat out, was benched, or is still being merged in) is replayed from the
   cache for an hour at most, like a result set from a thinned pool, so the
-  lane's answer is not kept out of that search for a week.
+  lane's answer is not kept out of that search for a week. The replay says
+  which engine it lacks (`agent_lane.missing`).
+- When no keyless engine has answered, the fan-out used to wait for every
+  one of them however long it took. A lane answer with results now counts
+  as an answer, so stragglers are cut at the search deadline as usual, and
+  an early rescue that has come back by then is merged in rather than
+  thrown away.
 - The lane never queues for a rate-limit token. Past its per-minute limit (10
   for both engines, which protects the account's usage) an engine sits the
   search out and `agent_lane.rate_limited` says so.
-- A failure benches a lane engine at once (a spent usage window, a revoked
-  sign-in or a refused model does not clear on the next search, and every
-  attempt draws on the plan), and is reported under `agent_lane.errors`, never
-  under `errors`. The keyless pool's breaker, census and rescue decisions
+- A spent usage window, a revoked sign-in or a refused model benches a lane
+  engine at once (none of them clears on the next search, and every attempt
+  draws on the plan); a timeout or a reset takes the ordinary two strikes.
+  Failures are reported under `agent_lane.errors`, never under `errors`. The keyless pool's breaker, census and rescue decisions
   count only keyless engines, so the pool stays able to answer alone, and a
   keyless engine that found nothing takes no "silent" strike because a lane
   engine did. A lane search never opens a sign-in page.

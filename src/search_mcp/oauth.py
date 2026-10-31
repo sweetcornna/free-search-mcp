@@ -477,8 +477,35 @@ def load(provider_id: str) -> Credential | None:
     return cred if (cred.access_token or cred.refresh_token) else None
 
 
+# `is_signed_in` answers per file state. The agent lane asks it on every
+# automatic search, cache hits included, and a stat is far cheaper than
+# reading and parsing the credential (two files for a linked Codex CLI
+# sign-in) on the event loop each time.
+_signed_in_memo: dict[str, tuple[tuple[Any, ...], bool]] = {}
+
+
+def _file_stamp(path: Path) -> tuple[int, int] | None:
+    try:
+        st = path.stat()
+    except OSError:
+        return None
+    return (st.st_mtime_ns, st.st_size)
+
+
 def is_signed_in(provider_id: str) -> bool:
-    return load(provider_id) is not None
+    path = credential_path(provider_id)
+    stamp = _file_stamp(path)
+    if stamp is None:
+        return False
+    key: tuple[Any, ...] = (str(path), stamp)
+    if provider(provider_id).id == "codex":
+        key += (str(codex_cli_auth_path()), _file_stamp(codex_cli_auth_path()))
+    memo = _signed_in_memo.get(provider_id)
+    if memo is not None and memo[0] == key:
+        return memo[1]
+    signed_in = load(provider_id) is not None
+    _signed_in_memo[provider_id] = (key, signed_in)
+    return signed_in
 
 
 def sign_out(provider_id: str) -> bool:

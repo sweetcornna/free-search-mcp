@@ -40,7 +40,14 @@ class TokenBucket:
             return False
         self.tokens -= n
         if wait > 0:
-            await asyncio.sleep(wait)
+            try:
+                await asyncio.sleep(wait)
+            except asyncio.CancelledError:
+                # Nothing was sent: hand the reservation back, or every
+                # cancelled waiter (a rescue race's loser, an engine past the
+                # search deadline) would leave the bucket in debt.
+                self.tokens += n
+                raise
         return True
 
 

@@ -247,6 +247,14 @@ async def test_the_wait_stretches_when_the_keyless_engines_found_nothing(world, 
     assert "pending" not in payload["agent_lane"]
 
 
+async def test_a_transient_lane_failure_takes_two_strikes(world):
+    world.stubs["codex"].exc = RuntimeError("connection reset")
+    await aggregate_search(QUERY, use_cache=False)
+    assert not engine_health.is_open("codex")
+    await aggregate_search(QUERY, use_cache=False)
+    assert engine_health.is_open("codex")
+
+
 async def test_a_failing_lane_engine_is_benched_and_reported_apart(world):
     world.stubs["codex"].exc = EngineKeyError("codex: the plan's usage limit was reached")
     payload = await aggregate_search(QUERY, use_cache=False)
@@ -448,7 +456,7 @@ async def test_a_run_missing_its_lane_engine_is_replayed_for_an_hour_at_most(wor
     world.stubs["codex"].exc = RuntimeError("upstream reset")
     await aggregate_search(QUERY)
     (results, meta), = world.cache.rows.values()
-    assert meta["lane_missing"] is True
+    assert meta["lane_missing"] == ["codex"]
     assert not aggregator._too_degraded_to_replay(meta)
     assert aggregator._too_degraded_to_replay({**meta, "cached_at": time.time() - 3700})
 
@@ -464,7 +472,7 @@ async def test_the_late_merge_clears_the_mark_once_the_lane_is_in(world, monkeyp
     world.stubs["codex"].delay = 0.2
     await aggregate_search(QUERY)
     (_, meta), = world.cache.rows.values()
-    assert meta["lane_missing"] is True
+    assert meta["lane_missing"] == ["codex"]
     await asyncio.sleep(0.4)
     (results, meta), = world.cache.rows.values()
     assert "lane_missing" not in meta
@@ -493,3 +501,60 @@ async def test_a_late_merge_never_overwrites_a_newer_row(world, monkeypatch):
     assert "codex" not in engines_found, "the first search's late merge overwrote the refresh"
     assert any(r["url"].startswith("https://fresh.example/") for r in results)
     assert not aggregator._lane_rows
+
+
+# ---------------------------------------------------------------------------
+# Review round 2
+# ---------------------------------------------------------------------------
+
+
+async def test_a_lane_answer_ends_the_wait_for_empty_stragglers(world, monkeypatch):
+    monkeypatch.setattr(settings, "search_deadline_seconds", 0.1)
+    for name in ("duckduckgo", "bing", "anysearch"):
+        world.stubs[name].results = []
+    world.stubs["anysearch"].delay = 3
+    world.stubs["codex"].delay = 0.2
+    started = time.monotonic()
+    payload = await aggregate_search(QUERY, use_cache=False)
+    took = time.monotonic() - started
+    assert {e for r in payload["results"] for e in r["engines"]} == {"codex"}
+    assert payload["timed_out_engines"] == ["anysearch"]
+    assert took < 1.5, f"{took:.2f} s"
+
+
+async def test_a_late_empty_answer_completes_the_lane(world, monkeypatch):
+    monkeypatch.setattr(settings, "agent_lane_wait_seconds", 0.05)
+    world.stubs["codex"].delay = 0.2
+    world.stubs["codex"].results = []
+    await aggregate_search(QUERY)
+    (_, meta), = world.cache.rows.values()
+    assert meta["lane_missing"] == ["codex"]
+    await asyncio.sleep(0.4)
+    (_, meta), = world.cache.rows.values()
+    assert "lane_missing" not in meta
+    assert meta["engines"][-1] == "codex"
+
+
+async def test_an_early_rescue_that_came_back_is_used(world, monkeypatch):
+    monkeypatch.setattr(settings, "rescue_enabled", True)
+    monkeypatch.setattr(settings, "reserve_engines", ["so360"])
+    monkeypatch.setattr(settings, "search_deadline_seconds", 2.0)
+    for name in ("duckduckgo", "bing", "anysearch"):
+        world.stubs[name].results = []
+    world(Stub("so360", delay=0.02))
+    world.stubs["codex"].results = bucket("codex", 6)
+    world.stubs["codex"].delay = 0.2
+    payload = await aggregate_search(QUERY, use_cache=False)
+    assert payload["rescued_via"] == "so360"
+    assert {e for r in payload["results"] for e in r["engines"]} == {"codex", "so360"}
+
+
+async def test_a_cached_set_without_its_lane_engine_says_so(world):
+    world.stubs["codex"].exc = RuntimeError("upstream reset")
+    await aggregate_search(QUERY)
+    world.stubs["codex"].exc = None
+    again = await aggregate_search(QUERY)
+    assert again["cached"] is True
+    assert again["agent_lane"] == {"engines": ["codex"], "missing": ["codex"]}
+    assert "cached without codex" in again["agent_lane_hint"]
+    assert "Agent lane:" in render_search(again)

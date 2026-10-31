@@ -149,10 +149,14 @@ and rescue, which naming `engines=["codex", ...]` switches off.
   "Agent lane" note.
 - The lane never waits for a rate-limit token: past 10 searches a minute,
   `codex` sits a search out instead of holding it.
-- In the lane, a failure (a spent usage window, a refused sign-in) benches it
-  at once, for 10 minutes doubling up to an hour, so a spent plan costs no
-  request per search. It is reported under `agent_lane.errors`, never under
-  `errors`, and the keyless results are unaffected.
+- In the lane, a spent usage window or a refused sign-in benches it at once,
+  for 10 minutes doubling up to an hour, so a spent plan costs no request per
+  search; a timeout or a reset takes two in a row, as for any engine. It is
+  reported under `agent_lane.errors`, never under `errors`, and the keyless
+  results are unaffected.
+- A result set cached without `codex` (it failed, sat out or had not
+  answered) is replayed for an hour at most, and says so in an "Agent lane"
+  note when it is.
 - `SEARCH_MCP_AGENT_ENGINES=off` turns the lane off; `codex` then runs only
   when a call names it.
 

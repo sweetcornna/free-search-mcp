@@ -48,7 +48,7 @@ contract.
 
 from __future__ import annotations
 
-from urllib.parse import quote_plus, urlparse
+from urllib.parse import quote_plus
 
 from .base import (
     Engine,
@@ -56,6 +56,8 @@ from .base import (
     SearchResult,
     augment_query_with_operators,
     extract_date_hint,
+    host_matches,
+    host_of,
     inline_text,
     parse_html,
 )
@@ -73,11 +75,8 @@ _INTERNAL_HOSTS = ("search.yahoo.co.jp", "rdsig.yahoo.co.jp", "ard.yahoo.co.jp")
 
 
 def _is_internal(url: str) -> bool:
-    try:
-        host = (urlparse(url).hostname or "").lower()
-    except ValueError:
-        return True
-    return any(host == h or host.endswith("." + h) for h in _INTERNAL_HOSTS)
+    host = host_of(url)
+    return not host or host_matches(host, _INTERNAL_HOSTS)
 
 
 class YahooJapanEngine(Engine):

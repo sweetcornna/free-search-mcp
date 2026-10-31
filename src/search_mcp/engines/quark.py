@@ -44,7 +44,7 @@ unparseable page, per the keyless-engine contract.
 from __future__ import annotations
 
 import json
-from urllib.parse import quote_plus, urlparse
+from urllib.parse import quote_plus
 
 from .base import (
     Engine,
@@ -52,6 +52,8 @@ from .base import (
     SearchResult,
     enclosing_anchor,
     extract_date_hint,
+    host_matches,
+    host_of,
     inline_text,
     parse_html,
 )
@@ -68,11 +70,9 @@ _ORGANIC_CARDS = frozenset({"ss_text", "ss_pic", "ss_kv", "nature_result"})
 _OWN_HOSTS = ("sm.cn", "quark.cn")
 
 def _is_own_host(url: str) -> bool:
-    try:
-        host = (urlparse(url).hostname or "").lower()
-    except ValueError:  # a malformed href: drop the row, keep the page
-        return True
-    return any(host == h or host.endswith("." + h) for h in _OWN_HOSTS)
+    # A malformed href has no host: drop the row, keep the page.
+    host = host_of(url)
+    return not host or host_matches(host, _OWN_HOSTS)
 
 
 class QuarkEngine(Engine):

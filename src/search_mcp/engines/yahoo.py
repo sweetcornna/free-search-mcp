@@ -81,6 +81,7 @@ from .base import (
     SearchResult,
     augment_query_with_operators,
     extract_date_hint,
+    host_matches,
     inline_text,
     parse_html,
 )
@@ -144,10 +145,10 @@ def _is_dropped(url: str) -> bool:
     except ValueError:
         return True
     host = (parsed.hostname or "").lower()
-    if any(host == h or host.endswith("." + h) for h in _INTERNAL_HOSTS):
+    if host_matches(host, _INTERNAL_HOSTS):
         return True
     # What Yahoo's ads unwrap to: Bing Ads' own click redirect.
-    return (host == "bing.com" or host.endswith(".bing.com")) and parsed.path.startswith("/aclick")
+    return host_matches(host, ("bing.com",)) and parsed.path.startswith("/aclick")
 
 
 # ---------------------------------------------------------------------------
