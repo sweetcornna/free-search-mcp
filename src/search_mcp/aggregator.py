@@ -703,16 +703,17 @@ async def _await_lane(
             # One lane engine's answer is an answer: the others get the
             # ordinary wait, not the stretched one (and never a longer one).
             wait = min(wait, ordinary)
-        remaining: float | None = started + wait - time.monotonic()
-        if remaining is not None and remaining <= 0:
+        remaining = started + wait - time.monotonic()
+        timeout: float | None = remaining
+        if remaining <= 0:
             if rescue is None or rescue.done() or _lane_found(tasks):
                 break
             # The search will wait for the early rescue anyway; a lane answer
             # that arrives meanwhile belongs in it.
-            remaining = None
+            timeout = None
         watched = pending | ({rescue} if rescue is not None else set())
         done, _ = await asyncio.wait(
-            watched, timeout=remaining, return_when=asyncio.FIRST_COMPLETED
+            watched, timeout=timeout, return_when=asyncio.FIRST_COMPLETED
         )
         # On a timeout the loop goes round again: the wait has passed, and the
         # top of the loop decides whether the early rescue still holds it open.
@@ -825,10 +826,14 @@ def _row_lock() -> asyncio.Lock:
     if lock is None:
         lock = _row_locks[loop] = asyncio.Lock()
     return lock
-# Ceiling on that background wait. Each engine's own timeout
-# (SEARCH_MCP_CODEX_TIMEOUT, SEARCH_MCP_ANTIGRAVITY_TIMEOUT, 60 s by default)
-# ends it sooner; this only guards against one that never returns.
-_LANE_LATE_SECONDS = 150.0
+def _late_ceiling() -> float:
+    """Ceiling on that background wait. Each engine's own timeout
+    (SEARCH_MCP_CODEX_TIMEOUT, SEARCH_MCP_ANTIGRAVITY_TIMEOUT, 60 s by default)
+    ends it sooner; this only guards against one that never returns. Two of
+    the longest timeout (a search may refresh its token and ask again) and a
+    margin, so an operator who allows a slow engine more time keeps its
+    answer: 150 s with the defaults."""
+    return 2 * max(settings.codex_timeout, settings.antigravity_timeout) + 30.0
 
 
 def _merge_lane_later(
@@ -893,7 +898,7 @@ async def _fold_late_lane(
     `lane_missing`, and the merge stops once a newer search has rewritten the
     row.
     """
-    deadline = time.monotonic() + _LANE_LATE_SECONDS
+    deadline = time.monotonic() + _late_ceiling()
     missing_now = set(missing)
     try:
         while pending:
@@ -1990,15 +1995,24 @@ async def aggregate_search(
             and not early_rescue.cancelled()
             and bool(early_rescue.result()[0])
         )
+        # Whether to rescue is the keyless pool's question. A lane bucket that
+        # was dropped as off-topic, or that no witness could judge, says
+        # nothing about the keyless engines' health, and stragglers cut short
+        # because a lane answer settled the search do not call for breadth.
+        keyless_diag = {
+            **diagnostics,
+            "gated": {k: v for k, v in (diagnostics.get("gated") or {}).items() if k not in lane},
+        }
+        lane_settled = _lane_found(lane_tasks)
         if early_ready or _needs_rescue(
             merged,
             errors,
-            diagnostics,
+            keyless_diag,
             category,
-            seek_witness=len(unconfirmed) == 1,
+            seek_witness=len([name for name in unconfirmed if name not in lane]) == 1,
             # Only the automatic pool promises breadth. Someone who named two
             # engines and lost one asked for two engines, not for three indexes.
-            lost_general=lost if auto_pool else 0,
+            lost_general=lost if auto_pool and not lane_settled else 0,
             healthy_general=standing,
         ):
             if early_rescue is not None:
@@ -2024,7 +2038,9 @@ async def aggregate_search(
                 if rescued_via:
                     fb = diagnostics.setdefault("fallback", {})
                     for name in diagnostics.get("gated", {}):
-                        fb.setdefault(name, rescued_via)
+                        # A lane engine's gap is the lane's to report.
+                        if name not in lane:
+                            fb.setdefault(name, rescued_via)
         elif early_rescue is not None:
             early_rescue.cancel()
 
@@ -2037,7 +2053,10 @@ async def aggregate_search(
         lane_gated = diagnostics.get("gated") or {}
         for name, res, lane_diag in lane_done:
             if not lane_diag.get("rate_limited"):
-                _record_lane_health(name, res, lane_gated.get(name))
+                # The off-topic guard's verdict, else a wall the engine itself
+                # recorded in its own diagnostics.
+                reason = lane_gated.get(name) or (lane_diag.get("gated") or {}).get(name)
+                _record_lane_health(name, res, reason)
         if rescued_via and _is_guarded(rescued_via):
             standing += 1
         # An answer resting on too few indexes is served, and cached — but not for
@@ -2092,17 +2111,17 @@ async def aggregate_search(
         if lane_missing:
             meta["lane_missing"] = lane_missing
         written_at = int(time.time())
-        if use_cache and lane_nominal:
+        if use_cache:
             # This run's row (or its absence) is the newest answer: a late
-            # merge an earlier search left running must not overwrite it. The
-            # row lock makes taking the row and writing it one step, so the
-            # merge cannot slip a write in between.
+            # merge an earlier search left running must not overwrite it. That
+            # holds for any search with the same key, a call naming the very
+            # engines an automatic search asked included. The row lock makes
+            # taking the row and writing it one step, so the merge cannot slip
+            # a write in between.
             async with _row_lock():
                 _lane_rows.pop(cache_key, None)
                 if merged and not sign_in_pending:
                     await cache.put_search(cache_key, query, asked, merged, meta or None)
-        elif use_cache and merged and not sign_in_pending:
-            await cache.put_search(cache_key, query, asked, merged, meta or None)
         stored_as = cache_key if use_cache and merged and not sign_in_pending else None
     except BaseException:
         # Cancelling a finished task is a no-op, so all of them will do.

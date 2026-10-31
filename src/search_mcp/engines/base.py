@@ -988,7 +988,9 @@ class EngineKeyError(ValueError):
     the account is fine, and the next search may well succeed.
     """
 
-    transient: bool = False
+    def __init__(self, *args: object, transient: bool = False) -> None:
+        super().__init__(*args)
+        self.transient = transient
 
 
 def is_lasting(exc: BaseException) -> bool:

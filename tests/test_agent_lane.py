@@ -709,9 +709,7 @@ async def test_a_late_lasting_failure_does_not_shorten_the_row(world, monkeypatc
 
 
 def _transient(message: str) -> EngineKeyError:
-    failure = EngineKeyError(message)
-    failure.transient = True
-    return failure
+    return EngineKeyError(message, transient=True)
 
 
 async def test_a_transient_sign_in_failure_is_a_passing_one(world):
@@ -845,3 +843,55 @@ async def test_a_late_off_topic_answer_is_recorded_as_a_gate(world, monkeypatch)
     await asyncio.sleep(0.4)
     (_, meta), = world.cache.rows.values()
     assert meta["gated_engines"]["codex"]["reason"] == "off_topic"
+
+
+# ---------------------------------------------------------------------------
+# Review round 9
+# ---------------------------------------------------------------------------
+
+
+async def test_a_named_search_with_the_same_key_takes_the_row_from_a_late_merge(world, monkeypatch):
+    monkeypatch.setattr(settings, "agent_lane_wait_seconds", 0.05)
+    world.stubs["codex"].delay = 0.3
+    await aggregate_search(QUERY)  # leaves codex merging in the background
+    # Naming the pool plus codex is the same cache key; it writes afresh.
+    world.stubs["duckduckgo"].results = bucket("fresh", 4)
+    world.stubs["codex"].delay = 0
+    await aggregate_search(
+        QUERY, engines=["duckduckgo", "bing", "anysearch", "codex"], max_age_seconds=0
+    )
+    await asyncio.sleep(0.5)
+    (results, _), = world.cache.rows.values()
+    assert any(r["url"].startswith("https://fresh.example/") for r in results)
+    assert world.cache.writes == 2
+
+
+async def test_an_off_topic_lane_bucket_alone_does_not_start_a_rescue(world, monkeypatch):
+    monkeypatch.setattr(settings, "rescue_enabled", True)
+    monkeypatch.setattr(settings, "reserve_engines", ["so360"])
+    world(Stub("so360"))
+    for name in ("duckduckgo", "bing", "anysearch"):
+        world.stubs[name].results = bucket(name, 2)  # healthy, too few to judge
+    world.stubs["codex"].results = _decoy("codex")
+    payload = await aggregate_search(QUERY, use_cache=False)
+    assert world.stubs["so360"].calls == 0
+    assert "rescued_via" not in payload
+
+
+async def test_stragglers_cut_by_a_lane_answer_do_not_start_a_rescue(world, monkeypatch):
+    monkeypatch.setattr(settings, "rescue_enabled", True)
+    monkeypatch.setattr(settings, "reserve_engines", ["so360"])
+    monkeypatch.setattr(settings, "search_deadline_seconds", 0.1)
+    world(Stub("so360"))
+    for name in ("duckduckgo", "bing", "anysearch"):
+        world.stubs[name].delay = 2
+    world.stubs["codex"].results = bucket("codex", 6)
+    payload = await aggregate_search(QUERY, use_cache=False)
+    assert world.stubs["so360"].calls == 0
+    assert {e for r in payload["results"] for e in r["engines"]} == {"codex"}
+
+
+def test_the_late_ceiling_follows_the_engine_timeouts(monkeypatch):
+    assert aggregator._late_ceiling() == 150.0
+    monkeypatch.setattr(settings, "antigravity_timeout", 200.0)
+    assert aggregator._late_ceiling() == 430.0
