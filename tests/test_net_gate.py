@@ -82,16 +82,6 @@ def test_detect_gate_none_on_empty_and_normal():
         ("<form action='/recaptcha/api'>g-recaptcha</form>", "captcha"),
         ("<a href='https://consent.google.com/...'>before you continue</a>", "consent"),
         ("<div class='SignFlow'>请登录知乎</div>", "login"),
-        # Yahoo! JAPAN's notice to the EEA and the UK, and Yahoo's EU consent wall.
-        (
-            "<title>【お知らせ】欧州経済領域（EEA）およびイギリスからご利用のお客様へ</title>"
-            "<p>From Wednesday, April 6, 2022, Yahoo! JAPAN is no longer available in "
-            "the EEA and the United Kingdom.</p>"
-            "<link href='https://s.yimg.jp/images/privacy/areacheck/...'>",
-            "region",
-        ),
-        ("<a href='https://privacy.yahoo.co.jp/areacheck/error.html'>", "region"),
-        ("<form action='https://consent.yahoo.com/v2/collectConsent?sessionId=1'>", "consent"),
         # Mojeek's ALTCHA proof-of-work wall. Shares no markup with the Google
         # or DDG walls, so a captcha-blocked Mojeek — one of the four DEFAULT
         # engines — was reported as a silent empty and read as an IP block.
@@ -163,3 +153,34 @@ def test_detect_gate_priority_captcha_over_login():
     # A page with both markers reports the higher-priority one (captcha).
     html = "unusual traffic … please log in to continue"
     assert detect_gate(html) == "captcha"
+
+
+# --- engine-specific walls ---------------------------------------------------
+
+
+_EEA_NOTICE = (
+    "<title>【お知らせ】欧州経済領域（EEA）およびイギリスからご利用のお客様へ</title>"
+    "<p>From Wednesday, April 6, 2022, Yahoo! JAPAN is no longer available in "
+    "the EEA and the United Kingdom.</p>"
+    "<a href='https://privacy.yahoo.co.jp/areacheck/error.html'>"
+)
+
+
+def test_an_engine_s_own_wall_is_named_for_that_engine_only():
+    from search_mcp.engines.quark import QuarkEngine
+    from search_mcp.engines.yahoo import YahooEngine
+    from search_mcp.engines.yahoojp import YahooJapanEngine
+
+    assert detect_gate(_EEA_NOTICE, YahooJapanEngine.gate_markers) == "region"
+    consent = "<form action='https://consent.yahoo.com/v2/collectConsent?sessionId=1'>"
+    assert detect_gate(consent, YahooEngine.gate_markers) == "consent"
+    wall = '<script>var url = "//quark.sm.cn//s/_____tmd_____/punish?x5secdata=x";</script>'
+    assert detect_gate(wall, QuarkEngine.gate_markers) == "captcha"
+
+
+def test_an_empty_page_echoing_a_wall_phrase_is_not_a_wall_elsewhere():
+    """Another engine's empty page that echoes the query "services no longer
+    available in the EEA" must not read as a region block and bench it."""
+    echo = "<h1>No results for services no longer available in the EEA</h1>"
+    assert detect_gate(echo) is None
+    assert detect_gate(_EEA_NOTICE) is None

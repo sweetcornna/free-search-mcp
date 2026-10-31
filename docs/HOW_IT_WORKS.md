@@ -239,9 +239,9 @@ candidate is asked at once, each next one `SEARCH_MCP_RESCUE_STAGGER_SECONDS`
 answer wins and cancels the rest; the whole pass fits in
 `SEARCH_MCP_RESCUE_TIMEOUT` (10). At most two candidates hold a place at a
 time, so an ordinary slow reserve is hedged by one more request rather than
-by the whole list; one that has run past its share of the pass (the timeout
-divided among the candidates, and never under two staggers) keeps running
-but stops holding its place, so two hung reserves cannot starve a fast third. Until 0.18 it asked one candidate at a time,
+by the whole list; one that has run past its share of the pass (two fifths
+of the timeout, and never under two staggers) keeps running but stops
+holding its place, so two hung reserves cannot starve a fast third. Until 0.18 it asked one candidate at a time,
 each in an equal slice of the timeout, so a slow first candidate spent its
 slice before a fast second one was asked. A candidate that answers inside the
 first stagger still spares the others a request. When nothing keyless
@@ -576,11 +576,16 @@ witness that exposes a keyless engine's decoy page.
   "Agent lane" note say so. A newer search that rewrites the same row takes
   it over, and a late answer from the older one is dropped rather than
   written over it.
-- A result set that lacks a lane engine the search is keyed on (it failed,
-  sat out, was benched, or is still being merged in) is replayed from the
-  cache for an hour at most, like a result set from a thinned pool, so the
-  lane's answer is not kept out of that search for a week. The replay says
-  which engine it lacks (`agent_lane.missing`).
+- A result set that lacks a lane engine for a passing reason (still being
+  merged in, out of tokens, a timeout or a reset) is replayed from the cache
+  for an hour at most, like a result set from a thinned pool, so the lane's
+  answer is not kept out of that search for a week. The replay says which
+  engine it lacks (`agent_lane.missing`). A lasting state (a spent plan, a
+  refused sign-in, a benched engine) does not shorten the cache, or every
+  search would re-run hourly for as long as it lasts.
+- A late lane answer that echoes the query is also the witness the off-topic
+  guard lacked: a keyless bucket it could not judge alone is dropped as a
+  decoy when the answer is merged in.
 - When no keyless engine has answered, the fan-out used to wait for every
   one of them however long it took. A lane answer with results now counts
   as an answer, so stragglers are cut at the search deadline as usual, and

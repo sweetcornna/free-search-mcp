@@ -461,7 +461,7 @@ async def test_no_more_than_two_candidates_run_at_once(monkeypatch):
     search = asyncio.ensure_future(
         aggregate_search("q", engines=["duckduckgo"], use_cache=False)
     )
-    # Each candidate holds its place for 4 s / 4 = 1 s.
+    # Each candidate holds its place for 0.4 x 4 s = 1.6 s.
     await asyncio.sleep(0.5)
     assert [name for name, stub in stubs.items() if stub.calls] == ["a", "b"]
     search.cancel()
@@ -480,5 +480,5 @@ async def test_two_hung_candidates_do_not_starve_a_fast_third(monkeypatch):
     }
     _wire(monkeypatch, {"duckduckgo": _StubEngine("duckduckgo", []), **stubs})
     out = await aggregate_search("q", engines=["duckduckgo"], use_cache=False)
-    # Each holds its place for max(2 staggers, 3 s / 3) = 1 s, then c is asked.
+    # Each holds its place for max(2 staggers, 0.4 x 3 s) = 1.2 s, then c is asked.
     assert out["rescued_via"] == "c"

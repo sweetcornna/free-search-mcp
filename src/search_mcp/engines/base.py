@@ -918,11 +918,6 @@ _GATE_MARKERS: tuple[tuple[str, tuple[str, ...]], ...] = (
             "altcha",
             "verification required",
             "complete the challenge",
-            # Alibaba's x5sec wall (Quark answers a burst with it): a 1 KB page
-            # whose script redirects to /_____tmd_____/punish?x5secdata=...
-            "_____tmd_____/punish",
-            "x5secdata",
-            "rgv587_flag",
         ),
     ),
     (
@@ -948,20 +943,6 @@ _GATE_MARKERS: tuple[tuple[str, tuple[str, ...]], ...] = (
             "consent.youtube.com",
             "before you continue",
             "consent.bing.com",
-            # Yahoo's EU consent interstitial (search.yahoo.com from Europe).
-            "consent.yahoo.com",
-            "collectconsent",
-        ),
-    ),
-    (
-        # A source that does not serve this country at all. Yahoo! JAPAN has
-        # answered the EEA and the UK with a notice page since April 2022; it
-        # parses to nothing and was otherwise a silent empty. A proxy in a
-        # served region is the fix, as for any wall.
-        "region",
-        (
-            "privacy.yahoo.co.jp/areacheck",
-            "no longer available in the eea",
         ),
     ),
     (
@@ -1121,18 +1102,22 @@ def _retry_after_seconds(headers: Any) -> float | None:
     return val if val >= 0 else None
 
 
-def detect_gate(html: str) -> str | None:
+def detect_gate(
+    html: str, extra: tuple[tuple[str, tuple[str, ...]], ...] = ()
+) -> str | None:
     """Best-effort: classify a page as a gate (``"captcha"``/``"consent"``/
-    ``"login"``/``"javascript"``) when it carries a known wall marker, else
-    ``None``.
+    ``"login"``/``"javascript"``, or an engine's own reason such as
+    ``"region"``) when it carries a known wall marker, else ``None``.
 
-    Used to (a) surface an honest reason instead of a silent empty result set,
-    and (b) let gated SERP engines fall back to a working meta-search. Never
-    raises; a normal results page returns ``None``."""
+    `extra` holds the markers of the engine whose page this is
+    (`Engine.gate_markers`), checked after the shared ones. Used to (a)
+    surface an honest reason instead of a silent empty result set, and (b)
+    let gated SERP engines fall back to a working meta-search. Never raises;
+    a normal results page returns ``None``."""
     if not html:
         return None
     low = html.lower()
-    for reason, markers in _GATE_MARKERS:
+    for reason, markers in (*_GATE_MARKERS, *extra):
         if any(m in low for m in markers):
             return reason
     return None
@@ -1234,6 +1219,12 @@ class Engine(abc.ABC):
     # provider allows its sign-in to be used by a third-party tool; an
     # operator can still list any agent engine by name.
     agent_lane_auto: bool = False
+    # Walls only this engine serves, as `(reason, markers)` pairs checked
+    # after the shared `_GATE_MARKERS` (see `detect_gate`). They live here, not
+    # in the shared list, because a shared marker is matched against every
+    # engine's empty page, and an empty page often echoes the query: a search
+    # for "no longer available in the EEA" must not bench DuckDuckGo.
+    gate_markers: tuple[tuple[str, tuple[str, ...]], ...] = ()
 
     def claims(self, query: str) -> bool:
         """Whether this engine can answer `query` on its own, judged offline.
@@ -1300,7 +1291,7 @@ class Engine(abc.ABC):
         # recorded above must not be clobbered by the gate classification of
         # the very shell the browser render was supposed to get past.
         if not results and diagnostics is not None:
-            reason = detect_gate(html)
+            reason = detect_gate(html, self.gate_markers)
             if reason:
                 diagnostics.setdefault("gated", {}).setdefault(self.name, reason)
         return self.finalize_results(results, filters, max_results, diagnostics)

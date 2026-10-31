@@ -87,6 +87,9 @@ class QuarkEngine(Engine):
     rate_limit_per_minute = 10
     rate_limit_burst = 3
     rate_limit_max_wait = 1.0
+    # Alibaba's x5sec wall, its answer to a burst: a 1 KB page whose script
+    # redirects to /_____tmd_____/punish?x5secdata=...
+    gate_markers = (("captcha", ("_____tmd_____/punish", "x5secdata", "rgv587_flag")),)
 
     def build_url(
         self, query: str, max_results: int, filters: SearchFilters | None = None

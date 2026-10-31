@@ -37,7 +37,7 @@ Snippets lead with Yahoo's own date, "2026/10/1 -" or "5日前 -", which
 
 Yahoo! JAPAN has not served the EEA or the UK since April 2022. From there the
 request is answered with a notice page instead of results, which parses to `[]`
-and is reported as a `region` gate (see `_GATE_MARKERS`), so the breaker
+and is reported as a `region` gate (`gate_markers` below), so the breaker
 benches the engine and the hint suggests a proxy.
 
 Best-effort by nature: this parses a page meant for humans, and the selectors
@@ -85,6 +85,11 @@ class YahooJapanEngine(Engine):
     name = "yahoojp"
     description = (
         "Yahoo! JAPAN: Google's web index with no key, in any language; strongest for Japanese."
+    )
+    # The notice the EEA and the UK get instead of results (since April 2022).
+    # A proxy in a served region is the fix, as for any wall.
+    gate_markers = (
+        ("region", ("privacy.yahoo.co.jp/areacheck", "no longer available in the eea")),
     )
 
     def build_url(

@@ -459,14 +459,22 @@ def _read_codex_cli(cred: Credential) -> Credential:
     return cred
 
 
-def load(provider_id: str) -> Credential | None:
-    """The stored sign-in, or None. Never raises on a missing or corrupt file."""
+def _read_record(provider_id: str) -> dict[str, Any] | None:
+    """The stored sign-in record as written, or None."""
     try:
         data = json.loads(credential_path(provider_id).read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None
-    if not isinstance(data, dict):
-        return None
+    return data if isinstance(data, dict) else None
+
+
+def load(provider_id: str) -> Credential | None:
+    """The stored sign-in, or None. Never raises on a missing or corrupt file."""
+    data = _read_record(provider_id)
+    return None if data is None else _credential_from(provider_id, data)
+
+
+def _credential_from(provider_id: str, data: dict[str, Any]) -> Credential | None:
     try:
         cred = _from_dict({**data, "provider": provider(provider_id).id})
     except (TypeError, ValueError):
@@ -493,15 +501,11 @@ def _file_stamp(path: Path) -> tuple[int, int] | None:
     return (st.st_mtime_ns, st.st_size)
 
 
-def _linked_file(provider_id: str) -> Path | None:
+def _linked_file(record: dict[str, Any] | None) -> Path | None:
     """The Codex CLI file a link record reads its tokens from, else None."""
-    try:
-        data = json.loads(credential_path(provider_id).read_text(encoding="utf-8"))
-    except (OSError, ValueError):
+    if record is None or record.get("source") != "codex-cli":
         return None
-    if not isinstance(data, dict) or data.get("source") != "codex-cli":
-        return None
-    return Path(data.get("linked_path") or codex_cli_auth_path())
+    return Path(record.get("linked_path") or codex_cli_auth_path())
 
 
 def is_signed_in(provider_id: str) -> bool:
@@ -515,9 +519,11 @@ def is_signed_in(provider_id: str) -> bool:
         memo_key, linked, linked_stamp, signed_in = memo
         if memo_key == key and (linked is None or _file_stamp(linked) == linked_stamp):
             return signed_in
-    linked = _linked_file(provider_id)
+    # One read of the record serves both the memo and the answer.
+    record = _read_record(provider_id)
+    linked = _linked_file(record)
     linked_stamp = _file_stamp(linked) if linked is not None else None
-    signed_in = load(provider_id) is not None
+    signed_in = record is not None and _credential_from(provider_id, record) is not None
     _signed_in_memo[provider_id] = (key, linked, linked_stamp, signed_in)
     return signed_in
 

@@ -393,3 +393,11 @@ async def test_live_search_returns_unwrapped_urls(monkeypatch):
         assert r.url.startswith(("http://", "https://"))
         assert "r.search.yahoo.com" not in r.url
         assert r.title
+
+
+@pytest.mark.parametrize("status", [403, 429])
+async def test_a_refusal_ends_the_handshake_at_once(monkeypatch, status):
+    wire = _Wire(monkeypatch, handshakes=[(status, ""), (200, _PAGE), (200, _PAGE)])
+    with pytest.raises(RequestException, match=f"HTTP {status}"):
+        await YahooEngine().search("python asyncio taskgroup", 10)
+    assert len(wire.handshake_urls) == 1

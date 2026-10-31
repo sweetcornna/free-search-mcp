@@ -48,6 +48,7 @@ from .base import (
     augment_query_with_operators,
     enclosing_anchor,
     extract_date_hint,
+    host_matches,
     host_of,
     inline_text,
     parse_html,
@@ -112,7 +113,7 @@ class NaverEngine(Engine):
                 continue
             host = host_of(url)
             # A malformed href costs that row, not the page.
-            if not host or host in _AD_HOSTS or url in seen:
+            if not host or host_matches(host, _AD_HOSTS) or url in seen:
                 continue
             seen.add(url)
 

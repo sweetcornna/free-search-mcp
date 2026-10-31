@@ -200,6 +200,8 @@ class YahooEngine(Engine):
     description = (
         "Yahoo Search: Bing's index via Yahoo's own front end; a keyless backup when bing is gated."
     )
+    # Yahoo's EU consent interstitial, which a European egress gets instead.
+    gate_markers = (("consent", ("consent.yahoo.com", "collectconsent")),)
 
     def build_url(
         self, query: str, max_results: int, filters: SearchFilters | None = None
@@ -269,6 +271,10 @@ class YahooEngine(Engine):
             for _ in range(max(1, attempts)):
                 resp = await client.get(url)
                 status = resp.status_code
+                if status in (403, 429):
+                    # A refusal, not the bot check's empty 500: asking again
+                    # at once only adds to what Yahoo is counting.
+                    break
                 if status == 200:
                     cookies = {c.name: c.value for c in client.cookies.jar if c.value is not None}
                     if cookies:

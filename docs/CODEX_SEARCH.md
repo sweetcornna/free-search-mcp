@@ -154,9 +154,10 @@ and rescue, which naming `engines=["codex", ...]` switches off.
   search; a timeout or a reset takes two in a row, as for any engine. It is
   reported under `agent_lane.errors`, never under `errors`, and the keyless
   results are unaffected.
-- A result set cached without `codex` (it failed, sat out or had not
-  answered) is replayed for an hour at most, and says so in an "Agent lane"
-  note when it is.
+- A result set cached without `codex` for a passing reason (it had not
+  answered yet, was out of tokens, or hit a timeout) is replayed for an hour
+  at most, and says so in an "Agent lane" note when it is. A spent plan does
+  not shorten the cache.
 - `SEARCH_MCP_AGENT_ENGINES=off` turns the lane off; `codex` then runs only
   when a call names it.
 

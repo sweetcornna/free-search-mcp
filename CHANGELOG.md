@@ -25,9 +25,10 @@ Google's index, and five keyless sources join the registry.
   - The lane never queues for a rate-limit token. A spent usage window or a
     revoked sign-in benches it at once, a timeout or a reset after two in a
     row, and its problems are reported under `agent_lane` and an "Agent lane"
-    note, never in `errors`. A result set missing a lane engine is replayed
-    from the cache for an hour at most and says so, and a late merge never
-    overwrites a newer search's row.
+    note, never in `errors`. A result set missing a lane engine for a passing
+    reason is replayed from the cache for an hour at most and says so, and a
+    late merge never overwrites a newer search's row. A late lane answer can
+    also be the witness that drops a keyless decoy page.
   - A lane answer counts as an answer for the search deadline: when every
     keyless engine came back empty, the stragglers are cut at the deadline
     instead of being waited for.
@@ -55,13 +56,16 @@ Google's index, and five keyless sources join the registry.
   (`2026/10/1`, `2026.05.24.`, `2026年10月1日`, `5日前`, `3天前`, `3일 전`) are read.
 - Yahoo's EU consent page and Alibaba's x5sec wall (Quark's answer to a burst)
   are recognised as `consent` and `captcha` gates instead of silent empties.
+  Walls only one engine serves are declared on that engine
+  (`Engine.gate_markers`), so a phrase from them in another engine's empty
+  page, which often echoes the query, benches nothing.
 
 ### Changed
 
 - The rescue pass is a staggered race instead of a queue. The first candidate
   is asked at once and each next one `SEARCH_MCP_RESCUE_STAGGER_SECONDS` (1)
   later, or as soon as the previous one fails, with at most two holding a
-  place at a time (one that runs past its share of the pass gives its place
+  place at a time (one that runs past two fifths of the pass gives its place
   up); the first usable answer wins and cancels the rest, and the whole pass
   still fits in `SEARCH_MCP_RESCUE_TIMEOUT`. It used to give each candidate an equal slice of
   that timeout in turn, so a slow first candidate held up a fast second one.

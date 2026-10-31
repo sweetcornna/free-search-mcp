@@ -189,7 +189,7 @@ def test_x5sec_punish_page_yields_empty():
         "</script><!--rgv587_flag:sm-->"
     )
     assert QuarkEngine().parse(wall) == []
-    assert detect_gate(wall) == "captcha"
+    assert detect_gate(wall, QuarkEngine.gate_markers) == "captcha"
 
 
 # ---------------------------------------------------------------------------

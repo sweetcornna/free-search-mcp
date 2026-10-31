@@ -574,3 +574,64 @@ async def test_a_lane_answer_that_beat_a_slow_pool_is_kept(world, monkeypatch):
     assert "codex" in {e for r in payload["results"] for e in r["engines"]}
     assert payload["agent_lane"] == {"engines": ["codex"], "answered": {"codex": 4}}
     assert "agent_lane_hint" not in payload
+
+
+# ---------------------------------------------------------------------------
+# Review round 4
+# ---------------------------------------------------------------------------
+
+
+async def test_a_lasting_lane_failure_does_not_shorten_the_cache(world):
+    world.stubs["codex"].exc = EngineKeyError("codex: the plan's usage limit was reached")
+    await aggregate_search(QUERY)
+    (_, meta), = world.cache.rows.values()
+    assert "lane_missing" not in meta
+    # Benched now: the next search's row is not marked either.
+    await aggregate_search(QUERY, max_age_seconds=0)
+    (_, meta), = world.cache.rows.values()
+    assert "lane_missing" not in meta
+
+
+async def test_one_lane_answer_ends_the_stretched_wait(world, monkeypatch):
+    monkeypatch.setattr(settings, "agent_engines", "codex,antigravity")
+    monkeypatch.setattr(settings, "agent_lane_wait_seconds", 0.2)
+    monkeypatch.setattr(settings, "search_deadline_seconds", 3.0)
+    for name in ("duckduckgo", "bing", "anysearch"):
+        world.stubs[name].results = []
+    world.stubs["codex"].delay = 0.05
+    world.stubs["antigravity"].delay = 5
+    started = time.monotonic()
+    payload = await aggregate_search(QUERY, use_cache=False)
+    took = time.monotonic() - started
+    assert {e for r in payload["results"] for e in r["engines"]} == {"codex"}
+    assert payload["agent_lane"]["pending"] == ["antigravity"]
+    assert took < 0.6, f"{took:.2f} s"
+
+
+def _decoy(engine: str) -> list[SearchResult]:
+    return [
+        SearchResult(
+            title=f"Rust (video game) store page {i}",
+            url=f"https://store-{engine}.example/{i}",
+            snippet="Survive the island. Rust is a multiplayer survival game.",
+            engine=engine,
+            rank=i + 1,
+        )
+        for i in range(6)
+    ]
+
+
+async def test_a_late_lane_answer_is_the_witness_that_drops_a_decoy(world, monkeypatch):
+    monkeypatch.setattr(settings, "agent_lane_wait_seconds", 0.05)
+    world.stubs["bing"].results = _decoy("bing")
+    world.stubs["duckduckgo"].results = []
+    world.stubs["anysearch"].results = []
+    world.stubs["codex"].delay = 0.2
+    first = await aggregate_search(QUERY)
+    # No witness yet: the suspect is kept for now.
+    assert "bing" in {e for r in first["results"] for e in r["engines"]}
+    await asyncio.sleep(0.4)
+    (results, meta), = world.cache.rows.values()
+    assert {e for r in results for e in r["engines"]} == {"codex"}
+    assert meta["gated_engines"]["bing"]["reason"] == "off_topic"
+    assert engine_health.is_open("bing")
