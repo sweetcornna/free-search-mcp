@@ -1094,3 +1094,55 @@ async def test_a_late_witness_benches_a_lane_decoy_served_earlier(world, monkeyp
     assert {e for r in results for e in r["engines"]} == {"antigravity"}
     assert meta["lane_left_out"] == ["codex"]
     assert engine_health.is_open("codex")
+
+
+# ---------------------------------------------------------------------------
+# Review round 14
+# ---------------------------------------------------------------------------
+
+
+async def test_a_lane_suspect_does_not_make_a_thin_unhealthy_run_look_healthy(world, monkeypatch):
+    monkeypatch.setattr(settings, "rescue_enabled", True)
+    monkeypatch.setattr(settings, "reserve_engines", ["so360"])
+    world(Stub("so360"))
+    world.stubs["duckduckgo"].results = bucket("duckduckgo", 2)
+    world.stubs["bing"].results = []
+    world.stubs["anysearch"].results = []
+    world.stubs["codex"].results = _decoy("codex")
+    payload = await aggregate_search(QUERY, use_cache=False)
+    assert payload["rescued_via"] == "so360"
+
+
+async def test_a_replay_through_named_engines_still_says_left_out(world):
+    world.stubs["codex"].results = _decoy("codex")
+    await aggregate_search(QUERY)
+    again = await aggregate_search(QUERY, engines=["duckduckgo", "bing", "anysearch", "codex"])
+    assert again["cached"] is True
+    assert again["agent_lane"] == {"left_out": ["codex"]}
+
+
+async def test_a_run_that_writes_nothing_does_not_take_the_merge_from_a_live_row(world, monkeypatch):
+    monkeypatch.setattr(settings, "agent_lane_wait_seconds", 0.05)
+    monkeypatch.setattr(settings, "search_deadline_seconds", 0.05)
+    world.stubs["codex"].delay = 0.4
+    await aggregate_search(QUERY)  # A: row written, codex merging late
+    (key,) = world.cache.rows
+    owner = aggregator._lane_rows[key]
+    for name in ("duckduckgo", "bing", "anysearch"):
+        world.stubs[name].results = []
+    await aggregate_search(QUERY, max_age_seconds=0)  # B: nothing to write
+    assert aggregator._lane_rows.get(key) is owner
+    await asyncio.sleep(0.8)
+    (results, _), = world.cache.rows.values()
+    # A's row, with A's keyless results and codex's late answer merged in.
+    assert "codex" in {e for r in results for e in r["engines"]}
+    assert any(r["url"].startswith("https://duckduckgo.example/") for r in results)
+
+
+async def test_an_engine_whose_answers_keep_being_left_out_sits_out(world):
+    for name in ("duckduckgo", "bing", "anysearch"):
+        world.stubs[name].results = bucket(name, 2)
+    world.stubs["codex"].results = _decoy("codex")
+    for _ in range(3):
+        await aggregate_search(QUERY, use_cache=False)
+    assert engine_health.is_open("codex")

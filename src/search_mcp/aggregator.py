@@ -792,6 +792,11 @@ def _take_lane_verdicts(diagnostics: dict[str, Any], lane: list[str]) -> list[st
 # The breaker's reason for a lane engine benched by a lasting failure. A cache
 # row is not shortened for an engine benched with it (see `lane_missing`).
 LANE_REFUSED = "refused"
+# For an answer left out because nothing could confirm it. Weak evidence
+# alone, so it takes as many in a row as a silent engine does; but an engine
+# whose answers keep being left out is spending the operator's plan for
+# nothing, and sits out a while.
+LANE_UNCONFIRMED = "unconfirmed"
 
 
 def _record_lane_health(
@@ -814,6 +819,8 @@ def _record_lane_health(
             engine_health.record_failure(name, reason or LANE_REFUSED, threshold=1)
         else:
             engine_health.record_failure(name, reason or "error")
+    elif reason == LANE_UNCONFIRMED:
+        engine_health.record_failure(name, reason, threshold=SILENT_THRESHOLD)
     elif reason:
         engine_health.record_failure(name, reason)
     elif outcome:
@@ -1009,7 +1016,9 @@ async def _fold_late_lane(
                 lane_names = [n_ for n_ in asked if n_ not in keyless]
                 dropped_lane = _take_lane_verdicts(verdict, lane_names)
                 kept, _, doubted = _settle_lane_suspects(kept, unjudged, lane_names)
-                if name not in dropped_lane and name not in doubted:
+                if name in doubted:
+                    _record_lane_health(name, outcome, LANE_UNCONFIRMED)
+                elif name not in dropped_lane:
                     _record_lane_health(name, outcome)
                 for dropped in dropped_lane:
                     # The late answer itself, or a lane engine served earlier
@@ -1964,8 +1973,10 @@ async def aggregate_search(
                 payload["rescued_via"] = meta["rescued_via"]
             if meta.get("auto_routed"):
                 payload["auto_routed"] = meta["auto_routed"]
-            missing = _lane_names(meta.get("lane_missing"), lane_nominal)
-            left_out = _lane_names(meta.get("lane_left_out"), lane_nominal)
+            # Against everything this key promises: a call naming the very
+            # engines an automatic search asked reads the same row.
+            missing = _lane_names(meta.get("lane_missing"), nominal + lane_nominal)
+            left_out = _lane_names(meta.get("lane_left_out"), nominal + lane_nominal)
             # Only what is known of this replay: which lane engine it lacks.
             replay: dict[str, Any] = {}
             notes: list[str] = []
@@ -2089,6 +2100,7 @@ async def aggregate_search(
         # query within TTL should not re-pay the rescue.
         rescued_via: str | None = None
         rescue_pair: list[tuple[str, list[SearchResult]]] = []
+        rescue_witness = False
         # Stragglers the fan-out cut short because a lane answer settled the
         # search do not call for a rescue: the search has its answer. They did
         # run past the deadline, so the breaker still hears of it as of any
@@ -2109,8 +2121,16 @@ async def aggregate_search(
             and not early_rescue.cancelled()
             and bool(early_rescue.result()[0])
         )
+        # Judged without the lane suspects, which are settled only after the
+        # rescue: a lane answer nothing confirmed must not make a thin,
+        # unhealthy keyless run look healthy.
+        judged = (
+            _merge([b for n_, b in named if n_ not in lane_suspects], n, category, query)
+            if lane_suspects
+            else merged
+        )
         if early_ready or _needs_rescue(
-            merged,
+            judged,
             {k: v for k, v in errors.items() if k not in cut_by_lane},
             diagnostics,
             category,
@@ -2127,7 +2147,8 @@ async def aggregate_search(
                     query, n, filters, engine_names, diagnostics
                 )
             if rescue_bucket:
-                if unconfirmed and is_witness(query, rescue_bucket):
+                rescue_witness = is_witness(query, rescue_bucket)
+                if unconfirmed and rescue_witness:
                     # The second opinion is in, and it echoes the query: the
                     # suspects were decoys after all.
                     _mark_off_topic(unconfirmed, diagnostics)
@@ -2149,12 +2170,14 @@ async def aggregate_search(
 
         # Every bucket of the run is in: settle the lane suspects, with the
         # rescue bucket as the witness or the solid answer they may lack.
-        rescue_witness = bool(rescue_pair) and is_witness(query, rescue_pair[0][1])
         settled, late_off_topic, doubted = _settle_lane_suspects(
-            named + rescue_pair, lane_suspects + unconfirmed, lane, witness=rescue_witness
+            named + rescue_pair,
+            lane_suspects + unconfirmed,
+            lane,
+            witness=bool(rescue_pair) and rescue_witness,
         )
         if late_off_topic or doubted:
-            named = [pair for pair in settled if pair not in rescue_pair]
+            named = [(n_, b) for n_, b in settled if n_ != rescued_via]
             buckets = [bucket for _, bucket in settled]
             merged = _merge(buckets, n, category, query)
         lane_off_topic += late_off_topic
@@ -2167,9 +2190,15 @@ async def aggregate_search(
             engine_names, [(n, b) for n, b in named if n not in lane], raised, diagnostics
         )
         for name, res, lane_diag in lane_done:
-            # A doubted answer is no evidence either way.
-            if not lane_diag.get("rate_limited") and name not in doubted:
-                _record_lane_health(name, res, "off_topic" if name in lane_off_topic else None)
+            if not lane_diag.get("rate_limited"):
+                reason = (
+                    "off_topic"
+                    if name in lane_off_topic
+                    else LANE_UNCONFIRMED
+                    if name in doubted
+                    else None
+                )
+                _record_lane_health(name, res, reason)
         if rescued_via and _is_guarded(rescued_via):
             standing += 1
         # An answer resting on too few indexes is served, and cached — but not for
@@ -2251,7 +2280,14 @@ async def aggregate_search(
         if early_rescue is not None:
             early_rescue.cancel()
         raise
-    merges_later = bool(lane_pending) and use_cache and not sign_in_pending
+    # A run that wrote no row leaves an earlier search's late merge its row
+    # rather than replace it with a merge of its own into nothing.
+    merges_later = (
+        bool(lane_pending)
+        and use_cache
+        and not sign_in_pending
+        and (stored_as is not None or cache_key not in _lane_rows)
+    )
     if merges_later:
         # Not cancelled: the request is already spent, and its answer makes
         # the next identical search better. Started after the write above, so
