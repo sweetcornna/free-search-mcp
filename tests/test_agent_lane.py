@@ -1177,3 +1177,27 @@ def test_a_subclass_can_declare_itself_transient():
 
     assert not is_lasting(_Passing("x"))
     assert is_lasting(_Passing("x", transient=False))
+
+
+# ---------------------------------------------------------------------------
+# Review round 16
+# ---------------------------------------------------------------------------
+
+
+async def test_an_unconfirmed_answer_and_one_timeout_do_not_add_up_to_a_bench(world):
+    for name in ("duckduckgo", "bing", "anysearch"):
+        world.stubs[name].results = bucket(name, 2)
+    world.stubs["codex"].results = _decoy("codex")
+    await aggregate_search(QUERY, use_cache=False)  # left out as unconfirmed
+    world.stubs["codex"].exc = RuntimeError("connection reset")
+    await aggregate_search(QUERY, use_cache=False)  # one blip
+    assert not engine_health.is_open("codex")
+
+
+async def test_a_replay_says_a_lane_engine_was_sitting_out(world):
+    engine_health.record_failure("codex", aggregator.LANE_REFUSED, threshold=1)
+    await aggregate_search(QUERY)
+    again = await aggregate_search(QUERY)
+    assert again["cached"] is True
+    assert again["agent_lane"] == {"benched": ["codex"]}
+    assert "sitting out" in again["agent_lane_hint"]
