@@ -522,8 +522,9 @@ def _active_pool(nominal: list[str]) -> tuple[list[str], dict[str, dict[str, Any
     """`(engines to query, benched)`: the nominal pool minus open circuits.
 
     Reserves are seated only while fewer than `min_healthy_engines` general
-    engines remain. The shipped default pool is exactly that wide, so losing
-    one engine seats one reserve. If nothing general is left at all the breaker
+    engines remain. The shipped default pool is one wider than that, so it
+    loses one engine before a reserve is seated, and each further loss seats
+    one. If nothing general is left at all the breaker
     is ignored for this search: trying three doubtful engines beats answering
     with none.
     """
@@ -659,6 +660,7 @@ async def _await_lane(
     tasks: dict[asyncio.Future[_LaneOutcome], str],
     started: float,
     answered: bool,
+    query: str,
     rescue: asyncio.Future[tuple[list[SearchResult], str | None]] | None = None,
 ) -> tuple[list[_LaneOutcome], set[asyncio.Future[_LaneOutcome]], float]:
     """`(finished, still running, seconds since started)` once the lane's wait
@@ -681,19 +683,23 @@ async def _await_lane(
             if not rescue.cancelled() and rescue.exception() is None and rescue.result()[0]:
                 wait = ordinary
             rescue = None
-        if _lane_found(tasks):
+        if _lane_found(tasks, query):
             # One lane engine's answer is an answer: the others get the
             # ordinary wait, not the stretched one.
             wait = ordinary
-        remaining = started + wait - time.monotonic()
-        if remaining <= 0:
-            break
+        remaining: float | None = started + wait - time.monotonic()
+        if remaining is not None and remaining <= 0:
+            if rescue is None or rescue.done():
+                break
+            # The search will wait for the early rescue anyway; a lane answer
+            # that arrives meanwhile belongs in it.
+            remaining = None
         watched = pending | ({rescue} if rescue is not None else set())
         done, _ = await asyncio.wait(
             watched, timeout=remaining, return_when=asyncio.FIRST_COMPLETED
         )
-        if not done:
-            break
+        # On a timeout the loop goes round again: the wait has passed, and the
+        # top of the loop decides whether the early rescue still holds it open.
         pending -= done
     pending = {task for task in pending if not task.done()}
     order = {name: i for i, name in enumerate(tasks.values())}
@@ -703,15 +709,17 @@ async def _await_lane(
     return finished, pending, time.monotonic() - started
 
 
-def _lane_found(lane: Collection[asyncio.Future[_LaneOutcome]]) -> bool:
-    """Whether an agent engine of the lane has answered with results."""
-    return any(
-        task.done()
-        and not task.cancelled()
-        and isinstance(task.result()[1], list)
-        and bool(task.result()[1])
-        for task in lane
-    )
+def _lane_found(lane: Collection[asyncio.Future[_LaneOutcome]], query: str) -> bool:
+    """Whether an agent engine of the lane has answered with results that echo
+    the query. Only such an answer may stop the search waiting for others: a
+    bucket the off-topic guard would drop is no answer."""
+    for task in lane:
+        if not task.done() or task.cancelled():
+            continue
+        bucket = task.result()[1]
+        if isinstance(bucket, list) and bucket and is_witness(query, bucket):
+            return True
+    return False
 
 
 def _record_lane_health(
@@ -748,6 +756,8 @@ def _lane_hint(
     waited: float,
     merges_later: bool,
 ) -> str:
+    """The "Agent lane" note. Called after the breaker heard about the run,
+    so it can say whether a failed engine sits out the next searches."""
     parts: list[str] = []
     if pending:
         who = ", ".join(pending)
@@ -762,10 +772,12 @@ def _lane_hint(
                 "to get them."
             )
     for name, err in errors.items():
-        parts.append(
-            f"{name} failed ({err}) and sits out the next searches; the keyless results "
-            "are unaffected."
+        after = (
+            "sits out the next searches"
+            if settings.health_enabled and engine_health.is_open(name)
+            else "is asked again on the next search"
         )
+        parts.append(f"{name} failed ({err}) and {after}; the keyless results are unaffected.")
     if rate_limited:
         parts.append(
             f"{', '.join(rate_limited)} sat this search out: its per-minute limit, which "
@@ -861,6 +873,11 @@ async def _fold_late_lane(
                 name, outcome, lane_diag = task.result()
                 if isinstance(outcome, Exception) or lane_diag.get("rate_limited"):
                     _record_lane_health(name, outcome)
+                    if isinstance(outcome, EngineKeyError):
+                        # A lasting state, as on the main path: the row keeps
+                        # its full lifetime.
+                        missing_now.discard(name)
+                        changed = True
                     continue
                 buckets = [bucket for _, bucket in named]
                 if (
@@ -905,17 +922,31 @@ async def _fold_late_lane(
 
 def _with_off_topic(meta: dict[str, Any], names: list[str]) -> dict[str, Any]:
     """`meta` with `names` recorded as off-topic gates, and the breaker told."""
-    gated_engines = dict(meta.get("gated_engines") or {})
-    for name in names:
-        log.info("engine %s returned an off-topic bucket; dropped", name)
-        gated_engines[name] = {"reason": "off_topic", "fallback": None}
-        if settings.health_enabled:
-            engine_health.record_failure(name, "off_topic")
-    gated = {name: info.get("reason") or "gated" for name, info in gated_engines.items()}
-    fallback = {
-        name: info["fallback"] for name, info in gated_engines.items() if info.get("fallback")
+    stored = meta.get("gated_engines") or {}
+    diag: dict[str, Any] = {
+        "gated": {name: info.get("reason") or "gated" for name, info in stored.items()},
+        "fallback": {
+            name: info["fallback"] for name, info in stored.items() if info.get("fallback")
+        },
     }
-    return {**meta, "gated_engines": gated_engines, "gated_hint": _gate_hint(gated, fallback)}
+    _mark_off_topic(names, diag)
+    if settings.health_enabled:
+        for name in names:
+            engine_health.record_failure(name, "off_topic")
+    gated_engines, gated_hint = _gate_provenance(diag["gated"], diag["fallback"])
+    return {**meta, "gated_engines": gated_engines, "gated_hint": gated_hint}
+
+
+def _gate_provenance(
+    gated: dict[str, str], fallback: dict[str, str]
+) -> tuple[dict[str, dict[str, Any]], str]:
+    """`(gated_engines, gated_hint)`: which engines hit a wall and how each was
+    covered, in the shape the payload and the cache row carry."""
+    gated_engines = {
+        name: {"reason": gated.get(name, "gated"), "fallback": fallback.get(name)}
+        for name in sorted(set(gated) | set(fallback))
+    }
+    return gated_engines, (_gate_hint(gated, fallback) if gated_engines else "")
 
 
 # Raised by an engine without saying anything about the engine itself.
@@ -1264,9 +1295,14 @@ async def _rescue(
             if done:
                 # A candidate failed: its successor need not wait out the stagger.
                 next_start = loop.time()
-        for name in running.values():
+        end = loop.time()
+        for task, name in running.items():
             info.setdefault("timeouts", []).append(name)
-            _probe_failed(name, "timeout")
+            # Only a candidate that had its share of the pass and still did
+            # not answer has shown anything; one started just before the end
+            # has not.
+            if end - started_at[task] >= hold:
+                _probe_failed(name, "timeout")
         return [], None
     finally:
         for task in running:
@@ -1614,6 +1650,7 @@ async def _fan_out(
     engine_names: list[str],
     diagnostics: dict[str, Any],
     lane: Collection[asyncio.Future[_LaneOutcome]] = (),
+    query: str = "",
 ) -> list[tuple[str, list[SearchResult] | Exception]]:
     """Query every engine in parallel, bounded by `settings.search_deadline_seconds`.
 
@@ -1639,7 +1676,7 @@ async def _fan_out(
         )
         if not answered:
             lane_open = {task for task in lane if not task.done()}
-            while pending and not _lane_found(lane):
+            while pending and not _lane_found(lane, query):
                 more, _ = await asyncio.wait(
                     pending | lane_open, return_when=asyncio.FIRST_COMPLETED
                 )
@@ -1823,11 +1860,12 @@ async def aggregate_search(
     }
     early_rescue: asyncio.Future[tuple[list[SearchResult], str | None]] | None = None
     try:
-        results = await _fan_out(run, engine_names, diagnostics, lane_tasks)
+        results = await _fan_out(run, engine_names, diagnostics, lane_tasks, query)
         answered = any(isinstance(res, list) and res for _, res in results)
         if (
             not answered
             and any(not task.done() for task in lane_tasks)
+            and not _lane_found(lane_tasks, query)
             and settings.rescue_enabled
             and not _is_exclusive(category)
         ):
@@ -1839,7 +1877,7 @@ async def aggregate_search(
                 _rescue(query, n, filters, engine_names, diagnostics)
             )
         lane_done, lane_pending, lane_waited = await _await_lane(
-            lane_tasks, lane_started, answered, early_rescue
+            lane_tasks, lane_started, answered, query, early_rescue
         )
     except BaseException:
         for task in lane_tasks:
@@ -1960,12 +1998,7 @@ async def aggregate_search(
         # Gate/fallback provenance is computed BEFORE the cache write so it can be
         # stored alongside the results it describes and replayed on a later hit.
         gated = diagnostics.get("gated") or {}
-        fallback = diagnostics.get("fallback") or {}
-        gated_engines = {
-            name: {"reason": gated.get(name, "gated"), "fallback": fallback.get(name)}
-            for name in sorted(set(gated) | set(fallback))
-        }
-        gated_hint = _gate_hint(gated, fallback) if gated_engines else ""
+        gated_engines, gated_hint = _gate_provenance(gated, diagnostics.get("fallback") or {})
 
         # A named engine waiting on its sign-in page did not get to answer; a
         # cached run without it would be replayed after the approval.

@@ -635,3 +635,68 @@ async def test_a_late_lane_answer_is_the_witness_that_drops_a_decoy(world, monke
     assert {e for r in results for e in r["engines"]} == {"codex"}
     assert meta["gated_engines"]["bing"]["reason"] == "off_topic"
     assert engine_health.is_open("bing")
+
+
+# ---------------------------------------------------------------------------
+# Review round 5
+# ---------------------------------------------------------------------------
+
+
+async def test_a_lane_answer_during_the_rescue_wait_is_kept(world, monkeypatch):
+    monkeypatch.setattr(settings, "rescue_enabled", True)
+    monkeypatch.setattr(settings, "reserve_engines", ["so360"])
+    monkeypatch.setattr(settings, "agent_lane_wait_seconds", 0.1)
+    monkeypatch.setattr(settings, "search_deadline_seconds", 0.1)
+    for name in ("duckduckgo", "bing", "anysearch"):
+        world.stubs[name].results = []
+    world(Stub("so360", delay=0.6))
+    world.stubs["codex"].delay = 0.3
+    payload = await aggregate_search(QUERY, use_cache=False)
+    assert "codex" in {e for r in payload["results"] for e in r["engines"]}
+    assert "pending" not in payload["agent_lane"]
+
+
+async def test_an_off_topic_lane_bucket_does_not_cut_the_keyless_wait(world, monkeypatch):
+    monkeypatch.setattr(settings, "search_deadline_seconds", 0.1)
+    world.stubs["duckduckgo"].results = []
+    world.stubs["bing"].results = []
+    world.stubs["anysearch"].delay = 0.4
+    world.stubs["codex"].results = _decoy("codex")
+    world.stubs["codex"].delay = 0.02
+    payload = await aggregate_search(QUERY, use_cache=False)
+    assert "anysearch" in {e for r in payload["results"] for e in r["engines"]}
+    assert "timed_out_engines" not in payload
+
+
+async def test_no_early_rescue_once_a_lane_engine_answered(world, monkeypatch):
+    monkeypatch.setattr(settings, "agent_engines", "codex,antigravity")
+    monkeypatch.setattr(settings, "rescue_enabled", True)
+    monkeypatch.setattr(settings, "reserve_engines", ["so360"])
+    monkeypatch.setattr(settings, "agent_lane_wait_seconds", 0.2)
+    for name in ("duckduckgo", "bing", "anysearch"):
+        world.stubs[name].results = []
+        world.stubs[name].delay = 0.1
+    world(Stub("so360"))
+    world.stubs["codex"].results = bucket("codex", 6)
+    world.stubs["antigravity"].delay = 5
+    payload = await aggregate_search(QUERY, use_cache=False)
+    assert world.stubs["so360"].calls == 0
+    assert "rescued_via" not in payload
+
+
+async def test_the_hint_says_when_a_failed_lane_engine_is_asked_again(world):
+    world.stubs["codex"].exc = RuntimeError("connection reset")
+    payload = await aggregate_search(QUERY, use_cache=False)
+    assert "is asked again on the next search" in payload["agent_lane_hint"]
+
+
+async def test_a_late_lasting_failure_does_not_shorten_the_row(world, monkeypatch):
+    monkeypatch.setattr(settings, "agent_lane_wait_seconds", 0.05)
+    world.stubs["codex"].delay = 0.2
+    world.stubs["codex"].exc = EngineKeyError("codex: the plan's usage limit was reached")
+    await aggregate_search(QUERY)
+    (_, meta), = world.cache.rows.values()
+    assert meta["lane_missing"] == ["codex"]
+    await asyncio.sleep(0.4)
+    (_, meta), = world.cache.rows.values()
+    assert "lane_missing" not in meta

@@ -158,11 +158,12 @@ def test_detect_gate_priority_captcha_over_login():
 # --- engine-specific walls ---------------------------------------------------
 
 
+# Trimmed from the live notice page (2026-10-31).
 _EEA_NOTICE = (
-    "<title>【お知らせ】欧州経済領域（EEA）およびイギリスからご利用のお客様へ</title>"
+    "<title>【お知らせ】欧州経済領域（EEA）およびイギリスからご利用のお客様へ - Yahoo! JAPAN</title>"
+    '<meta property="og:url" content="https://privacy.yahoo.co.jp/areacheck/error.html">'
     "<p>From Wednesday, April 6, 2022, Yahoo! JAPAN is no longer available in "
     "the EEA and the United Kingdom.</p>"
-    "<a href='https://privacy.yahoo.co.jp/areacheck/error.html'>"
 )
 
 
@@ -184,3 +185,12 @@ def test_an_empty_page_echoing_a_wall_phrase_is_not_a_wall_elsewhere():
     echo = "<h1>No results for services no longer available in the EEA</h1>"
     assert detect_gate(echo) is None
     assert detect_gate(_EEA_NOTICE) is None
+
+
+def test_yahoojp_s_own_empty_page_echoing_the_notice_is_not_a_region_wall():
+    from search_mcp.engines.yahoojp import YahooJapanEngine
+
+    query = 'privacy.yahoo.co.jp/areacheck "no longer available in the EEA"'
+    escaped = query.replace("&", "&amp;").replace("<", "&lt;").replace('"', "&quot;")
+    echo = f'<input name="p" value="{escaped}"><p>{escaped} に一致する情報は見つかりませんでした</p>'
+    assert detect_gate(echo, YahooJapanEngine.gate_markers) is None

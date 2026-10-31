@@ -87,9 +87,11 @@ class YahooJapanEngine(Engine):
         "Yahoo! JAPAN: Google's web index with no key, in any language; strongest for Japanese."
     )
     # The notice the EEA and the UK get instead of results (since April 2022).
-    # A proxy in a served region is the fix, as for any wall.
+    # A proxy in a served region is the fix, as for any wall. Matched on the
+    # page's own markup, not its wording: an empty results page echoes the
+    # query, and a raw "<" can only come from the page itself.
     gate_markers = (
-        ("region", ("privacy.yahoo.co.jp/areacheck", "no longer available in the eea")),
+        ("region", ('<meta property="og:url" content="https://privacy.yahoo.co.jp/areacheck',)),
     )
 
     def build_url(

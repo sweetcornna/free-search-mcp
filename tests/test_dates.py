@@ -182,6 +182,9 @@ def test_extract_date_hint_east_asian_forms(text, expected):
         "10월 1일 전까지 신청",
         "2024年前半の動向",
         "2020年前后",
+        "PyCharm 2023.3.4 is out",
+        "v2024.1.2 release",
+        "certifi 2024.08.30",
     ],
 )
 def test_extract_date_hint_ignores_year_first_lookalikes(text):

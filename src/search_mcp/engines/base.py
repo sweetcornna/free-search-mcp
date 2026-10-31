@@ -47,10 +47,14 @@ _ABS_RE_2 = re.compile(r"\b(\d{4})-(\d{2})-(\d{2})\b")
 # US/EU short date 12/01/2024 or 1/2/24
 _ABS_RE_3 = re.compile(r"\b(\d{1,2})/(\d{1,2})/(\d{2,4})\b")
 # Year first, as East Asian engines print it: Yahoo! JAPAN "2026/10/1 -",
-# Naver "2026.05.24.", and "2026年10月1日" in Chinese and Japanese prose.
+# Naver "2026.05.24.", and "2026年10月1日" in Chinese and Japanese prose. The
+# dotted form must close with its own dot, as Naver prints it: without one it
+# is a CalVer version ("PyCharm 2023.3.4", "certifi 2024.08.30"). No letter or
+# digit may lead the year ("v2024.1.2.").
 _ABS_RE_YMD = re.compile(
-    r"(?<![\d.])(\d{4})(?:([/.])(\d{1,2})\2(\d{1,2})(?![\d/]|\.\d)|"
-    r"\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日)"
+    r"(?<![A-Za-z\d.])(\d{4})(?:/(\d{1,2})/(\d{1,2})(?![\d/])"
+    r"|\.(\d{1,2})\.(\d{1,2})\.(?!\d)"
+    r"|\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日)"
 )
 # Relative dates in Japanese ("5日前", "15時間前"), Chinese ("3天前", "5小时前")
 # and Korean ("3일 전"). Yahoo! JAPAN, Quark and Naver lead snippets with them.
@@ -120,8 +124,8 @@ def extract_date_hint(text: str) -> str:
 
     # Year-first dates: unambiguous once the year leads.
     for ymd in _ABS_RE_YMD.finditer(text):
-        month = ymd.group(3) or ymd.group(5)
-        day = ymd.group(4) or ymd.group(6)
+        month = ymd.group(2) or ymd.group(4) or ymd.group(6)
+        day = ymd.group(3) or ymd.group(5) or ymd.group(7)
         try:
             d = datetime(int(ymd.group(1)), int(month), int(day))
         except ValueError:

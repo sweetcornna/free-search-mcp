@@ -200,8 +200,9 @@ class YahooEngine(Engine):
     description = (
         "Yahoo Search: Bing's index via Yahoo's own front end; a keyless backup when bing is gated."
     )
-    # Yahoo's EU consent interstitial, which a European egress gets instead.
-    gate_markers = (("consent", ("consent.yahoo.com", "collectconsent")),)
+    # Yahoo's EU consent interstitial, which a European egress gets instead:
+    # its form posts to this path, which no query plausibly echoes.
+    gate_markers = (("consent", ("consent.yahoo.com/v2/collectconsent?sessionid=",)),)
 
     def build_url(
         self, query: str, max_results: int, filters: SearchFilters | None = None

@@ -482,3 +482,19 @@ async def test_two_hung_candidates_do_not_starve_a_fast_third(monkeypatch):
     out = await aggregate_search("q", engines=["duckduckgo"], use_cache=False)
     # Each holds its place for max(2 staggers, 0.4 x 3 s) = 1.2 s, then c is asked.
     assert out["rescued_via"] == "c"
+
+
+async def test_a_candidate_cut_off_early_by_the_deadline_is_not_struck(monkeypatch):
+    from search_mcp.health import engine_health
+
+    monkeypatch.setattr(settings, "rescue_timeout", 1.0)
+    monkeypatch.setattr(settings, "rescue_stagger_seconds", 0.0)
+    monkeypatch.setattr(settings, "rescue_engines", list("abcdef"))
+    stubs = {name: _StubEngine(name, _mk_results(name, 3), delay=5.0) for name in "abcdef"}
+    _wire(monkeypatch, {"duckduckgo": _StubEngine("duckduckgo", []), **stubs})
+    # Places are held 0.4 s: a, b at 0; c, d at 0.4; e, f at 0.8, which have
+    # run 0.2 s when the 1 s pass ends. Two passes bench a to d (soft
+    # strikes), and never e or f.
+    for _ in range(2):
+        await aggregate_search("q", engines=["duckduckgo"], use_cache=False)
+    assert [n for n in "abcdef" if engine_health.is_open(n)] == ["a", "b", "c", "d"]
