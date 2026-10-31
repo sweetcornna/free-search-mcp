@@ -22,7 +22,7 @@ lacked.
 research("how does reciprocal rank fusion work", depth=3)
    ↓
 # Research brief: how does reciprocal rank fusion work
-_engines: duckduckgo, bing, anysearch · sources: 3 · ~3,400 tokens_
+_engines: duckduckgo, bing, yahoojp, anysearch · sources: 3 · ~3,400 tokens_
 
 ## Sources
 - [1] Reciprocal rank fusion | Elasticsearch Reference — <https://…>
@@ -128,8 +128,10 @@ header. `format="json"` returns structured data.
 ### How a search runs
 
 - A search that names no engines asks a small keyless pool: `duckduckgo`,
-  `bing` and `anysearch`. `googlenews` joins when recency is asked for, and
-  `so360` when the query is written in Chinese. Sources that only served a
+  `bing`, `yahoojp` (Yahoo! JAPAN, the keyless route to Google's index) and
+  `anysearch`. `googlenews` joins when recency is asked for, `so360` and
+  `quark` when the query is written in Chinese, `naver` when it is written in
+  Korean. Sources that only served a
   CAPTCHA or an empty shell (`mojeek`, `google`, `startpage`, `searx`,
   `sogou`) were removed rather than left to fail on every fresh process.
 - `category=` routes to sources that index that kind of thing (papers,
@@ -363,7 +365,7 @@ environment first, then `./.env`, then `~/.config/search-mcp/.env`
 |---|---|---|
 | `SEARCH_MCP_PROXY` | empty | outbound proxy (`http`, `https` or `socks5`) for the engines, the browser and `fetch` |
 | `SEARCH_MCP_PROXY_ENGINES` | empty | proxy only these engines |
-| `SEARCH_MCP_DEFAULT_ENGINES` | `["duckduckgo","bing","anysearch"]` | the pool a search uses when it names no engines |
+| `SEARCH_MCP_DEFAULT_ENGINES` | `["duckduckgo","bing","yahoojp","anysearch"]` | the pool a search uses when it names no engines |
 | `SEARCH_MCP_REGION` | `us-en` | locale for engines that take one |
 | `SEARCH_MCP_CACHE_DIR` | `~/.cache/search-mcp` | search and page cache |
 | `SEARCH_MCP_TOOLS` | empty | register only these tools |

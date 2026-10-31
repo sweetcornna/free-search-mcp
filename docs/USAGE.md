@@ -142,23 +142,25 @@ page, check the date, and corroborate what matters.
 picks a small pool for you. Every engine a search reaches on its own is keyless
 (no API key, no account).
 
-The registry contains 71 engines in total.
+The registry contains 76 engines in total.
 
-The default pool is `duckduckgo`, `bing` and `anysearch`. All three are plain
-HTTP and need no browser. The scrapers that only served a CAPTCHA, a
+The default pool is `duckduckgo`, `bing`, `yahoojp` and `anysearch`. All four
+are plain HTTP and need no browser. `yahoojp` is Yahoo! JAPAN, the keyless
+route to Google's index; it answers queries in any language. The scrapers that only served a CAPTCHA, a
 JavaScript wall or an empty page (`mojeek`, `google`, `serpsearch`,
 `startpage`, `searx`, `sogou`) were removed from the registry.
 
-Two engines join only when the query calls for it:
+These join only when the query calls for it:
 
 - `googlenews` joins for `freshness="day"` / `"week"` or `category="news"`. It
   stays out of the default pool because a news feed suits a web search only
   when recency was asked for.
-- `so360` joins when the query itself is written in Chinese.
+- `so360` and `quark` join when the query itself is written in Chinese, and
+  `naver` when it is written in Korean.
 
-The reserves (`so360`, `brave`, in that order) are seated only while fewer
-than 3 general engines are healthy. With a three-engine default pool, losing
-any one of them seats a reserve.
+The reserves (`yahoo`, `seznam`, `so360`, `brave`, in that order) are seated
+only while fewer than 3 general engines are healthy. With a four-engine
+default pool, the pool can lose one engine before a reserve is seated.
 
 The circuit breaker benches an engine at once when it serves a wall or an
 off-topic page. Errors bench it after 2 in a row, and silent zero-result
@@ -168,7 +170,15 @@ clears it. Naming an engine in `engines=` always runs it. The response lists
 
 When the pool still comes back empty, or nearly empty with gated or erroring
 engines, the aggregator runs one bounded rescue pass (the reserves, then
-`youcom`, then `baidu`) and reports it as `rescued_via`.
+`youcom`, then `baidu`) and reports it as `rescued_via`. The pass is a
+staggered race: the next candidate starts a second after the previous one, or
+as soon as it fails, and the first usable answer wins.
+
+Once the operator has signed in to `codex`, every search that names no
+engines asks it beside the pool, and its results join the same ranking (the
+agent lane, see [CODEX_SEARCH.md](CODEX_SEARCH.md#the-agent-lane)). A slow
+answer never holds the links more than 6 s; it is merged into the cached
+result set when it arrives.
 
 With `SEARCH_MCP_AGENT_BACKEND` configured, `search` also runs the answer agent
 beside the engines from the same result set and prints a short sourced answer
@@ -184,6 +194,10 @@ Engines outside the default pool, reached by name:
 | `bilibili` | Bilibili (哔哩哔哩) JSON API | keyless video search (synthetic `buvid3` cookie); video results only |
 | `zhihu` | Zhihu (知乎) search page | best effort, browser-rendered; Zhihu hard-gates bots, so a login wall or an empty result is common and is reported as such |
 | `so360` | 360搜索 HTML scrape | returns direct URLs; joins automatically for Chinese queries |
+| `quark` | Quark / 神马 (Alibaba) HTML scrape | a third Chinese index; joins automatically for Chinese queries; honours no `site:` operator, so domain filters apply afterwards |
+| `naver` | Naver web documents | Korea's main index; joins automatically for Korean queries |
+| `yahoo` | Yahoo Search HTML scrape | Bing's index through Yahoo's own front end; the first reserve |
+| `seznam` | Seznam.cz | an independent crawler index, strong on Czech; the second reserve |
 | `wikipedia` | MediaWiki API | language follows `SEARCH_MCP_REGION` |
 | `openlibrary` | Open Library | book search |
 
@@ -358,7 +372,7 @@ list) in `.env`.
 # English web search, default pool
 search("reciprocal rank fusion")
 
-# Chinese web: name the Chinese indexes (so360 also joins on its own)
+# Chinese web: name the Chinese indexes (so360 and quark also join on their own)
 search("RoboMaster 2026 报名时间", engines=["so360", "baidu"])
 
 # Recent news: googlenews joins because recency was asked for
@@ -375,7 +389,8 @@ search("asyncio task groups", include_domains=["python.org"])
 ```
 
 > Measured status on 2026-10-29: `duckduckgo`, `bing`, `anysearch`, `so360`,
-> `baidu`, `youcom`, `googlenews` and `brave` return live, on-topic results.
+> `baidu`, `youcom`, `googlenews` and `brave` return live, on-topic results,
+> and on 2026-10-31 so did `yahoojp`, `yahoo`, `seznam`, `quark` and `naver`.
 > The engines that only served a CAPTCHA, a JavaScript wall or nothing
 > (`mojeek`, `google`/`serpsearch`, `startpage`, `searx`, `sogou`) were removed.
 > `zhihu` frequently hits a login wall and returns empty, which is the expected
@@ -429,10 +444,10 @@ ones:
 
 | Var | Default | Meaning |
 |---|---|---|
-| `SEARCH_MCP_DEFAULT_ENGINES` | `["duckduckgo","bing","anysearch"]` | the pool used when a search names no engines (JSON list) |
-| `SEARCH_MCP_RESERVE_ENGINES` | `["so360","brave"]` | stand-ins, seated only while fewer than `SEARCH_MCP_MIN_HEALTHY_ENGINES` (default `3`) general engines are healthy |
+| `SEARCH_MCP_DEFAULT_ENGINES` | `["duckduckgo","bing","yahoojp","anysearch"]` | the pool used when a search names no engines (JSON list) |
+| `SEARCH_MCP_RESERVE_ENGINES` | `["yahoo","seznam","so360","brave"]` | stand-ins, seated only while fewer than `SEARCH_MCP_MIN_HEALTHY_ENGINES` (default `3`) general engines are healthy |
 | `SEARCH_MCP_FRESH_ENGINES` | `["googlenews"]` | joined for `freshness="day"` / `"week"` |
-| `SEARCH_MCP_LOCALE_ENGINES` | `{"zh":["so360"]}` | JSON object: engines joined when the query is written in that language |
+| `SEARCH_MCP_LOCALE_ENGINES` | `{"zh":["so360","quark"],"ko":["naver"]}` | JSON object: engines joined when the query is written in that language |
 | `SEARCH_MCP_HEALTH_ENABLED` | `true` | the circuit breaker |
 | `SEARCH_MCP_ENGINE_COOLDOWN_SECONDS` / `_MAX_SECONDS` | `600` / `3600` | first bench, and the ceiling it doubles towards |
 | `SEARCH_MCP_COHERENCE_GUARD_ENABLED` | `true` | the off-topic bucket guard |

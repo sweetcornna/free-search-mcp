@@ -4,6 +4,72 @@ All notable changes to this project are documented here. The format is loosely
 based on [Keep a Changelog](https://keepachangelog.com/), and the project follows
 semantic versioning.
 
+## [Unreleased]
+
+Agent search and keyless search now run side by side, the default pool gains
+Google's index, and five keyless sources join the registry.
+
+### Added
+
+- The agent lane. Once the operator has signed in to `codex`
+  (`search-mcp-login codex`), every search that names no engines asks it at
+  the same moment as the keyless engines. Its results go through the same
+  off-topic guard and are fused into the same ranking; until now `codex` ran
+  only when a call named it, and naming it switched the keyless pool, its
+  breaker, routing and rescue off for that call.
+  - The links wait for the lane at most `SEARCH_MCP_AGENT_LANE_WAIT_SECONDS`
+    (6), counted from when the engines were asked. A lane engine still
+    searching then finishes in the background, and its results are merged
+    into the cached result set, so the same search a little later returns
+    them.
+  - The lane never queues for a rate-limit token, one failure (a spent usage
+    window, a revoked sign-in) benches it, and its problems are reported under
+    `agent_lane` and an "Agent lane" note, never in `errors`.
+  - `SEARCH_MCP_AGENT_ENGINES` picks the lane: `auto` (default) seats a
+    signed-in `codex`; `antigravity` joins only when listed
+    (`codex,antigravity`), because Google's terms forbid this use of its
+    sign-in; `off` turns the lane off. Without a sign-in nothing changes and
+    no sign-in page opens.
+  - The cache key includes the seated lane, and the startup warm-up refreshes
+    a signed-in lane engine's token and looks its model up.
+- `yahoojp`: Yahoo! JAPAN serves Google's index as plain HTML, in any
+  language. Measured 0.8 to 1.5 s, and it put docs.python.org, Stack Overflow
+  and the Federal Reserve's own release on top. It joins the default pool,
+  which is now `duckduckgo`, `bing`, `yahoojp` and `anysearch`. Yahoo! JAPAN
+  does not serve the EEA or the UK; from there its notice page is reported as
+  a new `region` gate and the engine is benched.
+- `yahoo`: Bing's index through Yahoo's own front end, which stayed on topic
+  where `bing` served its decoy page. It keeps the cookies of one completed
+  bot-check handshake per proxy egress. It is the first reserve.
+- `seznam`: Seznam.cz's independent crawler index, read from the JSON state
+  embedded in the page. The second reserve, ahead of `so360` and `brave`.
+- `quark` (Alibaba's Shenma index) joins `so360` for a query written in
+  Chinese, and `naver` (Korea's main index) joins for one written in Korean.
+- Snippet dates printed year first or as East Asian relative phrases
+  (`2026/10/1`, `2026.05.24.`, `2026年10月1日`, `5日前`, `3天前`, `3일 전`) are read.
+- Yahoo's EU consent page and Alibaba's x5sec wall (Quark's answer to a burst)
+  are recognised as `consent` and `captcha` gates instead of silent empties.
+
+### Changed
+
+- The rescue pass is a staggered race instead of a queue. The first candidate
+  is asked at once and each next one `SEARCH_MCP_RESCUE_STAGGER_SECONDS` (1)
+  later, or as soon as the previous one fails; the first usable answer wins
+  and cancels the rest, and the whole pass still fits in
+  `SEARCH_MCP_RESCUE_TIMEOUT`. It used to give each candidate an equal slice of
+  that timeout in turn, so a slow first candidate held up a fast second one.
+- When no keyless engine answered and the agent lane is still searching, the
+  rescue pass starts beside the lane wait instead of after it, and is
+  cancelled if the lane's answer is enough.
+- Reserves are now `yahoo`, `seznam`, `so360`, `brave`; locale engines are
+  `{"zh": ["so360", "quark"], "ko": ["naver"]}`. The default pool is four wide,
+  so it can lose one engine before a reserve is seated.
+- An engine can cap its burst below its per-minute rate
+  (`Engine.rate_limit_burst`). `quark` uses 10 a minute, at most 3 at once,
+  and a search skips it rather than queue.
+- The cache key of a plain search changes with the new default pool, so
+  searches cached by 0.17 are not replayed.
+
 ## [0.17.0] - 2026-10-29
 
 ### Added

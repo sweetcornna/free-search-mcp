@@ -39,7 +39,7 @@ to it. Do not infer the current year from search results or from memory.
 - Never copy a date, amount, name, rule or number from a snippet or the `Lead:`
   line into your answer.
 - Search in the language of the source. A Chinese query is routed to a Chinese
-  index automatically; to force more of them use `engines=["so360", "baidu"]`.
+  index automatically; to force more of them use `engines=["so360", "quark", "baidu"]`.
 
 ## 2. Read the source itself
 

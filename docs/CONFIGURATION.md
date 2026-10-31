@@ -15,11 +15,11 @@ Available settings:
 
 | Var | Default | Meaning |
 |---|---|---|
-| `SEARCH_MCP_DEFAULT_ENGINES` | `["duckduckgo","bing","anysearch"]` | JSON list; the pool a search uses when it names no engines |
-| `SEARCH_MCP_RESERVE_ENGINES` | `["so360","brave"]` | stand-ins, in order, seated only while fewer than `MIN_HEALTHY_ENGINES` general engines are healthy |
+| `SEARCH_MCP_DEFAULT_ENGINES` | `["duckduckgo","bing","yahoojp","anysearch"]` | JSON list; the pool a search uses when it names no engines |
+| `SEARCH_MCP_RESERVE_ENGINES` | `["yahoo","seznam","so360","brave"]` | stand-ins, in order, seated only while fewer than `MIN_HEALTHY_ENGINES` general engines are healthy |
 | `SEARCH_MCP_MIN_HEALTHY_ENGINES` | `3` | below this many healthy general engines, reserves are seated |
 | `SEARCH_MCP_FRESH_ENGINES` | `["googlenews"]` | joined for `freshness="day"` / `"week"` |
-| `SEARCH_MCP_LOCALE_ENGINES` | `{"zh":["so360"]}` | JSON object: engines joined when the QUERY is written in that language |
+| `SEARCH_MCP_LOCALE_ENGINES` | `{"zh":["so360","quark"],"ko":["naver"]}` | JSON object: engines joined when the QUERY is written in that language |
 | `SEARCH_MCP_HEALTH_ENABLED` | `true` | the circuit breaker; `false` asks every engine every time |
 | `SEARCH_MCP_ENGINE_COOLDOWN_SECONDS` | `600` | first bench; doubles on each repeat |
 | `SEARCH_MCP_ENGINE_COOLDOWN_MAX_SECONDS` | `3600` | ceiling for the doubling |

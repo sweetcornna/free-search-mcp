@@ -677,9 +677,10 @@ def render_engines(
         lines.append("")
         lines.append(
             f"Every engine above is keyless. Opt-in extras that run only on the operator's "
-            f"own API key or account sign-in: {labelled}. They are never used unless named, and "
-            "an unconfigured one returns an error and no results, so do not ask the user for a "
-            "key or a sign-in."
+            f"own API key or account sign-in: {labelled}. A signed-in account engine may also "
+            "search beside the keyless pool on its own (the agent lane); the rest run only when "
+            "named. An unconfigured one returns an error and no results, so do not ask the user "
+            "for a key or a sign-in."
         )
     return "\n".join(lines) + "\n"
 
