@@ -416,6 +416,23 @@ def auto_signin(monkeypatch):
     return install
 
 
+async def test_the_agent_lane_never_opens_the_sign_in(backend, auto_signin):
+    """The lane seats only a signed-in codex, but a sign-in removed between
+    that check and the search must not open a browser from a search nobody
+    named codex in."""
+    from search_mcp.engines.base import EngineKeyError, in_agent_lane
+
+    asked = auto_signin(oauth.Credential(provider="codex", access_token="FRESH",
+                                         account_id="acct-9", expires_at=time.time() + 3600))
+    token = in_agent_lane.set(True)
+    try:
+        with pytest.raises(EngineKeyError, match="codex"):
+            await CodexEngine().search("asyncio taskgroup", 5)
+    finally:
+        in_agent_lane.reset(token)
+    assert asked == []
+
+
 async def test_naming_it_unsigned_opens_the_sign_in_and_then_searches(backend, auto_signin):
     routes, calls = backend
     routes["/alpha/search"] = httpx.Response(200, json=_SEARCH_REPLY)

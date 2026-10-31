@@ -44,14 +44,15 @@ unparseable page, per the keyless-engine contract.
 from __future__ import annotations
 
 import json
-import re
 from urllib.parse import quote_plus, urlparse
 
 from .base import (
     Engine,
     SearchFilters,
     SearchResult,
+    enclosing_anchor,
     extract_date_hint,
+    inline_text,
     parse_html,
 )
 
@@ -66,45 +67,11 @@ _ORGANIC_CARDS = frozenset({"ss_text", "ss_pic", "ss_kv", "nature_result"})
 # the quark.sm.cn/adclick redirect behind ads.
 _OWN_HOSTS = ("sm.cn", "quark.cn")
 
-_REL_DATE = re.compile(r"(\d+)\s*(分钟|小时|天|周|个月|年)前")
-_REL_UNIT = {
-    "分钟": "minute",
-    "小时": "hour",
-    "天": "day",
-    "周": "week",
-    "个月": "month",
-    "年": "year",
-}
-
-
-def _text(node) -> str:
-    """Visible text with no separator at tag boundaries.
-
-    Quark wraps query terms in `<em>`, often inside a word or a dotted name; a
-    space at each boundary would print "asyncio . TaskGroup".
-    """
-    if node is None:
-        return ""
-    return " ".join(node.text(separator="").split())
-
-
-def _source_date(source: str) -> str:
-    """The date on a card's source line, normalised, else ""."""
-    m = _REL_DATE.search(source)
-    if m:
-        n, unit = int(m.group(1)), _REL_UNIT[m.group(2)]
-        return f"{n} {unit}{'s' if n != 1 else ''} ago"
-    return extract_date_hint(source)
-
-
-def _enclosing_anchor(node):
-    while node is not None and node.tag != "a":
-        node = node.parent
-    return node
-
-
 def _is_own_host(url: str) -> bool:
-    host = (urlparse(url).hostname or "").lower()
+    try:
+        host = (urlparse(url).hostname or "").lower()
+    except ValueError:  # a malformed href: drop the row, keep the page
+        return True
     return any(host == h or host.endswith("." + h) for h in _OWN_HOSTS)
 
 
@@ -153,19 +120,19 @@ class QuarkEngine(Engine):
             if meta.get("ads"):
                 continue
             head = card.css_first(".qk-title-text")
-            anchor = _enclosing_anchor(head)
+            anchor = enclosing_anchor(head)
             if anchor is None:
                 continue
             url = (anchor.attributes.get("href") or "").strip()
-            title = _text(head)
+            title = inline_text(head)
             if not title or not url.startswith(("http://", "https://")):
                 continue
             if _is_own_host(url) or url in seen:
                 continue
             seen.add(url)
 
-            snippet = _text(card.css_first(".qk-paragraph-text"))
-            source = " · ".join(_text(n) for n in card.css(".qk-source-item"))
+            snippet = inline_text(card.css_first(".qk-paragraph-text"))
+            source = " · ".join(inline_text(n) for n in card.css(".qk-source-item"))
             results.append(
                 SearchResult(
                     title=title,
@@ -175,7 +142,7 @@ class QuarkEngine(Engine):
                     rank=0,
                     # Scraped from the page, so NOT confident; the absolute
                     # form is display-only under a freshness filter.
-                    published_age=_source_date(source) or extract_date_hint(snippet),
+                    published_age=extract_date_hint(source) or extract_date_hint(snippet),
                 )
             )
         return results

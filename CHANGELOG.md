@@ -24,7 +24,9 @@ Google's index, and five keyless sources join the registry.
     them.
   - The lane never queues for a rate-limit token, one failure (a spent usage
     window, a revoked sign-in) benches it, and its problems are reported under
-    `agent_lane` and an "Agent lane" note, never in `errors`.
+    `agent_lane` and an "Agent lane" note, never in `errors`. A result set
+    missing a lane engine is replayed from the cache for an hour at most, and
+    a late merge never overwrites a newer search's row.
   - `SEARCH_MCP_AGENT_ENGINES` picks the lane: `auto` (default) seats a
     signed-in `codex`; `antigravity` joins only when listed
     (`codex,antigravity`), because Google's terms forbid this use of its
@@ -54,8 +56,8 @@ Google's index, and five keyless sources join the registry.
 
 - The rescue pass is a staggered race instead of a queue. The first candidate
   is asked at once and each next one `SEARCH_MCP_RESCUE_STAGGER_SECONDS` (1)
-  later, or as soon as the previous one fails; the first usable answer wins
-  and cancels the rest, and the whole pass still fits in
+  later, or as soon as the previous one fails, at most two at a time; the
+  first usable answer wins and cancels the rest, and the whole pass still fits in
   `SEARCH_MCP_RESCUE_TIMEOUT`. It used to give each candidate an equal slice of
   that timeout in turn, so a slow first candidate held up a fast second one.
 - When no keyless engine answered and the agent lane is still searching, the
@@ -67,6 +69,10 @@ Google's index, and five keyless sources join the registry.
 - An engine can cap its burst below its per-minute rate
   (`Engine.rate_limit_burst`). `quark` uses 10 a minute, at most 3 at once,
   and a search skips it rather than queue.
+- The rate limiter no longer sleeps while holding its lock. A caller that has
+  to wait reserves its token and sleeps on its own, so callers are still
+  served in arrival order, and one that will not wait (`max_wait`) is never
+  queued behind a sleeper.
 - The cache key of a plain search changes with the new default pool, so
   searches cached by 0.17 are not replayed.
 

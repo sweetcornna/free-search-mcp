@@ -57,6 +57,7 @@ from .base import (
     SearchFilters,
     SearchResult,
     extract_date_hint,
+    in_agent_lane,
     not_signed_in,
 )
 
@@ -599,7 +600,9 @@ class CodexEngine(Engine):
                 "search and reading in one step."
             ),
         )
-        if not _can_sign_in_here():
+        if not _can_sign_in_here() or in_agent_lane.get():
+            # The agent lane asks only signed-in engines, and a search that did
+            # not name `codex` must never open a sign-in page.
             raise unconfigured
         try:
             return await oauth.sign_in_on_first_use("codex", settings.codex_signin_wait_seconds)

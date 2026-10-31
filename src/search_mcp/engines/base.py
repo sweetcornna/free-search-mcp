@@ -5,6 +5,7 @@ import asyncio
 import logging
 import random
 import re
+from contextvars import ContextVar
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
 from typing import Any
@@ -53,8 +54,9 @@ _ABS_RE_YMD = re.compile(
 )
 # Relative dates in Japanese ("5日前", "15時間前"), Chinese ("3天前", "5小时前")
 # and Korean ("3일 전"). Yahoo! JAPAN, Quark and Naver lead snippets with them.
+# Not after a month: "10月1日前" and "10월 1일 전" mean "before 1 October".
 _REL_CJK_RE = re.compile(
-    r"(\d+)\s*(分钟|分鐘|分|時間|小时|小時|日|天|週間|周|週|か月|ヶ月|ケ月|个月|個月|年|"
+    r"(?<![\d月월])(?<!月\s)(?<!월\s)(\d+)\s*(分钟|分鐘|分|時間|小时|小時|日|天|週間|周|週|か月|ヶ月|ケ月|个月|個月|年|"
     r"분|시간|일|주|개월|년)\s*(?:前|전)"
 )
 _CJK_UNITS = {
@@ -972,6 +974,12 @@ _GATE_MARKERS: tuple[tuple[str, tuple[str, ...]], ...] = (
 )
 
 
+# Set while an engine runs in the agent lane (aggregator._run_lane), i.e. in a
+# search that did not name it. An engine must not open a sign-in page then,
+# even if its stored sign-in vanished between the lane's check and the search.
+in_agent_lane: ContextVar[bool] = ContextVar("in_agent_lane", default=False)
+
+
 class EngineKeyError(ValueError):
     """A keyed engine cannot run: its key is missing, rejected, or out of quota.
 
@@ -1472,6 +1480,26 @@ def text_of(node) -> str:
     if node is None:
         return ""
     return " ".join(node.text(separator=" ", strip=True).split())
+
+
+def inline_text(node) -> str:
+    """Node text with the page's own spacing, whitespace collapsed.
+
+    Not `text_of`, which puts a space at every tag boundary: SERPs wrap query
+    terms in `<b>`, `<em>` or `<mark>`, often inside a dotted name or a CJK
+    word, and that printed "asyncio . TaskGroup" and "파이썬 에서는". For titles
+    and snippets, which hold inline markup only, so no words merge.
+    """
+    if node is None:
+        return ""
+    return " ".join(node.text(separator="").split())
+
+
+def enclosing_anchor(node):
+    """The nearest `<a>` at or above `node`, or None."""
+    while node is not None and node.tag != "a":
+        node = node.parent
+    return node
 
 
 def parse_html(html: str) -> HTMLParser:

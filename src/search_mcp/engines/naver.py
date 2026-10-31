@@ -39,7 +39,6 @@ page yields `[]` rather than an error, per the keyless-engine contract.
 
 from __future__ import annotations
 
-import re
 from urllib.parse import quote_plus, urlparse
 
 from .base import (
@@ -47,7 +46,9 @@ from .base import (
     SearchFilters,
     SearchResult,
     augment_query_with_operators,
+    enclosing_anchor,
     extract_date_hint,
+    inline_text,
     parse_html,
 )
 
@@ -63,46 +64,9 @@ _NEW_WINDOW = "새 창 열림"
 # document; this only keeps one out if that ever changes.
 _AD_HOSTS = ("ader.naver.com", "ad.search.naver.com")
 
-_ABS_DATE = re.compile(r"^(\d{4})\.(\d{1,2})\.(\d{1,2})\.")
-_REL_DATE = re.compile(r"^(\d+)\s*(분|시간|일|주|개월|년)\s*전")
-_REL_UNIT = {
-    "분": "minute",
-    "시간": "hour",
-    "일": "day",
-    "주": "week",
-    "개월": "month",
-    "년": "year",
-}
-
-
 def _text(node) -> str:
-    """Visible text with no separator at tag boundaries.
-
-    Naver wraps query terms in `<mark>`, often mid-word; a space at each
-    boundary printed "asyncio . TaskGroup" and "파이썬 에서는".
-    """
-    if node is None:
-        return ""
-    return " ".join(node.text(separator="").replace(_NEW_WINDOW, " ").split())
-
-
-def _profile_date(text: str) -> str:
-    """Normalise the date that opens a document's profile line, else ""."""
-    m = _ABS_DATE.match(text)
-    if m:
-        y, mo, d = (int(g) for g in m.groups())
-        return f"{y:04d}-{mo:02d}-{d:02d}"
-    m = _REL_DATE.match(text)
-    if m:
-        n, unit = int(m.group(1)), _REL_UNIT[m.group(2)]
-        return f"{n} {unit}{'s' if n != 1 else ''} ago"
-    return ""
-
-
-def _enclosing_anchor(node):
-    while node is not None and node.tag != "a":
-        node = node.parent
-    return node
+    """`inline_text`, without the "새 창 열림" (opens in a new window) label."""
+    return " ".join(inline_text(node).replace(_NEW_WINDOW, " ").split())
 
 
 class NaverEngine(Engine):
@@ -138,20 +102,23 @@ class NaverEngine(Engine):
 
         for doc in tree.css("div.fds-web-doc-root"):
             head = doc.css_first(".sds-comps-text-type-headline1")
-            anchor = _enclosing_anchor(head)
+            anchor = enclosing_anchor(head)
             if anchor is None:
                 continue
             url = (anchor.attributes.get("href") or "").strip()
             title = _text(head)
             if not title or not url.startswith(("http://", "https://")):
                 continue
-            host = (urlparse(url).hostname or "").lower()
+            try:
+                host = (urlparse(url).hostname or "").lower()
+            except ValueError:  # a malformed href costs that row, not the page
+                continue
             if host in _AD_HOSTS or url in seen:
                 continue
             seen.add(url)
 
             snippet = _text(doc.css_first(".sds-comps-text-type-body1"))
-            date = _profile_date(_text(doc.css_first(".sds-comps-profile-info-subtext")))
+            date = extract_date_hint(_text(doc.css_first(".sds-comps-profile-info-subtext")))
             results.append(
                 SearchResult(
                     title=title,

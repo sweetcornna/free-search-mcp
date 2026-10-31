@@ -419,3 +419,77 @@ async def test_an_early_rescue_the_lane_made_unnecessary_is_cancelled(world, mon
     # Two hops: the rescue task, then the probe it was waiting on.
     await asyncio.sleep(0.05)
     assert world.stubs["so360"].cancelled
+
+
+# ---------------------------------------------------------------------------
+# Review round 1
+# ---------------------------------------------------------------------------
+
+
+async def test_a_rescued_answer_ends_the_stretched_lane_wait(world, monkeypatch):
+    monkeypatch.setattr(settings, "rescue_enabled", True)
+    monkeypatch.setattr(settings, "reserve_engines", ["so360"])
+    monkeypatch.setattr(settings, "agent_lane_wait_seconds", 0.2)
+    monkeypatch.setattr(settings, "search_deadline_seconds", 3.0)
+    for name in ("duckduckgo", "bing", "anysearch"):
+        world.stubs[name].results = []
+    world(Stub("so360", delay=0.05))
+    world.stubs["codex"].delay = 5
+    started = time.monotonic()
+    payload = await aggregate_search(QUERY, use_cache=False)
+    took = time.monotonic() - started
+    assert payload["rescued_via"] == "so360"
+    # The lane's ordinary 0.2 s, not the 3 s deadline the empty run stretched to.
+    assert took < 0.6, f"{took:.2f} s"
+    assert payload["agent_lane"]["pending"] == ["codex"]
+
+
+async def test_a_run_missing_its_lane_engine_is_replayed_for_an_hour_at_most(world):
+    world.stubs["codex"].exc = RuntimeError("upstream reset")
+    await aggregate_search(QUERY)
+    (results, meta), = world.cache.rows.values()
+    assert meta["lane_missing"] is True
+    assert not aggregator._too_degraded_to_replay(meta)
+    assert aggregator._too_degraded_to_replay({**meta, "cached_at": time.time() - 3700})
+
+
+async def test_a_complete_lane_leaves_the_row_unmarked(world):
+    await aggregate_search(QUERY)
+    (_, meta), = world.cache.rows.values()
+    assert "lane_missing" not in meta
+
+
+async def test_the_late_merge_clears_the_mark_once_the_lane_is_in(world, monkeypatch):
+    monkeypatch.setattr(settings, "agent_lane_wait_seconds", 0.05)
+    world.stubs["codex"].delay = 0.2
+    await aggregate_search(QUERY)
+    (_, meta), = world.cache.rows.values()
+    assert meta["lane_missing"] is True
+    await asyncio.sleep(0.4)
+    (results, meta), = world.cache.rows.values()
+    assert "lane_missing" not in meta
+    assert "codex" in {e for r in results for e in r["engines"]}
+
+
+async def test_keyless_engines_take_no_silent_strike_from_a_lane_find(world):
+    for name in ("duckduckgo", "bing", "anysearch"):
+        world.stubs[name].results = []
+    for _ in range(4):
+        await aggregate_search(QUERY, use_cache=False)
+    assert not any(engine_health.is_open(n) for n in ("duckduckgo", "bing", "anysearch"))
+
+
+async def test_a_late_merge_never_overwrites_a_newer_row(world, monkeypatch):
+    monkeypatch.setattr(settings, "agent_lane_wait_seconds", 0.05)
+    world.stubs["codex"].delay = 0.3
+    await aggregate_search(QUERY)  # leaves codex merging in the background
+    # A forced refresh of the same search, whose codex is out of tokens.
+    world.tokens["codex"] = False
+    world.stubs["duckduckgo"].results = bucket("fresh", 4)
+    await aggregate_search(QUERY, max_age_seconds=0)
+    await asyncio.sleep(0.5)
+    (results, _), = world.cache.rows.values()
+    engines_found = {e for r in results for e in r["engines"]}
+    assert "codex" not in engines_found, "the first search's late merge overwrote the refresh"
+    assert any(r["url"].startswith("https://fresh.example/") for r in results)
+    assert not aggregator._lane_rows

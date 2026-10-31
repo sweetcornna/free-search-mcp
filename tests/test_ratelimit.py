@@ -75,3 +75,27 @@ async def test_quark_is_configured_with_its_burst_cap():
     bucket = search_limiter._buckets["quark"]
     assert bucket.capacity == 3
     assert bucket.rate == 10 / 60.0
+
+
+async def test_a_caller_that_will_not_wait_is_not_queued_behind_a_sleeper():
+    bucket = TokenBucket(60, burst=1)  # one token, refilled once a second
+    await bucket.acquire(1)
+    sleeper = asyncio.ensure_future(bucket.acquire(1))  # waits about a second
+    await asyncio.sleep(0)
+    started = asyncio.get_event_loop().time()
+    assert await bucket.acquire(1, max_wait=0) is False
+    assert asyncio.get_event_loop().time() - started < 0.05
+    assert await sleeper is True
+
+
+async def test_waiters_are_served_in_arrival_order():
+    bucket = TokenBucket(600, burst=1)  # a token every 0.1 s
+    await bucket.acquire(1)
+    order: list[int] = []
+
+    async def take(i: int) -> None:
+        await bucket.acquire(1)
+        order.append(i)
+
+    await asyncio.gather(*(take(i) for i in range(3)))
+    assert order == [0, 1, 2]

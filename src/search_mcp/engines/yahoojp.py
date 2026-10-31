@@ -56,6 +56,7 @@ from .base import (
     SearchResult,
     augment_query_with_operators,
     extract_date_hint,
+    inline_text,
     parse_html,
 )
 
@@ -69,19 +70,6 @@ _FRESHNESS = {"day": "d", "week": "w", "month": "m1", "year": "y"}
 # Other yahoo.co.jp hosts are kept: a Chiebukuro question or a Yahoo! News
 # article that Google ranks organically is a real page, not navigation.
 _INTERNAL_HOSTS = ("search.yahoo.co.jp", "rdsig.yahoo.co.jp", "ard.yahoo.co.jp")
-
-
-def _text(node) -> str:
-    """Node text with the page's own spacing, whitespace collapsed.
-
-    Not `text_of`: that joins text nodes with a space, which splits every
-    `<b>` highlight off its neighbours ("asyncio . TaskGroup",
-    "クレジットカード 人気ランキング"), and Japanese has no spaces to begin with.
-    Titles and snippets here hold inline markup only, so no words merge.
-    """
-    if node is None:
-        return ""
-    return " ".join(node.text().split())
 
 
 def _is_internal(url: str) -> bool:
@@ -136,14 +124,14 @@ class YahooJapanEngine(Engine):
                 continue
             url = (anchor.attributes.get("href") or "").strip()
             # The anchor's own text includes the site name and breadcrumb.
-            title = _text(anchor.css_first("h3"))
+            title = inline_text(anchor.css_first("h3"))
             if not title or not url.startswith(("http://", "https://")):
                 continue
             if _is_internal(url) or url in seen:
                 continue
             seen.add(url)
 
-            snippet = _text(card.css_first("p.sw-Card__summary"))
+            snippet = inline_text(card.css_first("p.sw-Card__summary"))
             results.append(
                 SearchResult(
                     title=title,

@@ -81,6 +81,7 @@ from .base import (
     SearchResult,
     augment_query_with_operators,
     extract_date_hint,
+    inline_text,
     parse_html,
 )
 
@@ -147,19 +148,6 @@ def _is_dropped(url: str) -> bool:
         return True
     # What Yahoo's ads unwrap to: Bing Ads' own click redirect.
     return (host == "bing.com" or host.endswith(".bing.com")) and parsed.path.startswith("/aclick")
-
-
-def _text(node) -> str:
-    """Node text with the page's own spacing, whitespace collapsed.
-
-    Not `text_of`: that joins text nodes with a space, which splits every
-    `<b>` highlight off its neighbours ("<b>asyncio</b>.<b>TaskGroup</b>"
-    became "asyncio . TaskGroup"). Titles and snippets here hold inline
-    markup only, so no words merge.
-    """
-    if node is None:
-        return ""
-    return " ".join(node.text().split())
 
 
 # ---------------------------------------------------------------------------
@@ -306,14 +294,14 @@ class YahooEngine(Engine):
             if any(marker in href for marker in _AD_CLICK_MARKERS):
                 continue
             url = resolve_yahoo_url(href)
-            title = _text(row.css_first("h3"))
+            title = inline_text(row.css_first("h3"))
             if not title or not url.startswith(("http://", "https://")):
                 continue
             if _is_dropped(url) or url in seen:
                 continue
             seen.add(url)
 
-            snippet = _text(row.css_first("div.compText"))
+            snippet = inline_text(row.css_first("div.compText"))
             results.append(
                 SearchResult(
                     title=title,

@@ -235,8 +235,9 @@ default engines then costs time but still returns results.
 
 The pass is a staggered race, in the manner of hedged requests. The first
 candidate is asked at once, each next one `SEARCH_MCP_RESCUE_STAGGER_SECONDS`
-(1) later or as soon as the one before it has failed, and the first usable
-answer wins and cancels the rest; the whole pass fits in
+(1) later or as soon as the one before it has failed, never more than two at a
+time, and the first usable answer wins and cancels the rest; the whole pass
+fits in
 `SEARCH_MCP_RESCUE_TIMEOUT` (10). Until 0.18 it asked one candidate at a time,
 each in an equal slice of the timeout, so a slow first candidate spent its
 slice before a fast second one was asked. A candidate that answers inside the
@@ -561,13 +562,21 @@ witness that exposes a keyless engine's decoy page.
   2026-09-26: `codex` answered in about 3 s and the pool in 2 to 4 s, so the
   two usually land together; `antigravity` took 10 to 20 s. When the keyless
   engines found nothing, the wait stretches to the search deadline, and the
-  rescue pass starts beside it rather than after it; it is cancelled if the
-  lane's answer turns out to be enough.
+  rescue pass starts beside it rather than after it. Whichever settles it
+  first ends the other: a rescue that brings results back returns the lane to
+  its ordinary wait, and a lane answer that makes the rescue unnecessary
+  cancels it.
 - A lane engine still searching when the wait ends is not cancelled. It
   finishes in the background, and its results are merged into the cached
   result set of that search, so the same call a little later (or
   `cache://search/...`) returns the fused set. `agent_lane.pending` and the
-  "Agent lane" note say so.
+  "Agent lane" note say so. A newer search that rewrites the same row takes
+  it over, and a late answer from the older one is dropped rather than
+  written over it.
+- A result set that lacks a lane engine the search is keyed on (it failed,
+  sat out, was benched, or is still being merged in) is replayed from the
+  cache for an hour at most, like a result set from a thinned pool, so the
+  lane's answer is not kept out of that search for a week.
 - The lane never queues for a rate-limit token. Past its per-minute limit (10
   for both engines, which protects the account's usage) an engine sits the
   search out and `agent_lane.rate_limited` says so.
@@ -575,7 +584,9 @@ witness that exposes a keyless engine's decoy page.
   sign-in or a refused model does not clear on the next search, and every
   attempt draws on the plan), and is reported under `agent_lane.errors`, never
   under `errors`. The keyless pool's breaker, census and rescue decisions
-  count only keyless engines, so the pool stays able to answer alone.
+  count only keyless engines, so the pool stays able to answer alone, and a
+  keyless engine that found nothing takes no "silent" strike because a lane
+  engine did. A lane search never opens a sign-in page.
 - The cache key includes the seated lane, so signing in turns a cached
   keyless-only answer into a fresh search instead of replaying it.
 - The server's startup warm-up refreshes a signed-in lane engine's token and

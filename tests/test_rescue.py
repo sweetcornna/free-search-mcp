@@ -450,3 +450,14 @@ async def test_candidates_still_running_at_the_deadline_are_benched(monkeypatch)
     assert not engine_health.is_open("searx")
     await aggregate_search("q2", engines=["duckduckgo"], use_cache=False)
     assert engine_health.is_open("searx") and engine_health.is_open("bing")
+
+
+async def test_no_more_than_two_candidates_run_at_once(monkeypatch):
+    monkeypatch.setattr(settings, "rescue_timeout", 0.3)
+    monkeypatch.setattr(settings, "rescue_stagger_seconds", 0.0)
+    monkeypatch.setattr(settings, "rescue_engines", ["a", "b", "c", "d"])
+    stubs = {name: _StubEngine(name, _mk_results(name, 3), delay=5.0) for name in "abcd"}
+    _wire(monkeypatch, {"duckduckgo": _StubEngine("duckduckgo", []), **stubs})
+    out = await aggregate_search("q", engines=["duckduckgo"], use_cache=False)
+    assert out["results"] == []
+    assert [name for name, stub in stubs.items() if stub.calls] == ["a", "b"]

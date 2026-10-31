@@ -161,6 +161,8 @@ def test_apply_post_filters_no_filter_preserves_field():
         ("2个月前", "2 months ago"),
         ("3일 전", "3 days ago"),
         ("2시간 전", "2 hours ago"),
+        # A deadline is not a relative date; the year-first date still is.
+        ("请于2026年10月1日前提交", "2026-10-01"),
     ],
 )
 def test_extract_date_hint_east_asian_forms(text, expected):
@@ -176,6 +178,8 @@ def test_extract_date_hint_east_asian_forms(text, expected):
         "2026/10/1/2",
         "2999/01/01",
         "数年前",
+        "请于10月1日前提交",
+        "10월 1일 전까지 신청",
     ],
 )
 def test_extract_date_hint_ignores_year_first_lookalikes(text):
