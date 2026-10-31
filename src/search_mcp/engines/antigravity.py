@@ -436,7 +436,9 @@ class AntigravityEngine(Engine):
                 ),
             ) from None
         except oauth.OAuthError as exc:
-            raise EngineKeyError(f"{self.name}: {exc}") from exc
+            failure = EngineKeyError(f"{self.name}: {exc}")
+            failure.transient = isinstance(exc, oauth.OAuthUnreachable)
+            raise failure from exc
 
     async def search(
         self,

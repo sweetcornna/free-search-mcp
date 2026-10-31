@@ -577,7 +577,8 @@ witness that exposes a keyless engine's decoy page.
   it over, and a late answer from the older one is dropped rather than
   written over it.
 - A result set that lacks a lane engine for a passing reason (still being
-  merged in, out of tokens, a timeout or a reset) is replayed from the cache
+  merged in, out of tokens, a timeout or a reset, or benched after those) is
+  replayed from the cache
   for an hour at most, like a result set from a thinned pool, so the lane's
   answer is not kept out of that search for a week. The replay says which
   engine it lacks (`agent_lane.missing`). A lasting state (a spent plan, a
@@ -596,7 +597,8 @@ witness that exposes a keyless engine's decoy page.
   search out and `agent_lane.rate_limited` says so.
 - A spent usage window, a revoked sign-in or a refused model benches a lane
   engine at once (none of them clears on the next search, and every attempt
-  draws on the plan); a timeout or a reset takes the ordinary two strikes.
+  draws on the plan); a timeout, a reset or a token endpoint that was down
+  takes the ordinary two strikes.
   Failures are reported under `agent_lane.errors`, never under `errors`. The keyless pool's breaker, census and rescue decisions
   count only keyless engines, so the pool stays able to answer alone, and a
   keyless engine that found nothing takes no "silent" strike because a lane

@@ -81,6 +81,11 @@ class OAuthError(RuntimeError):
     """Signing in, or keeping a sign-in fresh, failed. The message says what to do."""
 
 
+class OAuthUnreachable(OAuthError):
+    """The token endpoint could not be reached or failed on its side (a
+    network error, a 5xx). Nothing is wrong with the sign-in; try again later."""
+
+
 class NotSignedIn(OAuthError):
     """No sign-in is stored for this provider."""
 
@@ -645,7 +650,7 @@ async def _token_request(
             spec.token_url, headers={"Accept": "application/json"}, **encoding
         )
     except httpx.HTTPError as exc:
-        raise OAuthError(
+        raise OAuthUnreachable(
             f"could not reach {urlparse(spec.token_url).netloc}: {type(exc).__name__}. "
             "If it is blocked on this network, set SEARCH_MCP_PROXY."
         ) from exc
@@ -656,8 +661,9 @@ async def _token_request(
                 f"the {spec.account} sign-in has expired or was revoked ({detail}). "
                 f"Sign in again with `search-mcp-login {spec.id}`."
             )
-        raise OAuthError(f"{spec.account} token endpoint answered HTTP {response.status_code}: "
-                         f"{detail}")
+        failure = OAuthUnreachable if response.status_code >= 500 else OAuthError
+        raise failure(f"{spec.account} token endpoint answered HTTP {response.status_code}: "
+                      f"{detail}")
     try:
         data = response.json()
     except ValueError as exc:
@@ -1270,6 +1276,7 @@ __all__ = [
     "Credential",
     "NotSignedIn",
     "OAuthError",
+    "OAuthUnreachable",
     "OAuthProvider",
     "SignInPending",
     "can_open_browser",

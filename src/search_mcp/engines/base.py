@@ -46,23 +46,27 @@ _ABS_RE_1 = re.compile(
 _ABS_RE_2 = re.compile(r"\b(\d{4})-(\d{2})-(\d{2})\b")
 # US/EU short date 12/01/2024 or 1/2/24
 _ABS_RE_3 = re.compile(r"\b(\d{1,2})/(\d{1,2})/(\d{2,4})\b")
-# Year first, as East Asian engines print it: Yahoo! JAPAN "2026/10/1 -",
-# Naver "2026.05.24.", and "2026年10月1日" in Chinese and Japanese prose. The
-# dotted form must close with its own dot, as Naver prints it: without one it
-# is a CalVer version ("PyCharm 2023.3.4", "certifi 2024.08.30"). No letter or
-# digit may lead the year ("v2024.1.2.").
+# Year first, as East Asian engines print it: Yahoo! JAPAN "2026/10/1 -" and
+# "2026年10月1日" in Chinese and Japanese prose. No letter, digit or dot may
+# lead the year. The dotted form ("2026.05.24.") is left to the engine that
+# prints it (naver.py): in other text it is usually a CalVer version, with or
+# without a sentence's closing dot ("Upgrade to certifi 2024.08.30.").
 _ABS_RE_YMD = re.compile(
     r"(?<![A-Za-z\d.])(\d{4})(?:/(\d{1,2})/(\d{1,2})(?![\d/])"
-    r"|\.(\d{1,2})\.(\d{1,2})\.(?!\d)"
     r"|\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日)"
 )
 # Relative dates in Japanese ("5日前", "15時間前"), Chinese ("3天前", "5小时前")
-# and Korean ("3일 전"). Yahoo! JAPAN, Quark and Naver lead snippets with them.
-# Not after a month: "10月1日前" and "10월 1일 전" mean "before 1 October". At
-# most three digits, and not "前半"/"前后": "2024年前半" is the first half of 2024.
+# and Korean ("3일 전"), where an engine prints a date: at the start of the
+# text or after a separator, and before the end or a separator. Yahoo! JAPAN
+# leads a snippet with "5日前 -", Quark ends a source line "· 3天前", Naver's
+# profile line is "3주 전". In prose the same words mean something else:
+# "この寺は30年前に建てられた" (built 30 years ago), "締切の3日前まで" (until three
+# days before the deadline), "10月1日前" (before 1 October), "2024年前半" (the
+# first half of 2024).
+_CJK_SEP = r"\s·・|,，、\-"
 _REL_CJK_RE = re.compile(
-    r"(?<![\d月월])(?<!月\s)(?<!월\s)(\d{1,3})\s*(分钟|分鐘|分|時間|小时|小時|日|天|週間|周|週|か月|ヶ月|ケ月|个月|個月|年|"
-    r"분|시간|일|주|개월|년)\s*(?:前(?![半后後])|전)"
+    rf"(?<![^{_CJK_SEP}])(\d{{1,3}})\s*(分钟|分鐘|分|時間|小时|小時|日|天|週間|周|週|か月|ヶ月|ケ月|"
+    rf"个月|個月|年|분|시간|일|주|개월|년)\s*(?:前|전)(?![^{_CJK_SEP}])"
 )
 _CJK_UNITS = {
     "分": "minute", "分钟": "minute", "分鐘": "minute", "분": "minute",
@@ -124,8 +128,8 @@ def extract_date_hint(text: str) -> str:
 
     # Year-first dates: unambiguous once the year leads.
     for ymd in _ABS_RE_YMD.finditer(text):
-        month = ymd.group(2) or ymd.group(4) or ymd.group(6)
-        day = ymd.group(3) or ymd.group(5) or ymd.group(7)
+        month = ymd.group(2) or ymd.group(4)
+        day = ymd.group(3) or ymd.group(5)
         try:
             d = datetime(int(ymd.group(1)), int(month), int(day))
         except ValueError:
@@ -978,7 +982,19 @@ class EngineKeyError(ValueError):
     transport failures and malformed payloads. Without the distinction, an
     unconfigured keyed engine reports "no results" — which reads as "nothing
     matched" rather than "you need to add a token".
+
+    `transient` is set on one raised for a passing reason, such as a sign-in
+    whose token could not be refreshed because the token endpoint was down:
+    the account is fine, and the next search may well succeed.
     """
+
+    transient: bool = False
+
+
+def is_lasting(exc: BaseException) -> bool:
+    """Whether a failure is one the next search will not repair: a missing,
+    refused or spent key or sign-in, as opposed to a timeout or an outage."""
+    return isinstance(exc, EngineKeyError) and not exc.transient
 
 
 class EngineSignInPending(EngineKeyError):

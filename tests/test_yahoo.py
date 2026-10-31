@@ -259,6 +259,11 @@ def test_description_is_one_short_line():
 # ---------------------------------------------------------------------------
 
 
+def _http_error(status: int) -> HTTPError:
+    """What `raise_for_status` raises: an HTTPError carrying its response."""
+    return HTTPError(f"HTTP Error {status}", response=SimpleNamespace(status_code=status))
+
+
 class _Wire:
     """Scripts the handshake session and the jar-carrying search requests."""
 
@@ -339,7 +344,7 @@ async def test_a_rejected_jar_is_replaced_within_the_same_search(monkeypatch):
     wire = _Wire(
         monkeypatch,
         handshakes=[(200, _PAGE), (200, _PAGE)],
-        searches=[HTTPError("HTTP Error 500")],
+        searches=[_http_error(500)],
     )
     engine = YahooEngine()
     await engine.search("first query", 10)  # mints
@@ -357,7 +362,7 @@ async def test_a_rejected_jar_gets_fewer_handshake_attempts(monkeypatch):
     wire = _Wire(
         monkeypatch,
         handshakes=[(200, _PAGE)] + [(500, "")] * 3,
-        searches=[HTTPError("HTTP Error 500")],
+        searches=[_http_error(500)],
     )
     engine = YahooEngine()
     await engine.search("first query", 10)
@@ -401,3 +406,15 @@ async def test_a_refusal_ends_the_handshake_at_once(monkeypatch, status):
     with pytest.raises(RequestException, match=f"HTTP {status}"):
         await YahooEngine().search("python asyncio taskgroup", 10)
     assert len(wire.handshake_urls) == 1
+
+
+@pytest.mark.parametrize("failure", [_http_error(403), _http_error(429), RequestException("reset")])
+async def test_a_refusal_or_reset_keeps_the_jar_and_sends_nothing_more(monkeypatch, failure):
+    wire = _Wire(monkeypatch, handshakes=[(200, _PAGE)], searches=[failure])
+    engine = YahooEngine()
+    await engine.search("first query", 10)
+    jar = yahoo_mod._JARS[""]
+    with pytest.raises(RequestException):
+        await engine.search("second query", 10)
+    assert len(wire.handshake_urls) == 1
+    assert yahoo_mod._JARS[""] is jar

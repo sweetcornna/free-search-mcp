@@ -39,6 +39,8 @@ page yields `[]` rather than an error, per the keyless-engine contract.
 
 from __future__ import annotations
 
+import re
+from datetime import date
 from urllib.parse import quote_plus
 
 from .base import (
@@ -65,6 +67,23 @@ _NEW_WINDOW = "새 창 열림"
 # Ad click redirects. Ads render in their own section, never as a web
 # document; this only keeps one out if that ever changes.
 _AD_HOSTS = ("ader.naver.com", "ad.search.naver.com")
+
+# The date that opens a document's profile line, as Naver prints it
+# ("2026.05.24."). Read here rather than by `extract_date_hint`, where the same
+# shape in other text is usually a CalVer version.
+_PROFILE_DATE = re.compile(r"(\d{4})\.(\d{1,2})\.(\d{1,2})\.")
+
+
+def _profile_date(text: str) -> str:
+    """The profile line's date, as YYYY-MM-DD or "N units ago", else ""."""
+    m = _PROFILE_DATE.match(text)
+    if m:
+        try:
+            return date(*(int(g) for g in m.groups())).isoformat()
+        except ValueError:
+            return ""
+    return extract_date_hint(text)
+
 
 def _text(node) -> str:
     """`inline_text`, without the "새 창 열림" (opens in a new window) label."""
@@ -118,7 +137,7 @@ class NaverEngine(Engine):
             seen.add(url)
 
             snippet = _text(doc.css_first(".sds-comps-text-type-body1"))
-            date = extract_date_hint(_text(doc.css_first(".sds-comps-profile-info-subtext")))
+            published = _profile_date(_text(doc.css_first(".sds-comps-profile-info-subtext")))
             results.append(
                 SearchResult(
                     title=title,
@@ -128,7 +147,7 @@ class NaverEngine(Engine):
                     rank=0,
                     # Scraped from the page, so NOT confident; the absolute
                     # form is display-only under a freshness filter.
-                    published_age=date or extract_date_hint(snippet),
+                    published_age=published or extract_date_hint(snippet),
                 )
             )
         return results

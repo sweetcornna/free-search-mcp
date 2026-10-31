@@ -700,3 +700,63 @@ async def test_a_late_lasting_failure_does_not_shorten_the_row(world, monkeypatc
     await asyncio.sleep(0.4)
     (_, meta), = world.cache.rows.values()
     assert "lane_missing" not in meta
+
+
+# ---------------------------------------------------------------------------
+# Review round 6
+# ---------------------------------------------------------------------------
+
+
+def _transient(message: str) -> EngineKeyError:
+    failure = EngineKeyError(message)
+    failure.transient = True
+    return failure
+
+
+async def test_a_transient_sign_in_failure_is_a_passing_one(world):
+    world.stubs["codex"].exc = _transient("codex: could not reach auth.openai.com")
+    await aggregate_search(QUERY)
+    assert not engine_health.is_open("codex")
+    (_, meta), = world.cache.rows.values()
+    assert meta["lane_missing"] == ["codex"]
+
+
+async def test_a_lane_engine_benched_after_passing_failures_still_marks_the_row(world):
+    world.stubs["codex"].exc = RuntimeError("connection reset")
+    for _ in range(2):
+        await aggregate_search(QUERY, use_cache=False)
+    assert engine_health.is_open("codex")
+    await aggregate_search(QUERY)
+    (_, meta), = world.cache.rows.values()
+    assert meta["lane_missing"] == ["codex"]
+
+
+async def test_the_rescue_does_not_hold_a_search_a_lane_answer_settled(world, monkeypatch):
+    monkeypatch.setattr(settings, "agent_engines", "codex,antigravity")
+    monkeypatch.setattr(settings, "rescue_enabled", True)
+    monkeypatch.setattr(settings, "reserve_engines", ["so360"])
+    monkeypatch.setattr(settings, "agent_lane_wait_seconds", 0.3)
+    monkeypatch.setattr(settings, "search_deadline_seconds", 2.0)
+    for name in ("duckduckgo", "bing", "anysearch"):
+        world.stubs[name].results = []
+    world(Stub("so360", delay=3))
+    world.stubs["codex"].results = bucket("codex", 6)
+    world.stubs["codex"].delay = 0.1
+    world.stubs["antigravity"].delay = 5
+    started = time.monotonic()
+    payload = await aggregate_search(QUERY, use_cache=False)
+    took = time.monotonic() - started
+    assert {e for r in payload["results"] for e in r["engines"]} == {"codex"}
+    assert took < 1.0, f"{took:.2f} s"
+
+
+async def test_a_late_off_topic_answer_still_completes_the_lane(world, monkeypatch):
+    monkeypatch.setattr(settings, "agent_lane_wait_seconds", 0.05)
+    world.stubs["codex"].delay = 0.2
+    world.stubs["codex"].results = _decoy("codex")
+    await aggregate_search(QUERY)
+    await asyncio.sleep(0.4)
+    (results, meta), = world.cache.rows.values()
+    assert "lane_missing" not in meta
+    assert "codex" not in {e for r in results for e in r["engines"]}
+    assert engine_health.is_open("codex")

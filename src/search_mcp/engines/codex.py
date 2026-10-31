@@ -591,7 +591,9 @@ class CodexEngine(Engine):
         except oauth.NotSignedIn:
             pass
         except oauth.OAuthError as exc:
-            raise EngineKeyError(f"{self.name}: {exc}") from exc
+            failure = EngineKeyError(f"{self.name}: {exc}")
+            failure.transient = isinstance(exc, oauth.OAuthUnreachable)
+            raise failure from exc
         unconfigured = not_signed_in(
             self.name,
             account="ChatGPT",

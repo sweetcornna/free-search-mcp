@@ -152,7 +152,6 @@ def test_apply_post_filters_no_filter_preserves_field():
     ("text", "expected"),
     [
         ("2026/10/1 - Python 3.15 の新機能", "2026-10-01"),
-        ("2026.05.24. 네이버 블로그", "2026-05-24"),
         ("2026年10月1日に公開", "2026-10-01"),
         ("5日前 - 記事", "5 days ago"),
         ("1時間前", "1 hour ago"),
@@ -185,6 +184,9 @@ def test_extract_date_hint_east_asian_forms(text, expected):
         "PyCharm 2023.3.4 is out",
         "v2024.1.2 release",
         "certifi 2024.08.30",
+        "Upgrade to certifi 2024.08.30.",
+        "この寺は30年前に建てられた",
+        "締切の3日前までに申し込み",
     ],
 )
 def test_extract_date_hint_ignores_year_first_lookalikes(text):

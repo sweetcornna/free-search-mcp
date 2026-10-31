@@ -53,7 +53,10 @@ Google's index, and five keyless sources join the registry.
 - `quark` (Alibaba's Shenma index) joins `so360` for a query written in
   Chinese, and `naver` (Korea's main index) joins for one written in Korean.
 - Snippet dates printed year first or as East Asian relative phrases
-  (`2026/10/1`, `2026.05.24.`, `2026年10月1日`, `5日前`, `3天前`, `3일 전`) are read.
+  (`2026/10/1`, `2026年10月1日`, `5日前`, `3天前`, `3일 전`, and Naver's
+  `2026.05.24.`) are read where an engine prints a date. The same words in
+  prose ("30年前に建てられた", "締切の3日前まで", "10月1日前") and CalVer
+  versions ("certifi 2024.08.30") are not taken for publication dates.
 - Yahoo's EU consent page and Alibaba's x5sec wall (Quark's answer to a burst)
   are recognised as `consent` and `captcha` gates instead of silent empties.
   Walls only one engine serves are declared on that engine

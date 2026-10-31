@@ -240,6 +240,11 @@ class YahooEngine(Engine):
             except Timeout:
                 raise  # slow, not rejected: a handshake would only be slower
             except RequestException as exc:
+                status = getattr(getattr(exc, "response", None), "status_code", None)
+                if status is None or status < 500:
+                    # A reset, a 403 or a 429 says nothing against the jar,
+                    # and more requests now would only add to Yahoo's count.
+                    raise
                 # A rejected jar is answered the way a fresh client is: an
                 # empty HTTP 500. Drop it (unless a concurrent search already
                 # replaced it) and mint a new one in this same search.

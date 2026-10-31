@@ -696,3 +696,17 @@ async def test_an_unreadable_catalogue_falls_back_and_the_search_still_runs(back
     assert await CodexEngine().search("q", 5)
     search = next(c for c in calls if c.url.path.endswith("/alpha/search"))
     assert json.loads(search.content)["model"] == _FALLBACK_MODEL
+
+
+
+async def test_an_unreachable_token_endpoint_is_a_transient_failure(monkeypatch):
+    from search_mcp.engines.base import EngineKeyError, is_lasting
+
+    async def unreachable(provider_id, *, force_refresh=False):
+        raise oauth.OAuthUnreachable("could not reach auth.openai.com: ConnectError.")
+
+    monkeypatch.setattr(oauth, "credential", unreachable)
+    with pytest.raises(EngineKeyError) as caught:
+        await CodexEngine().search("asyncio taskgroup", 5)
+    assert caught.value.transient is True
+    assert not is_lasting(caught.value)

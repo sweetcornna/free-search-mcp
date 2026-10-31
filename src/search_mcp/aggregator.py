@@ -41,11 +41,11 @@ from .engines import (
     get_engine,
 )
 from .engines.base import (
-    EngineKeyError,
     EngineSignInPending,
     classify_source,
     detect_query_region,
     in_agent_lane,
+    is_lasting,
 )
 from .health import SILENT_THRESHOLD, engine_health
 from .ratelimit import RateLimiter
@@ -613,6 +613,12 @@ def _lane_nominal(nominal: list[str]) -> list[str]:
     return lane
 
 
+def _benched_for(name: str) -> str:
+    """The breaker's reason for benching `name` right now, or ""."""
+    state = engine_health.describe(name)
+    return str(state.get("reason") or "") if state else ""
+
+
 def _seated(lane_nominal: list[str]) -> list[str]:
     """The lane engines asked right now: the nominal lane minus open circuits."""
     if not settings.health_enabled:
@@ -650,17 +656,20 @@ async def _run_lane(
         lane_diag["rate_limited"] = True
         return name, [], lane_diag
     try:
-        return name, await engine.search(query, n, filters, diagnostics=lane_diag), lane_diag
+        results = await engine.search(query, n, filters, diagnostics=lane_diag)
     except Exception as e:
         log.warning("agent engine %s failed: %s", name, brief_error(e))
         return name, e, lane_diag
+    # Judged once, here: whether this answer echoes the query, which is what
+    # lets it end the search's waits (see `_lane_found`).
+    lane_diag["witness"] = bool(results) and is_witness(query, results)
+    return name, results, lane_diag
 
 
 async def _await_lane(
     tasks: dict[asyncio.Future[_LaneOutcome], str],
     started: float,
     answered: bool,
-    query: str,
     rescue: asyncio.Future[tuple[list[SearchResult], str | None]] | None = None,
 ) -> tuple[list[_LaneOutcome], set[asyncio.Future[_LaneOutcome]], float]:
     """`(finished, still running, seconds since started)` once the lane's wait
@@ -683,13 +692,13 @@ async def _await_lane(
             if not rescue.cancelled() and rescue.exception() is None and rescue.result()[0]:
                 wait = ordinary
             rescue = None
-        if _lane_found(tasks, query):
+        if _lane_found(tasks):
             # One lane engine's answer is an answer: the others get the
             # ordinary wait, not the stretched one.
             wait = ordinary
         remaining: float | None = started + wait - time.monotonic()
         if remaining is not None and remaining <= 0:
-            if rescue is None or rescue.done():
+            if rescue is None or rescue.done() or _lane_found(tasks):
                 break
             # The search will wait for the early rescue anyway; a lane answer
             # that arrives meanwhile belongs in it.
@@ -709,17 +718,20 @@ async def _await_lane(
     return finished, pending, time.monotonic() - started
 
 
-def _lane_found(lane: Collection[asyncio.Future[_LaneOutcome]], query: str) -> bool:
+def _lane_found(lane: Collection[asyncio.Future[_LaneOutcome]]) -> bool:
     """Whether an agent engine of the lane has answered with results that echo
-    the query. Only such an answer may stop the search waiting for others: a
-    bucket the off-topic guard would drop is no answer."""
-    for task in lane:
-        if not task.done() or task.cancelled():
-            continue
-        bucket = task.result()[1]
-        if isinstance(bucket, list) and bucket and is_witness(query, bucket):
-            return True
-    return False
+    the query (`_run_lane` judges that once). Only such an answer may stop the
+    search waiting for others: a bucket the off-topic guard would drop is no
+    answer."""
+    return any(
+        task.done() and not task.cancelled() and task.result()[2].get("witness")
+        for task in lane
+    )
+
+
+# The breaker's reason for a lane engine benched by a lasting failure. A cache
+# row is not shortened for an engine benched with it (see `lane_missing`).
+LANE_REFUSED = "refused"
 
 
 def _record_lane_health(
@@ -727,21 +739,21 @@ def _record_lane_health(
 ) -> None:
     """Tell the breaker how an agent engine did.
 
-    Stricter than `_record_health` where it counts: an `EngineKeyError` (a
-    spent usage window, a refused or revoked sign-in, a model the service
-    will not serve) benches it at once, since the next search does not repair
-    any of those and every attempt draws on the operator's plan. Anything
-    else, a timeout or a reset, gets the ordinary two strikes. An empty answer
-    is not held against it.
+    Stricter than `_record_health` where it counts: a lasting failure (a spent
+    usage window, a refused or revoked sign-in, a model the service will not
+    serve; see `is_lasting`) benches it at once as `LANE_REFUSED`, since the
+    next search does not repair any of those and every attempt draws on the
+    operator's plan. Anything else, a timeout, a reset, a token endpoint that
+    was down, gets the ordinary two strikes. An empty answer is not held
+    against it.
     """
     if not settings.health_enabled:
         return
     if isinstance(outcome, Exception):
-        engine_health.record_failure(
-            name,
-            reason or "error",
-            threshold=1 if isinstance(outcome, EngineKeyError) else None,
-        )
+        if is_lasting(outcome):
+            engine_health.record_failure(name, reason or LANE_REFUSED, threshold=1)
+        else:
+            engine_health.record_failure(name, reason or "error")
     elif reason:
         engine_health.record_failure(name, reason)
     elif outcome:
@@ -806,7 +818,6 @@ def _merge_lane_later(
     n: int,
     category: str | None,
     named: list[tuple[str, list[SearchResult]]],
-    suspects: list[str],
     asked: list[str],
     cache_key: str,
     meta: dict[str, Any],
@@ -821,7 +832,6 @@ def _merge_lane_later(
             n=n,
             category=category,
             named=list(named),
-            suspects=list(suspects),
             asked=list(asked),
             cache_key=cache_key,
             meta=dict(meta),
@@ -840,7 +850,6 @@ async def _fold_late_lane(
     n: int,
     category: str | None,
     named: list[tuple[str, list[SearchResult]]],
-    suspects: list[str],
     asked: list[str],
     cache_key: str,
     meta: dict[str, Any],
@@ -850,13 +859,13 @@ async def _fold_late_lane(
     """Merge agent engines that answered after their search returned into
     that search's cached result set. Never raises.
 
-    `named` is what the search merged, as `(engine, bucket)`; `suspects` are
-    web engines the off-topic guard could not judge for want of a witness. A
-    late lane bucket that echoes the query is that witness: the suspects are
-    dropped as decoys, as the rescue would have dropped them. The row is
-    rewritten each time an engine adds results or answers empty and so
-    completes the lane, which takes it off `lane_missing`, and the merge stops
-    once a newer search has rewritten the row.
+    `named` is what the search merged, as `(engine, bucket)`. Each late bucket
+    goes through the same off-topic guard (`_drop_decoy_buckets`) together
+    with it: it can be dropped as a decoy itself, or be the witness that drops
+    a web engine the guard could not judge before for want of one. The row is
+    rewritten each time an engine answers, which also settles its place on
+    `lane_missing`, and the merge stops once a newer search has rewritten the
+    row.
     """
     deadline = time.monotonic() + _LANE_LATE_SECONDS
     missing_now = set(missing)
@@ -873,32 +882,31 @@ async def _fold_late_lane(
                 name, outcome, lane_diag = task.result()
                 if isinstance(outcome, Exception) or lane_diag.get("rate_limited"):
                     _record_lane_health(name, outcome)
-                    if isinstance(outcome, EngineKeyError):
+                    if isinstance(outcome, Exception) and is_lasting(outcome):
                         # A lasting state, as on the main path: the row keeps
                         # its full lifetime.
                         missing_now.discard(name)
                         changed = True
                     continue
-                buckets = [bucket for _, bucket in named]
-                if (
-                    outcome
-                    and settings.coherence_guard_enabled
-                    and _is_guarded(name)
-                    and looks_like_decoy(query, outcome)
-                    and any(is_witness(query, bucket) for bucket in buckets)
-                ):
-                    _record_lane_health(name, outcome, "off_topic")
-                    continue
-                _record_lane_health(name, outcome)
                 missing_now.discard(name)
                 asked.append(name)
-                if outcome and suspects and is_witness(query, outcome):
-                    named = [(n_, b) for n_, b in named if n_ not in suspects]
-                    meta = _with_off_topic(meta, suspects)
-                    suspects = []
-                if outcome:
-                    named.append((name, outcome))
                 changed = True
+                if not outcome:
+                    _record_lane_health(name, outcome)
+                    continue
+                verdict: dict[str, Any] = {}
+                kept, _ = _drop_decoy_buckets(
+                    query, [*named, (name, outcome)], verdict
+                )
+                dropped = list(verdict.get("gated") or {})
+                if name in dropped:
+                    _record_lane_health(name, outcome, "off_topic")
+                else:
+                    _record_lane_health(name, outcome)
+                cleared = [suspect for suspect in dropped if suspect != name]
+                if cleared:
+                    meta = _with_off_topic(meta, cleared)
+                named = kept
             if not changed:
                 continue
             if _lane_rows.get(cache_key) is not owner:
@@ -921,19 +929,16 @@ async def _fold_late_lane(
 
 
 def _with_off_topic(meta: dict[str, Any], names: list[str]) -> dict[str, Any]:
-    """`meta` with `names` recorded as off-topic gates, and the breaker told."""
+    """`meta` with `names` recorded as off-topic gates, and the breaker told.
+    (`_drop_decoy_buckets` has already logged them.)"""
     stored = meta.get("gated_engines") or {}
-    diag: dict[str, Any] = {
-        "gated": {name: info.get("reason") or "gated" for name, info in stored.items()},
-        "fallback": {
-            name: info["fallback"] for name, info in stored.items() if info.get("fallback")
-        },
-    }
-    _mark_off_topic(names, diag)
-    if settings.health_enabled:
-        for name in names:
+    gated = {name: info.get("reason") or "gated" for name, info in stored.items()}
+    fallback = {name: info["fallback"] for name, info in stored.items() if info.get("fallback")}
+    for name in names:
+        gated[name] = "off_topic"
+        if settings.health_enabled:
             engine_health.record_failure(name, "off_topic")
-    gated_engines, gated_hint = _gate_provenance(diag["gated"], diag["fallback"])
+    gated_engines, gated_hint = _gate_provenance(gated, fallback)
     return {**meta, "gated_engines": gated_engines, "gated_hint": gated_hint}
 
 
@@ -1026,9 +1031,9 @@ def _general_census(
 
 
 # A result set produced while the pool was too thin, or without an agent engine
-# the search was keyed on (it failed, sat out, was benched or is still being
-# merged in), is replayed for an hour at most, however long the configured TTL
-# is: both describe a pool that recovers.
+# the search was keyed on for a passing reason (still being merged in, out of
+# tokens, a timeout, or benched after one), is replayed for an hour at most,
+# however long the configured TTL is: both describe a pool that recovers.
 _DEGRADED_CACHE_TTL = 3600
 
 
@@ -1307,6 +1312,14 @@ async def _rescue(
     finally:
         for task in running:
             task.cancel()
+            # Owned until its cancellation has run (a browser render tears
+            # down for a while), without the search waiting for it.
+            _cancelled_probes.add(task)
+            task.add_done_callback(_cancelled_probes.discard)
+
+
+# Rescue candidates cancelled by a winner or the deadline, still unwinding.
+_cancelled_probes: set[asyncio.Future[list[SearchResult]]] = set()
 
 
 def _probe_failed(name: str, reason: str) -> None:
@@ -1650,7 +1663,6 @@ async def _fan_out(
     engine_names: list[str],
     diagnostics: dict[str, Any],
     lane: Collection[asyncio.Future[_LaneOutcome]] = (),
-    query: str = "",
 ) -> list[tuple[str, list[SearchResult] | Exception]]:
     """Query every engine in parallel, bounded by `settings.search_deadline_seconds`.
 
@@ -1676,7 +1688,7 @@ async def _fan_out(
         )
         if not answered:
             lane_open = {task for task in lane if not task.done()}
-            while pending and not _lane_found(lane, query):
+            while pending and not _lane_found(lane):
                 more, _ = await asyncio.wait(
                     pending | lane_open, return_when=asyncio.FIRST_COMPLETED
                 )
@@ -1860,12 +1872,12 @@ async def aggregate_search(
     }
     early_rescue: asyncio.Future[tuple[list[SearchResult], str | None]] | None = None
     try:
-        results = await _fan_out(run, engine_names, diagnostics, lane_tasks, query)
+        results = await _fan_out(run, engine_names, diagnostics, lane_tasks)
         answered = any(isinstance(res, list) and res for _, res in results)
         if (
             not answered
             and any(not task.done() for task in lane_tasks)
-            and not _lane_found(lane_tasks, query)
+            and not _lane_found(lane_tasks)
             and settings.rescue_enabled
             and not _is_exclusive(category)
         ):
@@ -1877,7 +1889,7 @@ async def aggregate_search(
                 _rescue(query, n, filters, engine_names, diagnostics)
             )
         lane_done, lane_pending, lane_waited = await _await_lane(
-            lane_tasks, lane_started, answered, query, early_rescue
+            lane_tasks, lane_started, answered, early_rescue
         )
     except BaseException:
         for task in lane_tasks:
@@ -1964,7 +1976,6 @@ async def aggregate_search(
                     _mark_off_topic(unconfirmed, diagnostics)
                     named = [(name, bucket) for name, bucket in named if name not in unconfirmed]
                     buckets = [bucket for _, bucket in named]
-                    unconfirmed = []
                 buckets.append(rescue_bucket)
                 rescue_pair = [(rescued_via or "rescue", rescue_bucket)]
                 merged = _merge(buckets, n, category, query)
@@ -2026,16 +2037,18 @@ async def aggregate_search(
             meta["auto_routed"] = routed
         lane_benched = [name for name in lane_nominal if name not in lane]
         # The lane engines the cache key promises and these results lack for a
-        # passing reason: still searching, out of tokens, a timeout or reset.
-        # A benched engine, or one refused for its plan or its sign-in, is a
-        # lasting state; marking those too would turn every cached search
-        # into an hourly re-run for as long as a plan stays spent.
+        # passing reason: still searching, out of tokens, a timeout or reset,
+        # or benched after one. One refused for its plan or its sign-in, or
+        # benched for that, is a lasting state; marking those too would turn
+        # every cached search into an hourly re-run for as long as a plan
+        # stays spent.
         lane_missing = [
             name
             for name in lane_nominal
             if name in still_searching
             or name in lane_rate_limited
-            or (name in lane_raised and not isinstance(lane_raised[name], EngineKeyError))
+            or (name in lane_raised and not is_lasting(lane_raised[name]))
+            or (name in lane_benched and _benched_for(name) != LANE_REFUSED)
         ]
         if lane_missing:
             meta["lane_missing"] = lane_missing
@@ -2066,7 +2079,6 @@ async def aggregate_search(
             n=n,
             category=category,
             named=named + rescue_pair,
-            suspects=unconfirmed,
             asked=asked,
             cache_key=cache_key,
             meta=meta,
