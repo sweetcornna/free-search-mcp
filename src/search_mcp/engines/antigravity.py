@@ -329,7 +329,11 @@ def _http_failure(status: int, raw: str, model: str = "") -> Exception:
                     f"{model or settings.antigravity_model!r}; set "
                     "SEARCH_MCP_ANTIGRAVITY_MODEL to a model in the account's Antigravity "
                     "catalogue, or to latest.)")
-        return _ModelRefused(message + hint)
+        refused = _ModelRefused(message + hint)
+        # Following the catalogue, the next search picks again; a pinned
+        # model stays refused until the operator changes it.
+        refused.transient = _follows_catalogue()
+        return refused
     return RuntimeError(f"antigravity: the service answered HTTP {status}{suffix}")
 
 

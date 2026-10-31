@@ -82,8 +82,10 @@ class OAuthError(RuntimeError):
 
 
 class OAuthUnreachable(OAuthError):
-    """The token endpoint could not be reached or failed on its side (a
-    network error, a 5xx). Nothing is wrong with the sign-in; try again later."""
+    """The token endpoint could not be reached, failed on its side (a network
+    error, a 5xx, a 429) or answered with something that is not a token reply
+    (a captive portal's page). Nothing is known to be wrong with the sign-in;
+    try again later."""
 
 
 class NotSignedIn(OAuthError):
@@ -661,15 +663,16 @@ async def _token_request(
                 f"the {spec.account} sign-in has expired or was revoked ({detail}). "
                 f"Sign in again with `search-mcp-login {spec.id}`."
             )
-        failure = OAuthUnreachable if response.status_code >= 500 else OAuthError
+        passing = response.status_code >= 500 or response.status_code == 429
+        failure = OAuthUnreachable if passing else OAuthError
         raise failure(f"{spec.account} token endpoint answered HTTP {response.status_code}: "
                       f"{detail}")
     try:
         data = response.json()
     except ValueError as exc:
-        raise OAuthError(f"{spec.account} token endpoint did not return JSON") from exc
+        raise OAuthUnreachable(f"{spec.account} token endpoint did not return JSON") from exc
     if not isinstance(data, dict) or not data.get("access_token"):
-        raise OAuthError(f"{spec.account} token endpoint returned no access token")
+        raise OAuthUnreachable(f"{spec.account} token endpoint returned no access token")
     return data
 
 

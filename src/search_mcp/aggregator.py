@@ -6,6 +6,7 @@ import json
 import logging
 import re
 import time
+import weakref
 from collections.abc import Collection
 from dataclasses import asdict
 from datetime import UTC, datetime
@@ -696,12 +697,12 @@ async def _await_lane(
     while pending:
         if rescue is not None and rescue.done():
             if not rescue.cancelled() and rescue.exception() is None and rescue.result()[0]:
-                wait = ordinary
+                wait = min(wait, ordinary)
             rescue = None
         if _lane_found(tasks):
             # One lane engine's answer is an answer: the others get the
-            # ordinary wait, not the stretched one.
-            wait = ordinary
+            # ordinary wait, not the stretched one (and never a longer one).
+            wait = min(wait, ordinary)
         remaining: float | None = started + wait - time.monotonic()
         if remaining is not None and remaining <= 0:
             if rescue is None or rescue.done() or _lane_found(tasks):
@@ -811,6 +812,19 @@ _lane_background: set[asyncio.Task[None]] = set()
 # row afresh takes it away from any merge an earlier search left running, so
 # old buckets never overwrite a newer answer.
 _lane_rows: dict[str, object] = {}
+# Serialises taking a row and writing it, per event loop (a lock is bound to
+# the loop it first waits on).
+_row_locks: weakref.WeakKeyDictionary[asyncio.AbstractEventLoop, asyncio.Lock] = (
+    weakref.WeakKeyDictionary()
+)
+
+
+def _row_lock() -> asyncio.Lock:
+    loop = asyncio.get_running_loop()
+    lock = _row_locks.get(loop)
+    if lock is None:
+        lock = _row_locks[loop] = asyncio.Lock()
+    return lock
 # Ceiling on that background wait. Each engine's own timeout
 # (SEARCH_MCP_CODEX_TIMEOUT, SEARCH_MCP_ANTIGRAVITY_TIMEOUT, 60 s by default)
 # ends it sooner; this only guards against one that never returns.
@@ -829,6 +843,7 @@ def _merge_lane_later(
     cache_key: str,
     meta: dict[str, Any],
     missing: list[str],
+    written_at: int | None,
 ) -> None:
     owner = object()
     _lane_rows[cache_key] = owner
@@ -844,6 +859,7 @@ def _merge_lane_later(
             cache_key=cache_key,
             meta=dict(meta),
             missing=list(missing),
+            written_at=written_at,
             owner=owner,
         )
     )
@@ -863,6 +879,7 @@ async def _fold_late_lane(
     cache_key: str,
     meta: dict[str, Any],
     missing: list[str],
+    written_at: int | None,
     owner: object,
 ) -> None:
     """Merge agent engines that answered after their search returned into
@@ -891,11 +908,14 @@ async def _fold_late_lane(
                 name, outcome, lane_diag = task.result()
                 if isinstance(outcome, Exception) or lane_diag.get("rate_limited"):
                     _record_lane_health(name, outcome)
-                    if isinstance(outcome, Exception) and is_lasting(outcome):
-                        # A lasting state, as on the main path: the row keeps
-                        # its full lifetime.
-                        missing_now.discard(name)
+                    if isinstance(outcome, Exception):
+                        # Asked and failed: listed as the main path lists it.
+                        asked.append(name)
                         changed = True
+                        if is_lasting(outcome):
+                            # A lasting state, as on the main path: the row
+                            # keeps its full lifetime.
+                            missing_now.discard(name)
                     continue
                 missing_now.discard(name)
                 asked.append(name)
@@ -910,6 +930,7 @@ async def _fold_late_lane(
                 dropped = list(verdict.get("gated") or {})
                 if name in dropped:
                     _record_lane_health(name, outcome, "off_topic")
+                    meta = _with_off_topic(meta, [name], tell_breaker=False)
                 else:
                     _record_lane_health(name, outcome)
                 cleared = [suspect for suspect in dropped if suspect != name]
@@ -918,15 +939,12 @@ async def _fold_late_lane(
                     meta = _with_off_topic(meta, cleared)
                     # The row now rests on fewer keyless indexes; if too few,
                     # it is degraded like any thinned pool's.
-                    standing = sum(
-                        1 for n_, b in named if b and n_ in keyless and _is_guarded(n_)
-                    )
+                    gates = {n_: info["reason"] for n_, info in meta["gated_engines"].items()}
+                    _, standing = _general_census(keyless, named, {}, {"gated": gates})
                     if standing < settings.min_healthy_engines:
                         meta = {**meta, "degraded": True}
             if not changed:
                 continue
-            if _lane_rows.get(cache_key) is not owner:
-                break
             merged = _merge([bucket for _, bucket in named], n, category, query)
             if not merged:
                 continue
@@ -934,7 +952,15 @@ async def _fold_late_lane(
             stored.pop("lane_missing", None)
             if missing_now:
                 stored["lane_missing"] = sorted(missing_now)
-            await cache.put_search(cache_key, query, asked, merged, stored)
+            async with _row_lock():
+                if _lane_rows.get(cache_key) is not owner:
+                    break
+                # The keyless results are as old as the search that found
+                # them; adding a lane answer does not make them newer.
+                await cache.put_search(
+                    cache_key, query, asked, merged, stored, created=written_at
+                )
+                written_at = written_at or int(time.time())
     except Exception:  # noqa: BLE001 - nobody is waiting on this to fail
         log.warning("merging the agent lane's late results failed", exc_info=True)
     finally:
@@ -944,15 +970,17 @@ async def _fold_late_lane(
             del _lane_rows[cache_key]
 
 
-def _with_off_topic(meta: dict[str, Any], names: list[str]) -> dict[str, Any]:
-    """`meta` with `names` recorded as off-topic gates, and the breaker told.
-    (`_drop_decoy_buckets` has already logged them.)"""
+def _with_off_topic(
+    meta: dict[str, Any], names: list[str], *, tell_breaker: bool = True
+) -> dict[str, Any]:
+    """`meta` with `names` recorded as off-topic gates, and the breaker told
+    unless the caller already did. (`_drop_decoy_buckets` has logged them.)"""
     stored = meta.get("gated_engines") or {}
     gated = {name: info.get("reason") or "gated" for name, info in stored.items()}
     fallback = {name: info["fallback"] for name, info in stored.items() if info.get("fallback")}
     for name in names:
         gated[name] = "off_topic"
-        if settings.health_enabled:
+        if tell_breaker and settings.health_enabled:
             engine_health.record_failure(name, "off_topic")
     gated_engines, gated_hint = _gate_provenance(gated, fallback)
     return {**meta, "gated_engines": gated_engines, "gated_hint": gated_hint}
@@ -1850,7 +1878,8 @@ async def aggregate_search(
             lacked = meta.get("lane_missing")
             missing = [n for n in lacked if n in lane_nominal] if isinstance(lacked, list) else []
             if missing:
-                payload["agent_lane"] = {"engines": lane_nominal, "missing": missing}
+                # Only what is known of this replay: which engine it lacks.
+                payload["agent_lane"] = {"missing": missing}
                 payload["agent_lane_hint"] = (
                     f"This result set was cached without {', '.join(missing)}, which had "
                     "failed, sat out or not answered yet. It is replayed for an hour at "
@@ -2062,16 +2091,19 @@ async def aggregate_search(
         ]
         if lane_missing:
             meta["lane_missing"] = lane_missing
+        written_at = int(time.time())
         if use_cache and lane_nominal:
             # This run's row (or its absence) is the newest answer: a late
-            # merge an earlier search left running must not overwrite it.
-            # Taken before the write, so the merge cannot slip in during it.
-            _lane_rows.pop(cache_key, None)
-        if use_cache and merged and not sign_in_pending:
+            # merge an earlier search left running must not overwrite it. The
+            # row lock makes taking the row and writing it one step, so the
+            # merge cannot slip a write in between.
+            async with _row_lock():
+                _lane_rows.pop(cache_key, None)
+                if merged and not sign_in_pending:
+                    await cache.put_search(cache_key, query, asked, merged, meta or None)
+        elif use_cache and merged and not sign_in_pending:
             await cache.put_search(cache_key, query, asked, merged, meta or None)
-            stored_as = cache_key
-        else:
-            stored_as = None
+        stored_as = cache_key if use_cache and merged and not sign_in_pending else None
     except BaseException:
         # Cancelling a finished task is a no-op, so all of them will do.
         for task in lane_tasks:
@@ -2095,6 +2127,7 @@ async def aggregate_search(
             cache_key=cache_key,
             meta=meta,
             missing=lane_missing,
+            written_at=written_at if stored_as else None,
         )
     else:
         # Without the cache there is no row to merge a late answer into, so

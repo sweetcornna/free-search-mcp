@@ -508,11 +508,15 @@ def _http_failure(status: int, raw: str, model: str = "") -> Exception:
     detail = detail.strip()[:300]
     suffix = f": {detail}" if detail else ""
     if status == 429 or kind == "usage_limit_reached":
-        return EngineKeyError(
+        failure = EngineKeyError(
             f"codex: the ChatGPT plan's usage limit or rate limit was reached (HTTP {status}"
             f"{suffix}). Retry later, or continue with the keyless engines, which do not draw "
             "on this quota."
         )
+        # A spent usage window lasts hours; a bare 429 is a rate limit that
+        # passes within the minute.
+        failure.transient = kind != "usage_limit_reached"
+        return failure
     if status in (400, 403, 404):
         # Configuration: a model the plan does not include, a workspace the
         # service has not enabled. Waiting does not fix it, so it is not a
@@ -527,7 +531,11 @@ def _http_failure(status: int, raw: str, model: str = "") -> Exception:
         else:
             hint = (f" (Operator note: the search ran on {model or settings.codex_model!r}; "
                     "set SEARCH_MCP_CODEX_MODEL to a model the plan offers, or to latest.)")
-        return _ModelRefused(message + hint)
+        refused = _ModelRefused(message + hint)
+        # Following the catalogue, the next search picks again; a pinned
+        # model stays refused until the operator changes it.
+        refused.transient = _follows_catalogue()
+        return refused
     return RuntimeError(f"codex: the service answered HTTP {status}{suffix}")
 
 

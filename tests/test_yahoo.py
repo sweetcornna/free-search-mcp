@@ -16,7 +16,6 @@ handshake, which reads back the cookies it ends with) and `Engine._http_get`
 from __future__ import annotations
 
 import asyncio
-
 import os
 from types import SimpleNamespace
 from urllib.parse import parse_qs, urlparse
@@ -440,3 +439,26 @@ async def test_waiters_on_a_failed_handshake_send_nothing_of_their_own(monkeypat
     )
     assert all(isinstance(o, RequestException) for o in outcomes)
     assert len(wire.handshake_urls) == yahoo_mod._HANDSHAKE_ATTEMPTS
+
+
+async def test_a_cancelled_handshake_hands_its_waiters_their_own(monkeypatch):
+    wire = _Wire(monkeypatch, handshakes=[(200, _PAGE), (200, _PAGE)])
+    engine = YahooEngine()
+    owner = asyncio.ensure_future(engine.search("first", 10))
+    await asyncio.sleep(0)  # the owner is inside its handshake
+    waiter = asyncio.ensure_future(engine.search("second", 10))
+    await asyncio.sleep(0)
+    owner.cancel()
+    results = await waiter
+    assert len(results) == 3
+    assert len(wire.handshake_urls) == 2
+
+
+async def test_an_expired_jar_is_never_replayed(monkeypatch):
+    wire = _Wire(monkeypatch, handshakes=[(200, _PAGE), (200, _PAGE)])
+    engine = YahooEngine()
+    await engine.search("first", 10)
+    yahoo_mod._JARS[""].minted_at -= yahoo_mod._JAR_TTL + 1
+    await engine.search("second", 10)
+    assert len(wire.handshake_urls) == 2
+    assert wire.search_cookies == []

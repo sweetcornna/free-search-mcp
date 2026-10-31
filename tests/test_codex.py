@@ -710,3 +710,23 @@ async def test_an_unreachable_token_endpoint_is_a_transient_failure(monkeypatch)
         await CodexEngine().search("asyncio taskgroup", 5)
     assert caught.value.transient is True
     assert not is_lasting(caught.value)
+
+
+def test_a_spent_usage_window_lasts_and_a_bare_429_passes(monkeypatch):
+    from search_mcp.engines.base import is_lasting
+    from search_mcp.engines.codex import _http_failure
+
+    spent = _http_failure(429, json.dumps({"error": {"type": "usage_limit_reached",
+                                                     "message": "limit"}}))
+    assert is_lasting(spent)
+    assert not is_lasting(_http_failure(429, "Too Many Requests"))
+
+
+@pytest.mark.parametrize(("model", "lasting"), [("latest", False), ("gpt-pinned", True)])
+def test_a_refused_model_lasts_only_when_pinned(monkeypatch, model, lasting):
+    from search_mcp.engines.base import is_lasting
+    from search_mcp.engines.codex import _http_failure
+
+    monkeypatch.setattr(settings, "codex_model", model)
+    refused = _http_failure(400, json.dumps({"error": {"message": "model not supported"}}), model)
+    assert is_lasting(refused) is lasting

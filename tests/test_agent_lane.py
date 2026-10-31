@@ -78,9 +78,10 @@ class Cache:
     async def get_search(self, key, max_age_seconds=None):
         return self.rows.get(key)
 
-    async def put_search(self, key, query, engines, results, meta=None):
+    async def put_search(self, key, query, engines, results, meta=None, *, created=None):
         self.writes += 1
-        self.rows[key] = (results, {**(meta or {}), "cached_at": time.time()})
+        stamp = time.time() if created is None else created
+        self.rows[key] = (results, {**(meta or {}), "cached_at": stamp})
 
 
 @pytest.fixture
@@ -556,7 +557,7 @@ async def test_a_cached_set_without_its_lane_engine_says_so(world):
     world.stubs["codex"].exc = None
     again = await aggregate_search(QUERY)
     assert again["cached"] is True
-    assert again["agent_lane"] == {"engines": ["codex"], "missing": ["codex"]}
+    assert again["agent_lane"] == {"missing": ["codex"]}
     assert "cached without codex" in again["agent_lane_hint"]
     assert "Agent lane:" in render_search(again)
 
@@ -795,3 +796,52 @@ async def test_a_late_witness_that_thins_the_pool_marks_the_row_degraded(world, 
     (results, meta), = world.cache.rows.values()
     assert "bing" not in {e for r in results for e in r["engines"]}
     assert meta["degraded"] is True
+
+
+# ---------------------------------------------------------------------------
+# Review round 8
+# ---------------------------------------------------------------------------
+
+
+async def test_a_lane_answer_never_lengthens_the_grace(world, monkeypatch):
+    monkeypatch.setattr(settings, "agent_engines", "codex,antigravity")
+    monkeypatch.setattr(settings, "agent_lane_wait_seconds", 3.0)
+    monkeypatch.setattr(settings, "agent_lane_grace_seconds", 0.2)
+    world.stubs["codex"].delay = 0.1
+    world.stubs["antigravity"].delay = 5
+    started = time.monotonic()
+    payload = await aggregate_search(QUERY, use_cache=False)
+    assert time.monotonic() - started < 0.8
+    assert payload["agent_lane"]["pending"] == ["antigravity"]
+
+
+async def test_a_late_merge_keeps_the_row_s_original_time(world, monkeypatch):
+    monkeypatch.setattr(settings, "agent_lane_wait_seconds", 0.05)
+    world.stubs["codex"].delay = 1.2
+    await aggregate_search(QUERY)
+    (_, first), = world.cache.rows.values()
+    await asyncio.sleep(1.5)
+    (results, meta), = world.cache.rows.values()
+    assert "codex" in {e for r in results for e in r["engines"]}
+    assert int(meta["cached_at"]) == int(first["cached_at"])
+
+
+async def test_a_late_failure_is_listed_like_one_in_time(world, monkeypatch):
+    monkeypatch.setattr(settings, "agent_lane_wait_seconds", 0.05)
+    world.stubs["codex"].delay = 0.2
+    world.stubs["codex"].exc = RuntimeError("connection reset")
+    await aggregate_search(QUERY)
+    await asyncio.sleep(0.4)
+    (_, meta), = world.cache.rows.values()
+    assert meta["engines"][-1] == "codex"
+    assert meta["lane_missing"] == ["codex"]
+
+
+async def test_a_late_off_topic_answer_is_recorded_as_a_gate(world, monkeypatch):
+    monkeypatch.setattr(settings, "agent_lane_wait_seconds", 0.05)
+    world.stubs["codex"].delay = 0.2
+    world.stubs["codex"].results = _decoy("codex")
+    await aggregate_search(QUERY)
+    await asyncio.sleep(0.4)
+    (_, meta), = world.cache.rows.values()
+    assert meta["gated_engines"]["codex"]["reason"] == "off_topic"

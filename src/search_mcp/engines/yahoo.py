@@ -183,11 +183,14 @@ class _Jar:
 # Keyed by proxy egress: cookies minted from one exit IP and replayed from
 # another are exactly the inconsistency a bot check looks for.
 _JARS: dict[str, _Jar] = {}
-# The handshake in flight per egress, resolving to the jar it minted (or None).
-# Searches that need a jar meanwhile wait for it instead of each sending a
-# handshake of their own: four searches at once would otherwise be twelve
-# bot-check requests, which is the traffic Yahoo scores.
-_MINTING: dict[str, asyncio.Future[_Jar | None]] = {}
+# The handshake in flight per egress, resolving to the jar it minted, None
+# when Yahoo turned it away, or `_ABANDONED` when it minted nothing for the
+# others (its search was cancelled, or the reply set no cookies). Searches that
+# need a jar meanwhile wait for it instead of each sending a handshake of their
+# own: four searches at once would otherwise be twelve bot-check requests,
+# which is the traffic Yahoo scores.
+_MINTING: dict[str, asyncio.Future[Any]] = {}
+_ABANDONED = object()
 
 
 def _reset_jar() -> None:
@@ -238,7 +241,12 @@ class YahooEngine(Engine):
         proxy_kwargs = curl_proxy_kwargs(self.name)
         key = _egress_key(proxy_kwargs)
         jar = _JARS.get(key)
-        if jar is not None and jar.fresh(time.monotonic()):
+        if jar is not None and not jar.fresh(time.monotonic()):
+            # Expired: never handed to a search again, the handshake's waiters
+            # included.
+            _JARS.pop(key, None)
+            jar = None
+        if jar is not None:
             try:
                 # One request: a rejected jar is answered with an empty 500,
                 # which the generic retry would only repeat; the handshake
@@ -267,19 +275,29 @@ class YahooEngine(Engine):
         key = _egress_key(proxy_kwargs)
         minting = _MINTING.get(key)
         if minting is not None:
-            jar = await asyncio.shield(minting)
-            if jar is None:
+            outcome = await asyncio.shield(minting)
+            if outcome is _ABANDONED:
+                # Nothing to share: this search runs (or waits for) the next one.
+                return await self._mint(url, proxy_kwargs, attempts=attempts)
+            if outcome is None:
                 raise RequestException(
                     "yahoo: Yahoo's bot check did not let a concurrent search's cookie "
                     "handshake through; the other engines are unaffected."
                 )
-            return await super()._http_get(url, cookies=jar.cookies, retry=False)
-        future: asyncio.Future[_Jar | None] = asyncio.get_running_loop().create_future()
+            return await super()._http_get(url, cookies=outcome.cookies, retry=False)
+        future: asyncio.Future[Any] = asyncio.get_running_loop().create_future()
         _MINTING[key] = future
+        before = _JARS.get(key)
         try:
             text = await self._handshake(url, proxy_kwargs, attempts=attempts)
-            future.set_result(_JARS.get(key))
+            minted = _JARS.get(key)
+            future.set_result(minted if minted is not None and minted is not before else _ABANDONED)
             return text
+        except asyncio.CancelledError:
+            # This search was cancelled, which says nothing about Yahoo.
+            if not future.done():
+                future.set_result(_ABANDONED)
+            raise
         except BaseException:
             # Settle the waiters rather than orphan them.
             if not future.done():
