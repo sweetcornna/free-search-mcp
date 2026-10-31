@@ -989,3 +989,53 @@ async def test_a_replay_says_a_lane_answer_was_left_out(world):
     assert again["cached"] is True
     assert again["agent_lane"] == {"left_out": ["codex"]}
     assert "left out" in again["agent_lane_hint"]
+
+
+# ---------------------------------------------------------------------------
+# Review round 12
+# ---------------------------------------------------------------------------
+
+
+async def test_a_lane_answer_that_is_all_there_is_is_never_sent_to_the_rescue(world, monkeypatch):
+    monkeypatch.setattr(settings, "rescue_enabled", True)
+    monkeypatch.setattr(settings, "reserve_engines", ["so360"])
+    world(Stub("so360", results=[]))
+    for name in ("duckduckgo", "bing", "anysearch"):
+        world.stubs[name].results = []
+    world.stubs["codex"].results = _decoy("codex")
+    payload = await aggregate_search(QUERY, use_cache=False)
+    assert "codex" not in (payload.get("gated_engines") or {})
+    assert {e for r in payload["results"] for e in r["engines"]} == {"codex"}
+
+
+async def test_a_suspect_keyless_bucket_does_not_outrank_a_suspect_lane_one(world):
+    world.stubs["duckduckgo"].results = _decoy("duckduckgo")
+    world.stubs["bing"].results = []
+    world.stubs["anysearch"].results = []
+    world.stubs["codex"].results = _decoy("codex")
+    payload = await aggregate_search(QUERY, use_cache=False)
+    assert "codex" in {e for r in payload["results"] for e in r["engines"]}
+    assert "left_out" not in payload["agent_lane"]
+
+
+async def test_a_doubted_answer_shortens_the_row_like_a_passing_failure(world):
+    for name in ("duckduckgo", "bing", "anysearch"):
+        world.stubs[name].results = bucket(name, 2)
+    world.stubs["codex"].results = _decoy("codex")
+    await aggregate_search(QUERY)
+    (_, meta), = world.cache.rows.values()
+    assert meta["lane_left_out"] == ["codex"]
+    assert meta["lane_missing"] == ["codex"]
+
+
+async def test_stragglers_cut_by_a_sparse_lane_answer_do_not_start_a_rescue(world, monkeypatch):
+    monkeypatch.setattr(settings, "rescue_enabled", True)
+    monkeypatch.setattr(settings, "reserve_engines", ["so360"])
+    monkeypatch.setattr(settings, "search_deadline_seconds", 0.1)
+    world(Stub("so360"))
+    for name in ("duckduckgo", "bing", "anysearch"):
+        world.stubs[name].delay = 2
+    world.stubs["codex"].results = bucket("codex", 4)
+    payload = await aggregate_search(QUERY, max_results=3, use_cache=False)
+    assert world.stubs["so360"].calls == 0
+    assert "rescued_via" not in payload

@@ -742,6 +742,30 @@ def _lane_found(lane: Collection[asyncio.Future[_LaneOutcome]]) -> bool:
     )
 
 
+def _settle_lane_suspects(
+    named: list[tuple[str, list[SearchResult]]],
+    unconfirmed: list[str],
+    lane: Collection[str],
+) -> tuple[list[tuple[str, list[SearchResult]]], list[str], list[str]]:
+    """`(named, keyless suspects, doubted lane engines)`: the one rule for a
+    lane bucket the off-topic guard could not judge, on both the main path and
+    the late merge.
+
+    It is never handed to the rescue (that pass is the keyless pool's, and no
+    request is spent judging an agent engine) and never becomes a keyless
+    gate. It is left out ("doubted") while a keyless bucket that is not itself
+    a suspect remains to answer with; when it is not, the lane's answer is all
+    there is and is served, as a keyless suspect is.
+    """
+    lane_suspects = [name for name in unconfirmed if name in lane]
+    keyless_suspects = [name for name in unconfirmed if name not in lane]
+    solid = any(
+        bucket for name, bucket in named if name not in lane and name not in keyless_suspects
+    )
+    doubted = lane_suspects if solid else []
+    return [(n, b) for n, b in named if n not in doubted], keyless_suspects, doubted
+
+
 def _take_lane_verdicts(diagnostics: dict[str, Any], lane: list[str]) -> list[str]:
     """Move the off-topic guard's verdicts on lane engines out of the shared
     `diagnostics["gated"]`, and return the lane engines it dropped."""
@@ -883,6 +907,7 @@ def _merge_lane_later(
     meta: dict[str, Any],
     missing: list[str],
     written_at: int | None,
+    pending_names: list[str],
 ) -> None:
     owner = object()
     _lane_rows[cache_key] = owner
@@ -899,6 +924,7 @@ def _merge_lane_later(
             meta=dict(meta),
             missing=list(missing),
             written_at=written_at,
+            ceiling=_late_ceiling(pending_names),
             owner=owner,
         )
     )
@@ -919,6 +945,7 @@ async def _fold_late_lane(
     meta: dict[str, Any],
     missing: list[str],
     written_at: int | None,
+    ceiling: float,
     owner: object,
 ) -> None:
     """Merge agent engines that answered after their search returned into
@@ -932,7 +959,7 @@ async def _fold_late_lane(
     `lane_missing`, and the merge stops once a newer search has rewritten the
     row.
     """
-    deadline = time.monotonic() + _late_ceiling(missing)
+    deadline = time.monotonic() + ceiling
     missing_now = set(missing)
     try:
         while pending:
@@ -966,18 +993,21 @@ async def _fold_late_lane(
                 kept, unjudged = _drop_decoy_buckets(
                     query, [*named, (name, outcome)], verdict
                 )
-                dropped = list(verdict.get("gated") or {})
-                doubted = name in unjudged and any(b for n_, b in kept if n_ != name)
-                if name in dropped:
+                lane_names = [n_ for n_ in asked if n_ not in keyless]
+                dropped_lane = _take_lane_verdicts(verdict, lane_names)
+                kept, _, doubted = _settle_lane_suspects(kept, unjudged, lane_names)
+                if name in dropped_lane:
                     _record_lane_health(name, outcome, "off_topic")
-                elif not doubted:
+                elif name not in doubted:
                     _record_lane_health(name, outcome)
-                if name in dropped or doubted:
+                left = [n_ for n_ in dropped_lane + doubted
+                        if n_ not in (meta.get("lane_left_out") or [])]  # fmt: skip
+                if left:
                     # Left out, as on the main path, and recorded on the row.
-                    kept = [(n_, b) for n_, b in kept if n_ != name]
-                    left_out = [*(meta.get("lane_left_out") or []), name]
-                    meta = {**meta, "lane_left_out": left_out}
-                cleared = [suspect for suspect in dropped if suspect != name]
+                    meta = {**meta, "lane_left_out": [*(meta.get("lane_left_out") or []), *left]}
+                if doubted:
+                    missing_now.update(doubted)
+                cleared = list(verdict.get("gated") or {})
                 named = kept
                 if cleared:
                     meta = _with_off_topic(meta, cleared)
@@ -1930,8 +1960,9 @@ async def aggregate_search(
                 replay["missing"] = missing
                 notes.append(
                     f"This result set was cached without {', '.join(missing)}, which had "
-                    "failed, sat out or not answered yet. It is replayed for an hour at "
-                    "most; pass max_age_hours=0 to search again now."
+                    "failed, sat out, not answered yet or given an answer nothing could "
+                    "confirm. It is replayed for an hour at most; pass max_age_hours=0 to "
+                    "search again now."
                 )
             if left_out:
                 replay["left_out"] = left_out
@@ -2031,18 +2062,8 @@ async def aggregate_search(
         # never the keyless pool's: they leave the shared `gated` here, so the
         # rescue, the census and the gate hint see keyless engines only.
         lane_off_topic = _take_lane_verdicts(diagnostics, lane)
-        # A lane bucket that looks off-topic and that nothing could confirm
-        # is left out rather than trusted, while keyless results remain to
-        # answer with; when it is all there is, it is served, as a keyless
-        # suspect is. A keyless suspect is kept for the rescue to judge; the
-        # rescue is the keyless pool's, and no request is spent judging an
-        # agent engine.
-        doubted = [name for name in unconfirmed if name in lane]
-        if doubted and not any(bucket for name, bucket in named if name not in lane):
-            doubted = []
-        if doubted:
-            named = [(name, bucket) for name, bucket in named if name not in doubted]
-            unconfirmed = [name for name in unconfirmed if name not in doubted]
+        named, unconfirmed, doubted = _settle_lane_suspects(named, unconfirmed, lane)
+        lane_left_out = lane_off_topic + doubted
         buckets = [bucket for _, bucket in named]
         merged = _merge(buckets, n, category, query)
 
@@ -2055,8 +2076,10 @@ async def aggregate_search(
         rescued_via: str | None = None
         rescue_pair: list[tuple[str, list[SearchResult]]] = []
         # Stragglers the fan-out cut short because a lane answer settled the
-        # search were slow, not lost: they do not call for breadth. Engines
-        # cut by the ordinary deadline, walled, refused or failed still do.
+        # search do not call for a rescue: the search has its answer. They did
+        # run past the deadline, so the breaker still hears of it as of any
+        # engine cut there. Engines cut by the ordinary deadline, walled,
+        # refused or failed still call for breadth.
         cut_by_lane = set(diagnostics.get("cut_by_lane") or ())
         lost, standing = _general_census(
             engine_names,
@@ -2074,7 +2097,7 @@ async def aggregate_search(
         )
         if early_ready or _needs_rescue(
             merged,
-            errors,
+            {k: v for k, v in errors.items() if k not in cut_by_lane},
             diagnostics,
             category,
             seek_witness=len(unconfirmed) == 1,
@@ -2168,15 +2191,16 @@ async def aggregate_search(
             for name in lane_nominal
             if name in still_searching
             or name in lane_rate_limited
+            or name in doubted  # nothing judged it bad; the next search may keep it
             or (name in lane_raised and not is_lasting(lane_raised[name]))
             or (name in lane_benched and _benched_for(name) != LANE_REFUSED)
         ]
         if lane_missing:
             meta["lane_missing"] = lane_missing
-        if lane_off_topic or doubted:
+        if lane_left_out:
             # So a replay can say that a lane engine was asked and its answer
             # left out, rather than pass the set off as including its view.
-            meta["lane_left_out"] = lane_off_topic + doubted
+            meta["lane_left_out"] = lane_left_out
         written_at = int(time.time())
         if use_cache:
             # A row this run writes is the newest answer: a late merge an
@@ -2214,6 +2238,7 @@ async def aggregate_search(
             meta=meta,
             missing=lane_missing,
             written_at=written_at if stored_as else None,
+            pending_names=lane_pending_names,
         )
     else:
         # Without the cache there is no row to merge a late answer into, so
@@ -2268,8 +2293,8 @@ async def aggregate_search(
             lane_report["rate_limited"] = lane_rate_limited
         if lane_benched:
             lane_report["benched"] = lane_benched
-        if lane_off_topic or doubted:
-            lane_report["left_out"] = lane_off_topic + doubted
+        if lane_left_out:
+            lane_report["left_out"] = lane_left_out
         payload["agent_lane"] = lane_report
         lane_hint = _lane_hint(
             lane_pending_names,
