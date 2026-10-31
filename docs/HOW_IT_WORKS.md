@@ -555,7 +555,11 @@ engine that `SEARCH_MCP_AGENT_ENGINES` seats at the same moment as the keyless
 engines, puts each answer through the same off-topic guard, and fuses it into
 the same reciprocal-rank ranking. A page OpenAI's search and DuckDuckGo both
 found outranks a page only one of them found, and a lane bucket can be the
-witness that exposes a keyless engine's decoy page.
+witness that exposes a keyless engine's decoy page. A lane answer the guard
+drops, or one that looks off-topic with nothing to confirm it either way, is
+left out and reported under `agent_lane.left_out`, never as a keyless gate,
+and the rescue pass, which belongs to the keyless pool, is never spent judging
+it.
 
 - `auto` (the default) seats `codex` once it is signed in. `antigravity` is
   seated only when the setting names it, because Google's terms forbid this

@@ -356,7 +356,10 @@ async def test_an_off_topic_lane_bucket_is_dropped(world):
     ]
     payload = await aggregate_search(QUERY, use_cache=False)
     assert "codex" not in {e for r in payload["results"] for e in r["engines"]}
-    assert payload["gated_engines"]["codex"]["reason"] == "off_topic"
+    # The lane's to report, not a keyless gate.
+    assert "codex" not in (payload.get("gated_engines") or {})
+    assert payload["agent_lane"]["left_out"] == ["codex"]
+    assert "left out" in payload["agent_lane_hint"]
     assert payload["agent_lane"]["answered"] == {}
     assert engine_health.is_open("codex")
 
@@ -835,14 +838,16 @@ async def test_a_late_failure_is_listed_like_one_in_time(world, monkeypatch):
     assert meta["lane_missing"] == ["codex"]
 
 
-async def test_a_late_off_topic_answer_is_recorded_as_a_gate(world, monkeypatch):
+async def test_a_late_off_topic_answer_is_benched_not_reported_as_a_gate(world, monkeypatch):
     monkeypatch.setattr(settings, "agent_lane_wait_seconds", 0.05)
     world.stubs["codex"].delay = 0.2
     world.stubs["codex"].results = _decoy("codex")
     await aggregate_search(QUERY)
     await asyncio.sleep(0.4)
-    (_, meta), = world.cache.rows.values()
-    assert meta["gated_engines"]["codex"]["reason"] == "off_topic"
+    (results, meta), = world.cache.rows.values()
+    assert "codex" not in {e for r in results for e in r["engines"]}
+    assert "codex" not in (meta.get("gated_engines") or {})
+    assert engine_health.is_open("codex")
 
 
 # ---------------------------------------------------------------------------
@@ -876,6 +881,10 @@ async def test_an_off_topic_lane_bucket_alone_does_not_start_a_rescue(world, mon
     payload = await aggregate_search(QUERY, use_cache=False)
     assert world.stubs["so360"].calls == 0
     assert "rescued_via" not in payload
+    # Nothing could confirm it either way: left out rather than trusted.
+    assert "codex" not in {e for r in payload["results"] for e in r["engines"]}
+    assert payload["agent_lane"]["left_out"] == ["codex"]
+    assert not engine_health.is_open("codex")
 
 
 async def test_stragglers_cut_by_a_lane_answer_do_not_start_a_rescue(world, monkeypatch):
@@ -892,6 +901,61 @@ async def test_stragglers_cut_by_a_lane_answer_do_not_start_a_rescue(world, monk
 
 
 def test_the_late_ceiling_follows_the_engine_timeouts(monkeypatch):
-    assert aggregator._late_ceiling() == 150.0
+    assert aggregator._late_ceiling() == 270.0
     monkeypatch.setattr(settings, "antigravity_timeout", 200.0)
-    assert aggregator._late_ceiling() == 430.0
+    assert aggregator._late_ceiling() == 830.0
+
+
+# ---------------------------------------------------------------------------
+# Review round 10
+# ---------------------------------------------------------------------------
+
+
+class _Walled(Stub):
+    """A lane engine that records a wall in its own diagnostics."""
+
+    def __init__(self, name, reason):
+        super().__init__(name, results=[])
+        self.reason = reason
+
+    async def search(self, query, n, filters=None, diagnostics=None):
+        if diagnostics is not None:
+            diagnostics.setdefault("gated", {})[self.name] = self.reason
+        return []
+
+
+async def test_a_lane_answer_does_not_hide_walled_keyless_engines(world, monkeypatch):
+    monkeypatch.setattr(settings, "rescue_enabled", True)
+    monkeypatch.setattr(settings, "reserve_engines", ["so360"])
+    world(Stub("so360"))
+
+    class _Captcha(Stub):
+        async def search(self, query, n, filters=None, diagnostics=None):
+            diagnostics.setdefault("gated", {})[self.name] = "captcha"
+            return []
+
+    world(_Captcha("bing"), _Captcha("anysearch"))
+    payload = await aggregate_search(QUERY, use_cache=False)
+    assert payload["rescued_via"] == "so360"
+
+
+@pytest.mark.parametrize(("reason", "benched"), [("captcha", True),
+                                                 ("browser_unavailable", False)])  # fmt: skip
+async def test_a_wall_in_the_lane_engine_s_own_diagnostics(world, reason, benched):
+    world(_Walled("codex", reason))
+    await aggregate_search(QUERY, use_cache=False)
+    assert engine_health.is_open("codex") is benched
+
+
+async def test_a_search_that_writes_nothing_leaves_the_late_merge_its_row(world, monkeypatch):
+    monkeypatch.setattr(settings, "agent_lane_wait_seconds", 0.05)
+    world.stubs["codex"].delay = 0.3
+    await aggregate_search(QUERY)  # leaves codex merging in the background
+    for name in ("duckduckgo", "bing", "anysearch"):
+        world.stubs[name].results = []
+    world.tokens["codex"] = False
+    empty = await aggregate_search(QUERY, max_age_seconds=0)
+    assert empty["results"] == []
+    await asyncio.sleep(0.5)
+    (results, _), = world.cache.rows.values()
+    assert "codex" in {e for r in results for e in r["engines"]}
