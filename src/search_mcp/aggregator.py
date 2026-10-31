@@ -841,9 +841,11 @@ def _lane_hint(
     so it can say whether a failed engine sits out the next searches."""
     parts: list[str] = []
     if off_topic:
+        benched = settings.health_enabled and all(engine_health.is_open(n) for n in off_topic)
         parts.append(
             f"The answer from {', '.join(off_topic)} barely mentioned the query beyond its "
-            "first word while other engines' results did, so it was left out."
+            "first word while other engines' results did, so it was left out"
+            + (" and sits out the next searches." if benched else ".")
         )
     if doubted:
         parts.append(
@@ -1016,10 +1018,10 @@ async def _fold_late_lane(
                 lane_names = [n_ for n_ in asked if n_ not in keyless]
                 dropped_lane = _take_lane_verdicts(verdict, lane_names)
                 kept, _, doubted = _settle_lane_suspects(kept, unjudged, lane_names)
-                if name in doubted:
-                    _record_lane_health(name, outcome, LANE_UNCONFIRMED)
-                elif name not in dropped_lane:
+                if name not in doubted and name not in dropped_lane:
                     _record_lane_health(name, outcome)
+                for unconfirmed_name in doubted:
+                    _record_lane_health(unconfirmed_name, outcome, LANE_UNCONFIRMED)
                 for dropped in dropped_lane:
                     # The late answer itself, or a lane engine served earlier
                     # that it has now shown to be a decoy.
@@ -1923,7 +1925,10 @@ async def aggregate_search(
         include_text=include_text,
         exclude_text=exclude_text,
     )
-    cache_key = _key(query, nominal + lane_nominal, n, filters)
+    # Lane engines enter the key marked as such, so a call that names the
+    # same engines (`engines=[..., "codex"]`) is a different search with a
+    # row of its own: only automatic searches with this lane share it.
+    cache_key = _key(query, nominal + [f"agent:{name}" for name in lane_nominal], n, filters)
 
     # Read-bypass and cache-WRITE are decoupled. `use_cache` gates BOTH the read
     # and the write; `max_age_seconds` only tightens the read TTL. So a caller
@@ -1973,10 +1978,8 @@ async def aggregate_search(
                 payload["rescued_via"] = meta["rescued_via"]
             if meta.get("auto_routed"):
                 payload["auto_routed"] = meta["auto_routed"]
-            # Against everything this key promises: a call naming the very
-            # engines an automatic search asked reads the same row.
-            missing = _lane_names(meta.get("lane_missing"), nominal + lane_nominal)
-            left_out = _lane_names(meta.get("lane_left_out"), nominal + lane_nominal)
+            missing = _lane_names(meta.get("lane_missing"), lane_nominal)
+            left_out = _lane_names(meta.get("lane_left_out"), lane_nominal)
             # Only what is known of this replay: which lane engine it lacks.
             replay: dict[str, Any] = {}
             notes: list[str] = []
@@ -2124,13 +2127,12 @@ async def aggregate_search(
         # Judged without the lane suspects, which are settled only after the
         # rescue: a lane answer nothing confirmed must not make a thin,
         # unhealthy keyless run look healthy.
-        judged = (
-            _merge([b for n_, b in named if n_ not in lane_suspects], n, category, query)
-            if lane_suspects
-            else merged
-        )
         if early_ready or _needs_rescue(
-            judged,
+            (
+                _merge([b for n_, b in named if n_ not in lane_suspects], n, category, query)
+                if lane_suspects
+                else merged
+            ),
             {k: v for k, v in errors.items() if k not in cut_by_lane},
             diagnostics,
             category,
@@ -2189,16 +2191,11 @@ async def aggregate_search(
         _record_health(
             engine_names, [(n, b) for n, b in named if n not in lane], raised, diagnostics
         )
+        verdicts = {**dict.fromkeys(doubted, LANE_UNCONFIRMED),
+                    **dict.fromkeys(lane_off_topic, "off_topic")}  # fmt: skip
         for name, res, lane_diag in lane_done:
             if not lane_diag.get("rate_limited"):
-                reason = (
-                    "off_topic"
-                    if name in lane_off_topic
-                    else LANE_UNCONFIRMED
-                    if name in doubted
-                    else None
-                )
-                _record_lane_health(name, res, reason)
+                _record_lane_health(name, res, verdicts.get(name))
         if rescued_via and _is_guarded(rescued_via):
             standing += 1
         # An answer resting on too few indexes is served, and cached — but not for
@@ -2238,7 +2235,7 @@ async def aggregate_search(
         lane_benched = [name for name in lane_nominal if name not in lane]
         # The lane engines the cache key promises and these results lack for a
         # passing reason: still searching, out of tokens, a timeout or reset,
-        # or benched after one. One refused for its plan or its sign-in, or
+        # or benched after those. One refused for its plan or its sign-in, or
         # benched for that, is a lasting state; marking those too would turn
         # every cached search into an hourly re-run for as long as a plan
         # stays spent.
@@ -2248,7 +2245,9 @@ async def aggregate_search(
             if name in still_searching
             or name in lane_rate_limited
             or (name in lane_raised and not is_lasting(lane_raised[name]))
-            or (name in lane_benched and _benched_for(name) != LANE_REFUSED)
+            # Benched after timeouts or resets; not for a refusal, an off-topic
+            # or unconfirmed answer, which the lane chose to leave out.
+            or (name in lane_benched and _benched_for(name) == "error")
         ]
         if lane_missing:
             meta["lane_missing"] = lane_missing
@@ -2257,22 +2256,21 @@ async def aggregate_search(
             # left out, rather than pass the set off as including its view.
             meta["lane_left_out"] = lane_left_out
         written_at = int(time.time())
+        stored_as: str | None = None
         if use_cache and merged and not sign_in_pending:
-            if lane_nominal or cache_key in _lane_rows:
+            stored_as = cache_key
+            if lane_nominal:
                 # A row this run writes is the newest answer: a late merge an
-                # earlier search left running must not overwrite it. That holds
-                # for any search with the same key, a call naming the very
-                # engines an automatic search asked included. A run that writes
-                # nothing leaves the merge its row. The row lock makes taking
-                # the row and writing it one step, so the merge cannot slip a
-                # write in between; a search with no lane and no merge for its
-                # key has nothing to take and skips it.
+                # earlier search with this key left running must not overwrite
+                # it. (Only lane searches share a lane key; see `cache_key`.)
+                # A run that writes nothing leaves the merge its row. The row
+                # lock makes taking the row and writing it one step, so the
+                # merge cannot slip a write in between.
                 async with _row_lock():
                     _lane_rows.pop(cache_key, None)
                     await cache.put_search(cache_key, query, asked, merged, meta or None)
             else:
                 await cache.put_search(cache_key, query, asked, merged, meta or None)
-        stored_as = cache_key if use_cache and merged and not sign_in_pending else None
     except BaseException:
         # Cancelling a finished task is a no-op, so all of them will do.
         for task in lane_tasks:

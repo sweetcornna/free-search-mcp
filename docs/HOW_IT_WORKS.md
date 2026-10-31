@@ -613,8 +613,13 @@ answer is all there is, it is served.
   count only keyless engines, so the pool stays able to answer alone, and a
   keyless engine that found nothing takes no "silent" strike because a lane
   engine did. A lane search never opens a sign-in page.
-- The cache key includes the seated lane, so signing in turns a cached
-  keyless-only answer into a fresh search instead of replaying it.
+- The cache key includes the seated lane, marked as the lane, so signing in
+  turns a cached keyless-only answer into a fresh search instead of replaying
+  it, and a call that names the same engines (`engines=[..., "codex"]`) is a
+  search with a row of its own.
+- An answer left out as unconfirmed is weak evidence; three in a row bench
+  the engine for a while, so one whose answers keep being discarded stops
+  spending the plan.
 - The server's startup warm-up refreshes a signed-in lane engine's token and
   looks its model up, which the first search would otherwise wait for.
 

@@ -855,20 +855,22 @@ async def test_a_late_off_topic_answer_is_benched_not_reported_as_a_gate(world, 
 # ---------------------------------------------------------------------------
 
 
-async def test_a_named_search_with_the_same_key_takes_the_row_from_a_late_merge(world, monkeypatch):
+async def test_a_call_naming_the_lane_engines_has_a_row_of_its_own(world, monkeypatch):
     monkeypatch.setattr(settings, "agent_lane_wait_seconds", 0.05)
     world.stubs["codex"].delay = 0.3
-    await aggregate_search(QUERY)  # leaves codex merging in the background
-    # Naming the pool plus codex is the same cache key; it writes afresh.
-    world.stubs["duckduckgo"].results = bucket("fresh", 4)
+    await aggregate_search(QUERY)  # automatic, leaves codex merging late
     world.stubs["codex"].delay = 0
-    await aggregate_search(
-        QUERY, engines=["duckduckgo", "bing", "anysearch", "codex"], max_age_seconds=0
-    )
+    named = await aggregate_search(QUERY, engines=["duckduckgo", "bing", "anysearch", "codex"])
+    # Not a replay of the automatic search's row, nor a write into it.
+    assert named["cached"] is False
+    assert "agent_lane" not in named
     await asyncio.sleep(0.5)
-    (results, _), = world.cache.rows.values()
-    assert any(r["url"].startswith("https://fresh.example/") for r in results)
-    assert world.cache.writes == 2
+    assert len(world.cache.rows) == 2
+    # The automatic search's row got its late codex answer.
+    assert any(
+        (meta.get("engines") or [])[-1:] == ["codex"] and "lane_missing" not in meta
+        for _, meta in world.cache.rows.values()
+    )
 
 
 async def test_an_off_topic_lane_bucket_alone_does_not_start_a_rescue(world, monkeypatch):
@@ -1113,12 +1115,11 @@ async def test_a_lane_suspect_does_not_make_a_thin_unhealthy_run_look_healthy(wo
     assert payload["rescued_via"] == "so360"
 
 
-async def test_a_replay_through_named_engines_still_says_left_out(world):
+async def test_a_call_naming_the_lane_engines_does_not_replay_the_lane_row(world):
     world.stubs["codex"].results = _decoy("codex")
     await aggregate_search(QUERY)
     again = await aggregate_search(QUERY, engines=["duckduckgo", "bing", "anysearch", "codex"])
-    assert again["cached"] is True
-    assert again["agent_lane"] == {"left_out": ["codex"]}
+    assert again["cached"] is False
 
 
 async def test_a_run_that_writes_nothing_does_not_take_the_merge_from_a_live_row(world, monkeypatch):
@@ -1146,3 +1147,33 @@ async def test_an_engine_whose_answers_keep_being_left_out_sits_out(world):
     for _ in range(3):
         await aggregate_search(QUERY, use_cache=False)
     assert engine_health.is_open("codex")
+
+
+# ---------------------------------------------------------------------------
+# Review round 15
+# ---------------------------------------------------------------------------
+
+
+async def test_a_lane_bench_for_an_unconfirmed_answer_does_not_shorten_rows(world):
+    for _ in range(3):
+        engine_health.record_failure("codex", aggregator.LANE_UNCONFIRMED, threshold=3)
+    assert engine_health.is_open("codex")
+    await aggregate_search(QUERY)
+    (_, meta), = world.cache.rows.values()
+    assert "lane_missing" not in meta
+
+
+async def test_an_off_topic_hint_says_the_engine_sits_out(world):
+    world.stubs["codex"].results = _decoy("codex")
+    payload = await aggregate_search(QUERY, use_cache=False)
+    assert "sits out the next searches" in payload["agent_lane_hint"]
+
+
+def test_a_subclass_can_declare_itself_transient():
+    from search_mcp.engines.base import is_lasting
+
+    class _Passing(EngineKeyError):
+        transient = True
+
+    assert not is_lasting(_Passing("x"))
+    assert is_lasting(_Passing("x", transient=False))
