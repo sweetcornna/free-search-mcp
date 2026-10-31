@@ -263,6 +263,7 @@ search. Measured on 2026-09-26, a `codex` search took about 3 s and an
 | `SEARCH_MCP_CODEX_AUTO_SIGNIN` | `true` | open the sign-in page on first use |
 | `SEARCH_MCP_AGENT_ENGINES` | `auto` | the agent lane: `auto` seats a signed-in `codex`; `off`; or a list such as `codex,antigravity` |
 | `SEARCH_MCP_AGENT_LANE_WAIT_SECONDS` | `6` | how long a search waits for the lane |
+| `SEARCH_MCP_AGENT_LANE_GRACE_SECONDS` | `2` | how much longer than the keyless engines it waits, once they have results |
 | `SEARCH_MCP_ANTIGRAVITY_CLIENT_ID`, `SEARCH_MCP_ANTIGRAVITY_CLIENT_SECRET` | read from the Antigravity install | for a machine without Antigravity; set both or neither |
 | `SEARCH_MCP_PROXY` | empty | the sign-in and the searches go through it |
 
@@ -276,7 +277,8 @@ reserves, routing and rescue, which naming `engines=["codex", ...]` would
 switch off.
 
 - The search waits for the lane at most 6 s from when the engines were asked
-  (`SEARCH_MCP_AGENT_LANE_WAIT_SECONDS`). A lane engine still searching then
+  (`SEARCH_MCP_AGENT_LANE_WAIT_SECONDS`), and at most 2 s past the keyless
+  engines once they have results. A lane engine still searching then
   finishes in the background, and its results are merged into the cached
   result set, so the same search a little later returns them.
 - The lane never queues for a rate-limit token, a spent usage window benches

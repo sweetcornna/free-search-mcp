@@ -272,7 +272,9 @@ Other keyless engines, and how each behaves:
 - `yahoojp` (default pool) passes `site:`, `-site:` and `filetype:pdf` on to
   Google and filters by time with `vd=`. Yahoo! JAPAN has not served the EEA
   or the UK since April 2022; from there its notice page is reported as a
-  `region` gate and the engine is benched, and a proxy elsewhere is the fix.
+  `region` gate and the engine is benched for the maximum hour at once. A
+  proxy elsewhere is the fix, or, for a server that stays in Europe, leaving
+  it out of `SEARCH_MCP_DEFAULT_ENGINES`.
 - `yahoo` scrapes search.yahoo.com and unwraps its `r.search.yahoo.com`
   click redirects. Yahoo answers a cookieless client with a bot-check
   handshake that often ends in an empty HTTP 500, so the cookies of one
@@ -287,7 +289,7 @@ Other keyless engines, and how each behaves:
   its "no results" page, so domain and PDF filters are applied afterwards. It
   walls a burst (the fourth request within 6 s) with Alibaba's x5sec page,
   which is recognised as a captcha, so it is limited to 10 searches a minute
-  and 3 at once, and a search skips it rather than queue.
+  and 2 at once, and a search skips it rather than queue.
 - `naver` takes Naver's web documents only. Its blog and cafe cards are left
   out (blog pages are empty frames over HTTP and cafe links carry expiring
   tokens), so a query Naver answers mostly from those returns few results.
@@ -561,7 +563,9 @@ witness that exposes a keyless engine's decoy page.
   opens, so nothing changes for an operator who never signed in.
 - The keyless results are never held back past
   `SEARCH_MCP_AGENT_LANE_WAIT_SECONDS` (6), counted from when the engines were
-  asked, so the keyless fan-out's own time is not added to it. Measured
+  asked, so the keyless fan-out's own time is not added to it, nor more than
+  `SEARCH_MCP_AGENT_LANE_GRACE_SECONDS` (2) after the keyless engines have
+  answered with results. Measured
   2026-09-26: `codex` answered in about 3 s and the pool in 2 to 4 s, so the
   two usually land together; `antigravity` took 10 to 20 s. When the keyless
   engines found nothing, the wait stretches to the search deadline, and the

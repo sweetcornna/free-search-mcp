@@ -15,6 +15,8 @@ handshake, which reads back the cookies it ends with) and `Engine._http_get`
 
 from __future__ import annotations
 
+import asyncio
+
 import os
 from types import SimpleNamespace
 from urllib.parse import parse_qs, urlparse
@@ -286,6 +288,8 @@ class _Wire:
 
             async def get(self, url):
                 wire.handshake_urls.append(url)
+                # A real handshake takes a while; let concurrent searches in.
+                await asyncio.sleep(0.01)
                 status, body = wire.handshake_answers.pop(0)
                 # Every hop sets YBV; a completed handshake also the A3 jar.
                 self.cookies.jar = [SimpleNamespace(name="YBV", value=f"v0.{len(wire.handshake_urls)}")]
@@ -418,3 +422,21 @@ async def test_a_refusal_or_reset_keeps_the_jar_and_sends_nothing_more(monkeypat
         await engine.search("second query", 10)
     assert len(wire.handshake_urls) == 1
     assert yahoo_mod._JARS[""] is jar
+
+
+async def test_concurrent_searches_share_one_handshake(monkeypatch):
+    wire = _Wire(monkeypatch, handshakes=[(200, _PAGE)], searches=[_PAGE, _PAGE, _PAGE])
+    engine = YahooEngine()
+    results = await asyncio.gather(*(engine.search(f"query {i}", 10) for i in range(4)))
+    assert all(len(r) == 3 for r in results)
+    assert len(wire.handshake_urls) == 1
+
+
+async def test_waiters_on_a_failed_handshake_send_nothing_of_their_own(monkeypatch):
+    wire = _Wire(monkeypatch, handshakes=[(500, "")] * 3)
+    engine = YahooEngine()
+    outcomes = await asyncio.gather(
+        *(engine.search(f"query {i}", 10) for i in range(3)), return_exceptions=True
+    )
+    assert all(isinstance(o, RequestException) for o in outcomes)
+    assert len(wire.handshake_urls) == yahoo_mod._HANDSHAKE_ATTEMPTS

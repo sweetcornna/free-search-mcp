@@ -760,3 +760,38 @@ async def test_a_late_off_topic_answer_still_completes_the_lane(world, monkeypat
     assert "lane_missing" not in meta
     assert "codex" not in {e for r in results for e in r["engines"]}
     assert engine_health.is_open("codex")
+
+
+# ---------------------------------------------------------------------------
+# Review round 7
+# ---------------------------------------------------------------------------
+
+
+async def test_a_quick_pool_gives_the_lane_only_its_grace(world, monkeypatch):
+    monkeypatch.setattr(settings, "agent_lane_wait_seconds", 5.0)
+    monkeypatch.setattr(settings, "agent_lane_grace_seconds", 0.1)
+    world.stubs["codex"].delay = 2
+    started = time.monotonic()
+    payload = await aggregate_search(QUERY, use_cache=False)
+    assert time.monotonic() - started < 0.6
+    assert payload["agent_lane"]["pending"] == ["codex"]
+
+
+async def test_a_late_witness_that_thins_the_pool_marks_the_row_degraded(world, monkeypatch):
+    monkeypatch.setattr(settings, "agent_lane_wait_seconds", 0.05)
+    monkeypatch.setattr(
+        settings, "default_engines", ["duckduckgo", "bing", "anysearch", "yahoojp"]
+    )
+    world(Stub("yahoojp", results=bucket("yahoojp", 2)))
+    # Too few results to judge, so neither a decoy nor a witness.
+    world.stubs["duckduckgo"].results = bucket("duckduckgo", 2)
+    world.stubs["bing"].results = _decoy("bing")
+    world.stubs["anysearch"].results = _decoy("anysearch")
+    world.stubs["codex"].delay = 0.2
+    await aggregate_search(QUERY)
+    (_, meta), = world.cache.rows.values()
+    assert "degraded" not in meta
+    await asyncio.sleep(0.4)
+    (results, meta), = world.cache.rows.values()
+    assert "bing" not in {e for r in results for e in r["engines"]}
+    assert meta["degraded"] is True

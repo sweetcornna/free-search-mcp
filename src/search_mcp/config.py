@@ -286,6 +286,12 @@ class Settings(BaseSettings):
     # search (and `cache://search/...`) returns. When the keyless engines found
     # nothing, the wait stretches to `search_deadline_seconds`.
     agent_lane_wait_seconds: float = Field(default=6.0, ge=0)
+    # Once the keyless engines have answered with results, the lane gets at
+    # most this much longer (still within `agent_lane_wait_seconds`). The pool
+    # usually finishes in 2 to 4 s, so this rarely binds; when the pool was
+    # quick, it keeps a slow lane engine from adding the whole wait to a search
+    # that already has its answer. Its results still reach the cache.
+    agent_lane_grace_seconds: float = Field(default=2.0, ge=0)
 
     # --- The `codex` sign-in engine (oauth.py, engines/codex.py) ----------
     # Never in a pool or a route. It runs when a call names it, and, once the

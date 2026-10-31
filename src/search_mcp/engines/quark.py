@@ -82,10 +82,11 @@ class QuarkEngine(Engine):
     description = "Quark/Shenma (Alibaba): Chinese web index; a third opinion beside Baidu and 360."
     # Measured 2026-10-31: the fourth back-to-back request (about 6 s in) got
     # Alibaba's x5sec wall, which lifted 30 s later, while six requests 6 s
-    # apart all passed. So ten a minute, at most three at once, and a search
-    # skips Quark rather than queue more than a second for it.
+    # apart all passed. So ten a minute and at most two at once: a burst of
+    # three plus the token refilled at 6 s would be that fourth request. A
+    # search skips Quark rather than queue more than a second for it.
     rate_limit_per_minute = 10
-    rate_limit_burst = 3
+    rate_limit_burst = 2
     rate_limit_max_wait = 1.0
     # Alibaba's x5sec wall, its answer to a burst: a 1 KB page whose script
     # redirects to /_____tmd_____/punish?x5secdata=... and ends in an HTML

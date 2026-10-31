@@ -6,7 +6,13 @@ import time
 
 import pytest
 
-from search_mcp.health import HARD_REASONS, SILENT_THRESHOLD, SOFT_THRESHOLD, EngineHealth
+from search_mcp.health import (
+    HARD_REASONS,
+    LONG_REASONS,
+    SILENT_THRESHOLD,
+    SOFT_THRESHOLD,
+    EngineHealth,
+)
 
 
 class Clock:
@@ -30,7 +36,7 @@ def health(clock):
     return EngineHealth(cooldown=600, max_cooldown=3600, clock=clock)
 
 
-@pytest.mark.parametrize("reason", sorted(HARD_REASONS))
+@pytest.mark.parametrize("reason", sorted(HARD_REASONS - LONG_REASONS))
 def test_a_wall_benches_the_engine_at_once(health, reason):
     health.record_failure("mojeek", reason)
     assert health.is_open("mojeek")
@@ -175,3 +181,10 @@ def test_the_escalation_survives_a_restart(clock):
     assert not second.is_open("mojeek")
     second.record_failure("mojeek", "captcha")
     assert second.describe("mojeek")["retry_in_seconds"] == 1200
+
+
+def test_a_region_block_is_benched_for_the_maximum_at_once(health):
+    health.record_failure("yahoojp", "region")
+    state = health.describe("yahoojp")
+    assert state["reason"] == "region"
+    assert state["retry_in_seconds"] == pytest.approx(3600, abs=1)

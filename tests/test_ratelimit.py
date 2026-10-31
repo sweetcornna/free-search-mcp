@@ -73,7 +73,7 @@ async def test_quark_is_configured_with_its_burst_cap():
     from search_mcp.aggregator import search_limiter
 
     bucket = search_limiter._buckets["quark"]
-    assert bucket.capacity == 3
+    assert bucket.capacity == 2
     assert bucket.rate == 10 / 60.0
 
 

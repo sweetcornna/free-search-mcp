@@ -18,7 +18,9 @@ Google's index, and five keyless sources join the registry.
   only when a call named it, and naming it switched the keyless pool, its
   breaker, routing and rescue off for that call.
   - The links wait for the lane at most `SEARCH_MCP_AGENT_LANE_WAIT_SECONDS`
-    (6), counted from when the engines were asked. A lane engine still
+    (6), counted from when the engines were asked, and at most
+    `SEARCH_MCP_AGENT_LANE_GRACE_SECONDS` (2) past the keyless engines once
+    they have results. A lane engine still
     searching then finishes in the background, and its results are merged
     into the cached result set, so the same search a little later returns
     them.
@@ -44,7 +46,8 @@ Google's index, and five keyless sources join the registry.
   and the Federal Reserve's own release on top. It joins the default pool,
   which is now `duckduckgo`, `bing`, `yahoojp` and `anysearch`. Yahoo! JAPAN
   does not serve the EEA or the UK; from there its notice page is reported as
-  a new `region` gate and the engine is benched.
+  a new `region` gate and the engine is benched for the maximum hour at once
+  (a server that stays there can leave it out of the pool).
 - `yahoo`: Bing's index through Yahoo's own front end, which stayed on topic
   where `bing` served its decoy page. It keeps the cookies of one completed
   bot-check handshake per proxy egress. It is the first reserve.
@@ -79,7 +82,7 @@ Google's index, and five keyless sources join the registry.
   `{"zh": ["so360", "quark"], "ko": ["naver"]}`. The default pool is four wide,
   so it can lose one engine before a reserve is seated.
 - An engine can cap its burst below its per-minute rate
-  (`Engine.rate_limit_burst`). `quark` uses 10 a minute, at most 3 at once,
+  (`Engine.rate_limit_burst`). `quark` uses 10 a minute, at most 2 at once,
   and a search skips it rather than queue.
 - The rate limiter no longer sleeps while holding its lock. A caller that has
   to wait reserves its token and sleeps on its own, so callers are still

@@ -62,6 +62,7 @@ yields `[]` rather than an error, per the keyless-engine contract.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import re
 import time
@@ -182,11 +183,17 @@ class _Jar:
 # Keyed by proxy egress: cookies minted from one exit IP and replayed from
 # another are exactly the inconsistency a bot check looks for.
 _JARS: dict[str, _Jar] = {}
+# The handshake in flight per egress, resolving to the jar it minted (or None).
+# Searches that need a jar meanwhile wait for it instead of each sending a
+# handshake of their own: four searches at once would otherwise be twelve
+# bot-check requests, which is the traffic Yahoo scores.
+_MINTING: dict[str, asyncio.Future[_Jar | None]] = {}
 
 
 def _reset_jar() -> None:
     """Forget every minted jar. For tests."""
     _JARS.clear()
+    _MINTING.clear()
 
 
 def _egress_key(proxy_kwargs: dict[str, Any]) -> str:
@@ -251,8 +258,36 @@ class YahooEngine(Engine):
                 log.info("yahoo cookie jar rejected (%s); running the handshake again", exc)
                 if _JARS.get(key) is jar:
                     _JARS.pop(key, None)
-                return await self._handshake(url, proxy_kwargs, attempts=_REMINT_ATTEMPTS)
-        return await self._handshake(url, proxy_kwargs, attempts=_HANDSHAKE_ATTEMPTS)
+                return await self._mint(url, proxy_kwargs, attempts=_REMINT_ATTEMPTS)
+        return await self._mint(url, proxy_kwargs, attempts=_HANDSHAKE_ATTEMPTS)
+
+    async def _mint(self, url: str, proxy_kwargs: dict[str, Any], *, attempts: int) -> str:
+        """Run the handshake for `url`, or wait for the one already running for
+        this egress and replay its jar once."""
+        key = _egress_key(proxy_kwargs)
+        minting = _MINTING.get(key)
+        if minting is not None:
+            jar = await asyncio.shield(minting)
+            if jar is None:
+                raise RequestException(
+                    "yahoo: Yahoo's bot check did not let a concurrent search's cookie "
+                    "handshake through; the other engines are unaffected."
+                )
+            return await super()._http_get(url, cookies=jar.cookies, retry=False)
+        future: asyncio.Future[_Jar | None] = asyncio.get_running_loop().create_future()
+        _MINTING[key] = future
+        try:
+            text = await self._handshake(url, proxy_kwargs, attempts=attempts)
+            future.set_result(_JARS.get(key))
+            return text
+        except BaseException:
+            # Settle the waiters rather than orphan them.
+            if not future.done():
+                future.set_result(None)
+            raise
+        finally:
+            if _MINTING.get(key) is future:
+                del _MINTING[key]
 
     async def _handshake(self, url: str, proxy_kwargs: dict[str, Any], *, attempts: int) -> str:
         """GET `url` from a session of our own, keeping the cookies it ends with.

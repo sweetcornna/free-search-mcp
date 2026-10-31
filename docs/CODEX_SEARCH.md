@@ -137,7 +137,9 @@ only one of them found. The keyless pool keeps its breaker, reserves, routing
 and rescue, which naming `engines=["codex", ...]` switches off.
 
 - The search waits for the lane at most `SEARCH_MCP_AGENT_LANE_WAIT_SECONDS`
-  (6 s), counted from when the engines were asked. `codex` answered in about
+  (6 s), counted from when the engines were asked, and no more than
+  `SEARCH_MCP_AGENT_LANE_GRACE_SECONDS` (2 s) after the keyless engines have
+  answered with results. `codex` answered in about
   3 s and the keyless pool in 2 to 4 s when measured, so the two usually land
   together. When the keyless engines found nothing, the wait stretches to
   `SEARCH_MCP_SEARCH_DEADLINE_SECONDS`, and the rescue pass starts beside it
@@ -173,6 +175,7 @@ and rescue, which naming `engines=["codex", ...]` switches off.
 | `SEARCH_MCP_CODEX_SIGNIN_WAIT_SECONDS` | `45` | how long one search waits for that approval |
 | `SEARCH_MCP_AGENT_ENGINES` | `auto` | the agent lane; `auto` seats a signed-in `codex`, `off` turns the lane off |
 | `SEARCH_MCP_AGENT_LANE_WAIT_SECONDS` | `6` | how long a search waits for the lane |
+| `SEARCH_MCP_AGENT_LANE_GRACE_SECONDS` | `2` | how much longer than the keyless engines it waits, once they have results |
 
 The sign-in and the searches go through `SEARCH_MCP_PROXY` when it is set, which
 matters where `auth.openai.com` or `chatgpt.com` is blocked.

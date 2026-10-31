@@ -676,7 +676,8 @@ async def _await_lane(
     has passed.
 
     The wait counts from `started`, when the keyless engines were asked too,
-    so the keyless fan-out's own time is not added to it. When the keyless
+    so the keyless fan-out's own time is not added to it, and once those have
+    answered it ends `agent_lane_grace_seconds` after them at the latest. When the keyless
     engines found nothing, the lane may be all there is, and the wait
     stretches to the search deadline; once the early `rescue` running beside
     it has brought results back, the lane is down to its ordinary wait again.
@@ -684,7 +685,12 @@ async def _await_lane(
     if not tasks:
         return [], set(), 0.0
     ordinary = settings.agent_lane_wait_seconds
-    wait = ordinary if answered else max(ordinary, settings.search_deadline_seconds)
+    if answered:
+        # The keyless results are in: the lane gets its grace beyond them,
+        # within its own wait.
+        wait = min(ordinary, time.monotonic() - started + settings.agent_lane_grace_seconds)
+    else:
+        wait = max(ordinary, settings.search_deadline_seconds)
     # What finished while the keyless fan-out ran is in, however long that took.
     pending = {task for task in tasks if not task.done()}
     while pending:
@@ -818,6 +824,7 @@ def _merge_lane_later(
     n: int,
     category: str | None,
     named: list[tuple[str, list[SearchResult]]],
+    keyless: list[str],
     asked: list[str],
     cache_key: str,
     meta: dict[str, Any],
@@ -832,6 +839,7 @@ def _merge_lane_later(
             n=n,
             category=category,
             named=list(named),
+            keyless=list(keyless),
             asked=list(asked),
             cache_key=cache_key,
             meta=dict(meta),
@@ -850,6 +858,7 @@ async def _fold_late_lane(
     n: int,
     category: str | None,
     named: list[tuple[str, list[SearchResult]]],
+    keyless: list[str],
     asked: list[str],
     cache_key: str,
     meta: dict[str, Any],
@@ -904,9 +913,16 @@ async def _fold_late_lane(
                 else:
                     _record_lane_health(name, outcome)
                 cleared = [suspect for suspect in dropped if suspect != name]
+                named = kept
                 if cleared:
                     meta = _with_off_topic(meta, cleared)
-                named = kept
+                    # The row now rests on fewer keyless indexes; if too few,
+                    # it is degraded like any thinned pool's.
+                    standing = sum(
+                        1 for n_, b in named if b and n_ in keyless and _is_guarded(n_)
+                    )
+                    if standing < settings.min_healthy_engines:
+                        meta = {**meta, "degraded": True}
             if not changed:
                 continue
             if _lane_rows.get(cache_key) is not owner:
@@ -1871,6 +1887,9 @@ async def aggregate_search(
         asyncio.ensure_future(_run_lane(name, query, n, filters)): name for name in lane
     }
     early_rescue: asyncio.Future[tuple[list[SearchResult], str | None]] | None = None
+    # Until the still-running lane engines are handed to the late merge or
+    # cancelled below, an exception (or the caller cancelling) must not leave
+    # them, or an early rescue, running unowned.
     try:
         results = await _fan_out(run, engine_names, diagnostics, lane_tasks)
         answered = any(isinstance(res, list) and res for _, res in results)
@@ -1891,16 +1910,6 @@ async def aggregate_search(
         lane_done, lane_pending, lane_waited = await _await_lane(
             lane_tasks, lane_started, answered, early_rescue
         )
-    except BaseException:
-        for task in lane_tasks:
-            task.cancel()
-        if early_rescue is not None:
-            early_rescue.cancel()
-        raise
-    # Until the still-running lane engines are handed to the late merge or
-    # cancelled below, an exception (or the caller cancelling) must not
-    # leave them, or an early rescue, running unowned.
-    try:
         named: list[tuple[str, list[SearchResult]]] = []
         errors: dict[str, str] = {}
         raised: dict[str, Exception] = {}
@@ -1977,7 +1986,8 @@ async def aggregate_search(
                     named = [(name, bucket) for name, bucket in named if name not in unconfirmed]
                     buckets = [bucket for _, bucket in named]
                 buckets.append(rescue_bucket)
-                rescue_pair = [(rescued_via or "rescue", rescue_bucket)]
+                if rescued_via:
+                    rescue_pair = [(rescued_via, rescue_bucket)]
                 merged = _merge(buckets, n, category, query)
                 # Attribute the recovery to the gated engines so the gate hint
                 # reads "was captcha-gated → served via <reserve>" instead of the
@@ -2063,7 +2073,8 @@ async def aggregate_search(
         else:
             stored_as = None
     except BaseException:
-        for task in lane_pending:
+        # Cancelling a finished task is a no-op, so all of them will do.
+        for task in lane_tasks:
             task.cancel()
         if early_rescue is not None:
             early_rescue.cancel()
@@ -2079,6 +2090,7 @@ async def aggregate_search(
             n=n,
             category=category,
             named=named + rescue_pair,
+            keyless=engine_names + [name for name, _ in rescue_pair],
             asked=asked,
             cache_key=cache_key,
             meta=meta,
