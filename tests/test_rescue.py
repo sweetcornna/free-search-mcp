@@ -453,11 +453,32 @@ async def test_candidates_still_running_at_the_deadline_are_benched(monkeypatch)
 
 
 async def test_no_more_than_two_candidates_run_at_once(monkeypatch):
-    monkeypatch.setattr(settings, "rescue_timeout", 0.3)
+    monkeypatch.setattr(settings, "rescue_timeout", 4.0)
     monkeypatch.setattr(settings, "rescue_stagger_seconds", 0.0)
     monkeypatch.setattr(settings, "rescue_engines", ["a", "b", "c", "d"])
     stubs = {name: _StubEngine(name, _mk_results(name, 3), delay=5.0) for name in "abcd"}
     _wire(monkeypatch, {"duckduckgo": _StubEngine("duckduckgo", []), **stubs})
-    out = await aggregate_search("q", engines=["duckduckgo"], use_cache=False)
-    assert out["results"] == []
+    search = asyncio.ensure_future(
+        aggregate_search("q", engines=["duckduckgo"], use_cache=False)
+    )
+    # Each candidate holds its place for 4 s / 4 = 1 s.
+    await asyncio.sleep(0.5)
     assert [name for name, stub in stubs.items() if stub.calls] == ["a", "b"]
+    search.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await search
+
+
+async def test_two_hung_candidates_do_not_starve_a_fast_third(monkeypatch):
+    monkeypatch.setattr(settings, "rescue_timeout", 3.0)
+    monkeypatch.setattr(settings, "rescue_stagger_seconds", 0.1)
+    monkeypatch.setattr(settings, "rescue_engines", ["a", "b", "c"])
+    stubs = {
+        "a": _StubEngine("a", _mk_results("a", 3), delay=30.0),
+        "b": _StubEngine("b", _mk_results("b", 3), delay=30.0),
+        "c": _StubEngine("c", _mk_results("c", 3, prefix="fast")),
+    }
+    _wire(monkeypatch, {"duckduckgo": _StubEngine("duckduckgo", []), **stubs})
+    out = await aggregate_search("q", engines=["duckduckgo"], use_cache=False)
+    # Each holds its place for max(2 staggers, 3 s / 3) = 1 s, then c is asked.
+    assert out["rescued_via"] == "c"

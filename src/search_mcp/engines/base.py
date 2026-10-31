@@ -207,7 +207,7 @@ _PAPER_HOSTS = (
     "sagepub.com",
 )
 
-# Subdomains of allowlisted publishers that are NOT scholarly. `_host_matches`
+# Subdomains of allowlisted publishers that are NOT scholarly. `host_matches`
 # accepts any subdomain of an entry, which is what makes the list short — but
 # the big presses also run dictionaries and bookshops on the same domain, and
 # those sailed through as papers. Measured: `category="paper"` on "what is
@@ -314,7 +314,7 @@ _NEWS_HOST_SUFFIXES = (".press", "news.com", "news.net", "news.cn", "news.org")
 
 def _is_news_host(host: str) -> bool:
     """Allowlist membership OR the `news.<domain>` naming convention."""
-    if _host_matches(host, _NEWS_HOSTS):
+    if host_matches(host, _NEWS_HOSTS):
         return True
     return host.startswith(_NEWS_HOST_PREFIXES) or host.endswith(_NEWS_HOST_SUFFIXES)
 
@@ -396,16 +396,12 @@ def host_matches(host: str, suffixes: tuple[str, ...] | list[str]) -> bool:
     return any(host == s or host.endswith("." + s) for s in suffixes)
 
 
-# The names this module has always used.
-_host = host_of
-_host_matches = host_matches
-
 
 def _is_paper_host(host: str) -> bool:
     """A scholarly host, and not one of the presses' non-scholarly siblings."""
-    if _host_matches(host, _NOT_PAPER_HOSTS):
+    if host_matches(host, _NOT_PAPER_HOSTS):
         return False
-    return _host_matches(host, _PAPER_HOSTS)
+    return host_matches(host, _PAPER_HOSTS)
 
 
 # Public-sector and academic hosts, by the naming conventions registries
@@ -428,14 +424,14 @@ def classify_source(url: str) -> str:
     a glance, and it must never feed the ranking — per-result scoring has been
     measured and rejected here more than once.
     """
-    host = _host(url)
+    host = host_of(url)
     if not host:
         return ""
     if _is_paper_host(host):
         return "paper"
-    if _host_matches(host, _GITHUB_HOSTS):
+    if host_matches(host, _GITHUB_HOSTS):
         return "code"
-    if _host_matches(host, _FORUM_HOSTS):
+    if host_matches(host, _FORUM_HOSTS):
         return "forum"
     if _is_news_host(host):
         return "news"
@@ -566,12 +562,12 @@ def apply_post_filters_with_diagnostics(
 
     out: list[SearchResult] = []
     for r in results:
-        host = _host(r.url)
+        host = host_of(r.url)
 
-        if inc and not _host_matches(host, tuple(inc)):
+        if inc and not host_matches(host, tuple(inc)):
             _bump("include_domains")
             continue
-        if exc and _host_matches(host, tuple(exc)):
+        if exc and host_matches(host, tuple(exc)):
             _bump("exclude_domains")
             continue
 
@@ -584,10 +580,10 @@ def apply_post_filters_with_diagnostics(
             if filters.category == "paper" and not _is_paper_host(host):
                 _bump("category_paper")
                 continue
-            if filters.category == "forum" and not _host_matches(host, _FORUM_HOSTS):
+            if filters.category == "forum" and not host_matches(host, _FORUM_HOSTS):
                 _bump("category_forum")
                 continue
-            if filters.category == "github" and not _host_matches(host, _GITHUB_HOSTS):
+            if filters.category == "github" and not host_matches(host, _GITHUB_HOSTS):
                 _bump("category_github")
                 continue
             if filters.category == "news" and not _is_news_host(host):
@@ -595,9 +591,9 @@ def apply_post_filters_with_diagnostics(
                 continue
             if filters.category == "blog" and (
                 # Blog = "ordinary web page" — exclude obvious non-blog hosts.
-                _host_matches(host, _PAPER_HOSTS)
-                or _host_matches(host, _FORUM_HOSTS)
-                or _host_matches(host, _GITHUB_HOSTS)
+                host_matches(host, _PAPER_HOSTS)
+                or host_matches(host, _FORUM_HOSTS)
+                or host_matches(host, _GITHUB_HOSTS)
                 or _is_news_host(host)
             ):
                 _bump("category_blog")
@@ -1431,8 +1427,13 @@ class Engine(abc.ABC):
                 raise http_err from None
             return html
 
-    async def _http_get(self, url: str, *, cookies: dict[str, str] | None = None) -> str:
+    async def _http_get(
+        self, url: str, *, cookies: dict[str, str] | None = None, retry: bool = True
+    ) -> str:
         """One HTTP GET with at most one retry for transient failures.
+
+        ``retry=False`` makes it exactly one request, for an engine that has
+        its own answer to a failed one (Yahoo re-runs its cookie handshake).
 
         Retry policy lives in the module-level ``_RETRYABLE_STATUSES`` /
         ``_retry_after_seconds`` helpers; timeouts are never retried. The
@@ -1459,8 +1460,9 @@ class Engine(abc.ABC):
             **curl_proxy_kwargs(self.name),
             **extra,
         ) as client:
-            for attempt in range(_MAX_ATTEMPTS):
-                last = attempt + 1 >= _MAX_ATTEMPTS
+            attempts = _MAX_ATTEMPTS if retry else 1
+            for attempt in range(attempts):
+                last = attempt + 1 >= attempts
                 try:
                     resp = await client.get(url)
                 except Timeout:

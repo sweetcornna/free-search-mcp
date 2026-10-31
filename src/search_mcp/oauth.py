@@ -480,8 +480,9 @@ def load(provider_id: str) -> Credential | None:
 # `is_signed_in` answers per file state. The agent lane asks it on every
 # automatic search, cache hits included, and a stat is far cheaper than
 # reading and parsing the credential (two files for a linked Codex CLI
-# sign-in) on the event loop each time.
-_signed_in_memo: dict[str, tuple[tuple[Any, ...], bool]] = {}
+# sign-in) on the event loop each time. A memo is (the credential file and its
+# stamp, the linked Codex CLI file and its stamp, the answer).
+_signed_in_memo: dict[str, tuple[tuple[str, tuple[int, int]], Path | None, Any, bool]] = {}
 
 
 def _file_stamp(path: Path) -> tuple[int, int] | None:
@@ -492,19 +493,32 @@ def _file_stamp(path: Path) -> tuple[int, int] | None:
     return (st.st_mtime_ns, st.st_size)
 
 
+def _linked_file(provider_id: str) -> Path | None:
+    """The Codex CLI file a link record reads its tokens from, else None."""
+    try:
+        data = json.loads(credential_path(provider_id).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(data, dict) or data.get("source") != "codex-cli":
+        return None
+    return Path(data.get("linked_path") or codex_cli_auth_path())
+
+
 def is_signed_in(provider_id: str) -> bool:
     path = credential_path(provider_id)
     stamp = _file_stamp(path)
     if stamp is None:
         return False
-    key: tuple[Any, ...] = (str(path), stamp)
-    if provider(provider_id).id == "codex":
-        key += (str(codex_cli_auth_path()), _file_stamp(codex_cli_auth_path()))
+    key = (str(path), stamp)
     memo = _signed_in_memo.get(provider_id)
-    if memo is not None and memo[0] == key:
-        return memo[1]
+    if memo is not None:
+        memo_key, linked, linked_stamp, signed_in = memo
+        if memo_key == key and (linked is None or _file_stamp(linked) == linked_stamp):
+            return signed_in
+    linked = _linked_file(provider_id)
+    linked_stamp = _file_stamp(linked) if linked is not None else None
     signed_in = load(provider_id) is not None
-    _signed_in_memo[provider_id] = (key, signed_in)
+    _signed_in_memo[provider_id] = (key, linked, linked_stamp, signed_in)
     return signed_in
 
 

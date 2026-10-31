@@ -122,11 +122,11 @@ class Settings(BaseSettings):
     rescue_timeout: float = 10.0
     # The pass is a staggered race (hedged requests): the first candidate is
     # asked at once, the next one this many seconds later or as soon as the one
-    # before it fails, never more than two at a time, and the first usable
-    # answer wins and cancels the rest. It used to try one candidate at a time,
-    # each in an equal slice of `rescue_timeout`, so a slow first candidate
-    # cost its whole slice before the next was asked. 0 asks the first two at
-    # once.
+    # before it fails, at most two holding a place at a time (one past its
+    # share of the pass gives its place up), and the first usable answer wins
+    # and cancels the rest. It used to try one candidate at a time, each in an
+    # equal slice of `rescue_timeout`, so a slow first candidate cost its whole
+    # slice before the next was asked. 0 asks the first two at once.
     rescue_stagger_seconds: float = Field(default=1.0, ge=0)
 
     rate_limit_per_minute: int = Field(default=30, gt=0)

@@ -27,7 +27,7 @@ Available settings:
 | `SEARCH_MCP_RESCUE_ENABLED` | `true` | auto-rescue empty searches via rescue engines |
 | `SEARCH_MCP_RESCUE_ENGINES` | `["youcom","baidu"]` | rescue order (JSON list), tried after the reserves |
 | `SEARCH_MCP_RESCUE_TIMEOUT` | `10.0` | seconds; cap on the whole rescue pass |
-| `SEARCH_MCP_RESCUE_STAGGER_SECONDS` | `1.0` | the rescue pass is a staggered race: the next candidate is asked this long after the previous one, or as soon as it fails, at most two at a time, and the first usable answer wins; `0` asks the first two at once |
+| `SEARCH_MCP_RESCUE_STAGGER_SECONDS` | `1.0` | the rescue pass is a staggered race: the next candidate is asked this long after the previous one, or as soon as it fails, at most two holding a place at a time (one past its share of the pass gives its place up), and the first usable answer wins; `0` asks the first two at once |
 | `SEARCH_MCP_MAX_RESULTS_PER_ENGINE` | `10` | |
 | `SEARCH_MCP_RATE_LIMIT_PER_MINUTE` | `30` | per engine |
 | `SEARCH_MCP_FETCH_RATE_LIMIT_PER_MINUTE` | `20` | shared `fetch` bucket |

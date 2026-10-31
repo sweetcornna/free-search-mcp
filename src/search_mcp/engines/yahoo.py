@@ -220,15 +220,20 @@ class YahooEngine(Engine):
                 url += f"&btf={token}"
         return url
 
-    async def _http_get(self, url: str, *, cookies: dict[str, str] | None = None) -> str:
+    async def _http_get(
+        self, url: str, *, cookies: dict[str, str] | None = None, retry: bool = True
+    ) -> str:
         if cookies is not None:
-            return await super()._http_get(url, cookies=cookies)
+            return await super()._http_get(url, cookies=cookies, retry=retry)
         proxy_kwargs = curl_proxy_kwargs(self.name)
         key = _egress_key(proxy_kwargs)
         jar = _JARS.get(key)
         if jar is not None and jar.fresh(time.monotonic()):
             try:
-                return await super()._http_get(url, cookies=jar.cookies)
+                # One request: a rejected jar is answered with an empty 500,
+                # which the generic retry would only repeat; the handshake
+                # below is the answer to it.
+                return await super()._http_get(url, cookies=jar.cookies, retry=False)
             except Timeout:
                 raise  # slow, not rejected: a handshake would only be slower
             except RequestException as exc:

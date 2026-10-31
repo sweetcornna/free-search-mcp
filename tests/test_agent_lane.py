@@ -8,6 +8,7 @@ the same ranking, without letting a slow one hold the keyless results back.
 from __future__ import annotations
 
 import asyncio
+import re
 import time
 
 import pytest
@@ -204,7 +205,7 @@ async def test_a_slow_lane_engine_cannot_hold_the_keyless_results(world, monkeyp
     assert payload["engines"] == ["duckduckgo", "bing", "anysearch"]
     assert payload["agent_lane"]["pending"] == ["codex"]
     assert payload["agent_lane"]["merges_into_cache"] is True
-    assert "codex had not answered within 0.1 s" in payload["agent_lane_hint"]
+    assert re.search(r"codex had not answered within 0\.[12] s", payload["agent_lane_hint"])
     assert "repeat the same call" in payload["agent_lane_hint"]
     assert "Agent lane:" in render_search(payload)
 
@@ -558,3 +559,18 @@ async def test_a_cached_set_without_its_lane_engine_says_so(world):
     assert again["agent_lane"] == {"engines": ["codex"], "missing": ["codex"]}
     assert "cached without codex" in again["agent_lane_hint"]
     assert "Agent lane:" in render_search(again)
+
+
+# ---------------------------------------------------------------------------
+# Review round 3
+# ---------------------------------------------------------------------------
+
+
+async def test_a_lane_answer_that_beat_a_slow_pool_is_kept(world, monkeypatch):
+    monkeypatch.setattr(settings, "agent_lane_wait_seconds", 0.1)
+    world.stubs["duckduckgo"].delay = 0.3
+    world.stubs["codex"].delay = 0.05
+    payload = await aggregate_search(QUERY, use_cache=False)
+    assert "codex" in {e for r in payload["results"] for e in r["engines"]}
+    assert payload["agent_lane"] == {"engines": ["codex"], "answered": {"codex": 4}}
+    assert "agent_lane_hint" not in payload

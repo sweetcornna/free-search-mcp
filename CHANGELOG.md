@@ -60,9 +60,10 @@ Google's index, and five keyless sources join the registry.
 
 - The rescue pass is a staggered race instead of a queue. The first candidate
   is asked at once and each next one `SEARCH_MCP_RESCUE_STAGGER_SECONDS` (1)
-  later, or as soon as the previous one fails, at most two at a time; the
-  first usable answer wins and cancels the rest, and the whole pass still fits in
-  `SEARCH_MCP_RESCUE_TIMEOUT`. It used to give each candidate an equal slice of
+  later, or as soon as the previous one fails, with at most two holding a
+  place at a time (one that runs past its share of the pass gives its place
+  up); the first usable answer wins and cancels the rest, and the whole pass
+  still fits in `SEARCH_MCP_RESCUE_TIMEOUT`. It used to give each candidate an equal slice of
   that timeout in turn, so a slow first candidate held up a fast second one.
 - When no keyless engine answered and the agent lane is still searching, the
   rescue pass starts beside the lane wait instead of after it, and is

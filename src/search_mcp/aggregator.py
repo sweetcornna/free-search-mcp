@@ -661,7 +661,8 @@ async def _await_lane(
     answered: bool,
     rescue: asyncio.Future[tuple[list[SearchResult], str | None]] | None = None,
 ) -> tuple[list[_LaneOutcome], set[asyncio.Future[_LaneOutcome]], float]:
-    """`(finished, still running, seconds waited)` once the lane's wait has passed.
+    """`(finished, still running, seconds since started)` once the lane's wait
+    has passed.
 
     The wait counts from `started`, when the keyless engines were asked too,
     so the keyless fan-out's own time is not added to it. When the keyless
@@ -673,7 +674,8 @@ async def _await_lane(
         return [], set(), 0.0
     ordinary = settings.agent_lane_wait_seconds
     wait = ordinary if answered else max(ordinary, settings.search_deadline_seconds)
-    pending = set(tasks)
+    # What finished while the keyless fan-out ran is in, however long that took.
+    pending = {task for task in tasks if not task.done()}
     while pending:
         if rescue is not None and rescue.done():
             if not rescue.cancelled() and rescue.exception() is None and rescue.result()[0]:
@@ -689,11 +691,12 @@ async def _await_lane(
         if not done:
             break
         pending -= done
+    pending = {task for task in pending if not task.done()}
     order = {name: i for i, name in enumerate(tasks.values())}
     finished = sorted(
         (task.result() for task in tasks if task not in pending), key=lambda o: order[o[0]]
     )
-    return finished, pending, wait
+    return finished, pending, time.monotonic() - started
 
 
 def _lane_found(lane: Collection[asyncio.Future[_LaneOutcome]]) -> bool:
@@ -745,7 +748,7 @@ def _lane_hint(
     if pending:
         who = ", ".join(pending)
         parts.append(
-            f"{who} had not answered within {waited:g} s, so the results above do not "
+            f"{who} had not answered within {waited:.1f} s, so the results above do not "
             "include it."
         )
         if merges_later:
@@ -1097,7 +1100,8 @@ def _needs_rescue(
 # The race hedges one slow candidate with one more, not with the whole list:
 # the reserves answer in 1 to 3 s, so a one-second stagger with no cap would
 # have every rescue reach the browser-rendered `brave` and the quota-limited
-# `youcom` on an ordinary slow day.
+# `youcom` on an ordinary slow day. A candidate stops counting against the cap
+# once it has run past its share of the pass (see `hold` in `_rescue`).
 _RESCUE_IN_FLIGHT = 2
 
 
@@ -1181,22 +1185,34 @@ async def _rescue(
     deadline = loop.time() + settings.rescue_timeout
     waiting = list(candidates)
     running: dict[asyncio.Future[list[SearchResult]], str] = {}
+    started_at: dict[asyncio.Future[list[SearchResult]], float] = {}
+    # How long a candidate holds its place among the `_RESCUE_IN_FLIGHT`. One
+    # still running after that keeps running, and can still win, but no longer
+    # keeps the next candidate waiting: two hung reserves must not starve a
+    # fast third. Never less than the old design's equal slice.
+    hold = max(2 * settings.rescue_stagger_seconds, settings.rescue_timeout / len(candidates))
     next_start = loop.time()
     try:
         while waiting or running:
             now = loop.time()
             if now >= deadline:
                 break
-            room = len(running) < _RESCUE_IN_FLIGHT
+            holding = [task for task in running if now - started_at[task] < hold]
+            room = len(holding) < _RESCUE_IN_FLIGHT
             if waiting and room and (not running or now >= next_start):
                 name = waiting.pop(0)
                 attempted.append(name)
-                running[asyncio.ensure_future(probe(name))] = name
+                task = asyncio.ensure_future(probe(name))
+                running[task] = name
+                started_at[task] = now
                 next_start = now + settings.rescue_stagger_seconds
                 continue
             timeout = deadline - now
             if waiting and room:
                 timeout = min(timeout, max(0.0, next_start - now))
+            elif waiting:
+                free_at = min(started_at[task] + hold for task in holding)
+                timeout = min(timeout, max(0.0, free_at - now))
             done, _ = await asyncio.wait(
                 running, timeout=timeout, return_when=asyncio.FIRST_COMPLETED
             )
@@ -1946,15 +1962,16 @@ async def aggregate_search(
         ]
         if lane_missing:
             meta["lane_missing"] = lane_missing
+        if use_cache and lane_nominal:
+            # This run's row (or its absence) is the newest answer: a late
+            # merge an earlier search left running must not overwrite it.
+            # Taken before the write, so the merge cannot slip in during it.
+            _lane_rows.pop(cache_key, None)
         if use_cache and merged and not sign_in_pending:
             await cache.put_search(cache_key, query, asked, merged, meta or None)
             stored_as = cache_key
         else:
             stored_as = None
-        if use_cache and lane_nominal:
-            # This run's row (or its absence) is the newest answer: a late
-            # merge an earlier search left running must not overwrite it.
-            _lane_rows.pop(cache_key, None)
     except BaseException:
         for task in lane_pending:
             task.cancel()

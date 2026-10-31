@@ -46,6 +46,7 @@ from .base import (
     SearchResult,
     augment_query_with_operators,
     extract_date_hint,
+    inline_text,
     parse_html,
 )
 
@@ -83,7 +84,7 @@ def _plain(fragment: Any) -> str:
     """
     if not isinstance(fragment, str) or not fragment:
         return ""
-    return " ".join(parse_html(fragment).text(separator="").split())
+    return inline_text(parse_html(fragment))
 
 
 def _shown_date(data: dict) -> str:
@@ -141,7 +142,9 @@ class SeznamEngine(Engine):
             return []
         if not isinstance(state, dict):
             return []
-        entities = (state.get("data") or {}).get("entities")
+        data = state.get("data")
+        # Anything but the shape measured is an unparseable page, not an error.
+        entities = data.get("entities") if isinstance(data, dict) else None
 
         results: list[SearchResult] = []
         seen: set[str] = set()

@@ -235,10 +235,13 @@ default engines then costs time but still returns results.
 
 The pass is a staggered race, in the manner of hedged requests. The first
 candidate is asked at once, each next one `SEARCH_MCP_RESCUE_STAGGER_SECONDS`
-(1) later or as soon as the one before it has failed, never more than two at a
-time, and the first usable answer wins and cancels the rest; the whole pass
-fits in
-`SEARCH_MCP_RESCUE_TIMEOUT` (10). Until 0.18 it asked one candidate at a time,
+(1) later or as soon as the one before it has failed, and the first usable
+answer wins and cancels the rest; the whole pass fits in
+`SEARCH_MCP_RESCUE_TIMEOUT` (10). At most two candidates hold a place at a
+time, so an ordinary slow reserve is hedged by one more request rather than
+by the whole list; one that has run past its share of the pass (the timeout
+divided among the candidates, and never under two staggers) keeps running
+but stops holding its place, so two hung reserves cannot starve a fast third. Until 0.18 it asked one candidate at a time,
 each in an equal slice of the timeout, so a slow first candidate spent its
 slice before a fast second one was asked. A candidate that answers inside the
 first stagger still spares the others a request. When nothing keyless

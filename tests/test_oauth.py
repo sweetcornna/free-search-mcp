@@ -362,6 +362,19 @@ async def test_an_expired_codex_cli_link_is_never_refreshed_here(mock_http):
     assert oauth.codex_cli_auth_path().read_bytes() == before
 
 
+def test_is_signed_in_follows_a_linked_codex_cli_file_at_its_own_path(tmp_path):
+    _write_codex_cli(time.time() + 3600)
+    custom = tmp_path / "elsewhere" / "auth.json"
+    custom.parent.mkdir()
+    custom.write_bytes(oauth.codex_cli_auth_path().read_bytes())
+    oauth.link_codex_cli(custom)
+    assert oauth.is_signed_in("codex") is True
+    # Logging out of that Codex CLI empties its file; our link record and the
+    # default auth.json are untouched, and the answer must still change.
+    custom.write_text(json.dumps({"auth_mode": "chatgpt", "tokens": None}), encoding="utf-8")
+    assert oauth.is_signed_in("codex") is False
+
+
 def test_linking_without_a_codex_cli_sign_in_says_how_to_get_one():
     with pytest.raises(oauth.OAuthError, match="codex login"):
         oauth.link_codex_cli()

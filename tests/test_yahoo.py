@@ -288,7 +288,10 @@ class _Wire:
                     self.cookies.jar.append(SimpleNamespace(name="A3", value="d=AQAB"))
                 return SimpleNamespace(status_code=status, text=body)
 
-        async def http_get(engine, url, *, cookies=None):
+        async def http_get(engine, url, *, cookies=None, retry=True):
+            # A replayed jar gets exactly one request: a rejection is answered
+            # by the handshake, not by the generic retry.
+            assert retry is False
             wire.search_cookies.append(cookies)
             answer = wire.search_answers.pop(0)
             if isinstance(answer, Exception):
