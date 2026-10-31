@@ -82,6 +82,16 @@ def test_detect_gate_none_on_empty_and_normal():
         ("<form action='/recaptcha/api'>g-recaptcha</form>", "captcha"),
         ("<a href='https://consent.google.com/...'>before you continue</a>", "consent"),
         ("<div class='SignFlow'>请登录知乎</div>", "login"),
+        # Yahoo! JAPAN's notice to the EEA and the UK, and Yahoo's EU consent wall.
+        (
+            "<title>【お知らせ】欧州経済領域（EEA）およびイギリスからご利用のお客様へ</title>"
+            "<p>From Wednesday, April 6, 2022, Yahoo! JAPAN is no longer available in "
+            "the EEA and the United Kingdom.</p>"
+            "<link href='https://s.yimg.jp/images/privacy/areacheck/...'>",
+            "region",
+        ),
+        ("<a href='https://privacy.yahoo.co.jp/areacheck/error.html'>", "region"),
+        ("<form action='https://consent.yahoo.com/v2/collectConsent?sessionId=1'>", "consent"),
         # Mojeek's ALTCHA proof-of-work wall. Shares no markup with the Google
         # or DDG walls, so a captcha-blocked Mojeek — one of the four DEFAULT
         # engines — was reported as a silent empty and read as an IP block.

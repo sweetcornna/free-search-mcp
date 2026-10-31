@@ -44,8 +44,8 @@ class RateLimiter:
         self.default_rpm = default_rpm
         self._buckets: dict[str, TokenBucket] = defaultdict(lambda: TokenBucket(self.default_rpm))
 
-    def configure(self, key: str, rpm: int) -> None:
-        self._buckets[key] = TokenBucket(rpm)
+    def configure(self, key: str, rpm: int, burst: int | None = None) -> None:
+        self._buckets[key] = TokenBucket(rpm, burst)
 
     async def acquire(self, key: str, max_wait: float | None = None) -> bool:
         return await self._buckets[key].acquire(max_wait=max_wait)

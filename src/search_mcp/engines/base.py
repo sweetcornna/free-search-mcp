@@ -45,6 +45,27 @@ _ABS_RE_1 = re.compile(
 _ABS_RE_2 = re.compile(r"\b(\d{4})-(\d{2})-(\d{2})\b")
 # US/EU short date 12/01/2024 or 1/2/24
 _ABS_RE_3 = re.compile(r"\b(\d{1,2})/(\d{1,2})/(\d{2,4})\b")
+# Year first, as East Asian engines print it: Yahoo! JAPAN "2026/10/1 -",
+# Naver "2026.05.24.", and "2026年10月1日" in Chinese and Japanese prose.
+_ABS_RE_YMD = re.compile(
+    r"(?<![\d.])(\d{4})(?:([/.])(\d{1,2})\2(\d{1,2})(?![\d/]|\.\d)|"
+    r"\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日)"
+)
+# Relative dates in Japanese ("5日前", "15時間前"), Chinese ("3天前", "5小时前")
+# and Korean ("3일 전"). Yahoo! JAPAN, Quark and Naver lead snippets with them.
+_REL_CJK_RE = re.compile(
+    r"(\d+)\s*(分钟|分鐘|分|時間|小时|小時|日|天|週間|周|週|か月|ヶ月|ケ月|个月|個月|年|"
+    r"분|시간|일|주|개월|년)\s*(?:前|전)"
+)
+_CJK_UNITS = {
+    "分": "minute", "分钟": "minute", "分鐘": "minute", "분": "minute",
+    "時間": "hour", "小时": "hour", "小時": "hour", "시간": "hour",
+    "日": "day", "天": "day", "일": "day",
+    "週間": "week", "周": "week", "週": "week", "주": "week",
+    "か月": "month", "ヶ月": "month", "ケ月": "month", "个月": "month", "個月": "month",
+    "개월": "month",
+    "年": "year", "년": "year",
+}  # fmt: skip
 
 
 def _plausible_publish_date(d: datetime) -> bool:
@@ -80,11 +101,26 @@ def extract_date_hint(text: str) -> str:
     if rel:
         n, unit = rel.group(1), rel.group(2).lower()
         return f"{n} {unit}{'s' if int(n) != 1 else ''} ago"
+    rel = _REL_CJK_RE.search(text)
+    if rel:
+        n, unit = rel.group(1), _CJK_UNITS[rel.group(2)]
+        return f"{int(n)} {unit}{'s' if int(n) != 1 else ''} ago"
 
     # ISO date wins next — least ambiguous.
     for iso in _ABS_RE_2.finditer(text):
         try:
             d = datetime.strptime(iso.group(0), "%Y-%m-%d")
+        except ValueError:
+            continue
+        if _plausible_publish_date(d):
+            return d.strftime("%Y-%m-%d")
+
+    # Year-first dates: unambiguous once the year leads.
+    for ymd in _ABS_RE_YMD.finditer(text):
+        month = ymd.group(3) or ymd.group(5)
+        day = ymd.group(4) or ymd.group(6)
+        try:
+            d = datetime(int(ymd.group(1)), int(month), int(day))
         except ValueError:
             continue
         if _plausible_publish_date(d):
@@ -876,6 +912,11 @@ _GATE_MARKERS: tuple[tuple[str, tuple[str, ...]], ...] = (
             "altcha",
             "verification required",
             "complete the challenge",
+            # Alibaba's x5sec wall (Quark answers a burst with it): a 1 KB page
+            # whose script redirects to /_____tmd_____/punish?x5secdata=...
+            "_____tmd_____/punish",
+            "x5secdata",
+            "rgv587_flag",
         ),
     ),
     (
@@ -901,6 +942,20 @@ _GATE_MARKERS: tuple[tuple[str, tuple[str, ...]], ...] = (
             "consent.youtube.com",
             "before you continue",
             "consent.bing.com",
+            # Yahoo's EU consent interstitial (search.yahoo.com from Europe).
+            "consent.yahoo.com",
+            "collectconsent",
+        ),
+    ),
+    (
+        # A source that does not serve this country at all. Yahoo! JAPAN has
+        # answered the EEA and the UK with a notice page since April 2022; it
+        # parses to nothing and was otherwise a silent empty. A proxy in a
+        # served region is the fix, as for any wall.
+        "region",
+        (
+            "privacy.yahoo.co.jp/areacheck",
+            "no longer available in the eea",
         ),
     ),
     (
@@ -1116,6 +1171,11 @@ class Engine(abc.ABC):
     # delay to the WHOLE search. Skipping costs one source; waiting costs the
     # user's latency on every result.
     rate_limit_max_wait: float | None = None
+    # How many requests the bucket allows back to back. None means as many as
+    # the per-minute rate. For a source that walls a burst well below its
+    # sustained rate (Quark: the fourth request within 6 s, while one every
+    # 6 s passed indefinitely).
+    rate_limit_burst: int | None = None
     # TLS/JA3 + header fingerprint for this engine's HTTP requests. None means
     # "use the shared default" (httpfetch.IMPERSONATE).
     #

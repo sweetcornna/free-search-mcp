@@ -57,3 +57,21 @@ async def test_ratelimiter_with_zero_default_does_not_raise():
     limiter = RateLimiter(0)
     await asyncio.wait_for(limiter.acquire("any-key"), timeout=1.0)
     await asyncio.wait_for(limiter.acquire("any-key"), timeout=1.0)
+
+
+async def test_a_burst_cap_below_the_rate_skips_the_fourth_request():
+    from search_mcp.ratelimit import RateLimiter
+
+    limiter = RateLimiter(30)
+    limiter.configure("quark", 10, 3)
+    assert [await limiter.acquire("quark", max_wait=0) for _ in range(4)] == [
+        True, True, True, False,
+    ]  # fmt: skip
+
+
+async def test_quark_is_configured_with_its_burst_cap():
+    from search_mcp.aggregator import search_limiter
+
+    bucket = search_limiter._buckets["quark"]
+    assert bucket.capacity == 3
+    assert bucket.rate == 10 / 60.0

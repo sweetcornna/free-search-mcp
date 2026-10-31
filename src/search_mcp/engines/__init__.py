@@ -49,6 +49,7 @@ from .huggingface import HuggingFaceEngine
 from .ietf import IetfEngine
 from .imf import ImfEngine
 from .mdn import MdnEngine
+from .naver import NaverEngine
 from .npm import NpmEngine
 from .nvd import NvdEngine
 from .openalex import OpenAlexEngine
@@ -58,12 +59,14 @@ from .openverse import OpenverseEngine
 from .osv import OsvEngine
 from .pubmed import PubMedEngine
 from .pypi import PyPIEngine
+from .quark import QuarkEngine
 from .rdap import RdapEngine
 from .registries import RegistriesEngine
 from .sec_edgar import SecEdgarEngine
 from .semanticscholar import SemanticScholarEngine
 from .serpbase import SerpBaseEngine
 from .serper import SerperEngine
+from .seznam import SeznamEngine
 from .so360 import So360Engine
 from .stackexchange import StackExchangeEngine
 from .tavily import TavilyEngine
@@ -73,7 +76,9 @@ from .wikimedia import WikimediaEngine
 from .wikipedia import WikipediaEngine
 from .worldbank import WorldBankEngine
 from .worldclock import WorldClockEngine
+from .yahoo import YahooEngine
 from .yahoofinance import YahooFinanceEngine
+from .yahoojp import YahooJapanEngine
 from .youcom import YouComEngine
 from .zbmath import ZbMathEngine
 from .zenodo import ZenodoEngine
@@ -84,6 +89,12 @@ ENGINES: dict[str, Engine] = {
     "googlenews": GoogleNewsEngine(),
     "brave": BraveEngine(),
     "bing": BingEngine(),
+    # Google's index, served keylessly as plain HTML by Yahoo! JAPAN, in the
+    # default pool since 0.18. Yahoo's own front end to Bing's index stands in
+    # for a gated `bing`, and Seznam's independent crawler is the next reserve.
+    "yahoojp": YahooJapanEngine(),
+    "yahoo": YahooEngine(),
+    "seznam": SeznamEngine(),
     "baidu": BaiduEngine(),
     # Engines added per integration request — all keyless, all opt-in (not in
     # the fast default pool). anysearch is a JSON REST aggregator (anonymous
@@ -139,8 +150,11 @@ ENGINES: dict[str, Engine] = {
     "dataverse": DataverseEngine(),
     "zenodo": ZenodoEngine(),
     "figshare": FigshareEngine(),
-    # Chinese-language web index (HTML scrape, best-effort like zhihu).
+    # Chinese-language web indexes (HTML scrapes, best-effort like zhihu),
+    # joined for a query written in Chinese, and Korea's for one in Hangul.
     "so360": So360Engine(),
+    "quark": QuarkEngine(),
+    "naver": NaverEngine(),
     # Finance. Ordered so `category="finance"` (which round-robins across
     # sub-groups) reaches filings, market data and macro research in that
     # order — the three answer different questions and none substitutes for

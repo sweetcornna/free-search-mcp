@@ -689,9 +689,9 @@ async def search(
     Args:
         query: Natural-language query (the same string a human would type).
         engines: Subset of `engines()`. None (recommended) = the health-aware
-            default pool: duckduckgo, bing and anysearch, plus googlenews when
-            `freshness` is "day"/"week" and a Chinese index for a Chinese
-            query.
+            default pool: duckduckgo, bing, yahoojp (Google's index) and
+            anysearch, plus googlenews when `freshness` is "day"/"week",
+            so360 and quark for a Chinese query and naver for a Korean one.
         max_results: Merged result count after dedup, clamped to 1-50. It is
             also the PER-ENGINE budget, so it multiplies across the fan-out;
             5-20 is the useful range and anything past that is duplicate noise

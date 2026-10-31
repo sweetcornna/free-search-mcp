@@ -51,7 +51,9 @@ search_limiter = RateLimiter(settings.rate_limit_per_minute)
 # seconds" — the default 30/min would walk straight into that.
 for _name, _engine in ENGINES.items():
     if _engine.rate_limit_per_minute is not None:
-        search_limiter.configure(_name, _engine.rate_limit_per_minute)
+        search_limiter.configure(
+            _name, _engine.rate_limit_per_minute, _engine.rate_limit_burst
+        )
 
 
 def _max_token_wait(engine: Any) -> float | None:

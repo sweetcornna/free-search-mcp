@@ -264,6 +264,7 @@ def test_the_guarded_engines_are_exactly_the_web_indexes():
         "duckduckgo", "brave", "bing", "baidu",
         "anysearch", "so360", "brave_api", "serper", "serpbase",
         "tavily", "google_cse", "codex", "antigravity", "youcom",
+        "yahoojp", "yahoo", "seznam", "quark", "naver",
     }  # fmt: skip
 
 

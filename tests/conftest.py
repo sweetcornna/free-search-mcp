@@ -220,6 +220,16 @@ def _reset_bing_session():
 
 
 @pytest.fixture(autouse=True)
+def _reset_yahoo_jar():
+    """Yahoo keeps the cookies of one completed bot-check handshake per proxy
+    egress, for the same reason and with the same hazard as Bing's jar."""
+    from search_mcp.engines.yahoo import _reset_jar
+    _reset_jar()
+    yield
+    _reset_jar()
+
+
+@pytest.fixture(autouse=True)
 def _reset_engine_health():
     """The circuit breaker is process-wide on purpose. Across tests that means
     one test's stubbed captcha would bench that engine for every test after it."""

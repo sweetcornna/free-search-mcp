@@ -37,17 +37,25 @@ class Settings(BaseSettings):
     #   * bing        — real results again with a warmed session and the right
     #                   request shape (engines/bing.py). When it serves a decoy
     #                   page instead, the off-topic guard drops it.
+    #   * yahoojp     — Yahoo! JAPAN serves Google's index as plain HTML, in
+    #                   any language. Measured 2026-10-31: 0.8 to 1.5 s, and
+    #                   docs.python.org / Stack Overflow / the Fed's own page
+    #                   on top where the others had blogs. Not served in the
+    #                   EEA or the UK: there it is a `region` gate, benched,
+    #                   and the other three carry on.
     #   * anysearch   — keyless anonymous tier of a JSON API, ~3s, coherent.
     # `googlenews` left this list. It answered every query, programming
     # questions included, with ten news headlines behind opaque redirect URLs;
     # see `fresh_engines`.
-    default_engines: list[str] = ["duckduckgo", "bing", "anysearch"]
+    default_engines: list[str] = ["duckduckgo", "bing", "yahoojp", "anysearch"]
     # Stand-ins, in order, used only while fewer than `min_healthy_engines`
-    # general engines are healthy. so360 is plain HTTP and measured coherent;
-    # brave works but needs a browser render (seconds, and Chromium). Not used
-    # to pad a pool that is merely one short — three good engines beat three
-    # good engines plus a browser render.
-    reserve_engines: list[str] = ["so360", "brave"]
+    # general engines are healthy. yahoo is Bing's index through Yahoo's own
+    # front end (on topic where bing served its decoy), seznam an independent
+    # crawler, so360 plain HTTP and coherent; brave works but needs a browser
+    # render (seconds, and Chromium). Not used to pad a pool that is merely
+    # one short — three good engines beat three good engines plus a browser
+    # render.
+    reserve_engines: list[str] = ["yahoo", "seznam", "so360", "brave"]
     min_healthy_engines: int = 3
     # Joined to the pool when the caller asks for `freshness="day"|"week"` —
     # the only time a news feed is the right answer to a web search.
@@ -55,8 +63,10 @@ class Settings(BaseSettings):
     # Joined when the QUERY is written in that language (detected from its
     # script, not from SEARCH_MCP_REGION). Measured: for a Chinese query so360
     # returns the organiser's own site and the university notice that the
-    # western indexes do not have at all.
-    locale_engines: dict[str, list[str]] = {"zh": ["so360"]}
+    # western indexes do not have at all; quark (Alibaba's Shenma index) adds
+    # CSDN, Tencent Cloud and php.cn pages neither has. naver is Korea's own
+    # index. Japanese needs no entry: yahoojp is in the default pool.
+    locale_engines: dict[str, list[str]] = {"zh": ["so360", "quark"], "ko": ["naver"]}
 
     # Circuit breaker (health.py). An engine that hits a wall, or keeps
     # failing, is benched for `engine_cooldown_seconds`, doubling on each

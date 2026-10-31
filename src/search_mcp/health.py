@@ -37,7 +37,7 @@ log = logging.getLogger(__name__)
 # ban. `off_topic` belongs here too — a decoy page is a block with better
 # manners.
 HARD_REASONS = frozenset(
-    {"captcha", "consent", "javascript", "login", "no_live_instance", "off_topic"}
+    {"captcha", "consent", "javascript", "login", "no_live_instance", "off_topic", "region"}
 )
 
 # Failures that are often a blip: a timeout, a reset, a 503. Two in a row.
