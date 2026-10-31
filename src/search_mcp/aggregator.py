@@ -2016,11 +2016,13 @@ async def aggregate_search(
                     f"The answer from {', '.join(left_out)} was left out of this result set "
                     "as off-topic or unconfirmed."
                 )
+            # Not repeated for an engine the "missing" note already covers.
+            lane_off = [name for name in lane_off if name not in missing]
             if lane_off:
                 replay["benched"] = lane_off
                 notes.append(
-                    f"{', '.join(lane_off)} was sitting out after recent failures when this "
-                    "result set was made."
+                    f"{', '.join(lane_off)} was sitting out (benched by the breaker) when "
+                    "this result set was made."
                 )
             if replay:
                 payload["agent_lane"] = replay
@@ -2202,7 +2204,7 @@ async def aggregate_search(
             named,
             lane_suspects + unconfirmed,
             lane,
-            solid_extra=bool(rescue_pair),
+            solid_extra=bool(rescue_pair) and _is_guarded(rescued_via or ""),
             witness=bool(rescue_pair) and rescue_witness,
         )
         if late_off_topic or doubted:

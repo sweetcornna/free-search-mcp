@@ -659,7 +659,9 @@ async def search(
       asked and appears under `benched_engines` instead; a rescue pass that
       substituted a source appears as `rescued_via`. When the operator has
       signed in to an agent engine (`codex`), it searches beside the keyless
-      engines and `agent_lane` reports it ({engines, answered, pending, errors});
+      engines and `agent_lane` reports it ({engines, answered, pending, errors,
+      rate_limited, benched, left_out}; `left_out` lists an answer dropped as
+      off-topic or unconfirmed);
       one still searching when the links return is merged into the cached
       result set, so the same call repeated later carries its results too.
 
