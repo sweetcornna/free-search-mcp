@@ -114,10 +114,25 @@ def world(monkeypatch):
 # ---------------------------------------------------------------------------
 
 
-def test_the_default_pool_is_three_general_web_engines_and_no_news_feed():
+def test_the_default_pool_is_four_general_web_engines_and_no_news_feed():
     assert _nominal_pool("python asyncio taskgroup", None, None) == [
-        "duckduckgo", "bing", "anysearch",
+        "duckduckgo", "bing", "yahoojp", "anysearch",
     ]  # fmt: skip
+
+
+@pytest.mark.parametrize(
+    ("query", "joined"),
+    [
+        ("人工智能 最新进展", ["so360", "quark"]),
+        ("파이썬 비동기 프로그래밍", ["naver"]),
+        ("Pythonの非同期処理", []),
+        ("python asyncio taskgroup", []),
+    ],
+)
+def test_a_query_in_chinese_or_korean_adds_that_language_s_indexes(query, joined):
+    pool = _nominal_pool(query, None, None)
+    assert pool[:4] == ["duckduckgo", "bing", "yahoojp", "anysearch"]
+    assert [name for name in pool[4:] if name in ("so360", "quark", "naver")] == joined
 
 
 @pytest.mark.parametrize(("freshness", "joins"), [("day", True), ("week", True), ("month", False),

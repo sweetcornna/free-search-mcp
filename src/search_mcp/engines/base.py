@@ -5,6 +5,7 @@ import asyncio
 import logging
 import random
 import re
+from contextvars import ContextVar
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
 from typing import Any
@@ -45,6 +46,37 @@ _ABS_RE_1 = re.compile(
 _ABS_RE_2 = re.compile(r"\b(\d{4})-(\d{2})-(\d{2})\b")
 # US/EU short date 12/01/2024 or 1/2/24
 _ABS_RE_3 = re.compile(r"\b(\d{1,2})/(\d{1,2})/(\d{2,4})\b")
+# Year first, as East Asian engines print it: Yahoo! JAPAN "2026/10/1 -" and
+# "2026年10月1日" in Chinese and Japanese prose. No letter, digit or dot may
+# lead the year. The dotted form ("2026.05.24.") is left to the engine that
+# prints it (naver.py): in other text it is usually a CalVer version, with or
+# without a sentence's closing dot ("Upgrade to certifi 2024.08.30.").
+_ABS_RE_YMD = re.compile(
+    r"(?<![A-Za-z\d.])(\d{4})(?:/(\d{1,2})/(\d{1,2})(?![\d/])"
+    r"|\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日)"
+)
+# Relative dates in Japanese ("5日前", "15時間前"), Chinese ("3天前", "5小时前")
+# and Korean ("3일 전"), where an engine prints a date: at the start of the
+# text or after a separator, and before the end or a separator. Yahoo! JAPAN
+# leads a snippet with "5日前 -", Quark ends a source line "· 3天前", Naver's
+# profile line is "3주 전". In prose the same words mean something else:
+# "この寺は30年前に建てられた" (built 30 years ago), "締切の3日前まで" (until three
+# days before the deadline), "10月1日前" (before 1 October), "2024年前半" (the
+# first half of 2024).
+_CJK_SEP = r"\s·・|,，、\-"
+_REL_CJK_RE = re.compile(
+    rf"(?<![^{_CJK_SEP}])(\d{{1,3}})\s*(分钟|分鐘|分|時間|小时|小時|日|天|週間|周|週|か月|ヶ月|ケ月|"
+    rf"个月|個月|年|분|시간|일|주|개월|년)\s*(?:前|전)(?![^{_CJK_SEP}])"
+)
+_CJK_UNITS = {
+    "分": "minute", "分钟": "minute", "分鐘": "minute", "분": "minute",
+    "時間": "hour", "小时": "hour", "小時": "hour", "시간": "hour",
+    "日": "day", "天": "day", "일": "day",
+    "週間": "week", "周": "week", "週": "week", "주": "week",
+    "か月": "month", "ヶ月": "month", "ケ月": "month", "个月": "month", "個月": "month",
+    "개월": "month",
+    "年": "year", "년": "year",
+}  # fmt: skip
 
 
 def _plausible_publish_date(d: datetime) -> bool:
@@ -80,11 +112,26 @@ def extract_date_hint(text: str) -> str:
     if rel:
         n, unit = rel.group(1), rel.group(2).lower()
         return f"{n} {unit}{'s' if int(n) != 1 else ''} ago"
+    rel = _REL_CJK_RE.search(text)
+    if rel:
+        n, unit = rel.group(1), _CJK_UNITS[rel.group(2)]
+        return f"{int(n)} {unit}{'s' if int(n) != 1 else ''} ago"
 
     # ISO date wins next — least ambiguous.
     for iso in _ABS_RE_2.finditer(text):
         try:
             d = datetime.strptime(iso.group(0), "%Y-%m-%d")
+        except ValueError:
+            continue
+        if _plausible_publish_date(d):
+            return d.strftime("%Y-%m-%d")
+
+    # Year-first dates: unambiguous once the year leads.
+    for ymd in _ABS_RE_YMD.finditer(text):
+        month = ymd.group(2) or ymd.group(4)
+        day = ymd.group(3) or ymd.group(5)
+        try:
+            d = datetime(int(ymd.group(1)), int(month), int(day))
         except ValueError:
             continue
         if _plausible_publish_date(d):
@@ -168,7 +215,7 @@ _PAPER_HOSTS = (
     "sagepub.com",
 )
 
-# Subdomains of allowlisted publishers that are NOT scholarly. `_host_matches`
+# Subdomains of allowlisted publishers that are NOT scholarly. `host_matches`
 # accepts any subdomain of an entry, which is what makes the list short — but
 # the big presses also run dictionaries and bookshops on the same domain, and
 # those sailed through as papers. Measured: `category="paper"` on "what is
@@ -275,7 +322,7 @@ _NEWS_HOST_SUFFIXES = (".press", "news.com", "news.net", "news.cn", "news.org")
 
 def _is_news_host(host: str) -> bool:
     """Allowlist membership OR the `news.<domain>` naming convention."""
-    if _host_matches(host, _NEWS_HOSTS):
+    if host_matches(host, _NEWS_HOSTS):
         return True
     return host.startswith(_NEWS_HOST_PREFIXES) or host.endswith(_NEWS_HOST_SUFFIXES)
 
@@ -342,24 +389,27 @@ class SearchResult:
         return d
 
 
-def _host(url: str) -> str:
+def host_of(url: str) -> str:
+    """The URL's lower-cased hostname, or "" when it has none or is malformed."""
     try:
         return (urlparse(url).hostname or "").lower()
     except ValueError:
         return ""
 
 
-def _host_matches(host: str, suffixes: tuple[str, ...] | list[str]) -> bool:
+def host_matches(host: str, suffixes: tuple[str, ...] | list[str]) -> bool:
+    """Whether `host` is one of `suffixes` or a subdomain of one."""
     if not host:
         return False
     return any(host == s or host.endswith("." + s) for s in suffixes)
 
 
+
 def _is_paper_host(host: str) -> bool:
     """A scholarly host, and not one of the presses' non-scholarly siblings."""
-    if _host_matches(host, _NOT_PAPER_HOSTS):
+    if host_matches(host, _NOT_PAPER_HOSTS):
         return False
-    return _host_matches(host, _PAPER_HOSTS)
+    return host_matches(host, _PAPER_HOSTS)
 
 
 # Public-sector and academic hosts, by the naming conventions registries
@@ -382,14 +432,14 @@ def classify_source(url: str) -> str:
     a glance, and it must never feed the ranking — per-result scoring has been
     measured and rejected here more than once.
     """
-    host = _host(url)
+    host = host_of(url)
     if not host:
         return ""
     if _is_paper_host(host):
         return "paper"
-    if _host_matches(host, _GITHUB_HOSTS):
+    if host_matches(host, _GITHUB_HOSTS):
         return "code"
-    if _host_matches(host, _FORUM_HOSTS):
+    if host_matches(host, _FORUM_HOSTS):
         return "forum"
     if _is_news_host(host):
         return "news"
@@ -520,12 +570,12 @@ def apply_post_filters_with_diagnostics(
 
     out: list[SearchResult] = []
     for r in results:
-        host = _host(r.url)
+        host = host_of(r.url)
 
-        if inc and not _host_matches(host, tuple(inc)):
+        if inc and not host_matches(host, tuple(inc)):
             _bump("include_domains")
             continue
-        if exc and _host_matches(host, tuple(exc)):
+        if exc and host_matches(host, tuple(exc)):
             _bump("exclude_domains")
             continue
 
@@ -538,10 +588,10 @@ def apply_post_filters_with_diagnostics(
             if filters.category == "paper" and not _is_paper_host(host):
                 _bump("category_paper")
                 continue
-            if filters.category == "forum" and not _host_matches(host, _FORUM_HOSTS):
+            if filters.category == "forum" and not host_matches(host, _FORUM_HOSTS):
                 _bump("category_forum")
                 continue
-            if filters.category == "github" and not _host_matches(host, _GITHUB_HOSTS):
+            if filters.category == "github" and not host_matches(host, _GITHUB_HOSTS):
                 _bump("category_github")
                 continue
             if filters.category == "news" and not _is_news_host(host):
@@ -549,9 +599,9 @@ def apply_post_filters_with_diagnostics(
                 continue
             if filters.category == "blog" and (
                 # Blog = "ordinary web page" — exclude obvious non-blog hosts.
-                _host_matches(host, _PAPER_HOSTS)
-                or _host_matches(host, _FORUM_HOSTS)
-                or _host_matches(host, _GITHUB_HOSTS)
+                host_matches(host, _PAPER_HOSTS)
+                or host_matches(host, _FORUM_HOSTS)
+                or host_matches(host, _GITHUB_HOSTS)
                 or _is_news_host(host)
             ):
                 _bump("category_blog")
@@ -917,6 +967,12 @@ _GATE_MARKERS: tuple[tuple[str, tuple[str, ...]], ...] = (
 )
 
 
+# Set while an engine runs in the agent lane (aggregator._run_lane), i.e. in a
+# search that did not name it. An engine must not open a sign-in page then,
+# even if its stored sign-in vanished between the lane's check and the search.
+in_agent_lane: ContextVar[bool] = ContextVar("in_agent_lane", default=False)
+
+
 class EngineKeyError(ValueError):
     """A keyed engine cannot run: its key is missing, rejected, or out of quota.
 
@@ -926,7 +982,19 @@ class EngineKeyError(ValueError):
     transport failures and malformed payloads. Without the distinction, an
     unconfigured keyed engine reports "no results" — which reads as "nothing
     matched" rather than "you need to add a token".
+
+    `transient` is set on one raised for a passing reason, such as a sign-in
+    whose token could not be refreshed because the token endpoint was down:
+    the account is fine, and the next search may well succeed.
     """
+
+    transient: bool = False
+
+
+def is_lasting(exc: BaseException) -> bool:
+    """Whether a failure is one the next search will not repair: a missing,
+    refused or spent key or sign-in, as opposed to a timeout or an outage."""
+    return isinstance(exc, EngineKeyError) and not exc.transient
 
 
 class EngineSignInPending(EngineKeyError):
@@ -1054,18 +1122,22 @@ def _retry_after_seconds(headers: Any) -> float | None:
     return val if val >= 0 else None
 
 
-def detect_gate(html: str) -> str | None:
+def detect_gate(
+    html: str, extra: tuple[tuple[str, tuple[str, ...]], ...] = ()
+) -> str | None:
     """Best-effort: classify a page as a gate (``"captcha"``/``"consent"``/
-    ``"login"``/``"javascript"``) when it carries a known wall marker, else
-    ``None``.
+    ``"login"``/``"javascript"``, or an engine's own reason such as
+    ``"region"``) when it carries a known wall marker, else ``None``.
 
-    Used to (a) surface an honest reason instead of a silent empty result set,
-    and (b) let gated SERP engines fall back to a working meta-search. Never
-    raises; a normal results page returns ``None``."""
+    `extra` holds the markers of the engine whose page this is
+    (`Engine.gate_markers`), checked after the shared ones. Used to (a)
+    surface an honest reason instead of a silent empty result set, and (b)
+    let gated SERP engines fall back to a working meta-search. Never raises;
+    a normal results page returns ``None``."""
     if not html:
         return None
     low = html.lower()
-    for reason, markers in _GATE_MARKERS:
+    for reason, markers in (*_GATE_MARKERS, *extra):
         if any(m in low for m in markers):
             return reason
     return None
@@ -1116,6 +1188,11 @@ class Engine(abc.ABC):
     # delay to the WHOLE search. Skipping costs one source; waiting costs the
     # user's latency on every result.
     rate_limit_max_wait: float | None = None
+    # How many requests the bucket allows back to back. None means as many as
+    # the per-minute rate. For a source that walls a burst well below its
+    # sustained rate (Quark: the fourth request within 6 s, while one every
+    # 6 s passed indefinitely).
+    rate_limit_burst: int | None = None
     # TLS/JA3 + header fingerprint for this engine's HTTP requests. None means
     # "use the shared default" (httpfetch.IMPERSONATE).
     #
@@ -1150,6 +1227,24 @@ class Engine(abc.ABC):
     # engine (other candidate names, older advisories) count as ordinary
     # native hits.
     direct_answer: bool = False
+    # True for an engine whose search a language model runs on the operator's
+    # own account (`codex`, `antigravity`) instead of a results page this
+    # process reads. Such an engine sits in no pool and no route. Once its
+    # sign-in is stored it can join automatic searches as the AGENT LANE: it is
+    # asked at the same moment as the keyless engines and its results are
+    # fused into the same ranking (aggregator._lane_nominal,
+    # settings.agent_engines).
+    agent_search: bool = False
+    # Whether `SEARCH_MCP_AGENT_ENGINES=auto` seats it. True only where the
+    # provider allows its sign-in to be used by a third-party tool; an
+    # operator can still list any agent engine by name.
+    agent_lane_auto: bool = False
+    # Walls only this engine serves, as `(reason, markers)` pairs checked
+    # after the shared `_GATE_MARKERS` (see `detect_gate`). They live here, not
+    # in the shared list, because a shared marker is matched against every
+    # engine's empty page, and an empty page often echoes the query: a search
+    # for "no longer available in the EEA" must not bench DuckDuckGo.
+    gate_markers: tuple[tuple[str, tuple[str, ...]], ...] = ()
 
     def claims(self, query: str) -> bool:
         """Whether this engine can answer `query` on its own, judged offline.
@@ -1216,7 +1311,7 @@ class Engine(abc.ABC):
         # recorded above must not be clobbered by the gate classification of
         # the very shell the browser render was supposed to get past.
         if not results and diagnostics is not None:
-            reason = detect_gate(html)
+            reason = detect_gate(html, self.gate_markers)
             if reason:
                 diagnostics.setdefault("gated", {}).setdefault(self.name, reason)
         return self.finalize_results(results, filters, max_results, diagnostics)
@@ -1343,8 +1438,13 @@ class Engine(abc.ABC):
                 raise http_err from None
             return html
 
-    async def _http_get(self, url: str, *, cookies: dict[str, str] | None = None) -> str:
+    async def _http_get(
+        self, url: str, *, cookies: dict[str, str] | None = None, retry: bool = True
+    ) -> str:
         """One HTTP GET with at most one retry for transient failures.
+
+        ``retry=False`` makes it exactly one request, for an engine that has
+        its own answer to a failed one (Yahoo re-runs its cookie handshake).
 
         Retry policy lives in the module-level ``_RETRYABLE_STATUSES`` /
         ``_retry_after_seconds`` helpers; timeouts are never retried. The
@@ -1371,8 +1471,9 @@ class Engine(abc.ABC):
             **curl_proxy_kwargs(self.name),
             **extra,
         ) as client:
-            for attempt in range(_MAX_ATTEMPTS):
-                last = attempt + 1 >= _MAX_ATTEMPTS
+            attempts = _MAX_ATTEMPTS if retry else 1
+            for attempt in range(attempts):
+                last = attempt + 1 >= attempts
                 try:
                     resp = await client.get(url)
                 except Timeout:
@@ -1400,6 +1501,26 @@ def text_of(node) -> str:
     if node is None:
         return ""
     return " ".join(node.text(separator=" ", strip=True).split())
+
+
+def inline_text(node) -> str:
+    """Node text with the page's own spacing, whitespace collapsed.
+
+    Not `text_of`, which puts a space at every tag boundary: SERPs wrap query
+    terms in `<b>`, `<em>` or `<mark>`, often inside a dotted name or a CJK
+    word, and that printed "asyncio . TaskGroup" and "파이썬 에서는". For titles
+    and snippets, which hold inline markup only, so no words merge.
+    """
+    if node is None:
+        return ""
+    return " ".join(node.text(separator="").split())
+
+
+def enclosing_anchor(node):
+    """The nearest `<a>` at or above `node`, or None."""
+    while node is not None and node.tag != "a":
+        node = node.parent
+    return node
 
 
 def parse_html(html: str) -> HTMLParser:

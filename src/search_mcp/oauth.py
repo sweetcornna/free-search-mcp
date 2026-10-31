@@ -15,9 +15,11 @@ suspended accounts for it. It is here because an operator asked for it on
 their own account. Nothing opens its sign-in by itself, and the sign-in says
 what it risks before it starts.
 
-Like the API-key engines, both are opt-in. No pool, reserve or category route
-contains them (tests/test_no_key_positioning.py), so a search only reaches one
-when a call names it, and every search spends the operator's own plan quota.
+Both are opt-in, and every search spends the operator's own plan quota. No
+pool, reserve or category route contains them (tests/test_no_key_positioning.py).
+A call can name one, and once signed in they can join automatic searches as the
+agent lane (aggregator._lane_nominal): `codex` by default, `antigravity` only
+when SEARCH_MCP_AGENT_ENGINES names it.
 
 The flow is the one the Codex CLI and the Antigravity IDE use: OAuth 2.0
 authorization code with PKCE, redirected to a listener on a fixed loopback
@@ -77,6 +79,13 @@ from .net import proxy_for
 
 class OAuthError(RuntimeError):
     """Signing in, or keeping a sign-in fresh, failed. The message says what to do."""
+
+
+class OAuthUnreachable(OAuthError):
+    """The token endpoint could not be reached, failed on its side (a network
+    error, a 5xx, a 429) or answered with something that is not a token reply
+    (a captive portal's page). Nothing is known to be wrong with the sign-in;
+    try again later."""
 
 
 class NotSignedIn(OAuthError):
@@ -457,14 +466,22 @@ def _read_codex_cli(cred: Credential) -> Credential:
     return cred
 
 
-def load(provider_id: str) -> Credential | None:
-    """The stored sign-in, or None. Never raises on a missing or corrupt file."""
+def _read_record(provider_id: str) -> dict[str, Any] | None:
+    """The stored sign-in record as written, or None."""
     try:
         data = json.loads(credential_path(provider_id).read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None
-    if not isinstance(data, dict):
-        return None
+    return data if isinstance(data, dict) else None
+
+
+def load(provider_id: str) -> Credential | None:
+    """The stored sign-in, or None. Never raises on a missing or corrupt file."""
+    data = _read_record(provider_id)
+    return None if data is None else _credential_from(provider_id, data)
+
+
+def _credential_from(provider_id: str, data: dict[str, Any]) -> Credential | None:
     try:
         cred = _from_dict({**data, "provider": provider(provider_id).id})
     except (TypeError, ValueError):
@@ -475,8 +492,47 @@ def load(provider_id: str) -> Credential | None:
     return cred if (cred.access_token or cred.refresh_token) else None
 
 
+# `is_signed_in` answers per file state. The agent lane asks it on every
+# automatic search, cache hits included, and a stat is far cheaper than
+# reading and parsing the credential (two files for a linked Codex CLI
+# sign-in) on the event loop each time. A memo is (the credential file and its
+# stamp, the linked Codex CLI file and its stamp, the answer).
+_signed_in_memo: dict[str, tuple[tuple[str, tuple[int, int]], Path | None, Any, bool]] = {}
+
+
+def _file_stamp(path: Path) -> tuple[int, int] | None:
+    try:
+        st = path.stat()
+    except OSError:
+        return None
+    return (st.st_mtime_ns, st.st_size)
+
+
+def _linked_file(record: dict[str, Any] | None) -> Path | None:
+    """The Codex CLI file a link record reads its tokens from, else None."""
+    if record is None or record.get("source") != "codex-cli":
+        return None
+    return Path(record.get("linked_path") or codex_cli_auth_path())
+
+
 def is_signed_in(provider_id: str) -> bool:
-    return load(provider_id) is not None
+    path = credential_path(provider_id)
+    stamp = _file_stamp(path)
+    if stamp is None:
+        return False
+    key = (str(path), stamp)
+    memo = _signed_in_memo.get(provider_id)
+    if memo is not None:
+        memo_key, linked, linked_stamp, signed_in = memo
+        if memo_key == key and (linked is None or _file_stamp(linked) == linked_stamp):
+            return signed_in
+    # One read of the record serves both the memo and the answer.
+    record = _read_record(provider_id)
+    linked = _linked_file(record)
+    linked_stamp = _file_stamp(linked) if linked is not None else None
+    signed_in = record is not None and _credential_from(provider_id, record) is not None
+    _signed_in_memo[provider_id] = (key, linked, linked_stamp, signed_in)
+    return signed_in
 
 
 def sign_out(provider_id: str) -> bool:
@@ -596,7 +652,7 @@ async def _token_request(
             spec.token_url, headers={"Accept": "application/json"}, **encoding
         )
     except httpx.HTTPError as exc:
-        raise OAuthError(
+        raise OAuthUnreachable(
             f"could not reach {urlparse(spec.token_url).netloc}: {type(exc).__name__}. "
             "If it is blocked on this network, set SEARCH_MCP_PROXY."
         ) from exc
@@ -607,14 +663,16 @@ async def _token_request(
                 f"the {spec.account} sign-in has expired or was revoked ({detail}). "
                 f"Sign in again with `search-mcp-login {spec.id}`."
             )
-        raise OAuthError(f"{spec.account} token endpoint answered HTTP {response.status_code}: "
-                         f"{detail}")
+        passing = response.status_code >= 500 or response.status_code == 429
+        failure = OAuthUnreachable if passing else OAuthError
+        raise failure(f"{spec.account} token endpoint answered HTTP {response.status_code}: "
+                      f"{detail}")
     try:
         data = response.json()
     except ValueError as exc:
-        raise OAuthError(f"{spec.account} token endpoint did not return JSON") from exc
+        raise OAuthUnreachable(f"{spec.account} token endpoint did not return JSON") from exc
     if not isinstance(data, dict) or not data.get("access_token"):
-        raise OAuthError(f"{spec.account} token endpoint returned no access token")
+        raise OAuthUnreachable(f"{spec.account} token endpoint returned no access token")
     return data
 
 
@@ -1221,6 +1279,7 @@ __all__ = [
     "Credential",
     "NotSignedIn",
     "OAuthError",
+    "OAuthUnreachable",
     "OAuthProvider",
     "SignInPending",
     "can_open_browser",

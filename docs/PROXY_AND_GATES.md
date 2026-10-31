@@ -158,9 +158,9 @@ one failed attempt, as before.
 ### Reserves
 
 While fewer than `SEARCH_MCP_MIN_HEALTHY_ENGINES` (3) general engines are
-healthy, reserves are seated in order: `so360`, `brave`
-(`SEARCH_MCP_RESERVE_ENGINES`). The default pool is exactly three wide, so
-losing any one engine seats a reserve. A reserve that needs Chromium is skipped while
+healthy, reserves are seated in order: `yahoo`, `seznam`, `so360`, `brave`
+(`SEARCH_MCP_RESERVE_ENGINES`). The default pool is four wide, so it can lose
+one engine before a reserve is seated. A reserve that needs Chromium is skipped while
 Chromium is known to be missing. An answer that still rests on too few indexes
 is served, but it is cached for at most an hour instead of the usual week, so
 the pool's recovery shows up.
@@ -169,13 +169,18 @@ the pool's recovery shows up.
 
 If a search still comes back empty, or nearly empty while engines were gated or
 erroring, one bounded recovery attempt runs through the reserves, then
-`youcom`, then `baidu`, skipping whatever already ran or is benched. Recovered results are
+`youcom`, then `baidu`, skipping whatever already ran or is benched. It is a
+staggered race: the next candidate starts one second
+(`SEARCH_MCP_RESCUE_STAGGER_SECONDS`) after the previous one or as soon as it
+fails, and the first usable answer wins. Recovered results are
 attributed to the engine that produced them. The response reports this in
 `rescued_via` and in a `fallback` entry on each gated engine
 (`was captcha-gated → served via so360`).
 
-Measured on 2026-10-29: `duckduckgo`, `bing`, `anysearch` and the reserves
-answer on topic. Engines that only served a wall on every request (`mojeek`,
+Measured on 2026-10-29 and 2026-10-31: `duckduckgo`, `bing`, `yahoojp`,
+`anysearch` and the reserves answer on topic. `yahoojp` (Yahoo! JAPAN) is not
+served in the EEA or the UK; from there it reports a `region` gate and is
+benched, and a proxy outside those regions brings it back. Engines that only served a wall on every request (`mojeek`,
 `google`/`serpsearch`, `startpage`, `searx`, `sogou`) were removed from the
 registry, so no pool, rescue pass or explicit name reaches them.
 

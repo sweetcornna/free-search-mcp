@@ -7,6 +7,8 @@ freshness without fetching every URL.
 """
 from __future__ import annotations
 
+import pytest
+
 from search_mcp.engines import SearchFilters, SearchResult, apply_post_filters
 from search_mcp.engines.base import extract_date_hint
 
@@ -142,3 +144,50 @@ def test_apply_post_filters_no_filter_preserves_field():
     ]
     out = apply_post_filters(results, None)
     assert out[0].published_age == "2026-04-28"
+
+
+# East Asian engines (Yahoo! JAPAN, Naver, Quark) print the year first, or a
+# relative phrase in their own language.
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("2026/10/1 - Python 3.15 の新機能", "2026-10-01"),
+        ("2026年10月1日に公開", "2026-10-01"),
+        ("5日前 - 記事", "5 days ago"),
+        ("1時間前", "1 hour ago"),
+        ("3天前 发布", "3 days ago"),
+        ("5小时前", "5 hours ago"),
+        ("2个月前", "2 months ago"),
+        ("3일 전", "3 days ago"),
+        ("2시간 전", "2 hours ago"),
+        # A deadline is not a relative date; the year-first date still is.
+        ("请于2026年10月1日前提交", "2026-10-01"),
+    ],
+)
+def test_extract_date_hint_east_asian_forms(text, expected):
+    assert extract_date_hint(text) == expected
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "version 3.11.2",
+        "certifi 2024.08.30.1",
+        "2026/13/40",
+        "2026/10/1/2",
+        "2999/01/01",
+        "数年前",
+        "请于10月1日前提交",
+        "10월 1일 전까지 신청",
+        "2024年前半の動向",
+        "2020年前后",
+        "PyCharm 2023.3.4 is out",
+        "v2024.1.2 release",
+        "certifi 2024.08.30",
+        "Upgrade to certifi 2024.08.30.",
+        "この寺は30年前に建てられた",
+        "締切の3日前までに申し込み",
+    ],
+)
+def test_extract_date_hint_ignores_year_first_lookalikes(text):
+    assert extract_date_hint(text) == ""

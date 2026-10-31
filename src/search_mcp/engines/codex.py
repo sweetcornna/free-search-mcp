@@ -57,6 +57,7 @@ from .base import (
     SearchFilters,
     SearchResult,
     extract_date_hint,
+    in_agent_lane,
     not_signed_in,
 )
 
@@ -507,11 +508,15 @@ def _http_failure(status: int, raw: str, model: str = "") -> Exception:
     detail = detail.strip()[:300]
     suffix = f": {detail}" if detail else ""
     if status == 429 or kind == "usage_limit_reached":
-        return EngineKeyError(
+        failure = EngineKeyError(
             f"codex: the ChatGPT plan's usage limit or rate limit was reached (HTTP {status}"
             f"{suffix}). Retry later, or continue with the keyless engines, which do not draw "
             "on this quota."
         )
+        # A spent usage window lasts hours; a bare 429 is a rate limit that
+        # passes within the minute.
+        failure.transient = kind != "usage_limit_reached"
+        return failure
     if status in (400, 403, 404):
         # Configuration: a model the plan does not include, a workspace the
         # service has not enabled. Waiting does not fix it, so it is not a
@@ -526,7 +531,11 @@ def _http_failure(status: int, raw: str, model: str = "") -> Exception:
         else:
             hint = (f" (Operator note: the search ran on {model or settings.codex_model!r}; "
                     "set SEARCH_MCP_CODEX_MODEL to a model the plan offers, or to latest.)")
-        return _ModelRefused(message + hint)
+        refused = _ModelRefused(message + hint)
+        # Following the catalogue, the next search picks again; a pinned
+        # model stays refused until the operator changes it.
+        refused.transient = _follows_catalogue()
+        return refused
     return RuntimeError(f"codex: the service answered HTTP {status}{suffix}")
 
 
@@ -558,11 +567,25 @@ class CodexEngine(Engine):
     # repeats down; this keeps a looping agent from spending the plan's usage
     # window in a minute.
     rate_limit_per_minute = 10
+    # OpenAI supports this sign-in in third-party tools, so a stored sign-in
+    # seats it in the agent lane of every automatic search.
+    agent_search = True
+    agent_lane_auto = True
 
     def build_url(
         self, query: str, max_results: int, filters: SearchFilters | None = None
     ) -> str:
         return settings.codex_base_url.rstrip("/") + "/alpha/search"
+
+    async def warm(self) -> None:
+        """Refresh an expiring token and look the model up before the first
+        search needs them. Only with a sign-in stored: warming never opens a
+        sign-in page."""
+        if not self.is_available():
+            return
+        cred = await oauth.credential("codex")
+        async with oauth.http_client(self.name, timeout=settings.codex_timeout) as client:
+            await self._model(client, cred)
 
     def parse(self, html: str) -> list[SearchResult]:
         return []
@@ -576,7 +599,9 @@ class CodexEngine(Engine):
         except oauth.NotSignedIn:
             pass
         except oauth.OAuthError as exc:
-            raise EngineKeyError(f"{self.name}: {exc}") from exc
+            failure = EngineKeyError(f"{self.name}: {exc}")
+            failure.transient = isinstance(exc, oauth.OAuthUnreachable)
+            raise failure from exc
         unconfigured = not_signed_in(
             self.name,
             account="ChatGPT",
@@ -585,7 +610,9 @@ class CodexEngine(Engine):
                 "search and reading in one step."
             ),
         )
-        if not _can_sign_in_here():
+        if not _can_sign_in_here() or in_agent_lane.get():
+            # The agent lane asks only signed-in engines, and a search that did
+            # not name `codex` must never open a sign-in page.
             raise unconfigured
         try:
             return await oauth.sign_in_on_first_use("codex", settings.codex_signin_wait_seconds)

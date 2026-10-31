@@ -71,7 +71,7 @@ the agent can see how far to trust a result:
 ```text
 # Search: uv 0.9 release notes
 
-_engines: duckduckgo, bing, anysearch_  _results: 3_  _dated: 2/3_
+_engines: duckduckgo, bing, yahoojp, anysearch_  _results: 3_  _dated: 2/3_
 _(cached 2 days ago · retrieved 2026-09-19T08:12:03Z)_
 
 ## 1. Release 0.9.0 · astral-sh/uv
@@ -148,36 +148,47 @@ process, so new and old clients both work unchanged. What a client sees:
 
 ## Engines
 
-The registry holds 71 engines. A search that names none of them runs a small
+The registry holds 76 engines. A search that names none of them runs a small
 pool chosen for it, and the pool depends on which engines are healthy at that
 moment.
 
-The default pool is `duckduckgo`, `bing` and `anysearch`. All three use plain
-HTTP and need no browser. The scrapers that only ever served a CAPTCHA, a
+The default pool is `duckduckgo`, `bing`, `yahoojp` and `anysearch`. All four
+use plain HTTP and need no browser. `yahoojp` is Yahoo! JAPAN, which licenses
+Google's organic results and serves them as plain HTML, so it is the keyless
+route to Google's index (google.com itself answers a plain request with a
+JavaScript shell). The interface is Japanese, the index is not: measured on
+2026-10-31 it answered English, Chinese and Japanese queries in 0.8 to 1.5 s
+and put docs.python.org, Stack Overflow and the Federal Reserve's own release
+on top where the other engines led with blogs. The scrapers that only ever served a CAPTCHA, a
 JavaScript shell or nothing at all (`mojeek`, `google`, `serpsearch`,
 `startpage`, `searx`, `sogou`) were removed from the registry, because leaving
 them in the pool only spent a wall's latency on the first search of every
 process.
 
-Two engines join it when the query calls for them:
+These join it when the query calls for them:
 
 - `googlenews` joins for `freshness="day"` / `"week"`, or `category="news"`.
   It answers any query, programming questions included, with ten news
   headlines, which suits a web search only when recency was asked for. Its
   opaque `news.google.com` redirect links are resolved to the publisher's URL,
   so the same story from a web engine merges with it and is listed once.
-- `so360` joins when the query itself is written in Chinese. The language is
-  detected from the script of the query, and `SEARCH_MCP_REGION` plays no part.
-  In our measurement it returned the organiser's own site and the university
-  notice for a Chinese query, neither of which the western indexes had.
+- `so360` and `quark` join when the query itself is written in Chinese, and
+  `naver` when it is written in Korean. The language is detected from the
+  script of the query, and `SEARCH_MCP_REGION` plays no part. In our
+  measurement `so360` returned the organiser's own site and the university
+  notice for a Chinese query, neither of which the western indexes had, and
+  `quark` (Alibaba's Shenma index) added CSDN, Tencent Cloud and php.cn pages.
+  A Japanese query needs no extra engine: `yahoojp` is already in the pool.
 
-Reserves (`so360`, `brave`, in that order) are seated only while fewer than 3
-general engines are healthy. The default pool is exactly three wide, so losing
-any one of them seats a reserve. A reserve that needs Chromium is skipped while
-Chromium is known to be missing.
+Reserves (`yahoo`, `seznam`, `so360`, `brave`, in that order) are seated only
+while fewer than 3 general engines are healthy. The default pool is four wide,
+so it can lose one engine before a reserve is seated. `yahoo` is Bing's index
+through Yahoo's own front end, which stayed on topic when `bing` served its
+decoy page; `seznam` is an independent crawler. A reserve that needs Chromium
+is skipped while Chromium is known to be missing.
 
 The circuit breaker benches an engine at once when it serves a wall (CAPTCHA,
-consent, login, a JS shell) or an off-topic page. An engine that errors is
+consent, login, a JS shell, a region block) or an off-topic page. An engine that errors is
 benched after 2 failures in a row, and one that silently returns nothing after
 3. The bench lasts 10 minutes and doubles on each repeat up to 60, and one
 success clears it. A benched engine is not asked, so a dead engine slows down
@@ -218,20 +229,36 @@ words do get echoed. The engine is reported under `gated_engines` with reason
 
 The rescue pass runs when a search still comes back empty, or nearly empty
 with gated or erroring engines. The aggregator makes one bounded recovery
-attempt through the reserves and then `youcom` and `baidu`, in that order,
-skipping anything that already ran or is benched, and reports it as
-`rescued_via`. A wall on the default engines then costs time but still returns
-results.
+attempt through the reserves and then `youcom` and `baidu`, skipping anything
+that already ran or is benched, and reports it as `rescued_via`. A wall on the
+default engines then costs time but still returns results.
+
+The pass is a staggered race, in the manner of hedged requests. The first
+candidate is asked at once, each next one `SEARCH_MCP_RESCUE_STAGGER_SECONDS`
+(1) later or as soon as the one before it has failed, and the first usable
+answer wins and cancels the rest; the whole pass fits in
+`SEARCH_MCP_RESCUE_TIMEOUT` (10). At most two candidates hold a place at a
+time, so an ordinary slow reserve is hedged by one more request rather than
+by the whole list; one that has run past its share of the pass (two fifths
+of the timeout, and never under two staggers) keeps running but stops
+holding its place, so two hung reserves cannot starve a fast third. Until 0.18 it asked one candidate at a time,
+each in an equal slice of the timeout, so a slow first candidate spent its
+slice before a fast second one was asked. A candidate that answers inside the
+first stagger still spares the others a request. When nothing keyless
+answered and the [agent lane](#the-agent-lane) is still searching, the rescue
+starts beside the lane wait instead of after it.
 
 None of this needs an API key. No engine in the default, reserve, rescue,
 fresh, locale or category pools requires one, and
 `tests/test_no_key_positioning.py` fails the build if a keyed engine is added
 to any of them.
 
-Status as measured on 2026-10-29:
+Status as measured on 2026-10-29, and on 2026-10-31 for the engines added in
+0.18:
 
 - `duckduckgo`, `bing`, `anysearch`, `so360`, `baidu`, `youcom`, `googlenews`
-  and `brave` (browser) answer on topic.
+  and `brave` (browser) answer on topic, and so do `yahoojp`, `yahoo`,
+  `seznam`, `quark` and `naver`.
 - `mojeek`, `google` / `serpsearch`, `startpage`, `searx` and `sogou` no longer
   have an engine module. They were measured serving a CAPTCHA, a JavaScript
   wall or an empty page on every request, so no pool, route or explicit name
@@ -242,6 +269,30 @@ Status as measured on 2026-10-29:
 Other keyless engines, and how each behaves:
 - `brave` and `baidu` are browser-rendered and intermittently challenge
   headless clients.
+- `yahoojp` (default pool) passes `site:`, `-site:` and `filetype:pdf` on to
+  Google and filters by time with `vd=`. Yahoo! JAPAN has not served the EEA
+  or the UK since April 2022; from there its notice page is reported as a
+  `region` gate and the engine is benched for the maximum hour at once. A
+  proxy elsewhere is the fix, or, for a server that stays in Europe, leaving
+  it out of `SEARCH_MCP_DEFAULT_ENGINES`.
+- `yahoo` scrapes search.yahoo.com and unwraps its `r.search.yahoo.com`
+  click redirects. Yahoo answers a cookieless client with a bot-check
+  handshake that often ends in an empty HTTP 500, so the cookies of one
+  completed handshake are kept per proxy egress for 12 hours (measured: 5 of
+  5 searches through without a redirect, against 3 of 8 with a fresh session
+  each). Its EU consent page is a `consent` gate.
+- `seznam` reads Seznam.cz's own crawler index from the JSON state embedded in
+  the page rather than its per-build class names, which also holds all ten
+  organic hits where the HTML rendered three. It honours `site:` and
+  `filetype:` and has no time filter.
+- `quark` (Quark / 神马) honours no search operators: a `site:` query returns
+  its "no results" page, so domain and PDF filters are applied afterwards. It
+  walls a burst (the fourth request within 6 s) with Alibaba's x5sec page,
+  which is recognised as a captcha, so it is limited to 10 searches a minute
+  and 2 at once, and a search skips it rather than queue.
+- `naver` takes Naver's web documents only. Its blog and cafe cards are left
+  out (blog pages are empty frames over HTTP and cafe links carry expiring
+  tokens), so a query Naver answers mostly from those returns few results.
 - `anysearch` is in the default pool. It calls the anonymous (keyless) tier of
   the [AnySearch](https://github.com/anysearch-ai/anysearch-mcp-server)
   unified-search REST API, and one HTTP call returns fused, re-ranked results.
@@ -489,6 +540,81 @@ takes seconds; the search waits one second for it and moves on. When nothing
 has answered by the deadline the search keeps waiting, because an empty answer
 delivered on time is worth less than a late one. `0` disables the deadline.
 
+## The agent lane
+
+An agent engine searches with a language model on the operator's own account:
+`codex` runs OpenAI's web search on a ChatGPT plan, `antigravity` Google Search
+through Gemini. Neither needs a key, both need a sign-in, and neither sits in a
+pool or a route. Until 0.18 one ran only when a call named it, and naming it
+switched the keyless pool, its breaker, its routing and its rescue off for
+that call.
+
+The agent lane runs them beside the pool instead. A search that names no
+engines (and is not an `image` or `dataset` search) asks every signed-in agent
+engine that `SEARCH_MCP_AGENT_ENGINES` seats at the same moment as the keyless
+engines, puts each answer through the same off-topic guard, and fuses it into
+the same reciprocal-rank ranking. A page OpenAI's search and DuckDuckGo both
+found outranks a page only one of them found, and a lane bucket can be the
+witness that exposes a keyless engine's decoy page.
+
+- `auto` (the default) seats `codex` once it is signed in. `antigravity` is
+  seated only when the setting names it, because Google's terms forbid this
+  use of its sign-in. Without a sign-in nothing is seated and no sign-in page
+  opens, so nothing changes for an operator who never signed in.
+- The keyless results are never held back past
+  `SEARCH_MCP_AGENT_LANE_WAIT_SECONDS` (6), counted from when the engines were
+  asked, so the keyless fan-out's own time is not added to it, nor more than
+  `SEARCH_MCP_AGENT_LANE_GRACE_SECONDS` (2) after the keyless engines have
+  answered with results. Measured
+  2026-09-26: `codex` answered in about 3 s and the pool in 2 to 4 s, so the
+  two usually land together; `antigravity` took 10 to 20 s. When the keyless
+  engines found nothing, the wait stretches to the search deadline, and the
+  rescue pass starts beside it rather than after it. Whichever settles it
+  first ends the other: a rescue that brings results back returns the lane to
+  its ordinary wait, and a lane answer that makes the rescue unnecessary
+  cancels it.
+- A lane engine still searching when the wait ends is not cancelled. It
+  finishes in the background, and its results are merged into the cached
+  result set of that search, so the same call a little later (or
+  `cache://search/...`) returns the fused set. `agent_lane.pending` and the
+  "Agent lane" note say so. A newer search that rewrites the same row takes
+  it over, and a late answer from the older one is dropped rather than
+  written over it.
+- A result set that lacks a lane engine for a passing reason (still being
+  merged in, out of tokens, a timeout or a reset, or benched after those) is
+  replayed from the cache
+  for an hour at most, like a result set from a thinned pool, so the lane's
+  answer is not kept out of that search for a week. The replay says which
+  engine it lacks (`agent_lane.missing`). A lasting state (a spent plan, a
+  refused sign-in, a benched engine) does not shorten the cache, or every
+  search would re-run hourly for as long as it lasts.
+- A late lane answer that echoes the query is also the witness the off-topic
+  guard lacked: a keyless bucket it could not judge alone is dropped as a
+  decoy when the answer is merged in.
+- When no keyless engine has answered, the fan-out used to wait for every
+  one of them however long it took. A lane answer with results now counts
+  as an answer, so stragglers are cut at the search deadline as usual, and
+  an early rescue that has come back by then is merged in rather than
+  thrown away.
+- The lane never queues for a rate-limit token. Past its per-minute limit (10
+  for both engines, which protects the account's usage) an engine sits the
+  search out and `agent_lane.rate_limited` says so.
+- A spent usage window, a revoked sign-in or a refused model benches a lane
+  engine at once (none of them clears on the next search, and every attempt
+  draws on the plan); a timeout, a reset or a token endpoint that was down
+  takes the ordinary two strikes.
+  Failures are reported under `agent_lane.errors`, never under `errors`. The keyless pool's breaker, census and rescue decisions
+  count only keyless engines, so the pool stays able to answer alone, and a
+  keyless engine that found nothing takes no "silent" strike because a lane
+  engine did. A lane search never opens a sign-in page.
+- The cache key includes the seated lane, so signing in turns a cached
+  keyless-only answer into a fresh search instead of replaying it.
+- The server's startup warm-up refreshes a signed-in lane engine's token and
+  looks its model up, which the first search would otherwise wait for.
+
+`SEARCH_MCP_AGENT_ENGINES=off` turns the lane off. Naming engines in a call
+(`engines=["codex"]`, `engines=["duckduckgo"]`) still runs exactly those.
+
 `engines()` prints this tree live from the registry. The tree is derived from
 what each engine declares, so it cannot drift from what runs.
 
@@ -568,15 +694,23 @@ category=forum. Try widening or removing one filter.
    │  - search cache (FTS5)  │  │  - page cache (FTS5)   │
    │  - health-aware pool    │  │  - fetched_at / dates  │
    │  - off-topic guard      │  │                        │
+   │  - agent lane, hedged   │  │                        │
+   │    rescue race          │  │                        │
    └────┬────────────────────┘  └────────────┬───────────┘
         │                                    │
    ┌────▼─────────────────┐  ┌──────────────▼─────────────┐
    │  engines/            │  │  browser pool              │
    │   duckduckgo.py      │  │   - persistent context     │
    │   bing.py            │  │   - stealth init script    │
-   │   anysearch.py       │  │   - shared cookies         │
-   │   brave.py   (reserve)│ │   - semaphore-bounded pages│
-   │   so360.py   (reserve)│ └────────────────────────────┘
+   │   yahoojp.py         │  │   - shared cookies         │
+   │   anysearch.py       │  │   - semaphore-bounded pages│
+   │   yahoo.py  (reserve)│  └────────────────────────────┘
+   │   seznam.py (reserve)│
+   │   so360.py  (reserve)│
+   │   brave.py  (reserve)│
+   │   quark/naver(locale)│
+   │   codex/antigravity  │
+   │        (agent lane)  │
    │   baidu.py     (opt) │
    │   youcom.py (rescue) │
    │   bilibili.py  (opt) │

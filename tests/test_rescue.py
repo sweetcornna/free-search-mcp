@@ -356,3 +356,145 @@ def test_augmenting_categories_still_rescue(category):
     from search_mcp.aggregator import _needs_rescue
 
     assert _needs_rescue([], {"duckduckgo": "boom"}, {}, category) is True
+
+
+# ---------------------------------------------------------------------------
+# The pass is a staggered race, not a queue
+# ---------------------------------------------------------------------------
+
+
+async def test_a_slow_first_candidate_does_not_hold_a_fast_second_one(monkeypatch):
+    import time
+
+    monkeypatch.setattr(settings, "rescue_timeout", 5.0)
+    monkeypatch.setattr(settings, "rescue_stagger_seconds", 0.1)
+    searx = _StubEngine("searx", _mk_results("searx", 3), delay=3.0)
+    bing = _StubEngine("bing", _mk_results("bing", 3, prefix="rescue"), delay=0.05)
+    _wire(monkeypatch, {"duckduckgo": _StubEngine("duckduckgo", []), "searx": searx,
+                        "bing": bing})  # fmt: skip
+    started = time.monotonic()
+    out = await aggregate_search("q", engines=["duckduckgo"], use_cache=False)
+    took = time.monotonic() - started
+    assert out["rescued_via"] == "bing"
+    # One stagger plus bing's own time, where a queue would have spent half
+    # the 5 s budget on searx first.
+    assert took < 1.0, f"{took:.2f} s"
+
+
+async def test_the_winner_cancels_the_candidates_still_running(monkeypatch):
+    monkeypatch.setattr(settings, "rescue_stagger_seconds", 0.0)
+    cancelled: list[str] = []
+
+    class _Slow(_StubEngine):
+        async def search(self, query, max_results, filters=None, diagnostics=None):
+            try:
+                return await super().search(query, max_results, filters, diagnostics)
+            except asyncio.CancelledError:
+                cancelled.append(self.name)
+                raise
+
+    _wire(monkeypatch, {"duckduckgo": _StubEngine("duckduckgo", []),
+                        "searx": _Slow("searx", _mk_results("searx", 3), delay=5.0),
+                        "bing": _StubEngine("bing", _mk_results("bing", 3, prefix="r"))})  # fmt: skip
+    out = await aggregate_search("q", engines=["duckduckgo"], use_cache=False)
+    assert out["rescued_via"] == "bing"
+    await asyncio.sleep(0)
+    assert cancelled == ["searx"]
+
+
+async def test_a_failed_candidate_starts_the_next_without_waiting_out_the_stagger(monkeypatch):
+    import time
+
+    monkeypatch.setattr(settings, "rescue_stagger_seconds", 5.0)
+    searx = _StubEngine("searx", [], raise_exc=RuntimeError("dead"))
+    bing = _StubEngine("bing", _mk_results("bing", 3, prefix="rescue"))
+    _wire(monkeypatch, {"duckduckgo": _StubEngine("duckduckgo", []), "searx": searx,
+                        "bing": bing})  # fmt: skip
+    started = time.monotonic()
+    out = await aggregate_search("q", engines=["duckduckgo"], use_cache=False)
+    assert out["rescued_via"] == "bing"
+    assert time.monotonic() - started < 1.0
+
+
+async def test_a_quick_first_candidate_spares_the_others_a_request(monkeypatch):
+    monkeypatch.setattr(settings, "rescue_stagger_seconds", 1.0)
+    searx = _StubEngine("searx", _mk_results("searx", 3), delay=0.01)
+    bing = _StubEngine("bing", _mk_results("bing", 3, prefix="rescue"))
+    _wire(monkeypatch, {"duckduckgo": _StubEngine("duckduckgo", []), "searx": searx,
+                        "bing": bing})  # fmt: skip
+    out = await aggregate_search("q", engines=["duckduckgo"], use_cache=False)
+    assert out["rescued_via"] == "searx"
+    assert bing.calls == 0
+
+
+async def test_answers_in_the_same_tick_go_to_the_earlier_candidate(monkeypatch):
+    monkeypatch.setattr(settings, "rescue_stagger_seconds", 0.0)
+    _wire(monkeypatch, {"duckduckgo": _StubEngine("duckduckgo", []),
+                        "searx": _StubEngine("searx", _mk_results("searx", 3)),
+                        "bing": _StubEngine("bing", _mk_results("bing", 3, prefix="r"))})  # fmt: skip
+    out = await aggregate_search("q", engines=["duckduckgo"], use_cache=False)
+    assert out["rescued_via"] == "searx"
+
+
+async def test_candidates_still_running_at_the_deadline_are_benched(monkeypatch):
+    from search_mcp.health import engine_health
+
+    monkeypatch.setattr(settings, "rescue_timeout", 0.1)
+    monkeypatch.setattr(settings, "rescue_stagger_seconds", 0.0)
+    _wire(monkeypatch, {"duckduckgo": _StubEngine("duckduckgo", []),
+                        "searx": _StubEngine("searx", _mk_results("searx", 3), delay=2.0),
+                        "bing": _StubEngine("bing", _mk_results("bing", 3), delay=2.0)})  # fmt: skip
+    out = await aggregate_search("q", engines=["duckduckgo"], use_cache=False)
+    assert out["results"] == []
+    # A timeout is a soft failure: the first one only counts a strike.
+    assert not engine_health.is_open("searx")
+    await aggregate_search("q2", engines=["duckduckgo"], use_cache=False)
+    assert engine_health.is_open("searx") and engine_health.is_open("bing")
+
+
+async def test_no_more_than_two_candidates_run_at_once(monkeypatch):
+    monkeypatch.setattr(settings, "rescue_timeout", 4.0)
+    monkeypatch.setattr(settings, "rescue_stagger_seconds", 0.0)
+    monkeypatch.setattr(settings, "rescue_engines", ["a", "b", "c", "d"])
+    stubs = {name: _StubEngine(name, _mk_results(name, 3), delay=5.0) for name in "abcd"}
+    _wire(monkeypatch, {"duckduckgo": _StubEngine("duckduckgo", []), **stubs})
+    search = asyncio.ensure_future(
+        aggregate_search("q", engines=["duckduckgo"], use_cache=False)
+    )
+    # Each candidate holds its place for 0.4 x 4 s = 1.6 s.
+    await asyncio.sleep(0.5)
+    assert [name for name, stub in stubs.items() if stub.calls] == ["a", "b"]
+    search.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await search
+
+
+async def test_two_hung_candidates_do_not_starve_a_fast_third(monkeypatch):
+    monkeypatch.setattr(settings, "rescue_timeout", 3.0)
+    monkeypatch.setattr(settings, "rescue_stagger_seconds", 0.1)
+    monkeypatch.setattr(settings, "rescue_engines", ["a", "b", "c"])
+    stubs = {
+        "a": _StubEngine("a", _mk_results("a", 3), delay=30.0),
+        "b": _StubEngine("b", _mk_results("b", 3), delay=30.0),
+        "c": _StubEngine("c", _mk_results("c", 3, prefix="fast")),
+    }
+    _wire(monkeypatch, {"duckduckgo": _StubEngine("duckduckgo", []), **stubs})
+    out = await aggregate_search("q", engines=["duckduckgo"], use_cache=False)
+    # Each holds its place for max(2 staggers, 0.4 x 3 s) = 1.2 s, then c is asked.
+    assert out["rescued_via"] == "c"
+
+
+async def test_a_candidate_cut_off_early_by_the_deadline_is_not_struck(monkeypatch):
+    from search_mcp.health import engine_health
+
+    monkeypatch.setattr(settings, "rescue_timeout", 1.0)
+    monkeypatch.setattr(settings, "rescue_stagger_seconds", 0.0)
+    monkeypatch.setattr(settings, "rescue_engines", list("abcdef"))
+    stubs = {name: _StubEngine(name, _mk_results(name, 3), delay=5.0) for name in "abcdef"}
+    _wire(monkeypatch, {"duckduckgo": _StubEngine("duckduckgo", []), **stubs})
+    # Places are held 0.4 s: a, b at 0; c, d at 0.4; e, f at 0.8, which have
+    # run 0.2 s when the 1 s pass ends. Two passes bench a to d (soft
+    # strikes), and never e or f.
+    for _ in range(2):
+        await aggregate_search("q", engines=["duckduckgo"], use_cache=False)
+    assert [n for n in "abcdef" if engine_health.is_open(n)] == ["a", "b", "c", "d"]

@@ -227,17 +227,19 @@ timings.
 ## Agent operating rules
 
 Prefer the default pool: omit `engines=` and let the server choose. The pool is
-`duckduckgo`, `bing` and `anysearch`, all keyless and plain HTTP.
-`googlenews` joins on its own for `freshness="day"` / `"week"` or
-`category="news"`, `so360` joins when the query is written in Chinese, and the
-reserves (`so360`, `brave`) are seated while fewer than 3 general
-engines are healthy. An engine that hit a wall recently is benched for 10 to 60
+`duckduckgo`, `bing`, `yahoojp` (Google's index) and `anysearch`, all keyless
+and plain HTTP. `googlenews` joins on its own for `freshness="day"` / `"week"`
+or `category="news"`, `so360` and `quark` join when the query is written in
+Chinese, `naver` when it is written in Korean, and the reserves (`yahoo`,
+`seznam`, `so360`, `brave`) are seated while fewer than 3 general engines are
+healthy. When the operator has signed in to `codex`, it searches beside the
+pool on its own (the agent lane); do not name it to get that. An engine that hit a wall recently is benched for 10 to 60
 minutes and reported under "Benched engines"; naming it in `engines=` forces an
 attempt.
 
 Name engines only when the task needs a specific source: `bilibili` for video
-search, `so360`/`baidu`/`zhihu` for Chinese content, `brave`
-(browser-rendered) for a second opinion.
+search, `so360`/`quark`/`baidu`/`zhihu` for Chinese content, `naver` for
+Korean, `seznam` for Czech, `brave` (browser-rendered) for a second opinion.
 
 Never ask for an API key, and never suggest getting one as a fix. The server is
 built to work without them, and nothing it selects on its own needs one.
@@ -253,7 +255,7 @@ When results are thin, try these in order:
 3. Name `engines=["so360","baidu"]` for Chinese content.
 4. Name `engines=["brave"]` if the browser is installed.
 5. Tell the user a proxy would help, but only when `gated_engines` shows a real
-   wall (`captcha`, `consent`, `login`, `javascript`).
+   wall (`captcha`, `consent`, `login`, `javascript`, `region`).
 
 Prefer `category=` over naming engines. It routes the query to sources that
 natively index that kind of content instead of filtering web results by

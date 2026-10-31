@@ -220,6 +220,16 @@ def _reset_bing_session():
 
 
 @pytest.fixture(autouse=True)
+def _reset_yahoo_jar():
+    """Yahoo keeps the cookies of one completed bot-check handshake per proxy
+    egress, for the same reason and with the same hazard as Bing's jar."""
+    from search_mcp.engines.yahoo import _reset_jar
+    _reset_jar()
+    yield
+    _reset_jar()
+
+
+@pytest.fixture(autouse=True)
 def _reset_engine_health():
     """The circuit breaker is process-wide on purpose. Across tests that means
     one test's stubbed captcha would bench that engine for every test after it."""
@@ -229,3 +239,22 @@ def _reset_engine_health():
     yield
     engine_health.reset()
     http_walls.reset()
+
+
+@pytest.fixture(autouse=True)
+def _full_rate_limit_buckets():
+    """The search rate limiter is process-wide too, and its buckets refill with
+    time, so how many tokens a test finds depended on which tests ran before it
+    and how fast. CI's fresh-resolve leg ran the rescue tests after enough
+    stubbed `bing` searches that a probe waited 2 s for its token. Every test
+    starts with full buckets. Only when the aggregator is already loaded: the
+    lazy-import tests must not have this fixture load it for them."""
+    import sys
+    import time
+
+    aggregator = sys.modules.get("search_mcp.aggregator")
+    if aggregator is not None:
+        for bucket in aggregator.search_limiter._buckets.values():
+            bucket.tokens = float(bucket.capacity)
+            bucket.last = time.monotonic()
+    yield

@@ -6,6 +6,8 @@ import json
 import logging
 import re
 import time
+import weakref
+from collections.abc import Collection
 from dataclasses import asdict
 from datetime import UTC, datetime
 from typing import Any, Literal
@@ -34,13 +36,18 @@ from .config import settings
 from .engines import (
     ENGINES,
     Category,
-    Engine,
     SearchFilters,
     SearchResult,
     category_group,
     get_engine,
 )
-from .engines.base import EngineSignInPending, classify_source, detect_query_region
+from .engines.base import (
+    EngineSignInPending,
+    classify_source,
+    detect_query_region,
+    in_agent_lane,
+    is_lasting,
+)
 from .health import SILENT_THRESHOLD, engine_health
 from .ratelimit import RateLimiter
 
@@ -52,7 +59,9 @@ search_limiter = RateLimiter(settings.rate_limit_per_minute)
 # seconds" — the default 30/min would walk straight into that.
 for _name, _engine in ENGINES.items():
     if _engine.rate_limit_per_minute is not None:
-        search_limiter.configure(_name, _engine.rate_limit_per_minute)
+        search_limiter.configure(
+            _name, _engine.rate_limit_per_minute, _engine.rate_limit_burst
+        )
 
 
 def _max_token_wait(engine: Any) -> float | None:
@@ -514,8 +523,9 @@ def _active_pool(nominal: list[str]) -> tuple[list[str], dict[str, dict[str, Any
     """`(engines to query, benched)`: the nominal pool minus open circuits.
 
     Reserves are seated only while fewer than `min_healthy_engines` general
-    engines remain. The shipped default pool is exactly that wide, so losing
-    one engine seats one reserve. If nothing general is left at all the breaker
+    engines remain. The shipped default pool is one wider than that, so it
+    loses one engine before a reserve is seated, and each further loss seats
+    one. If nothing general is left at all the breaker
     is ignored for this search: trying three doubtful engines beats answering
     with none.
     """
@@ -549,6 +559,443 @@ def default_pool_now() -> list[str]:
     """The engines a plain search would ask right now: the default pool with
     benched engines out and reserves in."""
     return _active_pool(list(settings.default_engines))[0]
+
+
+# --- the agent lane ---------------------------------------------------------
+#
+# An agent engine (`Engine.agent_search`) searches with a language model on the
+# operator's own sign-in. It used to run only when a call named it, and naming
+# it switched the keyless pool, its breaker and its routing off for that call.
+# The lane runs the signed-in ones beside the pool instead: asked at the same
+# moment, fused into the same ranking, and never allowed to hold the keyless
+# results back past `agent_lane_wait_seconds`.
+
+# Words in SEARCH_MCP_AGENT_ENGINES that name no agent engine, warned about once.
+_warned_lane_tokens: set[str] = set()
+
+
+def _configured_lane() -> list[str]:
+    """The agent engines SEARCH_MCP_AGENT_ENGINES names, before sign-in and health."""
+    tokens = settings.agent_engine_tokens()
+    if "off" in tokens:
+        return []
+    names: list[str] = []
+    # getattr: tests substitute duck-typed engine stubs for the registry.
+    for token in tokens:
+        if token == "auto":
+            names.extend(
+                name
+                for name, engine in ENGINES.items()
+                if getattr(engine, "agent_search", False)
+                and getattr(engine, "agent_lane_auto", False)
+            )
+        elif token in ENGINES and getattr(ENGINES[token], "agent_search", False):
+            names.append(token)
+        elif token not in _warned_lane_tokens:
+            _warned_lane_tokens.add(token)
+            log.warning("SEARCH_MCP_AGENT_ENGINES: %r is not an agent engine; ignored", token)
+    return list(dict.fromkeys(names))
+
+
+def _lane_nominal(nominal: list[str]) -> list[str]:
+    """The agent lane this search is entitled to: configured, signed in, and
+    not already in the pool. The cache key includes it, so like `nominal` it
+    is decided before the breaker is consulted."""
+    lane: list[str] = []
+    for name in _configured_lane():
+        if name in nominal:
+            continue
+        try:
+            # Reads the stored sign-in; it never opens a sign-in page.
+            if get_engine(name).is_available():
+                lane.append(name)
+        except Exception:  # noqa: BLE001 - a broken sign-in file must not break search
+            log.warning("engine %s: is_available() raised", name, exc_info=True)
+    return lane
+
+
+def _benched_for(name: str) -> str:
+    """The breaker's reason for benching `name` right now, or ""."""
+    state = engine_health.describe(name)
+    return str(state.get("reason") or "") if state else ""
+
+
+def _seated(lane_nominal: list[str]) -> list[str]:
+    """The lane engines asked right now: the nominal lane minus open circuits."""
+    if not settings.health_enabled:
+        return list(lane_nominal)
+    return [name for name in lane_nominal if not engine_health.is_open(name)]
+
+
+def agent_lane_now() -> list[str]:
+    """The agent engines a plain search would ask right now."""
+    return _seated(_lane_nominal(list(settings.default_engines)))
+
+
+_LaneOutcome = tuple[str, list[SearchResult] | Exception, dict[str, Any]]
+
+
+async def _run_lane(
+    name: str, query: str, n: int, filters: SearchFilters
+) -> _LaneOutcome:
+    """Ask one agent engine. Never raises.
+
+    Its diagnostics stay in a dict of its own: an engine that finishes after
+    the search returned must not write into a payload already handed back.
+    """
+    lane_diag: dict[str, Any] = {}
+    # Each lane task runs in its own copy of the context, so this marks only
+    # this engine's search.
+    in_agent_lane.set(True)
+    try:
+        engine = get_engine(name)
+    except ValueError as e:
+        return name, e, lane_diag
+    # No waiting for a token: the limit protects the operator's plan, and an
+    # engine out of tokens sits this search out instead of holding it.
+    if not await search_limiter.acquire(name, max_wait=0):
+        lane_diag["rate_limited"] = True
+        return name, [], lane_diag
+    try:
+        results = await engine.search(query, n, filters, diagnostics=lane_diag)
+    except Exception as e:
+        log.warning("agent engine %s failed: %s", name, brief_error(e))
+        return name, e, lane_diag
+    # Judged once, here: whether this answer echoes the query, which is what
+    # lets it end the search's waits (see `_lane_found`).
+    lane_diag["witness"] = bool(results) and is_witness(query, results)
+    return name, results, lane_diag
+
+
+async def _await_lane(
+    tasks: dict[asyncio.Future[_LaneOutcome], str],
+    started: float,
+    answered: bool,
+    rescue: asyncio.Future[tuple[list[SearchResult], str | None]] | None = None,
+) -> tuple[list[_LaneOutcome], set[asyncio.Future[_LaneOutcome]], float]:
+    """`(finished, still running, seconds since started)` once the lane's wait
+    has passed.
+
+    The wait counts from `started`, when the keyless engines were asked too,
+    so the keyless fan-out's own time is not added to it, and once those have
+    answered it ends `agent_lane_grace_seconds` after them at the latest. When the keyless
+    engines found nothing, the lane may be all there is, and the wait
+    stretches to the search deadline; once the early `rescue` running beside
+    it has brought results back, the lane is down to its ordinary wait again.
+    """
+    if not tasks:
+        return [], set(), 0.0
+    ordinary = settings.agent_lane_wait_seconds
+    if answered:
+        # The keyless results are in: the lane gets its grace beyond them,
+        # within its own wait.
+        wait = min(ordinary, time.monotonic() - started + settings.agent_lane_grace_seconds)
+    else:
+        wait = max(ordinary, settings.search_deadline_seconds)
+    # What finished while the keyless fan-out ran is in, however long that took.
+    pending = {task for task in tasks if not task.done()}
+    while pending:
+        if rescue is not None and rescue.done():
+            if not rescue.cancelled() and rescue.exception() is None and rescue.result()[0]:
+                wait = min(wait, ordinary)
+            rescue = None
+        if _lane_found(tasks):
+            # One lane engine's answer is an answer: the others get the
+            # ordinary wait, not the stretched one (and never a longer one).
+            wait = min(wait, ordinary)
+        remaining: float | None = started + wait - time.monotonic()
+        if remaining is not None and remaining <= 0:
+            if rescue is None or rescue.done() or _lane_found(tasks):
+                break
+            # The search will wait for the early rescue anyway; a lane answer
+            # that arrives meanwhile belongs in it.
+            remaining = None
+        watched = pending | ({rescue} if rescue is not None else set())
+        done, _ = await asyncio.wait(
+            watched, timeout=remaining, return_when=asyncio.FIRST_COMPLETED
+        )
+        # On a timeout the loop goes round again: the wait has passed, and the
+        # top of the loop decides whether the early rescue still holds it open.
+        pending -= done
+    pending = {task for task in pending if not task.done()}
+    order = {name: i for i, name in enumerate(tasks.values())}
+    finished = sorted(
+        (task.result() for task in tasks if task not in pending), key=lambda o: order[o[0]]
+    )
+    return finished, pending, time.monotonic() - started
+
+
+def _lane_found(lane: Collection[asyncio.Future[_LaneOutcome]]) -> bool:
+    """Whether an agent engine of the lane has answered with results that echo
+    the query (`_run_lane` judges that once). Only such an answer may stop the
+    search waiting for others: a bucket the off-topic guard would drop is no
+    answer."""
+    return any(
+        task.done() and not task.cancelled() and task.result()[2].get("witness")
+        for task in lane
+    )
+
+
+# The breaker's reason for a lane engine benched by a lasting failure. A cache
+# row is not shortened for an engine benched with it (see `lane_missing`).
+LANE_REFUSED = "refused"
+
+
+def _record_lane_health(
+    name: str, outcome: list[SearchResult] | Exception, reason: str | None = None
+) -> None:
+    """Tell the breaker how an agent engine did.
+
+    Stricter than `_record_health` where it counts: a lasting failure (a spent
+    usage window, a refused or revoked sign-in, a model the service will not
+    serve; see `is_lasting`) benches it at once as `LANE_REFUSED`, since the
+    next search does not repair any of those and every attempt draws on the
+    operator's plan. Anything else, a timeout, a reset, a token endpoint that
+    was down, gets the ordinary two strikes. An empty answer is not held
+    against it.
+    """
+    if not settings.health_enabled:
+        return
+    if isinstance(outcome, Exception):
+        if is_lasting(outcome):
+            engine_health.record_failure(name, reason or LANE_REFUSED, threshold=1)
+        else:
+            engine_health.record_failure(name, reason or "error")
+    elif reason:
+        engine_health.record_failure(name, reason)
+    elif outcome:
+        engine_health.record_success(name)
+
+
+def _lane_hint(
+    pending: list[str],
+    errors: dict[str, str],
+    rate_limited: list[str],
+    *,
+    waited: float,
+    merges_later: bool,
+) -> str:
+    """The "Agent lane" note. Called after the breaker heard about the run,
+    so it can say whether a failed engine sits out the next searches."""
+    parts: list[str] = []
+    if pending:
+        who = ", ".join(pending)
+        parts.append(
+            f"{who} had not answered within {waited:.1f} s, so the results above do not "
+            "include it."
+        )
+        if merges_later:
+            parts.append(
+                "It keeps searching in the background and its results are merged into the "
+                "cached result set for this search: repeat the same call in a little while "
+                "to get them."
+            )
+    for name, err in errors.items():
+        after = (
+            "sits out the next searches"
+            if settings.health_enabled and engine_health.is_open(name)
+            else "is asked again on the next search"
+        )
+        parts.append(f"{name} failed ({err}) and {after}; the keyless results are unaffected.")
+    if rate_limited:
+        parts.append(
+            f"{', '.join(rate_limited)} sat this search out: its per-minute limit, which "
+            "protects the account's usage, was spent."
+        )
+    return " ".join(parts)
+
+
+# Agent engines still searching when their search returned. Held here so the
+# event loop keeps a reference until each one's results are merged.
+_lane_background: set[asyncio.Task[None]] = set()
+# Which late merge may still write each cache row: a search that writes the
+# row afresh takes it away from any merge an earlier search left running, so
+# old buckets never overwrite a newer answer.
+_lane_rows: dict[str, object] = {}
+# Serialises taking a row and writing it, per event loop (a lock is bound to
+# the loop it first waits on).
+_row_locks: weakref.WeakKeyDictionary[asyncio.AbstractEventLoop, asyncio.Lock] = (
+    weakref.WeakKeyDictionary()
+)
+
+
+def _row_lock() -> asyncio.Lock:
+    loop = asyncio.get_running_loop()
+    lock = _row_locks.get(loop)
+    if lock is None:
+        lock = _row_locks[loop] = asyncio.Lock()
+    return lock
+# Ceiling on that background wait. Each engine's own timeout
+# (SEARCH_MCP_CODEX_TIMEOUT, SEARCH_MCP_ANTIGRAVITY_TIMEOUT, 60 s by default)
+# ends it sooner; this only guards against one that never returns.
+_LANE_LATE_SECONDS = 150.0
+
+
+def _merge_lane_later(
+    pending: set[asyncio.Future[_LaneOutcome]],
+    *,
+    query: str,
+    n: int,
+    category: str | None,
+    named: list[tuple[str, list[SearchResult]]],
+    keyless: list[str],
+    asked: list[str],
+    cache_key: str,
+    meta: dict[str, Any],
+    missing: list[str],
+    written_at: int | None,
+) -> None:
+    owner = object()
+    _lane_rows[cache_key] = owner
+    task = asyncio.ensure_future(
+        _fold_late_lane(
+            pending,
+            query=query,
+            n=n,
+            category=category,
+            named=list(named),
+            keyless=list(keyless),
+            asked=list(asked),
+            cache_key=cache_key,
+            meta=dict(meta),
+            missing=list(missing),
+            written_at=written_at,
+            owner=owner,
+        )
+    )
+    _lane_background.add(task)
+    task.add_done_callback(_lane_background.discard)
+
+
+async def _fold_late_lane(
+    pending: set[asyncio.Future[_LaneOutcome]],
+    *,
+    query: str,
+    n: int,
+    category: str | None,
+    named: list[tuple[str, list[SearchResult]]],
+    keyless: list[str],
+    asked: list[str],
+    cache_key: str,
+    meta: dict[str, Any],
+    missing: list[str],
+    written_at: int | None,
+    owner: object,
+) -> None:
+    """Merge agent engines that answered after their search returned into
+    that search's cached result set. Never raises.
+
+    `named` is what the search merged, as `(engine, bucket)`. Each late bucket
+    goes through the same off-topic guard (`_drop_decoy_buckets`) together
+    with it: it can be dropped as a decoy itself, or be the witness that drops
+    a web engine the guard could not judge before for want of one. The row is
+    rewritten each time an engine answers, which also settles its place on
+    `lane_missing`, and the merge stops once a newer search has rewritten the
+    row.
+    """
+    deadline = time.monotonic() + _LANE_LATE_SECONDS
+    missing_now = set(missing)
+    try:
+        while pending:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                break
+            done, pending = await asyncio.wait(
+                pending, timeout=remaining, return_when=asyncio.FIRST_COMPLETED
+            )
+            changed = False
+            for task in done:
+                name, outcome, lane_diag = task.result()
+                if isinstance(outcome, Exception) or lane_diag.get("rate_limited"):
+                    _record_lane_health(name, outcome)
+                    if isinstance(outcome, Exception):
+                        # Asked and failed: listed as the main path lists it.
+                        asked.append(name)
+                        changed = True
+                        if is_lasting(outcome):
+                            # A lasting state, as on the main path: the row
+                            # keeps its full lifetime.
+                            missing_now.discard(name)
+                    continue
+                missing_now.discard(name)
+                asked.append(name)
+                changed = True
+                if not outcome:
+                    _record_lane_health(name, outcome)
+                    continue
+                verdict: dict[str, Any] = {}
+                kept, _ = _drop_decoy_buckets(
+                    query, [*named, (name, outcome)], verdict
+                )
+                dropped = list(verdict.get("gated") or {})
+                if name in dropped:
+                    _record_lane_health(name, outcome, "off_topic")
+                    meta = _with_off_topic(meta, [name], tell_breaker=False)
+                else:
+                    _record_lane_health(name, outcome)
+                cleared = [suspect for suspect in dropped if suspect != name]
+                named = kept
+                if cleared:
+                    meta = _with_off_topic(meta, cleared)
+                    # The row now rests on fewer keyless indexes; if too few,
+                    # it is degraded like any thinned pool's.
+                    gates = {n_: info["reason"] for n_, info in meta["gated_engines"].items()}
+                    _, standing = _general_census(keyless, named, {}, {"gated": gates})
+                    if standing < settings.min_healthy_engines:
+                        meta = {**meta, "degraded": True}
+            if not changed:
+                continue
+            merged = _merge([bucket for _, bucket in named], n, category, query)
+            if not merged:
+                continue
+            stored = {**meta, "engines": asked}
+            stored.pop("lane_missing", None)
+            if missing_now:
+                stored["lane_missing"] = sorted(missing_now)
+            async with _row_lock():
+                if _lane_rows.get(cache_key) is not owner:
+                    break
+                # The keyless results are as old as the search that found
+                # them; adding a lane answer does not make them newer.
+                await cache.put_search(
+                    cache_key, query, asked, merged, stored, created=written_at
+                )
+                written_at = written_at or int(time.time())
+    except Exception:  # noqa: BLE001 - nobody is waiting on this to fail
+        log.warning("merging the agent lane's late results failed", exc_info=True)
+    finally:
+        for task in pending:
+            task.cancel()
+        if _lane_rows.get(cache_key) is owner:
+            del _lane_rows[cache_key]
+
+
+def _with_off_topic(
+    meta: dict[str, Any], names: list[str], *, tell_breaker: bool = True
+) -> dict[str, Any]:
+    """`meta` with `names` recorded as off-topic gates, and the breaker told
+    unless the caller already did. (`_drop_decoy_buckets` has logged them.)"""
+    stored = meta.get("gated_engines") or {}
+    gated = {name: info.get("reason") or "gated" for name, info in stored.items()}
+    fallback = {name: info["fallback"] for name, info in stored.items() if info.get("fallback")}
+    for name in names:
+        gated[name] = "off_topic"
+        if tell_breaker and settings.health_enabled:
+            engine_health.record_failure(name, "off_topic")
+    gated_engines, gated_hint = _gate_provenance(gated, fallback)
+    return {**meta, "gated_engines": gated_engines, "gated_hint": gated_hint}
+
+
+def _gate_provenance(
+    gated: dict[str, str], fallback: dict[str, str]
+) -> tuple[dict[str, dict[str, Any]], str]:
+    """`(gated_engines, gated_hint)`: which engines hit a wall and how each was
+    covered, in the shape the payload and the cache row carry."""
+    gated_engines = {
+        name: {"reason": gated.get(name, "gated"), "fallback": fallback.get(name)}
+        for name in sorted(set(gated) | set(fallback))
+    }
+    return gated_engines, (_gate_hint(gated, fallback) if gated_engines else "")
 
 
 # Raised by an engine without saying anything about the engine itself.
@@ -627,13 +1074,15 @@ def _general_census(
     return lost, standing
 
 
-# A result set produced while the pool was too thin is replayed for an hour at
-# most, however long the configured TTL is.
+# A result set produced while the pool was too thin, or without an agent engine
+# the search was keyed on for a passing reason (still being merged in, out of
+# tokens, a timeout, or benched after one), is replayed for an hour at most,
+# however long the configured TTL is: both describe a pool that recovers.
 _DEGRADED_CACHE_TTL = 3600
 
 
 def _too_degraded_to_replay(meta: dict[str, Any]) -> bool:
-    if not meta.get("degraded"):
+    if not (meta.get("degraded") or meta.get("lane_missing")):
         return False
     return time.time() - float(meta.get("cached_at") or 0) > _DEGRADED_CACHE_TTL
 
@@ -758,6 +1207,18 @@ def _needs_rescue(
     )
 
 
+# The race hedges one slow candidate with one more, not with the whole list:
+# the reserves answer in 1 to 3 s, so a one-second stagger with no cap would
+# have every rescue reach the browser-rendered `brave` and the quota-limited
+# `youcom` on an ordinary slow day. A candidate stops counting against the cap
+# once it has run past its share of the pass (see `hold` in `_rescue`).
+_RESCUE_IN_FLIGHT = 2
+# A candidate's place is held for this share of `rescue_timeout`: 4 s of the
+# default 10, past the 1 to 3 s a slow reserve takes and early enough to leave
+# a fast third candidate time to answer.
+_RESCUE_HOLD_SHARE = 0.4
+
+
 async def _rescue(
     query: str,
     n: int,
@@ -768,9 +1229,14 @@ async def _rescue(
     """One bounded keyless recovery pass via ``settings.reserve_engines`` then
     ``settings.rescue_engines``, skipping any that already ran or are benched.
 
-    Sequential, first engine that yields results wins. Each candidate gets an
-    equal slice of ``settings.rescue_timeout`` (rate-limiter wait included),
-    so a slow first candidate can never starve a fast later one. Calls the
+    A staggered race, first usable answer wins. The first candidate is asked
+    at once and each next one ``settings.rescue_stagger_seconds`` later, or as
+    soon as the one before it has failed, with at most ``_RESCUE_IN_FLIGHT``
+    running at once; the winner cancels whatever is still running. The whole
+    pass, rate-limiter waits included, fits in ``settings.rescue_timeout``.
+    It used to ask one candidate at a time in an equal slice each, so a slow
+    first candidate spent its slice before a fast second one was asked; a
+    race asks the fast one after one stagger. Calls the
     engines directly, never re-entering ``aggregate_search``, and the candidate
     list excludes engines the caller already ran, so there is no recursion and
     no self-rescue.
@@ -791,39 +1257,26 @@ async def _rescue(
     attempted: list[str] = []
     info: dict[str, Any] = {"attempted": attempted}
     diagnostics["rescue"] = info
-    per_candidate = settings.rescue_timeout / len(candidates)
 
-    for name in candidates:
-        attempted.append(name)
+    async def probe(name: str) -> list[SearchResult]:
+        """The candidate's results if they are usable, else [] (and the
+        failure recorded)."""
         try:
             engine = get_engine(name)
         except ValueError:
-            continue
+            return []
         rescue_diag: dict[str, Any] = {}
-
-        async def _one(
-            name: str = name,
-            engine: Engine = engine,
-            rescue_diag: dict[str, Any] = rescue_diag,
-        ) -> list[SearchResult]:
+        try:
             if not await search_limiter.acquire(name, max_wait=_max_token_wait(engine)):
                 # Rescue is already a bounded, best-effort recovery attempt;
-                # burning its timeout budget queueing for a token would starve
-                # the remaining candidates.
+                # queueing for a token would starve the other candidates.
                 return []
-            return await engine.search(query, n, filters, diagnostics=rescue_diag)
-
-        try:
-            results = await asyncio.wait_for(_one(), timeout=per_candidate)
-        except TimeoutError:
-            info.setdefault("timeouts", []).append(name)
-            _probe_failed(name, "timeout")
-            continue
+            results = await engine.search(query, n, filters, diagnostics=rescue_diag)
         except Exception as e:
             log.warning("rescue engine %s failed: %s", name, e)
             if not isinstance(e, ValueError):
                 _probe_failed(name, "error")
-            continue
+            return []
         if rescue_diag.get("gated"):
             info.setdefault("gated", {}).update(rescue_diag["gated"])
             reason = rescue_diag["gated"].get(name)
@@ -839,14 +1292,78 @@ async def _rescue(
             # bad day. Recovering INTO a decoy would be worse than not recovering.
             info.setdefault("gated", {})[name] = "off_topic"
             _probe_failed(name, "off_topic")
-            continue
-        if results:
-            info["served_by"] = name
-            info["results"] = len(results)
-            if settings.health_enabled:
-                engine_health.record_success(name)
-            return results, name
-    return [], None
+            return []
+        return results
+
+    loop = asyncio.get_running_loop()
+    deadline = loop.time() + settings.rescue_timeout
+    waiting = list(candidates)
+    running: dict[asyncio.Future[list[SearchResult]], str] = {}
+    started_at: dict[asyncio.Future[list[SearchResult]], float] = {}
+    # How long a candidate holds its place among the `_RESCUE_IN_FLIGHT`. One
+    # still running after that keeps running, and can still win, but no longer
+    # keeps the next candidate waiting: two hung reserves must not starve a
+    # fast third, and a reserve that is merely slow (2 to 3 s) must not let the
+    # race run on to `brave` and `youcom` either.
+    hold = max(2 * settings.rescue_stagger_seconds, settings.rescue_timeout * _RESCUE_HOLD_SHARE)
+    next_start = loop.time()
+    try:
+        while waiting or running:
+            now = loop.time()
+            if now >= deadline:
+                break
+            holding = [task for task in running if now - started_at[task] < hold]
+            room = len(holding) < _RESCUE_IN_FLIGHT
+            if waiting and room and (not running or now >= next_start):
+                name = waiting.pop(0)
+                attempted.append(name)
+                task = asyncio.ensure_future(probe(name))
+                running[task] = name
+                started_at[task] = now
+                next_start = now + settings.rescue_stagger_seconds
+                continue
+            timeout = deadline - now
+            if waiting and room:
+                timeout = min(timeout, max(0.0, next_start - now))
+            elif waiting:
+                free_at = min(started_at[task] + hold for task in holding)
+                timeout = min(timeout, max(0.0, free_at - now))
+            done, _ = await asyncio.wait(
+                running, timeout=timeout, return_when=asyncio.FIRST_COMPLETED
+            )
+            # Two answers in the same tick: the earlier candidate wins.
+            for task in sorted(done, key=lambda t: candidates.index(running[t])):
+                name = running.pop(task)
+                results = task.result()
+                if results:
+                    info["served_by"] = name
+                    info["results"] = len(results)
+                    if settings.health_enabled:
+                        engine_health.record_success(name)
+                    return results, name
+            if done:
+                # A candidate failed: its successor need not wait out the stagger.
+                next_start = loop.time()
+        end = loop.time()
+        for task, name in running.items():
+            info.setdefault("timeouts", []).append(name)
+            # Only a candidate that had its share of the pass and still did
+            # not answer has shown anything; one started just before the end
+            # has not.
+            if end - started_at[task] >= hold:
+                _probe_failed(name, "timeout")
+        return [], None
+    finally:
+        for task in running:
+            task.cancel()
+            # Owned until its cancellation has run (a browser render tears
+            # down for a while), without the search waiting for it.
+            _cancelled_probes.add(task)
+            task.add_done_callback(_cancelled_probes.discard)
+
+
+# Rescue candidates cancelled by a winner or the deadline, still unwinding.
+_cancelled_probes: set[asyncio.Future[list[SearchResult]]] = set()
 
 
 def _probe_failed(name: str, reason: str) -> None:
@@ -1186,7 +1703,10 @@ _MAX_RESULTS = 50
 
 
 async def _fan_out(
-    run: Any, engine_names: list[str], diagnostics: dict[str, Any]
+    run: Any,
+    engine_names: list[str],
+    diagnostics: dict[str, Any],
+    lane: Collection[asyncio.Future[_LaneOutcome]] = (),
 ) -> list[tuple[str, list[SearchResult] | Exception]]:
     """Query every engine in parallel, bounded by `settings.search_deadline_seconds`.
 
@@ -1195,7 +1715,9 @@ async def _fan_out(
     cancelled and listed in `diagnostics["timed_out"]`; their slot in the
     answer is an error, so the breaker sees it and the caller reads it. When
     nothing has answered yet the wait continues, because an empty answer
-    delivered on time is worth less than a late one.
+    delivered on time is worth less than a late one, unless an agent engine
+    of the `lane` running beside the fan-out has found results: then the
+    search has its answer, and the stragglers are cut like any other.
     """
     deadline = settings.search_deadline_seconds
     tasks = {asyncio.ensure_future(run(name)): name for name in engine_names}
@@ -1209,8 +1731,15 @@ async def _fan_out(
             isinstance(t.result()[1], list) and t.result()[1] for t in done if not t.cancelled()
         )
         if not answered:
-            more, pending = await asyncio.wait(pending)
-            done |= more
+            lane_open = {task for task in lane if not task.done()}
+            while pending and not _lane_found(lane):
+                more, _ = await asyncio.wait(
+                    pending | lane_open, return_when=asyncio.FIRST_COMPLETED
+                )
+                lane_open -= more
+                finished = more & pending
+                done |= finished
+                pending -= finished
     results: list[tuple[str, list[SearchResult] | Exception]] = []
     for task in pending:
         task.cancel()
@@ -1260,6 +1789,10 @@ async def aggregate_search(
     else:
         nominal = _nominal_pool(query, category, freshness)
         engine_names, benched = _active_pool(nominal) if auto_pool else (nominal, {})
+    # The agent lane joins the automatic pool only: naming engines is an
+    # instruction, and an image or dataset search wants records, not pages.
+    lane_nominal = _lane_nominal(nominal) if auto_pool else []
+    lane = _seated(lane_nominal)
     routed = (
         [name for name in engine_names if name not in settings.default_engines]
         if auto_pool and not category
@@ -1292,7 +1825,7 @@ async def aggregate_search(
         include_text=include_text,
         exclude_text=exclude_text,
     )
-    cache_key = _key(query, nominal, n, filters)
+    cache_key = _key(query, nominal + lane_nominal, n, filters)
 
     # Read-bypass and cache-WRITE are decoupled. `use_cache` gates BOTH the read
     # and the write; `max_age_seconds` only tightens the read TTL. So a caller
@@ -1317,7 +1850,7 @@ async def aggregate_search(
                 "query": query,
                 # The engines that produced THESE results, which is not
                 # necessarily the pool a fresh run would use right now.
-                "engines": meta.get("engines") or nominal,
+                "engines": meta.get("engines") or nominal + lane_nominal,
                 "cached": True,
                 "results": _annotate(hit),
                 "lead_snippet": _lead_snippet(query, hit),
@@ -1342,6 +1875,16 @@ async def aggregate_search(
                 payload["rescued_via"] = meta["rescued_via"]
             if meta.get("auto_routed"):
                 payload["auto_routed"] = meta["auto_routed"]
+            lacked = meta.get("lane_missing")
+            missing = [n for n in lacked if n in lane_nominal] if isinstance(lacked, list) else []
+            if missing:
+                # Only what is known of this replay: which engine it lacks.
+                payload["agent_lane"] = {"missing": missing}
+                payload["agent_lane_hint"] = (
+                    f"This result set was cached without {', '.join(missing)}, which had "
+                    "failed, sat out or not answered yet. It is replayed for an hour at "
+                    "most; pass max_age_hours=0 to search again now."
+                )
             return payload
 
     # Shared accumulator the engines populate with raw/filtered counts, per-reason
@@ -1367,91 +1910,163 @@ async def aggregate_search(
             log.warning("engine %s failed: %s", name, brief_error(e))
             return name, e
 
-    results = await _fan_out(run, engine_names, diagnostics)
-    named: list[tuple[str, list[SearchResult]]] = []
-    errors: dict[str, str] = {}
-    raised: dict[str, Exception] = {}
-    for name, res in results:
-        if isinstance(res, Exception):
-            errors[name] = brief_error(res)
-            raised[name] = res
-        else:
-            named.append((name, res))
-
-    # Before the merge, not after: RRF has no notion of a bad bucket, and would
-    # interleave a decoy's ten results at ranks 3, 6, 9 of the answer.
-    named, unconfirmed = _drop_decoy_buckets(query, named, diagnostics)
-    buckets = [bucket for _, bucket in named]
-    merged = _merge(buckets, n, category, query)
-
-    # Keyless rescue: one bounded recovery attempt when the run came back
-    # empty or nearly-empty with demonstrably unhealthy engines. Rescue
-    # results join the RRF merge (any partial default results keep their
-    # weight and attribution stays honest via each result's `engines`), and
-    # they flow into the cache write below like any other result — a repeat
-    # query within TTL should not re-pay the rescue.
-    rescued_via: str | None = None
-    lost, standing = _general_census(engine_names, named, raised, diagnostics)
-    if _needs_rescue(
-        merged,
-        errors,
-        diagnostics,
-        category,
-        seek_witness=len(unconfirmed) == 1,
-        # Only the automatic pool promises breadth. Someone who named two
-        # engines and lost one asked for two engines, not for three indexes.
-        lost_general=lost if auto_pool else 0,
-        healthy_general=standing,
-    ):
-        rescue_bucket, rescued_via = await _rescue(
-            query, n, filters, engine_names, diagnostics
-        )
-        if rescue_bucket:
-            if unconfirmed and is_witness(query, rescue_bucket):
-                # The second opinion is in, and it echoes the query: the
-                # suspects were decoys after all.
-                _mark_off_topic(unconfirmed, diagnostics)
-                buckets = [bucket for name, bucket in named if name not in unconfirmed]
-            buckets.append(rescue_bucket)
-            merged = _merge(buckets, n, category, query)
-            # Attribute the recovery to the gated engines so the gate hint
-            # reads "was captcha-gated → served via <reserve>" instead of the
-            # misleading "(no results)".
-            if rescued_via:
-                fb = diagnostics.setdefault("fallback", {})
-                for name in diagnostics.get("gated", {}):
-                    fb.setdefault(name, rescued_via)
-
-    _record_health(engine_names, named, raised, diagnostics)
-    if rescued_via and _is_guarded(rescued_via):
-        standing += 1
-    # An answer resting on too few indexes is served, and cached — but not for
-    # a week: the point of the breaker is that the pool recovers.
-    degraded = auto_pool and standing < settings.min_healthy_engines
-    benched_hint = _benched_hint(benched) if benched else ""
-
-    # Gate/fallback provenance is computed BEFORE the cache write so it can be
-    # stored alongside the results it describes and replayed on a later hit.
-    gated = diagnostics.get("gated") or {}
-    fallback = diagnostics.get("fallback") or {}
-    gated_engines = {
-        name: {"reason": gated.get(name, "gated"), "fallback": fallback.get(name)}
-        for name in sorted(set(gated) | set(fallback))
+    # The agent lane starts with the keyless fan-out, not after it.
+    lane_started = time.monotonic()
+    lane_tasks = {
+        asyncio.ensure_future(_run_lane(name, query, n, filters)): name for name in lane
     }
-    gated_hint = _gate_hint(gated, fallback) if gated_engines else ""
+    early_rescue: asyncio.Future[tuple[list[SearchResult], str | None]] | None = None
+    # Until the still-running lane engines are handed to the late merge or
+    # cancelled below, an exception (or the caller cancelling) must not leave
+    # them, or an early rescue, running unowned.
+    try:
+        results = await _fan_out(run, engine_names, diagnostics, lane_tasks)
+        answered = any(isinstance(res, list) and res for _, res in results)
+        if (
+            not answered
+            and any(not task.done() for task in lane_tasks)
+            and not _lane_found(lane_tasks)
+            and settings.rescue_enabled
+            and not _is_exclusive(category)
+        ):
+            # Nothing keyless answered and the lane is still searching. The
+            # rescue such a run nearly always needs starts now, beside the
+            # lane wait rather than after it, and is cancelled below if the
+            # lane's answer turns out to be enough.
+            early_rescue = asyncio.ensure_future(
+                _rescue(query, n, filters, engine_names, diagnostics)
+            )
+        lane_done, lane_pending, lane_waited = await _await_lane(
+            lane_tasks, lane_started, answered, early_rescue
+        )
+        named: list[tuple[str, list[SearchResult]]] = []
+        errors: dict[str, str] = {}
+        raised: dict[str, Exception] = {}
+        for name, res in results:
+            if isinstance(res, Exception):
+                errors[name] = brief_error(res)
+                raised[name] = res
+            else:
+                named.append((name, res))
+        # Lane outcomes join the run's buckets, so the off-topic guard and the
+        # merge treat them like any web engine (and they can be the witness that
+        # exposes a keyless decoy). Their failures are reported in `agent_lane`,
+        # not `errors`: nobody named them, and the advice `errors` produces is
+        # about the engines the caller chose.
+        lane_errors: dict[str, str] = {}
+        lane_raised: dict[str, Exception] = {}
+        lane_rate_limited: list[str] = []
+        for name, res, lane_diag in lane_done:
+            if lane_diag.get("rate_limited"):
+                lane_rate_limited.append(name)
+            elif isinstance(res, Exception):
+                lane_errors[name] = brief_error(res)
+                lane_raised[name] = res
+            else:
+                named.append((name, res))
+        still_searching = {lane_tasks[task] for task in lane_pending}
+        lane_pending_names = [name for name in lane if name in still_searching]
 
-    # A named engine waiting on its sign-in page did not get to answer; a
-    # cached run without it would be replayed after the approval.
-    sign_in_pending = any(isinstance(e, EngineSignInPending) for e in raised.values())
-    if use_cache and merged and not sign_in_pending:
+        # Before the merge, not after: RRF has no notion of a bad bucket, and would
+        # interleave a decoy's ten results at ranks 3, 6, 9 of the answer.
+        named, unconfirmed = _drop_decoy_buckets(query, named, diagnostics)
+        buckets = [bucket for _, bucket in named]
+        merged = _merge(buckets, n, category, query)
+
+        # Keyless rescue: one bounded recovery attempt when the run came back
+        # empty or nearly-empty with demonstrably unhealthy engines. Rescue
+        # results join the RRF merge (any partial default results keep their
+        # weight and attribution stays honest via each result's `engines`), and
+        # they flow into the cache write below like any other result — a repeat
+        # query within TTL should not re-pay the rescue.
+        rescued_via: str | None = None
+        rescue_pair: list[tuple[str, list[SearchResult]]] = []
+        lost, standing = _general_census(engine_names, named, raised, diagnostics)
+        # An early rescue that has already come back is used whatever the
+        # lane brought: its requests are spent, and its index adds breadth.
+        early_ready = (
+            early_rescue is not None
+            and early_rescue.done()
+            and not early_rescue.cancelled()
+            and bool(early_rescue.result()[0])
+        )
+        if early_ready or _needs_rescue(
+            merged,
+            errors,
+            diagnostics,
+            category,
+            seek_witness=len(unconfirmed) == 1,
+            # Only the automatic pool promises breadth. Someone who named two
+            # engines and lost one asked for two engines, not for three indexes.
+            lost_general=lost if auto_pool else 0,
+            healthy_general=standing,
+        ):
+            if early_rescue is not None:
+                rescue_bucket, rescued_via = await early_rescue
+            else:
+                rescue_bucket, rescued_via = await _rescue(
+                    query, n, filters, engine_names, diagnostics
+                )
+            if rescue_bucket:
+                if unconfirmed and is_witness(query, rescue_bucket):
+                    # The second opinion is in, and it echoes the query: the
+                    # suspects were decoys after all.
+                    _mark_off_topic(unconfirmed, diagnostics)
+                    named = [(name, bucket) for name, bucket in named if name not in unconfirmed]
+                    buckets = [bucket for _, bucket in named]
+                buckets.append(rescue_bucket)
+                if rescued_via:
+                    rescue_pair = [(rescued_via, rescue_bucket)]
+                merged = _merge(buckets, n, category, query)
+                # Attribute the recovery to the gated engines so the gate hint
+                # reads "was captcha-gated → served via <reserve>" instead of the
+                # misleading "(no results)".
+                if rescued_via:
+                    fb = diagnostics.setdefault("fallback", {})
+                    for name in diagnostics.get("gated", {}):
+                        fb.setdefault(name, rescued_via)
+        elif early_rescue is not None:
+            early_rescue.cancel()
+
+        # Lane buckets are left out: an engine that legitimately found nothing
+        # must not take a "silent" strike because a language model's search
+        # found pages no keyless index has.
+        _record_health(
+            engine_names, [(n, b) for n, b in named if n not in lane], raised, diagnostics
+        )
+        lane_gated = diagnostics.get("gated") or {}
+        for name, res, lane_diag in lane_done:
+            if not lane_diag.get("rate_limited"):
+                _record_lane_health(name, res, lane_gated.get(name))
+        if rescued_via and _is_guarded(rescued_via):
+            standing += 1
+        # An answer resting on too few indexes is served, and cached — but not for
+        # a week: the point of the breaker is that the pool recovers.
+        degraded = auto_pool and standing < settings.min_healthy_engines
+        benched_hint = _benched_hint(benched) if benched else ""
+
+        # Gate/fallback provenance is computed BEFORE the cache write so it can be
+        # stored alongside the results it describes and replayed on a later hit.
+        gated = diagnostics.get("gated") or {}
+        gated_engines, gated_hint = _gate_provenance(gated, diagnostics.get("fallback") or {})
+
+        # A named engine waiting on its sign-in page did not get to answer; a
+        # cached run without it would be replayed after the approval.
+        sign_in_pending = any(isinstance(e, EngineSignInPending) for e in raised.values())
+        # What was asked and has answered: the keyless engines, then the agent
+        # engines that finished in time. One still searching is not listed yet; it
+        # joins the row when its results are merged in.
+        asked = engine_names + [
+            name for name in lane if name not in still_searching and name not in lane_rate_limited
+        ]
         meta: dict[str, Any] = {}
         if gated_engines:
             meta["gated_engines"] = gated_engines
             meta["gated_hint"] = gated_hint
         if rescued_via:
             meta["rescued_via"] = rescued_via
-        if engine_names != nominal:
-            meta["engines"] = engine_names
+        if asked != nominal + lane_nominal:
+            meta["engines"] = asked
         if benched:
             meta["benched_engines"] = benched
             meta["benched_hint"] = benched_hint
@@ -1459,14 +2074,70 @@ async def aggregate_search(
             meta["degraded"] = True
         if routed:
             meta["auto_routed"] = routed
-        await cache.put_search(cache_key, query, engine_names, merged, meta or None)
-        stored_as = cache_key
+        lane_benched = [name for name in lane_nominal if name not in lane]
+        # The lane engines the cache key promises and these results lack for a
+        # passing reason: still searching, out of tokens, a timeout or reset,
+        # or benched after one. One refused for its plan or its sign-in, or
+        # benched for that, is a lasting state; marking those too would turn
+        # every cached search into an hourly re-run for as long as a plan
+        # stays spent.
+        lane_missing = [
+            name
+            for name in lane_nominal
+            if name in still_searching
+            or name in lane_rate_limited
+            or (name in lane_raised and not is_lasting(lane_raised[name]))
+            or (name in lane_benched and _benched_for(name) != LANE_REFUSED)
+        ]
+        if lane_missing:
+            meta["lane_missing"] = lane_missing
+        written_at = int(time.time())
+        if use_cache and lane_nominal:
+            # This run's row (or its absence) is the newest answer: a late
+            # merge an earlier search left running must not overwrite it. The
+            # row lock makes taking the row and writing it one step, so the
+            # merge cannot slip a write in between.
+            async with _row_lock():
+                _lane_rows.pop(cache_key, None)
+                if merged and not sign_in_pending:
+                    await cache.put_search(cache_key, query, asked, merged, meta or None)
+        elif use_cache and merged and not sign_in_pending:
+            await cache.put_search(cache_key, query, asked, merged, meta or None)
+        stored_as = cache_key if use_cache and merged and not sign_in_pending else None
+    except BaseException:
+        # Cancelling a finished task is a no-op, so all of them will do.
+        for task in lane_tasks:
+            task.cancel()
+        if early_rescue is not None:
+            early_rescue.cancel()
+        raise
+    merges_later = bool(lane_pending) and use_cache and not sign_in_pending
+    if merges_later:
+        # Not cancelled: the request is already spent, and its answer makes
+        # the next identical search better. Started after the write above, so
+        # the late merge always lands on top of it.
+        _merge_lane_later(
+            lane_pending,
+            query=query,
+            n=n,
+            category=category,
+            named=named + rescue_pair,
+            keyless=engine_names + [name for name, _ in rescue_pair],
+            asked=asked,
+            cache_key=cache_key,
+            meta=meta,
+            missing=lane_missing,
+            written_at=written_at if stored_as else None,
+        )
     else:
-        stored_as = None
+        # Without the cache there is no row to merge a late answer into, so
+        # nothing is gained by letting it finish.
+        for task in lane_pending:
+            task.cancel()
 
     payload: dict[str, Any] = {
         "query": query,
-        "engines": engine_names,
+        "engines": asked,
         "cached": False,
         "results": _annotate(merged),
         "lead_snippet": _lead_snippet(query, merged),
@@ -1497,6 +2168,30 @@ async def aggregate_search(
     if benched:
         payload["benched_engines"] = benched
         payload["benched_hint"] = benched_hint
+    if lane_nominal:
+        lane_report: dict[str, Any] = {
+            "engines": lane,
+            "answered": {name: len(bucket) for name, bucket in named if name in lane},
+        }
+        if lane_pending_names:
+            lane_report["pending"] = lane_pending_names
+            lane_report["merges_into_cache"] = merges_later
+        if lane_errors:
+            lane_report["errors"] = lane_errors
+        if lane_rate_limited:
+            lane_report["rate_limited"] = lane_rate_limited
+        if lane_benched:
+            lane_report["benched"] = lane_benched
+        payload["agent_lane"] = lane_report
+        lane_hint = _lane_hint(
+            lane_pending_names,
+            lane_errors,
+            lane_rate_limited,
+            waited=lane_waited,
+            merges_later=merges_later,
+        )
+        if lane_hint:
+            payload["agent_lane_hint"] = lane_hint
 
     # Engines the rate limiter refused a token to. Recorded since the limiter
     # was added but never read, so a source silently vanished from a search it

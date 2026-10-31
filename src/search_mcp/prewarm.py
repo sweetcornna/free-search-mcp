@@ -68,7 +68,7 @@ async def prewarm() -> None:
         return
     try:
         await asyncio.to_thread(_import_search_path)
-        from .aggregator import default_pool_now
+        from .aggregator import agent_lane_now, default_pool_now
         from .engines import get_engine
 
         names = default_pool_now()
@@ -77,6 +77,9 @@ async def prewarm() -> None:
             jobs.append(get_engine("bing").warm())
         if _wants_browser(names):
             jobs.append(pool.launch())
+        # A signed-in agent engine's first search would otherwise refresh its
+        # token and look its model up before searching.
+        jobs.extend(get_engine(name).warm() for name in agent_lane_now())
         for outcome in await asyncio.gather(*jobs, return_exceptions=True):
             if isinstance(outcome, Exception):
                 log.debug("prewarm step failed: %s", outcome)

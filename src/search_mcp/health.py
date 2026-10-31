@@ -37,8 +37,13 @@ log = logging.getLogger(__name__)
 # ban. `off_topic` belongs here too — a decoy page is a block with better
 # manners.
 HARD_REASONS = frozenset(
-    {"captcha", "consent", "javascript", "login", "no_live_instance", "off_topic"}
+    {"captcha", "consent", "javascript", "login", "no_live_instance", "off_topic", "region"}
 )
+
+# Walls that do not move: a source that does not serve this machine's region
+# (Yahoo! JAPAN in the EEA and the UK). Benched for the maximum at once, so an
+# operator there pays one probe an hour rather than one per short cooldown.
+LONG_REASONS = frozenset({"region"})
 
 # Failures that are often a blip: a timeout, a reset, a 503. Two in a row.
 SOFT_THRESHOLD = 2
@@ -195,7 +200,7 @@ class EngineHealth:
             if self._max_cooldown is not None
             else settings.engine_cooldown_max_seconds
         )
-        state.cooldown = min(base * (2**state.trips), cap)
+        state.cooldown = cap if reason in LONG_REASONS else min(base * (2**state.trips), cap)
         state.trips += 1
         state.opened_at = self._clock()
         state.reason = reason

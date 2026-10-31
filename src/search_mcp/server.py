@@ -657,7 +657,11 @@ async def search(
       `engines` is what was actually ASKED for this answer; each result's own
       `engines` is what found it. A default engine that failed recently is not
       asked and appears under `benched_engines` instead; a rescue pass that
-      substituted a source appears as `rescued_via`.
+      substituted a source appears as `rescued_via`. When the operator has
+      signed in to an agent engine (`codex`), it searches beside the keyless
+      engines and `agent_lane` reports it ({engines, answered, pending, errors});
+      one still searching when the links return is merged into the cached
+      result set, so the same call repeated later carries its results too.
 
     Common mistakes:
     - Answering from snippets. A snippet is an engine's summary of a page as it
@@ -685,9 +689,9 @@ async def search(
     Args:
         query: Natural-language query (the same string a human would type).
         engines: Subset of `engines()`. None (recommended) = the health-aware
-            default pool: duckduckgo, bing and anysearch, plus googlenews when
-            `freshness` is "day"/"week" and a Chinese index for a Chinese
-            query.
+            default pool: duckduckgo, bing, yahoojp (Google's index) and
+            anysearch, plus googlenews when `freshness` is "day"/"week",
+            so360 and quark for a Chinese query and naver for a Korean one.
         max_results: Merged result count after dedup, clamped to 1-50. It is
             also the PER-ENGINE budget, so it multiplies across the fan-out;
             5-20 is the useful range and anything past that is duplicate noise

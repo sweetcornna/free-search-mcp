@@ -22,7 +22,7 @@ lacked.
 research("how does reciprocal rank fusion work", depth=3)
    ↓
 # Research brief: how does reciprocal rank fusion work
-_engines: duckduckgo, bing, anysearch · sources: 3 · ~3,400 tokens_
+_engines: duckduckgo, bing, yahoojp, anysearch · sources: 3 · ~3,400 tokens_
 
 ## Sources
 - [1] Reciprocal rank fusion | Elasticsearch Reference — <https://…>
@@ -128,8 +128,10 @@ header. `format="json"` returns structured data.
 ### How a search runs
 
 - A search that names no engines asks a small keyless pool: `duckduckgo`,
-  `bing` and `anysearch`. `googlenews` joins when recency is asked for, and
-  `so360` when the query is written in Chinese. Sources that only served a
+  `bing`, `yahoojp` (Yahoo! JAPAN, the keyless route to Google's index) and
+  `anysearch`. `googlenews` joins when recency is asked for, `so360` and
+  `quark` when the query is written in Chinese, `naver` when it is written in
+  Korean. Sources that only served a
   CAPTCHA or an empty shell (`mojeek`, `google`, `startpage`, `searx`,
   `sogou`) were removed rather than left to fail on every fresh process.
 - `category=` routes to sources that index that kind of thing (papers,
@@ -139,6 +141,9 @@ header. `format="json"` returns structured data.
 - An engine that serves a CAPTCHA, a login wall or an off-topic page is
   benched, a reserve takes its seat, and the response says what happened. A
   proxy (`SEARCH_MCP_PROXY`) is the fix for IP gating.
+- Once you have signed in to `codex`, it searches beside those engines on
+  every such search and its results join the same ranking (the
+  [agent lane](#the-agent-lane)). The links never wait more than 6 s for it.
 - With an answer backend configured (`SEARCH_MCP_AGENT_BACKEND=api`,
   `claude-code` or `codex`), `search` also runs the answer agent beside the
   engines from the same result set and puts a short sourced answer above the
@@ -189,8 +194,10 @@ Operating rules for agents are in [docs/AGENT_USAGE.md](docs/AGENT_USAGE.md).
 ## Search on your own account: `codex` and `antigravity`
 
 Two opt-in engines search on an account you sign in with instead of an API
-key. Neither is in any pool or route: a search reaches one only when the call
-names it, and nothing changes for anyone who never signs in.
+key. Neither is in any pool or route, and nothing changes for anyone who never
+signs in. Once you sign in to `codex`, it searches beside the keyless engines
+on every automatic search (the [agent lane](#the-agent-lane)); `antigravity`
+runs only when a call or `SEARCH_MCP_AGENT_ENGINES` names it.
 
 | | `codex` | `antigravity` |
 |---|---|---|
@@ -254,8 +261,31 @@ search. Measured on 2026-09-26, a `codex` search took about 3 s and an
 | `SEARCH_MCP_CODEX_MODEL`, `SEARCH_MCP_ANTIGRAVITY_MODEL` | `latest` | `latest` follows the account's model catalogue, so a new model is used once it is listed; a model name pins one |
 | `SEARCH_MCP_CODEX_TIMEOUT`, `SEARCH_MCP_ANTIGRAVITY_TIMEOUT` | `60` | seconds for one search |
 | `SEARCH_MCP_CODEX_AUTO_SIGNIN` | `true` | open the sign-in page on first use |
+| `SEARCH_MCP_AGENT_ENGINES` | `auto` | the agent lane: `auto` seats a signed-in `codex`; `off`; or a list such as `codex,antigravity` |
+| `SEARCH_MCP_AGENT_LANE_WAIT_SECONDS` | `6` | how long a search waits for the lane |
+| `SEARCH_MCP_AGENT_LANE_GRACE_SECONDS` | `2` | how much longer than the keyless engines it waits, once they have results |
 | `SEARCH_MCP_ANTIGRAVITY_CLIENT_ID`, `SEARCH_MCP_ANTIGRAVITY_CLIENT_SECRET` | read from the Antigravity install | for a machine without Antigravity; set both or neither |
 | `SEARCH_MCP_PROXY` | empty | the sign-in and the searches go through it |
+
+### The agent lane
+
+A signed-in `codex` does not wait to be named. Every search that names no
+engines asks it at the same moment as the keyless pool, and its results are
+fused into the same ranking, so the agent search and the keyless search run in
+parallel and one answer comes back. The keyless pool keeps its breaker,
+reserves, routing and rescue, which naming `engines=["codex", ...]` would
+switch off.
+
+- The search waits for the lane at most 6 s from when the engines were asked
+  (`SEARCH_MCP_AGENT_LANE_WAIT_SECONDS`), and at most 2 s past the keyless
+  engines once they have results. A lane engine still searching then
+  finishes in the background, and its results are merged into the cached
+  result set, so the same search a little later returns them.
+- The lane never queues for a rate-limit token, a spent usage window benches
+  it at once, and its problems are reported under `agent_lane`, never as a
+  failed search.
+- `SEARCH_MCP_AGENT_ENGINES=off` turns it off; `codex,antigravity` adds
+  `antigravity` to it.
 
 ### On a server, over SSH, or in Docker
 
@@ -337,7 +367,7 @@ environment first, then `./.env`, then `~/.config/search-mcp/.env`
 |---|---|---|
 | `SEARCH_MCP_PROXY` | empty | outbound proxy (`http`, `https` or `socks5`) for the engines, the browser and `fetch` |
 | `SEARCH_MCP_PROXY_ENGINES` | empty | proxy only these engines |
-| `SEARCH_MCP_DEFAULT_ENGINES` | `["duckduckgo","bing","anysearch"]` | the pool a search uses when it names no engines |
+| `SEARCH_MCP_DEFAULT_ENGINES` | `["duckduckgo","bing","yahoojp","anysearch"]` | the pool a search uses when it names no engines |
 | `SEARCH_MCP_REGION` | `us-en` | locale for engines that take one |
 | `SEARCH_MCP_CACHE_DIR` | `~/.cache/search-mcp` | search and page cache |
 | `SEARCH_MCP_TOOLS` | empty | register only these tools |

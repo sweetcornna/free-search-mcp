@@ -314,7 +314,12 @@ class Cache:
         engines: list[str],
         results: list[dict[str, Any]],
         meta: dict[str, Any] | None = None,
+        *,
+        created: int | None = None,
     ) -> None:
+        """Write a search's row. `created` keeps an earlier write's time, for a
+        rewrite that adds to results retrieved then (the agent lane's late
+        merge) and must not make them look newer."""
         conn = await self._conn()
         await conn.execute(
             "INSERT OR REPLACE INTO search_cache "
@@ -325,7 +330,7 @@ class Cache:
                 query,
                 ",".join(engines),
                 json.dumps(results, ensure_ascii=False),
-                int(time.time()),
+                int(time.time()) if created is None else created,
                 json.dumps(meta, ensure_ascii=False) if meta else None,
             ),
         )

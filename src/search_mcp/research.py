@@ -236,6 +236,8 @@ async def research(
         "auto_routed",
         "timed_out_engines",
         "timed_out_hint",
+        "agent_lane",
+        "agent_lane_hint",
     ):
         if sr.get(key):
             out[key] = sr[key]

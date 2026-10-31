@@ -15,11 +15,11 @@ Available settings:
 
 | Var | Default | Meaning |
 |---|---|---|
-| `SEARCH_MCP_DEFAULT_ENGINES` | `["duckduckgo","bing","anysearch"]` | JSON list; the pool a search uses when it names no engines |
-| `SEARCH_MCP_RESERVE_ENGINES` | `["so360","brave"]` | stand-ins, in order, seated only while fewer than `MIN_HEALTHY_ENGINES` general engines are healthy |
+| `SEARCH_MCP_DEFAULT_ENGINES` | `["duckduckgo","bing","yahoojp","anysearch"]` | JSON list; the pool a search uses when it names no engines. `yahoojp` does not serve the EEA or the UK; a server there can leave it out |
+| `SEARCH_MCP_RESERVE_ENGINES` | `["yahoo","seznam","so360","brave"]` | stand-ins, in order, seated only while fewer than `MIN_HEALTHY_ENGINES` general engines are healthy |
 | `SEARCH_MCP_MIN_HEALTHY_ENGINES` | `3` | below this many healthy general engines, reserves are seated |
 | `SEARCH_MCP_FRESH_ENGINES` | `["googlenews"]` | joined for `freshness="day"` / `"week"` |
-| `SEARCH_MCP_LOCALE_ENGINES` | `{"zh":["so360"]}` | JSON object: engines joined when the QUERY is written in that language |
+| `SEARCH_MCP_LOCALE_ENGINES` | `{"zh":["so360","quark"],"ko":["naver"]}` | JSON object: engines joined when the QUERY is written in that language |
 | `SEARCH_MCP_HEALTH_ENABLED` | `true` | the circuit breaker; `false` asks every engine every time |
 | `SEARCH_MCP_ENGINE_COOLDOWN_SECONDS` | `600` | first bench; doubles on each repeat |
 | `SEARCH_MCP_ENGINE_COOLDOWN_MAX_SECONDS` | `3600` | ceiling for the doubling |
@@ -27,6 +27,7 @@ Available settings:
 | `SEARCH_MCP_RESCUE_ENABLED` | `true` | auto-rescue empty searches via rescue engines |
 | `SEARCH_MCP_RESCUE_ENGINES` | `["youcom","baidu"]` | rescue order (JSON list), tried after the reserves |
 | `SEARCH_MCP_RESCUE_TIMEOUT` | `10.0` | seconds; cap on the whole rescue pass |
+| `SEARCH_MCP_RESCUE_STAGGER_SECONDS` | `1.0` | the rescue pass is a staggered race: the next candidate is asked this long after the previous one, or as soon as it fails, at most two holding a place at a time (one past its share of the pass gives its place up), and the first usable answer wins; `0` asks the first two at once |
 | `SEARCH_MCP_MAX_RESULTS_PER_ENGINE` | `10` | |
 | `SEARCH_MCP_RATE_LIMIT_PER_MINUTE` | `30` | per engine |
 | `SEARCH_MCP_FETCH_RATE_LIMIT_PER_MINUTE` | `20` | shared `fetch` bucket |
@@ -63,13 +64,16 @@ Available settings:
 | `SEARCH_MCP_AGENT_IN_SEARCH` | `true` | with a backend configured, run the answer agent beside every `search` and put its sourced answer above the links |
 | `SEARCH_MCP_AGENT_SEARCH_TIMEOUT_SECONDS` | `45` | how long `search` waits for that answer before returning the links alone |
 | `SEARCH_MCP_AGENT_*` | off | the optional answer agent; see [DELEGATION.md](DELEGATION.md) |
-| `SEARCH_MCP_CODEX_MODEL` | `latest` | model for the opt-in `codex` engine (`latest` follows the plan's catalogue); see [CODEX_SEARCH.md](CODEX_SEARCH.md) |
+| `SEARCH_MCP_AGENT_ENGINES` | `auto` | the agent lane: signed-in agent engines that search beside the keyless pool on every automatic search. `auto` seats `codex` once you signed in to it; `antigravity` joins only when listed (`codex,antigravity`); `off` keeps them to calls that name them |
+| `SEARCH_MCP_AGENT_LANE_WAIT_SECONDS` | `6` | how long a search waits for the agent lane, counted from when the engines were asked. One still searching after that is merged into the cached result set when it answers |
+| `SEARCH_MCP_AGENT_LANE_GRACE_SECONDS` | `2` | once the keyless engines have answered with results, the lane gets at most this much longer |
+| `SEARCH_MCP_CODEX_MODEL` | `latest` | model for the `codex` agent engine (`latest` follows the plan's catalogue); see [CODEX_SEARCH.md](CODEX_SEARCH.md) |
 | `SEARCH_MCP_CODEX_TIMEOUT` | `60` | seconds for one `codex` search |
 | `SEARCH_MCP_CODEX_REASONING_EFFORT` | `low` | `low` / `medium` / `high`; used only when the backend has no search endpoint |
 | `SEARCH_MCP_CODEX_BASE_URL` | `https://chatgpt.com/backend-api/codex` | the Codex backend |
 | `SEARCH_MCP_CODEX_AUTO_SIGNIN` | `true` | named with no sign-in stored, open the sign-in page in the local browser and finish the search once it is approved (stdio on a desktop only) |
 | `SEARCH_MCP_CODEX_SIGNIN_WAIT_SECONDS` | `45` | how long one search waits for that approval |
-| `SEARCH_MCP_ANTIGRAVITY_MODEL` | `latest` | model for the opt-in `antigravity` engine (`latest` follows the account's catalogue); see [ANTIGRAVITY_SEARCH.md](ANTIGRAVITY_SEARCH.md) |
+| `SEARCH_MCP_ANTIGRAVITY_MODEL` | `latest` | model for the `antigravity` agent engine (`latest` follows the account's catalogue); see [ANTIGRAVITY_SEARCH.md](ANTIGRAVITY_SEARCH.md) |
 | `SEARCH_MCP_ANTIGRAVITY_TIMEOUT` | `60` | seconds for one `antigravity` search |
 | `SEARCH_MCP_ANTIGRAVITY_BASE_URLS` | the daily sandbox, then production | JSON list of Cloud Code backends, tried in order |
 | `SEARCH_MCP_ANTIGRAVITY_VERSION` | `2.1.4` | the Antigravity release the user agent names |

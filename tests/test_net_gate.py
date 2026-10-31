@@ -153,3 +153,44 @@ def test_detect_gate_priority_captcha_over_login():
     # A page with both markers reports the higher-priority one (captcha).
     html = "unusual traffic … please log in to continue"
     assert detect_gate(html) == "captcha"
+
+
+# --- engine-specific walls ---------------------------------------------------
+
+
+# Trimmed from the live notice page (2026-10-31).
+_EEA_NOTICE = (
+    "<title>【お知らせ】欧州経済領域（EEA）およびイギリスからご利用のお客様へ - Yahoo! JAPAN</title>"
+    '<meta property="og:url" content="https://privacy.yahoo.co.jp/areacheck/error.html">'
+    "<p>From Wednesday, April 6, 2022, Yahoo! JAPAN is no longer available in "
+    "the EEA and the United Kingdom.</p>"
+)
+
+
+def test_an_engine_s_own_wall_is_named_for_that_engine_only():
+    from search_mcp.engines.quark import QuarkEngine
+    from search_mcp.engines.yahoo import YahooEngine
+    from search_mcp.engines.yahoojp import YahooJapanEngine
+
+    assert detect_gate(_EEA_NOTICE, YahooJapanEngine.gate_markers) == "region"
+    consent = "<form action='https://consent.yahoo.com/v2/collectConsent?sessionId=1'>"
+    assert detect_gate(consent, YahooEngine.gate_markers) == "consent"
+    wall = '<script>var url = "//quark.sm.cn//s/_____tmd_____/punish?x5secdata=x";</script>'
+    assert detect_gate(wall, QuarkEngine.gate_markers) == "captcha"
+
+
+def test_an_empty_page_echoing_a_wall_phrase_is_not_a_wall_elsewhere():
+    """Another engine's empty page that echoes the query "services no longer
+    available in the EEA" must not read as a region block and bench it."""
+    echo = "<h1>No results for services no longer available in the EEA</h1>"
+    assert detect_gate(echo) is None
+    assert detect_gate(_EEA_NOTICE) is None
+
+
+def test_yahoojp_s_own_empty_page_echoing_the_notice_is_not_a_region_wall():
+    from search_mcp.engines.yahoojp import YahooJapanEngine
+
+    query = 'privacy.yahoo.co.jp/areacheck "no longer available in the EEA"'
+    escaped = query.replace("&", "&amp;").replace("<", "&lt;").replace('"', "&quot;")
+    echo = f'<input name="p" value="{escaped}"><p>{escaped} に一致する情報は見つかりませんでした</p>'
+    assert detect_gate(echo, YahooJapanEngine.gate_markers) is None

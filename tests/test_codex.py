@@ -416,6 +416,23 @@ def auto_signin(monkeypatch):
     return install
 
 
+async def test_the_agent_lane_never_opens_the_sign_in(backend, auto_signin):
+    """The lane seats only a signed-in codex, but a sign-in removed between
+    that check and the search must not open a browser from a search nobody
+    named codex in."""
+    from search_mcp.engines.base import EngineKeyError, in_agent_lane
+
+    asked = auto_signin(oauth.Credential(provider="codex", access_token="FRESH",
+                                         account_id="acct-9", expires_at=time.time() + 3600))
+    token = in_agent_lane.set(True)
+    try:
+        with pytest.raises(EngineKeyError, match="codex"):
+            await CodexEngine().search("asyncio taskgroup", 5)
+    finally:
+        in_agent_lane.reset(token)
+    assert asked == []
+
+
 async def test_naming_it_unsigned_opens_the_sign_in_and_then_searches(backend, auto_signin):
     routes, calls = backend
     routes["/alpha/search"] = httpx.Response(200, json=_SEARCH_REPLY)
@@ -679,3 +696,37 @@ async def test_an_unreadable_catalogue_falls_back_and_the_search_still_runs(back
     assert await CodexEngine().search("q", 5)
     search = next(c for c in calls if c.url.path.endswith("/alpha/search"))
     assert json.loads(search.content)["model"] == _FALLBACK_MODEL
+
+
+
+async def test_an_unreachable_token_endpoint_is_a_transient_failure(monkeypatch):
+    from search_mcp.engines.base import EngineKeyError, is_lasting
+
+    async def unreachable(provider_id, *, force_refresh=False):
+        raise oauth.OAuthUnreachable("could not reach auth.openai.com: ConnectError.")
+
+    monkeypatch.setattr(oauth, "credential", unreachable)
+    with pytest.raises(EngineKeyError) as caught:
+        await CodexEngine().search("asyncio taskgroup", 5)
+    assert caught.value.transient is True
+    assert not is_lasting(caught.value)
+
+
+def test_a_spent_usage_window_lasts_and_a_bare_429_passes(monkeypatch):
+    from search_mcp.engines.base import is_lasting
+    from search_mcp.engines.codex import _http_failure
+
+    spent = _http_failure(429, json.dumps({"error": {"type": "usage_limit_reached",
+                                                     "message": "limit"}}))
+    assert is_lasting(spent)
+    assert not is_lasting(_http_failure(429, "Too Many Requests"))
+
+
+@pytest.mark.parametrize(("model", "lasting"), [("latest", False), ("gpt-pinned", True)])
+def test_a_refused_model_lasts_only_when_pinned(monkeypatch, model, lasting):
+    from search_mcp.engines.base import is_lasting
+    from search_mcp.engines.codex import _http_failure
+
+    monkeypatch.setattr(settings, "codex_model", model)
+    refused = _http_failure(400, json.dumps({"error": {"message": "model not supported"}}), model)
+    assert is_lasting(refused) is lasting
