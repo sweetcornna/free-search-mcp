@@ -4,6 +4,31 @@ All notable changes to this project are documented here. The format is loosely
 based on [Keep a Changelog](https://keepachangelog.com/), and the project follows
 semantic versioning.
 
+## [Unreleased]
+
+### Fixed
+
+- The browser no longer runs as your Chrome. Pages were rendered in the
+  installed Google Chrome (`channel="chrome"`), and on macOS the system counted
+  that headless instance as your own: with your Chrome closed, its Dock icon
+  and links reopened a browser with no window, so Chrome seemed to hang and
+  never open. The default is now the Chromium Playwright downloads;
+  `SEARCH_MCP_BROWSER_CHANNEL=chrome` opts back in. On Linux and Windows an
+  installed Chrome still stands in when the bundled Chromium is missing.
+- The browser profile no longer piles up. Every MCP client's server pointed its
+  browser at the one `browser_profile`, so a desktop with many sessions open had
+  several browsers writing it at once, and nothing pruned its caches (1.5 GB on
+  one machine). One server at a time now holds that profile and the rest use a
+  throwaway one that is deleted when they stop, or by the next server if they
+  were killed. HTTP, code, GPU and service-worker caches and the model files a
+  real Chrome downloads are pruned each time a profile is leased, and the HTTP
+  cache is capped at `SEARCH_MCP_BROWSER_DISK_CACHE_BYTES` (64 MiB) while the
+  browser runs. Cookies and site storage are kept.
+- `search-mcp-login` opens its window in a throwaway profile and saves the
+  session's cookies to `browser_login_cookies.json`, which every running
+  server's browser adds before its next page. It used to write into the shared
+  profile while servers had it open.
+
 ## [0.18.0] - 2026-10-31
 
 Agent search and keyless search now run side by side, the default pool gains

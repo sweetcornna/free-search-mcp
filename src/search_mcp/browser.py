@@ -9,6 +9,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any
 
+from . import browser_profile
 from .config import settings
 from .net import playwright_proxy
 
@@ -172,6 +173,45 @@ async def _close_manager(manager) -> None:
     except Exception:
         log.debug("playwright manager exit after a stalled start failed")
 
+async def _launch_context(playwright, kwargs: dict) -> BrowserContext:
+    """Launch a persistent context on the configured channel.
+
+    The default is the Chromium Playwright downloads. ``browser_channel`` opts
+    into an installed browser, falling back to the bundled one when it is
+    absent. The installed Chrome is not the default because on macOS the
+    system then treats the automation instance as the user's Chrome: with the
+    user's own Chrome closed, its Dock icon and links reopen the headless
+    instance, which has no window, so Chrome seems to hang.
+    """
+    channel = settings.browser_channel.strip()
+    if channel:
+        try:
+            return await playwright.chromium.launch_persistent_context(
+                channel=channel, **kwargs
+            )
+        except Exception as e:
+            log.warning(
+                "browser channel %r did not launch, using bundled Chromium: %s",
+                channel,
+                brief_error(e),
+            )
+        return await playwright.chromium.launch_persistent_context(**kwargs)
+    try:
+        return await playwright.chromium.launch_persistent_context(**kwargs)
+    except Exception as e:
+        # Without the bundled Chromium, an installed Chrome still beats no
+        # browser where it is a separate instance, which is everywhere but
+        # macOS. The original error carries the install hint.
+        if sys.platform == "darwin" or not _is_missing_browser_error(str(e)):
+            raise
+        try:
+            return await playwright.chromium.launch_persistent_context(
+                channel="chrome", **kwargs
+            )
+        except Exception:
+            raise e from None
+
+
 # Common desktop viewports — pick one per session to break up the trivially
 # constant-1366x800 fingerprint without straying into freakish dimensions.
 _VIEWPORTS = [
@@ -207,6 +247,11 @@ class BrowserPool:
         # so a network blip heals by itself while a missing binary stays
         # missing until ``shutdown()``.
         self._launch_failed_at: float | None = None
+        # The user-data-dir this process holds (see browser_profile), taken on
+        # the first launch and given up when the browser is shut down.
+        self._lease: browser_profile.ProfileLease | None = None
+        # mtime of the login cookie file last added to ``_ctx``.
+        self._login_cookies_mtime: int | None = None
 
     @property
     def known_unavailable(self) -> bool:
@@ -224,7 +269,30 @@ class BrowserPool:
         # sandbox often can't run anyway.
         if sys.platform != "darwin":
             args.append("--no-sandbox")
+        if settings.browser_disk_cache_bytes:
+            args.append(f"--disk-cache-size={settings.browser_disk_cache_bytes}")
         return args
+
+    def _context_kwargs(self, user_data_dir: str, *, headless: bool) -> dict:
+        width, height = random.choice(_VIEWPORTS)
+        return dict(
+            user_data_dir=user_data_dir,
+            headless=headless,
+            args=self._launch_args(),
+            user_agent=settings.user_agent,
+            locale="en-US",
+            timezone_id="America/Los_Angeles",
+            viewport={"width": width, "height": height},
+            extra_http_headers={"Accept-Language": settings.accept_language},
+            # Opt-in proxy: empty dict (no `proxy` key) when none configured,
+            # so behaviour is byte-for-byte unchanged without a proxy.
+            **_launch_proxy_kwargs(),
+        )
+
+    def _release_lease(self) -> None:
+        lease, self._lease = self._lease, None
+        if lease is not None:
+            lease.release()
 
     async def _teardown_driver(self) -> None:
         """Close any half-built context and stop the Playwright driver.
@@ -247,6 +315,7 @@ class BrowserPool:
             except Exception:
                 log.debug("playwright stop during teardown failed")
             self._playwright = None
+        self._release_lease()
 
     async def _ensure(self) -> BrowserContext:
         async with self._lock:
@@ -264,6 +333,14 @@ class BrowserPool:
                     raise BrowserLaunchError(_launch_timeout_hint())
                 self._launch_failed_at = None
 
+            if self._lease is None:
+                # Off the event loop: the first prune of a profile that grew
+                # for months deletes a lot of files.
+                self._lease = await asyncio.to_thread(
+                    browser_profile.acquire, settings.cache_dir
+                )
+            self._login_cookies_mtime = None
+
             timeout = settings.browser_launch_timeout
             # Both awaits below run under self._lock. Unbounded, a driver start
             # or launch that hangs (a proxy, VPN or TUN dropping the handshake)
@@ -278,49 +355,21 @@ class BrowserPool:
                 # stop what the manager started, cool down, and raise the
                 # network hint.
                 await _close_manager(manager)
+                self._release_lease()
                 self._launch_failed_at = time.monotonic()
                 raise BrowserLaunchError(_launch_timeout_hint()) from e
 
-            user_data_dir = str(settings.cache_dir / "browser_profile")
-            settings.cache_dir.mkdir(parents=True, exist_ok=True)
-
-            width, height = random.choice(_VIEWPORTS)
-            common_kwargs = dict(
-                user_data_dir=user_data_dir,
-                headless=settings.browser_headless,
-                args=self._launch_args(),
-                user_agent=settings.user_agent,
-                locale="en-US",
-                timezone_id="America/Los_Angeles",
-                viewport={"width": width, "height": height},
-                extra_http_headers={"Accept-Language": settings.accept_language},
-                # Opt-in proxy: empty dict (no `proxy` key) when none configured,
-                # so behaviour is byte-for-byte unchanged without a proxy.
-                **_launch_proxy_kwargs(),
+            kwargs = self._context_kwargs(
+                str(self._lease.path), headless=settings.browser_headless
             )
-
-            async def _launch() -> BrowserContext:
-                # Prefer a real installed Chrome (better fingerprint than the
-                # bundled Chromium); fall back transparently when it's absent.
-                try:
-                    return await self._playwright.chromium.launch_persistent_context(
-                        channel="chrome",
-                        **common_kwargs,
-                    )
-                except Exception as e:
-                    log.warning(
-                        "real Chrome not found, using bundled Chromium: %s", e
-                    )
-                    return await self._playwright.chromium.launch_persistent_context(
-                        **common_kwargs,
-                    )
-
             # If the launch (or the stealth init script) fails, the started
             # driver must not leak, or every later _ensure starts another and
             # node processes pile up. Tear it down so the next call starts
             # clean.
             try:
-                self._ctx = await asyncio.wait_for(_launch(), timeout=timeout)
+                self._ctx = await asyncio.wait_for(
+                    _launch_context(self._playwright, kwargs), timeout=timeout
+                )
                 try:
                     await self._ctx.add_init_script(_STEALTH_SCRIPT)
                 except Exception:
@@ -349,6 +398,7 @@ class BrowserPool:
     async def page(self) -> AsyncIterator[Page]:
         async with self._page_sema:
             ctx = await self._ensure()
+            await self._add_login_cookies(ctx)
             page = await ctx.new_page()
             page.set_default_timeout(int(settings.fetch_timeout * 1000))
             try:
@@ -358,6 +408,29 @@ class BrowserPool:
                     await page.close()
                 except Exception:
                     pass
+
+    async def _add_login_cookies(self, ctx: BrowserContext) -> None:
+        """Add the cookies of the latest interactive login, once per change.
+
+        The login window runs in a profile of its own, so this is how a
+        browser that was already running, or one in a throwaway profile,
+        gets the session.
+        """
+        path = settings.cache_dir / browser_profile.LOGIN_COOKIES
+        try:
+            mtime = path.stat().st_mtime_ns
+        except OSError:
+            return
+        if mtime == self._login_cookies_mtime:
+            return
+        self._login_cookies_mtime = mtime
+        cookies = browser_profile.read_login_cookies(settings.cache_dir)
+        if not cookies:
+            return
+        try:
+            await ctx.add_cookies(cookies)
+        except Exception as e:
+            log.debug("adding login cookies failed: %s", brief_error(e))
 
     async def fetch_html(self, url: str, wait_selector: str | None = None) -> tuple[str, str]:
         async with self.page() as page:
@@ -405,52 +478,29 @@ class BrowserPool:
     async def login(self, url: str, *, timeout_ms: int = 180000) -> bool:
         """Open a HEADED login window for an interactive sign-in (e.g. Zhihu).
 
-        Requires a desktop session (a visible browser window appears). Uses the
-        SAME persistent user-data-dir as the pool so cookies are written to disk
-        and later headless searches reuse the session. Forces ``headless=False``
-        for this window even when the pool default is headless.
+        Requires a desktop session (a visible browser window appears). The
+        window runs in a throwaway profile of its own, so it neither waits on
+        nor writes under a server that holds the shared one. The session's
+        cookies are saved to ``browser_login_cookies.json`` as they appear, and
+        every browser pool adds them before its next page, the shared profile
+        keeping them from then on.
 
-        Navigates to ``url`` and waits (best-effort) until the user finishes
-        signing in — detected as a navigation away from any ``/signin`` or
-        ``/login`` path — or until ``timeout_ms`` elapses. Returns ``True`` on
-        success, ``False`` on failure.
+        Navigates to ``url`` and waits (best-effort) until an auth cookie
+        appears, the window is closed, or ``timeout_ms`` elapses. Returns
+        ``True`` unless the window could not be opened.
         """
         manager = async_playwright()
-        playwright = None
         ctx: BrowserContext | None = None
+        lease: browser_profile.ProfileLease | None = None
         timeout = settings.browser_launch_timeout
+        cache_dir = settings.cache_dir
         try:
+            lease = await asyncio.to_thread(browser_profile.acquire_private, cache_dir)
             # Bounded like _ensure(), so a stalled driver or launch cannot hang
             # the login command forever.
             playwright = await asyncio.wait_for(manager.start(), timeout=timeout)
-            user_data_dir = str(settings.cache_dir / "browser_profile")
-            settings.cache_dir.mkdir(parents=True, exist_ok=True)
-
-            width, height = random.choice(_VIEWPORTS)
-            common_kwargs = dict(
-                user_data_dir=user_data_dir,
-                headless=False,  # forced visible window for interactive login
-                args=self._launch_args(),
-                user_agent=settings.user_agent,
-                locale="en-US",
-                timezone_id="America/Los_Angeles",
-                viewport={"width": width, "height": height},
-                extra_http_headers={"Accept-Language": settings.accept_language},
-                **_launch_proxy_kwargs(),
-            )
-
-            async def _launch_login() -> BrowserContext:
-                try:
-                    return await playwright.chromium.launch_persistent_context(
-                        channel="chrome", **common_kwargs
-                    )
-                except Exception as e:
-                    log.warning("real Chrome not found for login, using Chromium: %s", e)
-                    return await playwright.chromium.launch_persistent_context(
-                        **common_kwargs
-                    )
-
-            ctx = await asyncio.wait_for(_launch_login(), timeout=timeout)
+            kwargs = self._context_kwargs(str(lease.path), headless=False)
+            ctx = await asyncio.wait_for(_launch_context(playwright, kwargs), timeout=timeout)
             try:
                 await ctx.add_init_script(_STEALTH_SCRIPT)
             except Exception:
@@ -461,8 +511,10 @@ class BrowserPool:
             # Wait for the user to actually authenticate. A URL change is NOT a
             # reliable signal — sites like Zhihu show a login MODAL while the URL
             # stays at "/" — so poll for an auth cookie, and also stop early if
-            # the user closes the window. Cookies in the persistent context are
-            # flushed to disk live, so they survive whichever way the wait ends.
+            # the user closes the window. Cookies are saved on every change,
+            # since closing the last window can take the browser with it.
+            base = browser_profile.read_login_cookies(cache_dir)
+            saved: list[dict] = []
             poll_s = 1.0
             elapsed_ms = 0
             while elapsed_ms < timeout_ms:
@@ -471,7 +523,13 @@ class BrowserPool:
                 try:
                     cookies = await ctx.cookies()
                 except Exception:
-                    cookies = []
+                    break
+                if cookies and cookies != saved:
+                    try:
+                        browser_profile.write_login_cookies(cache_dir, base, cookies)
+                        saved = cookies
+                    except OSError as e:
+                        log.warning("saving login cookies failed: %s", e)
                 if any(
                     (c.get("name") or "").lower() in _AUTH_COOKIE_NAMES
                     for c in cookies
@@ -494,6 +552,8 @@ class BrowserPool:
                 except Exception:
                     log.debug("login ctx close failed")
             await _close_manager(manager)
+            if lease is not None:
+                await asyncio.to_thread(lease.release)
 
     async def shutdown(self) -> None:
         async with self._lock:
@@ -514,6 +574,8 @@ class BrowserPool:
                 except Exception:
                     log.exception("playwright stop failed")
                 self._playwright = None
+            # After the browser has exited: a throwaway profile is deleted.
+            self._release_lease()
             # A shutdown is the "restart" the install hint asks for, so the next
             # launch starts clean: no missing-binary memo, no cooldown.
             self._unavailable_reason = None

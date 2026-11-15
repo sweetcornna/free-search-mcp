@@ -38,9 +38,18 @@ narrows it to the sources that index that sub-group. See
   plain httpx with its "anomaly 202" rate-limit response, and this fingerprint
   avoids it.
 - The Playwright fallback uses `launch_persistent_context` (cookies survive
-  restarts on disk), prefers a real installed Chrome (`channel="chrome"`),
-  drops the `--no-sandbox` fingerprint marker on macOS, and randomizes the
-  viewport per session.
+  restarts on disk), drops the `--no-sandbox` fingerprint marker on macOS, and
+  randomizes the viewport per session. It launches the Chromium Playwright
+  downloads, not the Chrome you use: on macOS an automated Chrome counts as
+  yours, and with yours closed the Dock icon reopens the headless one.
+  `SEARCH_MCP_BROWSER_CHANNEL=chrome` opts back in.
+- Each MCP client starts its own server, so one of them at a time holds the
+  shared profile (an OS lock on `browser_profile.lock`) and the others get a
+  throwaway profile under `browser_profiles/`, deleted when they stop or, if
+  they were killed, by the next server. Caches are pruned whenever a profile is
+  leased; cookies and site storage are kept. `search-mcp-login` signs in from a
+  throwaway profile too and saves the session to
+  `browser_login_cookies.json`, which every server's browser picks up.
 - Bing is queried the way a browser queries it, with a warmed cookie jar and
   the `form=QBRE` request shape. Without them Bing answers HTTP 200 with a decoy
   page about the query's first word. With them the results are on topic, and

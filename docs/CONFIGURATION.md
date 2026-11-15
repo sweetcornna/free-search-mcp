@@ -36,6 +36,8 @@ Available settings:
 | `SEARCH_MCP_CACHE_MAX_MB` | `512` | size cap on the cache file; `0` disables |
 | `SEARCH_MCP_FETCH_STRATEGY` | `auto` | `auto` / `http` / `browser` |
 | `SEARCH_MCP_BROWSER_HEADLESS` | `true` | |
+| `SEARCH_MCP_BROWSER_CHANNEL` | *(empty)* | empty launches the Chromium Playwright downloads. `chrome` or `msedge` launches the installed browser instead; on macOS that makes the system count the headless instance as your own Chrome, so with yours closed its Dock icon and links can land in a windowless browser |
+| `SEARCH_MCP_BROWSER_DISK_CACHE_BYTES` | `67108864` | cap on the browser's HTTP cache while it runs; caches are also pruned each time it starts |
 | `SEARCH_MCP_BROWSER_POOL_SIZE` | `2` | concurrent pages |
 | `SEARCH_MCP_BROWSER_LAUNCH_TIMEOUT` | `30` | seconds; cap on starting the browser. A launch that stalls (often a proxy, VPN or TUN) fails that one request instead of blocking every later fetch |
 | `SEARCH_MCP_BROWSER_LAUNCH_COOLDOWN` | `20` | seconds; after a stalled launch, browser calls fail at once for this long before the next attempt |
