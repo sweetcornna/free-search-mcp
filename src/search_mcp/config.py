@@ -144,6 +144,16 @@ class Settings(BaseSettings):
 
     fetch_strategy: Literal["auto", "http", "browser"] = "auto"
     browser_headless: bool = True
+    # Playwright channel to launch: "" is the Chromium Playwright downloads.
+    # "chrome" (or "msedge") launches the browser installed on this machine
+    # instead, a slightly better fingerprint at a cost: on macOS the system
+    # then counts the automation instance as the user's own Chrome, so a click
+    # on the Dock icon or a link can land in the headless window and Chrome
+    # seems not to open. Falls back to the bundled Chromium if absent.
+    browser_channel: str = ""
+    # Upper bound, in bytes, on the browser's HTTP disk cache while it runs.
+    # The caches are also pruned each time the browser starts.
+    browser_disk_cache_bytes: int = Field(default=64 * 1024 * 1024, ge=0)
     browser_pool_size: int = 2
     # Ceiling, in seconds, on starting the Playwright driver and on launching
     # the browser. Without it a launch that hangs (a proxy, VPN or TUN dropping
