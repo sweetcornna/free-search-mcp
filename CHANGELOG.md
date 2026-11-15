@@ -4,7 +4,10 @@ All notable changes to this project are documented here. The format is loosely
 based on [Keep a Changelog](https://keepachangelog.com/), and the project follows
 semantic versioning.
 
-## [Unreleased]
+## [0.18.1] - 2026-11-15
+
+The browser stops passing itself off as your Chrome on macOS, and its profile
+stops growing.
 
 ### Fixed
 
