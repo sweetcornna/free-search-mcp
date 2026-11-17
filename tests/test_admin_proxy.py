@@ -28,7 +28,7 @@ def _tmp_config(tmp_path, monkeypatch):
 
 @pytest.fixture
 def client():
-    with TestClient(app) as c:
+    with TestClient(app, base_url="http://127.0.0.1:8765") as c:
         yield c
 
 

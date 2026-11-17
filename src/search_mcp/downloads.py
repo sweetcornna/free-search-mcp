@@ -71,13 +71,16 @@ def safe_filename(url: str, media_type: str = "", blob: bytes = b"") -> str:
     name = _UNSAFE.sub("_", raw).strip("._-")
     if not name:
         name = "download"
-    if len(name) > _MAX_NAME:
-        stem, dot, ext = name.rpartition(".")
-        name = (stem[: _MAX_NAME - len(ext) - 1] + dot + ext) if dot else name[:_MAX_NAME]
     if "." not in name and media_type:
         ext = _extension_for(media_type)
         if ext:
             name = f"{name}.{ext}"
+    # Apply the cap after MIME inference so every final component (including
+    # the eight-character digest and dash below) is at most _MAX_NAME + 9.
+    if len(name) > _MAX_NAME:
+        stem, dot, ext = name.rpartition(".")
+        ext = ext[:16]
+        name = (stem[: _MAX_NAME - len(ext) - 1] + dot + ext) if dot else name[:_MAX_NAME]
     digest = hashlib.sha256(blob or url.encode()).hexdigest()[:8]
     return f"{digest}-{name}"
 

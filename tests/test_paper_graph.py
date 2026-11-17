@@ -10,6 +10,7 @@ Payload shapes are trimmed copies of real OpenAlex / Crossref responses.
 
 from __future__ import annotations
 
+import asyncio
 import os
 
 import pytest
@@ -331,6 +332,66 @@ async def test_a_full_walk_costs_four_requests_regardless_of_limit(api):
     assert len(api.urls) == 4
 
 
+async def test_independent_graph_lookups_run_concurrently(monkeypatch):
+    entered = set()
+    ready = asyncio.Event()
+    stub = _Api()
+
+    async def get_json(url, **kwargs):
+        if "filter=openalex_id:" in url:
+            entered.add("references")
+        elif "filter=cites:" in url:
+            entered.add("citations")
+        elif "api.crossref.org" in url:
+            entered.add("crossref")
+        else:
+            return await stub(url, **kwargs)
+        if len(entered) == 3:
+            ready.set()
+        # No lookup may complete before all three have started.
+        await asyncio.wait_for(ready.wait(), timeout=1)
+        return await stub(url, **kwargs)
+
+    monkeypatch.setattr(pg._api, "_get_json", get_json)
+    out = await pg.paper_graph("W2148972377")
+
+    assert entered == {"references", "citations", "crossref"}
+    assert out["references"] and out["citations"]
+    assert out["paper"]["crossref"]["registered"] is True
+    assert len(stub.urls) == 4
+
+
+async def test_graph_cancellation_settles_all_inflight_lookups(monkeypatch):
+    entered = set()
+    finished = set()
+    ready = asyncio.Event()
+    block = asyncio.Event()
+
+    async def get_json(url, **kwargs):
+        if "filter=" not in url and "api.crossref.org" not in url:
+            return _TARGET
+        entered.add(url)
+        if len(entered) == 3:
+            ready.set()
+        try:
+            await block.wait()
+        finally:
+            finished.add(url)
+
+    monkeypatch.setattr(pg._api, "_get_json", get_json)
+    task = asyncio.create_task(pg.paper_graph("W2148972377"))
+    try:
+        await asyncio.wait_for(ready.wait(), timeout=1)
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+        assert finished == entered
+        assert len(finished) == 3
+    finally:
+        task.cancel()
+        await asyncio.gather(task, return_exceptions=True)
+
+
 async def test_limit_is_clamped_to_a_sane_range(api):
     out = await pg.paper_graph("W2148972377", limit=99999)
     assert len(out["citations"]) <= pg._MAX_LIMIT
@@ -616,3 +677,81 @@ async def test_among_records_with_the_exact_arxiv_title_the_most_cited_wins(monk
     out = await pg.paper_graph("arXiv:1706.03762", direction="references")
 
     assert out["paper"]["openalex_id"] == "W2"
+
+
+@pytest.mark.parametrize(
+    "title_variant",
+    ["Attention  Is  All  You  Need", "Attention — Is — All — You — Need"],
+)
+async def test_arxiv_exact_match_normalizes_spacing_and_punctuation(monkeypatch, title_variant):
+    title = "Attention Is All You Need"
+    redeposit = dict(_TARGET, id="https://openalex.org/W1234", cited_by_count=1,
+                    display_name=title)
+    canonical = dict(_TARGET, id="https://openalex.org/W5678", cited_by_count=1000,
+                    display_name=title_variant)
+
+    class Api(_Api):
+        async def __call__(self, url, **kw):
+            if "?search=" in url:
+                return {"results": [redeposit, canonical]}
+            return await super().__call__(url, **kw)
+
+    _arxiv(monkeypatch, title=title)
+    monkeypatch.setattr(pg._api, "_get_json", Api())
+
+    out = await pg.paper_graph("arXiv:1706.03762", direction="references")
+
+    assert out["paper"]["openalex_id"] == "W5678"
+
+
+async def test_arxiv_registry_title_does_not_resolve_to_a_prefix_only_match(monkeypatch):
+    wrong = dict(_TARGET, display_name="Attention Is All You Need In Speech Separation")
+    _arxiv(monkeypatch, title="Attention Is All You Need", search=wrong)
+
+    out = await pg.paper_graph("arXiv:1706.03762")
+
+    assert out["paper"] is None
+    assert any(wrong["display_name"] in note for note in out["notes"])
+
+
+async def test_arxiv_registry_title_does_not_pick_a_short_sequel_suffix(monkeypatch):
+    title = "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding"
+    canonical = dict(_TARGET, id="https://openalex.org/W1234", display_name=title,
+                     cited_by_count=100)
+    sequel = dict(_TARGET, id="https://openalex.org/W5678", display_name=title + " II",
+                  cited_by_count=1000)
+
+    class Api(_Api):
+        async def __call__(self, url, **kw):
+            if "?search=" in url:
+                return {"results": [sequel, canonical]}
+            return await super().__call__(url, **kw)
+
+    _arxiv(monkeypatch, title=title)
+    monkeypatch.setattr(pg._api, "_get_json", Api())
+
+    out = await pg.paper_graph("arXiv:1706.03762")
+
+    assert out["paper"]["openalex_id"] == "W1234"
+
+
+async def test_arxiv_exact_match_does_not_promote_a_more_cited_title_prefix(monkeypatch):
+    canonical = dict(_TARGET, id="https://openalex.org/W1234", cited_by_count=100)
+    different = dict(
+        _TARGET, id="https://openalex.org/W5678", cited_by_count=1_000_000,
+        display_name=_TARGET["display_name"] + " in speech separation",
+    )
+
+    class Api(_Api):
+        async def __call__(self, url, **kw):
+            if "?search=" in url:
+                self.urls.append(url)
+                return {"results": [different, canonical]}
+            return await super().__call__(url, **kw)
+
+    _arxiv(monkeypatch, title=_TARGET["display_name"])
+    monkeypatch.setattr(pg._api, "_get_json", Api())
+
+    out = await pg.paper_graph("arXiv:1706.03762", direction="references")
+
+    assert out["paper"]["openalex_id"] == "W1234"

@@ -173,7 +173,9 @@ async def resolve_google_news_url(url: str) -> str | None:
 
     inflight = _INFLIGHT.get(url)
     if inflight is not None:
-        return await inflight
+        # A follower owns its wait, not the shared result. Cancelling it must
+        # not cancel the future awaited by every other independent request.
+        return await asyncio.shield(inflight)
 
     loop = asyncio.get_running_loop()
     fut: asyncio.Future = loop.create_future()

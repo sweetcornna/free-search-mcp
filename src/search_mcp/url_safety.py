@@ -314,7 +314,10 @@ def _precheck(url: str) -> tuple[str, int | None] | None:
     ``None`` when the URL is already fully validated (private-hosts escape
     hatch engaged, or the host was an IP literal checked directly).
     """
-    parts = urlsplit(url)
+    try:
+        parts = urlsplit(url)
+    except ValueError as exc:
+        raise UnsafeURLError(f"Invalid URL: {exc}") from exc
     scheme = parts.scheme.lower()
     if scheme not in _ALLOWED_SCHEMES:
         raise UnsafeURLError(
@@ -339,6 +342,25 @@ def _precheck(url: str) -> tuple[str, int | None] | None:
         # Escape hatch fully engaged: skip the (network-touching) DNS resolution
         # entirely so private/local fetches work without leaking lookups.
         return None
+
+    # Different HTTP stacks decode percent escapes, Unicode dots and legacy
+    # IPv4 spellings before connecting. Check the same destination, including
+    # when a proxy makes DNS intentionally unavailable. Reject escaped hosts
+    # rather than guessing which client/proxy decoding rules will apply.
+    if "%" in host or "\\" in parts.netloc or any(ord(c) <= 32 for c in host):
+        raise UnsafeURLError("Ambiguous or escaped URL host is not allowed")
+    try:
+        host = host.encode("idna").decode("ascii").lower().rstrip(".")
+    except UnicodeError as exc:
+        raise UnsafeURLError("Invalid internationalized URL host") from exc
+    if not host:
+        raise UnsafeURLError("URL has no host to validate")
+    if ":" not in host:
+        try:
+            # inet_aton is a DNS-free parser, including short/octal/hex IPv4.
+            host = socket.inet_ntoa(socket.inet_aton(host))
+        except OSError:
+            pass
 
     # Layer 2 — if the host is a bare IP literal, check it directly without DNS.
     try:
@@ -465,6 +487,8 @@ async def assert_url_allowed_async(url: str) -> str:
         raise UnsafeURLError(
             f"Could not resolve host {host!r}: {exc}. Refusing to connect."
         ) from exc
-    _check_resolved(host, infos)
+    # Fake-IP detection may perform synchronous canary DNS lookups. Keep that
+    # work off the loop too, not only the initial hostname resolution.
+    await asyncio.to_thread(_check_resolved, host, infos)
     _dns_ok_store(host, port)
     return url

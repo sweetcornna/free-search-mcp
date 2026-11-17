@@ -117,9 +117,24 @@ async def _lifespan(_server: MCPServer) -> AsyncIterator[dict[str, Any]]:
     try:
         yield {}
     finally:
-        for task in tasks:
-            task.cancel()
-        await asyncio.wait(tasks, timeout=1.0)
+        # Playwright owns futures and transports on THIS loop. Closing it in
+        # run() after MCPServer.run() returns uses a new loop, too late. Shield
+        # the entire cleanup, including the wait for cancelled startup tasks.
+        import anyio
+
+        with anyio.CancelScope(shield=True):
+            for task in tasks:
+                task.cancel()
+            await asyncio.wait(tasks, timeout=1.0)
+            from .oauth import finish_refreshes
+
+            try:
+                await finish_refreshes()
+            finally:
+                try:
+                    await pool.shutdown()
+                finally:
+                    await cache.close()
 
 
 async def _report_agent_problem() -> None:
@@ -1907,35 +1922,21 @@ def run(
     # this process is often short-lived, so a background timer would
     # frequently never fire.
     downloads.purge_expired()
-    try:
-        if transport == "streamable-http":
-            host = host or settings.http_host
-            port = port if port is not None else settings.http_port
-            path = path or settings.http_path
-            log.info("search-mcp listening on http://%s:%s%s", host, port, path)
-            mcp.run(
-                transport="streamable-http",
-                host=host,
-                port=port,
-                streamable_http_path=path,
-                transport_security=_http_security(host, port),
-            )
-        else:
-            mcp.run()
-    finally:
-        try:
-            import anyio
-            anyio.run(pool.shutdown)
-        except Exception:
-            pass
-        try:
-            import anyio
-            # A clean close checkpoints the WAL; without it the daemon-thread
-            # workaround in cache.py is the only thing standing between us and
-            # a hung exit.
-            anyio.run(cache.close)
-        except Exception:
-            pass
+    # The MCP lifespan closes resources before this call closes their loop.
+    if transport == "streamable-http":
+        host = host or settings.http_host
+        port = port if port is not None else settings.http_port
+        path = path or settings.http_path
+        log.info("search-mcp listening on http://%s:%s%s", host, port, path)
+        mcp.run(
+            transport="streamable-http",
+            host=host,
+            port=port,
+            streamable_http_path=path,
+            transport_security=_http_security(host, port),
+        )
+    else:
+        mcp.run()
 
 
 __all__ = ["mcp", "run"]

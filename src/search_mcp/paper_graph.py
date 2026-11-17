@@ -29,6 +29,7 @@ lists it.
 
 from __future__ import annotations
 
+import asyncio
 import html
 import logging
 import re
@@ -78,9 +79,6 @@ _MAX_LIMIT = 50
 # so a retry with a DOI is one step away.
 _TITLE_CANDIDATES = 5
 _TITLE_MIN = 85.0
-# "The same title", allowing for case and punctuation. Only used when the query
-# title came from a registry rather than from someone's memory.
-_EXACT_TITLE = 97.0
 
 # Post-publication notices, most severe first. Crossref files the SAME notice
 # DOI under several types — the Lancet Surgisphere paper lists one notice as
@@ -253,15 +251,21 @@ async def _resolve_arxiv(arxiv_id: str) -> tuple[dict[str, Any] | None, list[str
     # on 2026-09-21 its entry for "Attention Is All You Need" (W2626778328)
     # carried publication_year 2025 and a non-arXiv DOI. That is upstream data,
     # not a wrong match.
+    normalized = " ".join(utils.default_process(title).split())
     exact = [
         c for c in candidates
         if isinstance(c.get("display_name"), str)
-        and _title_score(title, c["display_name"]) >= _EXACT_TITLE
+        # A registry supplied the full title, not a remembered prefix. Even a
+        # high fuzzy score can confuse a sequel with the original work.
+        and " ".join(utils.default_process(c["display_name"]).split()) == normalized
     ]
     if exact:
         return (max(exact, key=lambda c: c.get("cited_by_count") or 0), [], title)
-    work, near = _pick_by_title(title, candidates)
-    return (work, near, title)
+    near = [
+        c["display_name"] for c in candidates
+        if isinstance(c.get("display_name"), str) and c["display_name"].strip()
+    ]
+    return (None, near[:3], title)
 
 
 async def _resolve(
@@ -551,10 +555,24 @@ async def paper_graph(
             "resolve arXiv's own DOIs. Check the paper above is the one you meant."
         )
 
+    # Once the target is known these requests are independent. Bound their
+    # lifetime to this call so cancellation or a failed parser cannot leave
+    # sibling requests running after the caller has gone away.
+    async with asyncio.TaskGroup() as tasks:
+        references_task = (
+            tasks.create_task(_references(work, limit))
+            if direction in ("both", "references") else None
+        )
+        citations_task = (
+            tasks.create_task(_citations(target["openalex_id"], limit))
+            if direction in ("both", "citations") else None
+        )
+        status_task = tasks.create_task(_crossref_status(target["doi"]))
+
     references: list[dict[str, Any]] = []
     total_references = 0
-    if direction in ("both", "references"):
-        references, total_references = await _references(work, limit)
+    if references_task is not None:
+        references, total_references = references_task.result()
         if total_references and not references:
             # OpenAlex lists edges it cannot always restore — merged or
             # withdrawn records. Silence here would read as "no references".
@@ -569,15 +587,15 @@ async def paper_graph(
             )
 
     citations: list[dict[str, Any]] = []
-    if direction in ("both", "citations"):
-        citations = await _citations(target["openalex_id"], limit)
+    if citations_task is not None:
+        citations = citations_task.result()
         if target["cited_by_count"] > len(citations):
             notes.append(
                 f"Showing {len(citations)} of {target['cited_by_count']} citing "
                 "works, most-cited first."
             )
 
-    status = await _crossref_status(target["doi"])
+    status = status_task.result()
     retractions = [n for n in status["notices"] if n["type"] == "retraction"]
     if target["retracted"] or retractions:
         target["retracted"] = True

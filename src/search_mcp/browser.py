@@ -9,6 +9,8 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any
 
+import anyio
+
 from . import browser_profile
 from .config import settings
 from .net import playwright_proxy
@@ -336,9 +338,7 @@ class BrowserPool:
             if self._lease is None:
                 # Off the event loop: the first prune of a profile that grew
                 # for months deletes a lot of files.
-                self._lease = await asyncio.to_thread(
-                    browser_profile.acquire, settings.cache_dir
-                )
+                self._lease = await browser_profile.acquire_async(settings.cache_dir)
             self._login_cookies_mtime = None
 
             timeout = settings.browser_launch_timeout
@@ -350,45 +350,24 @@ class BrowserPool:
             manager = async_playwright()
             try:
                 self._playwright = await asyncio.wait_for(manager.start(), timeout=timeout)
-            except TimeoutError as e:
-                # The driver handshake hung. Treat it like a stalled launch:
-                # stop what the manager started, cool down, and raise the
-                # network hint.
-                await _close_manager(manager)
-                self._release_lease()
-                self._launch_failed_at = time.monotonic()
-                raise BrowserLaunchError(_launch_timeout_hint()) from e
-
-            kwargs = self._context_kwargs(
-                str(self._lease.path), headless=settings.browser_headless
-            )
-            # If the launch (or the stealth init script) fails, the started
-            # driver must not leak, or every later _ensure starts another and
-            # node processes pile up. Tear it down so the next call starts
-            # clean.
-            try:
+                kwargs = self._context_kwargs(
+                    str(self._lease.path), headless=settings.browser_headless
+                )
                 self._ctx = await asyncio.wait_for(
                     _launch_context(self._playwright, kwargs), timeout=timeout
                 )
-                try:
-                    await self._ctx.add_init_script(_STEALTH_SCRIPT)
-                except Exception:
-                    # Context launched but stealth wiring failed: tear it down
-                    # so the next _ensure rebuilds it.
+                await self._ctx.add_init_script(_STEALTH_SCRIPT)
+            except BaseException as e:
+                # Cancellation is a failed start too. Keep the pool lock until
+                # its driver is stopped so a retry cannot overwrite ownership.
+                with anyio.CancelScope(shield=True):
+                    if self._playwright is None:
+                        await _close_manager(manager)
                     await self._teardown_driver()
-                    raise
-            except TimeoutError as e:
-                # The launch stalled past the ceiling. That is transient, not a
-                # missing binary: a network hint and a short cooldown, never
-                # "install Chromium".
-                await self._teardown_driver()
-                self._launch_failed_at = time.monotonic()
-                raise BrowserLaunchError(_launch_timeout_hint()) from e
-            except Exception as e:
-                # Launch failed entirely (or stealth re-raised): stop the driver
-                # and reset so we don't leak it across retries.
-                await self._teardown_driver()
-                if _is_missing_browser_error(str(e)):
+                if isinstance(e, TimeoutError):
+                    self._launch_failed_at = time.monotonic()
+                    raise BrowserLaunchError(_launch_timeout_hint()) from e
+                if isinstance(e, Exception) and _is_missing_browser_error(str(e)):
                     self._unavailable_reason = _MISSING_BROWSER_HINT
                     raise BrowserUnavailableError(self._unavailable_reason) from e
                 raise
@@ -495,7 +474,7 @@ class BrowserPool:
         timeout = settings.browser_launch_timeout
         cache_dir = settings.cache_dir
         try:
-            lease = await asyncio.to_thread(browser_profile.acquire_private, cache_dir)
+            lease = await browser_profile.acquire_async(cache_dir, private=True)
             # Bounded like _ensure(), so a stalled driver or launch cannot hang
             # the login command forever.
             playwright = await asyncio.wait_for(manager.start(), timeout=timeout)
@@ -546,14 +525,15 @@ class BrowserPool:
             # Bounded too: after a stall, close and stop can hang on the same
             # driver. The manager's exit is what playwright.stop() calls, and
             # it also covers a start() that never returned.
-            if ctx is not None:
-                try:
-                    await asyncio.wait_for(ctx.close(), _TEARDOWN_TIMEOUT)
-                except Exception:
-                    log.debug("login ctx close failed")
-            await _close_manager(manager)
-            if lease is not None:
-                await asyncio.to_thread(lease.release)
+            with anyio.CancelScope(shield=True):
+                if ctx is not None:
+                    try:
+                        await asyncio.wait_for(ctx.close(), _TEARDOWN_TIMEOUT)
+                    except Exception:
+                        log.debug("login ctx close failed")
+                await _close_manager(manager)
+                if lease is not None:
+                    await asyncio.to_thread(lease.release)
 
     async def shutdown(self) -> None:
         async with self._lock:

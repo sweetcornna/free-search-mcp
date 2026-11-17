@@ -24,8 +24,10 @@ import asyncio
 import html
 import os
 from typing import Any
+from urllib.parse import urlsplit
 
 from starlette.applications import Starlette
+from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import HTMLResponse, JSONResponse
 from starlette.routing import Route
@@ -896,6 +898,10 @@ async def api_oauth_logout(request: Request) -> JSONResponse:
     provider_id = request.path_params["provider_id"]
     if provider_id not in oauth.PROVIDERS:
         return JSONResponse({"ok": False, "error": "unknown provider"}, status_code=404)
+    job = _oauth_jobs.pop(provider_id, None)
+    if job is not None and not job["task"].done():
+        job["task"].cancel()
+        await asyncio.gather(job["task"], return_exceptions=True)
     oauth.sign_out(provider_id)
     return JSONResponse({"ok": True, "status": oauth.status(provider_id)})
 
@@ -918,6 +924,41 @@ app = Starlette(
         Route("/api/oauth/{provider_id}/logout", api_oauth_logout, methods=["POST"]),
     ]
 )
+
+
+async def _local_requests_only(request: Request, call_next):
+    """Loopback binding alone does not exclude a hostile browser origin."""
+    host = request.headers.get("host", "")
+    try:
+        authority = urlsplit(f"http://{host}")
+        # Accessing .port also rejects malformed/non-numeric ports.
+        port = authority.port
+        valid_host = (
+            authority.hostname in {"127.0.0.1", "localhost", "::1"}
+            and authority.username is None
+            and authority.password is None
+            and not authority.path
+            and not authority.query
+            and not authority.fragment
+            and (port is None or 0 < port <= 65535)
+        )
+    except ValueError:
+        valid_host = False
+    if not valid_host:
+        return JSONResponse({"ok": False, "error": "invalid Host"}, status_code=400)
+    origin = request.headers.get("origin")
+    if origin is not None and origin != f"{request.url.scheme}://{host}":
+        return JSONResponse({"ok": False, "error": "cross-origin request refused"}, status_code=403)
+    if request.headers.get("sec-fetch-site") in {"cross-site", "same-site"}:
+        return JSONResponse({"ok": False, "error": "cross-origin request refused"}, status_code=403)
+    if request.url.path in {"/api/save", "/api/clear"} and request.method == "POST":
+        media_type = request.headers.get("content-type", "").split(";", 1)[0].strip().lower()
+        if media_type != "application/json":
+            return JSONResponse({"ok": False, "error": "expected application/json"}, status_code=400)
+    return await call_next(request)
+
+
+app.add_middleware(BaseHTTPMiddleware, dispatch=_local_requests_only)
 
 
 def _schedule_browser_open(url: str) -> None:

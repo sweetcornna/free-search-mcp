@@ -123,6 +123,23 @@ async def test_compare_urls_truncates_long_bodies(monkeypatch):
         assert len(e["excerpt"]) <= 6100
 
 
+async def test_compare_preserves_fetcher_truncation(monkeypatch):
+    from search_mcp.compare import compare_urls
+
+    fakes = [
+        _FakeResult(
+            url="https://a.example", title="A", content="partial document", truncated=True,
+        ),
+        _FakeResult(url="https://b.example", title="B", content="complete document"),
+    ]
+    _patch_fetch_many(monkeypatch, fakes)
+
+    payload = await compare_urls("q", [r.url for r in fakes])
+
+    assert payload["excerpts"][0]["truncated"] is True
+    assert payload["excerpts"][1]["truncated"] is False
+
+
 async def test_compare_urls_rejects_too_few_urls():
     from search_mcp.compare import compare_urls
     with pytest.raises(ValueError):
