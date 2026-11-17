@@ -6,6 +6,7 @@ and the response parser that pulls the publisher URL out of Google's RPC reply.
 """
 from __future__ import annotations
 
+import asyncio
 import json
 
 import pytest
@@ -77,6 +78,64 @@ def test_parse_batchexecute_handles_multiline_and_length_prefix():
         _parse_batchexecute(body)
         == "https://www.bbc.com/news/articles/abc123"
     )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("cancel_owner", [False, True])
+async def test_singleflight_cancellation_does_not_cancel_other_waiters(monkeypatch, cancel_owner):
+    from search_mcp import gnews
+
+    monkeypatch.setattr(gnews, "_MEMO", {})
+    monkeypatch.setattr(gnews, "_INFLIGHT", {})
+    entered = asyncio.Event()
+    release = asyncio.Event()
+    waiters_ready = asyncio.Event()
+    calls = 0
+    waiting = 0
+    url = "https://news.google.com/read/CBM-cancellation"
+    publisher = "https://example.org/story"
+
+    async def resolve(_url):
+        nonlocal calls
+        calls += 1
+        entered.set()
+        await release.wait()
+        return publisher
+
+    async def waiter():
+        nonlocal waiting
+        waiting += 1
+        if waiting == 2:
+            waiters_ready.set()
+        return await resolve_google_news_url(url)
+
+    monkeypatch.setattr(gnews, "_resolve", resolve)
+    owner = asyncio.create_task(resolve_google_news_url(url))
+    tasks = [owner]
+    try:
+        await asyncio.wait_for(entered.wait(), timeout=1)
+        followers = [asyncio.create_task(waiter()) for _ in range(2)]
+        tasks.extend(followers)
+        await asyncio.wait_for(waiters_ready.wait(), timeout=1)
+        cancelled = owner if cancel_owner else followers[0]
+        cancelled.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await cancelled
+        release.set()
+        survivors = [task for task in tasks if task is not cancelled]
+        results = await asyncio.wait_for(asyncio.gather(*survivors), timeout=1)
+        assert results == [None if cancel_owner else publisher] * 2
+        assert calls == 1
+        assert not gnews._INFLIGHT
+        if not cancel_owner:
+            assert await resolve_google_news_url(url) == publisher
+            assert calls == 1
+    finally:
+        release.set()
+        for task in tasks:
+            if not task.done():
+                task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
 
 
 @pytest.mark.asyncio

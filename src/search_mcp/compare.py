@@ -51,7 +51,7 @@ async def compare_urls(question: str, urls: list[str]) -> dict[str, Any]:
             "sitename": d.get("sitename", ""),
             "published_date": d.get("published_date", ""),
             "excerpt": body,
-            "truncated": truncated,
+            "truncated": truncated or bool(d.get("truncated")),
             "tokens_estimated": estimate_tokens(body),
         })
     return {

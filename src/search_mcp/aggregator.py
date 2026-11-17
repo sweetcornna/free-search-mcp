@@ -1552,21 +1552,29 @@ _CATEGORY_CACHE_TTL = {
     "finance.fx": 3600,
     "software": 6 * 3600,
     "security": 6 * 3600,
+    # The clock is calculated locally: replaying even a recent row can report
+    # the wrong minute, and refreshing it requires no upstream request.
+    "calendar.clock": 0,
 }
 
 
 def _read_ttl(
-    freshness: str | None, category: str | None, max_age_seconds: int | None
+    freshness: str | None, category: str | None, max_age_seconds: int | None,
+    *, engines: Collection[str] = (),
 ) -> int | None:
-    """The tightest of: the caller's `max_age_seconds`, the freshness window's
-    TTL, the news cap and the category's own cap. None means "use the
-    configured default"."""
+    """The tightest caller, freshness or category cap. Engine categories count
+    too: auto-routed and explicitly named records age just like records found
+    with `category=`. None means "use the configured default"."""
     limits = [max_age_seconds, _FRESHNESS_CACHE_TTL.get(freshness or "")]
-    if category_group(category) == "news":
-        limits.append(_NEWS_CACHE_TTL)
-    if category:
-        cap = _CATEGORY_CACHE_TTL.get(category, _CATEGORY_CACHE_TTL.get(category_group(category)))
-        limits.append(cap)
+    categories = {category} if category else set()
+    for name in engines:
+        categories.update(getattr(ENGINES.get(name), "categories", ()) or ())
+    for token in categories:
+        if category_group(token) == "news":
+            limits.append(_NEWS_CACHE_TTL)
+        limits.append(
+            _CATEGORY_CACHE_TTL.get(token, _CATEGORY_CACHE_TTL.get(category_group(token)))
+        )
     known = [limit for limit in limits if limit is not None]
     return min(known) if known else None
 
@@ -1815,6 +1823,26 @@ def _merge(
 _MAX_RESULTS = 50
 
 
+# Cancelled requests can still be unwinding a browser or HTTP context after
+# their caller has returned. Keep them alive and retrieve teardown exceptions
+# without extending the caller's deadline or delaying its cancellation.
+_cancelled_search_tasks: set[asyncio.Future[Any]] = set()
+
+
+def _search_task_settled(task: asyncio.Future[Any]) -> None:
+    _cancelled_search_tasks.discard(task)
+    if not task.cancelled():
+        task.exception()
+
+
+def _cancel_owned_tasks(tasks: Collection[asyncio.Future[Any]]) -> None:
+    for task in tasks:
+        if task not in _cancelled_search_tasks:
+            task.cancel()
+            _cancelled_search_tasks.add(task)
+            task.add_done_callback(_search_task_settled)
+
+
 async def _fan_out(
     run: Any,
     engine_names: list[str],
@@ -1836,48 +1864,59 @@ async def _fan_out(
     tasks = {asyncio.ensure_future(run(name)): name for name in engine_names}
     if not tasks:
         return []
-    if deadline <= 0:
-        return list(await asyncio.gather(*tasks))
-    done, pending = await asyncio.wait(tasks, timeout=deadline)
-    if pending:
-        answered = any(
-            isinstance(t.result()[1], list) and t.result()[1] for t in done if not t.cancelled()
-        )
-        if not answered:
-            lane_open = {task for task in lane if not task.done()}
-            while pending and not _lane_found(lane):
-                more, _ = await asyncio.wait(
-                    pending | lane_open, return_when=asyncio.FIRST_COMPLETED
-                )
-                lane_open -= more
-                finished = more & pending
-                done |= finished
-                pending -= finished
-            if pending:
-                # Cut because a lane answer settled the search, not because
-                # another keyless engine had answered (see `aggregate_search`).
-                diagnostics["cut_by_lane"] = sorted(tasks[t] for t in pending)
-    results: list[tuple[str, list[SearchResult] | Exception]] = []
-    for task in pending:
-        task.cancel()
-    if pending:
-        # A cancelled engine may be inside a browser render whose teardown
-        # takes seconds; give it one and let the rest finish on its own.
-        # Measured 2026-09-22: waiting for the teardown made a 10 s deadline
-        # a 15 s search.
-        await asyncio.wait(pending, timeout=1.0)
-        late = sorted(tasks[t] for t in pending)
-        diagnostics["timed_out"] = late
-        log.info("search deadline %.1fs passed; cancelled %s", deadline, late)
-    for task in done:
-        results.append(task.result())
-    for task in pending:
-        results.append(
-            (tasks[task], TimeoutError(f"no answer within the {deadline:g}s search deadline"))
-        )
-    order = {name: i for i, name in enumerate(engine_names)}
-    results.sort(key=lambda item: order[item[0]])
-    return results
+    try:
+        if deadline <= 0:
+            return list(await asyncio.gather(*tasks))
+        done, pending = await asyncio.wait(tasks, timeout=deadline)
+        if pending:
+            answered = any(
+                isinstance(t.result()[1], list) and t.result()[1]
+                for t in done if not t.cancelled()
+            )
+            if not answered:
+                lane_open = {task for task in lane if not task.done()}
+                while pending and not answered and not _lane_found(lane):
+                    more, _ = await asyncio.wait(
+                        pending | lane_open, return_when=asyncio.FIRST_COMPLETED
+                    )
+                    lane_open -= more
+                    finished = more & pending
+                    done |= finished
+                    pending -= finished
+                    answered = any(
+                        isinstance(t.result()[1], list) and t.result()[1]
+                        for t in finished if not t.cancelled()
+                    )
+                if pending and not answered:
+                    # Only a lane witness ended this wait. A late keyless
+                    # answer cuts the others by the ordinary deadline and may
+                    # still need rescue breadth (see `aggregate_search`).
+                    diagnostics["cut_by_lane"] = sorted(tasks[t] for t in pending)
+        results: list[tuple[str, list[SearchResult] | Exception]] = []
+        _cancel_owned_tasks(pending)
+        if pending:
+            # A cancelled engine may be inside a browser render whose teardown
+            # takes seconds; give it one and let the rest finish on its own.
+            # Measured 2026-09-22: waiting for the teardown made a 10 s deadline
+            # a 15 s search.
+            await asyncio.wait(pending, timeout=1.0)
+            late = sorted(tasks[t] for t in pending)
+            diagnostics["timed_out"] = late
+            log.info("search deadline %.1fs passed; cancelled %s", deadline, late)
+        for task in done:
+            results.append(task.result())
+        for task in pending:
+            results.append(
+                (tasks[task], TimeoutError(f"no answer within the {deadline:g}s search deadline"))
+            )
+        order = {name: i for i, name in enumerate(engine_names)}
+        results.sort(key=lambda item: order[item[0]])
+        return results
+    except BaseException:
+        # asyncio.wait does not propagate cancellation to its children. The
+        # lane belongs to aggregate_search; only these keyless tasks are ours.
+        _cancel_owned_tasks(tasks)
+        raise
 
 
 async def aggregate_search(
@@ -1954,10 +1993,9 @@ async def aggregate_search(
     #   max_age_seconds is None  -> read with the server default TTL.
     #   max_age_seconds == 0     -> always a read miss (force-refresh).
     #   max_age_seconds > 0      -> read only if the row is younger than that.
-    if use_cache and max_age_seconds != 0:
-        cached = await cache.get_search(
-            cache_key, max_age_seconds=_read_ttl(freshness, category, max_age_seconds)
-        )
+    read_ttl = _read_ttl(freshness, category, max_age_seconds, engines=nominal)
+    if use_cache and read_ttl != 0:
+        cached = await cache.get_search(cache_key, max_age_seconds=read_ttl)
         if cached and _too_degraded_to_replay(cached[1]):
             cached = None
         if cached:

@@ -22,13 +22,17 @@ one.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import os
 import secrets
 import shutil
+import threading
 from contextlib import suppress
 from pathlib import Path
+
+import anyio
 
 log = logging.getLogger(__name__)
 
@@ -223,6 +227,45 @@ def acquire(cache_dir: Path) -> ProfileLease:
     _unlock_close(fd)
     log.info("browser profile in use by another server; using a throwaway one")
     return acquire_private(cache_dir)
+
+
+async def acquire_async(cache_dir: Path, *, private: bool = False) -> ProfileLease:
+    """Acquire off-loop, with an explicit ownership handoff on cancellation.
+
+    Cancelling to_thread cannot stop its worker. The worker must release an
+    abandoned lease itself, even if the event loop has already stopped; a task
+    completion callback is too late in that case.
+    """
+    lock = threading.Lock()
+    abandoned = False
+    lease: ProfileLease | None = None
+    acquire_profile = acquire_private if private else acquire
+
+    def work() -> None:
+        nonlocal lease
+        acquired = acquire_profile(cache_dir)
+        with lock:
+            if not abandoned:
+                lease = acquired
+                return
+        acquired.release()
+
+    try:
+        await asyncio.to_thread(work)
+    except BaseException:
+        with lock:
+            abandoned = True
+            owned, lease = lease, None
+        if owned is not None:
+            # The worker published just before cancellation. We own this one;
+            # release remains safe even if this second thread wait is cancelled.
+            with anyio.CancelScope(shield=True):
+                await asyncio.to_thread(owned.release)
+        raise
+    with lock:
+        assert lease is not None
+        owned, lease = lease, None
+    return owned
 
 
 def _cookie_key(cookie: dict) -> tuple:

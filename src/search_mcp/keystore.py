@@ -127,6 +127,8 @@ def _load_file() -> dict[str, str]:
     try:
         raw = json.loads(path.read_text(encoding="utf-8"))
         data = raw.get("secrets", raw) if isinstance(raw, dict) else {}
+        if not isinstance(data, dict):
+            data = {}
         # Coerce to str:str, dropping anything malformed.
         clean = {str(k): str(v) for k, v in data.items() if isinstance(v, (str, int, float))}
     except (OSError, ValueError):

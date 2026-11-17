@@ -17,7 +17,7 @@ from search_mcp.config import settings
 
 @pytest.fixture
 def client():
-    with TestClient(admin.app) as c:
+    with TestClient(admin.app, base_url="http://127.0.0.1:8765") as c:
         yield c
 
 

@@ -4,6 +4,83 @@ All notable changes to this project are documented here. The format is loosely
 based on [Keep a Changelog](https://keepachangelog.com/), and the project follows
 semantic versioning.
 
+## [Unreleased]
+
+### Fixed
+
+- Slow searches return sooner. Once the search deadline has passed, the first
+  keyless engine to come back with results ends the wait; the search used to
+  keep waiting for every engine still running.
+- `research` with `read_budget_seconds` returns when the budget runs out. A
+  page still closing its connection no longer holds up the answer, and the
+  budgeted path now honours `page_max_age_seconds`, which it ignored.
+- A cancelled search or `research` call stops the engine and page requests it
+  started instead of leaving them running.
+- `paper_graph` asks OpenAlex for references and citations and asks Crossref
+  for notices at the same time, not one after another.
+- Reading documents stays within its limits:
+  - an XLSX that declares a huge sheet is read at most 10,000 rows by 30
+    columns (and 100 sheets), instead of walking every empty cell it declares;
+  - a DOCX, XLSX, PPTX or EPUB whose members unpack to more than
+    `SEARCH_MCP_MAX_RESPONSE_BYTES`, or that holds more than 2,000 members, is
+    refused before it is unpacked;
+  - CSV tables stop at 10,000 rows, and empty rows count against
+    `SEARCH_MCP_MAX_DOCUMENT_CHARS` like any other;
+  - a DOCX style named like `Heading 100000` is read as a level-1 heading;
+  - a local file is read off the event loop, refused if it is larger than
+    `SEARCH_MCP_MAX_RESPONSE_BYTES` or is not a regular file.
+- gzip and deflate responses are decoded a piece at a time against
+  `SEARCH_MCP_MAX_RESPONSE_BYTES`. An 8 KB gzip body that expands to 8 MiB was
+  decoded in full before the size cap applied. Other encodings are no longer
+  requested, and a response that uses one anyway is refused.
+- `SEARCH_MCP_CACHE_MAX_MB` covers cached searches as well as pages, measures
+  the data rather than the write-ahead log, stops evicting once the cache fits
+  and runs `VACUUM` only when there is space to give back. A cache of searches
+  alone never shrank and was vacuumed on every pass.
+- The check for fake-IP VPN resolvers no longer runs DNS lookups on the event
+  loop.
+- Weather, exchange rates, package versions, security advisories and the clock
+  keep their shorter cache lifetimes when they answer a search without
+  `category=`. A clock reading is never replayed from the cache.
+- Exchange-rate amounts: `100 KRW` (and every code starting with K, and
+  krona/krone) was read as 100,000; `1,000,000` as 1,000; `2 thousand` as 2;
+  `0` as 1. Signs, small decimals, amounts after Chinese text and amounts
+  before punctuation are read as written, and a malformed number gets no
+  direct answer.
+- `paper_graph` on an arXiv id takes only an OpenAlex record whose title is the
+  arXiv title, ignoring case, spacing and punctuation. It could pick a sequel
+  or a longer title that starts the same way.
+- `compare` marks an excerpt truncated when the page itself was cut short.
+- Cancelling one Google News link lookup no longer cancels the others waiting
+  on the same link.
+- A charset Python knows but cannot decode with replacement (`idna`) falls back
+  to UTF-8 instead of failing the fetch.
+- `read_doc` paging moves past a run of whitespace longer than a page; it
+  returned the same page forever.
+- Saved downloads keep their names within the length limit when the URL has a
+  long extension or the extension comes from the media type.
+- A browser start that is cancelled stops its Playwright driver and releases
+  the profile; each one used to leave a driver running, and could keep the
+  shared profile locked. Shutdown closes the browser, the cache and any token
+  refresh on the event loop that owns them.
+- Two servers opening an old cache at the same time no longer fail with
+  `duplicate column name: meta`.
+- A `config.json` whose `secrets` is not an object is read as empty instead of
+  failing every key lookup.
+
+### Security
+
+- With a proxy configured, the URL guard no longer accepts other spellings of
+  private addresses: `127.1`, `2130706433`, `0x7f000001`, percent-encoded hosts
+  and the like.
+- The settings page (`search-mcp-admin`) answers only requests with a loopback
+  `Host` and no cross-site origin, and saves only JSON, so another site open in
+  the same browser cannot change the proxy or the keys. Signing out there
+  cancels a sign-in still in progress.
+- A token refresh still in flight can no longer bring back a sign-in that was
+  just signed out, or overwrite a newer one, and cancelling a search during a
+  refresh no longer loses the rotated refresh token.
+
 ## [0.18.1] - 2026-11-15
 
 The browser stops passing itself off as your Chrome on macOS, and its profile

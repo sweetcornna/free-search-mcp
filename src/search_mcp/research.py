@@ -17,14 +17,16 @@ import re
 from datetime import date
 from typing import Any, Literal
 
-from .aggregator import aggregate_search
+from .aggregator import _cancel_owned_tasks, aggregate_search
 from .cache import cache
 from .engines import Category
 from .fetcher import fetch_many, fetch_page
 from .formatting import estimate_tokens
 
 
-async def _read_within(urls: list[str], budget: float) -> list[Any]:
+async def _read_within(
+    urls: list[str], budget: float, page_max_age_seconds: int | None = None,
+) -> list[Any]:
     """Fetch every URL, and stop waiting for the slow ones after `budget` seconds.
 
     `fetch_many` returns when the slowest page does, and one page behind a wall
@@ -35,22 +37,23 @@ async def _read_within(urls: list[str], budget: float) -> list[Any]:
     shape a failed fetch has, so its snippet is still used.
     """
 
-    async def one(u: str) -> Any:
-        try:
-            return await fetch_page(u)
-        except Exception as e:  # mirror fetch_many's per-URL error capture
-            return {"url": u, "error": str(e)}
-
-    tasks = [asyncio.ensure_future(one(u)) for u in urls]
-    _, pending = await asyncio.wait(tasks, timeout=budget)
-    for task in pending:
-        task.cancel()
-    if pending:
-        await asyncio.gather(*pending, return_exceptions=True)
-    return [
-        {"url": u, "error": f"not read within {budget:g} s"} if t.cancelled() else t.result()
-        for u, t in zip(urls, tasks, strict=True)
-    ]
+    tasks = [asyncio.ensure_future(_fetch_one(u, page_max_age_seconds)) for u in urls]
+    try:
+        _, pending = await asyncio.wait(tasks, timeout=budget)
+        _cancel_owned_tasks(pending)
+        if pending:
+            # Deliver cancellation, but do not join potentially slow teardown.
+            # The tracked tasks keep ownership until their cleanup completes.
+            await asyncio.sleep(0)
+        return [
+            {"url": u, "error": f"not read within {budget:g} s"}
+            if t in pending or t.cancelled() else t.result()
+            for u, t in zip(urls, tasks, strict=True)
+        ]
+    except BaseException:
+        # asyncio.wait leaves its children running when its caller is cancelled.
+        _cancel_owned_tasks(tasks)
+        raise
 
 
 async def _fetch_with_freshness(
@@ -69,17 +72,21 @@ async def _fetch_with_freshness(
     if page_max_age_seconds is None:
         return await fetch_many(urls)
 
-    async def one(u: str):
-        try:
-            force = page_max_age_seconds == 0
-            if not force:
-                cached = await cache.get_page(u, max_age_seconds=page_max_age_seconds)
-                force = cached is None
-            return await fetch_page(u, force_refresh=force)
-        except Exception as e:  # mirror fetch_many's per-URL error capture
-            return {"url": u, "error": str(e)}
+    return await asyncio.gather(*(_fetch_one(u, page_max_age_seconds) for u in urls))
 
-    return await asyncio.gather(*(one(u) for u in urls))
+
+async def _fetch_one(url: str, page_max_age_seconds: int | None) -> Any:
+    """The same freshness and per-URL error policy with or without a read budget."""
+    try:
+        if page_max_age_seconds is None:
+            return await fetch_page(url)
+        force = page_max_age_seconds == 0
+        if not force:
+            cached = await cache.get_page(url, max_age_seconds=page_max_age_seconds)
+            force = cached is None
+        return await fetch_page(url, force_refresh=force)
+    except Exception as e:  # mirror fetch_many's per-URL error capture
+        return {"url": url, "error": str(e)}
 
 
 _ISO_DATE_RE = re.compile(r"\b(\d{4})-(\d{2})-(\d{2})\b")
@@ -188,7 +195,7 @@ async def research(
     if fetch and sources:
         urls = [s["url"] for s in sources]
         if read_budget_seconds:
-            results = await _read_within(urls, read_budget_seconds)
+            results = await _read_within(urls, read_budget_seconds, page_max_age_seconds)
         else:
             results = await _fetch_with_freshness(urls, page_max_age_seconds)
         for src, r in zip(sources, results, strict=True):

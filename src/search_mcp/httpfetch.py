@@ -18,6 +18,7 @@ must be disabled on the client.
 from __future__ import annotations
 
 import re
+import zlib
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urljoin
 
@@ -87,7 +88,7 @@ def httpx_client_kwargs() -> dict[str, Any]:
         "timeout": settings.fetch_timeout,
         # Automatic redirects DISABLED — see curl_session_kwargs.
         "follow_redirects": False,
-        "headers": {"User-Agent": settings.user_agent},
+        "headers": {"User-Agent": settings.user_agent, "Accept-Encoding": "gzip, deflate"},
         "proxy": proxy_url(),
     }
 
@@ -123,11 +124,68 @@ async def _accumulate_capped(aiter: Any) -> bytes:
     async for chunk in aiter:
         if not chunk:
             continue
-        buf.extend(chunk)
-        if len(buf) > cap:
+        if len(chunk) > cap - len(buf):
             raise MaxBytesExceededError(
                 f"Response body exceeded cap {cap} bytes while streaming; aborted."
             )
+        buf.extend(chunk)
+    return bytes(buf)
+
+
+async def _inflate_capped(aiter: Any, encoding: str) -> bytes:
+    """Decode raw gzip/deflate with independent wire and output byte budgets.
+
+    httpx's aiter_bytes decodes a whole input chunk before yielding, so its
+    chunk_size cannot prevent expansion bombs. zlib's max_length bounds each
+    allocation to the remaining output budget plus one detection byte. Never
+    call flush(): its length argument is an initial buffer size, not a cap.
+    """
+    cap = settings.max_response_bytes
+    buf = bytearray()
+    wire_size = 0
+    decoder = zlib.decompressobj(16 + zlib.MAX_WBITS) if encoding == "gzip" else None
+    prefix = b""
+    async for chunk in aiter:
+        wire_size += len(chunk)
+        if wire_size > cap:
+            raise MaxBytesExceededError(
+                f"Compressed response exceeded wire cap {cap} bytes while streaming; aborted."
+            )
+        if not chunk:
+            continue
+        if decoder is None:
+            # HTTP deflate is normally zlib-wrapped, but some servers send raw
+            # DEFLATE. Inspect the two-byte header, even if split across reads,
+            # before choosing a decoder, rather than replaying an entire body.
+            chunk = prefix + chunk
+            if len(chunk) < 2:
+                prefix = chunk
+                continue
+            wrapped = (
+                chunk[0] & 0x0F == 8
+                and chunk[0] >> 4 <= 7
+                and int.from_bytes(chunk[:2], "big") % 31 == 0
+            )
+            decoder = zlib.decompressobj(zlib.MAX_WBITS if wrapped else -zlib.MAX_WBITS)
+        while chunk:
+            if decoder.eof:
+                if encoding != "gzip":
+                    raise FetchError("Unexpected data after deflate response")
+                # Gzip permits concatenated members; they share one budget.
+                decoder = zlib.decompressobj(16 + zlib.MAX_WBITS)
+            remaining = cap - len(buf)
+            try:
+                decoded = decoder.decompress(chunk, max_length=remaining + 1)
+            except zlib.error as exc:
+                raise FetchError(f"Invalid {encoding} response: {exc}") from exc
+            if len(decoded) > remaining:
+                raise MaxBytesExceededError(
+                    f"Decoded response exceeded cap {cap} bytes while streaming; aborted."
+                )
+            buf.extend(decoded)
+            chunk = decoder.unused_data if decoder.eof else decoder.unconsumed_tail
+    if decoder is None or not decoder.eof:
+        raise FetchError(f"Truncated {encoding} response")
     return bytes(buf)
 
 
@@ -176,8 +234,8 @@ def _decode_body(body: bytes, ctype: str) -> str:
     enc = enc or "utf-8"
     try:
         return body.decode(enc, errors="replace")
-    except LookupError:
-        # An unrecognised charset label (e.g. a typo'd or exotic codec name).
+    except (LookupError, UnicodeError):
+        # Unknown labels and codecs that reject errors='replace' (e.g. IDNA).
         return body.decode("utf-8", errors="replace")
 
 
@@ -246,6 +304,15 @@ async def httpx_stream_capped(
             if raise_for_status:
                 resp.raise_for_status()
             _check_content_length(resp.headers)
-            body = await _accumulate_capped(resp.aiter_bytes())
+            encoding = resp.headers.get("content-encoding", "identity").strip().lower()
+            if encoding in ("", "identity"):
+                # No content decoder can expand this branch.
+                body = await _accumulate_capped(resp.aiter_bytes())
+            elif encoding in ("gzip", "deflate"):
+                body = await _inflate_capped(resp.aiter_raw(), encoding)
+            else:
+                # Includes stacked encodings and codecs without a bounded
+                # incremental API; never hand these to httpx's auto-decoder.
+                raise FetchError(f"Unsupported compressed Content-Encoding: {encoding}")
             return resp.status_code, resp.headers.get("content-type", "") or "", body
     raise FetchError(f"too many redirects (>{_MAX_REDIRECTS}) fetching {url}")

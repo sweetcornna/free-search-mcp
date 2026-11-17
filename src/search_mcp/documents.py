@@ -182,12 +182,37 @@ def _parse_pdf(blob: bytes) -> tuple[str, str, int, bool]:
     return title, "\n\n".join(parts), total_pages, truncated
 
 
+class DocumentBudgetError(ValueError):
+    """A document exceeded its input or expansion budget."""
+
+
+def _check_zip_budget(blob: bytes) -> None:
+    """Bound eager Office/EPUB expansion, including unused binary members.
+
+    ZipFile itself caps each member's output at its declared file_size. Check
+    the aggregate before any document library loads the container into memory.
+    Non-ZIP bodies retain the existing HTML-wall fallback.
+    """
+    import zipfile
+
+    stream = io.BytesIO(blob)
+    if not zipfile.is_zipfile(stream):
+        return
+    with zipfile.ZipFile(stream) as archive:
+        members = archive.infolist()
+        if len(members) > _MAX_ARCHIVE_ENTRIES:
+            raise DocumentBudgetError("Document ZIP entry limit exceeded")
+        if sum(member.file_size for member in members) > settings.max_response_bytes:
+            raise DocumentBudgetError("Document ZIP expanded-byte budget exceeded")
+
+
 def _parse_docx(blob: bytes) -> tuple[str, bool]:
     """Parse a docx, capping accumulated text to defuse decompression bombs.
 
     Stops once accumulated text passes ``settings.max_document_chars``. Returns
     ``(text, truncated)``.
     """
+    _check_zip_budget(blob)
     doc = DocxDocument(io.BytesIO(blob))
     max_chars = settings.max_document_chars
     parts: list[str] = []
@@ -199,8 +224,9 @@ def _parse_docx(blob: bytes) -> tuple[str, bool]:
             continue
         style = (p.style.name if p.style else "") or ""
         if style.startswith("Heading"):
-            level = "".join(c for c in style if c.isdigit()) or "1"
-            piece = f"{'#' * int(level)} {text}"
+            suffix = style.removeprefix("Heading").strip()
+            level = int(suffix) if suffix in ("1", "2", "3", "4", "5", "6") else 1
+            piece = f"{'#' * level} {text}"
         else:
             piece = text
         parts.append(piece)
@@ -279,14 +305,26 @@ def _parse_csv(blob: bytes, ctype: str = "") -> tuple[str, bool]:
     rows: list[list[str]] = []
     acc = 0
     truncated = False
-    for row in _csv.reader(io.StringIO(text), dialect):
-        cells = [str(c).strip() for c in row]
-        acc += sum(len(c) for c in cells)
+    for index, row in enumerate(_csv.reader(io.StringIO(text), dialect)):
+        if index >= _MAX_TABLE_ROWS:
+            truncated = True
+            break
+        cells = [str(c).strip() for c in row[:_MAX_TABLE_COLS]]
+        truncated |= len(row) > _MAX_TABLE_COLS
+        # Include separators and empty cells: blank rows consume resources too.
+        acc += sum(len(c.replace("|", "\\|")) for c in cells) + 3 * len(cells) + 4
         rows.append(cells)
         if acc >= settings.max_document_chars:
             truncated = True
             break
-    return _rows_to_markdown(rows), truncated
+    output = _rows_to_markdown(rows)
+    cap = settings.max_document_chars
+    return output[:cap], truncated or len(output) > cap
+
+
+_MAX_TABLE_ROWS = 10000
+_MAX_TABLE_COLS = 30
+_MAX_WORKSHEETS = 100
 
 
 def _parse_xlsx(blob: bytes) -> tuple[str, bool]:
@@ -298,35 +336,54 @@ def _parse_xlsx(blob: bytes) -> tuple[str, bool]:
     """
     from openpyxl import load_workbook
 
+    _check_zip_budget(blob)
     wb = load_workbook(io.BytesIO(blob), read_only=True, data_only=True)
     parts: list[str] = []
     acc = 0
     truncated = False
     try:
-        for sheet in wb.worksheets:
+        rows_left = _MAX_TABLE_ROWS
+        for sheet in wb.worksheets[:_MAX_WORKSHEETS]:
+            if rows_left <= 0:
+                truncated = True
+                break
+            clipped_sheet = (
+                (sheet.max_row or 0) > rows_left
+                or (sheet.max_column or 0) > _MAX_TABLE_COLS
+            )
             rows: list[list[str]] = []
-            for values in sheet.iter_rows(values_only=True):
+            for values in sheet.iter_rows(
+                values_only=True,
+                max_row=min(sheet.max_row or rows_left, rows_left),
+                max_col=min(sheet.max_column or _MAX_TABLE_COLS, _MAX_TABLE_COLS),
+            ):
+                rows_left -= 1
                 cells = ["" if v is None else str(v) for v in values]
                 if not any(c.strip() for c in cells):
                     continue  # skip the empty padding rows spreadsheets carry
                 rows.append(cells)
-                acc += sum(len(c) for c in cells)
+                acc += sum(len(c) for c in cells) + 3 * len(cells) + 4
                 if acc >= settings.max_document_chars:
                     truncated = True
                     break
             if rows:
                 parts.append(f"## {sheet.title}\n\n{_rows_to_markdown(rows)}")
-            if truncated:
+            truncated |= clipped_sheet
+            if acc >= settings.max_document_chars:
                 break
+        truncated |= len(wb.worksheets) > _MAX_WORKSHEETS
     finally:
         wb.close()
-    return "\n\n".join(parts), truncated
+    output = "\n\n".join(parts)
+    cap = settings.max_document_chars
+    return output[:cap], truncated or len(output) > cap
 
 
 def _parse_pptx(blob: bytes) -> tuple[str, int, bool]:
     """Slide text, one section per slide. Returns (text, slide_count, truncated)."""
     from pptx import Presentation
 
+    _check_zip_budget(blob)
     prs = Presentation(io.BytesIO(blob))
     parts: list[str] = []
     acc = 0
@@ -360,6 +417,7 @@ def _parse_epub(blob: bytes) -> tuple[str, str, bool]:
     import ebooklib
     from ebooklib import epub
 
+    _check_zip_budget(blob)
     book = epub.read_epub(io.BytesIO(blob))
     title = ""
     meta = book.get_metadata("DC", "title")
@@ -502,6 +560,10 @@ def _slice(full: str, start: int, length: int | None) -> tuple[str, bool, int, i
         # how much of the original `chunk` survived: the kept-prefix length.
         consumed = _source_chars_consumed(chunk)
         returned_chars = consumed
+        if consumed and not chunk[:consumed].strip():
+            # Preserve an all-whitespace prefix rather than dropping it while
+            # reporting no progress forever to pagination clients.
+            truncated_chunk = chunk[:consumed] + " …"
         # End of consumed source for the "did we reach EOF?" decision.
         soft_end = start + consumed
     else:
@@ -531,8 +593,8 @@ def _source_chars_consumed(chunk: str) -> int:
             best = idx + len(sep)
     if best <= 0:
         # Hard cut at max_chars (smart_truncate did head.rstrip() + " …").
-        return len(head.rstrip())
-    return len(head[:best].rstrip())
+        return len(head.rstrip()) or len(head)
+    return len(head[:best].rstrip()) or best
 
 
 def _resolve_local_path(source: str) -> Path:
@@ -600,6 +662,8 @@ def _parse_blob(
                 title, full, pages, doc_truncated = _parse_pdf(blob)
             else:
                 full, doc_truncated = _parse_docx(blob)
+        except DocumentBudgetError:
+            raise
         except Exception as e:
             log.info("%s parse failed for %s; falling back to HTML: %s", fmt, source, e)
             fmt = "html"
@@ -615,6 +679,8 @@ def _parse_blob(
                 full, pages, doc_truncated = _parse_pptx(blob)
             else:
                 title, full, doc_truncated = _parse_epub(blob)
+        except DocumentBudgetError:
+            raise
         except Exception as e:
             log.info("%s parse failed for %s; falling back to HTML: %s", fmt, source, e)
             fmt = "html"
@@ -643,7 +709,23 @@ def _parse_blob(
             f"Unsupported document format for {source!r}. Supported: pdf, docx, "
             "xlsx, pptx, epub, csv, archive (zip/tar), code, html, text, markdown."
         )
-    return fmt, title, full, pages, doc_truncated
+    cap = settings.max_document_chars
+    return fmt, title, full[:cap], pages, doc_truncated or len(full) > cap
+
+
+def _read_local_capped(path: Path) -> bytes:
+    import stat
+
+    if not stat.S_ISREG(path.stat().st_mode):
+        raise ValueError("Local document must be a regular file")
+    cap = settings.max_response_bytes
+    if path.stat().st_size > cap:
+        raise DocumentBudgetError("Local document byte limit exceeded")
+    with path.open("rb") as stream:
+        blob = stream.read(cap + 1)
+    if len(blob) > cap:
+        raise DocumentBudgetError("Local document byte limit exceeded")
+    return blob
 
 
 async def read_document(
@@ -658,7 +740,7 @@ async def read_document(
         fmt = _detect_format(source, ctype)
     else:
         path = _resolve_local_path(source)
-        blob = path.read_bytes()
+        blob = await asyncio.to_thread(_read_local_capped, path)
         ctype = ""
         fmt = _detect_format(str(path))
 

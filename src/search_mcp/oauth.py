@@ -422,7 +422,40 @@ def _write_private(path: Path, payload: dict[str, Any]) -> None:
             os.unlink(tmp)
 
 
+_record_mutex = threading.RLock()
+
+
+@contextlib.contextmanager
+def _record_lock(provider_id: str):
+    """Serialize short record mutations, never held over a network await."""
+    with _record_mutex:
+        directory = oauth_dir()
+        directory.mkdir(parents=True, exist_ok=True)
+        fd = os.open(directory / f".{provider_id}.record.lock", os.O_RDWR | os.O_CREAT, 0o600)
+        try:
+            if os.name == "nt":
+                import msvcrt
+
+                msvcrt.locking(fd, msvcrt.LK_LOCK, 1)
+            else:
+                import fcntl
+
+                fcntl.flock(fd, fcntl.LOCK_EX)
+            yield
+        finally:
+            if os.name == "nt":
+                with contextlib.suppress(OSError):
+                    os.lseek(fd, 0, os.SEEK_SET)
+                    msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
+            os.close(fd)
+
+
 def save(cred: Credential) -> None:
+    with _record_lock(provider(cred.provider).id):
+        _save_record(cred)
+
+
+def _save_record(cred: Credential) -> None:
     cred.updated_at = time.time()
     payload = asdict(cred)
     if cred.source == "codex-cli":
@@ -538,10 +571,11 @@ def is_signed_in(provider_id: str) -> bool:
 def sign_out(provider_id: str) -> bool:
     """Forget the stored sign-in. A linked Codex CLI login itself is untouched."""
     path = credential_path(provider_id)
-    try:
-        path.unlink()
-    except FileNotFoundError:
-        return False
+    with _record_lock(provider_id):
+        try:
+            path.unlink()
+        except FileNotFoundError:
+            return False
     return True
 
 
@@ -834,21 +868,34 @@ async def _file_lock(provider_id: str, wait: float = 30.0) -> AsyncIterator[None
         os.close(fd)
 
 
-async def credential(provider_id: str, *, force_refresh: bool = False) -> Credential:
-    """A signed-in credential whose access token is good for a few minutes.
+_refresh_tasks: set[asyncio.Task[Credential]] = set()
 
-    Raises `NotSignedIn` when there is nothing stored, and `OAuthError` when the
-    stored sign-in cannot be refreshed.
-    """
+
+async def credential(provider_id: str, *, force_refresh: bool = False) -> Credential:
+    """Return a fresh credential without abandoning a rotating token on cancel."""
     spec = provider(provider_id)
     cred = load(spec.id)
     if cred is None:
         raise NotSignedIn(f"{spec.id}: not signed in")
     if not force_refresh and not cred.expiring():
         return cred
+    task = asyncio.create_task(_refresh_credential(spec, force_refresh=force_refresh))
+    _refresh_tasks.add(task)
+
+    def finished(done: asyncio.Task[Credential]) -> None:
+        _refresh_tasks.discard(done)
+        if not done.cancelled():
+            done.exception()  # retrieve failures even if the caller stopped waiting
+
+    task.add_done_callback(finished)
+    return await asyncio.shield(task)
+
+
+async def _refresh_credential(spec: OAuthProvider, *, force_refresh: bool) -> Credential:
     async with _lock(spec.id), _file_lock(spec.id):
         # Another task or process may have refreshed while this one waited.
-        cred = load(spec.id)
+        record = _read_record(spec.id)
+        cred = _credential_from(spec.id, record) if record is not None else None
         if cred is None:
             raise NotSignedIn(f"{spec.id}: not signed in")
         if cred.source == "codex-cli":
@@ -873,8 +920,21 @@ async def credential(provider_id: str, *, force_refresh: bool = False) -> Creden
         async with http_client(spec.engine) as client:
             data = await _token_request(client, client_spec, form)
         cred = _credential_from_tokens(client_spec, data, cred)
-        save(cred)
+        # Logout or a new sign-in may happen while the network request runs.
+        # Compare and replace under the same short cross-process mutation lock
+        # used by save/sign_out; the refresh lock alone cannot protect them.
+        with _record_lock(spec.id):
+            if _read_record(spec.id) != record:
+                raise NotSignedIn(f"{spec.id}: sign-in changed while refreshing; try again")
+            _save_record(cred)
         return cred
+
+
+async def finish_refreshes() -> None:
+    """Drain token rotations before the server closes their owning event loop."""
+    tasks = [task for task in _refresh_tasks if task.get_loop() is asyncio.get_running_loop()]
+    if tasks:
+        await asyncio.gather(*tasks, return_exceptions=True)
 
 
 # --- the browser sign-in -------------------------------------------------------------

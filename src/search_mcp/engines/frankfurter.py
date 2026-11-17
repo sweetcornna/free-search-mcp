@@ -16,6 +16,7 @@ which the snippet carries.
 
 from __future__ import annotations
 
+import math
 import re
 from typing import Any
 
@@ -90,7 +91,22 @@ _NAMES = {
     "奈拉": "NGN", "naira": "NGN",
 }  # fmt: skip
 
-_AMOUNT_RE = re.compile(r"(?<![\w.])(\d{1,12}(?:[.,]\d{1,4})?)(?:\s*(?:k|万|亿|thousand|million))?")
+_CURRENCY_CODES = "|".join(sorted(CURRENCIES | MORE_CURRENCIES))
+_AMOUNT_RE = re.compile(
+    # Capture a complete numeric token first, then validate its grouping below.
+    # Punctuation joins the token only when followed by another digit.
+    r"(?<![a-z0-9_.+-])([+-]?(?:\d+(?:[.,]\d+)*|\.\d+))"
+    # A multiplier may touch a known ISO code (2kUSD), but must not consume
+    # the start of the currency itself (100 KRW or 100 krona).
+    rf"(?:\s*((?:k|thousand|million)(?=(?:{_CURRENCY_CODES})(?![a-z])|[^a-z]|$)|万|亿))?"
+    rf"(?:\s*({_CURRENCY_CODES})(?![a-z]))?",
+    re.IGNORECASE,
+)
+_NUMBER_RE = re.compile(r"[+-]?(?:(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?|\.\d+)")
+_AMOUNT_MULTIPLIERS = {
+    "k": 1_000, "thousand": 1_000, "万": 10_000,
+    "million": 1_000_000, "亿": 100_000_000,
+}
 _CODE_RE = re.compile(r"\b([A-Za-z]{3})\b")
 
 
@@ -99,7 +115,9 @@ def parse_pair(query: str) -> tuple[str, str, float] | None:
     # Currencies in the order the question names them: the first is the base
     # ("1万日元等于多少人民币" converts yen into yuan, not the reverse).
     hits: list[tuple[int, str]] = []
-    text = query
+    amount_match = _AMOUNT_RE.search(query)
+    if amount_match and amount_match.group(3):
+        hits.append((amount_match.start(3), amount_match.group(3).upper()))
     for m in _CODE_RE.finditer(query):
         code = m.group(1).upper()
         if code in CURRENCIES or code in MORE_CURRENCIES:
@@ -119,21 +137,19 @@ def parse_pair(query: str) -> tuple[str, str, float] | None:
     if len(found) < 2:
         return None
     amount = 1.0
-    m = _AMOUNT_RE.search(text)
-    if m:
+    if amount_match:
+        number, multiplier, _currency = amount_match.groups()
+        if _NUMBER_RE.fullmatch(number) is None:
+            return None
         try:
-            amount = float(m.group(1).replace(",", ""))
+            amount = float(number.replace(",", ""))
         except ValueError:
-            amount = 1.0
-        tail = text[m.end(1) : m.end(1) + 8].strip().lower()
-        if tail.startswith(("k", "thousand")):
-            amount *= 1_000
-        elif tail.startswith("万"):
-            amount *= 10_000
-        elif tail.startswith("million"):
-            amount *= 1_000_000
-        elif tail.startswith("亿"):
-            amount *= 100_000_000
+            return None
+        # Only a complete multiplier token counts: KRW and krona are currency
+        # names, not 'k', and slicing the suffix used to cut off 'thousand'.
+        amount *= _AMOUNT_MULTIPLIERS.get((multiplier or "").lower(), 1)
+        if not math.isfinite(amount):
+            return None
     return found[0], found[1], amount
 
 
@@ -205,7 +221,8 @@ class FrankfurterEngine(JsonApiEngine):
         base, rates, day = payload.get("base"), payload.get("rates"), payload.get("date")
         if not isinstance(base, str) or not isinstance(rates, dict) or not rates:
             return []
-        amount = float(payload.get("_amount") or 1.0)
+        raw_amount = payload.get("_amount")
+        amount = 1.0 if raw_amount is None else float(raw_amount)
         results: list[SearchResult] = []
         for symbol, rate in rates.items():
             try:

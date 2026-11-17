@@ -179,11 +179,9 @@ class Cache:
     async def _maintain(self, conn: aiosqlite.Connection) -> None:
         """Purge expired rows, then enforce the size cap. Never raises.
 
-        DELETEs alone never shrink a SQLite file (freed pages go to the
-        freelist), so when the file exceeds cache_max_mb we drop the oldest
-        ``pages`` rows down to a size-proportional target and run ONE VACUUM
-        (+WAL truncate) to actually return the space. ``pages`` dominates the
-        footprint; ``search_cache`` rows are small and age out via TTL.
+        Count live SQLite pages, not WAL history, when evicting. Recheck after
+        each batch because row sizes vary; search-only clients can fill the
+        database too. Compact once, and only if there are free pages to reclaim.
         """
         try:
             cutoff = int(time.time()) - settings.cache_ttl_seconds
@@ -195,22 +193,44 @@ class Cache:
             size = self._db_size()
             if cap <= 0 or size <= cap:
                 return
-            cur = await conn.execute("SELECT COUNT(*) FROM pages")
-            row = await cur.fetchone()
-            total = row[0] if row else 0
-            if total:
-                # Keep the newest rows that fit ~80% of the cap, assuming size
-                # scales with row count. The FTS delete-trigger keeps pages_fts
-                # in sync.
-                keep = int(total * (cap * 0.8) / size)
-                drop = max(1, total - keep)
-                await conn.execute(
-                    "DELETE FROM pages WHERE rowid IN "
-                    "(SELECT rowid FROM pages ORDER BY fetched ASC LIMIT ?)",
-                    (drop,),
-                )
-                await conn.commit()
-            await conn.execute("VACUUM")
+            async def storage() -> tuple[int, int, int]:
+                async with conn.execute(
+                    "SELECT page_count, freelist_count, page_size FROM "
+                    "pragma_page_count(), pragma_freelist_count(), pragma_page_size()"
+                ) as cur:
+                    return tuple(await cur.fetchone())
+
+            pages, free, page_size = await storage()
+            live_size = (pages - free) * page_size
+            while live_size > cap:
+                dropped = 0
+                # Index-backed oldest-first batches; never scan result blobs.
+                # Rechecking live pages handles a few large *new* rows mixed
+                # with many small old ones, without repeated full VACUUMs.
+                for table, timestamp in (("pages", "fetched"), ("search_cache", "created")):
+                    async with conn.execute(f"SELECT COUNT(*) FROM {table}") as cur:
+                        total = (await cur.fetchone())[0]
+                    if total:
+                        keep = int(total * (cap * 0.8) / live_size)
+                        drop = max(1, total - keep)
+                        async with conn.execute(
+                            f"DELETE FROM {table} WHERE rowid IN "
+                            f"(SELECT rowid FROM {table} "
+                            f"ORDER BY {timestamp}, rowid LIMIT ?)",
+                            (drop,),
+                        ) as cur:
+                            dropped += cur.rowcount
+                        await conn.commit()
+                        pages, free, page_size = await storage()
+                        live_size = (pages - free) * page_size
+                        if live_size <= cap:
+                            break
+                if not dropped:  # The schema/FTS floor cannot be evicted.
+                    break
+            if free and pages * page_size > cap:
+                await conn.execute("VACUUM")
+            # WAL history alone is not a reason to discard valid cache hits or
+            # rewrite the entire DB. A checkpoint can reclaim it directly.
             await conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
         except Exception as e:
             # Maintenance is best-effort housekeeping — a failure (locked db,
@@ -254,6 +274,9 @@ class Cache:
         not know the provenance of a result cached before we started recording
         it.
         """
+        # Independent server processes share this file. Lock before reading
+        # schema state, not just before ALTER, so only one migrates/rebuilds.
+        await conn.execute("BEGIN IMMEDIATE")
         cur = await conn.execute("PRAGMA table_info(search_cache)")
         columns = {row[1] for row in await cur.fetchall()}
         if "meta" not in columns:
