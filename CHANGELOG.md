@@ -4,7 +4,10 @@ All notable changes to this project are documented here. The format is loosely
 based on [Keep a Changelog](https://keepachangelog.com/), and the project follows
 semantic versioning.
 
-## [Unreleased]
+## [0.18.2] - 2026-11-16
+
+Searches, document reads and the cache stay within their time and size limits,
+and cancelled work no longer leaves requests or browsers running.
 
 ### Fixed
 
