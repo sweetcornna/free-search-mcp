@@ -63,9 +63,11 @@ narrows it to the sources that index that sub-group. See
   Each engine contributes only its strongest weighted rank for that page;
   repeated links from one engine cannot outvote independent engines agreeing.
   Duplicate sightings can still supply a longer snippet or a structured date.
-  Repeating an engine name in a call or the configured pool sends one request
-  to that engine. This ranking correction invalidates older search-cache rows;
-  the page cache is unaffected.
+  Engine names are case-insensitive and trimmed before request deduplication,
+  cache lookup, rate limiting and health checks. For example, `bing` and
+  ` BING ` share one request and one identity in explicit calls and configured
+  pools, including reserves and rescue. This ranking correction invalidates
+  older search-cache rows; the page cache is unaffected.
 - `search` includes an extractive `lead_snippet`. It picks the top-3 result
   whose snippet contains ≥2 query terms and is ≥80 chars, and renders it as
   `> **Lead:** According to {host}: …`. No LLM is called, and when no snippet

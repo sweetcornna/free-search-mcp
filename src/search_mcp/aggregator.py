@@ -40,6 +40,7 @@ from .engines import (
     SearchResult,
     category_group,
     get_engine,
+    normalize_engine_name,
 )
 from .engines.base import (
     EngineSignInPending,
@@ -474,6 +475,10 @@ def claimants(query: str) -> list[str]:
     return picks[:limit] if limit >= 0 else picks
 
 
+def _canonical_engine_names(names: Collection[str]) -> list[str]:
+    return list(dict.fromkeys(normalize_engine_name(name) for name in names))
+
+
 def _nominal_pool(query: str, category: str | None, freshness: str | None) -> list[str]:
     """The engines this search is entitled to, before health is considered.
 
@@ -486,8 +491,8 @@ def _nominal_pool(query: str, category: str | None, freshness: str | None) -> li
         # engine cannot return an image file or a dataset record, so mixing it
         # in only crowds out the sources that can. Falls back to the default
         # pool if no specialist is available.
-        return engines_for_category(category) or list(settings.default_engines)
-    pool = list(settings.default_engines)
+        return _canonical_engine_names(engines_for_category(category) or settings.default_engines)
+    pool = _canonical_engine_names(settings.default_engines)
     if category:
         pool.extend(engines_for_category(category, exclude=pool))
     else:
@@ -496,7 +501,7 @@ def _nominal_pool(query: str, category: str | None, freshness: str | None) -> li
     if freshness in ("day", "week"):
         extras.extend(settings.fresh_engines)
     extras.extend(settings.locale_engines.get(_query_language(query), []))
-    pool.extend(name for name in dict.fromkeys(extras) if name not in pool)
+    pool.extend(name for name in _canonical_engine_names(extras) if name not in pool)
     return pool
 
 
@@ -529,6 +534,7 @@ def _active_pool(nominal: list[str]) -> tuple[list[str], dict[str, dict[str, Any
     is ignored for this search: trying three doubtful engines beats answering
     with none.
     """
+    nominal = _canonical_engine_names(nominal)
     if not settings.health_enabled:
         return nominal, {}
     benched: dict[str, dict[str, Any]] = {}
@@ -542,7 +548,7 @@ def _active_pool(nominal: list[str]) -> tuple[list[str], dict[str, dict[str, Any
     active = [name for name in nominal if name not in benched]
     healthy = sum(1 for name in active if _is_guarded(name))
     waiting = [name for name in benched if _is_guarded(name)]
-    for name in settings.reserve_engines:
+    for name in _canonical_engine_names(settings.reserve_engines):
         if healthy >= settings.min_healthy_engines or not waiting:
             break
         if name in nominal or not _usable_reserve(name):
@@ -601,6 +607,7 @@ def _lane_nominal(nominal: list[str]) -> list[str]:
     """The agent lane this search is entitled to: configured, signed in, and
     not already in the pool. The cache key includes it, so like `nominal` it
     is decided before the breaker is consulted."""
+    nominal = _canonical_engine_names(nominal)
     lane: list[str] = []
     for name in _configured_lane():
         if name in nominal:
@@ -1358,9 +1365,10 @@ async def _rescue(
     summary — including any gates the probes hit — lives under
     ``diagnostics["rescue"]``. Returns ``(results, served_by)``; never raises.
     """
+    engine_names = _canonical_engine_names(engine_names)
     candidates = [
         name
-        for name in dict.fromkeys([*settings.reserve_engines, *settings.rescue_engines])
+        for name in _canonical_engine_names([*settings.reserve_engines, *settings.rescue_engines])
         if name not in engine_names and _usable_reserve(name)
     ]
     if not candidates:
@@ -1596,7 +1604,7 @@ def _key(query: str, engines: list[str], max_results: int, filters: SearchFilter
         {
             "v": 4,
             "q": query,
-            "e": sorted(set(engines)),
+            "e": sorted(_canonical_engine_names(engines)),
             "n": max_results,
             "f": asdict(filters),
             "r": settings.region,
@@ -1946,17 +1954,18 @@ async def aggregate_search(
     benched: dict[str, dict[str, Any]] = {}
     auto_pool = not engines and not _is_exclusive(category)
     if engines:
-        nominal = list(dict.fromkeys(engines))
+        nominal = _canonical_engine_names(engines)
         engine_names = nominal
     else:
-        nominal = list(dict.fromkeys(_nominal_pool(query, category, freshness)))
+        nominal = _canonical_engine_names(_nominal_pool(query, category, freshness))
         engine_names, benched = _active_pool(nominal) if auto_pool else (nominal, {})
     # The agent lane joins the automatic pool only: naming engines is an
     # instruction, and an image or dataset search wants records, not pages.
     lane_nominal = _lane_nominal(nominal) if auto_pool else []
     lane = _seated(lane_nominal)
+    defaults = set(_canonical_engine_names(settings.default_engines))
     routed = (
-        [name for name in engine_names if name not in settings.default_engines]
+        [name for name in engine_names if name not in defaults]
         if auto_pool and not category
         else []
     )
