@@ -119,6 +119,7 @@ reports what it knows about each result's date and origin:
 |---|---|
 | `retrieved_at` | when the engines (or the page) were asked; on a cache hit, the original time |
 | `cache_age_seconds` | cache hits only. Markdown: `(cached 2 days ago · retrieved …)` |
+| `search_cache_age_seconds` (`research`) | age of the cached search that selected the sources. The brief header labels this `search cached …`; individual pages keep their own retrieval times and cache ages |
 | `dated_results` | how many results carry any date, shown in the header as `dated: N/M` |
 | `date_source` (per result) | `structured` is shown as `dated 2026-09-02`, `snippet` as `2026-09-05 (from snippet text)`, and `none` as `undated` |
 | `source_type` (per result) | `paper` / `code` / `forum` / `news` / `government` / `academic`, from the hostname; never a ranking input |
@@ -127,7 +128,11 @@ reports what it knows about each result's date and origin:
 | `date_note` (`research`) | how many of the brief's sources could be dated and how far apart they are |
 
 `fetch` prints `published <date>` or `no publication date found`, and the cache
-age on a hit. Cached searches expire faster when recency was asked for:
+age on a hit. A `research` brief reports the search's original retrieval time
+above its sources, including when `fetch=False`. Each fetched document also
+shows its own retrieval time and cache age, when known. Fetching a page afresh
+does not make the search that selected it newer. Cached searches expire faster
+when recency was asked for:
 `freshness="day"` after 1 hour, `week` after 6 hours, `month` after 24 hours,
 and `category="news"` after 6 hours. `weather` and `finance.fx` answers expire
 after 1 hour and `software` and `security` after 6 hours whatever the query

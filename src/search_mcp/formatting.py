@@ -397,6 +397,12 @@ def render_research(payload: dict[str, Any]) -> str:
     if tokens:
         meta.append(f"~{tokens} tokens")
     lines.append("_" + " · ".join(meta) + "_")
+    crumb = _retrieved_crumb({
+        "retrieved_at": payload.get("retrieved_at"),
+        "cache_age_seconds": payload.get("search_cache_age_seconds"),
+    })
+    if crumb:
+        lines.append(f"_(search {crumb})_")
     lines.append("")
 
     lines.append("## Sources")
@@ -457,6 +463,9 @@ def render_research(payload: dict[str, Any]) -> str:
             tcrumb = f" · ~{tok} tokens" if tok else ""
             lines.append(f"### {title}")
             lines.append(f"<{url}>{tcrumb}")
+            page_crumb = _retrieved_crumb(d)
+            if page_crumb:
+                lines.append(f"_(page {page_crumb})_")
             lines.append("")
             lines.append((d.get("content") or "").rstrip())
             lines.append("")
