@@ -270,8 +270,12 @@ def source_taxonomy() -> dict[str, dict[str, list[str]]]:
     return taxonomy
 
 
+def normalize_engine_name(name: str) -> str:
+    return name.lower().strip()
+
+
 def get_engine(name: str) -> Engine:
-    key = name.lower().strip()
+    key = normalize_engine_name(name)
     if key not in ENGINES:
         raise ValueError(f"Unknown engine: {name!r}. Available: {list(ENGINES)}")
     return ENGINES[key]
@@ -288,5 +292,6 @@ __all__ = [
     "apply_post_filters_with_diagnostics",
     "category_group",
     "get_engine",
+    "normalize_engine_name",
     "source_taxonomy",
 ]
