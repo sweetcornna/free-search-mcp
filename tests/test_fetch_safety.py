@@ -468,8 +468,9 @@ def test_extract_structured_from_html_get_base_url_raises_falls_through(monkeypa
 # --------------------------------------------------------------------------- #
 # #8 _slice returned_chars == SOURCE chars consumed                           #
 # --------------------------------------------------------------------------- #
+@pytest.mark.parametrize("newline", ["\n", "\r\n"], ids=["lf", "crlf"])
 @pytest.mark.asyncio
-async def test_slice_returned_chars_is_source_consumed(monkeypatch, tmp_path):
+async def test_slice_returned_chars_is_source_consumed(monkeypatch, tmp_path, newline):
     from search_mcp import documents
 
     monkeypatch.setattr(config.settings, "document_root", tmp_path)
@@ -477,9 +478,10 @@ async def test_slice_returned_chars_is_source_consumed(monkeypatch, tmp_path):
 
     # Build a doc that forces a SOFT truncation (paragraph boundary inside the
     # window) so smart_truncate appends a marker.
-    body = ("alpha beta gamma delta. " * 4) + "\n\n" + ("more text here. " * 40)
+    body = ("alpha beta gamma delta. " * 4) + newline * 2 + ("more text here. " * 40)
     p = tmp_path / "doc.txt"
-    p.write_text(body, encoding="utf-8")
+    # Exact bytes keep expected offsets independent of host newline translation.
+    p.write_bytes(body.encode("utf-8"))
 
     first = await documents.read_document(str(p), start=0)
     assert first.truncated is True
