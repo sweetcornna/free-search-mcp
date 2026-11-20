@@ -1589,13 +1589,14 @@ def _key(query: str, engines: list[str], max_results: int, filters: SearchFilter
     existing row. 2: rows written before the off-topic guard can hold merged
     decoy results for up to the 7-day TTL. 3: agent-lane engines enter the
     engine list as `agent:<name>`; an older row keyed on a bare name must not
-    be replayed to a call that names that engine.
+    be replayed to a call that names that engine. 4: each engine contributes
+    only its strongest vote per page, so old duplicate-inflated scores expire.
     """
     raw = json.dumps(
         {
-            "v": 3,
+            "v": 4,
             "q": query,
-            "e": sorted(engines),
+            "e": sorted(set(engines)),
             "n": max_results,
             "f": asdict(filters),
             "r": settings.region,
@@ -1751,9 +1752,8 @@ def _merge(
     k = _RRF_K
     native = _native_engines(category, query)
     direct = _direct_answer_engines(category, query)
-    scores: dict[str, float] = {}
+    votes: dict[str, dict[str, float]] = {}
     representative: dict[str, dict[str, Any]] = {}
-    engines_for: dict[str, list[str]] = {}
 
     for bucket in buckets:
         # Buckets are per engine, so position 0 is that engine's first result.
@@ -1770,8 +1770,11 @@ def _merge(
                 weight = _NATIVE_CATEGORY_WEIGHT
             else:
                 weight = 1.0
-            scores[key] = scores.get(key, 0.0) + weight / (k + r.rank)
-            engines_for.setdefault(key, []).append(r.engine)
+            # Repeated links (including URL aliases) are one engine's evidence,
+            # not independent agreement. Keep the strongest vote even if the
+            # same engine arrives in more than one bucket; still absorb metadata.
+            engine_votes = votes.setdefault(key, {})
+            engine_votes[r.engine] = max(engine_votes.get(r.engine, 0.0), weight / (k + r.rank))
             rec = representative.get(key)
             if rec is None:
                 rec = r.to_dict()
@@ -1785,11 +1788,14 @@ def _merge(
                     # on PyPI"); the page title a web engine saw does not.
                     rec["title"] = r.title
 
-    ranked = sorted(scores.items(), key=lambda kv: kv[1], reverse=True)
+    ranked = sorted(
+        ((key, sum(engine_votes.values())) for key, engine_votes in votes.items()),
+        key=lambda kv: kv[1], reverse=True,
+    )
     out_full = []
     for key, score in ranked:
         rec = representative[key]
-        rec["engines"] = sorted(set(engines_for[key]))
+        rec["engines"] = sorted(votes[key])
         rec["score"] = round(score, 5)
         rec.pop("rank", None)
         rec.pop("engine", None)
@@ -1940,10 +1946,10 @@ async def aggregate_search(
     benched: dict[str, dict[str, Any]] = {}
     auto_pool = not engines and not _is_exclusive(category)
     if engines:
-        nominal = list(engines)
+        nominal = list(dict.fromkeys(engines))
         engine_names = nominal
     else:
-        nominal = _nominal_pool(query, category, freshness)
+        nominal = list(dict.fromkeys(_nominal_pool(query, category, freshness)))
         engine_names, benched = _active_pool(nominal) if auto_pool else (nominal, {})
     # The agent lane joins the automatic pool only: naming engines is an
     # instruction, and an image or dataset search wants records, not pages.
