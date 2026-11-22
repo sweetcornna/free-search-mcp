@@ -3,7 +3,6 @@ import json
 import sys
 
 from .keystore import load_all_env_files
-from .server import run
 
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -45,11 +44,6 @@ def _ask(argv: list[str]) -> int:
     a service that would rather start a process than speak MCP. Exit status 0
     means an answer, 1 means the model failed and the pages were printed
     instead, 2 means the agent is not configured."""
-    import asyncio
-
-    from .agent import AgentError, ask
-    from .formatting import render_ask
-
     parser = argparse.ArgumentParser(
         prog="search-mcp ask",
         description=(
@@ -65,6 +59,13 @@ def _ask(argv: list[str]) -> int:
     )
     parser.add_argument("--json", action="store_true", help="Print the JSON form.")
     args = parser.parse_args(argv)
+    load_all_env_files()
+
+    import asyncio
+
+    from .agent import AgentError, ask
+    from .formatting import render_ask
+
     try:
         payload = asyncio.run(
             ask(args.question, freshness=args.freshness, include_domains=args.domains)
@@ -83,8 +84,6 @@ def _agent_file(argv: list[str]) -> int:
     """`search-mcp agent-file codex > ~/.codex/agents/quick_search.toml`: the
     quick-search agent in a host's own format, for installs that do not come
     through the Claude Code plugin."""
-    from .agent import STANDALONE_TOOL_PREFIX, agent_file
-
     parser = argparse.ArgumentParser(
         prog="search-mcp agent-file",
         description="Print the quick-search agent definition for a host.",
@@ -95,26 +94,31 @@ def _agent_file(argv: list[str]) -> int:
         "prompt: the bare instructions, for any other platform.",
     )
     parser.add_argument(
-        "--tool-prefix", default=STANDALONE_TOOL_PREFIX,
+        "--tool-prefix", default=None,
         help="claude-code only: how the host names this server's tools "
-        f"(default: {STANDALONE_TOOL_PREFIX}, which matches `claude mcp add search ...`).",
+        "(default: mcp__search__, which matches `claude mcp add search ...`).",
     )
     args = parser.parse_args(argv)
-    print(agent_file(args.host, tool_prefix=args.tool_prefix), end="")
+    load_all_env_files()
+
+    from .agent import STANDALONE_TOOL_PREFIX, agent_file
+
+    tool_prefix = STANDALONE_TOOL_PREFIX if args.tool_prefix is None else args.tool_prefix
+    print(agent_file(args.host, tool_prefix=tool_prefix), end="")
     return 0
 
 
 def main(argv: list[str] | None = None) -> None:
-    # Make SEARCH_MCP_* keys in ./.env AND <config_dir>/.env visible to the
-    # keyed engines (keystore reads os.environ, which pydantic's .env loading
-    # doesn't populate). The config-dir file covers uvx launches from any CWD.
-    load_all_env_files()
     argv = sys.argv[1:] if argv is None else argv
     if argv[:1] == ["ask"]:
         raise SystemExit(_ask(argv[1:]))
     if argv[:1] == ["agent-file"]:
         raise SystemExit(_agent_file(argv[1:]))
     args = _parse_args(argv)
+    # Parsing must finish before loading runtime settings or creating the cache.
+    load_all_env_files()
+    from .server import run
+
     # None means "not given on the command line" — run() then falls back to
     # the SEARCH_MCP_* setting, so CLI beats env beats default.
     run(

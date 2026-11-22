@@ -70,7 +70,7 @@ async def _run(era: str) -> list[tuple[str, bool, str]]:
         doc.write_text("This is the smoke test document.\nSecond line.\n", encoding="utf-8")
         server = StdioServerParameters(
             command=sys.executable,
-            args=["-m", "search_mcp"],
+            args=["-m", "search_mcp", "--transport", "stdio"],
             cwd=str(ROOT),
             env={
                 "PYTHONPATH": str(ROOT / "src"),
