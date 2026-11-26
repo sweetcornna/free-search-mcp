@@ -175,13 +175,16 @@ jobs:
           targets: ${{ matrix.target }}
       - uses: Swatinem/rust-cache@v2
       - uses: astral-sh/setup-uv@v5
-      - name: Install pinned maturin (with zig)
-        run: uv tool install "maturin[zig]==${MATURIN_VERSION}"
       - name: Build binary wheel
         run: |
           set -euo pipefail
           mkdir -p dist
-          maturin build --release --locked --target "${{ matrix.target }}" --out dist ${{ matrix.maturin_args }}
+          # Run through uvx: it puts the tool environment (with the ziglang
+          # package) first on PATH, which is how maturin locates zig.
+          # `uv tool install` exposes only the maturin entry point, and
+          # maturin then fails with "Failed to find zig".
+          uvx --from "maturin[zig]==${MATURIN_VERSION}" maturin build --release --locked \
+            --target "${{ matrix.target }}" --out dist ${{ matrix.maturin_args }}
           ls -la dist
           # PyPI rejects bare `linux_*` platform tags; fail here, not at upload.
           if ls dist/*.whl | grep -E -- '-linux_[a-z0-9_]+\.whl$'; then
