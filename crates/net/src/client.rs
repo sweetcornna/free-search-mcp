@@ -824,6 +824,7 @@ impl HttpClient {
                 )
                 .await
                 .map_err(|e| wire_error(e, &label, &secrets))?;
+            check_response_header_size(resp.headers(), resp.status().as_u16(), &label)?;
             if let Some(j) = &jar
                 && let Ok(mut j) = j.lock()
             {
@@ -1144,6 +1145,36 @@ impl HttpClient {
         out.truncated = truncated;
         Ok(out)
     }
+}
+
+/// Upper bound on the total size of one response's header section (names,
+/// values and per-line `": "` + CRLF overhead).
+///
+/// hyper (`reqwest`) and the `wreq` Chrome stack each have their own internal
+/// read-buffer limit, and they do not agree, so an oversized header section was
+/// rejected by one stack and accepted by the other depending on how the bytes
+/// arrived. This makes the bound explicit and identical for both stacks.
+pub const MAX_RESPONSE_HEADER_BYTES: usize = 512 * 1024;
+
+fn check_response_header_size(
+    headers: &reqwest::header::HeaderMap,
+    status: u16,
+    label: &str,
+) -> Result<(), FsmError> {
+    let total: usize = headers
+        .iter()
+        .map(|(k, v)| k.as_str().len() + v.as_bytes().len() + 4)
+        .sum();
+    if total > MAX_RESPONSE_HEADER_BYTES {
+        return Err(FsmError::upstream(
+            label,
+            Some(status),
+            format!(
+                "response headers too large: {total} bytes (limit {MAX_RESPONSE_HEADER_BYTES})"
+            ),
+        ));
+    }
+    Ok(())
 }
 
 fn wire_error(e: WireError, label: &str, secrets: &Secrets<'_>) -> FsmError {
