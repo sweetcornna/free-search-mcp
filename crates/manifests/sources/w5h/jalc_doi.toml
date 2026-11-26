@@ -1,0 +1,107 @@
+id = "jalc_doi"
+name = "JaLC Japan Link Center DOI API"
+summary = "Official Japanese DOI Registration Agency (~10M Japanese and English DOIs across J-STAGE, NII, JST, and NDL) with keyless search, DOI lookup, and prefix enumeration."
+aliases = ["jalc", "japanlinkcenter", "japan doi", "ジャパンリンクセンター", "日本DOI"]
+home_url = "https://japanlinkcenter.org"
+tier = 1
+scopes = ["academic", "academic.index"]
+caps = ["search", "lookup", "harvest"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 5.0, burst = 10, concurrency = 3, timeout_ms = 10000, cache_ttl_s = 43200, host_bucket = "api.japanlinkcenter.org" }
+
+[op.search]
+summary = "Search JaLC registered Japanese and English DOI metadata records."
+method = "GET"
+url = "https://api.japanlinkcenter.org/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "quantum", limit = 3 }, min_results = 2, fixture = "fixtures/w5h/jalc_doi/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "free", doc = "Free-text search query (English or Japanese)" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "rows", doc = "Results per page" }
+page = { type = "int", default = 1, min = 1, to = "page", doc = "1-based page number" }
+
+[op.search.map]
+items = "(.data // [])[]"
+total = ".message.total"
+error = '''if (.status // "") == "NG" then ((.message.errors.message // []) | join("; ")) else null end'''
+work = '''(
+  (([(.title_list // [])[] | select(.lang == "en")][0]) // (.title_list[0]?)) as $tobj |
+  (if $tobj != null then ([($tobj.title // ""), ($tobj.subtitle // "")] | map(select(type == "string" and length > 0)) | join(": ") | strip_tags) else (.doi // "") end) as $title |
+  (.url // (if .doi then ("https://doi.org/" + .doi) else "" end)) as $url |
+  (([(.journal_title_name_list // [])[] | select(.type == "full" and .lang == "en") | .journal_title_name][0]) // (.journal_title_name_list[0]?.journal_title_name) // (.publisher_list[0]?.publisher_name) // null | collapse_ws) as $venue |
+  (([(.relation_list // [])[] | select(.relation == "fullTextPdf") | .content][0]) // null) as $pdf |
+  (([(.description_list // [])[] | select((.type // "") == "Abstract" and .lang == "en") | .description][0]) // ([(.description_list // [])[] | select((.type // "") == "Abstract") | .description][0]) // (.description_list[0]?.description) // null | strip_tags) as $abs |
+  ((.rights_list[0]?.uri // .rights_list[0]?.rights // null) | collapse_ws) as $lic |
+  (.publication_date // {}) as $pd |
+  (if ($pd.publication_year != null and $pd.publication_month != null and $pd.publication_day != null) then (($pd.publication_year | tostring) + "/" + ($pd.publication_month | tostring) + "/" + ($pd.publication_day | tostring) | parse_date) elif ($pd.publication_year != null and $pd.publication_month != null) then (($pd.publication_year | tostring) + "/" + ($pd.publication_month | tostring) | parse_date) elif ($pd.publication_year != null) then (($pd.publication_year | tostring) | parse_date) else ((.date // null) | parse_date) end) as $pub_date |
+  {
+    title: $title,
+    authors: [(.creator_list // [])[] | . as $c | ((.names // []) | ([.[] | select(.lang == "en")][0] // .[0])) | select(. != null) | {
+      name: ([((.first_name // "") | unescape_html | collapse_ws), ((.last_name // "") | unescape_html | collapse_ws)] | map(select(length > 0)) | join(" ")),
+      orcid: (([($c.researcher_id_list // [])[] | select((.type // "") == "ORCID") | .id_code][0] // null) | if type == "string" then sub("^https?://orcid\\.org/"; "") else null end),
+      affiliation: (([($c.affiliation_list // [])[0]?.affiliation_name_list[]? | select(.lang == "en") | .affiliation_name][0] // ($c.affiliation_list[0]?.affiliation_name_list[0]?.affiliation_name) // null) | collapse_ws)
+    } | select(.name != "")],
+    year: (((($pd.publication_year // "") | tostring)[0:4]) | to_int),
+    publishedDate: $pub_date,
+    venue: $venue,
+    workType: (if (.content_type // "") == "BK" then "book" elif ((.siteId // "") | test("preprint"; "i")) then "preprint" elif (.content_type // "") == "RD" then "dataset" else "article" end),
+    ids: { doi: (.doi // null | doi_norm) },
+    abstractText: (if ($abs | type) == "string" and ($abs | length) > 0 then $abs else null end),
+    oa: (if $pdf != null or $lic != null then { status: "open", url: $url, pdfUrl: $pdf, license: $lic } else null end),
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["jalc_doi"]
+  }
+)'''
+
+[op.doi]
+summary = "Look up authoritative JaLC v2 metadata for a single Japanese DOI."
+method = "GET"
+url = "https://api.japanlinkcenter.org/v2/dois/{doi}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+probe = { params = { doi = "10.11514/infopro.2008.0.138.0" }, min_results = 1, fixture = "fixtures/w5h/jalc_doi/doi/default.json" }
+
+[op.doi.params]
+doi = { type = "string", required = true, in = "path", encode = "raw", doc = "JaLC DOI e.g. 10.11514/infopro.2008.0.138.0" }
+
+[op.doi.map]
+items = ".data // empty"
+error = "@ref:op.search.map.error"
+work = "@ref:op.search.map.work"
+
+[op.prefix_list]
+summary = "Enumerate JaLC DOIs registered under a DOI prefix with optional update date bounds."
+method = "GET"
+url = "https://api.japanlinkcenter.org/doilist/{prefix}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { prefix = "10.1241", from = "2020-01-01", until = "2020-02-01", limit = 3 }, min_results = 2, fixture = "fixtures/w5h/jalc_doi/prefix_list/default.json" }
+
+[op.prefix_list.params]
+prefix = { type = "string", required = true, in = "path", doc = "DOI prefix e.g. 10.1241" }
+from = { type = "string", to = "from", doc = "Optional start update date YYYY-MM-DD" }
+until = { type = "string", to = "until", doc = "Optional end update date YYYY-MM-DD" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "rows", doc = "Results per page" }
+page = { type = "int", default = 1, min = 1, to = "page", doc = "1-based page number" }
+
+[op.prefix_list.map]
+items = "(.data.items // [])[]"
+total = ".message.total"
+error = "@ref:op.search.map.error"
+record = '''{
+  doi: (.dois.doi // null | doi_norm),
+  url: (.dois.url // ""),
+  ra: (.ra // "JaLC"),
+  siteId: (.siteId // null),
+  updatedDate: (.updated_date // null)
+}'''

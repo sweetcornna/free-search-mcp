@@ -1,0 +1,88 @@
+id = "eprint_iacr"
+name = "IACR Cryptology ePrint Archive"
+summary = "International Association for Cryptologic Research open-access cryptography preprint archive."
+aliases = ["iacr eprint", "cryptology eprint", "eprint.iacr.org"]
+home_url = "https://eprint.iacr.org"
+tier = 1
+scopes = ["academic", "academic.preprint", "academic.cs", "academic.math"]
+caps = ["search", "lookup", "fulltext"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 43200, host_bucket = "eprint.iacr.org" }
+
+[op.search]
+summary = "Search IACR Cryptology ePrint papers via server-rendered search page."
+method = "GET"
+url = "https://eprint.iacr.org/search"
+response = "html"
+returns = "works"
+probe = { params = { query = "ML-KEM Kyber lattice" }, min_results = 2, fixture = "fixtures/w5a/eprint_iacr/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Cryptography search terms" }
+limit = { type = "int", default = 20, min = 1, max = 50, in = "none", doc = "Max results" }
+
+[op.search.html]
+items_css = "div.results div.mb-4"
+fields = { id = "a.paperlink | text", path = "a.paperlink | attr(href)", title = "strong | text", authors = "span.fst-italic | text", updated = "small.ms-auto | text", snippet = "p.search-abstract | text", category = "small.badge | text" }
+wall_markers = ["Access Denied", "Just a moment"]
+
+[op.search.map]
+items = ".[:($p.limit // 20)][]"
+work = '''(
+  ((.path // ("/" + (.id // ""))) | resolve_url("https://eprint.iacr.org")) as $url |
+  ((.snippet // "") | strip_tags) as $abs |
+  (((.updated // "") | sub("(?i)^last updated:\\s*"; "") | parse_date) // ((.id // "")[0:4] | parse_date)) as $dt |
+  {
+    title: ((.title // "") | strip_tags),
+    authors: [(.authors // "") | split(",")[] | strip_tags | select(length > 0) | {name: .}],
+    year: ((.id // "")[0:4] | to_int),
+    publishedDate: $dt,
+    venue: "IACR Cryptology ePrint Archive",
+    workType: "preprint",
+    ids: {},
+    abstractText: (if ($abs // "") != "" then $abs else null end),
+    oa: { status: "green", url: $url, pdfUrl: ($url + ".pdf") },
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["eprint_iacr"]
+  }
+)'''
+
+[op.work]
+summary = "Fetch an IACR ePrint record via OAI-PMH GetRecord by year/number ID."
+method = "GET"
+url = "https://eprint.iacr.org/oai"
+response = "xml"
+returns = "works"
+const_query = { metadataPrefix = "oai_dc", verb = "GetRecord" }
+probe = { params = { id = "2024/001" }, min_results = 1, fixture = "fixtures/w5a/eprint_iacr/work/default.json" }
+
+[op.work.params]
+id = { type = "string", required = true, to = "identifier", template = "oai:eprint.iacr.org:{id}", doc = "IACR ePrint ID e.g. 2024/001" }
+
+[op.work.map]
+items = '''."oai-pmh".getrecord.record | arr | .[]'''
+error = '''if ."oai-pmh".error != null then ((."oai-pmh".error | arr | .[0]) | ((."@code" // "oai_error") + ": " + xml_text)) else null end'''
+work = '''(
+  .metadata.dc as $dc |
+  ($dc.identifier | arr | .[0] // "") as $url |
+  (($dc.date | first_str | parse_date) // null) as $dt |
+  (($dc.description | first_str) | if type == "string" then collapse_ws else null end) as $abs |
+  {
+    title: ((($dc.title | first_str) // "") | collapse_ws),
+    authors: [($dc.creator | arr)[] | xml_text | collapse_ws | select(length > 0) | {name: .}],
+    year: (if $dt != null then ($dt[0:4] | to_int) else null end),
+    publishedDate: $dt,
+    venue: "IACR Cryptology ePrint Archive",
+    workType: "preprint",
+    ids: {},
+    abstractText: (if ($abs // "") != "" then $abs else null end),
+    oa: { status: "green", url: $url, pdfUrl: ($url + ".pdf"), license: (($dc.rights | first_str) // null) },
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["eprint_iacr"]
+  }
+)'''

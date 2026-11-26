@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "ieee_xplore",
+  "op": "work",
+  "recordedAt": "2026-11-25T13:03:45Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://ieeexploreapi.ieee.org/api/v1/search/articles?max_records=1&doi=10.1109%2FACCESS.2020.3010000",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"total_records\": 1, \"total_searched\": 6120000, \"articles\": [{\"article_number\": \"9147599\", \"title\": \"Deep Transformer Networks for Signal Classification\", \"publication_title\": \"IEEE Access\", \"content_type\": \"Journals\", \"publication_year\": 2020, \"publication_date\": \"2020-07-22\", \"doi\": \"10.1109/ACCESS.2020.3010000\", \"citing_paper_count\": 42, \"access_type\": \"Open Access\", \"html_url\": \"https://ieeexplore.ieee.org/document/9147599/\", \"pdf_url\": \"https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9147599\", \"abstract\": \"Self-attention transformer architectures achieve robust modulation recognition under low SNR regimes.\", \"authors\": {\"authors\": [{\"full_name\": \"Alex Chen\", \"author_order\": 1, \"affiliation\": \"MIT, Cambridge, MA, USA\"}]}}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

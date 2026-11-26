@@ -1,0 +1,16 @@
+# A1 §G.5.2 instance vector: sru with dialect (A1 §D.4).
+protocol = "sru"
+
+[[instance]]
+id = "bnf_sru"
+name = "Bibliothèque nationale de France (BnF SRU)"
+summary = "French national library catalog SRU 1.2 search."
+aliases = ["bnf", "france national library"]
+base_url = "https://catalogue.bnf.fr/api/SRU"
+scopes = ["academic", "academic.books", "reference"]
+caps = ["search", "lookup", "book"]
+tier = 1
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 2, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 43200 }
+dialect = { version = "1.2", record_schema = "dublincore", query_template = "bib.title all \"{query}\"" }
+probe = { op = "search", params = { query = "bib.title all \"neural\"", limit = 3 }, min_results = 2 }

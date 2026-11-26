@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "anilist",
+  "op": "media",
+  "recordedAt": "2026-11-25T15:02:29Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://graphql.anilist.co",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": "df412e12ee8d3b785de6e20156615094b2b89e3381dde70f17d7b4f7d7567beb"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"data\":{\"Media\":{\"id\":1,\"title\":{\"romaji\":\"Cowboy Bebop\",\"english\":\"Cowboy Bebop\",\"native\":\"\\u30ab\\u30a6\\u30dc\\u30fc\\u30a4\\u30d3\\u30d0\\u30c3\\u30d7\"},\"type\":\"ANIME\",\"format\":\"TV\",\"status\":\"FINISHED\",\"episodes\":26,\"chapters\":null,\"seasonYear\":1998,\"startDate\":{\"year\":1998,\"month\":4,\"day\":3},\"averageScore\":86,\"genres\":[\"Action\",\"Adventure\",\"Drama\",\"Sci-Fi\"],\"siteUrl\":\"https:\\/\\/anilist.co\\/anime\\/1\",\"description\":\"Enter a world in the distant future, where Bounty Hunters roam the solar system. Spike and Jet, bounty hunting partners, set out on journeys in an ever struggling effort to win bounty rewards to survive.<br><br>\\nWhile traveling, they meet up with other very interesting people. Could Faye, the beautiful and ridiculously poor gambler, Edward, the computer genius, and Ein, the engineered dog be a good addition to the group?\",\"studios\":{\"nodes\":[{\"name\":\"Sunrise\"}]}}}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

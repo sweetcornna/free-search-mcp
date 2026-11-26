@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "treasury_fiscal",
+  "op": "avg_interest_rates",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v2/accounting/od/avg_interest_rates?sort=-record_date&page%5Bsize%5D=3&page%5Bnumber%5D=1",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"data\":[{\"record_date\":\"2026-10-31\",\"security_type_desc\":\"Marketable\",\"security_desc\":\"Treasury Bills\",\"avg_interest_rate_amt\":\"4.014\",\"src_line_nbr\":\"1\",\"record_fiscal_year\":\"2027\",\"record_fiscal_quarter\":\"1\",\"record_calendar_year\":\"2026\",\"record_calendar_quarter\":\"4\",\"record_calendar_month\":\"10\",\"record_calendar_day\":\"31\"},{\"record_date\":\"2026-10-31\",\"security_type_desc\":\"Marketable\",\"security_desc\":\"Treasury Notes\",\"avg_interest_rate_amt\":\"3.399\",\"src_line_nbr\":\"2\",\"record_fiscal_year\":\"2027\",\"record_fiscal_quarter\":\"1\",\"record_calendar_year\":\"2026\",\"record_calendar_quarter\":\"4\",\"record_calendar_month\":\"10\",\"record_calendar_day\":\"31\"},{\"record_date\":\"2026-10-31\",\"security_type_desc\":\"Marketable\",\"security_desc\":\"Treasury Bonds\",\"avg_interest_rate_amt\":\"3.483\",\"src_line_nbr\":\"3\",\"record_fiscal_year\":\"2027\",\"record_fiscal_quarter\":\"1\",\"record_calendar_year\":\"2026\",\"record_calendar_quarter\":\"4\",\"record_calendar_month\":\"10\",\"record_calendar_day\":\"31\"}],\"meta\":{\"count\":3,\"labels\":{\"record_date\":\"Record Date\",\"security_type_desc\":\"Security Type Description\",\"security_desc\":\"Security Description\",\"avg_interest_rate_amt\":\"Average Interest Rate Amount\",\"src_line_nbr\":\"Source Line Number\",\"record_fiscal_year\":\"Fiscal Year\",\"record_fiscal_quarter\":\"Fiscal Quarter Number\",\"record_calendar_year\":\"Calendar Year\",\"record_calendar_quarter\":\"Calendar Quarter Number\",\"record_calendar_month\":\"Calendar Month Number\",\"record_calendar_day\":\"Calendar Day Number\"},\"dataTypes\":{\"record_date\":\"DATE\",\"security_type_desc\":\"STRING\",\"security_desc\":\"STRING\",\"avg_interest_rate_amt\":\"PERCENTAGE\",\"src_line_nbr\":\"INTEGER\",\"record_fiscal_year\":\"YEAR\",\"record_fiscal_quarter\":\"QUARTER\",\"record_calendar_year\":\"YEAR\",\"record_calendar_quarter\":\"QUARTER\",\"record_calendar_month\":\"MONTH\",\"record_calendar_day\":\"DAY\"},\"dataFormats\":{\"record_date\":\"YYYY-MM-DD\",\"security_type_desc\":\"String\",\"security_desc\":\"String\",\"avg_interest_rate_amt\":\"10.2%\",\"src_line_nbr\":\"10\",\"record_fiscal_year\":\"YYYY\",\"record_fiscal_quarter\":\"Q\",\"record_calendar_year\":\"YYYY\",\"record_calendar_quarter\":\"Q\",\"record_calendar_month\":\"MM\",\"record_calendar_day\":\"DD\"},\"total-count\":5041,\"total-pages\":1681},\"links\":{\"self\":\"&page%5Bnumber%5D=1&page%5Bsize%5D=3\",\"first\":\"&page%5Bnumber%5D=1&page%5Bsize%5D=3\",\"prev\":null,\"next\":\"&page%5Bnumber%5D=2&page%5Bsize%5D=3\",\"last\":\"&page%5Bnumber%5D=1681&page%5Bsize%5D=3\"}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

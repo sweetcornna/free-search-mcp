@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "source": "plos",
+  "op": "search",
+  "recordedAt": "2026-11-25T15:09:53Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.plos.org/search?fl=id%2Cjournal%2Ceissn%2Cpublication_date%2Carticle_type%2Cauthor_display%2Cabstract%2Ctitle_display&fq=doc_type%3Afull&wt=json&rows=3&q=crispr",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "date",
+            "Wed, 25 Nov 2026 15:09:53 GMT"
+          ],
+          [
+            "content-type",
+            "application/json;charset=utf-8"
+          ],
+          [
+            "last-modified",
+            "Tue, 24 Nov 2026 19:08:03 GMT"
+          ],
+          [
+            "etag",
+            "\"MWE5NzQwMDAwMDAwMDAwMFNvbHI=\""
+          ],
+          [
+            "strict-transport-security",
+            "max-age=31536000; includeSubDomains"
+          ],
+          [
+            "access-control-allow-origin",
+            "*"
+          ],
+          [
+            "access-control-allow-credentials",
+            "true"
+          ],
+          [
+            "access-control-allow-methods",
+            "GET, PUT, POST, DELETE, PATCH, OPTIONS"
+          ],
+          [
+            "access-control-allow-headers",
+            "DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
+          ],
+          [
+            "access-control-max-age",
+            "1728000"
+          ]
+        ],
+        "bodyText": "{\n  \"response\":{\"numFound\":6805,\"start\":0,\"docs\":[\n      {\n        \"id\":\"10.1371/journal.pgen.1002441\",\n        \"journal\":\"PLoS Genetics\",\n        \"eissn\":\"1553-7404\",\n        \"publication_date\":\"2012-06-13T00:00:00Z\",\n        \"article_type\":\"Research Article\",\n        \"author_display\":[\"Mina Rho\",\n          \"Yu-Wei Wu\",\n          \"Haixu Tang\",\n          \"Thomas G. Doak\",\n          \"Yuzhen Ye\"],\n        \"abstract\":[\"\\n        CRISPR (Clustered Regularly Interspaced Short Palindromic Repeats) loci, together with cas (CRISPR–associated) genes, form the CRISPR/Cas adaptive immune system, a primary defense strategy that eubacteria and archaea mobilize against foreign nucleic acids, including phages and conjugative plasmids. Short spacer sequences separated by the repeats are derived from foreign DNA and direct interference to future infections. The availability of hundreds of shotgun metagenomic datasets from the Human Microbiome Project (HMP) enables us to explore the distribution and diversity of known CRISPRs in human-associated microbial communities and to discover new CRISPRs. We propose a targeted assembly strategy to reconstruct CRISPR arrays, which whole-metagenome assemblies fail to identify. For each known CRISPR type (identified from reference genomes), we use its direct repeat consensus sequence to recruit reads from each HMP dataset and then assemble the recruited reads into CRISPR loci; the unique spacer sequences can then be extracted for analysis. We also identified novel CRISPRs or new CRISPR variants in contigs from whole-metagenome assemblies and used targeted assembly to more comprehensively identify these CRISPRs across samples. We observed that the distributions of CRISPRs (including 64 known and 86 novel ones) are largely body-site specific. We provide detailed analysis of several CRISPR loci, including novel CRISPRs. For example, known streptococcal CRISPRs were identified in most oral microbiomes, totaling ∼8,000 unique spacers: samples resampled from the same individual and oral site shared the most spacers; different oral sites from the same individual shared significantly fewer, while different individuals had almost no common spacers, indicating the impact of subtle niche differences on the evolution of CRISPR defenses. We further demonstrate potential applications of CRISPRs to the tracing of rare species and the virus exposure of individuals. This work indicates the importance of effective identification and characterization of CRISPR loci to the study of the dynamic ecology of microbiomes.\\n      Author Summary: Human bodies are complex ecological systems in which various microbial organisms and viruses interact with each other and with the human host. The Human Microbiome Project (HMP) has resulted in >700 datasets of shotgun metagenomic sequences, from which we can learn about the compositions and functions of human-associated microbial communities. CRISPR/Cas systems are a widespread class of adaptive immune systems in bacteria and archaea, providing acquired immunity against foreign nucleic acids: CRISPR/Cas defense pathways involve integration of viral- or plasmid-derived DNA segments into CRISPR arrays (forming spacers between repeated structural sequences), and expression of short crRNAs from these single repeat-spacer units, to generate interference to future invading foreign genomes. Powered by an effective computational approach (the targeted assembly approach for CRISPR), our analysis of CRISPR arrays in the HMP datasets provides the very first global view of bacterial immunity systems in human-associated microbial communities. The great diversity of CRISPR spacers we observed among different body sites, in different individuals, and in single individuals over time, indicates the impact of subtle niche differences on the evolution of CRISPR defenses and indicates the key role of bacteriophage (and plasmids) in shaping human microbial communities. \"],\n        \"title_display\":\"Diverse CRISPRs Evolving in Human Microbiomes\"},\n      {\n        \"id\":\"10.1371/journal.pone.0312783\",\n        \"journal\":\"PLOS ONE\",\n        \"eissn\":\"1932-6203\",\n        \"publication_date\":\"2024-12-31T00:00:00Z\",\n        \"article_type\":\"Research Article\",\n        \"author_display\":[\"Javier Alejandro Delgado-Nungaray\",\n          \"Luis Joel Figueroa-Yáñez\",\n          \"Eire Reynaga-Delgado\",\n          \"Ana Montserrat Corona-España\",\n          \"Orfil Gonzalez-Reynoso\"],\n        \"abstract\":[\"\\nMultidrug resistance in Pseudomonas aeruginosa, a high-priority pathogen per the World Health Organization, poses a global threat due to carbapenem resistance and limited antibiotic treatments. Using the bioinformatic tools CRISPRCasFinder, CRISPRCasTyper, CRISPRloci, and CRISPRImmunity, we analyzed the genome of P. aeruginosa PAO1 and revealed an orphan CRISPR system, suggesting it may be a remnant of a type IV system due to the presence of the DinG protein. This system comprises two CRISPR arrays and noteworthy DinG and Cas3 proteins, supporting recent evidence about the association between type IV and I CRISPR systems. Additionally, we demonstrated a co-evolutionary relationship between the orphan CRISPR system in P. aeruginosa PAO1 and the mobile genetic element and prophages identified. One self-targeting spacer was identified, often associated with bacterial evolution and autoimmunity, and no Acr proteins. This research opens avenues for studying how these CRISPR arrays regulate pathogenicity and for developing alternative strategies using its endogenous orphan CRISPR system against carbapenem-resistant P. aeruginosa strains.\\n\"],\n        \"title_display\":\"Unveiling the endogenous CRISPR-Cas system in <i>Pseudomonas aeruginosa</i> PAO1\"},\n      {\n        \"id\":\"10.1371/journal.pgen.1004065\",\n        \"journal\":\"PLoS Genetics\",\n        \"eissn\":\"1553-7404\",\n        \"publication_date\":\"2014-01-09T00:00:00Z\",\n        \"article_type\":\"Research Article\",\n        \"author_display\":[\"Nina Sesto\",\n          \"Marie Touchon\",\n          \"José Marques Andrade\",\n          \"Jiro Kondo\",\n          \"Eduardo P. C. Rocha\",\n          \"Cecilia Maria Arraiano\",\n          \"Cristel Archambaud\",\n          \"Éric Westhof\",\n          \"Pascale Romby\",\n          \"Pascale Cossart\"],\n        \"abstract\":[\"\\nThe human bacterial pathogen Listeria monocytogenes is emerging as a model organism to study RNA-mediated regulation in pathogenic bacteria. A class of non-coding RNAs called CRISPRs (clustered regularly interspaced short palindromic repeats) has been described to confer bacterial resistance against invading bacteriophages and conjugative plasmids. CRISPR function relies on the activity of CRISPR associated (cas) genes that encode a large family of proteins with nuclease or helicase activities and DNA and RNA binding domains. Here, we characterized a CRISPR element (RliB) that is expressed and processed in the L. monocytogenes strain EGD-e, which is completely devoid of cas genes. Structural probing revealed that RliB has an unexpected secondary structure comprising basepair interactions between the repeats and the adjacent spacers in place of canonical hairpins formed by the palindromic repeats. Moreover, in contrast to other CRISPR-Cas systems identified in Listeria, RliB-CRISPR is ubiquitously present among Listeria genomes at the same genomic locus and is never associated with the cas genes. We showed that RliB-CRISPR is a substrate for the endogenously encoded polynucleotide phosphorylase (PNPase) enzyme. The spacers of the different Listeria RliB-CRISPRs share many sequences with temperate and virulent phages. Furthermore, we show that a cas-less RliB-CRISPR lowers the acquisition frequency of a plasmid carrying the matching protospacer, provided that trans encoded cas genes of a second CRISPR-Cas system are present in the genome. Importantly, we show that PNPase is required for RliB-CRISPR mediated DNA interference. Altogether, our data reveal a yet undescribed CRISPR system whose both processing and activity depend on PNPase, highlighting a new and unexpected function for PNPase in “CRISPRology”.\\nAuthor Summary: CRISPR-Cas systems confer to bacteria and archaea an adaptive immunity that protects them against invading bacteriophages and plasmids. In this study, we characterize a CRISPR (RliB-CRISPR) that is present in all L. monocytogenes strains at the same genomic locus but is never associated with a cas operon. It is an unusual CRISPR that, as we demonstrate, has a secondary structure consisting of basepair interactions between the repeat sequence and the adjacent spacer. We show that the RliB-CRISPR is processed by the endogenously encoded polynucleotide phosphorylase enzyme (PNPase). In addition, we show that the RliB-CRISPR system requires PNPase and presence of trans encoded cas genes of a second CRISPR-Cas system, to mediate DNA interference directed against a plasmid carrying a matching protospacer. Altogether, our data reveal a novel type of CRISPR system in bacteria that requires endogenously encoded PNPase enzyme for its processing and interference activity. \"],\n        \"title_display\":\"A PNPase Dependent CRISPR System in <i>Listeria</i>\"}]\n  }}\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

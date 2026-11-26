@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "sourcegraph_code",
+  "op": "repos",
+  "recordedAt": "2026-11-25T12:57:01Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://sourcegraph.com/.api/graphql",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": "a0da9f5edbd29fadee85cccf36c455295b0162dc70a040eb93424194bb424de7"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "cache-control",
+            "no-cache, max-age=0"
+          ],
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"data\":{\"search\":{\"results\":{\"matchCount\":3,\"results\":[{\"__typename\":\"Repository\",\"name\":\"github.com/tokio-rs/tokio\",\"url\":\"/r/github.com/tokio-rs/tokio\",\"description\":\"A runtime for writing reliable asynchronous applications with Rust. Provides I/O, networking, scheduling, timers, ...\",\"stars\":33787},{\"__typename\":\"Repository\",\"name\":\"github.com/tokio-rs/tls\",\"url\":\"/r/github.com/tokio-rs/tls\",\"description\":\"A collection of Tokio based TLS libraries.\",\"stars\":262},{\"__typename\":\"Repository\",\"name\":\"github.com/tokio-rs/tokio-core\",\"url\":\"/r/github.com/tokio-rs/tokio-core\",\"description\":\"I/O primitives and event loop for async I/O in Rust\",\"stars\":649}]}}}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

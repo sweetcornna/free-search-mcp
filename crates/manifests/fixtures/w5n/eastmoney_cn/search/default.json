@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "eastmoney_cn",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://searchapi.eastmoney.com/api/suggest/get?input=%E8%8C%85%E5%8F%B0&type=14&count=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"QuotationCodeTable\":{\"Data\":[{\"Code\":\"600519\",\"Name\":\"贵州茅台\",\"PinYin\":\"GZMT\",\"ID\":\"6005191\",\"JYS\":\"2\",\"Classify\":\"AStock\",\"MarketType\":\"1\",\"SecurityTypeName\":\"沪A\",\"SecurityType\":\"1\",\"MktNum\":\"1\",\"TypeUS\":\"2\",\"QuoteID\":\"1.600519\",\"UnifiedCode\":\"600519\",\"InnerCode\":\"46077278941243\"}],\"Status\":0,\"Message\":\"成功\",\"TotalCount\":1,\"BizCode\":\"\",\"BizMsg\":\"\"}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

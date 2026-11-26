@@ -1,0 +1,136 @@
+id = "legifrance_open"
+name = "Légifrance Open Data API (PISTE)"
+summary = "Official French DILA Légifrance API for French codes, laws, decrees, and jurisprudence via PISTE (requires free PISTE OAuth2 client credentials)."
+aliases = ["legifrance", "légifrance", "dila", "piste", "french law", "droit français", "code civil", "journal officiel"]
+home_url = "https://www.legifrance.gouv.fr"
+tier = 3
+scopes = ["gov", "gov.law"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 4, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 43200 }
+
+[auth]
+kind = "oauth2_client_credentials"
+mode = "required"
+token_url = "https://oauth.piste.gouv.fr/api/oauth/token"
+env_id = "SEARCH_MCP_LEGIFRANCE_CLIENT_ID"
+env_secret = "SEARCH_MCP_LEGIFRANCE_CLIENT_SECRET"
+style = "body"
+scope = "openid"
+route_requires_key = true
+
+[op.search]
+summary = "Search French consolidated codes, laws, or jurisprudence via PISTE Légifrance search endpoint."
+method = "POST"
+url = "https://api.piste.gouv.fr/dila/legifrance/lf-engine-app/search"
+headers = { Accept = "application/json", Content-Type = "application/json" }
+response = "json"
+returns = "records"
+body = { kind = "json", jaq = '''{
+  fond: ($p.fond // "CODE_ETAT"),
+  recherche: {
+    champs: [{
+      criteres: [{
+        operateur: "ET",
+        typeRecherche: "UN_DES_MOTS",
+        valeur: $p.query
+      }],
+      operateur: "ET",
+      typeChamp: "ALL"
+    }],
+    operateur: "ET",
+    pageNumber: ($p.page // 1),
+    pageSize: ($p.limit // 10),
+    sort: "PERTINENCE",
+    typePagination: "DEFAUT"
+  }
+}''' }
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "contrat de travail", fond = "CODE_ETAT", limit = 3 }, min_results = 2, fixture = "fixtures/w5d2/legifrance_open/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, in = "body", doc = "French legal search query" }
+fond = { type = "string", default = "CODE_ETAT", enum = ["ALL", "CODE_ETAT", "LODA_ETAT", "JORF", "JURI", "CETAT", "CONSTIT"], in = "body", doc = "Légifrance corpus fund" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "body", doc = "Page size" }
+page = { type = "int", default = 1, min = 1, in = "body", doc = "Page number" }
+
+[op.search.map]
+items = "(.results // [])[]"
+total = ".totalResultNumber"
+error = "if .error then (.error_description // .message // (.error | tostring)) else null end"
+record = '''{
+  id: (.titles[0]?.id // .id // null),
+  cid: (.titles[0]?.cid // .cid // null),
+  title: ((.titles[0]?.title // .title // "") | strip_tags // ""),
+  nature: (.nature // null),
+  etat: (.etat // .legalStatus // null),
+  date: ((.date // null) | parse_date),
+  articleId: (.sections[0]?.extracts[0]?.id // null),
+  articleNum: (.sections[0]?.extracts[0]?.num // .num // null),
+  excerpt: (((.sections[0]?.extracts[0]?.values[0] // .text // "") | strip_tags // "") | .[0:300]),
+  url: (
+    (.sections[0]?.extracts[0]?.id // .titles[0]?.cid // .id // "") as $tid |
+    if ($tid | startswith("LEGIARTI")) then "https://www.legifrance.gouv.fr/codes/article_lc/" + $tid
+    elif ($tid | startswith("JURITEXT")) then "https://www.legifrance.gouv.fr/juri/id/" + $tid
+    elif ($tid | startswith("CETATEXT")) then "https://www.legifrance.gouv.fr/ceta/id/" + $tid
+    elif ($tid | startswith("CONSTEXT")) then "https://www.legifrance.gouv.fr/cons/id/" + $tid
+    elif ($tid | startswith("JORFTEXT")) then "https://www.legifrance.gouv.fr/jorf/id/" + $tid
+    elif ($tid | startswith("LEGITEXT")) then (if ($p.fond // "") == "LODA_ETAT" then "https://www.legifrance.gouv.fr/loda/id/" else "https://www.legifrance.gouv.fr/codes/texte_lc/" end) + $tid
+    else "https://www.legifrance.gouv.fr" end
+  )
+}'''
+hit = '''{
+  title: (
+    ((.titles[0]?.title // .title // "Légifrance") | strip_tags // "Légifrance") +
+    (if (.sections[0]?.extracts[0]?.num // .num) then (" — Art. " + (.sections[0]?.extracts[0]?.num // .num)) else "" end)
+  ),
+  url: (
+    (.sections[0]?.extracts[0]?.id // .titles[0]?.cid // .id // "") as $tid |
+    if ($tid | startswith("LEGIARTI")) then "https://www.legifrance.gouv.fr/codes/article_lc/" + $tid
+    elif ($tid | startswith("JURITEXT")) then "https://www.legifrance.gouv.fr/juri/id/" + $tid
+    elif ($tid | startswith("CETATEXT")) then "https://www.legifrance.gouv.fr/ceta/id/" + $tid
+    elif ($tid | startswith("CONSTEXT")) then "https://www.legifrance.gouv.fr/cons/id/" + $tid
+    elif ($tid | startswith("JORFTEXT")) then "https://www.legifrance.gouv.fr/jorf/id/" + $tid
+    elif ($tid | startswith("LEGITEXT")) then (if ($p.fond // "") == "LODA_ETAT" then "https://www.legifrance.gouv.fr/loda/id/" else "https://www.legifrance.gouv.fr/codes/texte_lc/" end) + $tid
+    else "https://www.legifrance.gouv.fr" end
+  ),
+  snippet: (
+    [
+      .nature,
+      (.etat // .legalStatus),
+      (((.sections[0]?.extracts[0]?.values[0] // .text // "") | strip_tags // "") | if length > 0 then .[0:220] else null end)
+    ] | map(select(. != null)) | join(" · ")
+  ),
+  date: ((.date // null) | parse_date),
+  dateSource: "api"
+}'''
+
+[op.article]
+summary = "Fetch the full text and legal status of a French statutory article by LEGIARTI identifier."
+method = "POST"
+url = "https://api.piste.gouv.fr/dila/legifrance/lf-engine-app/consult/getArticle"
+headers = { Accept = "application/json", Content-Type = "application/json" }
+response = "json"
+returns = "records"
+body = { kind = "json", jaq = '''{ id: $p.id }''' }
+probe = { params = { id = "LEGIARTI000006900823" }, min_results = 1, fixture = "fixtures/w5d2/legifrance_open/article/default.json" }
+
+[op.article.params]
+id = { type = "string", required = true, in = "body", doc = "Légifrance article ID, e.g. LEGIARTI000006900823" }
+
+[op.article.map]
+items = ".article"
+error = "if .error then (.error_description // .message // (.error | tostring)) else null end"
+record = '''{
+  id: .id,
+  cid: (.cid // null),
+  num: (.num // null),
+  etat: (.etat // null),
+  dateDebut: ((.dateDebut // null) | parse_date),
+  dateFin: ((.dateFin // null) | parse_date),
+  codeTitle: (.textTitles[0]?.titre // .textTitles[0]?.titreLong // .context.titre // null),
+  nature: (.textTitles[0]?.nature // .nature // .context.nature // null),
+  texte: ((.texte // .texteHtml // "") | strip_tags // ""),
+  url: ("https://www.legifrance.gouv.fr/codes/article_lc/" + (.id // ""))
+}'''

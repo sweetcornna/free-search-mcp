@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "isric_soil",
+  "op": "properties",
+  "recordedAt": "2026-11-25T11:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://rest.isric.org/soilgrids/v2.0/properties/query?lon=-7.557&lat=41.196&property=clay&depth=0-5cm&value=mean",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-7.557,41.196]},\"properties\":{\"layers\":[{\"name\":\"clay\",\"unit_measure\":{\"d_factor\":10,\"mapped_units\":\"g/kg\",\"target_units\":\"%\",\"uncertainty_unit\":\"\"},\"depths\":[{\"range\":{\"top_depth\":0,\"bottom_depth\":5,\"unit_depth\":\"cm\"},\"label\":\"0-5cm\",\"values\":{\"mean\":126}}]}]},\"query_time_s\":0.10134029388427734}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+# A1 §G.4.5 test vector: oauth2_client_credentials, per-op auth, encode = "raw",
+# in = "none", query_jaq, fallback_urls. Endpoints follow EPO OPS; the mirror
+# host is a placeholder (example.org).
+id = "epo_ops_a1"
+name = "EPO Open Patent Services (A1 vector)"
+summary = "European Patent Office published-data search and bibliographic lookup via OAuth2."
+aliases = ["epo", "espacenet api"]
+home_url = "https://www.epo.org"
+tier = 2
+scopes = ["gov.patents"]
+caps = ["search", "lookup", "patent"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 2, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 86400 }
+
+[auth]
+kind = "oauth2_client_credentials"
+mode = "required"
+token_url = "https://ops.epo.org/3.2/auth/accesstoken"
+env_id = "SEARCH_MCP_EPO_OPS_KEY"
+env_secret = "SEARCH_MCP_EPO_OPS_SECRET"
+style = "basic"
+route_requires_key = true
+
+[op.search]
+summary = "Search published patents with CQL."
+method = "GET"
+url = "https://ops.epo.org/3.2/rest-services/published-data/search"
+fallback_urls = ["https://ops-mirror.example.org/3.2/rest-services/published-data/search"]
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+query_jaq = '''[ ["Range", "1-" + (($p.limit // 10) | tostring)], (($p.extra // {}) | to_entries[] | [.key, (.value | tostring)]) ]'''
+probe = { params = { query = "ti=graphene", limit = 3 }, min_results = 1 }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "CQL query, e.g. ti=graphene" }
+limit = { type = "int", default = 10, min = 1, max = 100, in = "none", doc = "Results (sent as the Range header-style query pair)" }
+extra = { type = "json", in = "none", doc = "Extra query pairs as an object" }
+
+[op.search.map]
+items = '.["ops:world-patent-data"]["ops:biblio-search"]["ops:search-result"]["ops:publication-reference"] | arr | .[]'
+record = '''{ id: (.["document-id"]["doc-number"]["$"] // null), family: .["@family-id"] }'''
+hit = '''{ title: ("EP " + (.["document-id"]["doc-number"]["$"] // "")), url: ("https://worldwide.espacenet.com/patent/search?q=pn%3D" + (.["document-id"]["doc-number"]["$"] // "")), snippet: "" }'''
+
+[op.biblio]
+summary = "Bibliographic data for a publication reference such as epodoc/EP1000000."
+method = "GET"
+url = "https://ops.epo.org/3.2/rest-services/published-data/publication/{ref}/biblio"
+response = "json"
+returns = "records"
+probe = { params = { ref = "epodoc/EP1000000" }, min_results = 1 }
+
+[op.biblio.params]
+ref = { type = "string", required = true, in = "path", encode = "raw", doc = "Reference type and number, e.g. epodoc/EP1000000" }
+
+[op.biblio.map]
+items = '.["ops:world-patent-data"]["exchange-documents"]["exchange-document"] | arr | .[]'
+record = '''{ id: .["@doc-number"], country: .["@country"], kind: .["@kind"] }'''
+
+[op.coverage]
+summary = "Public coverage note for OPS (keyless op of a keyed source)."
+method = "GET"
+url = "https://www.epo.org/en/searching-for-patents/data/coverage/weekly"
+auth = "none"
+response = "html"
+returns = "records"
+
+[op.coverage.html]
+items_css = "table tbody tr"
+fields = { office = "td:nth-child(1) | text", coverage = "td:nth-child(2) | text" }

@@ -1,0 +1,88 @@
+id = "simbad_cfa"
+name = "SIMBAD Astronomical Database TAP (CfA)"
+summary = "15M+ astronomical objects, ICRS coordinates, spectral types, parallaxes, and reference counts via Harvard CfA IVOA TAP mirror."
+aliases = ["simbad", "cds simbad", "astronomy objects", "star catalog"]
+home_url = "https://simbad.cfa.harvard.edu/simbad/"
+tier = 2
+scopes = ["academic.physics", "dataset"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 4, concurrency = 2, timeout_ms = 12000, cache_ttl_s = 86400, host_bucket = "simbad.cfa.harvard.edu" }
+
+[op.search]
+summary = "Search SIMBAD astronomical objects by main_id prefix via ADQL/TAP."
+method = "GET"
+url = "https://simbad.cfa.harvard.edu/simbad/sim-tap/sync"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { request = "doQuery", lang = "adql", format = "json" }
+probe = { params = { query = "M  3", limit = 3 }, min_results = 2, fixture = "fixtures/w5j/simbad_cfa/search/default.json" }
+examples = ["source.call('simbad_cfa.search', { query: 'M  3', limit: 5 })"]
+
+[op.search.params]
+query = { type = "string", required = true, to = "query", template = "SELECT main_id, otype, ra, dec, sp_type, rvz_radvel, plx_value, nbref FROM basic WHERE main_id LIKE '{query}%'", doc = "SIMBAD main_id prefix (e.g. 'M  3', 'NGC  224', 'HD  48915')" }
+limit = { type = "int", default = 5, min = 1, max = 50, to = "MAXREC", doc = "Maximum astronomical objects returned" }
+
+[op.search.map]
+items = "(.data // [])[]"
+record = '''{
+  mainId: (.[0] // ""),
+  objectType: (.[1] // null),
+  raDeg: (.[2] // null),
+  decDeg: (.[3] // null),
+  spectralType: (.[4] // null),
+  radialVelocityKmS: (.[5] // null),
+  parallaxMas: (.[6] // null),
+  referenceCount: (.[7] // null),
+  url: ("https://simbad.cfa.harvard.edu/simbad/sim-id?Ident=" + ((.[0] // "") | gsub(" "; "+")))
+}'''
+hit = '''{
+  title: (((.[0] // "") | collapse_ws // "") + (if (.[1] // "") != "" then (" [" + .[1] + "]") else "" end)),
+  url: ("https://simbad.cfa.harvard.edu/simbad/sim-id?Ident=" + ((.[0] // "") | gsub(" "; "+"))),
+  snippet: ([
+    (if (.[2] | type) == "number" and (.[3] | type) == "number" then "RA \(.[2])°, Dec \(.[3])°" else empty end),
+    (if (.[4] // "") != "" then "SpType: \(.[4])" else empty end),
+    (if (.[7] | type) == "number" then "\(.[7]) refs" else empty end)
+  ] | join(" · ")),
+  date: null,
+  dateSource: "api"
+}'''
+
+[op.object]
+summary = "Look up any astronomical object by common name or catalog identifier (e.g. Vega, M31, Sirius) via SIMBAD ident join."
+method = "GET"
+url = "https://simbad.cfa.harvard.edu/simbad/sim-tap/sync"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { request = "doQuery", lang = "adql", format = "json", MAXREC = 5 }
+probe = { params = { name = "Vega" }, min_results = 1, fixture = "fixtures/w5j/simbad_cfa/object/default.json" }
+examples = ["source.call('simbad_cfa.object', { name: 'Vega' })", "source.call('simbad_cfa.object', { name: 'M31' })"]
+
+[op.object.params]
+name = { type = "string", required = true, to = "query", template = "SELECT b.main_id, b.otype, b.ra, b.dec, b.sp_type, b.rvz_radvel, b.plx_value, b.nbref FROM basic AS b JOIN ident AS i ON b.oid = i.oidref WHERE i.id = '{name}'", doc = "Object name or catalog identifier (e.g. Vega, Sirius, M31, NGC 1976)" }
+
+[op.object.map]
+items = "(.data // [])[]"
+record = "@ref:op.search.map.record"
+
+[op.adql]
+summary = "Run a custom read-only ADQL query against the SIMBAD CfA TAP endpoint."
+method = "GET"
+url = "https://simbad.cfa.harvard.edu/simbad/sim-tap/sync"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { request = "doQuery", lang = "adql", format = "json" }
+probe = { params = { adql = "SELECT TOP 2 main_id, otype, ra, dec FROM basic WHERE main_id = 'M  31'", limit = 2 }, min_results = 1, fixture = "fixtures/w5j/simbad_cfa/adql/default.json" }
+examples = ["source.call('simbad_cfa.adql', { adql: \"SELECT TOP 5 main_id, otype, ra, dec FROM basic WHERE main_id LIKE 'M  %'\", limit: 5 })"]
+
+[op.adql.params]
+adql = { type = "string", required = true, to = "query", doc = "IVOA ADQL SELECT statement" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "MAXREC", doc = "Maximum rows returned" }
+
+[op.adql.map]
+items = ". as $root | ($root.metadata | map(.name)) as $cols | ($root.data // [])[] | . as $row | [range(0; ($cols | length)) | {key: $cols[.], value: $row[.]}] | from_entries"
+record = "."

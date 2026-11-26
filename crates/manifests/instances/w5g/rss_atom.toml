@@ -1,0 +1,78 @@
+protocol = "rss_atom"
+
+[[instance]]
+id = "nber_papers_rss"
+name = "NBER New Working Papers Feed"
+summary = "Weekly RSS feed of newly released National Bureau of Economic Research working papers."
+aliases = ["nber rss", "nber working papers"]
+base_url = "https://back.nber.org/rss/new.xml"
+scopes = ["academic.preprint", "finance"]
+caps = ["search", "harvest"]
+tier = 1
+probe = { op = "search", params = { limit = 5 }, min_results = 2 }
+
+[[instance]]
+id = "w3c_news_rss"
+name = "W3C Standards News Feed"
+summary = "Official World Wide Web Consortium feed for web specification publications, recommendations, and working group updates."
+aliases = ["w3c rss", "w3c news"]
+base_url = "https://www.w3.org/news/feed/"
+scopes = ["docs", "news"]
+caps = ["search", "harvest"]
+tier = 1
+probe = { op = "search", params = { limit = 5 }, min_results = 2 }
+
+[[instance]]
+id = "nist_news_rss"
+name = "NIST Research and Standards News Feed"
+summary = "Official US National Institute of Standards and Technology feed covering metrology, AI, quantum, and cybersecurity standards."
+aliases = ["nist rss", "nist news"]
+base_url = "https://www.nist.gov/news-events/news/rss.xml"
+scopes = ["docs", "security", "gov"]
+caps = ["search", "harvest"]
+tier = 1
+probe = { op = "search", params = { limit = 5 }, min_results = 2 }
+
+[[instance]]
+id = "fed_press_rss"
+name = "Federal Reserve Press Releases Feed"
+summary = "Official Board of Governors of the Federal Reserve System RSS feed for monetary policy, FOMC, and regulatory releases."
+aliases = ["federal reserve rss", "fomc feed"]
+base_url = "https://www.federalreserve.gov/feeds/press_all.xml"
+scopes = ["finance", "gov"]
+caps = ["search", "harvest"]
+tier = 1
+probe = { op = "search", params = { limit = 5 }, min_results = 2 }
+
+[[instance]]
+id = "kernel_releases_rss"
+name = "Linux Kernel Releases Feed"
+summary = "Official kernel.org RSS feed tracking mainline, stable, and long-term Linux kernel releases."
+aliases = ["kernel.org rss", "linux kernel releases"]
+base_url = "https://www.kernel.org/feeds/kdist.xml"
+scopes = ["code", "security"]
+caps = ["search", "harvest"]
+tier = 1
+probe = { op = "search", params = { limit = 5 }, min_results = 2 }
+
+[[instance]]
+id = "bbc_world_rss"
+name = "BBC World News Feed"
+summary = "International breaking news and global affairs headlines from BBC News World edition."
+aliases = ["bbc world", "bbc rss"]
+base_url = "https://feeds.bbci.co.uk/news/world/rss.xml"
+scopes = ["news"]
+caps = ["search", "harvest"]
+tier = 1
+probe = { op = "search", params = { limit = 5 }, min_results = 2 }
+
+[[instance]]
+id = "eli_bendersky_atom"
+name = "Eli Bendersky's Technical Blog (Atom)"
+summary = "In-depth Atom 1.0 systems programming feed covering compilers, Go internals, Linux, and algorithms."
+aliases = ["eli.thegreenplace.net", "bendersky blog"]
+base_url = "https://eli.thegreenplace.net/feeds/all.atom.xml"
+scopes = ["code", "docs"]
+caps = ["search", "harvest"]
+tier = 2
+probe = { op = "search", params = { limit = 5 }, min_results = 2 }

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "abusech_urlhaus",
+  "op": "payload",
+  "recordedAt": "2026-11-25T12:56:38Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://urlhaus-api.abuse.ch/v1/payload/",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": "f7dd89b355225eb47f89bc7758cf6d978e22b63acc2c1b5a514c77d492a75b9e"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"query_status\": \"ok\", \"sha256_hash\": \"275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f\", \"md5_hash\": \"d72ba95c67364911636a82f711732eb6\", \"file_size\": 51200, \"file_type\": \"peexe\", \"signature\": \"Trojan\", \"first_seen\": \"2023-05-12 14:22:10 UTC\", \"url_count\": \"1\", \"urls\": [{\"id\": \"2654321\", \"urlhaus_reference\": \"https://urlhaus.abuse.ch/url/2654321/\", \"url\": \"http://vektorex.com/evil/payload.exe\", \"url_status\": \"offline\", \"date_added\": \"2023-05-12 14:22:10 UTC\", \"threat\": \"malware_download\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

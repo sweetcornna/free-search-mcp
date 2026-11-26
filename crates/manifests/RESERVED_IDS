@@ -1,0 +1,78 @@
+# Reserved built-in and dropped source IDs (62 total — SPEC-contracts.md / SPEC.md §9.2 / M12).
+# User overrides in sources.d/*.toml MUST NOT reuse any ID in this file (S4).
+# Wave manifests (w5*) MUST NOT reuse any ID in this file; seed manifests and
+# legacy protocol instances live exclusively under sources/seed/ and instances/seed/.
+
+# --- 12 Seed Manifests (11 scholar-critical + mwmbl) ---
+arxiv
+crossref
+openaire
+europepmc
+openalex
+semanticscholar
+unpaywall
+pmc_idconv
+doaj
+datacite
+opencitations
+mwmbl
+
+# --- 13 Native SERP Engines (fsm-engines-serp) ---
+duckduckgo
+bing
+yahoojp
+yahoo
+seznam
+so360
+quark
+naver
+baidu
+googlenews
+youcom
+bilibili
+daum
+
+# --- 15 Native API & Keyed Engines (fsm-engines-api) ---
+github
+github_code
+github_releases
+registries
+sec_edgar
+yahoofinance
+cninfo
+worldclock
+openmeteo
+rdap
+wikidata
+brave_api
+serper
+serpbase
+tavily
+
+# --- 14 Native Direct-Answer / Claim Engines (fsm-engines-claims) ---
+imf
+holidays
+frankfurter
+cfets
+coingecko
+wdi
+gleif
+endoflife
+cisakev
+osv
+appstore
+pypi
+npm
+crates
+
+# --- 3 Legacy Protocol Instances (instances/seed/) ---
+wikipedia
+wikimedia
+dataverse
+
+# --- 5 Dropped Legacy Engines (must never be reused) ---
+brave
+zhihu
+google_cse
+antigravity
+codex

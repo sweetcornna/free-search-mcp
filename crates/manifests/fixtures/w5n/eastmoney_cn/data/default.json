@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "eastmoney_cn",
+  "op": "data",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_ECONOMY_CPI&columns=ALL&pageNumber=1&pageSize=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/plain;charset=UTF-8"
+          ]
+        ],
+        "bodyText": "{\"version\":\"583259ebeb8f0488d587ccfdea9c1514\",\"result\":{\"pages\":76,\"data\":[{\"REPORT_DATE\":\"2013-01-01 00:00:00\",\"TIME\":\"2013年01月份\",\"NATIONAL_SAME\":2,\"NATIONAL_BASE\":102,\"NATIONAL_SEQUENTIAL\":1.0103,\"NATIONAL_ACCUMULATE\":102.0305,\"CITY_SAME\":1.9791,\"CITY_BASE\":101.9791,\"CITY_SEQUENTIAL\":0.9589,\"CITY_ACCUMULATE\":101.9791,\"RURAL_SAME\":2.1834,\"RURAL_BASE\":102.1834,\"RURAL_SEQUENTIAL\":1.1635,\"RURAL_ACCUMULATE\":102.1834},{\"REPORT_DATE\":\"2021-01-01 00:00:00\",\"TIME\":\"2021年01月份\",\"NATIONAL_SAME\":-0.3,\"NATIONAL_BASE\":99.7,\"NATIONAL_SEQUENTIAL\":1,\"NATIONAL_ACCUMULATE\":99.7,\"CITY_SAME\":-0.4,\"CITY_BASE\":99.6,\"CITY_SEQUENTIAL\":1,\"CITY_ACCUMULATE\":99.6,\"RURAL_SAME\":-0.1,\"RURAL_BASE\":99.9,\"RURAL_SEQUENTIAL\":1.1,\"RURAL_ACCUMULATE\":99.9},{\"REPORT_DATE\":\"2009-01-01 00:00:00\",\"TIME\":\"2009年01月份\",\"NATIONAL_SAME\":0.95,\"NATIONAL_BASE\":100.95,\"NATIONAL_SEQUENTIAL\":0.9445,\"NATIONAL_ACCUMULATE\":100.95,\"CITY_SAME\":0.72,\"CITY_BASE\":100.72,\"CITY_SEQUENTIAL\":0.9736,\"CITY_ACCUMULATE\":100.72,\"RURAL_SAME\":1.5,\"RURAL_BASE\":101.5,\"RURAL_SEQUENTIAL\":0.8747,\"RURAL_ACCUMULATE\":101.5}],\"count\":226},\"success\":true,\"message\":\"ok\",\"code\":0}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

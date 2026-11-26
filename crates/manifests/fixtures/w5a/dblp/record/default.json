@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "source": "dblp",
+  "op": "record",
+  "recordedAt": "2026-11-25T15:05:12Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://sparql.dblp.org/sparql",
+        "headersSubset": {
+          "accept": "application/sparql-results+json",
+          "content-type": "application/sparql-query"
+        },
+        "bodySha256": "84ee0b0b524cf5a90bc89a52495f36daed9d7744232394a635ab45a496693f45"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "date",
+            "Wed, 25 Nov 2026 15:05:12 GMT"
+          ],
+          [
+            "server",
+            "Apache/2.4.52 (Ubuntu)"
+          ],
+          [
+            "content-type",
+            "application/sparql-results+json"
+          ],
+          [
+            "access-control-allow-origin",
+            "*"
+          ],
+          [
+            "access-control-allow-headers",
+            "*"
+          ],
+          [
+            "access-control-allow-methods",
+            "GET, POST, OPTIONS"
+          ],
+          [
+            "content-security-policy",
+            "frame-ancestors 'self' https://dblps.uni-trier.de"
+          ]
+        ],
+        "bodyText": "{\"head\":{\"vars\":[\"publ\",\"title\",\"year\",\"venue\",\"doi\",\"ee\",\"authors\"]},\"results\":{\"bindings\":[{\"publ\":{\"type\":\"uri\",\"value\":\"https://dblp.org/rec/conf/clef/FrobeHVP23\"},\"title\":{\"type\":\"literal\",\"value\":\"Open Web Search at LongEval 2023: Reciprocal Rank Fusion on Automatically Generated Query Variants.\"},\"year\":{\"datatype\":\"http://www.w3.org/2001/XMLSchema#gYear\",\"type\":\"literal\",\"value\":\"2023\"},\"venue\":{\"type\":\"literal\",\"value\":\"CLEF (Working Notes)\"},\"authors\":{\"type\":\"literal\",\"value\":\"Maik Fröbe; Gijs Hendriksen; Martin Potthast; Arjen P. de Vries\"}}]},\"meta\":{\"query-time-ms\":406,\"result-size-total\":1}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

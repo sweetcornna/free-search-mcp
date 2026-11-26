@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "gbif",
+  "op": "search",
+  "recordedAt": "2026-11-25T11:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.gbif.org/v1/species/search?q=Quercus&limit=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ],
+          [
+            "cache-control",
+            "public, max-age=600"
+          ]
+        ],
+        "bodyText": "{\"offset\":0,\"limit\":3,\"endOfRecords\":false,\"count\":53183,\"results\":[{\"key\":335094696,\"datasetKey\":\"8bc819e8-4358-416a-b75e-d4b6ed7e0352\",\"nubKey\":1926324,\"parentKey\":335094677,\"parent\":\"Quercusia\",\"kingdom\":\"Animalia\",\"phylum\":\"Arthropoda\",\"order\":\"Lepidoptera\",\"family\":\"Lycaenidae\",\"genus\":\"Quercusia\",\"species\":\"Quercusia quercus\",\"kingdomKey\":333531756,\"phylumKey\":333531785,\"classKey\":333549046,\"orderKey\":333760625,\"familyKey\":335080665,\"genusKey\":335094677,\"speciesKey\":335094696,\"scientificName\":\"Quercusia quercus\",\"canonicalName\":\"Quercusia quercus\",\"nameType\":\"SCIENTIFIC\",\"taxonomicStatus\":\"ACCEPTED\",\"rank\":\"SPECIES\",\"origin\":\"SOURCE\",\"numDescendants\":0,\"numOccurrences\":0,\"taxonID\":\"1175207\",\"habitats\":[],\"nomenclaturalStatus\":[],\"threatStatuses\":[],\"descriptions\":[],\"vernacularNames\":[],\"synonym\":false,\"higherClassificationMap\":{\"333531756\":\"Animalia\",\"333531785\":\"Arthropoda\",\"333549046\":\"Insecta\",\"333760625\":\"Lepidoptera\",\"335080665\":\"Lycaenidae\",\"335094677\":\"Quercusia\"},\"class\":\"Insecta\"},{\"key\":176557110,\"nameKey\":9618743,\"datasetKey\":\"fab88965-e69d-4491-a04d-e3198b626e52\",\"parentKey\":104422844,\"parent\":\"Hypaurotis\",\"acceptedKey\":104422961,\"accepted\":\"Hypaurotis quercus\",\"kingdom\":\"Metazoa\",\"phylum\":\"Arthropoda\",\"order\":\"Lepidoptera\",\"family\":\"Lycaenidae\",\"genus\":\"Hypaurotis\",\"species\":\"Hypaurotis quercus\",\"kingdomKey\":103832354,\"phylumKey\":104183026,\"classKey\":104295797,\"orderKey\":104296506,\"familyKey\":104415101,\"genusKey\":104422844,\"speciesKey\":104422961,\"scientificName\":\"Quercusia quercus\",\"canonicalName\":\"Quercusia quercus\",\"authorship\":\"\",\"nameType\":\"SCIENTIFIC\",\"taxonomicStatus\":\"SYNONYM\",\"origin\":\"SOURCE\",\"numDescendants\":0,\"numOccurrences\":0,\"taxonID\":\"116135-s5\",\"habitats\":[],\"nomenclaturalStatus\":[],\"threatStatuses\":[],\"descriptions\":[],\"vernacularNames\":[],\"synonym\":true,\"higherClassificationMap\":{\"103832354\":\"Metazoa\",\"104183026\":\"Arthropoda\",\"104295797\":\"Insecta\",\"104296506\":\"Lepidoptera\",\"104415101\":\"Lycaenidae\",\"104422844\":\"Hypaurotis\",\"104422961\":\"Hypaurotis quercus\"},\"class\":\"Insecta\"},{\"key\":257975632,\"datasetKey\":\"f95250e7-49f4-4d2e-a04e-35533dee3318\",\"nubKey\":1926324,\"parentKey\":72737,\"parent\":\"Favonius\",\"acceptedKey\":257975627,\"accepted\":\"Favonius quercus (Linnaeus, 1758)\",\"kingdom\":\"Animalia\",\"phylum\":\"Arthropoda\",\"order\":\"Lepidoptera\",\"family\":\"Lycaenidae\",\"genus\":\"Favonius\",\"species\":\"Favonius quercus\",\"kingdomKey\":257954924,\"phylumKey\":257958450,\"classKey\":257961670,\"orderKey\":257965589,\"familyKey\":257975243,\"genusKey\":257975623,\"speciesKey\":257975627,\"scientificName\":\"Quercusia quercus\",\"canonicalName\":\"Quercusia quercus\",\"nameType\":\"SCIENTIFIC\",\"taxonomicStatus\":\"SYNONYM\",\"rank\":\"SPECIES\",\"origin\":\"SOURCE\",\"numDescendants\":0,\"numOccurrences\":0,\"taxonID\":\"http://tun.fi/MX.5000024\",\"habitats\":[],\"nomenclaturalStatus\":[],\"threatStatuses\":[],\"descriptions\":[],\"vernacularNames\":[],\"synonym\":true,\"higherClassificationMap\":{\"257954924\":\"Animalia\",\"257958450\":\"Arthropoda\",\"257961670\":\"Insecta\",\"257965589\":\"Lepidoptera\",\"257975243\":\"Lycaenidae\",\"257975623\":\"Favonius\",\"257975627\":\"Favonius quercus\",\"72737\":\"Favonius\"},\"class\":\"Insecta\"}],\"facets\":[]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

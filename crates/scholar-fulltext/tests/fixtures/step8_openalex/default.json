@@ -1,0 +1,154 @@
+{
+  "version": 1,
+  "source": "synthetic_step8a_openalex",
+  "op": "best_oa_location",
+  "recordedAt": "",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://pmc.ncbi.nlm.nih.gov/tools/idconv/api/v1/articles/?format=json&ids=10.1038%2Fnature12373&tool=free-search-mcp",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"status\":\"ok\",\"records\":[{\"requested-id\":\"10.1038/nature12373\",\"status\":\"error\"}]}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.openalex.org/works/https://doi.org/10.1038/nature12373?select=id%2Cids%2Cdoi%2Copen_access%2Cbest_oa_location%2Clocations%2Cprimary_location",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"id\":\"https://openalex.org/W2159974629\",\"ids\":{\"openalex\":\"https://openalex.org/W2159974629\",\"doi\":\"https://doi.org/10.1038/nature12373\",\"mag\":\"2159974629\",\"pmid\":\"https://pubmed.ncbi.nlm.nih.gov/23903748\",\"pmcid\":\"https://www.ncbi.nlm.nih.gov/pmc/articles/4221854\",\"arxiv\":\"https://arxiv.org/abs/1304.1068\"},\"doi\":\"https://doi.org/10.1038/nature12373\",\"open_access\":{\"is_oa\":true,\"oa_status\":\"bronze\",\"oa_url\":\"https://www.nature.com/articles/nature12373.pdf\",\"any_repository_has_fulltext\":true},\"best_oa_location\":{\"id\":\"doi:10.1038/nature12373\",\"doi\":\"https://doi.org/10.1038/nature12373\",\"is_oa\":true,\"landing_page_url\":\"https://doi.org/10.1038/nature12373\",\"pdf_url\":\"https://www.nature.com/articles/nature12373.pdf\",\"source\":{\"id\":\"https://openalex.org/S137773608\",\"display_name\":\"Nature\",\"issn_l\":\"0028-0836\",\"issn\":[\"0028-0836\",\"1476-4687\"],\"is_oa\":false,\"is_in_doaj\":false,\"is_core\":true,\"listed_in\":[\"anvur-class-a\",\"anvur-scientific\",\"cwts-core\",\"dongbi-a\",\"doyens\",\"erih-plus\",\"jufo-3\",\"ki-jl-3\",\"medline\",\"norway-2\",\"poland-200\",\"russia-white-list-1\",\"vabb-shw\"],\"host_organization\":\"https://openalex.org/P4310319908\",\"host_organization_name\":\"Nature Portfolio\",\"host_organization_lineage\":[\"https://openalex.org/P4310319908\",\"https://openalex.org/P4310319965\"],\"host_organization_lineage_names\":[\"Nature Portfolio\",\"Springer Nature\"],\"type\":\"journal\"},\"license\":null,\"license_id\":null,\"version\":\"publishedVersion\",\"is_accepted\":true,\"is_published\":true,\"raw_source_name\":\"Nature\",\"raw_type\":\"journal-article\"},\"locations\":[{\"id\":\"doi:10.1038/nature12373\",\"doi\":\"https://doi.org/10.1038/nature12373\",\"is_oa\":true,\"landing_page_url\":\"https://doi.org/10.1038/nature12373\",\"pdf_url\":\"https://www.nature.com/articles/nature12373.pdf\",\"source\":{\"id\":\"https://openalex.org/S137773608\",\"display_name\":\"Nature\",\"issn_l\":\"0028-0836\",\"issn\":[\"0028-0836\",\"1476-4687\"],\"is_oa\":false,\"is_in_doaj\":false,\"is_core\":true,\"listed_in\":[\"anvur-class-a\",\"anvur-scientific\",\"cwts-core\",\"dongbi-a\",\"doyens\",\"erih-plus\",\"jufo-3\",\"ki-jl-3\",\"medline\",\"norway-2\",\"poland-200\",\"russia-white-list-1\",\"vabb-shw\"],\"host_organization\":\"https://openalex.org/P4310319908\",\"host_organization_name\":\"Nature Portfolio\",\"host_organization_lineage\":[\"https://openalex.org/P4310319908\",\"https://openalex.org/P4310319965\"],\"host_organization_lineage_names\":[\"Nature Portfolio\",\"Springer Nature\"],\"type\":\"journal\"},\"license\":null,\"license_id\":null,\"version\":\"publishedVersion\",\"is_accepted\":true,\"is_published\":true,\"raw_source_name\":\"Nature\",\"raw_type\":\"journal-article\"},{\"id\":\"pmid:23903748\",\"doi\":null,\"is_oa\":false,\"landing_page_url\":\"https://pubmed.ncbi.nlm.nih.gov/23903748\",\"pdf_url\":null,\"source\":{\"id\":\"https://openalex.org/S4306525036\",\"display_name\":\"PubMed\",\"issn_l\":null,\"issn\":null,\"is_oa\":false,\"is_in_doaj\":false,\"is_core\":false,\"listed_in\":[],\"host_organization\":\"https://openalex.org/I1299303238\",\"host_organization_name\":\"National Institutes of Health\",\"host_organization_lineage\":[\"https://openalex.org/I1299303238\"],\"host_organization_lineage_names\":[],\"type\":\"repository\"},\"license\":null,\"license_id\":null,\"version\":\"publishedVersion\",\"is_accepted\":true,\"is_published\":true,\"raw_source_name\":\"Nature\",\"raw_type\":\"Journal Article\"},{\"id\":\"pmh:oai:pubmedcentral.nih.gov:4221854\",\"doi\":null,\"is_oa\":true,\"landing_page_url\":\"https://pmc.ncbi.nlm.nih.gov/articles/PMC4221854/\",\"pdf_url\":null,\"source\":{\"id\":\"https://openalex.org/S2764455111\",\"display_name\":\"PubMed Central\",\"issn_l\":null,\"issn\":null,\"is_oa\":true,\"is_in_doaj\":false,\"is_core\":false,\"listed_in\":[],\"host_organization\":\"https://openalex.org/I1299303238\",\"host_organization_name\":\"National Institutes of Health\",\"host_organization_lineage\":[\"https://openalex.org/I1299303238\"],\"host_organization_lineage_names\":[],\"type\":\"repository\"},\"license\":null,\"license_id\":null,\"version\":\"acceptedVersion\",\"is_accepted\":true,\"is_published\":false,\"raw_source_name\":\"Nature\",\"raw_type\":\"Text\"},{\"id\":\"pmh:oai:arXiv.org:1304.1068\",\"doi\":\"https://doi.org/10.48550/arxiv.1304.1068\",\"is_oa\":true,\"landing_page_url\":\"http://arxiv.org/abs/1304.1068\",\"pdf_url\":\"https://arxiv.org/pdf/1304.1068\",\"source\":{\"id\":\"https://openalex.org/S4306400194\",\"display_name\":\"arXiv\",\"issn_l\":\"2331-8422\",\"issn\":[\"2331-8422\"],\"is_oa\":true,\"is_in_doaj\":false,\"is_core\":false,\"listed_in\":[],\"host_organization\":\"https://openalex.org/I4402554005\",\"host_organization_name\":\"arXiv\",\"host_organization_lineage\":[\"https://openalex.org/I4402554005\"],\"host_organization_lineage_names\":[],\"type\":\"repository\"},\"license\":null,\"license_id\":null,\"version\":\"submittedVersion\",\"is_accepted\":false,\"is_published\":false,\"raw_source_name\":null,\"raw_type\":\"text\"},{\"id\":\"pmh:oai:dash.harvard.edu:1/12285462\",\"doi\":null,\"is_oa\":false,\"landing_page_url\":\"http://nrs.harvard.edu/urn-3:HUL.InstRepos:12285462\",\"pdf_url\":null,\"source\":{\"id\":\"https://openalex.org/S4306401540\",\"display_name\":\"Digital Access to Scholarship at Harvard (DASH) (Harvard University)\",\"issn_l\":null,\"issn\":null,\"is_oa\":false,\"is_in_doaj\":false,\"is_core\":false,\"listed_in\":[],\"host_organization\":\"https://openalex.org/I136199984\",\"host_organization_name\":\"Harvard University\",\"host_organization_lineage\":[\"https://openalex.org/I136199984\"],\"host_organization_lineage_names\":[],\"type\":\"repository\"},\"license\":null,\"license_id\":null,\"version\":\"submittedVersion\",\"is_accepted\":false,\"is_published\":false,\"raw_source_name\":\"\",\"raw_type\":\"Journal Article\"},{\"id\":\"pmh:oai:RePEc:nat:nature:v:500:y:2013:i:7460:d:10.1038_nature12373\",\"doi\":null,\"is_oa\":false,\"landing_page_url\":\"https://www.nature.com/articles/nature12373\",\"pdf_url\":null,\"source\":{\"id\":\"https://openalex.org/S4306401271\",\"display_name\":\"RePEc: Research Papers in Economics\",\"issn_l\":null,\"issn\":null,\"is_oa\":false,\"is_in_doaj\":false,\"is_core\":false,\"listed_in\":[],\"host_organization\":\"https://openalex.org/I77793887\",\"host_organization_name\":\"Federal Reserve Bank of St. Louis\",\"host_organization_lineage\":[\"https://openalex.org/I77793887\"],\"host_organization_lineage_names\":[],\"type\":\"repository\"},\"license\":null,\"license_id\":null,\"version\":\"submittedVersion\",\"is_accepted\":false,\"is_published\":false,\"raw_source_name\":null,\"raw_type\":\"article\"},{\"id\":\"pmh:oai:escholarship.org:ark:/13030/qt5035z3pq\",\"doi\":null,\"is_oa\":false,\"landing_page_url\":\"https://escholarship.org/uc/item/5035z3pq\",\"pdf_url\":null,\"source\":{\"id\":\"https://openalex.org/S4306400115\",\"display_name\":\"eScholarship (California Digital Library)\",\"issn_l\":null,\"issn\":null,\"is_oa\":false,\"is_in_doaj\":false,\"is_core\":false,\"listed_in\":[],\"host_organization\":\"https://openalex.org/I2801248553\",\"host_organization_name\":\"California Digital Library\",\"host_organization_lineage\":[\"https://openalex.org/I2801248553\"],\"host_organization_lineage_names\":[],\"type\":\"repository\"},\"license\":null,\"license_id\":null,\"version\":\"submittedVersion\",\"is_accepted\":false,\"is_published\":false,\"raw_source_name\":\"Nature, vol 500, iss 7460\",\"raw_type\":\"article\"}],\"primary_location\":{\"id\":\"doi:10.1038/nature12373\",\"doi\":\"https://doi.org/10.1038/nature12373\",\"is_oa\":true,\"landing_page_url\":\"https://doi.org/10.1038/nature12373\",\"pdf_url\":\"https://www.nature.com/articles/nature12373.pdf\",\"source\":{\"id\":\"https://openalex.org/S137773608\",\"display_name\":\"Nature\",\"issn_l\":\"0028-0836\",\"issn\":[\"0028-0836\",\"1476-4687\"],\"is_oa\":false,\"is_in_doaj\":false,\"is_core\":true,\"listed_in\":[\"anvur-class-a\",\"anvur-scientific\",\"cwts-core\",\"dongbi-a\",\"doyens\",\"erih-plus\",\"jufo-3\",\"ki-jl-3\",\"medline\",\"norway-2\",\"poland-200\",\"russia-white-list-1\",\"vabb-shw\"],\"host_organization\":\"https://openalex.org/P4310319908\",\"host_organization_name\":\"Nature Portfolio\",\"host_organization_lineage\":[\"https://openalex.org/P4310319908\",\"https://openalex.org/P4310319965\"],\"host_organization_lineage_names\":[\"Nature Portfolio\",\"Springer Nature\"],\"type\":\"journal\"},\"license\":null,\"license_id\":null,\"version\":\"publishedVersion\",\"is_accepted\":true,\"is_published\":true,\"raw_source_name\":\"Nature\",\"raw_type\":\"journal-article\"}}\n",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC4221854/fullTextXML",
+        "headersSubset": {
+          "accept": "application/xml"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 404,
+        "headers": [
+          [
+            "content-type",
+            "text/plain"
+          ]
+        ],
+        "bodyText": "Not Found",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful/pmcoa.cgi/BioC_json/PMC4221854/unicode",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 404,
+        "headers": [
+          [
+            "content-type",
+            "text/plain"
+          ]
+        ],
+        "bodyText": "Not Found",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://arxiv.org/html/1304.1068",
+        "headersSubset": {
+          "accept": "text/html"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 404,
+        "headers": [
+          [
+            "content-type",
+            "text/html"
+          ]
+        ],
+        "bodyText": "Not Found",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://ar5iv.labs.arxiv.org/html/1304.1068",
+        "headersSubset": {
+          "accept": "text/html"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 404,
+        "headers": [
+          [
+            "content-type",
+            "text/html"
+          ]
+        ],
+        "bodyText": "Not Found",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.semanticscholar.org/graph/v1/paper/DOI:10.1038/nature12373?fields=openAccessPdf%2CexternalIds%2Curl%2CisOpenAccess",
+        "headersSubset": {
+          "accept": "application/json"
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"error\":\"not found\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

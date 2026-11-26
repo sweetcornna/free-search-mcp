@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "tvmaze",
+  "op": "show",
+  "recordedAt": "2026-11-25T11:54:40Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.tvmaze.com/shows/44933",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ]
+        ],
+        "bodyText": "{\"id\":44933,\"url\":\"https://www.tvmaze.com/shows/44933/severance\",\"name\":\"Severance\",\"type\":\"Scripted\",\"language\":\"English\",\"genres\":[\"Drama\",\"Science-Fiction\",\"Mystery\"],\"status\":\"Running\",\"runtime\":null,\"averageRuntime\":49,\"premiered\":\"2022-02-18\",\"ended\":null,\"officialSite\":\"https://tv.apple.com/show/severance/umc.cmc.1srk2goyh2q2zdxcx605w8vtx\",\"schedule\":{\"time\":\"\",\"days\":[\"Friday\"]},\"rating\":{\"average\":7.7},\"weight\":100,\"network\":null,\"webChannel\":{\"id\":310,\"name\":\"Apple TV\",\"country\":null,\"officialSite\":\"https://tv.apple.com/\"},\"dvdCountry\":null,\"externals\":{\"tvrage\":null,\"thetvdb\":371980,\"imdb\":\"tt11280740\"},\"image\":{\"medium\":\"https://static.tvmaze.com/uploads/images/medium_portrait/548/1371406.jpg\",\"original\":\"https://static.tvmaze.com/uploads/images/original_untouched/548/1371406.jpg\"},\"summary\":\"<p>Mark Scout leads a team at Lumon Industries, whose employees have undergone a severance procedure, which surgically divides their memories between their work and personal lives. This daring experiment in \\\"work-life balance\\\" is called into question as Mark finds himself at the center of an unraveling mystery that will force him to confront the true nature of his work… and of himself.</p>\",\"updated\":1790712623,\"_links\":{\"self\":{\"href\":\"https://api.tvmaze.com/shows/44933\"},\"previousepisode\":{\"href\":\"https://api.tvmaze.com/episodes/2939710\",\"name\":\"Cold Harbor\"}}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

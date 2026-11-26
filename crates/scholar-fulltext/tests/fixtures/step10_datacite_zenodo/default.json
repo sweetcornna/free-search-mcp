@@ -1,0 +1,217 @@
+{
+  "version": 1,
+  "source": "synthetic_step10ce_datacite_zenodo",
+  "op": "datacite_zenodo",
+  "recordedAt": "",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://pmc.ncbi.nlm.nih.gov/tools/idconv/api/v1/articles/?format=json&ids=10.5281%2Fzenodo.10900000&tool=free-search-mcp",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"status\":\"ok\",\"records\":[{\"requested-id\":\"10.5281/zenodo.10900000\",\"status\":\"error\"}]}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.openalex.org/works/https://doi.org/10.5281/zenodo.10900000?select=id%2Cids%2Cdoi%2Copen_access%2Cbest_oa_location%2Clocations%2Cprimary_location",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 404,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.semanticscholar.org/graph/v1/paper/DOI:10.5281/zenodo.10900000?fields=openAccessPdf%2CexternalIds%2Curl%2CisOpenAccess",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 404,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.core.ac.uk/v3/search/works?limit=3&q=doi%3A%2210.5281%2Fzenodo.10900000%22",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"totalHits\":0,\"results\":[]}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://doaj.org/api/search/articles/doi:10.5281%2Fzenodo.10900000",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"total\":0,\"results\":[]}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.crossref.org/works/10.5281/zenodo.10900000",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 404,
+        "headers": [
+          [
+            "content-type",
+            "text/plain"
+          ]
+        ],
+        "bodyText": "Resource not found.",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.datacite.org/dois/10.5281/zenodo.10900000",
+        "headersSubset": {
+          "accept": "application/vnd.api+json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/vnd.api+json"
+          ]
+        ],
+        "bodyText": "{\"data\":{\"id\":\"10.5281/zenodo.10900000\",\"type\":\"dois\",\"attributes\":{\"doi\":\"10.5281/zenodo.10900000\",\"prefix\":\"10.5281\",\"suffix\":\"zenodo.10900000\",\"identifiers\":[{\"identifier\":\"oai:zenodo.org:10900000\",\"identifierType\":\"oai\"}],\"alternateIdentifiers\":[{\"alternateIdentifierType\":\"oai\",\"alternateIdentifier\":\"oai:zenodo.org:10900000\"}],\"creators\":[{\"name\":\"\u0411\u043e\u0431\u043e\u0445\u043e\u043d\u043e\u0432, \u0410\u043a\u0440\u0430\u043c\u0445\u043e\u043d \u0410\u043b\u043e\u0445\u043e\u043d\u043e\u0432\u0438\u0447\",\"nameType\":\"Personal\",\"givenName\":\"\u0410\u043a\u0440\u0430\u043c\u0445\u043e\u043d \u0410\u043b\u043e\u0445\u043e\u043d\u043e\u0432\u0438\u0447\",\"familyName\":\"\u0411\u043e\u0431\u043e\u0445\u043e\u043d\u043e\u0432\",\"nameIdentifiers\":[],\"affiliation\":[]},{\"name\":\"\u0422\u0443\u0440\u0430\u0431\u043e\u0432, \u0412\u0430\u0445\u0438\u0434 \u0422\u0443\u0440\u0430\u0431\u043e\u0432\u0438\u0447\",\"nameType\":\"Personal\",\"givenName\":\"\u0412\u0430\u0445\u0438\u0434 \u0422\u0443\u0440\u0430\u0431\u043e\u0432\u0438\u0447\",\"familyName\":\"\u0422\u0443\u0440\u0430\u0431\u043e\u0432\",\"nameIdentifiers\":[],\"affiliation\":[]}],\"titles\":[{\"title\":\"\u04b2\u0423\u049a\u0423\u049a\u041d\u0418 \u041c\u0423\u04b2\u041e\u0424\u0410\u0417\u0410 \u049a\u0418\u041b\u0418\u0428 \u0424\u0410\u041e\u041b\u0418\u042f\u0422\u0418\u041d\u0418\u041d\u0413 \u0410\u041a\u0422\u0423\u0410\u041b \u041c\u0423\u0410\u041c\u041c\u041e\u041b\u0410\u0420\u0418, \u0423\u041b\u0410\u0420\u041d\u0418 \u0422\u0418\u0417\u0418\u041c\u041b\u0410\u0428\u0422\u0418\u0420\u0418\u0428, \u0428\u0423\u041d\u0418\u041d\u0413\u0414\u0415\u041a, \u0418\u041b\u041c\u0418\u0419-\u0410\u041c\u0410\u041b\u0418\u0419 \u0422\u0410\u0414\u049a\u0418\u049a \u049a\u0418\u041b\u0418\u0428\u041d\u0418\u041d\u0413 \u0418\u0421\u0422\u0418\u049a\u0411\u041e\u041b\u041b\u0418 \u0419\u040e\u041d\u0410\u041b\u0418\u0428\u041b\u0410\u0420\u0418\"}],\"publisher\":\"Zenodo\",\"container\":{},\"publicationYear\":2024,\"subjects\":[],\"contributors\":[],\"dates\":[{\"date\":\"2024-03-30\",\"dateType\":\"Issued\"}],\"language\":\"uz\",\"types\":{\"ris\":\"JOUR\",\"bibtex\":\"article\",\"citeproc\":\"article-journal\",\"schemaOrg\":\"ScholarlyArticle\",\"resourceType\":\"\",\"resourceTypeGeneral\":\"JournalArticle\"},\"relatedIdentifiers\":[{\"relationType\":\"IsVersionOf\",\"relatedIdentifier\":\"10.5281/zenodo.10899999\",\"relatedIdentifierType\":\"DOI\"},{\"relationType\":\"IsPartOf\",\"relatedIdentifier\":\"2181-3523\",\"resourceTypeGeneral\":\"Collection\",\"relatedIdentifierType\":\"ISSN\"}],\"relatedItems\":[],\"sizes\":[],\"formats\":[],\"version\":null,\"rightsList\":[{\"rights\":\"Creative Commons Attribution 4.0 International\",\"rightsUri\":\"https://creativecommons.org/licenses/by/4.0/legalcode\",\"schemeUri\":\"https://spdx.org/licenses/\",\"rightsIdentifier\":\"cc-by-4.0\",\"rightsIdentifierScheme\":\"SPDX\"}],\"descriptions\":[{\"description\":\"\u041c\u0430\u049b\u043e\u043b\u0430\u0434\u0430 \u04b3\u0443\u049b\u0443\u049b\u043d\u0438 \u043c\u0443\u04b3\u043e\u0444\u0430\u0437\u0430 \u049b\u0438\u043b\u0438\u0448 \u0444\u0430\u043e\u043b\u0438\u044f\u0442\u0438\u043d\u0438\u043d\u0433 \u0430\u043a\u0442\u0443\u0430\u043b \u043c\u0443\u0430\u043c\u043c\u043e\u043b\u0430\u0440\u0438\u043d\u0438 \u0442\u0430\u04b3\u043b\u0438\u043b\u0438\u0439 \u045e\u0440\u0433\u0430\u043d\u0438\u0431, \u0442\u0438\u0437\u0438\u043c\u043b\u0430\u0448\u0442\u0438\u0440\u0438\u0448, \u0443\u043b\u0430\u0440\u043d\u0438 \u0438\u043b\u043c\u0438\u0439-\u0430\u043c\u0430\u043b\u0438\u0439 \u0442\u0430\u0434\u049b\u0438\u049b \u049b\u0438\u043b\u0438\u0448\u043d\u0438\u043d\u0433 \u0438\u0441\u0442\u0438\u049b\u0431\u043e\u043b\u043b\u0438 \u0439\u045e\u043d\u0430\u043b\u0438\u0448\u043b\u0430\u0440\u0438\u043d\u0438 \u0431\u0435\u043b\u0433\u0438\u043b\u0430\u0448 \u044e\u0437\u0430\u0441\u0438\u0434\u0430\u043d \u0444\u0438\u043a\u0440 \u044e\u0440\u0438\u0442\u0438\u043b\u0433\u0430\u043d. \u0428\u0443\u043d\u0438\u043d\u0433\u0434\u0435\u043a, \u04b3\u0443\u049b\u0443\u049b\u043d\u0438 \u043c\u0443\u04b3\u043e\u0444\u0430\u0437\u0430 \u049b\u0438\u043b\u0438\u0448 \u0444\u0430\u043e\u043b\u0438\u044f\u0442\u0438\u0434\u0430\u0433\u0438 \u043c\u0443\u0430\u043c\u043c\u043e\u043b\u0430\u0440\u0438\u043d\u0438 \u0438\u043b\u043c\u0438\u0439 \u0436\u0438\u04b3\u0430\u0442\u0434\u0430\u043d \u045e\u0440\u0433\u0430\u043d\u0438\u0448 \u044e\u0437\u0430\u0441\u0438\u0434\u0430\u043d \u0442\u0430\u0434\u049b\u0438\u049b\u043e\u0442 \u0439\u045e\u043d\u0430\u043b\u0438\u0448\u043b\u0430\u0440\u0438 \u043a\u045e\u0440\u0441\u0430\u0442\u0438\u043b\u0433\u0430\u043d.\",\"descriptionType\":\"Abstract\"}],\"geoLocations\":[],\"fundingReferences\":[],\"xml\":\"PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHJlc291cmNlIHhtbG5zOnhzaT0iaHR0cDovL3d3dy53My5vcmcvMjAwMS9YTUxTY2hlbWEtaW5zdGFuY2UiIHhtbG5zPSJodHRwOi8vZGF0YWNpdGUub3JnL3NjaGVtYS9rZXJuZWwtNCIgeHNpOnNjaGVtYUxvY2F0aW9uPSJodHRwOi8vZGF0YWNpdGUub3JnL3NjaGVtYS9rZXJuZWwtNCBodHRwOi8vc2NoZW1hLmRhdGFjaXRlLm9yZy9tZXRhL2tlcm5lbC00L21ldGFkYXRhLnhzZCI+CiAgPGlkZW50aWZpZXIgaWRlbnRpZmllclR5cGU9IkRPSSI+MTAuNTI4MS9aRU5PRE8uMTA5MDAwMDA8L2lkZW50aWZpZXI+CiAgPGNyZWF0b3JzPgogICAgPGNyZWF0b3I+CiAgICAgIDxjcmVhdG9yTmFtZSBuYW1lVHlwZT0iUGVyc29uYWwiPtCR0L7QsdC+0YXQvtC90L7Qsiwg0JDQutGA0LDQvNGF0L7QvSDQkNC70L7RhdC+0L3QvtCy0LjRhzwvY3JlYXRvck5hbWU+CiAgICAgIDxnaXZlbk5hbWU+0JDQutGA0LDQvNGF0L7QvSDQkNC70L7RhdC+0L3QvtCy0LjRhzwvZ2l2ZW5OYW1lPgogICAgICA8ZmFtaWx5TmFtZT7QkdC+0LHQvtGF0L7QvdC+0LI8L2ZhbWlseU5hbWU+CiAgICA8L2NyZWF0b3I+CiAgICA8Y3JlYXRvcj4KICAgICAgPGNyZWF0b3JOYW1lIG5hbWVUeXBlPSJQZXJzb25hbCI+0KLRg9GA0LDQsdC+0LIsINCS0LDRhdC40LQg0KLRg9GA0LDQsdC+0LLQuNGHPC9jcmVhdG9yTmFtZT4KICAgICAgPGdpdmVuTmFtZT7QktCw0YXQuNC0INCi0YPRgNCw0LHQvtCy0LjRhzwvZ2l2ZW5OYW1lPgogICAgICA8ZmFtaWx5TmFtZT7QotGD0YDQsNCx0L7QsjwvZmFtaWx5TmFtZT4KICAgIDwvY3JlYXRvcj4KICA8L2NyZWF0b3JzPgogIDx0aXRsZXM+CiAgICA8dGl0bGU+0rLQo9Ka0KPSmtCd0Jgg0JzQo9Ky0J7QpNCQ0JfQkCDSmtCY0JvQmNCoINCk0JDQntCb0JjQr9Ci0JjQndCY0J3QkyDQkNCa0KLQo9CQ0Jsg0JzQo9CQ0JzQnNCe0JvQkNCg0JgsINCj0JvQkNCg0J3QmCDQotCY0JfQmNCc0JvQkNCo0KLQmNCg0JjQqCwg0KjQo9Cd0JjQndCT0JTQldCaLCDQmNCb0JzQmNCZLdCQ0JzQkNCb0JjQmSDQotCQ0JTSmtCY0pog0prQmNCb0JjQqNCd0JjQndCTINCY0KHQotCY0prQkdCe0JvQm9CYINCZ0I7QndCQ0JvQmNCo0JvQkNCg0Jg8L3RpdGxlPgogIDwvdGl0bGVzPgogIDxwdWJsaXNoZXI+WmVub2RvPC9wdWJsaXNoZXI+CiAgPHB1YmxpY2F0aW9uWWVhcj4yMDI0PC9wdWJsaWNhdGlvblllYXI+CiAgPHJlc291cmNlVHlwZSByZXNvdXJjZVR5cGVHZW5lcmFsPSJKb3VybmFsQXJ0aWNsZSIvPgogIDxkYXRlcz4KICAgIDxkYXRlIGRhdGVUeXBlPSJJc3N1ZWQiPjIwMjQtMDMtMzA8L2RhdGU+CiAgPC9kYXRlcz4KICA8bGFuZ3VhZ2U+dXpiPC9sYW5ndWFnZT4KICA8YWx0ZXJuYXRlSWRlbnRpZmllcnM+CiAgICA8YWx0ZXJuYXRlSWRlbnRpZmllciBhbHRlcm5hdGVJZGVudGlmaWVyVHlwZT0ib2FpIj5vYWk6emVub2RvLm9yZzoxMDkwMDAwMDwvYWx0ZXJuYXRlSWRlbnRpZmllcj4KICA8L2FsdGVybmF0ZUlkZW50aWZpZXJzPgogIDxyZWxhdGVkSWRlbnRpZmllcnM+CiAgICA8cmVsYXRlZElkZW50aWZpZXIgcmVsYXRlZElkZW50aWZpZXJUeXBlPSJET0kiIHJlbGF0aW9uVHlwZT0iSXNWZXJzaW9uT2YiPjEwLjUyODEvemVub2RvLjEwODk5OTk5PC9yZWxhdGVkSWRlbnRpZmllcj4KICAgIDxyZWxhdGVkSWRlbnRpZmllciByZWxhdGVkSWRlbnRpZmllclR5cGU9IklTU04iIHJlbGF0aW9uVHlwZT0iSXNQYXJ0T2YiIHJlc291cmNlVHlwZUdlbmVyYWw9IkNvbGxlY3Rpb24iPjIxODEtMzUyMzwvcmVsYXRlZElkZW50aWZpZXI+CiAgPC9yZWxhdGVkSWRlbnRpZmllcnM+CiAgPHNpemVzLz4KICA8Zm9ybWF0cy8+CiAgPHZlcnNpb24vPgogIDxyaWdodHNMaXN0PgogICAgPHJpZ2h0cyByaWdodHNVUkk9Imh0dHBzOi8vY3JlYXRpdmVjb21tb25zLm9yZy9saWNlbnNlcy9ieS80LjAvbGVnYWxjb2RlIiByaWdodHNJZGVudGlmaWVyPSJjYy1ieS00LjAiIHJpZ2h0c0lkZW50aWZpZXJTY2hlbWU9InNwZHgiPkNyZWF0aXZlIENvbW1vbnMgQXR0cmlidXRpb24gNC4wIEludGVybmF0aW9uYWw8L3JpZ2h0cz4KICA8L3JpZ2h0c0xpc3Q+CiAgPGRlc2NyaXB0aW9ucz4KICAgIDxkZXNjcmlwdGlvbiBkZXNjcmlwdGlvblR5cGU9IkFic3RyYWN0Ij7QnNCw0pvQvtC70LDQtNCwINKz0YPSm9GD0pvQvdC4INC80YPSs9C+0YTQsNC30LAg0pvQuNC70LjRiCDRhNCw0L7Qu9C40Y/RgtC40L3QuNC90LMg0LDQutGC0YPQsNC7INC80YPQsNC80LzQvtC70LDRgNC40L3QuCDRgtCw0rPQu9C40LvQuNC5INGe0YDQs9Cw0L3QuNCxLCDRgtC40LfQuNC80LvQsNGI0YLQuNGA0LjRiCwg0YPQu9Cw0YDQvdC4INC40LvQvNC40Lkt0LDQvNCw0LvQuNC5INGC0LDQtNKb0LjSmyDSm9C40LvQuNGI0L3QuNC90LMg0LjRgdGC0LjSm9Cx0L7Qu9C70Lgg0LnRntC90LDQu9C40YjQu9Cw0YDQuNC90Lgg0LHQtdC70LPQuNC70LDRiCDRjtC30LDRgdC40LTQsNC9INGE0LjQutGAINGO0YDQuNGC0LjQu9Cz0LDQvS4g0KjRg9C90LjQvdCz0LTQtdC6LCDSs9GD0pvRg9Kb0L3QuCDQvNGD0rPQvtGE0LDQt9CwINKb0LjQu9C40Ygg0YTQsNC+0LvQuNGP0YLQuNC00LDQs9C4INC80YPQsNC80LzQvtC70LDRgNC40L3QuCDQuNC70LzQuNC5INC20LjSs9Cw0YLQtNCw0L0g0Z7RgNCz0LDQvdC40Ygg0Y7Qt9Cw0YHQuNC00LDQvSDRgtCw0LTSm9C40pvQvtGCINC50Z7QvdCw0LvQuNGI0LvQsNGA0Lgg0LrRntGA0YHQsNGC0LjQu9Cz0LDQvS48L2Rlc2NyaXB0aW9uPgogIDwvZGVzY3JpcHRpb25zPgo8L3Jlc291cmNlPgo=\",\"url\":\"https://zenodo.org/doi/10.5281/zenodo.10900000\",\"contentUrl\":null,\"metadataVersion\":0,\"schemaVersion\":\"http://datacite.org/schema/kernel-4\",\"source\":\"api\",\"isActive\":true,\"state\":\"findable\",\"reason\":null,\"viewCount\":0,\"viewsOverTime\":[],\"downloadCount\":0,\"downloadsOverTime\":[],\"referenceCount\":0,\"citationCount\":0,\"citationsOverTime\":[],\"partCount\":0,\"partOfCount\":0,\"versionCount\":0,\"versionOfCount\":1,\"created\":\"2024-03-31T06:24:48.000Z\",\"registered\":\"2024-03-31T06:24:49.000Z\",\"published\":\"2024\",\"updated\":\"2024-03-31T06:24:49.000Z\"},\"relationships\":{\"client\":{\"data\":{\"id\":\"cern.zenodo\",\"type\":\"clients\"}},\"provider\":{\"data\":{\"id\":\"cern\",\"type\":\"providers\"}},\"media\":{\"data\":{\"id\":\"10.5281/zenodo.10900000\",\"type\":\"media\"}},\"references\":{\"data\":[]},\"citations\":{\"data\":[]},\"parts\":{\"data\":[]},\"partOf\":{\"data\":[]},\"versions\":{\"data\":[]},\"versionOf\":{\"data\":[{\"id\":\"10.5281/zenodo.10899999\",\"type\":\"dois\"}]}}}}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.archives-ouvertes.fr/search/?fl=halId_s%2Curi_s%2CfileMain_s%2CopenAccess_bool%2CdoiId_s&q=doiId_s%3A%2210.5281%2Fzenodo.10900000%22&rows=1&wt=json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"response\":{\"numFound\":0,\"docs\":[]}}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://zenodo.org/api/records/10900000",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"created\": \"2024-03-31T06:18:05.498546+00:00\", \"modified\": \"2024-07-06T18:15:27.748387+00:00\", \"id\": 10900000, \"conceptrecid\": \"10899999\", \"doi\": \"10.5281/zenodo.10900000\", \"conceptdoi\": \"10.5281/zenodo.10899999\", \"doi_url\": \"https://doi.org/10.5281/zenodo.10900000\", \"metadata\": {\"title\": \"\\u04b2\\u0423\\u049a\\u0423\\u049a\\u041d\\u0418 \\u041c\\u0423\\u04b2\\u041e\\u0424\\u0410\\u0417\\u0410 \\u049a\\u0418\\u041b\\u0418\\u0428 \\u0424\\u0410\\u041e\\u041b\\u0418\\u042f\\u0422\\u0418\\u041d\\u0418\\u041d\\u0413 \\u0410\\u041a\\u0422\\u0423\\u0410\\u041b \\u041c\\u0423\\u0410\\u041c\\u041c\\u041e\\u041b\\u0410\\u0420\\u0418, \\u0423\\u041b\\u0410\\u0420\\u041d\\u0418 \\u0422\\u0418\\u0417\\u0418\\u041c\\u041b\\u0410\\u0428\\u0422\\u0418\\u0420\\u0418\\u0428, \\u0428\\u0423\\u041d\\u0418\\u041d\\u0413\\u0414\\u0415\\u041a, \\u0418\\u041b\\u041c\\u0418\\u0419-\\u0410\\u041c\\u0410\\u041b\\u0418\\u0419 \\u0422\\u0410\\u0414\\u049a\\u0418\\u049a \\u049a\\u0418\\u041b\\u0418\\u0428\\u041d\\u0418\\u041d\\u0413 \\u0418\\u0421\\u0422\\u0418\\u049a\\u0411\\u041e\\u041b\\u041b\\u0418 \\u0419\\u040e\\u041d\\u0410\\u041b\\u0418\\u0428\\u041b\\u0410\\u0420\\u0418\", \"doi\": \"10.5281/zenodo.10900000\", \"publication_date\": \"2024-03-30\", \"description\": \"<p><em><span>\\u041c\\u0430\\u049b\\u043e\\u043b\\u0430\\u0434\\u0430 \\u04b3\\u0443\\u049b\\u0443\\u049b\\u043d\\u0438 \\u043c\\u0443\\u04b3\\u043e\\u0444\\u0430\\u0437\\u0430 \\u049b\\u0438\\u043b\\u0438\\u0448 \\u0444\\u0430\\u043e\\u043b\\u0438\\u044f\\u0442\\u0438\\u043d\\u0438\\u043d\\u0433 \\u0430\\u043a\\u0442\\u0443\\u0430\\u043b \\u043c\\u0443\\u0430\\u043c\\u043c\\u043e\\u043b\\u0430\\u0440\\u0438\\u043d\\u0438 \\u0442\\u0430\\u04b3\\u043b\\u0438\\u043b\\u0438\\u0439 \\u045e\\u0440\\u0433\\u0430\\u043d\\u0438\\u0431, \\u0442\\u0438\\u0437\\u0438\\u043c\\u043b\\u0430\\u0448\\u0442\\u0438\\u0440\\u0438\\u0448, \\u0443\\u043b\\u0430\\u0440\\u043d\\u0438 \\u0438\\u043b\\u043c\\u0438\\u0439-\\u0430\\u043c\\u0430\\u043b\\u0438\\u0439 \\u0442\\u0430\\u0434\\u049b\\u0438\\u049b \\u049b\\u0438\\u043b\\u0438\\u0448\\u043d\\u0438\\u043d\\u0433 \\u0438\\u0441\\u0442\\u0438\\u049b\\u0431\\u043e\\u043b\\u043b\\u0438 \\u0439\\u045e\\u043d\\u0430\\u043b\\u0438\\u0448\\u043b\\u0430\\u0440\\u0438\\u043d\\u0438 \\u0431\\u0435\\u043b\\u0433\\u0438\\u043b\\u0430\\u0448 \\u044e\\u0437\\u0430\\u0441\\u0438\\u0434\\u0430\\u043d \\u0444\\u0438\\u043a\\u0440 \\u044e\\u0440\\u0438\\u0442\\u0438\\u043b\\u0433\\u0430\\u043d. \\u0428\\u0443\\u043d\\u0438\\u043d\\u0433\\u0434\\u0435\\u043a, \\u04b3\\u0443\\u049b\\u0443\\u049b\\u043d\\u0438 \\u043c\\u0443\\u04b3\\u043e\\u0444\\u0430\\u0437\\u0430 \\u049b\\u0438\\u043b\\u0438\\u0448 \\u0444\\u0430\\u043e\\u043b\\u0438\\u044f\\u0442\\u0438\\u0434\\u0430\\u0433\\u0438 \\u043c\\u0443\\u0430\\u043c\\u043c\\u043e\\u043b\\u0430\\u0440\\u0438\\u043d\\u0438 \\u0438\\u043b\\u043c\\u0438\\u0439 \\u0436\\u0438\\u04b3\\u0430\\u0442\\u0434\\u0430\\u043d \\u045e\\u0440\\u0433\\u0430\\u043d\\u0438\\u0448 \\u044e\\u0437\\u0430\\u0441\\u0438\\u0434\\u0430\\u043d \\u0442\\u0430\\u0434\\u049b\\u0438\\u049b\\u043e\\u0442 \\u0439\\u045e\\u043d\\u0430\\u043b\\u0438\\u0448\\u043b\\u0430\\u0440\\u0438 \\u043a\\u045e\\u0440\\u0441\\u0430\\u0442\\u0438\\u043b\\u0433\\u0430\\u043d.</span></em></p>\", \"access_right\": \"open\", \"creators\": [{\"name\": \"\\u0411\\u043e\\u0431\\u043e\\u0445\\u043e\\u043d\\u043e\\u0432, \\u0410\\u043a\\u0440\\u0430\\u043c\\u0445\\u043e\\u043d \\u0410\\u043b\\u043e\\u0445\\u043e\\u043d\\u043e\\u0432\\u0438\\u0447\", \"affiliation\": null}, {\"name\": \"\\u0422\\u0443\\u0440\\u0430\\u0431\\u043e\\u0432, \\u0412\\u0430\\u0445\\u0438\\u0434 \\u0422\\u0443\\u0440\\u0430\\u0431\\u043e\\u0432\\u0438\\u0447\", \"affiliation\": null}], \"language\": \"uzb\", \"resource_type\": {\"title\": \"Journal article\", \"type\": \"publication\", \"subtype\": \"article\"}, \"journal\": {\"issue\": \"6\", \"pages\": \"40-47\", \"title\": \"Innovative Development in Educational Activities\", \"volume\": \"3\"}, \"license\": {\"id\": \"cc-by-4.0\"}, \"communities\": [{\"id\": \"openidea_uz\"}], \"relations\": {\"version\": [{\"index\": 0, \"is_last\": true, \"parent\": {\"pid_type\": \"recid\", \"pid_value\": \"10899999\"}}]}}, \"title\": \"\\u04b2\\u0423\\u049a\\u0423\\u049a\\u041d\\u0418 \\u041c\\u0423\\u04b2\\u041e\\u0424\\u0410\\u0417\\u0410 \\u049a\\u0418\\u041b\\u0418\\u0428 \\u0424\\u0410\\u041e\\u041b\\u0418\\u042f\\u0422\\u0418\\u041d\\u0418\\u041d\\u0413 \\u0410\\u041a\\u0422\\u0423\\u0410\\u041b \\u041c\\u0423\\u0410\\u041c\\u041c\\u041e\\u041b\\u0410\\u0420\\u0418, \\u0423\\u041b\\u0410\\u0420\\u041d\\u0418 \\u0422\\u0418\\u0417\\u0418\\u041c\\u041b\\u0410\\u0428\\u0422\\u0418\\u0420\\u0418\\u0428, \\u0428\\u0423\\u041d\\u0418\\u041d\\u0413\\u0414\\u0415\\u041a, \\u0418\\u041b\\u041c\\u0418\\u0419-\\u0410\\u041c\\u0410\\u041b\\u0418\\u0419 \\u0422\\u0410\\u0414\\u049a\\u0418\\u049a \\u049a\\u0418\\u041b\\u0418\\u0428\\u041d\\u0418\\u041d\\u0413 \\u0418\\u0421\\u0422\\u0418\\u049a\\u0411\\u041e\\u041b\\u041b\\u0418 \\u0419\\u040e\\u041d\\u0410\\u041b\\u0418\\u0428\\u041b\\u0410\\u0420\\u0418\", \"links\": {\"self\": \"https://zenodo.org/api/records/10900000\", \"self_html\": \"https://zenodo.org/records/10900000\", \"preview_html\": \"https://zenodo.org/records/10900000?preview=1\", \"doi\": \"https://doi.org/10.5281/zenodo.10900000\", \"self_doi\": \"https://doi.org/10.5281/zenodo.10900000\", \"self_doi_html\": \"https://zenodo.org/doi/10.5281/zenodo.10900000\", \"reserve_doi\": \"https://zenodo.org/api/records/10900000/draft/pids/doi\", \"parent\": \"https://zenodo.org/api/records/10899999\", \"parent_html\": \"https://zenodo.org/records/10899999\", \"parent_doi\": \"https://doi.org/10.5281/zenodo.10899999\", \"parent_doi_html\": \"https://zenodo.org/doi/10.5281/zenodo.10899999\", \"self_iiif_manifest\": \"https://zenodo.org/api/iiif/record:10900000/manifest\", \"self_iiif_sequence\": \"https://zenodo.org/api/iiif/record:10900000/sequence/default\", \"files\": \"https://zenodo.org/api/records/10900000/files\", \"media_files\": \"https://zenodo.org/api/records/10900000/media-files\", \"thumbnails\": {\"10\": \"https://zenodo.org/api/iiif/record:10900000:40-47.pdf/full/%5E10,/0/default.jpg\", \"50\": \"https://zenodo.org/api/iiif/record:10900000:40-47.pdf/full/%5E50,/0/default.jpg\", \"100\": \"https://zenodo.org/api/iiif/record:10900000:40-47.pdf/full/%5E100,/0/default.jpg\", \"250\": \"https://zenodo.org/api/iiif/record:10900000:40-47.pdf/full/%5E250,/0/default.jpg\", \"750\": \"https://zenodo.org/api/iiif/record:10900000:40-47.pdf/full/%5E750,/0/default.jpg\", \"1200\": \"https://zenodo.org/api/iiif/record:10900000:40-47.pdf/full/%5E1200,/0/default.jpg\"}, \"latest\": \"https://zenodo.org/api/records/10900000/versions/latest\", \"latest_html\": \"https://zenodo.org/records/10900000/latest\", \"versions\": \"https://zenodo.org/api/records/10900000/versions\", \"draft\": \"https://zenodo.org/api/records/10900000/draft\", \"access_links\": \"https://zenodo.org/api/records/10900000/access/links\", \"access_grants\": \"https://zenodo.org/api/records/10900000/access/grants\", \"access_users\": \"https://zenodo.org/api/records/10900000/access/users\", \"access_request\": \"https://zenodo.org/api/records/10900000/access/request\", \"access\": \"https://zenodo.org/api/records/10900000/access\", \"communities\": \"https://zenodo.org/api/records/10900000/communities\", \"communities-suggestions\": \"https://zenodo.org/api/records/10900000/communities-suggestions\", \"request_deletion\": \"https://zenodo.org/api/records/10900000/request-deletion\", \"file_modification\": \"https://zenodo.org/api/records/10900000/file-modification\", \"quota_increase\": \"https://zenodo.org/api/records/10900000/quota-increase\", \"requests\": \"https://zenodo.org/api/records/10900000/requests\"}, \"updated\": \"2024-07-06T18:15:27.748387+00:00\", \"recid\": \"10900000\", \"revision\": 6, \"files\": [{\"id\": \"8d09e3d1-3951-4bc1-b67b-4e00ee33120c\", \"key\": \"40-47.pdf\", \"size\": 288443, \"checksum\": \"md5:b5a204ff130baad56505fc8aad26f4a9\", \"links\": {\"self\": \"https://zenodo.org/api/records/10900000/files/40-47.pdf/content\"}}], \"swh\": {}, \"owners\": [{\"id\": \"337827\"}], \"status\": \"published\", \"stats\": {\"downloads\": 81, \"unique_downloads\": 73, \"views\": 131, \"unique_views\": 119, \"version_downloads\": 81, \"version_unique_downloads\": 73, \"version_unique_views\": 119, \"version_views\": 131}, \"state\": \"done\", \"submitted\": true}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://zenodo.org/api/records?q=doi%3A%2210.5281%2Fzenodo.10900000%22&size=1",
+        "headersSubset": {
+          "accept": "application/json"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"hits\":{\"total\":0,\"hits\":[]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

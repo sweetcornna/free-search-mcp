@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "flathub_apps",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:56:46Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://flathub.org/api/v2/search",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": "32a3e21585539e625b7b2ea1afc9cb1f6690ffbc6873a7c07f195dec73432673"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "cache-control",
+            "private, no-store"
+          ],
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"hits\":[{\"name\":\"VLC\",\"keywords\":[\"Player\",\"Capture\",\"DVD\"],\"localized_keywords\":[\"Capture\",\"DVD\",\"Player\"],\"summary\":\"VLC media player, the open-source multimedia player\",\"description\":\"VLC is a free and open source cross-platform multimedia player and framework that plays most\\n      multimedia files as well as DVDs, Audio CDs, VCDs, and various streaming protocols.\\n    \",\"id\":\"org_videolan_VLC\",\"type\":\"desktop-application\",\"project_license\":\"GPL-2.0+\",\"is_free_license\":true,\"app_id\":\"org.videolan.VLC\",\"icon\":\"https://dl.flathub.org/media/org/videolan/VLC/c1c97dde88a22efc4a61b9737d318570/icons/128x128/org.videolan.VLC.png\",\"main_categories\":\"audiovideo\",\"sub_categories\":[\"Player\",\"Recorder\"],\"developer_name\":\"VideoLAN et al.\",\"verification_verified\":false,\"verification_method\":\"none\",\"verification_login_name\":null,\"verification_login_provider\":null,\"verification_login_is_organization\":null,\"verification_website\":null,\"verification_timestamp\":null,\"runtime\":\"org.kde.Platform/x86_64/5.15-25.08\",\"updated_at\":1794949267,\"arches\":[\"x86_64\",\"aarch64\"],\"added_at\":1504907525,\"trending\":-1.5288199103022038,\"installs_last_month\":97843,\"favorites_count\":702,\"isMobileFriendly\":false},{\"name\":\"Stremio Service\",\"keywords\":[\"Stremio\",\"Media\",\"Play\"],\"localized_keywords\":[\"Media\",\"Play\",\"Stremio\"],\"summary\":\"Freedom to Stream\",\"description\":\"\\n      Lets you run Stremio server in the background.\\n    \\n    \",\"id\":\"com_stremio_Service\",\"type\":\"desktop-application\",\"project_license\":\"GPL-2.0\",\"is_free_license\":true,\"app_id\":\"com.stremio.Service\",\"icon\":\"https://dl.flathub.org/media/com/stremio/Service/57f6bae3fe72d83842680ac22bdb7a16/icons/128x128/com.stremio.Service.png\",\"main_categories\":\"utility\",\"sub_categories\":[\"Video\",\"Player\",\"AudioVideo\"],\"developer_name\":\"Stremio\",\"verification_verified\":true,\"verification_method\":\"website\",\"verification_login_name\":null,\"verification_login_provider\":null,\"verification_login_is_organization\":false,\"verification_website\":\"stremio.com\",\"verification_timestamp\":\"1711744944\",\"runtime\":\"org.freedesktop.Platform/x86_64/24.08\",\"updated_at\":1775314147,\"arches\":[\"x86_64\"],\"added_at\":1701683658,\"trending\":-0.5760157476325665,\"installs_last_month\":2874,\"favorites_count\":35,\"isMobileFriendly\":false},{\"name\":\"REAL Video Enhancer\",\"keywords\":[\"Video\",\"Enhancer\"],\"localized_keywords\":[\"Enhancer\",\"Video\"],\"summary\":\"Free and Open Source Video Enhancement Tool\",\"description\":\"A simple video enhancer for Linux\\n      Features:\\n      \\n        Discord RPC support for Discord flatpak.\\n        Scene change detection to preserve sharp transitions.\\n        Preview that shows latest frame that has been rendered.\\n      \\n    \",\"id\":\"io_github_tntwise_REAL-Video-Enhancer\",\"type\":\"desktop-application\",\"project_license\":\"AGPL-3.0-only\",\"is_free_license\":true,\"app_id\":\"io.github.tntwise.REAL-Video-Enhancer\",\"icon\":\"https://dl.flathub.org/media/io/github/tntwise.REAL-Video-Enhancer/972a9e0d23f88ce961e446253672af12/icons/128x128/io.github.tntwise.REAL-Video-Enhancer.png\",\"main_categories\":\"audiovideo\",\"sub_categories\":[],\"developer_name\":\"TNTwise\",\"verification_verified\":true,\"verification_method\":\"login_provider\",\"verification_login_name\":\"tntwise\",\"verification_login_provider\":\"github\",\"verification_login_is_organization\":true,\"verification_website\":null,\"verification_timestamp\":\"1701714564\",\"runtime\":\"org.kde.Platform/x86_64/6.10\",\"updated_at\":1774079271,\"arches\":[\"x86_64\",\"aarch64\"],\"added_at\":1701682241,\"trending\":0.10393802455995892,\"installs_last_month\":1972,\"favorites_count\":22,\"isMobileFriendly\":false}],\"query\":\"vlc\",\"processingTimeMs\":1501,\"hitsPerPage\":3,\"page\":1,\"totalPages\":26,\"totalHits\":78,\"facetDistribution\":{\"arches\":{\"aarch64\":66,\"x86_64\":78},\"is_free_license\":{\"false\":9,\"true\":69},\"main_categories\":{\"AudioVideo\":60,\"Education\":1,\"Network\":3,\"System\":2,\"Utility\":9},\"type\":{\"desktop-application\":78},\"verification_verified\":{\"false\":14,\"true\":64}},\"facetStats\":{}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,99 @@
+id = "guardian_open"
+name = "The Guardian Open Platform API"
+summary = "Structured search and full article lookup across The Guardian's archive with sections, tags, bylines, and text (requires free non-commercial key)."
+aliases = ["guardian", "the guardian", "guardianapis"]
+home_url = "https://open-platform.theguardian.com"
+tier = 3
+scopes = ["news"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 5, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 1800 }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_GUARDIAN_API_KEY"
+in = "header"
+name = "api-key"
+format = "{key}"
+route_requires_key = true
+
+[op.search]
+summary = "Search The Guardian articles by keyword, section, and date window."
+method = "GET"
+url = "https://content.guardianapis.com/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { "show-fields" = "headline,trailText,byline,wordcount" }
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "climate policy", limit = 3 }, min_results = 2, fixture = "fixtures/w5m/guardian_open/search/default.json" }
+examples = ["source.call('guardian_open.search', { query: 'climate policy', section: 'environment', limit: 5 })"]
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Search query supporting AND/OR/NOT" }
+section = { type = "string", to = "section", doc = "Section ID e.g. world, technology, business, environment" }
+from_date = { type = "string", to = "from-date", doc = "Start publication date YYYY-MM-DD" }
+to_date = { type = "string", to = "to-date", doc = "End publication date YYYY-MM-DD" }
+order_by = { type = "string", enum = ["newest", "oldest", "relevance"], to = "order-by", doc = "Sort order" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "page-size", doc = "Results per page" }
+page = { type = "int", default = 1, min = 1, to = "page", doc = "1-based page number" }
+
+[op.search.map]
+items = "(.response.results // [])[]"
+total = ".response.total"
+error = 'if .message and (.response == null) then .message elif (.response.status // "ok") != "ok" then (.response.message // .response.status) else null end'
+record = '''{
+  id: .id,
+  type: (.type // "article"),
+  sectionId: (.sectionId // null),
+  sectionName: (.sectionName // null),
+  pillarName: (.pillarName // null),
+  title: ((.fields.headline // .webTitle // "") | strip_tags),
+  trailText: ((.fields.trailText // "") | strip_tags),
+  byline: (.fields.byline // null),
+  wordcount: (.fields.wordcount | to_int),
+  publishedDate: (.webPublicationDate | parse_date),
+  url: (.webUrl // ""),
+  apiUrl: (.apiUrl // null)
+}'''
+hit = '''{
+  title: ((.fields.headline // .webTitle // "") | strip_tags),
+  url: (.webUrl // ""),
+  snippet: (((.sectionName // "") + (if .fields.byline then (" · " + .fields.byline) else "" end) + (if .fields.trailText then (" — " + (.fields.trailText | strip_tags)) else "" end))),
+  date: (.webPublicationDate | parse_date),
+  dateSource: "api"
+}'''
+
+[op.item]
+summary = "Fetch a single Guardian article with plain-text body by content path ID."
+method = "GET"
+url = "https://content.guardianapis.com/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { "show-fields" = "headline,trailText,bodyText,byline,wordcount" }
+probe = { params = { id = "environment/2026/oct/12/global-renewables-grid-investment" }, min_results = 1, fixture = "fixtures/w5m/guardian_open/item/default.json" }
+examples = ["source.call('guardian_open.item', { id: 'environment/2026/oct/12/global-renewables-grid-investment' })"]
+
+[op.item.params]
+id = { type = "string", required = true, in = "path", encode = "raw", doc = "Guardian content path ID from search results" }
+
+[op.item.map]
+items = ".response.content"
+error = "@ref:op.search.map.error"
+record = '''{
+  id: .id,
+  type: (.type // "article"),
+  sectionId: (.sectionId // null),
+  sectionName: (.sectionName // null),
+  pillarName: (.pillarName // null),
+  title: ((.fields.headline // .webTitle // "") | strip_tags),
+  trailText: ((.fields.trailText // "") | strip_tags),
+  bodyText: (.fields.bodyText // null),
+  byline: (.fields.byline // null),
+  wordcount: (.fields.wordcount | to_int),
+  publishedDate: (.webPublicationDate | parse_date),
+  url: (.webUrl // ""),
+  apiUrl: (.apiUrl // null)
+}'''

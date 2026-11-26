@@ -1,0 +1,85 @@
+id = "sourcegraph_code"
+name = "Sourcegraph Public Code Search"
+summary = "Keyless cross-repository public code and repository search via Sourcegraph's GraphQL API."
+aliases = ["sourcegraph", "sg code", "public code search"]
+home_url = "https://sourcegraph.com"
+tier = 1
+scopes = ["code"]
+caps = ["search"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 3600 }
+
+[op.search]
+summary = "Search public open-source code files and matching lines via Sourcegraph GraphQL."
+method = "POST"
+url = "https://sourcegraph.com/.api/graphql"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+body = { kind = "graphql", query = "query ($q: String!, $pt: SearchPatternType!) { search(query: $q, version: V3, patternType: $pt) { results { matchCount results { __typename ... on FileMatch { repository { name url } file { path url } lineMatches { lineNumber preview } } } } } }", variables_jaq = '''{
+  q: ($p.query + " count:" + (($p.limit // 10) | tostring)),
+  pt: ($p.pattern_type // "literal")
+}''' }
+probe = { params = { query = "tokio::sync::RwLock lang:rust", limit = 3 }, min_results = 2, fixture = "fixtures/w5l/sourcegraph_code/search/default.json" }
+examples = [
+  'source.call("sourcegraph_code.search", { query: "tokio::sync::RwLock lang:rust", limit: 5 })',
+  'source.call("sourcegraph_code.search", { query: "fn\\s+parse_\\w+ lang:rust", pattern_type: "regexp", limit: 5 })',
+]
+
+[op.search.params]
+query = { type = "string", required = true, in = "body", doc = "Sourcegraph search query (supports lang:, repo:, file: filters)" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "body", doc = "Maximum number of matches (passed as count:N)" }
+pattern_type = { type = "string", default = "literal", enum = ["literal", "regexp", "standard", "structural"], in = "body", doc = "Sourcegraph pattern matching mode" }
+
+[op.search.map]
+items = "(.data.search.results.results // [])[] | select(.__typename == \"FileMatch\")"
+total = ".data.search.results.matchCount"
+error = "if (.errors | type) == \"array\" and (.errors | length) > 0 then ([.errors[].message] | join(\"; \")) else null end"
+record = '''{
+  repo: (.repository.name // ""),
+  path: (.file.path // ""),
+  url: ((.file.url // "") | resolve_url("https://sourcegraph.com") // ""),
+  lineMatches: [(.lineMatches // [])[] | { lineNumber, preview }]
+}'''
+hit = '''(
+  ((.file.url // "") | resolve_url("https://sourcegraph.com") // "") as $url |
+  ([(.lineMatches // [])[:3][] | "L\(.lineNumber): " + ((.preview // "") | collapse_ws // "")] | join(" | ")) as $snip |
+  {
+    title: ((.repository.name // "") + ": " + (.file.path // "")),
+    url: $url,
+    snippet: $snip[0:280],
+    date: null,
+    dateSource: "api"
+  }
+)'''
+
+[op.repos]
+summary = "Search public open-source repositories indexed by Sourcegraph."
+method = "POST"
+url = "https://sourcegraph.com/.api/graphql"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+body = { kind = "graphql", query = "query ($q: String!) { search(query: $q, version: V3, patternType: literal) { results { matchCount results { __typename ... on Repository { name url description stars } } } } }", variables_jaq = '''{
+  q: ("type:repo " + $p.query + " count:" + (($p.limit // 10) | tostring))
+}''' }
+probe = { params = { query = "tokio", limit = 3 }, min_results = 2, fixture = "fixtures/w5l/sourcegraph_code/repos/default.json" }
+examples = [
+  'source.call("sourcegraph_code.repos", { query: "tokio", limit: 5 })',
+]
+
+[op.repos.params]
+query = { type = "string", required = true, in = "body", doc = "Repository name or keyword query" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "body", doc = "Maximum number of repositories" }
+
+[op.repos.map]
+items = "(.data.search.results.results // [])[] | select(.__typename == \"Repository\")"
+total = ".data.search.results.matchCount"
+error = "@ref:op.search.map.error"
+record = '''{
+  name: (.name // ""),
+  description: (.description // ""),
+  stars: (.stars // 0),
+  url: ("https://sourcegraph.com" + (.url // ""))
+}'''

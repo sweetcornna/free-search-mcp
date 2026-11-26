@@ -1,0 +1,110 @@
+id = "who_gho"
+name = "WHO Global Health Observatory (GHO)"
+summary = "World Health Organization OData API covering 2,000+ global health, mortality, disease, and life-expectancy indicators."
+aliases = ["who", "gho", "global health observatory", "who health", "world health organization", "oms"]
+home_url = "https://www.who.int/data/gho"
+tier = 1
+scopes = ["dataset", "reference"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 3.0, burst = 6, concurrency = 4, timeout_ms = 8000, cache_ttl_s = 43200 }
+
+[op.search]
+summary = "Search WHO GHO health indicators by keyword (case-insensitive OData filter)."
+method = "GET"
+url = "https://ghoapi.azureedge.net/api/Indicator"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+query_jaq = '''[["$filter", ("contains(tolower(IndicatorName),tolower('" + ($p.query | gsub("'"; "''")) + "'))")]]'''
+paginate = { style = "offset", param = "$skip", start = 0, max_pages = 3 }
+probe = { params = { query = "life expectancy", limit = 3 }, min_results = 2, fixture = "fixtures/w5d1/who_gho/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, in = "none", doc = "Health indicator keywords e.g. life expectancy, malaria, immunization" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "$top", doc = "Max indicators" }
+skip = { type = "int", min = 0, to = "$skip", doc = "Result offset" }
+
+[op.search.map]
+items = "(.value // [])[]"
+error = 'if (.error | type == "object") then (.error.message // (.error | tostring)) elif (.error | type == "string" and length > 0) then .error else null end'
+record = '''{
+  code: .IndicatorCode,
+  name: .IndicatorName,
+  language: (.Language // "EN"),
+  url: ("https://ghoapi.azureedge.net/api/" + (.IndicatorCode // "")),
+  portalUrl: "https://www.who.int/data/gho/data/indicators"
+}'''
+hit = '''{
+  title: ((.IndicatorName // "") + " (" + (.IndicatorCode // "") + ")"),
+  url: ("https://ghoapi.azureedge.net/api/" + (.IndicatorCode // "")),
+  snippet: ("WHO Global Health Observatory indicator " + (.IndicatorCode // "") + " — " + (.IndicatorName // ""))
+}'''
+
+[op.data]
+summary = "Fetch observations for a WHO GHO indicator code (e.g. WHOSIS_000001), optionally filtered by ISO-3 country or year."
+method = "GET"
+url = "https://ghoapi.azureedge.net/api/{indicator}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+query_jaq = '''
+[
+  (if ($p.country // "") != "" then ("SpatialDim eq '" + ($p.country | gsub("'"; "''")) + "'") else empty end),
+  (if $p.year != null then ("TimeDim eq " + ($p.year | tostring)) else empty end)
+] as $clauses
+| if ($clauses | length) > 0 then [["$filter", ($clauses | join(" and "))]] else [] end
+'''
+paginate = { style = "offset", param = "$skip", start = 0, max_pages = 3 }
+probe = { params = { indicator = "WHOSIS_000001", country = "USA", limit = 3 }, min_results = 2, fixture = "fixtures/w5d1/who_gho/data/default.json" }
+
+[op.data.params]
+indicator = { type = "string", required = true, in = "path", doc = "WHO GHO IndicatorCode e.g. WHOSIS_000001" }
+country = { type = "string", in = "none", doc = "ISO-3 country code e.g. USA, DEU, CHN" }
+year = { type = "int", in = "none", doc = "Optional reference year e.g. 2022" }
+limit = { type = "int", default = 10, min = 1, max = 100, to = "$top", doc = "Max observations" }
+skip = { type = "int", min = 0, to = "$skip", doc = "Result offset" }
+
+[op.data.map]
+items = "(.value // [])[]"
+error = "@ref:op.search.map.error"
+record = '''{
+  indicatorCode: .IndicatorCode,
+  country: .SpatialDim,
+  region: (.ParentLocation // null),
+  year: (.TimeDim // .TimeDimensionValue),
+  sexOrDim1: (.Dim1 // null),
+  dim2: (.Dim2 // null),
+  value: (.NumericValue // null),
+  displayValue: (.Value // null),
+  low: (.Low // null),
+  high: (.High // null),
+  updatedAt: (.Date | parse_date)
+}'''
+
+[op.countries]
+summary = "Search WHO GHO country dimension codes and parent WHO regions."
+method = "GET"
+url = "https://ghoapi.azureedge.net/api/DIMENSION/COUNTRY/DimensionValues"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+query_jaq = '''[["$filter", ("contains(tolower(Title),tolower('" + ($p.query | gsub("'"; "''")) + "'))")]]'''
+paginate = { style = "offset", param = "$skip", start = 0, max_pages = 3 }
+probe = { params = { query = "united", limit = 3 }, min_results = 2, fixture = "fixtures/w5d1/who_gho/countries/default.json" }
+
+[op.countries.params]
+query = { type = "string", required = true, in = "none", doc = "Country name substring e.g. united, germany" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "$top", doc = "Max countries" }
+skip = { type = "int", min = 0, to = "$skip", doc = "Result offset" }
+
+[op.countries.map]
+items = "(.value // [])[]"
+error = "@ref:op.search.map.error"
+record = '''{
+  code: .Code,
+  name: .Title,
+  regionCode: (.ParentCode // null),
+  regionName: (.ParentTitle // null)
+}'''

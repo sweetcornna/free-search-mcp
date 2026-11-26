@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "source": "aodn_imos",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:19:01Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://catalogue-imos.aodn.org.au/geonetwork/srv/eng/portal.opensearch",
+        "headersSubset": {
+          "accept": "application/opensearchdescription+xml, application/xml"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/xml;charset=UTF-8"
+          ],
+          [
+            "cache-control",
+            "no-cache"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><OpenSearchDescription xmlns=\"http://a9.com/-/spec/opensearch/1.1/\"><ShortName>Catalogue for the 123 Portal</ShortName><LongName>Catalogue for the 123 Portal (Australian Ocean Data Network)</LongName><Description>GeoNetwork opensearch service allow search to be made into the metadata catalog.\n  </Description><Tags>Catalogue Metadata ISO19115 ISO19139 DC</Tags><Contact>info@aodn.org.au info@aodn.org.au info@aodn.org.au</Contact><Url type=\"application/rss+xml\" template=\"https://catalogue-imos.aodn.org.au/geonetwork/srv/eng/rss.search?any={searchTerms}&amp;hitsPerPage={count?}&amp;bbox={geo:box?}&amp;geometry={geo:geometry?}&amp;name={geo:locationString?}\"/><Url type=\"application/rdf+xml\" template=\"https://catalogue-imos.aodn.org.au/geonetwork/srv/eng/rdf.search?any={searchTerms}&amp;hitsPerPage={count?}&amp;bbox={geo:box?}&amp;geometry={geo:geometry?}&amp;name={geo:locationString?}\"/><Url type=\"text/html\" template=\"https://catalogue-imos.aodn.org.au/geonetwork/srv/eng/catalog.search#/search?any={searchTerms}&amp;hitsPerPage={count?}&amp;bbox={geo:box?}&amp;geometry={geo:geometry?}&amp;name={geo:locationString?}\"/><Url type=\"application/x-suggestions+json\" template=\"https://catalogue-imos.aodn.org.au/geonetwork/srv/eng/suggest?field=anylight&amp;sortBy=STARTSWITHFIRST&amp;q={searchTerms}\"/><Image height=\"16\" width=\"16\" type=\"image/x-icon\">https://catalogue-imos.aodn.org.au/geonetwork/images/logos/favicon.png</Image></OpenSearchDescription>",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://catalogue-imos.aodn.org.au/geonetwork/srv/eng/rss.search?any=temperature&hitsPerPage=3",
+        "headersSubset": {
+          "accept": "application/rss+xml, application/xml"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/rss+xml;charset=UTF-8"
+          ],
+          [
+            "cache-control",
+            "no-cache"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><rss version=\"2.0\"><channel><title>Catalogue for the 123 Portal (Australian Ocean Data Network)</title><link>https://catalogue-imos.aodn.org.au/geonetwork/</link><description/><language>eng</language><copyright/><category>Geographic metadata catalog</category><generator>GeoNetwork opensource</generator><ttl>30</ttl><item xmlns:georss=\"http://www.georss.org/georss\" xmlns:gml=\"http://www.opengis.net/gml/3.2\" xmlns:gml320=\"http://www.opengis.net/gml\" xmlns:media=\"http://search.yahoo.com/mrss/\"><title>Orpheus Island Water Temperature From 09 Dec 2002</title><link>https://catalogue-imos.aodn.org.au/geonetwork/srv/metadata/1e22495f-0bd0-45bc-887b-e1c54fc10de6</link><category>Geographic metadata catalog</category><description><![CDATA[<p>The 'Wireless Sensor Networks Facility' (formerly known as Facility for The Automated Intelligent Monitoring of Marine Systems (FAIMMS)), part of the Great Barrier Reef Ocean Observing System project (GBROOS), is a facility of the Australian 'Integrated Marine Observing System' (IMOS) project. This data set was collected by the Great Barrier Reef Wireless Sensor Network.<br/></p><br clear=\"all\"/>]]></description><pubDate>25 Nov 2026  EST</pubDate><guid isPermaLink=\"true\">https://catalogue-imos.aodn.org.au/geonetwork/srv/metadata/1e22495f-0bd0-45bc-887b-e1c54fc10de6</guid></item><item xmlns:georss=\"http://www.georss.org/georss\" xmlns:gml=\"http://www.opengis.net/gml/3.2\" xmlns:gml320=\"http://www.opengis.net/gml\" xmlns:media=\"http://search.yahoo.com/mrss/\"><title>Heron Island Water Temperature From 01 Dec 2008</title><link>https://catalogue-imos.aodn.org.au/geonetwork/srv/metadata/0abcf26e-f3de-4e2a-80b4-909090d9c91d</link><category>Geographic metadata catalog</category><description><![CDATA[<p>The 'Wireless Sensor Networks Facility' (formerly known as Facility for The Automated Intelligent Monitoring of Marine Systems (FAIMMS)), part of the Great Barrier Reef Ocean Observing System project (GBROOS), is a facility of the Australian 'Integrated Marine Observing System' (IMOS) project. This data set was collected by the Great Barrier Reef Wireless Sensor Network.<br/></p><br clear=\"all\"/>]]></description><pubDate>25 Nov 2026  EST</pubDate><guid isPermaLink=\"true\">https://catalogue-imos.aodn.org.au/geonetwork/srv/metadata/0abcf26e-f3de-4e2a-80b4-909090d9c91d</guid></item><item xmlns:georss=\"http://www.georss.org/georss\" xmlns:gml=\"http://www.opengis.net/gml/3.2\" xmlns:gml320=\"http://www.opengis.net/gml\" xmlns:media=\"http://search.yahoo.com/mrss/\"><title>Davies Reef Water Temperature From 18 Oct 1991</title><link>https://catalogue-imos.aodn.org.au/geonetwork/srv/metadata/0155375c-8070-4662-9c93-b593ee4891b0</link><category>Geographic metadata catalog</category><description><![CDATA[<p>The 'Wireless Sensor Networks Facility' (formerly known as Facility for The Automated Intelligent Monitoring of Marine Systems (FAIMMS)), part of the Great Barrier Reef Ocean Observing System project (GBROOS), is a facility of the Australian 'Integrated Marine Observing System' (IMOS) project. This data set was collected by the Great Barrier Reef Wireless Sensor Network.<br/></p><br clear=\"all\"/>]]></description><pubDate>25 Nov 2026  EST</pubDate><guid isPermaLink=\"true\">https://catalogue-imos.aodn.org.au/geonetwork/srv/metadata/0155375c-8070-4662-9c93-b593ee4891b0</guid></item></channel></rss>",
+        "bodyB64": null
+      }
+    }
+  ]
+}

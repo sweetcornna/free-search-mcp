@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "source": "pmc_idconv",
+  "op": "convert",
+  "recordedAt": "2026-11-25T14:07:34Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://pmc.ncbi.nlm.nih.gov/tools/idconv/api/v1/articles/?format=json&tool=free-search-mcp&ids=23903748",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "date",
+            "Wed, 25 Nov 2026 14:07:34 GMT"
+          ],
+          [
+            "server",
+            "istio-envoy"
+          ],
+          [
+            "strict-transport-security",
+            "max-age=31536000; includeSubDomains; preload"
+          ],
+          [
+            "content-type",
+            "application/json"
+          ],
+          [
+            "vary",
+            "Accept,Accept-Encoding"
+          ],
+          [
+            "allow",
+            "GET, HEAD, OPTIONS"
+          ],
+          [
+            "x-frame-options",
+            "DENY"
+          ],
+          [
+            "x-content-type-options",
+            "nosniff"
+          ],
+          [
+            "x-content-type-options",
+            "nosniff"
+          ],
+          [
+            "referrer-policy",
+            "same-origin"
+          ],
+          [
+            "cross-origin-opener-policy",
+            "same-origin"
+          ],
+          [
+            "x-envoy-upstream-service-time",
+            "5"
+          ],
+          [
+            "x-ua-compatible",
+            "IE=Edge"
+          ],
+          [
+            "x-xss-protection",
+            "1; mode=block"
+          ],
+          [
+            "via",
+            "1.1 google"
+          ],
+          [
+            "alt-svc",
+            "clear"
+          ]
+        ],
+        "bodyText": "{\"status\":\"ok\",\"response-date\":\"2026-11-25 09:07:34\",\"request\":{\"warnings\":[\"query param `email` is missing.\"],\"format\":\"json\",\"ids\":[\"23903748\"],\"tool\":\"free-search-mcp\",\"echo\":\"format=json&tool=free-search-mcp&ids=23903748\",\"versions\":\"no\",\"showaiid\":\"no\",\"idtype\":\"pmid\"},\"records\":[{\"doi\":\"10.1038/nature12373\",\"pmcid\":\"PMC4221854\",\"pmid\":23903748,\"requested-id\":\"23903748\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

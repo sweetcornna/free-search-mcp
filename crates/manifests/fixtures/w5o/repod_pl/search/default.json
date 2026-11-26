@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "source": "repod_pl",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:41:20Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://repod.icm.edu.pl/api/search?q=data&type=dataset&per_page=3",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"status\":\"OK\",\"code\":200,\"data\":{\"q\":\"data\",\"total_count\":2989,\"start\":0,\"items\":[{\"name\":\"Art auction result of prints\",\"type\":\"dataset\",\"url\":\"https://doi.org/10.18150/AEQF8C\",\"citationHtml\":\"Mauer, Patryk, 2024, \\\"Art auction result of prints\\\", <a href=\\\"https://doi.org/10.18150/AEQF8C\\\" target=\\\"_blank\\\">https://doi.org/10.18150/AEQF8C</a>, RepOD, V1\",\"citation\":\"Mauer, Patryk, 2024, \\\"Art auction result of prints\\\", https://doi.org/10.18150/AEQF8C, RepOD, V1\",\"authors\":[\"Mauer, Patryk\"],\"global_id\":\"doi:10.18150/AEQF8C\",\"published_at\":\"2024-09-05T15:56:40Z\",\"identifier_of_dataverse\":\"repod\",\"name_of_dataverse\":\"RepOD\"},{\"name\":\"Parameters for distance restraints from NMR-data for UNRES package\",\"type\":\"dataset\",\"url\":\"https://doi.org/10.18150/NDMOYH\",\"citationHtml\":\"Lubecka, Emilia; Liwo, Adam, 2023, \\\"Parameters for distance restraints from NMR-data for UNRES package\\\", <a href=\\\"https://doi.org/10.18150/NDMOYH\\\" target=\\\"_blank\\\">https://doi.org/10.18150/NDMOYH</a>, RepOD, V1\",\"citation\":\"Lubecka, Emilia; Liwo, Adam, 2023, \\\"Parameters for distance restraints from NMR-data for UNRES package\\\", https://doi.org/10.18150/NDMOYH, RepOD, V1\",\"authors\":[\"Lubecka, Emilia\",\"Liwo, Adam\"],\"global_id\":\"doi:10.18150/NDMOYH\",\"published_at\":\"2023-05-26T06:58:15Z\",\"identifier_of_dataverse\":\"ug\",\"name_of_dataverse\":\"University of Gdańsk\"},{\"name\":\"HaulFare snowbird car shipping price estimates, 2026-27 season (October 2026 price edition)\",\"type\":\"dataset\",\"url\":\"https://doi.org/10.18150/ASL2CL\",\"citationHtml\":\"Fiaz, Shahrukh, 2026, \\\"HaulFare snowbird car shipping price estimates, 2026-27 season (October 2026 price edition)\\\", <a href=\\\"https://doi.org/10.18150/ASL2CL\\\" target=\\\"_blank\\\">https://doi.org/10.18150/ASL2CL</a>, RepOD, V1\",\"citation\":\"Fiaz, Shahrukh, 2026, \\\"HaulFare snowbird car shipping price estimates, 2026-27 season (October 2026 price edition)\\\", https://doi.org/10.18150/ASL2CL, RepOD, V1\",\"authors\":[\"Fiaz, Shahrukh\"],\"global_id\":\"doi:10.18150/ASL2CL\",\"published_at\":\"2026-11-17T13:40:23Z\",\"identifier_of_dataverse\":\"repod\",\"name_of_dataverse\":\"RepOD\"}],\"count_in_response\":3}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

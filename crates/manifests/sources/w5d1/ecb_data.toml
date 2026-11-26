@@ -1,0 +1,93 @@
+id = "ecb_data"
+name = "ECB Data Portal SDMX"
+summary = "European Central Bank exchange rates, Euro area interest rates, HICP inflation, and monetary aggregates."
+aliases = ["ecb", "european central bank", "ecb sdmx", "ezb", "bce", "europäische zentralbank", "banque centrale européenne"]
+home_url = "https://data.ecb.europa.eu"
+tier = 1
+scopes = ["finance", "dataset"]
+caps = ["lookup", "dataset"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 10000, cache_ttl_s = 21600 }
+
+[op.data]
+summary = "Fetch SDMX-JSON observations from an ECB dataflow (e.g. flow=EXR, key=D.USD.EUR.SP00.A)."
+method = "GET"
+url = "https://data-api.ecb.europa.eu/service/data/{flow}/{key}"
+headers = { Accept = "application/vnd.sdmx.data+json;version=1.0.0-wd" }
+response = "json"
+returns = "records"
+const_query = { format = "jsondata" }
+probe = { params = { flow = "EXR", key = "D.USD.EUR.SP00.A", limit = 3 }, min_results = 2, fixture = "fixtures/w5d1/ecb_data/data/default.json" }
+
+[op.data.params]
+flow = { type = "string", required = true, in = "path", doc = "ECB dataflow ID e.g. EXR, FM, ICP, BSI" }
+key = { type = "string", required = true, in = "path", encode = "raw", doc = "SDMX series key e.g. D.USD.EUR.SP00.A" }
+limit = { type = "int", default = 10, min = 1, max = 100, to = "lastNObservations", doc = "Most recent observations per series" }
+start = { type = "string", to = "startPeriod", doc = "Start period e.g. 2025-01-01" }
+end = { type = "string", to = "endPeriod", doc = "End period" }
+
+[op.data.map]
+items = '''
+.structure as $st
+| ($st.dimensions.series // []) as $sdims
+| ($st.attributes.series // []) as $sattrs
+| ($st.dimensions.observation[0].values // []) as $periods
+| (.dataSets[0].series // {}) | to_entries[]
+| (.key | split(":") | map(tonumber)) as $idx
+| (.value.attributes // []) as $aidx
+| (reduce range(0; ($sdims | length)) as $i ({}; . + { ($sdims[$i].id): ($sdims[$i].values[$idx[$i]].id // null) })) as $dims
+| (reduce range(0; ($sattrs | length)) as $i ({};
+    if ($aidx[$i] != null) then
+      ($sattrs[$i].values[$aidx[$i]]? | (.id // .name // null)) as $v
+      | if ($v != null) then (. + { ($sattrs[$i].id): $v }) else . end
+    else . end
+  )) as $attrs
+| .value.observations | to_entries[]
+| {
+    seriesName: ($st.name // null),
+    dimensions: $dims,
+    attributes: $attrs,
+    period: ($periods[.key | tonumber].id // .key),
+    value: ((.value[0] | to_num) // .value[0])
+  }
+'''
+error = 'if ((.status? // 0) >= 400 and (.title? // "") != "") then (.detail // .title) else null end'
+record = "."
+
+[op.dataflow]
+summary = "Fetch SDMX structure metadata for a single ECB dataflow (XML)."
+method = "GET"
+url = "https://data-api.ecb.europa.eu/service/dataflow/ECB/{flow}"
+headers = { Accept = "application/xml" }
+response = "xml"
+returns = "records"
+probe = { params = { flow = "EXR" }, min_results = 1, fixture = "fixtures/w5d1/ecb_data/dataflow/default.json" }
+
+[op.dataflow.params]
+flow = { type = "string", required = true, in = "path", doc = "ECB dataflow ID e.g. EXR, FM, ICP" }
+
+[op.dataflow.map]
+items = ".structure.structures.dataflows.dataflow | arr | .[]"
+record = '''{
+  id: (."@id" // ""),
+  agency: (."@agencyid" // "ECB"),
+  version: (."@version" // null),
+  name: (((.name | arr | map(select(."@lang"? == "en")) | .[0]) // (.name | arr | .[0])) | xml_text),
+  urn: (."@urn" // null),
+  url: ("https://data.ecb.europa.eu/data/datasets/" + (."@id" // ""))
+}'''
+
+[op.dataflows]
+summary = "List all available ECB SDMX dataflows (XML stub catalog)."
+method = "GET"
+url = "https://data-api.ecb.europa.eu/service/dataflow/ECB"
+headers = { Accept = "application/xml" }
+response = "xml"
+returns = "records"
+const_query = { detail = "allstubs" }
+probe = { params = {}, min_results = 5, fixture = "fixtures/w5d1/ecb_data/dataflows/default.json" }
+
+[op.dataflows.map]
+items = ".structure.structures.dataflows.dataflow | arr | .[]"
+record = "@ref:op.dataflow.map.record"

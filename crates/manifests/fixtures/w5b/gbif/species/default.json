@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "gbif",
+  "op": "species",
+  "recordedAt": "2026-11-25T15:12:24Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.gbif.org/v1/species/2878688",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ],
+          [
+            "cache-control",
+            "public, max-age=3601"
+          ]
+        ],
+        "bodyText": "{\"key\":2878688,\"nubKey\":2878688,\"nameKey\":9614407,\"taxonID\":\"gbif:2878688\",\"kingdom\":\"Plantae\",\"phylum\":\"Tracheophyta\",\"order\":\"Fagales\",\"family\":\"Fagaceae\",\"genus\":\"Quercus\",\"species\":\"Quercus robur\",\"kingdomKey\":6,\"phylumKey\":7707728,\"classKey\":220,\"orderKey\":1354,\"familyKey\":4689,\"genusKey\":2877951,\"speciesKey\":2878688,\"datasetKey\":\"d7dddbf4-2cf0-4f39-9b2a-bb099caae36c\",\"constituentKey\":\"7ddf754f-d193-4cc9-b351-99906754a03b\",\"parentKey\":2877951,\"parent\":\"Quercus\",\"scientificName\":\"Quercus robur L.\",\"canonicalName\":\"Quercus robur\",\"vernacularName\":\"Pedunculate Oak\",\"authorship\":\"L.\",\"nameType\":\"SCIENTIFIC\",\"rank\":\"SPECIES\",\"origin\":\"SOURCE\",\"taxonomicStatus\":\"ACCEPTED\",\"nomenclaturalStatus\":[],\"remarks\":\"\",\"publishedIn\":\"Sp. Pl.: 996 (1753)\",\"numDescendants\":8,\"lastCrawled\":\"2023-08-22T23:20:59.545+00:00\",\"lastInterpreted\":\"2023-08-22T23:04:45.267+00:00\",\"issues\":[],\"class\":\"Magnoliopsida\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

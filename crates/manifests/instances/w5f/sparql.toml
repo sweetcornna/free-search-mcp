@@ -1,0 +1,100 @@
+protocol = "sparql"
+
+[[instance]]
+id = "wikidata_scholarly"
+name = "Wikidata Scholarly Graph SPARQL"
+summary = "Dedicated Wikimedia SPARQL endpoint for 40M+ scholarly articles and citations split from main WDQS in May 2025; enables DOI/PMID/ORCID/QID crosswalks."
+aliases = ["wdqs scholarly", "query-scholarly.wikidata.org"]
+base_url = "https://query-scholarly.wikidata.org/sparql"
+scopes = ["academic", "academic.index", "reference"]
+caps = ["lookup", "graph"]
+tier = 1
+probe = { op = "query", params = { query = 'SELECT ?item WHERE { ?item <http://www.wikidata.org/prop/direct/P356> "10.1038/NATURE12373" } LIMIT 3' }, min_results = 1 }
+
+[[instance]]
+id = "dbpedia_sparql"
+name = "DBpedia Public SPARQL"
+summary = "Structured Linked Open Data knowledge graph extracted from Wikipedia infoboxes, categories, and multilingual entity links."
+aliases = ["dbpedia", "dbpedia.org"]
+base_url = "https://dbpedia.org/sparql"
+scopes = ["reference"]
+caps = ["lookup", "graph"]
+tier = 1
+probe = { op = "query", params = { query = 'SELECT ?s ?label WHERE { ?s a <http://dbpedia.org/ontology/Country> ; <http://www.w3.org/2000/01/rdf-schema#label> ?label . FILTER(LANG(?label) = "en") } LIMIT 3' }, min_results = 1 }
+
+[[instance]]
+id = "mesh_rdf"
+name = "US NLM MeSH RDF SPARQL"
+summary = "National Library of Medicine Medical Subject Headings (MeSH) controlled biomedical vocabulary and tree hierarchy over SPARQL."
+aliases = ["mesh", "nlm mesh", "id.nlm.nih.gov/mesh"]
+base_url = "https://id.nlm.nih.gov/mesh/sparql"
+scopes = ["academic.biomed", "reference"]
+caps = ["lookup", "graph"]
+tier = 1
+probe = { op = "query", params = { query = 'SELECT ?d ?label FROM <http://id.nlm.nih.gov/mesh> WHERE { ?d a <http://id.nlm.nih.gov/mesh/vocab#TopicalDescriptor> ; <http://www.w3.org/2000/01/rdf-schema#label> ?label } LIMIT 3' }, min_results = 1 }
+
+[[instance]]
+id = "getty_vocabularies"
+name = "Getty Vocabularies SPARQL (AAT/TGN/ULAN)"
+summary = "Getty Research Institute Linked Open Data thesauri for art and architecture (AAT), geographic names (TGN), and artists (ULAN)."
+aliases = ["getty", "getty aat", "vocab.getty.edu"]
+base_url = "https://vocab.getty.edu/sparql"
+scopes = ["academic.humanities", "reference"]
+caps = ["lookup", "graph"]
+tier = 1
+probe = { op = "query", params = { query = 'SELECT ?s ?label WHERE { ?s <http://www.w3.org/2004/02/skos/core#inScheme> <http://vocab.getty.edu/aat/> ; <http://vocab.getty.edu/ontology#prefLabelGVP>/<http://www.w3.org/2008/05/skos-xl#literalForm> ?label } LIMIT 3' }, min_results = 1 }
+
+[[instance]]
+id = "bnf_sparql"
+name = "BnF Data SPARQL (Bibliotheque nationale de France)"
+summary = "French National Library bibliographic, authority, work, and subject linked data graph covering millions of books, authors, and historical works."
+aliases = ["bnf", "data.bnf.fr"]
+base_url = "https://data.bnf.fr/sparql"
+scopes = ["academic.humanities", "academic.books", "reference"]
+caps = ["lookup", "graph", "book"]
+tier = 1
+probe = { op = "query", params = { query = 'SELECT ?s ?label WHERE { ?s <http://www.w3.org/2004/02/skos/core#prefLabel> ?label } LIMIT 3' }, min_results = 1 }
+
+[[instance]]
+id = "persee_sparql"
+name = "Persee Humanities & Social Sciences SPARQL"
+summary = "French scholarly portal of digitized humanities and social science journals, books, and proceedings exposed as RDF linked data."
+aliases = ["persee", "data.persee.fr"]
+base_url = "https://data.persee.fr/sparql"
+scopes = ["academic", "academic.humanities"]
+caps = ["lookup", "graph"]
+tier = 1
+probe = { op = "query", params = { query = 'SELECT ?s ?title WHERE { ?s <http://purl.org/dc/terms/title> ?title } LIMIT 3' }, min_results = 1 }
+
+[[instance]]
+id = "agrovoc_sparql"
+name = "FAO AGROVOC Multilingual Thesaurus SPARQL"
+summary = "UN FAO controlled multilingual vocabulary covering agriculture, forestry, fisheries, food security, nutrition, and environmental science."
+aliases = ["agrovoc", "fao thesaurus", "agrovoc.fao.org"]
+base_url = "https://agrovoc.fao.org/sparql"
+scopes = ["academic", "reference"]
+caps = ["lookup", "graph"]
+tier = 1
+probe = { op = "query", params = { query = 'SELECT ?s ?label WHERE { ?s <http://www.w3.org/2004/02/skos/core#prefLabel> ?label . FILTER(LANG(?label) = "en") } LIMIT 3' }, min_results = 1 }
+
+[[instance]]
+id = "wikipathways_sparql"
+name = "WikiPathways Biological Pathways SPARQL"
+summary = "Community-curated biological pathway knowledge graph linking genes, proteins, metabolites, and disease annotations across species."
+aliases = ["wikipathways", "sparql.wikipathways.org"]
+base_url = "https://sparql.wikipathways.org/sparql"
+scopes = ["academic.biomed", "dataset"]
+caps = ["lookup", "graph"]
+tier = 1
+probe = { op = "query", params = { query = 'SELECT ?p ?title WHERE { ?p a <http://vocabularies.wikipathways.org/wp#Pathway> ; <http://purl.org/dc/elements/1.1/title> ?title } LIMIT 3' }, min_results = 1 }
+
+[[instance]]
+id = "orkg_sparql"
+name = "Open Research Knowledge Graph (ORKG) SPARQL"
+summary = "TIB Hannover structured scholarly knowledge graph encoding research contributions, benchmarks, methods, and comparisons as RDF triples."
+aliases = ["orkg", "open research knowledge graph"]
+base_url = "https://orkg.org/triplestore"
+scopes = ["academic", "academic.cs"]
+caps = ["lookup", "graph"]
+tier = 2
+probe = { op = "query", params = { query = 'SELECT ?s ?label WHERE { ?s <http://www.w3.org/2000/01/rdf-schema#label> ?label } LIMIT 3' }, min_results = 1 }

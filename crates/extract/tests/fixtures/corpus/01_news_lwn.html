@@ -1,0 +1,133 @@
+        <!DOCTYPE html>
+        <html lang="en">
+        <head><title>A backdoor in xz [LWN.net]</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="A backdoor in xz">
+<meta property="og:site_name" content="LWN.net">
+<meta property="og:type" content="article">
+<meta property="og:description" content="Andres Freund has posted a detailed investigation into a backdoor that was shipped with version [...]">
+<meta HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
+<META NAME="robots" CONTENT="noai, noimageai">
+        <link rel="icon" href="https://static.lwn.net/images/favicon.png"
+              type="image/png">
+        <link rel="alternate" type="application/rss+xml" title="LWN.net headlines" href="https://lwn.net/headlines/rss">
+        <link rel="stylesheet" href="/CSS/lwn-v1">
+<style>div.MakeALink { display: none }</style>
+
+        
+        </head>
+        <body>
+        <a name="t"></a>
+<div id="menu"><a href="/" aria-label="Return to the front page">
+            <img src="https://static.lwn.net/images/logo/barepenguin-70.webp" class="logo"
+                 border="0" alt="LWN.net Logo">
+            <span class="logo">LWN<br>.net</span>
+            <span class="logobl">News from the source</span></a>
+            <a href="/" aria-label="Return to the front page">
+            <img src="https://static.lwn.net/images/lcorner-ss.png" class="sslogo"
+                 border="0" alt="LWN"></a><div class="navmenu-container">
+           <ul class="navmenu">
+        <li><a class="navmenu" href="#t"><b>Content</b></a><ul><li><a href="/current/">Weekly Edition</a></li><li><a href="/Archives/">Archives</a></li><li><a href="/Search/">Search</a></li><li><a href="/Kernel/">Kernel</a></li><li><a href="/Security/">Security</a></li><li><a href="/Calendar/">Events calendar</a></li><li><a href="/Comments/unread">Unread comments</a></li><li><hr></li><li><a href="/op/FAQ.lwn">LWN FAQ</a></li><li><a href="/op/AuthorGuide.lwn">Write for us</a></li></ul></li>
+<li><a class="navmenu" href="#t"><b>Edition</b></a><ul><li><a href="/Articles/966927/">Return to the Briefs page</a></li></ul></li>
+</ul></div>
+</div> <!-- menu -->
+<div class="topnav-spacer"></div>
+<div class="top-banner not-print"><ins data-revive-zoneid="12072" 
+data-revive-id="fa8c6c9da7f33852f7097c4a94da1070"></ins>
+<script async src="//servedby.aqua-adserver.com/asyncjs.php"></script></div>
+<div class="topnav-container">
+<div class="not-handset"><form action="https://lwn.net/Login/" method="post" name="loginform"
+                 class="loginform">
+        <label><b>User:</b> <input type="text" name="uname" value="" size="8" id="uc" /></label> 
+		<label><b>Password:</b> <input type="password" name="pword" size="8" id="pc" /></label> <input type="hidden" name="target" value="/Articles/967180/" /> <input type="submit" name="submit" value="Log in" /></form> |
+           <form action="https://lwn.net/subscribe/" method="post" class="loginform">
+           <input type="submit" name="submit" value="Subscribe" />
+           </form> |
+           <form action="https://lwn.net/Login/newaccount" method="post" class="loginform">
+           <input type="submit" name="submit" value="Register" />
+           </form>
+        </div>
+               <div class="handset-only">
+               <a href="/Login/"><b>Log in</b></a> /
+               <a href="/subscribe/"><b>Subscribe</b></a> /
+               <a href="/Login/newaccount"><b>Register</b></a>
+               </div>
+               </div><div class="maincolumn flexcol">
+<div class="middlecolumn">
+<div class="PageHeadline">
+<h1>A backdoor in xz</h1>
+<div class="Byline">[Posted March 29, 2024 by corbet]
+               <p>
+               </div>
+</div>
+<div class="ArticleText"><main>
+Andres Freund has posted <a
+href="/ml/oss-security/20240329155126.kjjfduxw2yrlxgzm@awork3.anarazel.de/">a
+detailed investigation</a> into a backdoor that was shipped with versions
+5.6.0 and 5.6.1 of the xz compression utility.  It appears that the
+malicious code may be aimed at allowing SSH authentication to be bypassed.
+<p>
+<blockquote class="bq">
+	I have not yet analyzed precisely what is being checked for in the
+	injected code, to allow unauthorized access. Since this is running
+	in a pre-authentication context, it seems likely to allow some form
+	of access or other form of remote code execution.
+</blockquote>
+<p>
+The affected versions are not yet widely shipped, but checking systems for
+the bad version would be a good idea.
+<p>
+<b>Update</b>: there are advisories out now from
+<a href="https://archlinux.org/news/the-xz-package-has-been-backdoored/">Arch</a>,
+<a
+href="https://lists.debian.org/debian-security-announce/2024/msg00057.html">Debian</a>,
+<a
+href="https://www.redhat.com/en/blog/urgent-security-alert-fedora-41-and-rawhide-users">Red
+Hat</a>, and
+<a
+href="/ml/opensuse-factory/5d7acd45-7021-4c09-8c0b-6f4b8797aecd@suse.com/">openSUSE</a>.
+<p>
+<a href="https://news.opensuse.org/2024/03/29/xz-backdoor/">A further
+update from openSUSE</a>:
+<p>
+<blockquote class="bq">
+	For our openSUSE Tumbleweed users where SSH is exposed to the
+	internet we recommend installing fresh, as it’s unknown if the
+	backdoor has been exploited. Due to the sophisticated nature of the
+	backdoor an on-system detection of a breach is likely not
+	possible. Also rotation of any credentials that could have been
+	fetched from the system is highly recommended.
+</blockquote><br clear="all"><hr>
+    The LWN site is currently under high scraper load, so comment
+    display has been suppressed for anonymous users.
+    If you are a
+        human, you may read the comments by clicking the button below:
+        <p>
+        <blockquote>
+         <form action="/Articles/967180/#Comments" method="POST">
+        	<input type="submit" name="go" value="See the comments" />
+         </form>
+        </blockquote>
+        <p>
+        <b>Note</b>: you can avoid this step in the future by logging
+        into your LWN account.
+    
+</main></div> <!-- ArticleText -->
+</div> <!-- middlecolumn -->
+<div class="rightcol not-print">
+<!-- no side ad served -->
+</div>
+</div> <!-- maincolumn -->
+
+            <br clear="all">
+            <center>
+            <P>
+            <span class="ReallySmall">
+            Copyright &copy; 2024, Eklektix, Inc.<BR>
+            
+            Comments and public postings are copyrighted by their creators.<br>
+            Linux  is a registered trademark of Linus Torvalds<br>
+            </span>
+            </center>
+            
+            </body></html>

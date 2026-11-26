@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "deps_dev",
+  "op": "version",
+  "recordedAt": "2026-11-25T11:54:20Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.deps.dev/v3/systems/pypi/packages/httpx/versions/0.27.2",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"versionKey\":{\"system\":\"PYPI\",\"name\":\"httpx\",\"version\":\"0.27.2\"},\"publishedAt\":\"2024-08-27T12:53:59Z\",\"isDefault\":false,\"isDeprecated\":false,\"deprecatedReason\":\"\",\"licenses\":[\"BSD-3-Clause\"],\"advisoryKeys\":[],\"links\":[{\"label\":\"SOURCE_REPO\",\"url\":\"https://github.com/encode/httpx\"},{\"label\":\"DOCUMENTATION\",\"url\":\"https://www.python-httpx.org\"},{\"label\":\"HOMEPAGE\",\"url\":\"https://github.com/encode/httpx\"}],\"slsaProvenances\":[],\"attestations\":[],\"registries\":[\"https://pypi.org/simple\"],\"relatedProjects\":[{\"projectKey\":{\"id\":\"github.com/encode/httpx\"},\"relationProvenance\":\"UNVERIFIED_METADATA\",\"relationType\":\"SOURCE_REPO\"}],\"projectStatus\":{\"status\":\"active\",\"reason\":\"\"}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,117 @@
+id = "jp_egov_law"
+name = "Japan e-Gov Law API v2"
+summary = "Japanese Digital Agency statutory law database supporting full-text keyword search, title listing, and full law JSON retrieval."
+aliases = ["egov law", "japan law", "日本法令", "e-gov法令"]
+home_url = "https://laws.e-gov.go.jp"
+tier = 1
+scopes = ["gov", "gov.law"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 4, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 43200 }
+
+[op.search]
+summary = "Full-text keyword search across Japanese statutes and regulations."
+method = "GET"
+url = "https://laws.e-gov.go.jp/api/2/keyword"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "個人情報", limit = 10 }, min_results = 2, fixture = "fixtures/w5d2/jp_egov_law/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "keyword", doc = "Japanese search keyword" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Maximum matched sentences/items" }
+offset = { type = "int", min = 0, to = "offset", doc = "Pagination offset" }
+
+[op.search.map]
+items = ".items[]"
+total = ".total_count"
+next_cursor = "if .next_offset != null then (.next_offset | tostring) else null end"
+error = "if .code and .message then .message else null end"
+record = '''{
+  lawId: .law_info.law_id,
+  lawNum: .law_info.law_num,
+  lawType: .law_info.law_type,
+  title: ((.revision_info.law_title // "") | collapse_ws // ""),
+  titleKana: (.revision_info.law_title_kana // null),
+  category: (.revision_info.category // null),
+  promulgationDate: ((.law_info.promulgation_date // null) | parse_date),
+  updated: (.revision_info.updated // null),
+  sentences: [(.sentences // [])[] | .text | select(. != null) | gsub("</?span[^>]*>"; "") | strip_tags | select(. != null and . != "")],
+  url: ("https://laws.e-gov.go.jp/law/" + .law_info.law_id)
+}'''
+hit = '''{
+  title: ((.revision_info.law_title // .law_info.law_num // "") | collapse_ws // ""),
+  url: ("https://laws.e-gov.go.jp/law/" + .law_info.law_id),
+  snippet: (
+    [
+      .law_info.law_num,
+      .revision_info.category,
+      (((.sentences[0]?.text // "") | gsub("</?span[^>]*>"; "") | strip_tags // "") | if length > 0 then .[0:220] else null end)
+    ] | map(select(. != null)) | join(" · ")
+  ),
+  date: ((.law_info.promulgation_date // null) | parse_date),
+  dateSource: "api"
+}'''
+
+[op.laws]
+summary = "Search Japanese statutes by law title."
+method = "GET"
+url = "https://laws.e-gov.go.jp/api/2/laws"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { law_title = "個人情報", limit = 3 }, min_results = 2, fixture = "fixtures/w5d2/jp_egov_law/laws/default.json" }
+
+[op.laws.params]
+law_title = { type = "string", required = true, to = "law_title", doc = "Substring of Japanese law title" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Maximum laws returned" }
+offset = { type = "int", min = 0, to = "offset", doc = "Pagination offset" }
+
+[op.laws.map]
+items = ".laws[]"
+total = ".total_count"
+next_cursor = "if .next_offset != null then (.next_offset | tostring) else null end"
+error = "if .code and .message then .message else null end"
+record = '''{
+  lawId: .law_info.law_id,
+  lawNum: .law_info.law_num,
+  lawType: .law_info.law_type,
+  title: ((.revision_info.law_title // "") | collapse_ws // ""),
+  titleKana: (.revision_info.law_title_kana // null),
+  category: (.revision_info.category // null),
+  promulgationDate: ((.law_info.promulgation_date // null) | parse_date),
+  enforcementDate: ((.revision_info.amendment_enforcement_date // null) | parse_date),
+  url: ("https://laws.e-gov.go.jp/law/" + .law_info.law_id)
+}'''
+
+[op.law_data]
+summary = "Retrieve structured full text and revision metadata for a Japanese law by law_id."
+method = "GET"
+url = "https://laws.e-gov.go.jp/api/2/law_data/{law_id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { response_format = "json" }
+probe = { params = { law_id = "413R00000001003" }, min_results = 1, fixture = "fixtures/w5d2/jp_egov_law/law_data/default.json" }
+
+[op.law_data.params]
+law_id = { type = "string", required = true, in = "path", doc = "e-Gov law_id, e.g. 413R00000001003" }
+
+[op.law_data.map]
+items = "."
+error = "if .code and .message then .message else null end"
+record = '''{
+  lawId: .law_info.law_id,
+  lawNum: .law_info.law_num,
+  lawType: .law_info.law_type,
+  title: ((.revision_info.law_title // "") | collapse_ws // ""),
+  category: (.revision_info.category // null),
+  promulgationDate: ((.law_info.promulgation_date // null) | parse_date),
+  updated: (.revision_info.updated // null),
+  url: ("https://laws.e-gov.go.jp/law/" + .law_info.law_id),
+  lawFullText: .law_full_text
+}'''

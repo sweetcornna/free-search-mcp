@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "swh_origin",
+  "op": "resolve",
+  "recordedAt": "2026-11-25T11:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://archive.softwareheritage.org/api/1/resolve/swh:1:cnt:94a9ed024d3859793618152ea559a168bbcbb5e2/",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"namespace\":\"swh\",\"scheme_version\":1,\"object_type\":\"content\",\"object_id\":\"94a9ed024d3859793618152ea559a168bbcbb5e2\",\"metadata\":{},\"browse_url\":\"https://archive.softwareheritage.org/browse/content/sha1_git:94a9ed024d3859793618152ea559a168bbcbb5e2/\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

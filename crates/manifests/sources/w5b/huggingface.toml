@@ -1,0 +1,183 @@
+id = "huggingface"
+name = "Hugging Face Hub"
+summary = "Open machine learning datasets, model weights, and community-curated AI research papers."
+aliases = ["hf", "hugging face", "hf hub", "hf papers"]
+home_url = "https://huggingface.co"
+tier = 1
+scopes = ["dataset", "academic.cs", "code"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.5, burst = 5, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 21600 }
+
+[op.search]
+summary = "Search public machine-learning dataset repositories on Hugging Face Hub."
+method = "GET"
+url = "https://huggingface.co/api/datasets"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "link_header", max_pages = 3 }
+probe = { params = { query = "squad", limit = 3 }, min_results = 2, fixture = "fixtures/w5b/huggingface/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "search", doc = "Dataset keywords" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Maximum datasets to return" }
+sort = { type = "string", enum = ["downloads", "likes", "lastModified", "trendingScore"], to = "sort", doc = "Optional sort key" }
+
+[op.search.map]
+items = ".[]"
+error = 'if type == "object" and (.error // null) != null then (.error | tostring) else null end'
+record = '''{
+  id: (.id // ""),
+  author: (.author // null),
+  downloads: ((.downloads | to_int) // 0),
+  likes: ((.likes | to_int) // 0),
+  gated: (.gated // false),
+  tags: ((.tags // [])[0:10]),
+  description: ((.description // null) | strip_tags),
+  lastModified: ((.lastModified // null) | parse_date),
+  url: ("https://huggingface.co/datasets/" + (.id // ""))
+}'''
+hit = '''((.lastModified // null) | parse_date) as $d | {
+  title: (.id // ""),
+  url: ("https://huggingface.co/datasets/" + (.id // "")),
+  snippet: ((((.downloads // 0) | tostring) + " downloads · " + (if (.likes // 0) == 1 then "1 like" else (((.likes // 0) | tostring) + " likes") end) + (if ((.description // "") | strip_tags) != "" then (" — " + ((.description // "") | strip_tags)) else "" end)) | collapse_ws)[0:280],
+  date: $d,
+  dateSource: (if $d != null then "api" else null end)
+}'''
+
+[op.models]
+summary = "Search open ML models on Hugging Face Hub."
+method = "GET"
+url = "https://huggingface.co/api/models"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "link_header", max_pages = 3 }
+probe = { params = { query = "qwen", limit = 3 }, min_results = 2, fixture = "fixtures/w5b/huggingface/models/default.json" }
+
+[op.models.params]
+query = { type = "string", required = true, to = "search", doc = "Model keywords" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Maximum models to return" }
+sort = { type = "string", enum = ["downloads", "likes", "lastModified", "trendingScore"], to = "sort", doc = "Optional sort key" }
+
+[op.models.map]
+items = ".[]"
+error = 'if type == "object" and (.error // null) != null then (.error | tostring) else null end'
+record = '''{
+  id: (.id // .modelId // ""),
+  pipelineTag: (.pipeline_tag // null),
+  library: (.library_name // null),
+  downloads: ((.downloads | to_int) // 0),
+  likes: ((.likes | to_int) // 0),
+  tags: ((.tags // [])[0:10]),
+  createdAt: ((.createdAt // null) | parse_date),
+  url: ("https://huggingface.co/" + (.id // .modelId // ""))
+}'''
+hit = '''((.createdAt // null) | parse_date) as $d | {
+  title: (.id // .modelId // ""),
+  url: ("https://huggingface.co/" + (.id // .modelId // "")),
+  snippet: (((.pipeline_tag // "model") + " · " + ((.downloads // 0) | tostring) + " downloads · " + (if (.likes // 0) == 1 then "1 like" else (((.likes // 0) | tostring) + " likes") end)) | collapse_ws),
+  date: $d,
+  dateSource: (if $d != null then "api" else null end)
+}'''
+
+[op.papers]
+summary = "Search community-curated AI/ML research papers on Hugging Face Papers."
+method = "GET"
+url = "https://huggingface.co/api/papers/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+probe = { params = { query = "transformer", limit = 3 }, min_results = 2, fixture = "fixtures/w5b/huggingface/papers/default.json" }
+
+[op.papers.params]
+query = { type = "string", required = true, to = "q", doc = "Paper search query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Maximum papers to return" }
+
+[op.papers.map]
+items = ".[]"
+error = 'if type == "object" and (.error // null) != null then (.error | tostring) else null end'
+work = '''((.paper.publishedAt // .publishedAt // null) | parse_date) as $d | {
+  title: ((.paper.title // .title // "") | collapse_ws),
+  authors: [(.paper.authors // [])[] | {name: ((.name // "") | collapse_ws)}],
+  year: (if $d != null then ($d[0:4] | to_int) else null end),
+  publishedDate: $d,
+  venue: null,
+  workType: "preprint",
+  ids: { arxiv: (.paper.id // null) },
+  abstractText: ((.paper.summary // .summary // null) | collapse_ws),
+  oa: { status: "green", url: (if (.paper.id // "") != "" then ("https://huggingface.co/papers/" + .paper.id) else null end), pdfUrl: (if (.paper.id // "") != "" then ("https://arxiv.org/pdf/" + .paper.id) else null end) },
+  retracted: false,
+  versions: [],
+  url: ("https://huggingface.co/papers/" + (.paper.id // "")),
+  sources: ["huggingface"]
+}'''
+
+[op.dataset]
+summary = "Fetch metadata for a specific Hugging Face dataset repository by owner and repo name."
+method = "GET"
+url = "https://huggingface.co/api/datasets/{owner}/{repo}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { owner = "rajpurkar", repo = "squad_v2" }, min_results = 1, fixture = "fixtures/w5b/huggingface/dataset/default.json" }
+
+[op.dataset.params]
+owner = { type = "string", required = true, in = "path", doc = "Dataset owner or organization (e.g. rajpurkar)" }
+repo = { type = "string", required = true, in = "path", doc = "Dataset repository name (e.g. squad_v2)" }
+
+[op.dataset.map]
+items = "."
+error = 'if type == "object" and (.error // null) != null then (.error | tostring) else null end'
+record = "@ref:op.search.map.record"
+
+[op.model]
+summary = "Fetch metadata for a specific Hugging Face model repository by owner and repo name."
+method = "GET"
+url = "https://huggingface.co/api/models/{owner}/{repo}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { owner = "google-bert", repo = "bert-base-uncased" }, min_results = 1, fixture = "fixtures/w5b/huggingface/model/default.json" }
+
+[op.model.params]
+owner = { type = "string", required = true, in = "path", doc = "Model owner or organization (e.g. google-bert)" }
+repo = { type = "string", required = true, in = "path", doc = "Model repository name (e.g. bert-base-uncased)" }
+
+[op.model.map]
+items = "."
+error = 'if type == "object" and (.error // null) != null then (.error | tostring) else null end'
+record = "@ref:op.models.map.record"
+
+[op.paper]
+summary = "Fetch arXiv paper metadata mapped to ScholarlyWork from Hugging Face Papers by arXiv ID."
+method = "GET"
+url = "https://huggingface.co/api/papers/{arxiv_id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+probe = { params = { arxiv_id = "1706.03762" }, min_results = 1, fixture = "fixtures/w5b/huggingface/paper/default.json" }
+
+[op.paper.params]
+arxiv_id = { type = "string", required = true, in = "path", doc = "arXiv identifier (e.g. 1706.03762)" }
+
+[op.paper.map]
+items = "."
+error = 'if type == "object" and (.error // null) != null then (.error | tostring) else null end'
+work = '''((.publishedAt // null) | parse_date) as $d | {
+  title: ((.title // "") | collapse_ws),
+  authors: [(.authors // [])[] | {name: ((.name // "") | collapse_ws)}],
+  year: (if $d != null then ($d[0:4] | to_int) else null end),
+  publishedDate: $d,
+  venue: null,
+  workType: "preprint",
+  ids: { arxiv: (.id // null) },
+  abstractText: ((.summary // .ai_summary // null) | collapse_ws),
+  oa: { status: "green", url: (if (.id // "") != "" then ("https://huggingface.co/papers/" + .id) else null end), pdfUrl: (if (.id // "") != "" then ("https://arxiv.org/pdf/" + .id) else null end) },
+  retracted: false,
+  versions: [],
+  url: ("https://huggingface.co/papers/" + (.id // "")),
+  sources: ["huggingface"]
+}'''

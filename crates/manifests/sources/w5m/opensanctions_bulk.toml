@@ -1,0 +1,77 @@
+id = "opensanctions_bulk"
+name = "OpenSanctions Open Artifacts Index"
+summary = "Keyless OpenSanctions daily dataset metadata and bulk artifact download index covering global sanctions lists, PEPs, and compliance collections (CC-BY-NC)."
+aliases = ["opensanctions", "sanctions", "pep lists", "ofac bulk"]
+home_url = "https://www.opensanctions.org/datasets/"
+tier = 1
+scopes = ["finance", "dataset"]
+caps = ["lookup", "dataset"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 2.0, burst = 4, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 21600 }
+
+[op.dataset]
+summary = "Fetch latest metadata, entity counts, update timestamps, and artifact download links for an OpenSanctions dataset or collection."
+method = "GET"
+url = "https://data.opensanctions.org/datasets/latest/{dataset}/index.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { dataset = "default" }, min_results = 1, fixture = "fixtures/w5m/opensanctions_bulk/dataset/default.json" }
+examples = ["source.call('opensanctions_bulk.dataset', { dataset: 'default' })"]
+
+[op.dataset.params]
+dataset = { type = "string", default = "default", in = "path", doc = "Dataset or collection slug e.g. default, sanctions, peps, us_ofac_sdn" }
+
+[op.dataset.map]
+items = "."
+record = '''{
+  name: .name,
+  title: (.title // ""),
+  summary: ((.summary // "") | collapse_ws),
+  type: (.type // null),
+  version: (.version // null),
+  updatedAt: (.updated_at // null),
+  lastChange: (.last_change // null),
+  entityCount: (.entity_count // null),
+  targetCount: (.target_count // null),
+  thingCount: (.thing_count // null),
+  childrenCount: ((.children // []) | length),
+  indexUrl: (.index_url // null),
+  statisticsUrl: (.statistics_url // null),
+  deltaUrl: (.delta_url // null),
+  resources: [(.resources // [])[] | {
+    name: .name,
+    title: (.title // null),
+    mimeType: (.mime_type // null),
+    sizeBytes: (.size // null),
+    checksum: (.checksum // null),
+    url: .url
+  }],
+  url: ("https://www.opensanctions.org/datasets/" + .name + "/")
+}'''
+
+[op.resources]
+summary = "List downloadable open bulk artifact files (FTM JSON, CSV, names list) for an OpenSanctions dataset."
+method = "GET"
+url = "https://data.opensanctions.org/datasets/latest/{dataset}/index.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { dataset = "sanctions" }, min_results = 3, fixture = "fixtures/w5m/opensanctions_bulk/resources/default.json" }
+examples = ["source.call('opensanctions_bulk.resources', { dataset: 'sanctions' })"]
+
+[op.resources.params]
+dataset = { type = "string", default = "sanctions", in = "path", doc = "Dataset or collection slug e.g. sanctions, default, peps" }
+
+[op.resources.map]
+items = "(.resources // [])[]"
+record = '''{
+  name: .name,
+  title: (.title // ""),
+  mimeType: (.mime_type // null),
+  mimeTypeLabel: (.mime_type_label // null),
+  sizeBytes: (.size // null),
+  checksum: (.checksum // null),
+  url: .url
+}'''

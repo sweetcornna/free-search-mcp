@@ -1,0 +1,82 @@
+id = "inspire"
+name = "INSPIRE-HEP"
+summary = "High-energy physics literature index with citation counts and arXiv/DOI links."
+aliases = ["inspire-hep", "inspirehep", "hep"]
+home_url = "https://inspirehep.net"
+tier = 1
+scopes = ["academic", "academic.physics"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 43200, host_bucket = "inspirehep.net" }
+
+[op.search]
+summary = "Search INSPIRE-HEP high-energy physics literature."
+method = "GET"
+url = "https://inspirehep.net/api/literature"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+const_query = { fields = "control_number,titles,authors.full_name,authors.ids,authors.affiliations,earliest_date,dois,arxiv_eprints,abstracts,citation_count,publication_info,document_type" }
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "dark matter axion", limit = 3 }, min_results = 2, fixture = "fixtures/w5a/inspire/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "INSPIRE search query (SPIRES/Invenio syntax supported)" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "size", doc = "Results per page" }
+page = { type = "int", min = 1, to = "page", doc = "1-indexed page number" }
+sort = { type = "string", enum = ["mostrecent", "mostcited"], to = "sort", doc = "Optional sort order" }
+
+[op.search.map]
+items = ".hits.hits[]"
+total = ".hits.total"
+error = '''if (.status // 200) >= 400 then (.message // ("HTTP " + (.status | tostring))) else null end'''
+work = '''(
+  .metadata as $m |
+  ($m.arxiv_eprints[0]?.value // null) as $ax |
+  ($m.dois[0]?.value // null) as $doi |
+  (($m.imprints[0]?.date // $m.earliest_date) | parse_date) as $dt |
+  (($m.abstracts[0]?.value // "") | unescape_html | collapse_ws) as $abs |
+  {
+    title: (($m.titles[0]?.title // "") | unescape_html | collapse_ws),
+    authors: [($m.authors // [])[:25][] | select(.full_name != null) | {
+      name: (.full_name | collapse_ws),
+      orcid: ([(.ids // [])[] | select(.schema == "ORCID") | .value][0] // null),
+      affiliation: (.affiliations[0]?.value // null)
+    }],
+    year: (if $dt != null then ($dt[0:4] | to_int) else ($m.publication_info[0]?.year | to_int) end),
+    publishedDate: $dt,
+    venue: ($m.publication_info[0]?.journal_title // null),
+    workType: ($m.document_type[0]? // "article"),
+    ids: {
+      doi: ($doi | doi_norm),
+      arxiv: $ax
+    },
+    abstractText: (if ($abs // "") != "" then $abs else null end),
+    citedBy: ($m.citation_count | to_int),
+    citedBySource: (if $m.citation_count != null then "inspire" else null end),
+    oa: (if $ax != null then { status: "green", url: ("https://arxiv.org/abs/" + $ax), pdfUrl: ("https://arxiv.org/pdf/" + $ax) } else null end),
+    retracted: false,
+    versions: [],
+    url: ("https://inspirehep.net/literature/" + ((.id // $m.control_number) | tostring)),
+    sources: ["inspire"]
+  }
+)'''
+
+[op.work]
+summary = "Fetch a single INSPIRE-HEP literature record by control number (recid)."
+method = "GET"
+url = "https://inspirehep.net/api/literature/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+const_query = { fields = "control_number,titles,authors.full_name,authors.ids,authors.affiliations,earliest_date,dois,arxiv_eprints,abstracts,citation_count,publication_info,document_type" }
+probe = { params = { id = "1301375" }, min_results = 1, fixture = "fixtures/w5a/inspire/work/default.json" }
+
+[op.work.params]
+id = { type = "string", required = true, in = "path", doc = "INSPIRE control number (recid) e.g. 1301375" }
+
+[op.work.map]
+items = "."
+error = "@ref:op.search.map.error"
+work = "@ref:op.search.map.work"

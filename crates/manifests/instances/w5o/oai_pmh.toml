@@ -1,0 +1,166 @@
+protocol = "oai_pmh"
+
+[[instance]]
+id = "ntu_ir_tw"
+name = "NTU Scholars (National Taiwan University)"
+summary = "National Taiwan University DSpace-CRIS OAI-PMH repository harvesting Chinese and English scholarly articles, conference papers, and graduate theses."
+aliases = ["ntu scholars", "national taiwan university", "台大学术典藏", "中文期刊"]
+base_url = "https://scholars.lib.ntu.edu.tw/server/oai/request"
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["lookup", "harvest", "thesis"]
+tier = 1
+probe = { op = "identify", params = {}, min_results = 1 }
+
+[[instance]]
+id = "sinica_ir_tw"
+name = "Academia Sinica Scholars Hub (Taiwan)"
+summary = "Academia Sinica Taiwan institutional OAI-PMH repository spanning Chinese humanities, history, earth sciences, biology, and physics research outputs."
+aliases = ["academia sinica", "sinica ir", "中研院机构典藏", "中文期刊"]
+base_url = "https://ir.sinica.edu.tw/oai/request"
+scopes = ["academic", "academic.openaccess", "academic.humanities"]
+caps = ["lookup", "harvest"]
+tier = 1
+probe = { op = "identify", params = {}, min_results = 1 }
+
+[[instance]]
+id = "nus_scholarbank"
+name = "ScholarBank@NUS (National University of Singapore)"
+summary = "National University of Singapore institutional OAI-PMH archive of research articles, doctoral dissertations, and Southeast Asian scholarship."
+aliases = ["scholarbank nus", "national university of singapore", "nus repository"]
+base_url = "https://scholarbank.nus.edu.sg/server/oai/request"
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["lookup", "harvest", "thesis"]
+tier = 1
+probe = { op = "identify", params = {}, min_results = 1 }
+
+[[instance]]
+id = "utokyo_repo"
+name = "UTokyo Repository (University of Tokyo)"
+summary = "University of Tokyo institutional OAI-PMH repository providing JPCOAR and Dublin Core metadata for doctoral theses, kiyo bulletins, and papers."
+aliases = ["utokyo", "university of tokyo repository", "東京大学学術機関リポジトリ"]
+base_url = "https://repository.dl.itc.u-tokyo.ac.jp/oai"
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["lookup", "harvest", "thesis"]
+tier = 1
+probe = { op = "identify", params = {}, min_results = 1 }
+
+[[instance]]
+id = "tohoku_tour_jp"
+name = "Tohoku University Repository (TOUR)"
+summary = "Tohoku University Sendai JAIRO Cloud OAI-PMH archive of materials science, physics, medicine, and humanities dissertations and bulletins."
+aliases = ["tour", "tohoku university repository", "東北大学機関リポジトリ"]
+base_url = "https://tohoku.repo.nii.ac.jp/oai"
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["lookup", "harvest", "thesis"]
+tier = 1
+probe = { op = "identify", params = {}, min_results = 1 }
+
+[[instance]]
+id = "kaist_koasas"
+name = "KAIST KOASAS (Korea Advanced Institute of Science and Technology)"
+summary = "KAIST institutional OAI-PMH repository harvesting Korean and English STEM theses, technical reports, and faculty research papers."
+aliases = ["kaist", "koasas", "kaist repository"]
+base_url = "https://koasas.kaist.ac.kr/oai/request"
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["lookup", "harvest", "thesis"]
+tier = 1
+probe = { op = "identify", params = {}, min_results = 1 }
+
+[[instance]]
+id = "snu_sspace_kr"
+name = "S-Space (Seoul National University)"
+summary = "Seoul National University open-access OAI-PMH archive covering Korean scholarly articles, doctoral dissertations, and research monographs."
+aliases = ["s-space", "seoul national university", "snu repository"]
+base_url = "https://s-space.snu.ac.kr/oai/request"
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["lookup", "harvest", "thesis"]
+tier = 1
+probe = { op = "identify", params = {}, min_results = 1 }
+
+[[instance]]
+id = "sedici_unlp_ar"
+name = "SEDICI (Universidad Nacional de La Plata, Argentina)"
+summary = "National University of La Plata open-access OAI-PMH repository hosting Latin American journal articles, conference proceedings, books, and ETDs."
+aliases = ["sedici", "unlp", "la plata repository"]
+base_url = "https://sedici.unlp.edu.ar/oai/request"
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["lookup", "harvest", "thesis"]
+tier = 1
+probe = { op = "identify", params = {}, min_results = 1 }
+
+[[instance]]
+id = "uchile_oai_cl"
+name = "Repositorio Académico Universidad de Chile"
+summary = "University of Chile institutional OAI-PMH archive of Chilean and Andean scholarly articles, theses, monographs, and historical collections."
+aliases = ["uchile", "universidad de chile", "chile academic repository"]
+base_url = "https://repositorio.uchile.cl/oai/request"
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["lookup", "harvest", "thesis"]
+tier = 1
+probe = { op = "identify", params = {}, min_results = 1 }
+
+[[instance]]
+id = "dialnet_es_oai"
+name = "Dialnet (Universidad de La Rioja, Spain)"
+summary = "Major Ibero-American scholarly OAI-PMH bibliography indexing Spanish- and Portuguese-language humanities, law, social science, and STEM articles."
+aliases = ["dialnet", "dialnet oai", "spanish humanities index"]
+base_url = "https://dialnet.unirioja.es/oai/OAIHandler"
+scopes = ["academic", "academic.index", "academic.humanities"]
+caps = ["lookup", "harvest"]
+tier = 1
+probe = { op = "identify", params = {}, min_results = 1 }
+
+[[instance]]
+id = "makerere_makir"
+name = "MakIR (Makerere University, Uganda)"
+summary = "Makerere University institutional OAI-PMH repository for East African tropical medicine, public health, agriculture, and social sciences theses."
+aliases = ["makir", "makerere university", "uganda repository"]
+base_url = "https://makir.mak.ac.ug/server/oai/request"
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["lookup", "harvest", "thesis"]
+tier = 2
+probe = { op = "identify", params = {}, min_results = 1 }
+
+[[instance]]
+id = "auc_fount_eg"
+name = "AUC Knowledge Fountain (American University in Cairo)"
+summary = "American University in Cairo institutional OAI-PMH repository of Egyptian and North African humanities, Middle East studies, and STEM theses."
+aliases = ["auc fountain", "american university in cairo", "cairo repository"]
+base_url = "https://fount.aucegypt.edu/do/oai/"
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["lookup", "harvest", "thesis"]
+tier = 2
+probe = { op = "identify", params = {}, min_results = 1 }
+
+[[instance]]
+id = "charles_oai_cz"
+name = "Charles University Digital Repository (Czechia)"
+summary = "Charles University Prague institutional OAI-PMH archive indexing Czech and English doctoral dissertations, faculty monographs, and journal articles."
+aliases = ["charles university", "univerzita karlova", "cuni repository"]
+base_url = "https://dspace.cuni.cz/oai/request"
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["lookup", "harvest", "thesis"]
+tier = 1
+probe = { op = "identify", params = {}, min_results = 1 }
+
+[[instance]]
+id = "nardus_rs_etd"
+name = "NaRDuS (National Repository of Dissertations in Serbia)"
+summary = "Serbian national OAI-PMH repository harvesting doctoral dissertations and evaluation reports from accredited universities across Serbia."
+aliases = ["nardus", "serbia dissertations", "serbia etd"]
+base_url = "https://nardus.mpn.gov.rs/oai/request"
+scopes = ["academic", "academic.theses", "academic.openaccess"]
+caps = ["lookup", "harvest", "thesis"]
+tier = 2
+probe = { op = "identify", params = {}, min_results = 1 }
+
+[[instance]]
+id = "real_mtak_hu"
+name = "REAL (Repository of the Hungarian Academy of Sciences)"
+summary = "Hungarian Academy of Sciences Library OAI-PMH repository harvesting Central and Eastern European open-access articles, books, and academy publications."
+aliases = ["real mtak", "hungarian academy of sciences", "mtak repository"]
+base_url = "https://real.mtak.hu/cgi/oai2"
+scopes = ["academic", "academic.openaccess", "academic.books"]
+caps = ["lookup", "harvest", "book"]
+tier = 1
+probe = { op = "identify", params = {}, min_results = 1 }

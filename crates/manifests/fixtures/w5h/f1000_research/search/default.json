@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "source": "f1000_research",
+  "op": "search",
+  "recordedAt": "2026-11-25T13:02:20Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://f1000research.com/extapi/search?q=crispr&rows=3&page=1",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/xml;charset=UTF-8"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><results numberOfResultsInPage=\"3\" totalNumberOfPages=\"68\"><doi>10.12688/f1000research.11243.1</doi><doi>10.12688/f1000research.16106.1</doi><doi>10.12688/f1000research.23185.2</doi></results>",
+        "bodyB64": null
+      }
+    }
+  ]
+}

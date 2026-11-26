@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "source": "eric",
+  "op": "work",
+  "recordedAt": "2026-11-25T15:09:17Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.ies.ed.gov/eric/?fields=id%2Ctitle%2Cauthor%2Cdescription%2Cpublicationdateyear%2Cpublicationtype%2Csource%2Cpublisher%2Ce_fulltextauth%2Curl%2Cissn&format=json&rows=1&search=id%3AEJ996400",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/plain;charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\n  \"response\":{\"numFound\":1,\"start\":0,\"numFoundExact\":true,\"docs\":[\n      {\n        \"id\":\"EJ996400\",\n        \"title\":\"The Current Status of STEM Education Research\",\n        \"author\":[\"Brown, Josh\"],\n        \"description\":\"This paper explores the current Science, Technology, Engineering and Mathematics (STEM) education research base through an analysis of articles from eight journals focused on the STEM disciplines. Analyzed are both practitioner and research publications to determine the current scope of STEM education research, where current STEM education research is conducted and who is involved in current STEM education research. Articles from eight journals were selected based on the original authors' discussion of STEM education in the articles. The findings in this article summarize the frequency of different research methods in STEM education, the outcomes of STEM education research, the participants in STEM education research, and the universities affiliated with STEM education research. (Contains 7 tables.)\",\n        \"e_fulltextauth\":0,\n        \"source\":\"Journal of STEM Education: Innovations and Research\",\n        \"publicationtype\":[\"Information Analyses\",\n          \"Journal Articles\",\n          \"Reports - Evaluative\"],\n        \"publicationdateyear\":2012,\n        \"url\":\"http://ojs.jstem.org/index.php?journal=JSTEM&page=article&op=view&path[]=1652&path[]=1490\",\n        \"issn\":[\"ISSN-1557-5284\"],\n        \"publisher\":\"Institute for STEM Education and Research. P.O. Box 4001, Auburn, AL 36831. Tel: 334-844-3360; Web site: http://www.jstem.org\"}]\n  }}\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

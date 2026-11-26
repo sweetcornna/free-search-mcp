@@ -1,0 +1,12 @@
+protocol = "sitemap_llms"
+
+[[instance]]
+id = "spec_openapis_sitemap"
+name = "OpenAPI Initiative Specifications (Sitemap)"
+summary = "Official OpenAPI Initiative specification sitemap indexing OpenAPI (OAS), Arazzo, Overlays, and extension registry technical standards."
+aliases = ["openapi spec", "spec.openapis.org", "oas sitemap"]
+base_url = "https://spec.openapis.org/sitemap.xml"
+scopes = ["docs", "code"]
+caps = ["search", "harvest"]
+tier = 1
+probe = { op = "search", params = { query = "schema", limit = 5 }, min_results = 2 }

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "geonames_free",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:13:33Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://secure.geonames.org/searchJSON?q=London&maxRows=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"totalResultsCount\": 654, \"geonames\": [{\"adminCode1\": \"ENG\", \"lng\": \"-0.12574\", \"geonameId\": 2643743, \"toponymName\": \"London\", \"countryId\": \"2635167\", \"fcl\": \"P\", \"population\": 8961989, \"countryCode\": \"GB\", \"name\": \"London\", \"fclName\": \"city, village,...\", \"countryName\": \"United Kingdom\", \"fcodeName\": \"capital of a political entity\", \"adminName1\": \"England\", \"lat\": \"51.50853\", \"fcode\": \"PPLC\"}, {\"adminCode1\": \"08\", \"lng\": \"-81.23304\", \"geonameId\": 6058560, \"toponymName\": \"London\", \"countryId\": \"6251999\", \"fcl\": \"P\", \"population\": 422324, \"countryCode\": \"CA\", \"name\": \"London\", \"fclName\": \"city, village,...\", \"countryName\": \"Canada\", \"fcodeName\": \"populated place\", \"adminName1\": \"Ontario\", \"lat\": \"42.98339\", \"fcode\": \"PPL\"}, {\"adminCode1\": \"ENG\", \"lng\": \"-0.09184\", \"geonameId\": 2643741, \"toponymName\": \"City of London\", \"countryId\": \"2635167\", \"fcl\": \"P\", \"population\": 8583, \"countryCode\": \"GB\", \"name\": \"City of London\", \"fclName\": \"city, village,...\", \"countryName\": \"United Kingdom\", \"fcodeName\": \"populated place\", \"adminName1\": \"England\", \"lat\": \"51.51279\", \"fcode\": \"PPL\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

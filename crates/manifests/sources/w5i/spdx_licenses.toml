@@ -1,0 +1,96 @@
+id = "spdx_licenses"
+name = "SPDX Open License Standards List"
+summary = "Authoritative SPDX open-source and open-data license identifiers, OSI/FSF approval status, exception IDs, and full canonical texts."
+aliases = ["spdx", "spdx.org", "open source licenses"]
+home_url = "https://spdx.org/licenses/"
+tier = 1
+scopes = ["docs"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 10000, cache_ttl_s = 86400, host_bucket = "spdx.org" }
+
+[op.search]
+summary = "Search SPDX license standards by identifier or name (client-side filter over official licenses.json)."
+method = "GET"
+url = "https://spdx.org/licenses/licenses.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { query = "MIT", limit = 5 }, min_results = 2, fixture = "fixtures/w5i/spdx_licenses/search/default.json" }
+examples = ['source.call("spdx_licenses.search", {query: "MIT", limit: 5})']
+
+[op.search.params]
+query = { type = "string", required = true, in = "none", doc = "Case-insensitive SPDX identifier or license name substring" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "none", doc = "Maximum matching licenses to return" }
+
+[op.search.map]
+items = '''(($p.query // "") | ascii_downcase) as $q | [(.licenses // [])[] | select((((.licenseId // "") | ascii_downcase) | contains($q)) or (((.name // "") | ascii_downcase) | contains($q)))] | sort_by(if ((.licenseId // "") | ascii_downcase) == $q then 0 elif ((.licenseId // "") | ascii_downcase | startswith($q)) then 1 else 2 end)[0:($p.limit // 10)][]'''
+record = '''{
+  licenseId: (.licenseId // ""),
+  name: ((.name // "") | collapse_ws // ""),
+  isOsiApproved: (.isOsiApproved == true),
+  isFsfLibre: (if .isFsfLibre == null then null else .isFsfLibre end),
+  isDeprecated: (.isDeprecatedLicenseId == true),
+  reference: (.reference // ""),
+  detailsUrl: (.detailsUrl // ""),
+  seeAlso: (.seeAlso // [])
+}'''
+hit = '''{
+  title: ((.licenseId // "") + " — " + ((.name // "") | collapse_ws // "")),
+  url: (.reference // ("https://spdx.org/licenses/" + (.licenseId // "") + ".html")),
+  snippet: ([ (if .isOsiApproved == true then "OSI-approved" else "Not OSI-approved" end), (if .isDeprecatedLicenseId == true then "Deprecated" else "Active" end), ((.seeAlso | arr | .[0]) // "") ] | map(select(length > 0)) | join(" · ")),
+  date: null,
+  dateSource: null
+}'''
+
+[op.license]
+summary = "Fetch full canonical license text, template, and OSI/FSF metadata for a specific SPDX license ID."
+method = "GET"
+url = "https://spdx.org/licenses/{id}.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "MIT" }, min_results = 1, fixture = "fixtures/w5i/spdx_licenses/license/default.json" }
+examples = ['source.call("spdx_licenses.license", {id: "MIT"})', 'source.call("spdx_licenses.license", {id: "Apache-2.0"})']
+
+[op.license.params]
+id = { type = "string", required = true, in = "path", doc = "Exact SPDX license identifier (e.g. MIT, Apache-2.0, CC-BY-4.0)" }
+
+[op.license.map]
+items = "."
+record = '''{
+  licenseId: (.licenseId // $p.id // ""),
+  name: ((.name // "") | collapse_ws // ""),
+  isOsiApproved: (.isOsiApproved == true),
+  isFsfLibre: (if .isFsfLibre == null then null else .isFsfLibre end),
+  isDeprecated: (.isDeprecatedLicenseId == true),
+  licenseText: (.licenseText // ""),
+  seeAlso: (.seeAlso // []),
+  url: ("https://spdx.org/licenses/" + (.licenseId // $p.id // "") + ".html")
+}'''
+
+[op.exceptions]
+summary = "List or filter SPDX license exceptions (e.g. Classpath-exception-2.0, LLVM-exception)."
+method = "GET"
+url = "https://spdx.org/licenses/exceptions.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = {}, min_results = 5, fixture = "fixtures/w5i/spdx_licenses/exceptions/default.json" }
+examples = ['source.call("spdx_licenses.exceptions", {query: "LLVM", limit: 10})']
+
+[op.exceptions.params]
+query = { type = "string", in = "none", doc = "Optional case-insensitive SPDX exception identifier or name substring" }
+limit = { type = "int", default = 50, min = 1, max = 200, in = "none", doc = "Maximum matching exceptions to return" }
+
+[op.exceptions.map]
+items = '''(($p.query // "") | ascii_downcase) as $q | [(.exceptions // [])[] | select($q == "" or (((.licenseExceptionId // "") | ascii_downcase | contains($q)) or (((.name // "") | ascii_downcase | contains($q)))))] | sort_by(if $q != "" and (((.licenseExceptionId // "") | ascii_downcase) == $q) then 0 elif $q != "" and (((.licenseExceptionId // "") | ascii_downcase | startswith($q))) then 1 else 2 end)[0:($p.limit // 50)][]'''
+record = '''{
+  exceptionId: (.licenseExceptionId // ""),
+  name: ((.name // "") | collapse_ws // ""),
+  isDeprecated: (.isDeprecatedLicenseId == true),
+  reference: (.reference // ""),
+  detailsUrl: (.detailsUrl // ""),
+  seeAlso: (.seeAlso // [])
+}'''

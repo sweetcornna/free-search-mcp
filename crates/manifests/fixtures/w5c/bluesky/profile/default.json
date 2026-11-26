@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "bluesky",
+  "op": "profile",
+  "recordedAt": "2026-11-25T11:54:20Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=bsky.app",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ],
+          [
+            "etag",
+            "W/\"8d9-rjLUXRlooh9R5IpkQsCLCTKQyL4\""
+          ]
+        ],
+        "bodyText": "{\"did\":\"did:plc:z72i7hdynmk6r22z27h6tvur\",\"handle\":\"bsky.app\",\"displayName\":\"Bluesky\",\"avatar\":\"https://cdn.bsky.app/img/avatar/plain/did:plc:z72i7hdynmk6r22z27h6tvur/bafkreihwihm6kpd6zuwhhlro75p5qks5qtrcu55jp3gddbfjsieiv7wuka\",\"associated\":{\"lists\":26,\"feedgens\":7,\"starterPacks\":23,\"labeler\":false,\"chat\":{\"allowIncoming\":\"none\"},\"activitySubscription\":{\"allowSubscriptions\":\"followers\"}},\"labels\":[],\"createdAt\":\"2023-04-12T04:53:57.057Z\",\"verification\":{\"verifications\":[],\"verifiedStatus\":\"none\",\"trustedVerifierStatus\":\"valid\"},\"status\":{\"uri\":\"at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.actor.status/self\",\"cid\":\"bafyreihkojqw7p22odgjcbzjh5sh4vrntow24sd4nvntpqnddrd5pqma44\",\"record\":{\"$type\":\"app.bsky.actor.status\",\"createdAt\":\"2026-10-20T16:00:37.680Z\",\"durationMinutes\":60,\"embed\":{\"$type\":\"app.bsky.embed.external\",\"external\":{\"$type\":\"app.bsky.embed.external#external\",\"description\":\"Elon Take The Wheel Livestream: Alex Gibney, Director of \\\"MUSK\\\"\",\"thumb\":{\"$type\":\"blob\",\"ref\":{\"$link\":\"bafkreifbiu2m3dnnhmzq4dk6u4227p3xuq3zzqhhzvibhuojnz6unengny\"},\"mimeType\":\"image/jpeg\",\"size\":195438},\"title\":\"e.w. niedermeyer is live on Streamplace\",\"uri\":\"https://stream.place/niedermeyer.online\"}},\"status\":\"app.bsky.actor.status#live\"},\"status\":\"app.bsky.actor.status#live\",\"embed\":{\"external\":{\"uri\":\"https://stream.place/niedermeyer.online\",\"title\":\"e.w. niedermeyer is live on Streamplace\",\"description\":\"Elon Take The Wheel Livestream: Alex Gibney, Director of \\\"MUSK\\\"\",\"thumb\":\"https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:z72i7hdynmk6r22z27h6tvur/bafkreifbiu2m3dnnhmzq4dk6u4227p3xuq3zzqhhzvibhuojnz6unengny\"},\"$type\":\"app.bsky.embed.external#view\"},\"labels\":[],\"expiresAt\":\"2026-10-20T17:00:37.680Z\",\"isActive\":false},\"description\":\"official Bluesky account (check username👆)\\n\\nBugs, feature requests, feedback: support@bsky.app\",\"indexedAt\":\"2026-11-04T15:41:10.973Z\",\"banner\":\"https://cdn.bsky.app/img/banner/plain/did:plc:z72i7hdynmk6r22z27h6tvur/bafkreichzyovokfzmymz36p5jibbjrhsur6n7hjnzxrpbt5jaydp2szvna\",\"followersCount\":35840668,\"followsCount\":44,\"postsCount\":928,\"pinnedPost\":{\"cid\":\"bafyreicnt42y6vo6pfpvyro234ac4o6ijug6adwwrh7awflgrqlt4zibxq\",\"uri\":\"at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.post/3l6oveex3ii2l\"}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

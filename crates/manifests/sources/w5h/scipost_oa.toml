@@ -1,0 +1,77 @@
+id = "scipost_oa"
+name = "SciPost Open Access Publications API"
+summary = "Diamond open-access physics, astronomy, mathematics, and chemistry publisher API with open peer-review threads and direct PDF links."
+aliases = ["scipost", "scipost physics"]
+home_url = "https://scipost.org"
+tier = 2
+scopes = ["academic", "academic.physics", "academic.math", "academic.openaccess"]
+caps = ["search", "lookup", "fulltext"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.5, burst = 4, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 43200, host_bucket = "scipost.org" }
+
+[op.search]
+summary = "Search SciPost diamond open-access publications across physics, astronomy, chemistry, and mathematics."
+method = "GET"
+url = "https://scipost.org/api/publications/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "quantum", limit = 3 }, min_results = 2, fixture = "fixtures/w5h/scipost_oa/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "search", doc = "Search query across title, abstract, authors, and DOI label" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Publications per page" }
+offset = { type = "int", default = 0, min = 0, to = "offset", doc = "0-based offset" }
+
+[op.search.map]
+items = "(.results // [])[]"
+total = ".count"
+error = '''if (type == "object" and .detail != null) then (.detail | tostring) else null end'''
+work = '''(
+  ((.url // "") | resolve_url("https://scipost.org") // "https://scipost.org") as $url |
+  (.accepted_submission.url // "") as $sub_url |
+  (if ($sub_url | test("/submissions/[0-9]{4}\\.[0-9]{4,5}")) then ($sub_url | capture("/submissions/(?<ax>[0-9]{4}\\.[0-9]{4,5})").ax) else null end) as $arxiv |
+  {
+    title: (.title // "" | collapse_ws),
+    authors: [(.author_list // "") | split(",")[] | collapse_ws | select(length > 0) | { name: . }],
+    year: (((.publication_date // "")[0:4]) | to_int),
+    publishedDate: ((.publication_date // null) | parse_date),
+    venue: (.in_issue // .in_volume // .citation // "SciPost" | collapse_ws),
+    workType: "article",
+    ids: {
+      doi: (.doi // null | doi_norm),
+      arxiv: $arxiv
+    },
+    abstractText: (.abstract // null | collapse_ws),
+    oa: {
+      status: "diamond",
+      url: $url,
+      pdfUrl: (if (.doi_label // "") != "" then ("https://scipost.org/" + .doi_label + "/pdf") else null end),
+      license: (.cc_license // "CC BY 4.0")
+    },
+    retracted: false,
+    versions: (if $arxiv != null then [{ kind: "preprint", arxiv: $arxiv, url: ("https://arxiv.org/abs/" + $arxiv) }] else [] end),
+    url: $url,
+    sources: ["scipost_oa"]
+  }
+)'''
+
+[op.work]
+summary = "Look up a single SciPost publication by DOI label (e.g. SciPostPhys.21.5.131)."
+method = "GET"
+url = "https://scipost.org/api/publications/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+const_query = { limit = 1 }
+probe = { params = { doi_label = "SciPostPhys.21.5.131" }, min_results = 1, fixture = "fixtures/w5h/scipost_oa/work/default.json" }
+
+[op.work.params]
+doi_label = { type = "string", required = true, to = "search", doc = "SciPost DOI label or DOI e.g. SciPostPhys.21.5.131" }
+
+[op.work.map]
+items = "(.results // [])[] | select(((.doi_label // \"\") | ascii_downcase) == ($p.doi_label | ascii_downcase) or ((.doi // \"\") | ascii_downcase) == ($p.doi_label | ascii_downcase))"
+error = "@ref:op.search.map.error"
+work = "@ref:op.search.map.work"

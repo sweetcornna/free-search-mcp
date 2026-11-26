@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "issn_portal",
+  "op": "lookup",
+  "recordedAt": "2026-11-25T11:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://portal.issn.org/resource/ISSN/0028-0836?format=json",
+        "headersSubset": {
+          "accept": "application/ld+json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/ld+json"
+          ]
+        ],
+        "bodyText": "{\"@context\":{\"@base\":\"http://issn.org/resource/ISSN/0028-0836\",\"@import\":\"https://raw.githubusercontent.com/sparna-git/issn-jsonld-context/main/issn-jsonld-context.json\"},\"alternateName\":[],\"format\":\"medium:Print\",\"hasCancelledISSN-L\":[],\"hasIncorrectISSN\":[],\"id\":\"\",\"identifiedBy\":{\"#ISSN\":{\"hasCancelledISSN\":[\"resource:ISSN/0302-2889#ISSN\"],\"status\":\"idStatus:Valid\",\"type\":\"bf:Issn\",\"value\":\"0028-0836\"},\"#ISSN-L\":{\"status\":\"idStatus:Valid\",\"type\":\"bf:IssnL\",\"value\":\"0028-0836\"},\"#KeyTitle\":{\"mainTitle\":{\"@language\":\"und-Latn\",\"@value\":\"Nature (London)\"},\"type\":[\"bf:Identifier\",\"bf:KeyTitle\"],\"value\":\"Nature (London)\"}},\"identifier\":\"0028-0836\",\"isPartOf\":[{\"id\":\"http://issn.org/resource/ISSN-L/0028-0836\",\"identifiedBy\":{\"#ISSN-L\":{\"status\":\"idStatus:Valid\",\"type\":\"bf:IssnL\",\"value\":\"0028-0836\"}}},{\"id\":\"http://issn.org/resource/ISSN-H/9048-0007\",\"identifiedBy\":{\"#ISSN-H\":{\"status\":\"idStatus:Valid\",\"type\":\"bf:Identifier\",\"value\":\"9048-0007\"}}}],\"issnBibo\":\"0028-0836\",\"issnSchema\":\"0028-0836\",\"mainEntityOf\":{\"generatedBy\":{\"created\":\"\",\"generated\":[\"#KeyTitle\",\"#ISSN-L\",\"#ISSN\",\"#Record\"],\"id\":\"#RecordCreation\",\"type\":\"prov:Activity\",\"wasAssociatedWith\":\"issnCenter:BO\"},\"id\":\"#Record\",\"modified\":\"2026-10-27\",\"status\":\"recordStatus:Register\",\"type\":\"schema:CreativeWork\",\"wasAttributedTo\":{\"id\":\"issnCenter:_2\",\"type\":\"schema:Organization\"}},\"mainTitle\":\"Nature.\",\"name\":[\"Nature.\",\"Nature\"],\"spatial\":[\"https://www.iso.org/obp/ui/#iso:code:3166:GB\",\"https://id.loc.gov/vocabulary/countries/enk.html\"],\"title\":[\"#KeyTitle\",{\"mainTitle\":{\"@language\":\"und-Latn\",\"@value\":\"Nature.\"},\"type\":\"bf:Title\"}],\"type\":[\"bf:Work\",\"bf:Instance\",\"schema:Periodical\"],\"typeDct\":\"formofmaterial:a\",\"url\":[]}\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

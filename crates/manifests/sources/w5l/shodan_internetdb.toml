@@ -1,0 +1,39 @@
+id = "shodan_internetdb"
+name = "Shodan InternetDB Fast IP Intel"
+summary = "Keyless low-latency IPv4 asset intelligence returning open ports, CPEs, known CVEs, hostnames, and infrastructure tags."
+aliases = ["internetdb", "shodan", "ip intel", "ip ports"]
+home_url = "https://internetdb.shodan.io"
+tier = 1
+scopes = ["security"]
+caps = ["lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 5.0, burst = 10, concurrency = 4, timeout_ms = 5000, cache_ttl_s = 21600 }
+
+[op.ip]
+summary = "Look up open ports, CPEs, CVEs, hostnames, and tags for a public IPv4 address."
+method = "GET"
+url = "https://internetdb.shodan.io/{ip}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { ip = "1.1.1.1" }, min_results = 1, fixture = "fixtures/w5l/shodan_internetdb/ip/default.json" }
+examples = [
+  'source.call("shodan_internetdb.ip", { ip: "1.1.1.1" })',
+]
+
+[op.ip.params]
+ip = { type = "string", required = true, in = "path", doc = "Public IPv4 address (e.g. 1.1.1.1)" }
+
+[op.ip.map]
+items = "if .ip then . else empty end"
+error = "if .detail then (.detail | tostring) else null end"
+record = '''{
+  ip: (.ip // ""),
+  ports: (.ports // []),
+  cpes: (.cpes // []),
+  hostnames: (.hostnames // []),
+  tags: (.tags // []),
+  vulns: (.vulns // []),
+  url: ("https://www.shodan.io/host/" + (.ip // ""))
+}'''

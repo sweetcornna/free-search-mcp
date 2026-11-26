@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "source": "protein_databank",
+  "op": "search",
+  "recordedAt": "2026-11-25T15:09:17Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://search.rcsb.org/rcsbsearch/v2/query",
+        "headersSubset": {
+          "accept": "application/json",
+          "content-type": "application/json"
+        },
+        "bodySha256": "beb02dbbec64d9dc8ab134f41844479670527cffd172c06c1c4db09e419ada69"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\n  \"query_id\" : \"26e3d510-8c55-4ce2-b04d-16b0cd6d663e\",\n  \"result_type\" : \"entry\",\n  \"total_count\" : 9226,\n  \"result_set\" : [ {\n    \"identifier\" : \"2PGH\",\n    \"score\" : 1.0\n  }, {\n    \"identifier\" : \"6IHX\",\n    \"score\" : 0.9987021256897813\n  }, {\n    \"identifier\" : \"20YJ\",\n    \"score\" : 0.9983407514250748\n  } ]\n}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://data.rcsb.org/graphql?query=%7B+entries%28entry_ids%3A+%5B%222PGH%22%2C%226IHX%22%2C%2220YJ%22%5D%29+%7B+rcsb_id+struct+%7B+title+%7D+rcsb_entry_info+%7B+experimental_method+resolution_combined+deposited_atom_count+%7D+rcsb_accession_info+%7B+deposit_date+initial_release_date+%7D+rcsb_primary_citation+%7B+pdbx_database_id_DOI+pdbx_database_id_PubMed+%7D+%7D+%7D",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"data\":{\"entries\":[{\"rcsb_id\":\"2PGH\",\"struct\":{\"title\":\"STRUCTURE DETERMINATION OF AQUOMET PORCINE HEMOGLOBIN AT 2.8 ANGSTROM RESOLUTION\"},\"rcsb_entry_info\":{\"experimental_method\":\"X-ray\",\"resolution_combined\":[2.8],\"deposited_atom_count\":4700},\"rcsb_accession_info\":{\"deposit_date\":\"1994-09-16T00:00:00Z\",\"initial_release_date\":\"1994-11-30T00:00:00Z\"},\"rcsb_primary_citation\":{\"pdbx_database_id_DOI\":\"10.1006/jmbi.1994.1751\",\"pdbx_database_id_PubMed\":7990139}},{\"rcsb_id\":\"6IHX\",\"struct\":{\"title\":\"Crystal Structure Analysis of bovine Hemoglobin modified by SNP\"},\"rcsb_entry_info\":{\"experimental_method\":\"X-ray\",\"resolution_combined\":[1.46],\"deposited_atom_count\":5218},\"rcsb_accession_info\":{\"deposit_date\":\"2018-10-03T00:00:00Z\",\"initial_release_date\":\"2018-12-12T00:00:00Z\"},\"rcsb_primary_citation\":{\"pdbx_database_id_DOI\":\"10.1021/acs.jpcb.8b10077\",\"pdbx_database_id_PubMed\":30444368}},{\"rcsb_id\":\"20YJ\",\"struct\":{\"title\":\"Hemoglobin amyloid fibril - PM2\"},\"rcsb_entry_info\":{\"experimental_method\":\"EM\",\"resolution_combined\":[3.4],\"deposited_atom_count\":2590},\"rcsb_accession_info\":{\"deposit_date\":\"2025-12-02T00:00:00Z\",\"initial_release_date\":\"2026-07-22T00:00:00Z\"},\"rcsb_primary_citation\":{\"pdbx_database_id_DOI\":\"10.1021/acs.nanolett.6c02217\",\"pdbx_database_id_PubMed\":42388124}}]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

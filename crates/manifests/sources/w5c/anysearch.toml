@@ -1,0 +1,54 @@
+id = "anysearch"
+name = "AnySearch"
+summary = "Hosted unified web search REST API (requires SEARCH_MCP_ANYSEARCH_API_KEY; anonymous pool returns HTTP 402)."
+aliases = ["anysearch api"]
+home_url = "https://anysearch.com"
+tier = 3
+scopes = ["web"]
+caps = ["search"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 2.0, burst = 4, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 21600 }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_ANYSEARCH_API_KEY"
+in = "header"
+name = "Authorization"
+format = "Bearer {key}"
+route_requires_key = true
+
+[op.search]
+summary = "Search the web via AnySearch POST /v1/search (requires API key)."
+method = "POST"
+url = "https://api.anysearch.com/v1/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+body = { kind = "json", jaq = '''{ query: $p.query, max_results: ($p.limit // 10) }''' }
+probe = { params = { query = "rust language", limit = 3 }, min_results = 2, fixture = "fixtures/w5c/anysearch/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, in = "body", doc = "Search query" }
+limit = { type = "int", default = 10, min = 1, max = 100, in = "body", doc = "Max results" }
+
+[op.search.map]
+items = "(.data.results // .results // [])[]"
+error = "if (.code | type) == \"number\" and .code != 0 then (.message // .error_code // \"AnySearch API error\") else null end"
+record = '''{
+  title: (.title // ""),
+  url: (.url // ""),
+  snippet: (([.snippet, .description] | map(select(type == "string" and length > 0))[0]) // ((.content // "") | collapse_ws | if length > 400 then .[0:400] + "..." else . end)),
+  score: .score,
+  qualityScore: .quality_score,
+  publishedAt: .published_at
+}'''
+hit = '''
+(.published_at | parse_date) as $dt |
+{
+  title: (.title // ""),
+  url: (.url // ""),
+  snippet: (([.snippet, .description] | map(select(type == "string" and length > 0))[0]) // ((.content // "") | collapse_ws | if length > 400 then .[0:400] + "..." else . end)),
+  date: $dt,
+  dateSource: (if $dt != null then "api" else null end)
+}'''

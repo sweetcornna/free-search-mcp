@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "wellcome_collection",
+  "op": "search",
+  "recordedAt": "2026-11-25T13:05:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.wellcomecollection.org/catalogue/v2/works?query=vaccine&pageSize=3&page=1",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"type\":\"ResultList\",\"pageSize\":3,\"totalPages\":1747,\"totalResults\":5241,\"results\":[{\"physicalDescription\":\"xvii, 221 pages : illustrations ; 23 cm\",\"description\":\"<p>\\\"In 1994, Peter J. Hotez's nineteen-month-old daughter, Rachel, was diagnosed with autism. Dr. Hotez, a pediatrician-scientist who develops vaccines for neglected tropical diseases affecting the world's poorest people, became troubled by the decades-long rise of the influential anti-vaccine community and their inescapable narrative around childhood vaccines and autism. The alleged link between the two was first espoused in a fraudulent scientific paper, long since retracted, but the story shows no signs of letting up. As a result, we've seen deadly and disabling outbreaks of vaccine-preventable diseases around the country, and Texas, where Hotez lives, is at particular risk. In Vaccines Did Not Cause Rachel's Autism, Hotez draws on his experiences as a pediatrician, vaccine scientist, and father of an autistic child. Outlining the arguments on both sides of the debate, he examines the science that refutes the concerns of the anti-vaccine movement, debunks current conspiracy theories alleging a cover-up by the CDC, and critiques the scientific community's failure to effectively communicate the facts about vaccines and autism to the general public, all while sharing his very personal story of raising a now-adult daughter with autism. A uniquely authoritative account, this important book persuasively provides evidence for the genetic basis of autism and illustrates how the neurodevelopmental pathways of autism are under way before birth. Dr. Hotez reminds readers of the many victories of vaccines over disease while warning about the growing dangers of the anti-vaccine movement, especially in the United States and Europe. A former US Science Envoy for the Department of State, he also explains what's at stake if the movement continues to gain ground. Opening with a foreword by leading medical ethicist Arthur L. Caplan, this book is a must-read for parent groups, child advocates, teachers, health-care providers, government policymakers, health and science policy experts, and anyone caring for a family member or friend with autism\\\"--Provided by publisher.</p>\",\"workType\":{\"id\":\"a\",\"type\":\"Format\",\"label\":\"Books\"},\"alternativeTitles\":[],\"id\":\"guv3vscg\",\"title\":\"Vaccines did not cause Rachel's autism : my journey as a vaccine scientist, pediatrician, and autism dad / Peter J. Hotez, MD, PhD ; foreword by Arthur L. Caplan (Division of Medical Ethics, NYU School of Medicine).\",\"type\":\"Work\",\"availabilities\":[{\"id\":\"open-shelves\",\"type\":\"Availability\",\"label\":\"Open shelves\"}]},{\"physicalDescription\":\"1 file\",\"workType\":{\"id\":\"h\",\"type\":\"Format\",\"label\":\"Archives and manuscripts\"},\"alternativeTitles\":[],\"id\":\"qr3xgsdy\",\"title\":\"'Vaccine Lymph' Register\",\"type\":\"Work\",\"availabilities\":[{\"id\":\"closed-stores\",\"type\":\"Availability\",\"label\":\"Closed stores\"}],\"referenceNumber\":\"SA/LIS/I.15\"},{\"currentFrequency\":\"52 times a year, 2005-\",\"workType\":{\"id\":\"j\",\"type\":\"Format\",\"label\":\"E-journals\"},\"alternativeTitles\":[\"Vaccine (Online)\"],\"id\":\"ywu8d37h\",\"title\":\"Vaccine\",\"type\":\"Work\",\"availabilities\":[{\"id\":\"online\",\"type\":\"Availability\",\"label\":\"Online\"}]}],\"nextPage\":\"https://api.wellcomecollection.org/catalogue/v2/works?page=2&pageSize=3&query=vaccine\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

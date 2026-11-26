@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "source": "hal",
+  "op": "search",
+  "recordedAt": "2026-11-25T15:09:45Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.archives-ouvertes.fr/search/?fl=halId_s%2Cdocid%2Ctitle_s%2CauthFullName_s%2CpublicationDate_s%2CpublicationDateY_i%2CdoiId_s%2CarxivId_s%2CpubmedId_s%2Curi_s%2Cabstract_s%2CjournalTitle_s%2CconferenceTitle_s%2CbookTitle_s%2CdocType_s%2CfileMain_s%2CopenAccess_bool%2Clicence_s&wt=json&rows=3&q=graph+neural+network",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "date",
+            "Wed, 25 Nov 2026 15:09:45 GMT"
+          ],
+          [
+            "server",
+            "Apache/2.4.71 (Debian)"
+          ],
+          [
+            "served-by",
+            "192.168.176.71 D=86622"
+          ],
+          [
+            "environment",
+            "production"
+          ],
+          [
+            "access-control-allow-origin",
+            "*"
+          ],
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ],
+          [
+            "strict-transport-security",
+            "max-age=63072000"
+          ]
+        ],
+        "bodyText": "{\n  \"response\":{\n    \"numFound\":1174,\n    \"start\":0,\n    \"maxScore\":12.116604,\n    \"numFoundExact\":true,\n    \"docs\":[{\n      \"docid\":\"4642650\",\n      \"openAccess_bool\":true,\n      \"title_s\":[\"Graph Neural Network, ChebNet, Graph Convolutional Network, and Graph Autoencoder: Tutorial and Survey\"],\n      \"abstract_s\":[\"This is a tutorial paper on graph neural networks including ChebNet, graph convolutional network, graph attention network, and graph autoencoder. It starts with Laplacian of graph, graph Fourier transform, and graph convolution. Then, it is explained how Chebyshev polynomials are used in graph networks to have ChebNet. Afterwards, graph convolutional network and its general framework are introduced. Then, graph attention network is explained as a combination of attention mechanism and graph neural networks. Finally, graph reconstruction autoencoder and graph variational autoencoder are introduced.\"],\n      \"authFullName_s\":[\"Benyamin Ghojogh\",\"Ali Ghodsi\"],\n      \"halId_s\":\"hal-04642650\",\n      \"uri_s\":\"https://hal.science/hal-04642650v1\",\n      \"docType_s\":\"UNDEFINED\",\n      \"publicationDate_s\":\"2024-07-10\",\n      \"publicationDateY_i\":2024,\n      \"fileMain_s\":\"https://hal.science/hal-04642650/document\",\n      \"licence_s\":\"https://about.hal.science/hal-authorisation-v1/\"\n    },{\n      \"docid\":\"4827162\",\n      \"openAccess_bool\":true,\n      \"title_s\":[\"Accelerate Model Parallel Deep Learning Training Using Effective Graph Traversal Order in Device Placement\"],\n      \"abstract_s\":[\"Modern neural networks require long training to reach decent performance on massive datasets. One common approach to speed up training is model parallelization, where large neural networks are split across multiple devices. However, different device placements of the same neural network lead to different training times. Most of the existing device placement solutions treat the problem as sequential decision-making by traversing neural network graphs and assigning their neurons to different devices. This work studies the impact of neural network graph traversal orders on device placement. In particular, we empirically study how different graph traversal orders of neural networks lead to different device placements, which in turn affects the training time of the neural network. Our experiment results show that the best graph traversal order depends on the type of neural networks and their computation graphs features. In this work, we also provide recommendations on choosing effective graph traversal orders in device placement for various neural network families to improve the training time in model parallelization.\"],\n      \"conferenceTitle_s\":\"17th IFIP International Conference on Distributed Applications and Interoperable Systems (DAIS)\",\n      \"authFullName_s\":[\"Tianze Wang\",\"Amir H. Payberah\",\"Desta Haileselassie Hagos\",\"Vladimir Vlassov\"],\n      \"halId_s\":\"hal-04827162\",\n      \"uri_s\":\"https://inria.hal.science/hal-04827162v1\",\n      \"docType_s\":\"COMM\",\n      \"doiId_s\":\"10.1007/978-3-031-16092-9_8\",\n      \"publicationDate_s\":\"2022\",\n      \"publicationDateY_i\":2022,\n      \"fileMain_s\":\"https://inria.hal.science/hal-04827162/document\",\n      \"licence_s\":\"https://creativecommons.org/licenses/by/4.0/\"\n    },{\n      \"docid\":\"3247184\",\n      \"openAccess_bool\":true,\n      \"title_s\":[\"GraphMix: Improved Training of GNNs for Semi-Supervised Learning\"],\n      \"abstract_s\":[\"We present GraphMix, a regularization method for Graph Neural Network based semi-supervised object classification, whereby we propose to train a fully-connected network jointly with the graph neural network via parameter sharing and interpolation-based regularization. Further, we provide a theoretical analysis of how GraphMix improves the generalization bounds of the underlying graph neural network, without making any assumptions about the \\\"aggregation\\\" layer or the depth of the graph neural networks. We experimentally validate this analysis by applying GraphMix to various architectures such as Graph Convolutional Networks, Graph Attention Networks and Graph-U-Net. Despite its simplicity, we demonstrate that GraphMix can consistently improve or closely match state-of-the-art performance using even simpler architectures such as Graph Convolutional Networks, across three established graph benchmarks: Cora, Citeseer and Pubmed citation network datasets, as well as three newly proposed datasets: Cora-Full, Co-author-CS and Co-author-Physics.\"],\n      \"conferenceTitle_s\":\"Proceedings of the AAAI Conference on Artificial Intelligence\",\n      \"authFullName_s\":[\"Vikas Verma\",\"Meng Qu\",\"Kenji Kawaguchi\",\"Alex Lamb\",\"Yoshua Bengio\",\"Juho Kannala\",\"Jian Tang\"],\n      \"halId_s\":\"hal-03247184\",\n      \"uri_s\":\"https://hal.science/hal-03247184v1\",\n      \"docType_s\":\"COMM\",\n      \"arxivId_s\":\"1909.11715\",\n      \"publicationDate_s\":\"2021-02-02\",\n      \"publicationDateY_i\":2021\n    }]\n  }\n}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

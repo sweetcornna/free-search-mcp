@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "source": "hal_oai",
+  "op": "all",
+  "recordedAt": "2026-11-25T12:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.archives-ouvertes.fr/oai/hal/?verb=Identify",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          ["content-type", "text/xml; charset=utf-8"]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\"><Identify><repositoryName>HAL</repositoryName><baseURL>https://api.archives-ouvertes.fr/oai/hal/</baseURL><protocolVersion>2.0</protocolVersion><adminEmail>hal@ccsd.cnrs.fr</adminEmail><earliestDatestamp>2001-01-01</earliestDatestamp><deletedRecord>no</deletedRecord><granularity>YYYY-MM-DD</granularity></Identify></OAI-PMH>",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.archives-ouvertes.fr/oai/hal/?verb=ListSets",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          ["content-type", "text/xml; charset=utf-8"]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\"><ListSets><set><setSpec>collection:CNRS</setSpec><setName>CNRS</setName></set><set><setSpec>collection:INRIA</setSpec><setName>Inria</setName></set><resumptionToken>sets_tok_2</resumptionToken></ListSets></OAI-PMH>",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.archives-ouvertes.fr/oai/hal/?verb=ListRecords&metadataPrefix=oai_dc&set=collection%3ACNRS&from=2026-01-01",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          ["content-type", "text/xml; charset=utf-8"]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\"><ListRecords><record><header status=\"deleted\"><identifier>oai:HAL:hal-00000001</identifier><datestamp>2026-01-02</datestamp></header></record><record><header><identifier>oai:HAL:hal-04000001v1</identifier><datestamp>2026-05-10</datestamp></header><metadata><oai_dc:dc xmlns:oai_dc=\"http://www.openarchives.org/OAI/2.0/oai_dc/\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\"><dc:title>Neural Operators in Fluid Dynamics</dc:title><dc:creator>Dupont, Claire</dc:creator><dc:date>2026-05-01</dc:date><dc:identifier>https://hal.science/hal-04000001</dc:identifier><dc:identifier>doi:10.1234/hal.2026.001</dc:identifier><dc:description>Operator learning for PDEs.</dc:description></oai_dc:dc></metadata></record><record><header><identifier>oai:HAL:hal-04000002v1</identifier><datestamp>2026-05-11</datestamp></header><metadata><oai_dc:dc xmlns:oai_dc=\"http://www.openarchives.org/OAI/2.0/oai_dc/\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\"><dc:title>Second Record Sliced Out</dc:title><dc:identifier>https://hal.science/hal-04000002</dc:identifier></oai_dc:dc></metadata></record><resumptionToken>rec_tok_2</resumptionToken></ListRecords></OAI-PMH>",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.archives-ouvertes.fr/oai/hal/?verb=ListRecords&resumptionToken=rec_tok_2",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          ["content-type", "text/xml; charset=utf-8"]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\"><ListRecords><record><header><identifier>oai:HAL:hal-04000003v1</identifier><datestamp>2026-05-12</datestamp></header><metadata><oai_dc:dc xmlns:oai_dc=\"http://www.openarchives.org/OAI/2.0/oai_dc/\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\"><dc:title>Page Two Paper</dc:title><dc:identifier>https://hal.science/hal-04000003</dc:identifier></oai_dc:dc></metadata></record><resumptionToken/></ListRecords></OAI-PMH>",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.archives-ouvertes.fr/oai/hal/?verb=GetRecord&identifier=oai%3AHAL%3Ahal-04000001v1&metadataPrefix=oai_dc",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          ["content-type", "text/xml; charset=utf-8"]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\"><GetRecord><record><header><identifier>oai:HAL:hal-04000001v1</identifier><datestamp>2026-05-10</datestamp></header><metadata><oai_dc:dc xmlns:oai_dc=\"http://www.openarchives.org/OAI/2.0/oai_dc/\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\"><dc:title>Neural Operators in Fluid Dynamics</dc:title><dc:creator>Dupont, Claire</dc:creator><dc:identifier>https://hal.science/hal-04000001</dc:identifier></oai_dc:dc></metadata></record></GetRecord></OAI-PMH>",
+        "bodyB64": null
+      }
+    }
+  ]
+}

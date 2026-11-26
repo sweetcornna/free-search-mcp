@@ -1,0 +1,78 @@
+id = "figshare"
+name = "figshare"
+summary = "Public scientific datasets, figures, code, and institutional repositories on figshare."
+aliases = ["figshare datasets"]
+home_url = "https://figshare.com"
+tier = 1
+scopes = ["dataset", "academic"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 4, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 21600 }
+
+[op.search]
+summary = "Search public figshare items (defaults to datasets, item_type=3)."
+method = "POST"
+url = "https://api.figshare.com/v2/articles/search"
+headers = { Accept = "application/json", "Content-Type" = "application/json" }
+response = "json"
+returns = "works"
+body = { kind = "json", jaq = '''({
+  item_type: ($p.item_type // 3),
+  limit: ($p.limit // 10),
+  search_for: $p.query
+} + (if $p.page != null then { page: $p.page } else {} end))''' }
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "climate", limit = 3 }, min_results = 2, fixture = "fixtures/w5b/figshare/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, in = "body", doc = "Search text (supports ':institution: <slug> <query>')" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "body", doc = "Maximum items to return" }
+page = { type = "int", min = 1, in = "body", doc = "1-based page number" }
+item_type = { type = "int", default = 3, min = 1, max = 30, in = "body", doc = "figshare defined_type (3=dataset, 1=figure, 9=software, 12=preprint)" }
+
+[op.search.map]
+items = ".[]"
+error = 'if type == "object" and (.code // null) != null and (.message // null) != null then .message else null end'
+work = '''{
+  title: ((.title // "") | strip_tags),
+  authors: [],
+  year: ((.published_date // "")[0:4] | to_int),
+  publishedDate: ((.published_date // null) | parse_date),
+  venue: "figshare",
+  workType: (.defined_type_name // "dataset"),
+  ids: { doi: ((.doi // null) | doi_norm) },
+  retracted: false,
+  versions: [],
+  url: (.url_public_html // (if (.doi // "") != "" then ("https://doi.org/" + .doi) else .url end)),
+  sources: ["figshare"]
+}'''
+
+[op.article]
+summary = "Fetch full metadata and file list for a figshare article by numeric ID."
+method = "GET"
+url = "https://api.figshare.com/v2/articles/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "34746354" }, min_results = 1, fixture = "fixtures/w5b/figshare/article/default.json" }
+
+[op.article.params]
+id = { type = "string", required = true, in = "path", doc = "Numeric figshare article ID (e.g. 34746354)" }
+
+[op.article.map]
+items = "."
+error = 'if type == "object" and (.code // null) != null and (.message // null) != null then .message else null end'
+record = '''{
+  id: (.id | to_int),
+  title: ((.title // "") | strip_tags),
+  doi: ((.doi // null) | doi_norm),
+  itemType: (.defined_type_name // null),
+  authors: [(.authors // [])[] | {name: (.full_name | collapse_ws), orcid: (if (.orcid_id // "") != "" then .orcid_id else null end)}],
+  description: ((.description // null) | strip_tags),
+  license: (.license.name // null),
+  fileCount: ((.files // []) | length),
+  files: [(.files // [])[0:25][] | {id: (.id | to_int), name: .name, size: (.size | to_int), mimetype: (.mimetype // null), downloadUrl: (.download_url // null)}],
+  publishedDate: ((.published_date // null) | parse_date),
+  url: (.figshare_url // (if (.doi // "") != "" then ("https://doi.org/" + .doi) else "" end))
+}'''

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "materials_cloud_3d",
+  "op": "structure",
+  "recordedAt": "2026-11-25T13:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://optimade.materialscloud.org/main/mc3d-pbesol-v2/v1/structures/296fcf6e-d90c-4347-b15d-cff700e0b0d3?response_fields=chemical_formula_reduced%2Cchemical_formula_descriptive%2Cchemical_formula_anonymous%2Celements%2Cnelements%2Cnsites%2Cdimension_types%2Clattice_vectors%2Cspecies_at_sites%2Clast_modified",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/vnd.api+json"
+          ]
+        ],
+        "bodyText": "{\"data\":{\"id\":\"296fcf6e-d90c-4347-b15d-cff700e0b0d3\",\"relationships\":null,\"links\":null,\"type\":\"structures\",\"attributes\":{\"last_modified\":\"2025-09-08T17:17:28.985727+02:00\",\"elements\":[\"Ca\",\"O\",\"Si\"],\"nelements\":3,\"chemical_formula_descriptive\":\"Ca3OSi\",\"chemical_formula_reduced\":\"Ca3OSi\",\"chemical_formula_anonymous\":\"A3BC\",\"dimension_types\":[1,1,1],\"lattice_vectors\":[[4.6562446220676,0.0,0.0],[0.0,4.6562446220676,0.0],[0.0,0.0,4.6562446220676]],\"nsites\":5,\"species_at_sites\":[\"Ca\",\"Ca\",\"Ca\",\"Si\",\"O\"]}},\"meta\":{\"query\":{\"representation\":\"/main/mc3d-pbesol-v2/v1/structures/296fcf6e-d90c-4347-b15d-cff700e0b0d3?response_fields=chemical_formula_reduced%2Cchemical_formula_descriptive%2Cchemical_formula_anonymous%2Celements%2Cnelements%2Cnsites%2Cdimension_types%2Clattice_vectors%2Cspecies_at_sites%2Clast_modified\"},\"api_version\":\"1.2.0\",\"more_data_available\":false,\"schema\":\"https://schemas.optimade.org/openapi/v1.2.0/optimade.json\",\"time_stamp\":\"2026-11-25T13:03:03.346994\",\"data_returned\":1,\"provider\":{\"name\":\"Materials Cloud\",\"description\":\"A platform for Open Science built for seamless sharing of resources in computational materials science\",\"prefix\":\"mcloud\",\"homepage\":\"https://www.materialscloud.org/\"},\"data_available\":33142,\"implementation\":{\"name\":\"OPTIMADE Python Tools\",\"version\":\"1.4.1\",\"homepage\":\"https://optimade.org/optimade-python-tools\",\"source_url\":\"https://github.com/Materials-Consortia/optimade-python-tools\",\"maintainer\":{\"email\":\"dev@optimade.org\"},\"issue_tracker\":\"https://github.com/Materials-Consortia/optimade-python-tools/issues\"}},\"included\":[],\"links\":{\"next\":null}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

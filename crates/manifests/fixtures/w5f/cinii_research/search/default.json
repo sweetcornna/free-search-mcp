@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "source": "cinii_research",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:18:49Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://cir.nii.ac.jp/opensearch/description.xml",
+        "headersSubset": {
+          "accept": "application/opensearchdescription+xml, application/xml"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/xml; charset=UTF-8"
+          ],
+          [
+            "last-modified",
+            "Wed, 11 Nov 2026 00:07:54 GMT"
+          ],
+          [
+            "etag",
+            "\"6af3b1da-31d\""
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<OpenSearchDescription xmlns=\"http://a9.com/-/spec/opensearch/1.1/\">\n    <ShortName>CiNii Research - all</ShortName>\n    <Description>CiNii Research - all</Description>\n    <Image height=\"16\" width=\"16\" type=\"image/x-icon\">https://cir.nii.ac.jp/static/images/favicon.ico</Image>\n    <Url type=\"text/html\" template=\"https://cir.nii.ac.jp/opensearch/v2/all?q={searchTerms}\"/>\n    <Url type=\"application/rss+xml\" template=\"https://cir.nii.ac.jp/opensearch/v2/all?q={searchTerms}&amp;format=rss\"/>\n    <Url type=\"application/atom+xml\" template=\"https://cir.nii.ac.jp/opensearch/v2/all?q={searchTerms}&amp;format=atom\"/>\n    <Url type=\"application/json\" template=\"https://cir.nii.ac.jp/opensearch/v2/all?q={searchTerms}&amp;format=json\"/>\n</OpenSearchDescription>",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://cir.nii.ac.jp/opensearch/v2/all?q=transformer&count=3&format=atom",
+        "headersSubset": {
+          "accept": "application/atom+xml, application/xml"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/atom+xml;charset=UTF-8"
+          ],
+          [
+            "cache-control",
+            "no-cache, no-store, max-age=0, must-revalidate"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n<feed xmlns=\"http://www.w3.org/2005/Atom\" xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" xmlns:rdfs=\"http://www.w3.org/2000/01/rdf-schema#\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:prism=\"http://prismstandard.org/namespaces/basic/2.0/\" xmlns:ndl=\"http://ndl.go.jp/dcndl/terms\" xmlns:opensearch=\"http://a9.com/-/spec/opensearch/1.1/\" xmlns:cir=\"https://cir.nii.ac.jp/schema/1.0/\" xml:lang=\"ja\">\n<title>CiNii Research all - transformer 3 atom</title>\n<link href=\"https://cir.nii.ac.jp/opensearch/v2/all?q=transformer&amp;count=3\"/>\n<link rel=\"self\" type=\"application/atom+xml\" href=\"https://cir.nii.ac.jp/opensearch/v2/all?q=transformer&amp;count=3&amp;format=atom\"/>\n<id>https://cir.nii.ac.jp/opensearch/v2/all?q=transformer&amp;count=3&amp;format=atom</id>\n<updated>2026-11-25T21:18:49.523+09:00</updated>\n<dc:date>2026-11-25T21:18:49.523+09:00</dc:date>\n<opensearch:totalResults>503160</opensearch:totalResults>\n<opensearch:startIndex>1</opensearch:startIndex>\n<opensearch:itemsPerPage>3</opensearch:itemsPerPage>\n<entry>\n<title>Derivation of Fourier transform of discrete series from z-transform</title>\n<link href=\"https://cir.nii.ac.jp/crid/1872272492775932672\"/>\n<link rel=\"alternate\" type=\"application/rdf+xml\" href=\"https://cir.nii.ac.jp/crid/1872272492775932672.rdf\"/>\n<id>https://cir.nii.ac.jp/crid/1872272492775932672</id>\n<author>\n<name>Ishii, R.</name>\n</author>\n<dc:publisher>Institution of Engineering and Technology (IET)</dc:publisher>\n<dc:type>Article</dc:type>\n<prism:publicationName>Electronics Letters</prism:publicationName>\n<prism:issn>0013-5194</prism:issn>\n<prism:volume>26</prism:volume>\n<prism:startingPage>1938</prism:startingPage>\n<prism:endingPage>1939</prism:endingPage>\n<prism:publicationDate>1990-11-08</prism:publicationDate>\n<content type=\"text\">Summary: The relationship between z-transform and Fourier transform of a discrete series is presented. The Fourier transform of a discrete series whose z- transform has poles on the unit circle can be derived using these results.</content>\n<dc:identifier rdf:datatype=\"cir:DOI\">10.1049/el:19901254</dc:identifier>\n<dc:subject>Numerical optimization and variational techniques</dc:subject>\n<dc:subject>Fourier transform</dc:subject>\n<dc:subject>z-transform</dc:subject>\n<dc:subject>discrete series</dc:subject>\n<dc:subject>Pole and zero placement problems</dc:subject>\n<dc:subject>Numerical methods for discrete and fast Fourier transforms</dc:subject>\n<dc:subject>poles</dc:subject>\n</entry>\n<entry>\n<title>INFINITESIMAL CONFORMAL TRANSFORMATIONS ON TANGENT BUNDLES WITH THE LIFT METRIC I+II</title>\n<link href=\"https://cir.nii.ac.jp/crid/1571980074875832064\"/>\n<link rel=\"alternate\" type=\"application/rdf+xml\" href=\"https://cir.nii.ac.jp/crid/1571980074875832064.rdf\"/>\n<id>https://cir.nii.ac.jp/crid/1571980074875832064</id>\n<author>\n<name>YAMAUCHI KAZUNARI</name>\n</author>\n<author>\n<name>HASEGAWA IZUMI</name>\n</author>\n<dc:type>Article</dc:type>\n<prism:publicationName>Scientiae Mathematicae japonicae</prism:publicationName>\n<prism:issn>13460862</prism:issn>\n<prism:volume>57</prism:volume>\n<prism:number>1</prism:number>\n<prism:startingPage>129</prism:startingPage>\n<prism:endingPage>137</prism:endingPage>\n<prism:publicationDate>2003-01-01</prism:publicationDate>\n<dc:identifier rdf:datatype=\"cir:NAID\">10011059508</dc:identifier>\n<dc:subject>tangent bundle</dc:subject>\n<dc:subject>infinitesimal conformal transformation</dc:subject>\n<dc:subject>infinitesimal projective transformation</dc:subject>\n<dc:subject>infinitesimal affine transformation</dc:subject>\n<dc:subject>infintesimal homothetic transformation</dc:subject>\n<dc:subject>Lie derivation</dc:subject>\n</entry>\n<entry>\n<title>The Orthogonal Transform Sign</title>\n<link href=\"https://cir.nii.ac.jp/crid/1872553968099684352\"/>\n<link rel=\"alternate\" type=\"application/rdf+xml\" href=\"https://cir.nii.ac.jp/crid/1872553968099684352.rdf\"/>\n<id>https://cir.nii.ac.jp/crid/1872553968099684352</id>\n<author>\n<name>Lifeng Zhang</name>\n</author>\n<author>\n<name>Takaharu Koda</name>\n</author>\n<author>\n<name>Huimin Lu</name>\n</author>\n<dc:publisher>The Institute of Industrial Applications Engineers</dc:publisher>\n<dc:type>Article</dc:type>\n<prism:publicationName>The Proceedings of the 1st International Conference on Industrial Application Engineering 2013</prism:publicationName>\n<prism:startingPage>112</prism:startingPage>\n<prism:endingPage>118</prism:endingPage>\n<prism:publicationDate>2013-03-27</prism:publicationDate>\n<content type=\"text\">The nature of transform signs in typical real orthogonal transforms are presented. Phase-only synthesis is intro- duced by ”Image recovery -Theory and Application-” written by Henry Stark. Sign-only synthesis is the ex- tended version of the Phase-only synthesis. Sign-only synthesis is defined as an inverse transform of only signs of the transform coefficients and has interesting prop- erty in its applications. Orthogonal transforms taken in this paper are Discrete Cosine Transform, Hadamard transform, Fourier Transform with binarized phase and Karhunen-Loeve Transform. These transforms have real number coefficients and then it looks interesting to know the property of each transform signs. The character- istics of these Sign-only synthesis are compared each other. And interesting nature of transform signs are ex- tended. One application of Sign-only synthesis is shown as a facial authentication.</content>\n<dc:identifier rdf:datatype=\"cir:DOI\">10.12792/iciae2013.023</dc:identifier>\n</entry>\n</feed>",
+        "bodyB64": null
+      }
+    }
+  ]
+}

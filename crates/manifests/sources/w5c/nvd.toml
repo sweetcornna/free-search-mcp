@@ -1,0 +1,102 @@
+id = "nvd"
+name = "NIST National Vulnerability Database (NVD)"
+summary = "US NIST NVD CVE 2.0 API with CVSS scores, severity, CWEs, and vulnerability descriptions."
+aliases = ["cve", "nist nvd", "nvd cve"]
+home_url = "https://nvd.nist.gov"
+tier = 1
+scopes = ["security"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "direct_claimant"
+limits = { rps = 0.15, burst = 2, concurrency = 1, timeout_ms = 10000, cache_ttl_s = 21600 }
+
+[auth]
+mode = "optional"
+env = "SEARCH_MCP_NVD_API_KEY"
+in = "header"
+name = "apiKey"
+route_requires_key = false
+
+[claims]
+patterns = ['(?i)\bCVE-\d{4}-\d{4,}\b']
+keywords = []
+max_per_search = 3
+
+[op.search]
+summary = "Search NVD CVE records by keyword or CVE identifier."
+method = "GET"
+url = "https://services.nvd.nist.gov/rest/json/cves/2.0"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "startIndex", start = 0, max_pages = 3 }
+probe = { params = { query = "openssl", limit = 3 }, min_results = 2, fixture = "fixtures/w5c/nvd/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "keywordSearch", doc = "Keyword or CVE ID" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "resultsPerPage", doc = "Max CVEs per page" }
+offset = { type = "int", min = 0, to = "startIndex", doc = "Start index offset" }
+pub_start = { type = "string", to = "pubStartDate", doc = "ISO-8601 start date (requires pub_end, <=120d window)" }
+pub_end = { type = "string", to = "pubEndDate", doc = "ISO-8601 end date" }
+
+[op.search.map]
+items = ".vulnerabilities[].cve"
+total = ".totalResults"
+error = "if (.message | type) == \"string\" and (.message | length) > 0 then .message else null end"
+record = '''
+(.metrics // {}) as $m |
+(($m.cvssMetricV40[0] // $m.cvssMetricV31[0] // $m.cvssMetricV30[0] // $m.cvssMetricV2[0]) // null) as $e |
+{
+  id: .id,
+  url: ("https://nvd.nist.gov/vuln/detail/" + (.id // "")),
+  vulnStatus: .vulnStatus,
+  published: .published,
+  lastModified: .lastModified,
+  cvss: (if $e == null then null else {
+    version: ($e.cvssData.version // null),
+    baseScore: ($e.cvssData.baseScore // null),
+    baseSeverity: ($e.cvssData.baseSeverity // $e.baseSeverity // null),
+    vectorString: ($e.cvssData.vectorString // null)
+  } end),
+  cwes: ([(.weaknesses // [])[] | (.description // [])[] | select(.lang == "en") | .value | select(type == "string" and startswith("CWE-"))] | unique),
+  description: (([(.descriptions // [])[] | select(.lang == "en") | .value][0]) // (.descriptions[0].value // "")),
+  references: ([(.references // [])[] | .url] | unique | .[0:5])
+}'''
+hit = '''
+(.metrics // {}) as $m |
+(($m.cvssMetricV40[0] // $m.cvssMetricV31[0] // $m.cvssMetricV30[0] // $m.cvssMetricV2[0]) // null) as $e |
+(if $e != null and ($e.cvssData.baseScore != null) then
+  "CVSS \($e.cvssData.baseScore)" + (if ($e.cvssData.baseSeverity // $e.baseSeverity) then " \($e.cvssData.baseSeverity // $e.baseSeverity)" else "" end)
+else "" end) as $cvss |
+(([(.descriptions // [])[] | select(.lang == "en") | .value][0]) // (.descriptions[0].value // "")) as $desc |
+(.published | parse_date) as $dt |
+{
+  title: (.id + (if ($cvss | length) > 0 then " (\($cvss))" else "" end)),
+  url: ("https://nvd.nist.gov/vuln/detail/" + (.id // "")),
+  snippet: ([
+    (if ($cvss | length) > 0 then $cvss else empty end),
+    (if $dt != null then "published \($dt)" else empty end),
+    (if (.vulnStatus | type) == "string" then .vulnStatus else empty end),
+    ($desc | collapse_ws | if length > 240 then .[0:240] + "..." else . end | select(length > 0))
+  ] | join(" · ")),
+  date: $dt,
+  dateSource: (if $dt != null then "api" else null end)
+}'''
+
+[op.cve]
+summary = "Fetch a single CVE record by exact CVE identifier (e.g. CVE-2024-3094)."
+method = "GET"
+url = "https://services.nvd.nist.gov/rest/json/cves/2.0"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { cve_id = "CVE-2024-3094" }, min_results = 1, fixture = "fixtures/w5c/nvd/cve/default.json" }
+
+[op.cve.params]
+cve_id = { type = "string", required = true, to = "cveId", doc = "Exact CVE ID e.g. CVE-2024-3094" }
+
+[op.cve.map]
+items = ".vulnerabilities[].cve"
+error = "@ref:op.search.map.error"
+record = "@ref:op.search.map.record"
+hit = "@ref:op.search.map.hit"

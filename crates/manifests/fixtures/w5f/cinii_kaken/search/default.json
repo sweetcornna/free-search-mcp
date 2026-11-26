@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "source": "cinii_kaken",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:18:53Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://cir.nii.ac.jp/opensearch/project.xml",
+        "headersSubset": {
+          "accept": "application/opensearchdescription+xml, application/xml"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/xml; charset=UTF-8"
+          ],
+          [
+            "last-modified",
+            "Wed, 11 Nov 2026 00:37:40 GMT"
+          ],
+          [
+            "etag",
+            "\"6af3b8d4-33f\""
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<OpenSearchDescription xmlns=\"http://a9.com/-/spec/opensearch/1.1/\">\n    <ShortName>CiNii Research - project</ShortName>\n    <Description>CiNii Research - project</Description>\n    <Image height=\"16\" width=\"16\" type=\"image/x-icon\">https://cir.nii.ac.jp/static/images/favicon.ico</Image>\n    <Url type=\"text/html\" template=\"https://cir.nii.ac.jp/opensearch/projects?q={searchTerms}\"/>\n    <Url type=\"application/rss+xml\"\n         template=\"https://cir.nii.ac.jp/opensearch/projects?q={searchTerms}&amp;format=rss\"/>\n    <Url type=\"application/atom+xml\"\n         template=\"https://cir.nii.ac.jp/opensearch/projects?q={searchTerms}&amp;format=atom\"/>\n    <Url type=\"application/json\" template=\"https://cir.nii.ac.jp/opensearch/projects?q={searchTerms}&amp;format=json\"/>\n</OpenSearchDescription>",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://cir.nii.ac.jp/opensearch/projects?q=quantum&count=3&format=atom",
+        "headersSubset": {
+          "accept": "application/atom+xml, application/xml"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/atom+xml;charset=UTF-8"
+          ],
+          [
+            "cache-control",
+            "no-cache, no-store, max-age=0, must-revalidate"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n<feed xmlns=\"http://www.w3.org/2005/Atom\" xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" xmlns:rdfs=\"http://www.w3.org/2000/01/rdf-schema#\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:prism=\"http://prismstandard.org/namespaces/basic/2.0/\" xmlns:ndl=\"http://ndl.go.jp/dcndl/terms\" xmlns:opensearch=\"http://a9.com/-/spec/opensearch/1.1/\" xmlns:cir=\"https://cir.nii.ac.jp/schema/1.0/\" xml:lang=\"ja\">\n<title>CiNii Research projects - quantum 3 atom</title>\n<link href=\"https://cir.nii.ac.jp/opensearch/projects?q=quantum&amp;count=3\"/>\n<link rel=\"self\" type=\"application/atom+xml\" href=\"https://cir.nii.ac.jp/opensearch/projects?q=quantum&amp;count=3&amp;format=atom\"/>\n<id>https://cir.nii.ac.jp/opensearch/projects?q=quantum&amp;count=3&amp;format=atom</id>\n<updated>2026-11-25T21:18:52.869+09:00</updated>\n<dc:date>2026-11-25T21:18:52.869+09:00</dc:date>\n<opensearch:totalResults>12197</opensearch:totalResults>\n<opensearch:startIndex>1</opensearch:startIndex>\n<opensearch:itemsPerPage>3</opensearch:itemsPerPage>\n<entry>\n<title>Algebraic and decision-theoretic ways into quantum resource theories</title>\n<link href=\"https://cir.nii.ac.jp/crid/1040848250652827392\"/>\n<id>https://cir.nii.ac.jp/crid/1040848250652827392</id>\n<author>\n<name>Buscemi F.</name>\n</author>\n<dc:type>Project</dc:type>\n<content type=\"text\">Some well-known features of quantum theory, such as quantum entanglement and quantum coherence, have moved from being qualitative traits of the theory to becoming tangible resources, with the potential to unlock various novel tasks in computation and communication. Such a resource-theoretic viewpoint on quantum theory has recently become mainstream in quantum information sciences. This project aims to investigate quantum resource theories as problems of statistical decision and inference, bringing in tools and insights from operator algebra and mathematical statistics.</content>\n<dc:identifier rdf:datatype=\"cir:KAKEN\">20K03746</dc:identifier>\n<dc:identifier rdf:datatype=\"cir:JGN\">JP20K03746</dc:identifier>\n<dc:identifier rdf:datatype=\"cir:URI\">https://kaken.nii.ac.jp/grant/KAKENHI-PROJECT-20K03746/</dc:identifier>\n<dc:subject>Quantum information</dc:subject>\n<dc:subject>Quantum resources</dc:subject>\n<dc:subject>Quantum communication</dc:subject>\n<dc:subject>Quantum measurement</dc:subject>\n<dc:subject>Quantum channel</dc:subject>\n<dc:subject>Statistical comparison</dc:subject>\n<dc:subject>Statistical models</dc:subject>\n<dc:subject>Decision theory</dc:subject>\n<dc:subject>quantum thermodynamics</dc:subject>\n<dc:subject>signaling dimension</dc:subject>\n<dc:subject>quantum measurements</dc:subject>\n<dc:subject>quantum instruments</dc:subject>\n<dc:subject>quantum incompatibility</dc:subject>\n<dc:subject>measurement sharpness</dc:subject>\n<dc:subject>thermodynamic resources</dc:subject>\n<dc:subject>information engine</dc:subject>\n<dc:subject>quantum error-correction</dc:subject>\n<dc:subject>quantum guesswork</dc:subject>\n<dc:subject>communication channels</dc:subject>\n<dc:subject>fluctuation relations</dc:subject>\n<dc:subject>quantum entanglement</dc:subject>\n<dc:subject>quantum channels</dc:subject>\n<dc:subject>quantum information</dc:subject>\n<dc:subject>resource theories</dc:subject>\n<dc:subject>statistical comparison</dc:subject>\n<dc:subject>statistical decision</dc:subject>\n<dc:subject>statistical inference</dc:subject>\n<dc:source rdf:resource=\"https://kaken.nii.ac.jp/grant/KAKENHI-PROJECT-20K03746/\" dc:title=\"KAKEN\"/>\n</entry>\n<entry>\n<title>Quantum optics in quantum hybrid systems</title>\n<link href=\"https://cir.nii.ac.jp/crid/1040003825717508224\"/>\n<id>https://cir.nii.ac.jp/crid/1040003825717508224</id>\n<author>\n<name>NORI FRANCO</name>\n</author>\n<author>\n<name>ブリオック コスティアンティン</name>\n</author>\n<author>\n<name>Macri Vincenzo</name>\n</author>\n<dc:type>Project</dc:type>\n<content type=\"text\">Superconducting (SC) quantum circuits can act as artificial atoms made from electrical circuit elements. At very low temperatures, these circuits have quantized energy levels. Transitions between levels are induced by applying pulsed microwave radiation to the circuit, revealing quantum coherent phenomena analogous to (and in certain cases beyond) those observed with coherent atomic systems. SC quantum nano-devices are attracting growing interest worldwide and are being extensively studied for both basic science and future applications.</content>\n<dc:identifier rdf:datatype=\"cir:KAKEN\">20H00134</dc:identifier>\n<dc:identifier rdf:datatype=\"cir:JGN\">JP20H00134</dc:identifier>\n<dc:identifier rdf:datatype=\"cir:URI\">https://kaken.nii.ac.jp/grant/KAKENHI-PROJECT-20H00134/</dc:identifier>\n<dc:subject>Quantum physics</dc:subject>\n<dc:subject>Quantum optics</dc:subject>\n<dc:subject>Quantum open systems</dc:subject>\n<dc:subject>Quantum information</dc:subject>\n<dc:subject>Quantum hybrid systems</dc:subject>\n<dc:subject>Quantum circuits</dc:subject>\n<dc:subject>Josephson qubits</dc:subject>\n<dc:subject>Photonics</dc:subject>\n<dc:subject>quantum optics</dc:subject>\n<dc:subject>hybrid systems</dc:subject>\n<dc:subject>ultra-strong coupling</dc:subject>\n<dc:subject>cavity QED</dc:subject>\n<dc:subject>optomechanics</dc:subject>\n<dc:subject>quantum hybrid systems</dc:subject>\n<dc:subject>superconducting qubit</dc:subject>\n<dc:subject>quantum electrodynamics</dc:subject>\n<dc:subject>artificial atoms</dc:subject>\n<dc:subject>quantum information</dc:subject>\n<dc:subject>quantum computer</dc:subject>\n<dc:subject>quantum simulator</dc:subject>\n<dc:subject>ｑuantum optics</dc:subject>\n<dc:source rdf:resource=\"https://kaken.nii.ac.jp/grant/KAKENHI-PROJECT-20H00134/\" dc:title=\"KAKEN\"/>\n</entry>\n<entry>\n<title>Statistical Inference of Quantum Measurements</title>\n<link href=\"https://cir.nii.ac.jp/crid/1040848250652836736\"/>\n<id>https://cir.nii.ac.jp/crid/1040848250652836736</id>\n<author>\n<name>DALLARNO Michele</name>\n</author>\n<dc:type>Project</dc:type>\n<content type=\"text\">This research plan will produce analytical and numerical results on the relevant problem of the statistical inference of quantum measurements. It will also produce implementations of quantum algorithms for the machine learning of quantum measurement with the IBM Q quantum computer.</content>\n<dc:identifier rdf:datatype=\"cir:KAKEN\">20K03774</dc:identifier>\n<dc:identifier rdf:datatype=\"cir:JGN\">JP20K03774</dc:identifier>\n<dc:identifier rdf:datatype=\"cir:URI\">https://kaken.nii.ac.jp/grant/KAKENHI-PROJECT-20K03774/</dc:identifier>\n<dc:subject>Quantum device</dc:subject>\n<dc:subject>Bayesian inference</dc:subject>\n<dc:subject>Statistical inference</dc:subject>\n<dc:subject>Quantum states</dc:subject>\n<dc:subject>Quantum measurements</dc:subject>\n<dc:subject>Quantum channel</dc:subject>\n<dc:subject>signaling dimension</dc:subject>\n<dc:subject>information storage</dc:subject>\n<dc:subject>Minkowski asymmetry</dc:subject>\n<dc:subject>quantum guesswork</dc:subject>\n<dc:subject>quadratic assignment</dc:subject>\n<dc:subject>hypotheses testing</dc:subject>\n<dc:subject>statistical inference</dc:subject>\n<dc:subject>quantum measurements</dc:subject>\n<dc:subject>2 designs</dc:subject>\n<dc:subject>testing regions</dc:subject>\n<dc:subject>Lorenz curve</dc:subject>\n<dc:subject>conical approximations</dc:subject>\n<dc:subject>John ellipsoid</dc:subject>\n<dc:subject>data-driven inference</dc:subject>\n<dc:subject>quantum inference</dc:subject>\n<dc:subject>quantum measurement</dc:subject>\n<dc:subject>quantum design</dc:subject>\n<dc:subject>quantum devices</dc:subject>\n<dc:subject>machine learning</dc:subject>\n<dc:subject>regular simplices</dc:subject>\n<dc:subject>SIC measurements</dc:subject>\n<dc:source rdf:resource=\"https://kaken.nii.ac.jp/grant/KAKENHI-PROJECT-20K03774/\" dc:title=\"KAKEN\"/>\n</entry>\n</feed>",
+        "bodyB64": null
+      }
+    }
+  ]
+}

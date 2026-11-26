@@ -1,0 +1,109 @@
+id = "nws_weather"
+name = "US National Weather Service API"
+summary = "Authoritative US NWS point grid metadata, 7-day forecasts, and weather alerts in GeoJSON."
+aliases = ["nws", "weather.gov", "noaa weather", "us weather", "weather data", "气象数据"]
+home_url = "https://www.weather.gov/documentation/services-web-api"
+tier = 1
+scopes = ["reference.geo"]
+caps = ["lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 1800 }
+
+[op.points]
+summary = "Resolve US lat/lon coordinates into NWS forecast office, grid coordinates, and forecast URLs."
+method = "GET"
+url = "https://api.weather.gov/points/{lat},{lon}"
+headers = { Accept = "application/geo+json" }
+response = "json"
+returns = "records"
+examples = ['source.call("nws_weather.points", { lat: 37.7749, lon: -122.4194 })']
+probe = { params = { lat = 37.7749, lon = -122.4194 }, min_results = 1, fixture = "fixtures/w5n/nws_weather/points/default.json" }
+
+[op.points.params]
+lat = { type = "float", required = true, in = "path", doc = "US latitude (e.g. 37.7749)" }
+lon = { type = "float", required = true, in = "path", doc = "US longitude (e.g. -122.4194)" }
+
+[op.points.map]
+items = "."
+error = "if (.status | type) == \"number\" and .status >= 400 then (.detail // .title // \"NWS error\") else null end"
+record = '''{
+  id: .id,
+  office: .properties.gridId,
+  gridX: .properties.gridX,
+  gridY: .properties.gridY,
+  city: (.properties.relativeLocation.properties.city // null),
+  state: (.properties.relativeLocation.properties.state // null),
+  timeZone: (.properties.timeZone // null),
+  radarStation: (.properties.radarStation // null),
+  forecastUrl: (.properties.forecast // null),
+  forecastHourlyUrl: (.properties.forecastHourly // null),
+  stationsUrl: (.properties.observationStations // null)
+}'''
+
+[op.forecast]
+summary = "Fetch 7-day NWS period forecast for a grid office and gridX/gridY pair."
+method = "GET"
+url = "https://api.weather.gov/gridpoints/{office}/{grid_x},{grid_y}/forecast"
+headers = { Accept = "application/geo+json" }
+response = "json"
+returns = "records"
+examples = ['source.call("nws_weather.forecast", { office: "MTR", grid_x: 85, grid_y: 105 })']
+probe = { params = { office = "MTR", grid_x = 85, grid_y = 105 }, min_results = 2, fixture = "fixtures/w5n/nws_weather/forecast/default.json" }
+
+[op.forecast.params]
+office = { type = "string", required = true, in = "path", doc = "3-letter NWS WFO code (e.g. MTR, OKX)" }
+grid_x = { type = "int", required = true, in = "path", doc = "NWS grid X coordinate" }
+grid_y = { type = "int", required = true, in = "path", doc = "NWS grid Y coordinate" }
+
+[op.forecast.map]
+items = "(.properties.periods // [])[]"
+error = "if (.status | type) == \"number\" and .status >= 400 then (.detail // .title // \"NWS error\") else null end"
+record = '''{
+  number: .number,
+  name: .name,
+  startTime: .startTime,
+  endTime: .endTime,
+  isDaytime: .isDaytime,
+  temperature: .temperature,
+  temperatureUnit: .temperatureUnit,
+  precipChancePct: (.probabilityOfPrecipitation.value // null),
+  windSpeed: .windSpeed,
+  windDirection: .windDirection,
+  shortForecast: .shortForecast,
+  detailedForecast: .detailedForecast
+}'''
+
+[op.alerts]
+summary = "List US National Weather Service alerts filtered by status, area, or severity."
+method = "GET"
+url = "https://api.weather.gov/alerts"
+headers = { Accept = "application/geo+json" }
+response = "json"
+returns = "records"
+examples = ['source.call("nws_weather.alerts", { status: "actual", limit: 3 })']
+probe = { params = { limit = 3, status = "actual" }, min_results = 2, fixture = "fixtures/w5n/nws_weather/alerts/default.json" }
+
+[op.alerts.params]
+limit = { type = "int", default = 10, min = 1, max = 50, doc = "Maximum alerts to return" }
+status = { type = "string", default = "actual", enum = ["actual", "exercise", "system", "test", "draft"], doc = "Alert status" }
+area = { type = "string", doc = "Two-letter US state or marine area code (e.g. CA, TX)" }
+severity = { type = "string", enum = ["Extreme", "Severe", "Moderate", "Minor", "Unknown"], doc = "Alert severity" }
+
+[op.alerts.map]
+items = "(.features // [])[]"
+error = "if (.status | type) == \"number\" and .status >= 400 then (.detail // .title // \"NWS error\") else null end"
+record = '''{
+  id: (.properties.id // .id),
+  event: (.properties.event // ""),
+  severity: (.properties.severity // null),
+  urgency: (.properties.urgency // null),
+  certainty: (.properties.certainty // null),
+  areaDesc: (.properties.areaDesc // null),
+  headline: (.properties.headline // null),
+  senderName: (.properties.senderName // null),
+  sent: (.properties.sent // null),
+  effective: (.properties.effective // null),
+  expires: (.properties.expires // null),
+  url: (.id // null)
+}'''

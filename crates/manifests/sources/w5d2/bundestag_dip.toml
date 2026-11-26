@@ -1,0 +1,130 @@
+id = "bundestag_dip"
+name = "Deutscher Bundestag DIP API"
+summary = "German Bundestag parliamentary documentation system (Drucksachen and legislative procedures/Vorgänge; requires free DIP API key)."
+aliases = ["bundestag", "deutscher bundestag", "dip", "drucksache", "vorgang", "vorgänge", "gesetzentwurf", "german parliament"]
+home_url = "https://dip.bundestag.de"
+tier = 3
+scopes = ["gov", "gov.law"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 10000, cache_ttl_s = 21600 }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_BUNDESTAG_DIP_API_KEY"
+in = "header"
+name = "Authorization"
+format = "ApiKey {key}"
+route_requires_key = true
+
+[op.search]
+summary = "Search German Bundestag printed papers (Drucksachen) by title, legislative period, or type."
+method = "GET"
+url = "https://search.dip.bundestag.de/api/v1/drucksache"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "json" }
+paginate = { style = "cursor", param = "cursor", max_pages = 3 }
+probe = { params = { query = "Klima" }, min_results = 2, fixture = "fixtures/w5d2/bundestag_dip/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "f.titel", doc = "Title search term (German)" }
+wahlperiode = { type = "int", min = 1, to = "f.wahlperiode", doc = "Electoral term / Wahlperiode, e.g. 20" }
+drucksachetyp = { type = "string", to = "f.drucksachetyp", doc = "Document type, e.g. Gesetzentwurf, Antrag, Kleine Anfrage" }
+cursor = { type = "string", to = "cursor", doc = "Pagination cursor" }
+
+[op.search.map]
+items = "(.documents // [])[]"
+total = ".numFound"
+next_cursor = ".cursor"
+error = "if .code and (.documents == null) then (.message // (.code | tostring)) else null end"
+record = '''{
+  id: .id,
+  dokumentnummer: (.dokumentnummer // null),
+  drucksachetyp: (.drucksachetyp // null),
+  wahlperiode: (.wahlperiode // null),
+  herausgeber: (.herausgeber // null),
+  datum: (.datum // null),
+  titel: (.titel // ""),
+  pdfUrl: (.fundstelle.pdf_url // null),
+  url: ("https://dip.bundestag.de/drucksache/" + (.id | tostring))
+}'''
+hit = '''{
+  title: ((.titel // ("Drucksache " + (.dokumentnummer // .id // ""))) | collapse_ws // ""),
+  url: ("https://dip.bundestag.de/drucksache/" + (.id | tostring)),
+  snippet: (
+    [
+      (if .dokumentnummer then ((.herausgeber // "BT") + "-Drs. " + .dokumentnummer) else null end),
+      .drucksachetyp,
+      (if .wahlperiode then ("WP " + (.wahlperiode | tostring)) else null end)
+    ] | map(select(. != null)) | join(" · ")
+  ),
+  date: ((.datum // null) | parse_date),
+  dateSource: "api"
+}'''
+
+[op.drucksache]
+summary = "Fetch metadata and PDF link for a single Bundestag Drucksache by numeric ID."
+method = "GET"
+url = "https://search.dip.bundestag.de/api/v1/drucksache/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "json" }
+probe = { params = { id = "68852" }, min_results = 1, fixture = "fixtures/w5d2/bundestag_dip/drucksache/default.json" }
+
+[op.drucksache.params]
+id = { type = "string", required = true, in = "path", doc = "DIP numeric Drucksache ID, e.g. 68852" }
+
+[op.drucksache.map]
+items = "."
+error = "if .code and (.id == null) then (.message // (.code | tostring)) else null end"
+record = '''{
+  id: .id,
+  dokumentnummer: (.dokumentnummer // null),
+  drucksachetyp: (.drucksachetyp // null),
+  wahlperiode: (.wahlperiode // null),
+  herausgeber: (.herausgeber // null),
+  datum: (.datum // null),
+  aktualisiert: (.aktualisiert // null),
+  titel: (.titel // ""),
+  autoren: [(.autoren_anzeige // [])[] | .title | select(. != null)],
+  pdfUrl: (.fundstelle.pdf_url // null),
+  url: ("https://dip.bundestag.de/drucksache/" + (.id | tostring))
+}'''
+
+[op.vorgang]
+summary = "Search German parliamentary legislative proceedings (Vorgänge) by title."
+method = "GET"
+url = "https://search.dip.bundestag.de/api/v1/vorgang"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "json" }
+paginate = { style = "cursor", param = "cursor", max_pages = 3 }
+probe = { params = { query = "Klima" }, min_results = 2, fixture = "fixtures/w5d2/bundestag_dip/vorgang/default.json" }
+
+[op.vorgang.params]
+query = { type = "string", required = true, to = "f.titel", doc = "Title search term (German)" }
+wahlperiode = { type = "int", min = 1, to = "f.wahlperiode", doc = "Electoral term / Wahlperiode" }
+cursor = { type = "string", to = "cursor", doc = "Pagination cursor" }
+
+[op.vorgang.map]
+items = "(.documents // [])[]"
+total = ".numFound"
+next_cursor = ".cursor"
+error = "if .code and (.documents == null) then (.message // (.code | tostring)) else null end"
+record = '''{
+  id: .id,
+  titel: (.titel // ""),
+  vorgangstyp: (.vorgangstyp // null),
+  beratungsstand: (.beratungsstand // null),
+  wahlperiode: (.wahlperiode // null),
+  initiative: (.initiative // []),
+  datum: (.datum // null),
+  abstract: (.abstract // null),
+  gesta: (.gesta // null),
+  url: ("https://dip.bundestag.de/vorgang/" + (.id | tostring))
+}'''

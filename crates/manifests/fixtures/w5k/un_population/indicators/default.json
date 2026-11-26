@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "un_population",
+  "op": "indicators",
+  "recordedAt": "2026-11-25T13:05:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://population.un.org/dataportalapi/api/v1/indicators?format=json&pageSize=3&pageNumber=1",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"pageNumber\":1,\"pageSize\":3,\"previousPage\":null,\"nextPage\":\"https://population.un.org/dataportalapi/api/v1/indicators?pageNumber=2&pageSize=3&format=json\",\"pages\":29,\"total\":86,\"data\":[{\"id\":1,\"name\":\"Contraceptive prevalence: Any method (Percent)\",\"shortName\":\"CPAnyP\",\"description\":\"Percentage of women of reproductive age (15-49 years) who are currently using any method of contraception\",\"displayName\":\"Any\",\"dimAge\":false,\"dimSex\":false,\"dimVariant\":true,\"dimCategory\":true,\"defaultAgeId\":31,\"defaultSexId\":2,\"defaultVariantId\":4,\"defaultCategoryId\":100,\"variableType\":\"relative\",\"valueType\":\"percent\",\"unitScaling\":0.01,\"precision\":1,\"isThousandSeparatorSpace\":false,\"formatString\":\"#0.0\",\"unitShortLabel\":\"%\",\"unitLongLabel\":\"per cent\",\"nClassesDefault\":5,\"downloadFileName\":\"PercentageContraceptive_AnyMethod\",\"sourceId\":29,\"sourceName\":\"Estimates and Projections of Family Planning Indicators\",\"sourceYear\":2024,\"sourceStartYear\":1970,\"sourceEndYear\":2030,\"sourceCitation\":\"United Nations, Department of Economic and Social Affairs, Population Division (2024). <i>Model-based Estimates and Projections of Family Planning Indicators 2024</i>, custom data acquired via website.\",\"sourceUrl\":\"https://www.un.org/development/desa/pd/data/family-planning-indicators\",\"topicId\":5,\"topicName\":\"Family Planning\",\"topicShortName\":\"FP\"},{\"id\":2,\"name\":\"Contraceptive prevalence: Any modern method (Percent)\",\"shortName\":\"CPModP\",\"description\":\"Percentage of women of reproductive age (15-49 years) who are currently using any modern method of contraception\",\"displayName\":\"CP Modern\",\"dimAge\":false,\"dimSex\":false,\"dimVariant\":true,\"dimCategory\":true,\"defaultAgeId\":31,\"defaultSexId\":2,\"defaultVariantId\":4,\"defaultCategoryId\":100,\"variableType\":\"relative\",\"valueType\":\"percent\",\"unitScaling\":0.01,\"precision\":1,\"isThousandSeparatorSpace\":false,\"formatString\":\"#0.0\",\"unitShortLabel\":\"%\",\"unitLongLabel\":\"per cent\",\"nClassesDefault\":5,\"downloadFileName\":\"PercentageContraceptive_AnyModernMethod\",\"sourceId\":29,\"sourceName\":\"Estimates and Projections of Family Planning Indicators\",\"sourceYear\":2024,\"sourceStartYear\":1970,\"sourceEndYear\":2030,\"sourceCitation\":\"United Nations, Department of Economic and Social Affairs, Population Division (2024). <i>Model-based Estimates and Projections of Family Planning Indicators 2024</i>, custom data acquired via website.\",\"sourceUrl\":\"https://www.un.org/development/desa/pd/data/family-planning-indicators\",\"topicId\":5,\"topicName\":\"Family Planning\",\"topicShortName\":\"FP\"},{\"id\":3,\"name\":\"Contraceptive prevalence: Any traditional method (Percent)\",\"shortName\":\"CPTrad\",\"description\":\"Percentage of women of reproductive age (15-49 years) who are currently using any traditional method of contraception\",\"displayName\":\"CP Traditional\",\"dimAge\":false,\"dimSex\":false,\"dimVariant\":true,\"dimCategory\":true,\"defaultAgeId\":31,\"defaultSexId\":2,\"defaultVariantId\":4,\"defaultCategoryId\":100,\"variableType\":\"relative\",\"valueType\":\"percent\",\"unitScaling\":0.01,\"precision\":1,\"isThousandSeparatorSpace\":false,\"formatString\":\"#0.0\",\"unitShortLabel\":\"%\",\"unitLongLabel\":\"per cent\",\"nClassesDefault\":5,\"downloadFileName\":\"PercentageContraceptive_AnyTraditionalMethod\",\"sourceId\":29,\"sourceName\":\"Estimates and Projections of Family Planning Indicators\",\"sourceYear\":2024,\"sourceStartYear\":1970,\"sourceEndYear\":2030,\"sourceCitation\":\"United Nations, Department of Economic and Social Affairs, Population Division (2024). <i>Model-based Estimates and Projections of Family Planning Indicators 2024</i>, custom data acquired via website.\",\"sourceUrl\":\"https://www.un.org/development/desa/pd/data/family-planning-indicators\",\"topicId\":5,\"topicName\":\"Family Planning\",\"topicShortName\":\"FP\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

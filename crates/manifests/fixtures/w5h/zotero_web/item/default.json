@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "source": "zotero_web",
+  "op": "item",
+  "recordedAt": "2026-11-25T13:02:20Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.zotero.org/users/475425/items/3RDD646E",
+        "headersSubset": {
+          "accept": "application/json",
+          "zotero-api-version": "3"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\n    \"key\": \"3RDD646E\",\n    \"version\": 1,\n    \"library\": {\n        \"type\": \"user\",\n        \"id\": 475425,\n        \"name\": \"Z public library\",\n        \"links\": {\n            \"alternate\": {\n                \"href\": \"https://www.zotero.org/z_public_library\",\n                \"type\": \"text/html\"\n            }\n        }\n    },\n    \"links\": {\n        \"self\": {\n            \"href\": \"https://api.zotero.org/users/475425/items/3RDD646E\",\n            \"type\": \"application/json\"\n        },\n        \"alternate\": {\n            \"href\": \"https://www.zotero.org/z_public_library/items/3RDD646E\",\n            \"type\": \"text/html\"\n        }\n    },\n    \"meta\": {\n        \"creatorSummary\": \"Confederate History Symposium\",\n        \"parsedDate\": \"1984\",\n        \"numChildren\": 0\n    },\n    \"data\": {\n        \"key\": \"3RDD646E\",\n        \"version\": 1,\n        \"itemType\": \"book\",\n        \"title\": \"1984 Confederate History Symposium: Hill Junior College, Hillsboro, Texas, April 14, 1984\",\n        \"creators\": [\n            {\n                \"creatorType\": \"author\",\n                \"name\": \"Confederate History Symposium\"\n            }\n        ],\n        \"abstractNote\": \"\",\n        \"series\": \"\",\n        \"seriesNumber\": \"\",\n        \"volume\": \"\",\n        \"numberOfVolumes\": \"\",\n        \"edition\": \"\",\n        \"date\": \"1984\",\n        \"publisher\": \"Hill Junior College\",\n        \"place\": \"[Hillsboro, Tex\",\n        \"originalDate\": \"\",\n        \"originalPublisher\": \"\",\n        \"originalPlace\": \"\",\n        \"format\": \"\",\n        \"numPages\": \"117\",\n        \"ISBN\": \"\",\n        \"DOI\": \"\",\n        \"citationKey\": \"\",\n        \"url\": \"\",\n        \"accessDate\": \"\",\n        \"ISSN\": \"\",\n        \"archive\": \"\",\n        \"archiveLocation\": \"\",\n        \"shortTitle\": \"1984 Confederate History Symposium\",\n        \"language\": \"\",\n        \"libraryCatalog\": \"i-share.carli.illinois.edu Library Catalog\",\n        \"callNumber\": \"E487\",\n        \"rights\": \"\",\n        \"extra\": \"\",\n        \"tags\": [\n            {\n                \"tag\": \"Civil War, 1861-1865\",\n                \"type\": 1\n            },\n            {\n                \"tag\": \"Confederate States of America\",\n                \"type\": 1\n            },\n            {\n                \"tag\": \"History\",\n                \"type\": 1\n            },\n            {\n                \"tag\": \"Lee, Robert E\",\n                \"type\": 1\n            },\n            {\n                \"tag\": \"Robert Edward\",\n                \"type\": 1\n            },\n            {\n                \"tag\": \"United States\",\n                \"type\": 1\n            }\n        ],\n        \"collections\": [\n            \"9MK5KS97\"\n        ],\n        \"relations\": {},\n        \"dateAdded\": \"2011-03-20T17:07:22Z\",\n        \"dateModified\": \"2011-03-20T17:07:22Z\"\n    }\n}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

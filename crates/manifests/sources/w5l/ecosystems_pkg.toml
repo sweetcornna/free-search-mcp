@@ -1,0 +1,111 @@
+id = "ecosystems_pkg"
+name = "ecosyste.ms Packages API"
+summary = "Cross-registry open package metadata, repository links, licenses, download counts, and versions across 30+ software ecosystems."
+aliases = ["ecosyste.ms", "ecosystems", "packages.ecosyste.ms"]
+home_url = "https://packages.ecosyste.ms"
+tier = 1
+scopes = ["code"]
+caps = ["lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 5.0, burst = 10, concurrency = 4, timeout_ms = 8000, cache_ttl_s = 21600 }
+
+[op.package]
+summary = "Look up full metadata for a package in a specific registry (e.g. pypi.org, npmjs.org, crates.io)."
+method = "GET"
+url = "https://packages.ecosyste.ms/api/v1/registries/{registry}/packages/{name}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { registry = "pypi.org", name = "tomli" }, min_results = 1, fixture = "fixtures/w5l/ecosystems_pkg/package/default.json" }
+examples = [
+  'source.call("ecosystems_pkg.package", { registry: "pypi.org", name: "tomli" })',
+  'source.call("ecosystems_pkg.package", { registry: "crates.io", name: "serde" })',
+]
+
+[op.package.params]
+registry = { type = "string", required = true, in = "path", doc = "Registry domain (e.g. pypi.org, npmjs.org, crates.io, rubygems.org, proxy.golang.org, hex.pm)" }
+name = { type = "string", required = true, in = "path", doc = "Exact package name in the registry" }
+
+[op.package.map]
+items = "."
+error = "if (type == \"object\") and (.error != null) then (.error | tostring) else null end"
+record = '''{
+  name: (.name // ""),
+  ecosystem: (.ecosystem // ""),
+  purl: (.purl // null),
+  description: (.description // ""),
+  homepage: (.homepage // null),
+  repositoryUrl: (.repository_url // null),
+  licenses: (.licenses // null),
+  normalizedLicenses: (.normalized_licenses // []),
+  latestVersion: (.latest_release_number // null),
+  latestPublishedAt: (.latest_release_published_at // null),
+  versionsCount: (.versions_count // 0),
+  downloads: (.downloads // null),
+  dependentPackagesCount: (.dependent_packages_count // null),
+  dependentReposCount: (.dependent_repos_count // null),
+  keywords: (.keywords_array // []),
+  url: (.registry_url // .homepage // .repository_url // "")
+}'''
+
+[op.versions]
+summary = "List published versions and integrity hashes for a package in a registry."
+method = "GET"
+url = "https://packages.ecosyste.ms/api/v1/registries/{registry}/packages/{name}/versions"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { registry = "pypi.org", name = "tomli", limit = 3 }, min_results = 2, fixture = "fixtures/w5l/ecosystems_pkg/versions/default.json" }
+examples = [
+  'source.call("ecosystems_pkg.versions", { registry: "pypi.org", name: "tomli", limit: 5 })',
+]
+
+[op.versions.params]
+registry = { type = "string", required = true, in = "path", doc = "Registry domain (e.g. pypi.org, npmjs.org, crates.io)" }
+name = { type = "string", required = true, in = "path", doc = "Exact package name" }
+limit = { type = "int", default = 10, min = 1, max = 100, to = "per_page", doc = "Versions per page" }
+page = { type = "int", min = 1, to = "page", doc = "1-based page number" }
+
+[op.versions.map]
+items = ".[]"
+error = "@ref:op.package.map.error"
+record = '''{
+  number: (.number // ""),
+  publishedAt: (.published_at // null),
+  licenses: (.licenses // null),
+  integrity: (.integrity // null),
+  status: (.status // null),
+  downloadUrl: (.download_url // null),
+  registryUrl: (.registry_url // null)
+}'''
+
+[op.registries]
+summary = "List supported software package registries and ecosystem counts on ecosyste.ms."
+method = "GET"
+url = "https://packages.ecosyste.ms/api/v1/registries"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { limit = 5 }, min_results = 3, fixture = "fixtures/w5l/ecosystems_pkg/registries/default.json" }
+examples = [
+  'source.call("ecosystems_pkg.registries", { limit: 20 })',
+]
+
+[op.registries.params]
+limit = { type = "int", default = 20, min = 1, max = 100, to = "per_page", doc = "Registries per page" }
+page = { type = "int", min = 1, to = "page", doc = "1-based page number" }
+
+[op.registries.map]
+items = ".[]"
+error = "@ref:op.package.map.error"
+record = '''{
+  name: (.name // ""),
+  ecosystem: (.ecosystem // ""),
+  url: (.url // ""),
+  packagesCount: (.packages_count // 0),
+  versionsCount: (.versions_count // 0),
+  downloads: (.downloads // 0)
+}'''

@@ -1,90 +1,41 @@
+[build-system]
+requires = ["maturin>=1.16,<2.0"]
+build-backend = "maturin"
+
 [project]
 name = "free-search-mcp"
-version = "0.18.2"
-description = "Local-first, no-API-key search MCP server. Multi-engine web search, smart fetching, document reading."
+version = "1.0.0"
+description = "Local-first, no-API-key Rust search, ask, and sandboxed exec MCP server across 500+ web, academic, and specialist sources."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.9"
 license = "MIT"
 license-files = ["LICENSE"]
+dependencies = []
 keywords = [
     "mcp",
     "model-context-protocol",
     "web-search",
     "search",
-    "scraping",
-    "playwright",
+    "academic-search",
+    "scholar",
+    "rust",
+    "quickjs",
     "llm",
     "no-api-key",
     "claude-code-plugin",
+    "codex-plugin",
+    "antigravity-plugin",
     "agent-skills",
 ]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
+    "Intended Audience :: Science/Research",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: 3",
     "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
-]
-dependencies = [
-    # v2 speaks protocol revision 2026-07-28 and renamed `FastMCP` ->
-    # `MCPServer` with no compatibility alias, so server.py cannot run on 1.x.
-    # One MCPServer instance serves both protocol eras, so this does not drop
-    # older clients.
-    #
-    # The range is BOTH a floor and a per-minor cap, and each half was paid for:
-    #   * `uvx free-search-mcp==X` (what the plugin runs) ignores uv.lock, so
-    #     this declared range is the ONLY thing that bounds which SDK a user
-    #     gets. 0.11.0 said `>=2.0.0`; CI tested the locked 2.0.0 while every
-    #     install resolved 2.2.0.
-    #   * 2.1.0 was a minor release that changed handler semantics: an
-    #     exception that is not a `ToolError` now reaches the client as a bare
-    #     "Error executing tool <name>". Every actionable message this server
-    #     raises went dark in production with a green test suite.
-    # So 2.2 is the floor (it is what CI runs and what server.py's error
-    # boundary is written against), and a new minor is adopted deliberately —
-    # bump the cap, read the SDK changelog, release. The `sdk-canary` job in
-    # ci.yml says when: its `next` leg runs this suite against the newest SDK.
-    "mcp[cli]>=2.2.0,<2.3",
-    # [socks] extra so the documented socks5:// proxy works with the httpx
-    # clients in documents.py / structured.py (curl_cffi handles socks natively).
-    "httpx[socks]>=0.27",
-    # >=0.12 for `discard_cookies`: the shared sessions in sessions.py must not
-    # keep what a response sets, or one request's cookies reach the next.
-    "curl-cffi>=0.12",
-    # Imported directly by zbMATH because curl_cffi's bundled CA store lacks
-    # the public root its current certificate chain needs.
-    "certifi>=2024.8.30",
-    # selectolax 1.0 removed the Modest backend (selectolax.parser), which the
-    # engines and fetcher import; importing it now raises ImportError.
-    "selectolax>=0.3.21,<1",
-    "playwright>=1.47",
-    "pypdf>=5.0",
-    "python-docx>=1.1",
-    # Office / ebook readers for read_doc. Each is pulled in lazily at parse
-    # time, so an install that never opens a spreadsheet never imports openpyxl.
-    "openpyxl>=3.1",
-    "python-pptx>=1.0",
-    "ebooklib>=0.18",
-    # Pillow reads image dimensions from the first few KB of a file, so `fetch`
-    # can describe an image without decoding (or inlining) the whole thing.
-    "pillow>=10.0",
-    "markdownify>=0.13",
-    "trafilatura>=2.0",
-    "aiosqlite>=0.20",
-    "pydantic>=2.8",
-    "pydantic-settings>=2.5",
-    "anyio>=4.4",
-    "rapidfuzz>=3.10",
-    "extruct>=0.18",
-    # Imported directly (structured.py: w3lib.html.get_base_url), not just a
-    # transitive dep of extruct — declare it so a future extruct can't break us.
-    "w3lib>=2.0",
-    # Imported directly by admin.py; today they arrive transitively via mcp[cli],
-    # but the search-mcp-admin entry point must not depend on mcp's extras.
-    "starlette>=0.40",
-    "uvicorn>=0.30",
 ]
 
 [project.urls]
@@ -93,64 +44,6 @@ Repository = "https://github.com/sweetcornna/free-search-mcp"
 Issues = "https://github.com/sweetcornna/free-search-mcp/issues"
 Changelog = "https://github.com/sweetcornna/free-search-mcp/blob/main/CHANGELOG.md"
 
-[project.scripts]
-search-mcp = "search_mcp.__main__:main"
-# Alias matching the PyPI distribution name so a bare `uvx free-search-mcp`
-# starts the server without needing --from.
-free-search-mcp = "search_mcp.__main__:main"
-search-mcp-admin = "search_mcp.admin:main"
-search-mcp-login = "search_mcp.login:main"
-
-[build-system]
-# hatchling>=1.26 for PEP 639 license expression support.
-requires = ["hatchling>=1.26"]
-build-backend = "hatchling.build"
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/search_mcp"]
-
-# Without an explicit include list hatchling sweeps the whole tree into the
-# sdist — including untracked local dirs like freesearch-promo/node_modules.
-[tool.hatch.build.targets.sdist]
-include = [
-    "src/search_mcp",
-    "tests",
-    "docs",
-    "scripts",
-    "README.md",
-    "CHANGELOG.md",
-    "LICENSE",
-    "pytest.ini",
-    "docker-compose.yml",
-    "Dockerfile",
-]
-
-[tool.ruff]
-line-length = 100
-src = ["src", "tests"]
-
-[tool.ruff.lint]
-select = ["E", "F", "W", "I", "B", "UP", "ASYNC", "SIM", "C4", "RET"]
-ignore = [
-    # Long URLs / golden HTML fixtures make strict line-length noisy in tests.
-    "SIM105",  # try/except/pass is often clearer than contextlib.suppress here
-    "RET504",  # named return values document intent in the parsers
-]
-
-[tool.ruff.lint.per-file-ignores]
-# E501: long URLs / golden HTML fixtures; B017: "raises anything" is the
-# intended assertion for cache-miss resources.
-"tests/*" = ["E501", "B017"]
-# Long lines live inside embedded HTML/CSS/JS template strings where a noqa
-# comment would leak into the rendered page.
-"src/search_mcp/admin.py" = ["E501"]
-# The agent prompt is one bullet per line, and the Claude Code and Codex agent
-# files must hold the same text byte for byte, so its lines cannot be wrapped.
-"src/search_mcp/agent.py" = ["E501"]
-
-[dependency-groups]
-dev = [
-    "pytest>=8.3",
-    "pytest-asyncio>=0.24",
-    "ruff>=0.7",
-]
+[tool.maturin]
+bindings = "bin"
+manifest-path = "crates/server/Cargo.toml"

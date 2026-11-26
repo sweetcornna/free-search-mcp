@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "source": "imf",
+  "op": "search",
+  "recordedAt": "2026-11-25T10:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.imf.org/external/datamapper/api/v1/indicators",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          ["content-type", "application/json"]
+        ],
+        "bodyText": "{\"indicators\":{\"NGDP_RPCH\":{\"label\":\"Real GDP growth\",\"description\":\"Gross domestic product at constant prices.\",\"unit\":\"Annual percent change\",\"dataset\":\"WEO\",\"source\":\"World Economic Outlook (April 2026)\"},\"PCPIPCH\":{\"label\":\"Inflation rate, average consumer prices\",\"description\":\"Consumer price inflation.\",\"unit\":\"Annual percent change\",\"dataset\":\"WEO\",\"source\":\"World Economic Outlook (April 2026)\"},\"NGDPRPC_PCH\":{\"label\":\"Real Per Capita GDP Growth\",\"description\":\"Real per capita GDP growth.\",\"unit\":\"Annual percent change\",\"dataset\":\"WEO\",\"source\":\"World Economic Outlook (April 2026)\"},\"GDP\":{\"label\":\"Nominal GDP\",\"description\":\"Gross domestic product at current prices.\",\"unit\":\"Millions of US Dollars\",\"dataset\":\"CF\",\"source\":\"Capital Flows\"}}}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.imf.org/external/datamapper/api/v1/countries",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          ["content-type", "application/json"]
+        ],
+        "bodyText": "{\"countries\":{\"VNM\":{\"label\":\"Vietnam\"},\"CHN\":{\"label\":\"China, People's Republic of\"},\"USA\":{\"label\":\"United States\"},\"TCD\":{\"label\":\"Chad\"}}}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.imf.org/external/datamapper/api/v1/NGDP_RPCH",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          ["content-type", "application/json"]
+        ],
+        "bodyText": "{\"values\":{\"NGDP_RPCH\":{\"VNM\":{\"2024\":6.1,\"2025\":6.5,\"2026\":6.7}}}}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.imf.org/external/datamapper/api/v1/NGDPRPC_PCH",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          ["content-type", "application/json"]
+        ],
+        "bodyText": "{\"values\":{\"NGDPRPC_PCH\":{\"VNM\":{\"2024\":5.3,\"2025\":5.7,\"2026\":5.9}}}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

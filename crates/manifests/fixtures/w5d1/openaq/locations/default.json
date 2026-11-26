@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "openaq",
+  "op": "locations",
+  "recordedAt": "2026-11-25T12:13:33Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.openaq.org/v3/locations?iso=US&limit=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"meta\": {\"name\": \"openaq-api\", \"website\": \"/\", \"page\": 1, \"limit\": 3, \"found\": 2841}, \"results\": [{\"id\": 2178, \"name\": \"McMillan Reservoir\", \"locality\": \"Washington\", \"timezone\": \"America/New_York\", \"country\": {\"id\": 155, \"code\": \"US\", \"name\": \"United States\"}, \"owner\": {\"id\": 4, \"name\": \"Government Agency\"}, \"provider\": {\"id\": 119, \"name\": \"AirNow\"}, \"isMobile\": false, \"isMonitor\": true, \"instruments\": [{\"id\": 2, \"name\": \"Government Monitor\"}], \"sensors\": [{\"id\": 1042, \"name\": \"pm25 µg/m³\", \"parameter\": {\"id\": 2, \"name\": \"pm25\", \"units\": \"µg/m³\", \"displayName\": \"PM2.5\"}}, {\"id\": 1043, \"name\": \"o3 ppm\", \"parameter\": {\"id\": 10, \"name\": \"o3\", \"units\": \"ppm\", \"displayName\": \"O3\"}}], \"coordinates\": {\"latitude\": 38.921847, \"longitude\": -77.013178}, \"licenses\": [{\"id\": 1, \"name\": \"US Public Domain\"}], \"bounds\": [-77.013178, 38.921847, -77.013178, 38.921847], \"distance\": null, \"datetimeFirst\": {\"utc\": \"2016-03-06T19:00:00Z\", \"local\": \"2016-03-06T14:00:00-05:00\"}, \"datetimeLast\": {\"utc\": \"2026-11-25T10:00:00Z\", \"local\": \"2026-11-25T05:00:00-05:00\"}}, {\"id\": 2201, \"name\": \"Los Angeles - N. Main Street\", \"locality\": \"Los Angeles\", \"timezone\": \"America/Los_Angeles\", \"country\": {\"id\": 155, \"code\": \"US\", \"name\": \"United States\"}, \"owner\": {\"id\": 4, \"name\": \"Government Agency\"}, \"provider\": {\"id\": 119, \"name\": \"AirNow\"}, \"isMobile\": false, \"isMonitor\": true, \"instruments\": [{\"id\": 2, \"name\": \"Government Monitor\"}], \"sensors\": [{\"id\": 1105, \"name\": \"pm25 µg/m³\", \"parameter\": {\"id\": 2, \"name\": \"pm25\", \"units\": \"µg/m³\", \"displayName\": \"PM2.5\"}}, {\"id\": 1106, \"name\": \"no2 ppm\", \"parameter\": {\"id\": 7, \"name\": \"no2\", \"units\": \"ppm\", \"displayName\": \"NO2\"}}], \"coordinates\": {\"latitude\": 34.06659, \"longitude\": -118.22688}, \"licenses\": [{\"id\": 1, \"name\": \"US Public Domain\"}], \"bounds\": [-118.22688, 34.06659, -118.22688, 34.06659], \"distance\": null, \"datetimeFirst\": {\"utc\": \"2016-01-30T01:00:00Z\", \"local\": \"2016-01-29T17:00:00-08:00\"}, \"datetimeLast\": {\"utc\": \"2026-11-25T10:00:00Z\", \"local\": \"2026-11-25T02:00:00-08:00\"}}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

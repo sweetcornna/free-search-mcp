@@ -1,0 +1,102 @@
+id = "orcid"
+name = "ORCID Public API v3"
+summary = "Global researcher identifier registry (20M+ ORCID iDs, verified affiliations, and works lists)."
+aliases = ["orcid.org", "researcher id"]
+home_url = "https://orcid.org"
+tier = 1
+scopes = ["academic", "academic.index"]
+caps = ["search", "lookup", "author"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 5.0, burst = 10, concurrency = 4, timeout_ms = 8000, cache_ttl_s = 86400, host_bucket = "pub.orcid.org" }
+
+[op.search]
+summary = "Search ORCID researchers via expanded Lucene query."
+method = "GET"
+url = "https://pub.orcid.org/v3.0/expanded-search/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "start", start = 0, max_pages = 3 }
+probe = { params = { query = "family-name:Hinton AND given-names:Geoffrey", limit = 3 }, min_results = 1, fixture = "fixtures/w5a/orcid/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "ORCID Lucene query e.g. family-name:Hinton AND given-names:Geoffrey" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "rows", doc = "Max researchers" }
+offset = { type = "int", min = 0, to = "start", doc = "Result offset" }
+
+[op.search.map]
+items = '''(."expanded-result" // [])[]'''
+total = '''."num-found"'''
+error = '''if ."developer-message" != null or ."user-message" != null then (."user-message" // ."developer-message") else null end'''
+record = '''(
+  (."credit-name" // ([."given-names", ."family-names"] | map(select(type == "string" and length > 0)) | join(" "))) as $nm |
+  {
+    name: ($nm | collapse_ws),
+    orcid: (."orcid-id" // null),
+    affiliations: (."institution-name" // []),
+    topWorks: [],
+    sources: ["orcid"]
+  }
+)'''
+hit = '''(
+  (."credit-name" // ([."given-names", ."family-names"] | map(select(type == "string" and length > 0)) | join(" "))) as $nm |
+  {
+    title: (($nm | collapse_ws) + " (ORCID " + (."orcid-id" // "") + ")"),
+    url: ("https://orcid.org/" + (."orcid-id" // "")),
+    snippet: (if ((."institution-name" // []) | length) > 0 then ((."institution-name"[:3]) | join("; ")) else ("ORCID researcher profile " + (."orcid-id" // "")) end),
+    date: null,
+    dateSource: "api"
+  }
+)'''
+
+[op.author]
+summary = "Fetch full public ORCID researcher profile, employments, and top works by ORCID iD."
+method = "GET"
+url = "https://pub.orcid.org/v3.0/{orcid}/record"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { orcid = "0000-0002-1825-0097" }, min_results = 1, fixture = "fixtures/w5a/orcid/author/default.json" }
+
+[op.author.params]
+orcid = { type = "string", required = true, in = "path", doc = "ORCID iD e.g. 0000-0002-1825-0097" }
+
+[op.author.map]
+items = "."
+error = "@ref:op.search.map.error"
+record = '''(
+  (.person.name."credit-name".value // ([.person.name."given-names".value, .person.name."family-name".value] | map(select(type == "string" and length > 0)) | join(" "))) as $nm |
+  (."orcid-identifier".path // null) as $oid |
+  ([(.["activities-summary"].employments."affiliation-group" // [])[] | .summaries[0]?."employment-summary".organization.name | select(type == "string")] | unique) as $affs |
+  (.["activities-summary"].works.group // []) as $wgroups |
+  {
+    name: ($nm | collapse_ws),
+    orcid: $oid,
+    affiliations: $affs,
+    worksCount: ($wgroups | length),
+    topWorks: [$wgroups[:5][] | (.["work-summary"][0]?) | select(. != null) | (
+      (.["external-ids"]."external-id" // []) as $eids |
+      ([$eids[] | select(."external-id-type" == "doi") | ."external-id-value"][0] // null) as $doi |
+      ([$eids[] | select(."external-id-type" == "pmid") | ."external-id-value"][0] // null) as $pmid |
+      ([$eids[] | select(."external-id-type" == "pmc") | ."external-id-value"][0] // null) as $pmcid |
+      ([$eids[] | select(."external-id-type" == "arxiv") | ."external-id-value"][0] // null) as $ax |
+      (.["publication-date"] // {}) as $pd |
+      ([($pd.year.value // null), ($pd.month.value // null), ($pd.day.value // null)] | map(select(type == "string" and length > 0)) | if length > 0 then (join("-") | parse_date) else null end) as $dt |
+      {
+        title: ((.title.title.value // "") | unescape_html | collapse_ws),
+        authors: (if $nm != "" then [{name: ($nm | collapse_ws), orcid: $oid}] else [] end),
+        year: ($pd.year.value? | to_int),
+        publishedDate: $dt,
+        venue: (.["journal-title"].value // null),
+        workType: (.type // "article"),
+        ids: { doi: ($doi | doi_norm), pmid: $pmid, pmcid: $pmcid, arxiv: $ax },
+        retracted: false,
+        versions: [],
+        url: (.url.value // (if $doi != null then ("https://doi.org/" + $doi) else ("https://orcid.org/" + ($oid // "")) end)),
+        sources: ["orcid"]
+      }
+    )],
+    sources: ["orcid"]
+  }
+)'''

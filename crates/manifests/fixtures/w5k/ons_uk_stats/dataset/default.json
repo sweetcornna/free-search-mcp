@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "ons_uk_stats",
+  "op": "dataset",
+  "recordedAt": "2026-11-25T13:05:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.beta.ons.gov.uk/v1/datasets/cpih01",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"contacts\":[{\"email\":\"cpi@ons.gov.uk\",\"name\":\"Consumer Price Inflation team\",\"telephone\":\"+44 (0)1633 456900\"}],\"description\":\"CPIH is the most comprehensive measure of inflation. It extends CPI to include a measure of the costs associated with owning, maintaining and living in one's own home, known as owner occupiers' housing costs (OOH), along with council tax. This dataset provides CPIH time series (2005 to latest published month), allowing users to customise their own selection, view or download.\",\"keywords\":[\"Inflation\"],\"id\":\"cpih01\",\"last_updated\":\"2026-02-18T10:25:05.825Z\",\"license\":\"Open Government Licence v3.0\",\"links\":{\"editions\":{\"href\":\"https://api.beta.ons.gov.uk/v1/datasets/cpih01/editions\"},\"latest_version\":{\"href\":\"https://api.beta.ons.gov.uk/v1/datasets/cpih01/editions/time-series/versions/67\",\"id\":\"67\"},\"self\":{\"href\":\"https://api.beta.ons.gov.uk/v1/datasets/cpih01\"},\"taxonomy\":{\"href\":\"https://api.beta.ons.gov.uk/v1/economy/inflationandpriceindices\"}},\"methodologies\":[{\"href\":\"https://www.ons.gov.uk/economy/inflationandpriceindices/methodologies/consumerpricesindicestechnicalmanual2019\",\"title\":\"Consumer Price Indices Technical Manual 2019 Edition\"},{\"description\":\"From the release of January consumer price inflation data on 16 February 2016, CPI and CPIH indices will be re-referenced and published with 2015=100.\",\"href\":\"https://www.ons.gov.uk/file?uri=/economy/inflationandpriceindices/datasets/consumerpriceinflation/current/cpirereferenceddata2015100tcm77432809.xls\",\"title\":\"Re-referencing of the CPI and CPIH indices to 2015=100\"},{\"description\":\"Provides information on the characteristics of the different measures of consumer price inflation in relation to potential use.\",\"href\":\"https://www.ons.gov.uk/economy/inflationandpriceindices/methodologies/usersandusesofconsumerpriceinflationstatistics\",\"title\":\"Users and uses of consumer price inflation statistics\"}],\"national_statistic\":true,\"next_release\":\"To be announced\",\"publications\":[{\"href\":\"https://www.ons.gov.uk/economy/inflationandpriceindices/bulletins/consumerpriceinflation/latest\",\"title\":\"UK consumer price inflation\"}],\"qmi\":{\"href\":\"https://www.ons.gov.uk/economy/inflationandpriceindices/methodologies/consumerpriceinflationincludesall3indicescpihcpiandrpiqmi\"},\"related_datasets\":[{\"href\":\"https://www.ons.gov.uk/economy/inflationandpriceindices/datasets/consumerpriceinflation\",\"title\":\"Consumer price inflation\"}],\"release_frequency\":\"Monthly\",\"state\":\"published\",\"title\":\"Consumer Prices Index including owner occupiers' housing costs (CPIH)\",\"unit_of_measure\":\"Index: 2015=100\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

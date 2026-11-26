@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "transitland_gtfs",
+  "op": "routes",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://transit.land/api/v2/rest/routes?operator_onestop_id=o-9q9-bart&limit=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"routes\":[{\"id\":123456,\"onestop_id\":\"r-9q99-bart~1\",\"route_id\":\"1\",\"route_short_name\":\"YELLOW-S\",\"route_long_name\":\"Antioch to SFO/Millbrae\",\"route_type\":1,\"route_color\":\"FFFF33\",\"route_text_color\":\"000000\",\"agency\":{\"agency_id\":\"BART\",\"agency_name\":\"Bay Area Rapid Transit\",\"agency_url\":\"https://www.bart.gov\"}},{\"id\":123457,\"onestop_id\":\"r-9q99-bart~2\",\"route_id\":\"2\",\"route_short_name\":\"RED-S\",\"route_long_name\":\"Richmond to Millbrae/SFO\",\"route_type\":1,\"route_color\":\"FF0000\",\"route_text_color\":\"FFFFFF\",\"agency\":{\"agency_id\":\"BART\",\"agency_name\":\"Bay Area Rapid Transit\",\"agency_url\":\"https://www.bart.gov\"}},{\"id\":123458,\"onestop_id\":\"r-9q99-bart~3\",\"route_id\":\"3\",\"route_short_name\":\"ORANGE-S\",\"route_long_name\":\"Richmond to Berryessa/North San Jose\",\"route_type\":1,\"route_color\":\"FF9933\",\"route_text_color\":\"000000\",\"agency\":{\"agency_id\":\"BART\",\"agency_name\":\"Bay Area Rapid Transit\",\"agency_url\":\"https://www.bart.gov\"}}],\"meta\":{\"after\":123458}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "courtlistener",
+  "op": "opinion",
+  "recordedAt": "2026-11-25T15:05:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.courtlistener.com/api/rest/v4/opinions/2812209/",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"id\": 2812209, \"resource_uri\": \"https://www.courtlistener.com/api/rest/v4/opinions/2812209/\", \"absolute_url\": \"/opinion/2812209/obergefell-v-hodges/\", \"cluster\": \"https://www.courtlistener.com/api/rest/v4/clusters/2812209/\", \"type\": \"020lead\", \"author_str\": \"Kennedy\", \"per_curiam\": false, \"page_count\": 28, \"date_created\": \"2015-06-26T14:05:00Z\", \"date_modified\": \"2024-02-10T18:12:00Z\", \"plain_text\": \"\", \"html_with_citations\": \"<p>The Constitution promises liberty to all within its reach, a liberty that includes certain specific rights that allow persons, within a lawful realm, to define and express their identity.</p>\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

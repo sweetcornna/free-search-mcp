@@ -1,0 +1,118 @@
+id = "launch_library2"
+name = "The Space Devs Launch Library 2"
+summary = "Global orbital and suborbital rocket launches, upcoming schedules, launch vehicles, and space missions."
+aliases = ["ll2", "thespacedevs", "rocket launches", "spaceflight"]
+home_url = "https://thespacedevs.com/llapi"
+tier = 2
+scopes = ["reference"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 0.05, burst = 2, concurrency = 1, timeout_ms = 10000, cache_ttl_s = 3600 }
+
+[op.search]
+summary = "Search past and upcoming rocket launches by rocket, mission, or agency name."
+method = "GET"
+url = "https://ll.thespacedevs.com/2.2.0/launch/"
+headers = { Accept = "application/json" }
+const_query = { mode = "list" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+examples = ['source.call("launch_library2.search", { query: "Starship", limit: 3 })']
+probe = { params = { query = "Starship", limit = 3 }, min_results = 2, fixture = "fixtures/w5n/launch_library2/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "search", doc = "Launch vehicle, mission, or agency search terms" }
+limit = { type = "int", default = 10, min = 1, max = 50, doc = "Maximum launches per page" }
+offset = { type = "int", min = 0, doc = "Pagination offset" }
+
+[op.search.map]
+items = "(.results // [])[]"
+total = ".count"
+error = "if .detail then .detail else null end"
+record = '''{
+  id: .id,
+  slug: (.slug // null),
+  name: (.name // ""),
+  status: (.status.name // null),
+  statusAbbrev: (.status.abbrev // null),
+  net: (.net // null),
+  windowStart: (.window_start // null),
+  windowEnd: (.window_end // null),
+  provider: (.lsp_name // .launch_service_provider.name // null),
+  mission: (if (.mission | type) == "string" then .mission elif (.mission | type) == "object" then .mission.name else null end),
+  missionType: (.mission_type // .mission.type // null),
+  pad: (if (.pad | type) == "string" then .pad elif (.pad | type) == "object" then .pad.name else null end),
+  location: (.location // .pad.location.name // null),
+  url: ("https://spacelaunchnow.me/launch/" + (.slug // .id))
+}'''
+hit = '''{
+  title: (.name // "Rocket Launch"),
+  url: ("https://spacelaunchnow.me/launch/" + (.slug // .id)),
+  snippet: ([
+    (.status.name // empty),
+    (.lsp_name // .launch_service_provider.name // empty),
+    (.location // .pad.location.name // empty),
+    (if (.mission | type) == "string" then .mission elif (.mission | type) == "object" then (.mission.name // empty) else empty end)
+  ] | join(" · ")),
+  date: (.net | parse_date),
+  dateSource: (if (.net | parse_date) != null then "api" else null end)
+}'''
+
+[op.upcoming]
+summary = "List upcoming global orbital rocket launches from Launch Library 2."
+method = "GET"
+url = "https://ll.thespacedevs.com/2.2.0/launch/upcoming/"
+headers = { Accept = "application/json" }
+const_query = { mode = "list" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+examples = ['source.call("launch_library2.upcoming", { limit: 3 })']
+probe = { params = { limit = 3 }, min_results = 2, fixture = "fixtures/w5n/launch_library2/upcoming/default.json" }
+
+[op.upcoming.params]
+limit = { type = "int", default = 10, min = 1, max = 50, doc = "Maximum upcoming launches" }
+offset = { type = "int", min = 0, doc = "Pagination offset" }
+search = { type = "string", doc = "Optional keyword filter" }
+
+[op.upcoming.map]
+items = "(.results // [])[]"
+total = ".count"
+error = "if .detail then .detail else null end"
+record = "@ref:op.search.map.record"
+
+[op.launch]
+summary = "Fetch full detailed launch record by Launch Library 2 UUID."
+method = "GET"
+url = "https://ll.thespacedevs.com/2.2.0/launch/{id}/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+examples = ['source.call("launch_library2.launch", { id: "460d9db7-eaf6-4cd9-b095-cff433534c09" })']
+probe = { params = { id = "460d9db7-eaf6-4cd9-b095-cff433534c09" }, min_results = 1, fixture = "fixtures/w5n/launch_library2/launch/default.json" }
+
+[op.launch.params]
+id = { type = "string", required = true, in = "path", doc = "Launch Library 2 launch UUID" }
+
+[op.launch.map]
+items = "."
+error = "if .detail then .detail else null end"
+record = '''{
+  id: .id,
+  slug: (.slug // null),
+  name: (.name // ""),
+  status: (.status.name // null),
+  net: (.net // null),
+  windowStart: (.window_start // null),
+  windowEnd: (.window_end // null),
+  provider: (.launch_service_provider.name // null),
+  rocket: (.rocket.configuration.full_name // .rocket.configuration.name // null),
+  mission: (.mission.name // null),
+  missionDescription: (.mission.description // null),
+  orbit: (.mission.orbit.name // null),
+  pad: (.pad.name // null),
+  location: (.pad.location.name // null),
+  url: ("https://spacelaunchnow.me/launch/" + (.slug // .id))
+}'''

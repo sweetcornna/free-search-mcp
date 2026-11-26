@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "govinfo_us",
+  "op": "package",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.govinfo.gov/packages/USCODE-2022-title42/summary",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"packageId\":\"USCODE-2022-title42\",\"title\":\"United States Code, 2022 Edition, Title 42 - THE PUBLIC HEALTH AND WELFARE\",\"collectionCode\":\"USCODE\",\"collectionName\":\"United States Code\",\"category\":\"Regulatory Information\",\"dateIssued\":\"2023-01-03\",\"detailsLink\":\"https://www.govinfo.gov/app/details/USCODE-2022-title42\",\"download\":{\"pdfLink\":\"https://api.govinfo.gov/packages/USCODE-2022-title42/pdf\",\"xmlLink\":\"https://api.govinfo.gov/packages/USCODE-2022-title42/xml\",\"modsLink\":\"https://api.govinfo.gov/packages/USCODE-2022-title42/mods\"}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

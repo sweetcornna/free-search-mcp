@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "jina_search",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:56:44Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://s.jina.ai/?q=rust+async+tokio",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"code\": 200, \"status\": 20000, \"data\": [{\"title\": \"Tokio - An asynchronous Rust runtime\", \"url\": \"https://tokio.rs/\", \"description\": \"A runtime for writing reliable, asynchronous, and slim applications with the Rust programming language.\", \"content\": \"# Tokio\\n\\nTokio is an event-driven, non-blocking I/O platform for writing asynchronous applications with the Rust programming language.\", \"publishedTime\": \"2026-03-10T00:00:00Z\", \"usage\": {\"tokens\": 612}}, {\"title\": \"Asynchronous Programming in Rust\", \"url\": \"https://rust-lang.github.io/async-book/\", \"description\": \"Guide to async/await, Futures, Pin, and runtimes in Rust.\", \"content\": \"# Asynchronous Programming in Rust\\n\\nAsync programming lets you run a large number of concurrent tasks on a small number of OS threads.\", \"publishedTime\": \"2026-01-22T00:00:00Z\", \"usage\": {\"tokens\": 495}}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

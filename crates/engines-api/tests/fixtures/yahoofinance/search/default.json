@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "source": "yahoofinance",
+  "op": "search",
+  "recordedAt": "2026-11-25T10:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://query2.finance.yahoo.com/v1/finance/search?q=nvidia&quotesCount=6&newsCount=20",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [["content-type", "application/json"]],
+        "bodyText": "{\"quotes\":[{\"symbol\":\"NVDA\",\"shortname\":\"NVIDIA Corporation\",\"longname\":\"NVIDIA Corporation\",\"typeDisp\":\"Equity\",\"exchDisp\":\"NASDAQ\",\"sectorDisp\":\"Technology\",\"industryDisp\":\"Semiconductors\"},{\"symbol\":\"NVHE-U.TO\",\"longname\":\"Harvest NVIDIA Enhanced High Income Shares ETF\",\"typeDisp\":\"ETF\"}],\"news\":[{\"title\":\"Wall Street is turning Nvidia's AI chips into a futures market\",\"link\":\"https://finance.yahoo.com/markets/article/nvidia-futures.html\",\"publisher\":\"Yahoo Finance\",\"providerPublishTime\":1788005497},{\"title\":\"Down 35% From Its High, Is Sandisk Stock a Bargain?\",\"link\":\"https://finance.yahoo.com/m/sandisk.html\",\"publisher\":\"Motley Fool\",\"providerPublishTime\":1788005497}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

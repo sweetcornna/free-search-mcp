@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "un_population",
+  "op": "indicator",
+  "recordedAt": "2026-11-25T13:05:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://population.un.org/dataportalapi/api/v1/indicators/49?format=json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "[{\"id\":49,\"name\":\"Total population by sex\",\"shortName\":\"TPopulation\",\"description\":\"Total number of persons by sex (mid-year)\",\"displayName\":\"Total population by sex\",\"dimAge\":false,\"dimSex\":true,\"dimVariant\":true,\"dimCategory\":false,\"defaultAgeId\":188,\"defaultSexId\":3,\"defaultVariantId\":4,\"defaultCategoryId\":0,\"variableType\":\"absolute\",\"valueType\":\"number\",\"unitScaling\":1,\"precision\":0,\"isThousandSeparatorSpace\":true,\"formatString\":\"### ### ##0\",\"unitShortLabel\":\"persons\",\"unitLongLabel\":\"persons\",\"nClassesDefault\":5,\"downloadFileName\":\"TotalPop\",\"sourceId\":27,\"sourceName\":\"World Population Prospects\",\"sourceYear\":2024,\"sourceStartYear\":1950,\"sourceEndYear\":2100,\"sourceCitation\":\"United Nations, Department of Economic and Social Affairs, Population Division (2024). <i>World Population Prospects: The 2024 Revision</i>, custom data acquired via website.\",\"sourceUrl\":\"https://population.un.org/wpp/\",\"topicId\":1,\"topicName\":\"Population\",\"topicShortName\":\"Pop\"}]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

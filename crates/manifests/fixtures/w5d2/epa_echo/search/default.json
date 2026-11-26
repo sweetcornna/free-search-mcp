@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "source": "epa_echo",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:12:46Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://echodata.epa.gov/echo/echo_rest_services.get_facilities?output=JSON&p_fn=TESLA&p_st=CA&responseset=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "cache-control",
+            "private, max-age=0, must-revalidate"
+          ],
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\n\"Results\":{\n\"Message\":\"Success\",\n\"Version\":\"ALL DATA v2017-06-16 0923\",\n\"QueryRows\":\"319\",\n\"IndianCountryRows\":\"96\",\n\"SVRows\":\"1\",\n\"CVRows\":\"5\",\n\"V3Rows\":\"10\",\n\"FEARows\":\"1\",\n\"InfFEARows\":\"3\",\n\"INSPRows\":\"14\",\n\"TotalPenalties\":\"$275,000\",\n\"CAARows\":\"3\",\n\"CWARows\":\"27\",\n\"RCRRows\":\"257\",\n\"TRIRows\":\"3\",\n\"BadSystemIDs\":null,\n\"QueryID\":\"178\"\n}\n}\n",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://echodata.epa.gov/echo/echo_rest_services.get_qid?output=JSON&pageno=1&qcolumns=1%2C2%2C3%2C4%2C5%2C6%2C7%2C8%2C23%2C24%2C25%2C30%2C31&qid=178",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "cache-control",
+            "private, max-age=0, must-revalidate"
+          ],
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\n\"Results\":{\n\"Message\":\"Working\",\n\"QueryRows\":\"319\",\n\"QueryID\":\"178\",\n\"PageNo\":\"1\",\n\"Facilities\":[\n{\n\"FacName\":\"TESLA MOTORS INC DBA TESLA MOTORS SERVICE CENTER\",\n\"FacStreet\":\"9250 TRADE PL\",\n\"FacCity\":\"SAN DIEGO\",\n\"FacState\":\"CA\",\n\"FacZip\":\"92126\",\n\"RegistryID\":\"110070414218\",\n\"FacCounty\":\"SAN DIEGO\",\n\"FacEPARegion\":null,\n\"NPDESIDs\":null,\n\"RCRAIDs\":\"CAL000394932\",\n\"RmpIDs\":null,\n\"GHGIDs\":null,\n\"TscaIDs\":null\n}\n,{\n\"FacName\":\"10045 TESLA ROAD\",\n\"FacStreet\":\"10045 TESLA ROAD\",\n\"FacCity\":\"LIVERMORE\",\n\"FacState\":\"CA\",\n\"FacZip\":\"94550\",\n\"RegistryID\":\"110070577478\",\n\"FacCounty\":\"ALAMEDA\",\n\"FacEPARegion\":null,\n\"NPDESIDs\":null,\n\"RCRAIDs\":\"CAC003012687\",\n\"RmpIDs\":null,\n\"GHGIDs\":null,\n\"TscaIDs\":null\n}\n,{\n\"FacName\":\"2816 TESLA AVE\",\n\"FacStreet\":\"2816 TESLA AVE\",\n\"FacCity\":\"LOS ANGELES\",\n\"FacState\":\"CA\",\n\"FacZip\":\"90039\",\n\"RegistryID\":\"110070802665\",\n\"FacCounty\":\"LOS ANGELES\",\n\"FacEPARegion\":null,\n\"NPDESIDs\":null,\n\"RCRAIDs\":\"CAC003059850\",\n\"RmpIDs\":null,\n\"GHGIDs\":null,\n\"TscaIDs\":null\n}\n]\n}\n}\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

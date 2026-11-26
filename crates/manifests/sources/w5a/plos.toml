@@ -1,0 +1,74 @@
+id = "plos"
+name = "PLOS Search API"
+summary = "Peer-reviewed open-access journals from the Public Library of Science (PLOS ONE, Biology, Genetics, Medicine, Comp Bio)."
+aliases = ["plos one", "public library of science"]
+home_url = "https://journals.plos.org"
+tier = 1
+scopes = ["academic", "academic.biomed", "academic.openaccess"]
+caps = ["search", "lookup", "fulltext"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 43200, host_bucket = "api.plos.org" }
+
+[op.search]
+summary = "Search PLOS open-access articles via Solr API."
+method = "GET"
+url = "https://api.plos.org/search"
+response = "json"
+returns = "works"
+const_query = { fl = "id,journal,eissn,publication_date,article_type,author_display,abstract,title_display", fq = "doc_type:full", wt = "json" }
+paginate = { style = "offset", param = "start", start = 0, max_pages = 3 }
+probe = { params = { query = "crispr", limit = 3 }, min_results = 2, fixture = "fixtures/w5a/plos/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Solr query (e.g. crispr or title:crispr)" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "rows", doc = "Max results" }
+offset = { type = "int", min = 0, to = "start", doc = "Offset" }
+
+[op.search.map]
+items = ".response.docs[]"
+total = ".response.numFound"
+error = '''if .error != null then (.error.msg // (.error | tostring)) else null end'''
+work = '''(
+  ((.abstract | first_str) | if type == "string" then (unescape_html | collapse_ws) else null end) as $abs |
+  (.publication_date | parse_date) as $dt |
+  (if ((.id // "") | contains(".pbio.")) then "plosbiology" elif ((.id // "") | contains(".pmed.")) then "plosmedicine" elif ((.id // "") | contains(".pgen.")) then "plosgenetics" elif ((.id // "") | contains(".pcbi.")) then "ploscompbiol" elif ((.id // "") | contains(".ppat.")) then "plospathogens" elif ((.id // "") | contains(".pntd.")) then "plosntds" elif ((.id // "") | contains(".pgph.")) then "globalpublichealth" else "plosone" end) as $slug |
+  {
+    title: ((.title_display // "") | strip_tags),
+    authors: [(.author_display // [])[] | collapse_ws | select(length > 0) | {name: .}],
+    year: (if $dt != null then ($dt[0:4] | to_int) else null end),
+    publishedDate: $dt,
+    venue: (.journal // null),
+    workType: "article",
+    ids: { doi: (.id | doi_norm) },
+    abstractText: (if ($abs // "") != "" then $abs else null end),
+    oa: {
+      status: "gold",
+      url: ("https://journals.plos.org/" + $slug + "/article?id=" + .id),
+      pdfUrl: ("https://journals.plos.org/" + $slug + "/article/file?id=" + .id + "&type=printable"),
+      structuredFormat: "jats",
+      license: "CC-BY-4.0"
+    },
+    retracted: false,
+    versions: [],
+    url: ("https://doi.org/" + .id),
+    sources: ["plos"]
+  }
+)'''
+
+[op.work]
+summary = "Fetch a single PLOS article by DOI."
+method = "GET"
+url = "https://api.plos.org/search"
+response = "json"
+returns = "works"
+const_query = { fl = "id,journal,eissn,publication_date,article_type,author_display,abstract,title_display", rows = "1", wt = "json" }
+probe = { params = { doi = "10.1371/journal.pgen.1002441" }, min_results = 1, fixture = "fixtures/w5a/plos/work/default.json" }
+
+[op.work.params]
+doi = { type = "string", required = true, to = "q", template = "id:\"{doi}\"", doc = "PLOS article DOI (without https://doi.org/ prefix)" }
+
+[op.work.map]
+items = ".response.docs[]"
+error = "@ref:op.search.map.error"
+work = "@ref:op.search.map.work"

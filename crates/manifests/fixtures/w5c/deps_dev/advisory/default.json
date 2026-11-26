@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "deps_dev",
+  "op": "advisory",
+  "recordedAt": "2026-11-25T11:54:22Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.deps.dev/v3/advisories/GHSA-34jh-p97f-mpxf",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"advisoryKey\":{\"id\":\"GHSA-34jh-p97f-mpxf\"},\"url\":\"https://osv.dev/vulnerability/GHSA-34jh-p97f-mpxf\",\"title\":\"urllib3's Proxy-Authorization request header isn't stripped during cross-origin redirects\",\"aliases\":[\"CVE-2024-37891\",\"PYSEC-2026-1995\"],\"cvss3Score\":4.4,\"cvss3Vector\":\"CVSS:3.1/AV:N/AC:H/PR:H/UI:N/S:U/C:H/I:N/A:N\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

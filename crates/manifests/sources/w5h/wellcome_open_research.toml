@@ -1,0 +1,52 @@
+id = "wellcome_open_research"
+name = "Wellcome Open Research External API"
+summary = "Wellcome Trust open-access, open peer-review biomedical and life sciences publishing platform with keyless XML search and full JATS XML retrieval."
+aliases = ["wellcome open research", "wellcomeopenres", "wellcome oa"]
+home_url = "https://wellcomeopenresearch.org"
+tier = 2
+scopes = ["academic", "academic.openaccess", "academic.biomed"]
+caps = ["search", "lookup", "fulltext"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.5, burst = 4, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 43200, host_bucket = "wellcomeopenresearch.org" }
+
+[op.search]
+summary = "Search Wellcome Open Research articles and return matching versioned DOIs."
+method = "GET"
+url = "https://wellcomeopenresearch.org/extapi/search"
+response = "xml"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "malaria", limit = 3 }, min_results = 2, fixture = "fixtures/w5h/wellcome_open_research/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Keyword search query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "rows", doc = "DOIs per page" }
+page = { type = "int", default = 1, min = 1, to = "page", doc = "1-based page number" }
+
+[op.search.map]
+items = ".results.doi | arr | .[] | select(type == \"string\" and length > 0)"
+total = "(.results.\"@totalnumberofpages\" | to_int | if . != null then . * ($p.limit // 10) else null end)"
+error = '''if .error != null then (.error | first_str // (.error | tostring)) else null end'''
+record = '''{
+  doi: (. | doi_norm),
+  url: ("https://doi.org/" + .),
+  xmlUrl: ("https://wellcomeopenresearch.org/extapi/article/xml?doi=" + .)
+}'''
+hit = '''{
+  title: ("Wellcome Open Research " + .),
+  url: ("https://doi.org/" + .),
+  snippet: ("Open peer-reviewed biomedical article (call wellcome_open_research.article with doi=" + . + " for full JATS XML)"),
+  date: null
+}'''
+
+[op.article]
+summary = "Fetch raw full-text JATS XML (title, authors, ORCIDs, affiliations, abstract, body, and peer-review metadata) for a Wellcome Open Research DOI."
+method = "GET"
+url = "https://wellcomeopenresearch.org/extapi/article/xml"
+response = "text"
+returns = "text"
+probe = { params = { doi = "10.12688/wellcomeopenres.15166.1" }, min_results = 1, fixture = "fixtures/w5h/wellcome_open_research/article/default.json" }
+
+[op.article.params]
+doi = { type = "string", required = true, to = "doi", doc = "Versioned Wellcome Open Research DOI e.g. 10.12688/wellcomeopenres.15166.1" }

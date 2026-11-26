@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "google_factcheck",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://factchecktools.googleapis.com/v1alpha1/claims:search?query=electric+vehicle+battery&languageCode=en&pageSize=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ]
+        ],
+        "bodyText": "{\"claims\":[{\"text\":\"Electric vehicle batteries must be replaced every three years at a cost of $25,000.\",\"claimant\":\"Social media posts\",\"claimDate\":\"2026-08-14T00:00:00Z\",\"claimReview\":[{\"publisher\":{\"name\":\"PolitiFact\",\"site\":\"politifact.com\"},\"url\":\"https://www.politifact.com/factchecks/2026/aug/20/social-media/ev-battery-lifespan-claim/\",\"title\":\"No, electric vehicle batteries do not require replacement every three years\",\"reviewDate\":\"2026-08-20T16:00:00Z\",\"textualRating\":\"False\",\"languageCode\":\"en\"}]},{\"text\":\"Cold weather permanently cuts EV battery capacity in half after one winter.\",\"claimant\":\"Viral video\",\"claimDate\":\"2026-01-19T00:00:00Z\",\"claimReview\":[{\"publisher\":{\"name\":\"Reuters Fact Check\",\"site\":\"reuters.com\"},\"url\":\"https://www.reuters.com/fact-check/ev-battery-winter-range-temporary-2026/\",\"title\":\"Fact Check: Freezing temperatures temporarily reduce EV range, not permanent battery capacity\",\"reviewDate\":\"2026-01-25T12:30:00Z\",\"textualRating\":\"Misleading\",\"languageCode\":\"en\"}]},{\"text\":\"Electric vehicle batteries cannot be recycled and are all dumped in landfills.\",\"claimant\":\"Blog post\",\"claimDate\":\"2026-05-03T00:00:00Z\",\"claimReview\":[{\"publisher\":{\"name\":\"AP Fact Check\",\"site\":\"apnews.com\"},\"url\":\"https://apnews.com/article/fact-check-ev-battery-recycling-2026\",\"title\":\"EV lithium-ion batteries are widely repurposed and recycled for critical minerals\",\"reviewDate\":\"2026-05-07T14:15:00Z\",\"textualRating\":\"False\",\"languageCode\":\"en\"}]}],\"nextPageToken\":\"CAIQAA\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "source": "w3c_specs",
+  "op": "versions",
+  "recordedAt": "2026-11-25T12:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.w3.org/specifications/html52/versions?embed=true&items=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/hal+json;version=1.0"
+          ],
+          [
+            "cache-control",
+            "public, s-maxage=900"
+          ],
+          [
+            "last-modified",
+            "Wed, 25 Nov 2026 12:43:50 GMT"
+          ]
+        ],
+        "bodyText": "{\n    \"page\": 1,\n    \"limit\": 3,\n    \"pages\": 4,\n    \"total\": 12,\n    \"_links\": {\n        \"up\": {\n            \"href\": \"https://api.w3.org/specifications/html52\"\n        },\n        \"version-history\": [\n            {\n                \"href\": \"https://api.w3.org/specifications/html52/versions/20210128\",\n                \"title\": \"HTML 5.2\"\n            },\n            {\n                \"href\": \"https://api.w3.org/specifications/html52/versions/20171214\",\n                \"title\": \"HTML 5.2\"\n            },\n            {\n                \"href\": \"https://api.w3.org/specifications/html52/versions/20171102\",\n                \"title\": \"HTML 5.2\"\n            }\n        ],\n        \"self\": {\n            \"href\": \"https://api.w3.org/specifications/html52/versions?embed=1&page=1&items=3\"\n        },\n        \"first\": {\n            \"href\": \"https://api.w3.org/specifications/html52/versions?embed=1&page=1&items=3\"\n        },\n        \"last\": {\n            \"href\": \"https://api.w3.org/specifications/html52/versions?embed=1&page=4&items=3\"\n        },\n        \"next\": {\n            \"href\": \"https://api.w3.org/specifications/html52/versions?embed=1&page=2&items=3\"\n        }\n    },\n    \"_embedded\": {\n        \"version-history\": [\n            {\n                \"status\": \"Retired\",\n                \"rec-track\": true,\n                \"editor-draft\": \"https://w3c.github.io/html/\",\n                \"uri\": \"https://www.w3.org/TR/2021/SPSD-html52-20210128/\",\n                \"date\": \"2021-01-28\",\n                \"informative\": false,\n                \"title\": \"HTML 5.2\",\n                \"shortlink\": \"https://www.w3.org/TR/html52/\",\n                \"process-rules\": \"https://www.w3.org/2020/Process-20200915/\",\n                \"_links\": {\n                    \"self\": {\n                        \"href\": \"https://api.w3.org/specifications/html52/versions/20210128\"\n                    },\n                    \"editors\": {\n                        \"href\": \"https://api.w3.org/specifications/html52/versions/20210128/editors\"\n                    },\n                    \"deliverers\": {\n                        \"href\": \"https://api.w3.org/specifications/html52/versions/20210128/deliverers\"\n                    },\n                    \"specification\": {\n                        \"href\": \"https://api.w3.org/specifications/html52\"\n                    },\n                    \"predecessor-version\": {\n                        \"href\": \"https://api.w3.org/specifications/html52/versions/20210128/predecessors\"\n                    }\n                }\n            },\n            {\n                \"status\": \"Recommendation\",\n                \"rec-track\": true,\n                \"editor-draft\": \"https://w3c.github.io/html/\",\n                \"uri\": \"https://www.w3.org/TR/2017/REC-html52-20171214/\",\n                \"date\": \"2017-12-14\",\n                \"informative\": false,\n                \"title\": \"HTML 5.2\",\n                \"shortlink\": \"https://www.w3.org/TR/html52/\",\n                \"translation\": \"https://www.w3.org/Consortium/Translation/\",\n                \"errata\": \"https://github.com/w3c/html/labels/errata\",\n                \"process-rules\": \"https://www.w3.org/2017/Process-20170301/\",\n                \"_links\": {\n                    \"self\": {\n                        \"href\": \"https://api.w3.org/specifications/html52/versions/20171214\"\n                    },\n                    \"editors\": {\n                        \"href\": \"https://api.w3.org/specifications/html52/versions/20171214/editors\"\n                    },\n                    \"deliverers\": {\n                        \"href\": \"https://api.w3.org/specifications/html52/versions/20171214/deliverers\"\n                    },\n                    \"specification\": {\n                        \"href\": \"https://api.w3.org/specifications/html52\"\n                    },\n                    \"predecessor-version\": {\n                        \"href\": \"https://api.w3.org/specifications/html52/versions/20171214/predecessors\"\n                    },\n                    \"successor-version\": {\n                        \"href\": \"https://api.w3.org/specifications/html52/versions/20171214/successors\"\n                    }\n                }\n            },\n            {\n                \"status\": \"Proposed Recommendation\",\n                \"rec-track\": true,\n                \"editor-draft\": \"https://w3c.github.io/html/\",\n                \"uri\": \"https://www.w3.org/TR/2017/PR-html52-20171102/\",\n                \"date\": \"2017-11-02\",\n                \"pr-reviews-date\": \"2017-11-30\",\n                \"informative\": false,\n                \"title\": \"HTML 5.2\",\n                \"shortlink\": \"https://www.w3.org/TR/html52/\",\n                \"process-rules\": \"https://www.w3.org/2017/Process-20170301/\",\n                \"_links\": {\n                    \"self\": {\n                        \"href\": \"https://api.w3.org/specifications/html52/versions/20171102\"\n                    },\n                    \"editors\": {\n                        \"href\": \"https://api.w3.org/specifications/html52/versions/20171102/editors\"\n                    },\n                    \"deliverers\": {\n                        \"href\": \"https://api.w3.org/specifications/html52/versions/20171102/deliverers\"\n                    },\n                    \"specification\": {\n                        \"href\": \"https://api.w3.org/specifications/html52\"\n                    },\n                    \"predecessor-version\": {\n                        \"href\": \"https://api.w3.org/specifications/html52/versions/20171102/predecessors\"\n                    },\n                    \"successor-version\": {\n                        \"href\": \"https://api.w3.org/specifications/html52/versions/20171102/successors\"\n                    }\n                }\n            }\n        ]\n    }\n}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

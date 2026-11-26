@@ -1,0 +1,36 @@
+# A1 §G.5.2 instance vector: mediawiki with default_params and limits.host_bucket (A1 §E #9, §F.9).
+protocol = "mediawiki"
+
+[[instance]]
+id = "wikimedia"
+name = "Wikimedia Commons"
+summary = "Free media repository (file search with image info)."
+base_url = "https://commons.wikimedia.org/w/api.php"
+scopes = ["media"]
+caps = ["search"]
+tier = 1
+default_params = { namespace = 6, prop = "imageinfo" }
+limits = { rps = 2.0, burst = 5, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 43200, host_bucket = "wikimedia.org" }
+probe = { op = "search", params = { query = "lighthouse", limit = 3 }, min_results = 1 }
+
+[[instance]]
+id = "wiktionary"
+name = "Wiktionary (English)"
+summary = "Collaborative multilingual dictionary."
+base_url = "https://en.wiktionary.org/w/api.php"
+scopes = ["reference"]
+caps = ["search", "lookup"]
+tier = 2
+limits = { rps = 2.0, burst = 5, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 43200, host_bucket = "wikimedia.org" }
+probe = { op = "search", params = { query = "serendipity", limit = 3 }, min_results = 1 }
+
+[[instance]]
+id = "wikipedia"
+name = "Wikipedia"
+summary = "The free encyclopedia; host chosen from the caller's language."
+base_url = "https://{lang_sub}.wikipedia.org"
+scopes = ["web", "reference"]
+caps = ["search", "lookup"]
+tier = 1
+dialect = { dynamic_lang_host = true }
+probe = { op = "search", params = { query = "Alan Turing", limit = 3 }, min_results = 1 }

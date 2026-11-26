@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "source": "appstore",
+  "op": "search",
+  "recordedAt": "2026-11-25T10:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://itunes.apple.com/search?term=%E5%BE%AE%E4%BF%A1&country=cn&entity=software&limit=5",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          ["content-type", "text/javascript; charset=utf-8"]
+        ],
+        "bodyText": "{\"results\":[{\"trackName\":\"秒剪\",\"version\":\"4.0.15\",\"trackViewUrl\":\"https://apps.apple.com/cn/app/id1\",\"currentVersionReleaseDate\":\"2026-09-18T00:00:00Z\",\"sellerName\":\"Tencent\"},{\"trackName\":\"微信\",\"version\":\"8.0.78\",\"trackViewUrl\":\"https://apps.apple.com/cn/app/id414478124?uo=4\",\"currentVersionReleaseDate\":\"2026-09-08T00:00:00Z\",\"sellerName\":\"Tencent\",\"minimumOsVersion\":\"15.0\",\"formattedPrice\":\"免费\",\"averageUserRating\":4.1,\"releaseNotes\":\"本次更新：\\n- 解决了一些已知问题。\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

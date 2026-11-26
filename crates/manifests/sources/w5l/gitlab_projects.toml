@@ -1,0 +1,107 @@
+id = "gitlab_projects"
+name = "GitLab Public Projects API v4"
+summary = "Keyless search and metadata lookup for public GitLab.com projects and releases via REST API v4."
+aliases = ["gitlab", "gitlab repos", "gitlab api"]
+home_url = "https://gitlab.com"
+tier = 1
+scopes = ["code"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 3600 }
+
+[op.search]
+summary = "Search public GitLab.com repositories ordered by star count or activity."
+method = "GET"
+url = "https://gitlab.com/api/v4/projects"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "gitlab-runner", limit = 3 }, min_results = 2, fixture = "fixtures/w5l/gitlab_projects/search/default.json" }
+examples = [
+  'source.call("gitlab_projects.search", { query: "gitlab-runner", limit: 5 })',
+]
+
+[op.search.params]
+query = { type = "string", required = true, to = "search", doc = "Project name, path, or description search string" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "per_page", doc = "Results per page" }
+order_by = { type = "string", default = "star_count", enum = ["id", "name", "path", "created_at", "updated_at", "last_activity_at", "star_count"], to = "order_by", doc = "Sort field" }
+sort = { type = "string", default = "desc", enum = ["asc", "desc"], to = "sort", doc = "Sort direction" }
+page = { type = "int", min = 1, to = "page", doc = "1-based page number" }
+
+[op.search.map]
+items = ".[]"
+error = "if (type == \"object\") and (.message != null or .error != null) then (.message // .error | tostring) else null end"
+record = '''{
+  id: .id,
+  name: (.name // ""),
+  pathWithNamespace: (.path_with_namespace // ""),
+  description: (.description // ""),
+  stars: (.star_count // 0),
+  forks: (.forks_count // 0),
+  defaultBranch: (.default_branch // null),
+  topics: (.topics // []),
+  lastActivityAt: (.last_activity_at // null),
+  url: (.web_url // "")
+}'''
+hit = '''{
+  title: (.path_with_namespace // .name // ""),
+  url: (.web_url // ""),
+  snippet: (
+    [
+      (if (.description // "") != "" then .description else null end),
+      ("★" + ((.star_count // 0) | tostring) + " · forks " + ((.forks_count // 0) | tostring))
+    ] | map(select(. != null)) | join(" · ")
+  )[0:280],
+  date: (.last_activity_at | parse_date),
+  dateSource: "api"
+}'''
+
+[op.project]
+summary = "Fetch detailed metadata for a public GitLab project by numeric ID or URL-encoded path."
+method = "GET"
+url = "https://gitlab.com/api/v4/projects/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "250833" }, min_results = 1, fixture = "fixtures/w5l/gitlab_projects/project/default.json" }
+examples = [
+  'source.call("gitlab_projects.project", { id: "250833" })',
+]
+
+[op.project.params]
+id = { type = "string", required = true, in = "path", doc = "Numeric GitLab project ID (e.g. 250833) or URL-encoded namespace%2Fproject" }
+
+[op.project.map]
+items = "."
+error = "@ref:op.search.map.error"
+record = "@ref:op.search.map.record"
+
+[op.releases]
+summary = "List recent releases and tags for a public GitLab project."
+method = "GET"
+url = "https://gitlab.com/api/v4/projects/{id}/releases"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "250833", limit = 2 }, min_results = 2, fixture = "fixtures/w5l/gitlab_projects/releases/default.json" }
+examples = [
+  'source.call("gitlab_projects.releases", { id: "250833", limit: 5 })',
+]
+
+[op.releases.params]
+id = { type = "string", required = true, in = "path", doc = "Numeric GitLab project ID or URL-encoded namespace%2Fproject" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "per_page", doc = "Max releases to return" }
+
+[op.releases.map]
+items = ".[]"
+error = "@ref:op.search.map.error"
+record = '''{
+  name: (.name // ""),
+  tagName: (.tag_name // ""),
+  releasedAt: (.released_at // .created_at // null),
+  upcomingRelease: (.upcoming_release // false),
+  description: ((.description // "")[0:600]),
+  url: (._links.self // "")
+}'''

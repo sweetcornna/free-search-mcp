@@ -1,0 +1,118 @@
+id = "nci_gdc"
+name = "NCI Genomic Data Commons (GDC)"
+summary = "US National Cancer Institute TCGA, TARGET, and MATCH cancer genomics projects, genes, and dataset metadata API."
+aliases = ["gdc", "tcga", "nci cancer genomics", "cancer genome"]
+home_url = "https://portal.gdc.cancer.gov"
+tier = 1
+scopes = ["academic.biomed", "dataset"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 5.0, burst = 10, concurrency = 4, timeout_ms = 8000, cache_ttl_s = 43200, host_bucket = "api.gdc.cancer.gov" }
+
+[op.search]
+summary = "Search NCI GDC cancer genomics projects by primary anatomical site, program (e.g. TCGA), or project ID."
+method = "POST"
+url = "https://api.gdc.cancer.gov/projects"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+body = { kind = "json", jaq = '''{
+  fields: "project_id,name,primary_site,disease_type,program.name,summary.case_count,summary.file_count",
+  filters: {
+    content: [
+      { content: { field: "primary_site", value: [$p.query] }, op: "in" },
+      { content: { field: "project_id", value: [$p.query] }, op: "in" },
+      { content: { field: "program.name", value: [$p.query] }, op: "in" }
+    ],
+    op: "or"
+  },
+  from: ($p.offset // 0),
+  size: ($p.limit // 10)
+}''' }
+paginate = { style = "offset", param = "from", start = 0, max_pages = 3 }
+probe = { params = { query = "Breast", limit = 3 }, min_results = 2, fixture = "fixtures/w5j/nci_gdc/search/default.json" }
+examples = ["source.call('nci_gdc.search', { query: 'Breast', limit: 5 })", "source.call('nci_gdc.search', { query: 'TCGA', limit: 5 })"]
+
+[op.search.params]
+query = { type = "string", required = true, in = "body", doc = "Primary site (e.g. Breast, Brain), program (TCGA, TARGET), or project ID (TCGA-BRCA)" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "body", doc = "Maximum projects to return" }
+offset = { type = "int", default = 0, min = 0, in = "body", doc = "0-based offset" }
+
+[op.search.map]
+items = "(.data.hits // [])[]"
+total = ".data.pagination.total"
+record = '''{
+  projectId: (.project_id // .id // ""),
+  name: (.name // ""),
+  program: (.program.name // null),
+  primarySites: (.primary_site // []),
+  diseaseTypes: (.disease_type // []),
+  caseCount: (.summary.case_count // null),
+  fileCount: (.summary.file_count // null),
+  url: ("https://portal.gdc.cancer.gov/projects/" + (.project_id // .id // ""))
+}'''
+hit = '''{
+  title: ((.project_id // "") + " — " + (.name // "")),
+  url: ("https://portal.gdc.cancer.gov/projects/" + (.project_id // "")),
+  snippet: ([
+    (if (.program.name // "") != "" then "Program: \(.program.name)" else empty end),
+    (if (.summary.case_count | type) == "number" then "\(.summary.case_count) cases" else empty end),
+    (if (.summary.file_count | type) == "number" then "\(.summary.file_count) files" else empty end),
+    (if ((.primary_site // []) | length) > 0 then ((.primary_site[0:3]) | join(", ")) else empty end)
+  ] | join(" · ")),
+  date: null,
+  dateSource: "api"
+}'''
+
+[op.project]
+summary = "Fetch metadata and case/file counts for a single GDC project by project ID."
+method = "GET"
+url = "https://api.gdc.cancer.gov/projects/{project_id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "JSON", fields = "project_id,name,primary_site,disease_type,program.name,summary.case_count,summary.file_count" }
+probe = { params = { project_id = "TCGA-BRCA" }, min_results = 1, fixture = "fixtures/w5j/nci_gdc/project/default.json" }
+examples = ["source.call('nci_gdc.project', { project_id: 'TCGA-BRCA' })"]
+
+[op.project.params]
+project_id = { type = "string", required = true, in = "path", doc = "GDC project ID (e.g. TCGA-BRCA, TCGA-LUAD)" }
+
+[op.project.map]
+items = ".data"
+record = "@ref:op.search.map.record"
+
+[op.gene]
+summary = "Look up a cancer-associated gene record in NCI GDC by HGNC gene symbol."
+method = "POST"
+url = "https://api.gdc.cancer.gov/genes"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+body = { kind = "json", jaq = '''{
+  fields: "gene_id,symbol,name,biotype,cytoband,is_cancer_gene_census",
+  filters: {
+    content: { field: "symbol", value: [$p.symbol] },
+    op: "in"
+  },
+  size: 3
+}''' }
+probe = { params = { symbol = "BRCA1" }, min_results = 1, fixture = "fixtures/w5j/nci_gdc/gene/default.json" }
+examples = ["source.call('nci_gdc.gene', { symbol: 'BRCA1' })"]
+
+[op.gene.params]
+symbol = { type = "string", required = true, in = "body", doc = "HGNC gene symbol (e.g. BRCA1, TP53)" }
+
+[op.gene.map]
+items = "(.data.hits // [])[]"
+total = ".data.pagination.total"
+record = '''{
+  geneId: (.gene_id // .id // ""),
+  symbol: (.symbol // ""),
+  name: (.name // ""),
+  biotype: (.biotype // null),
+  cytoband: (.cytoband // []),
+  isCancerGeneCensus: (.is_cancer_gene_census // false),
+  url: ("https://portal.gdc.cancer.gov/genes/" + (.gene_id // .id // ""))
+}'''

@@ -1,0 +1,90 @@
+id = "exa_search"
+name = "Exa Neural & Keyword Web Search"
+summary = "Neural, keyword, and hybrid web search with highlights and full-text content extraction via Exa API (requires free API key)."
+aliases = ["exa", "exa.ai", "metaphor", "neural search"]
+home_url = "https://exa.ai"
+tier = 3
+scopes = ["web"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 5.0, burst = 10, concurrency = 4, timeout_ms = 12000, cache_ttl_s = 21600 }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_EXA_API_KEY"
+in = "header"
+name = "x-api-key"
+format = "{key}"
+route_requires_key = true
+
+[op.search]
+summary = "Run neural, keyword, or auto hybrid web search with highlights via Exa POST /search."
+method = "POST"
+url = "https://api.exa.ai/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+body = { kind = "json", jaq = '''{
+  query: $p.query,
+  type: ($p.type // "auto"),
+  numResults: ($p.limit // 10),
+  contents: { highlights: true }
+}''' }
+probe = { params = { query = "retrieval augmented generation survey", limit = 2 }, min_results = 2, fixture = "fixtures/w5l/exa_search/search/default.json" }
+examples = [
+  'source.call("exa_search.search", { query: "retrieval augmented generation survey", type: "auto", limit: 5 })',
+]
+
+[op.search.params]
+query = { type = "string", required = true, in = "body", doc = "Semantic or keyword search query" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "body", doc = "Maximum results (numResults)" }
+type = { type = "string", default = "auto", enum = ["auto", "neural", "keyword", "fast"], in = "body", doc = "Exa search mode" }
+
+[op.search.map]
+items = "(.results // [])[]"
+error = "if .error then (.error | tostring) else null end"
+record = '''{
+  id: (.id // .url // ""),
+  title: (.title // ""),
+  url: (.url // ""),
+  author: (.author // null),
+  publishedDate: (.publishedDate // null),
+  score: (.score // null),
+  highlights: (.highlights // []),
+  summary: (.summary // null),
+  text: (.text // null)
+}'''
+hit = '''{
+  title: (.title // .url // ""),
+  url: (.url // ""),
+  snippet: (
+    if ((.highlights // []) | length) > 0 then ((.highlights // []) | join(" ... "))
+    elif (.summary // "") != "" then .summary
+    else (.text // "")
+    end
+  )[0:280],
+  date: (.publishedDate | parse_date),
+  dateSource: "api"
+}'''
+
+[op.contents]
+summary = "Fetch clean extracted text for a list of URLs via Exa POST /contents."
+method = "POST"
+url = "https://api.exa.ai/contents"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+body = { kind = "json", jaq = '''{ urls: $p.urls, text: true }''' }
+probe = { params = { urls = ["https://arxiv.org/abs/2312.10997"] }, min_results = 1, fixture = "fixtures/w5l/exa_search/contents/default.json" }
+examples = [
+  'source.call("exa_search.contents", { urls: ["https://arxiv.org/abs/2312.10997"] })',
+]
+
+[op.contents.params]
+urls = { type = "string_array", required = true, in = "body", doc = "List of URLs to retrieve clean page text for" }
+
+[op.contents.map]
+items = "(.results // [])[]"
+error = "@ref:op.search.map.error"
+record = "@ref:op.search.map.record"

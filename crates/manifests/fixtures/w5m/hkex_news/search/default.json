@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "hkex_news",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www1.hkexnews.hk/search/titleSearchServlet.do?sortDir=0&sortByOptions=DateTime&category=0&market=SEHK&stockId=-1&documentType=-1&searchType=0&t1code=-2&t2Gcode=-2&t2code=-2&title=results&lang=E&rowRange=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "cache-control",
+            "private, no-store, no-cache, must-revalidate"
+          ],
+          [
+            "content-type",
+            "application/json;charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"result\":\"[{\\\"FILE_INFO\\\":\\\"127KB\\\",\\\"NEWS_ID\\\":\\\"12425888\\\",\\\"SHORT_TEXT\\\":\\\"Announcements and Notices - [Results of EGM\\\\u0026#x2f;SGM]\\\\u003cbr/\\\\u003e\\\",\\\"TOTAL_COUNT\\\":\\\"572\\\",\\\"DOD_WEB_PATH\\\":\\\"\\\",\\\"STOCK_NAME\\\":\\\"LOPAL TECH\\\",\\\"TITLE\\\":\\\"POLL RESULTS OF THE 2026 SIXTH\\\\nEXTRAORDINARY GENERAL MEETING\\\",\\\"FILE_TYPE\\\":\\\"PDF\\\",\\\"DATE_TIME\\\":\\\"25/11/2026 20:35\\\",\\\"LONG_TEXT\\\":\\\"Announcements and Notices - [Results of EGM\\\\u0026#x2f;SGM]\\\",\\\"STOCK_CODE\\\":\\\"02465\\\",\\\"FILE_LINK\\\":\\\"/listedco/listconews/sehk/2026/1125/2026112501397.pdf\\\"},{\\\"FILE_INFO\\\":\\\"65KB\\\",\\\"NEWS_ID\\\":\\\"12425878\\\",\\\"SHORT_TEXT\\\":\\\"Announcements and Notices - [Results of EGM\\\\u0026#x2f;SGM]\\\\u003cbr/\\\\u003e\\\",\\\"TOTAL_COUNT\\\":\\\"572\\\",\\\"DOD_WEB_PATH\\\":\\\"\\\",\\\"STOCK_NAME\\\":\\\"CHEUK NANG HOLD\\\",\\\"TITLE\\\":\\\"POLL RESULTS OF GENERAL MEETING\\\",\\\"FILE_TYPE\\\":\\\"PDF\\\",\\\"DATE_TIME\\\":\\\"25/11/2026 20:29\\\",\\\"LONG_TEXT\\\":\\\"Announcements and Notices - [Results of EGM\\\\u0026#x2f;SGM]\\\",\\\"STOCK_CODE\\\":\\\"00131\\\",\\\"FILE_LINK\\\":\\\"/listedco/listconews/sehk/2026/1125/2026112501387.pdf\\\"},{\\\"FILE_INFO\\\":\\\"73KB\\\",\\\"NEWS_ID\\\":\\\"12425860\\\",\\\"SHORT_TEXT\\\":\\\"Announcements and Notices - [Results of AGM]\\\\u003cbr/\\\\u003e\\\",\\\"TOTAL_COUNT\\\":\\\"572\\\",\\\"DOD_WEB_PATH\\\":\\\"\\\",\\\"STOCK_NAME\\\":\\\"CHEUK NANG HOLD\\\",\\\"TITLE\\\":\\\"POLL RESULTS OF ANNUAL GENERAL MEETING\\\",\\\"FILE_TYPE\\\":\\\"PDF\\\",\\\"DATE_TIME\\\":\\\"25/11/2026 20:25\\\",\\\"LONG_TEXT\\\":\\\"Announcements and Notices - [Results of AGM]\\\",\\\"STOCK_CODE\\\":\\\"00131\\\",\\\"FILE_LINK\\\":\\\"/listedco/listconews/sehk/2026/1125/2026112501369.pdf\\\"}]\",\"hasNextRow\":true,\"sortList\":\"[[0,0]]\",\"rowRange\":3,\"lang\":\"E\",\"loadedRecord\":3,\"recordCnt\":572}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

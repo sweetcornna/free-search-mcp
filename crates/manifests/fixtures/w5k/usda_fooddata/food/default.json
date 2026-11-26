@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "usda_fooddata",
+  "op": "food",
+  "recordedAt": "2026-11-25T13:05:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.nal.usda.gov/fdc/v1/food/173414?format=abridged",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"fdcId\": 173414, \"description\": \"Cheese, cheddar\", \"dataType\": \"SR Legacy\", \"ndbNumber\": 1009, \"publicationDate\": \"4/1/2019\", \"foodNutrients\": [{\"number\": \"203\", \"name\": \"Protein\", \"amount\": 24.9, \"unitName\": \"g\"}, {\"number\": \"204\", \"name\": \"Total lipid (fat)\", \"amount\": 33.14, \"unitName\": \"g\"}, {\"number\": \"205\", \"name\": \"Carbohydrate, by difference\", \"amount\": 1.28, \"unitName\": \"g\"}, {\"number\": \"208\", \"name\": \"Energy\", \"amount\": 403.0, \"unitName\": \"kcal\"}, {\"number\": \"301\", \"name\": \"Calcium, Ca\", \"amount\": 721.0, \"unitName\": \"mg\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

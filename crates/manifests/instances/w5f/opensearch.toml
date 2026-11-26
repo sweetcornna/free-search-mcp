@@ -1,0 +1,80 @@
+protocol = "opensearch"
+
+[[instance]]
+id = "nasa_cmr"
+name = "NASA Earthdata CMR Collections"
+summary = "NASA Common Metadata Repository OpenSearch catalog of global satellite, climate, atmospheric, and Earth observation dataset collections."
+aliases = ["cmr", "earthdata", "nasa earthdata", "space", "satellite"]
+base_url = "https://cmr.earthdata.nasa.gov/opensearch/collections/descriptor_document.xml"
+scopes = ["dataset", "academic", "reference.geo"]
+caps = ["search", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "modis", limit = 3 }, min_results = 1 }
+
+[[instance]]
+id = "cinii_research"
+name = "CiNii Research (NII Japan)"
+summary = "Japan National Institute of Informatics scholarly meta-index covering academic articles, books, doctoral dissertations, and research datasets."
+aliases = ["cinii", "cir.nii.ac.jp", "nii japan"]
+base_url = "https://cir.nii.ac.jp/opensearch/description.xml"
+scopes = ["academic", "academic.theses", "academic.books", "dataset"]
+caps = ["search", "book", "thesis", "dataset"]
+tier = 1
+limits = { rps = 1.0, burst = 2, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 21600, host_bucket = "cir.nii.ac.jp" }
+probe = { op = "search", params = { query = "transformer", limit = 3 }, min_results = 1 }
+
+[[instance]]
+id = "cinii_kaken"
+name = "CiNii Research KAKEN Projects (JSPS Grants)"
+summary = "Japan JSPS Grants-in-Aid for Scientific Research (KAKEN) funded projects and research reports indexed via NII CiNii OpenSearch."
+aliases = ["kaken", "jsps grants", "cinii projects"]
+base_url = "https://cir.nii.ac.jp/opensearch/project.xml"
+scopes = ["academic.grants", "academic"]
+caps = ["search"]
+tier = 1
+limits = { rps = 1.0, burst = 2, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 21600, host_bucket = "cir.nii.ac.jp" }
+probe = { op = "search", params = { query = "quantum", limit = 3 }, min_results = 1 }
+
+[[instance]]
+id = "noaa_ncei_geoportal"
+name = "NOAA NCEI Environmental Geoportal"
+summary = "US NOAA National Centers for Environmental Information OpenSearch metadata catalog for climate, ocean, coastal, and geophysical archives."
+aliases = ["ncei", "noaa geoportal", "noaa metadata", "weather data", "meteorology", "气象数据", "earthquakes", "seismic", "tsunamis"]
+base_url = "https://www.ncei.noaa.gov/metadata/geoportal/opensearch/description"
+scopes = ["dataset", "reference.geo"]
+caps = ["search", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "temperature", limit = 3 }, min_results = 1 }
+
+[[instance]]
+id = "aodn_imos"
+name = "Australian Ocean Data Network (IMOS)"
+summary = "Integrated Marine Observing System and Australian Ocean Data Network GeoNetwork OpenSearch catalog of Southern Hemisphere marine datasets."
+aliases = ["aodn", "imos", "australian ocean data"]
+base_url = "https://catalogue-imos.aodn.org.au/geonetwork/srv/eng/portal.opensearch"
+scopes = ["dataset", "reference.geo"]
+caps = ["search", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "temperature", limit = 3 }, min_results = 1 }
+
+[[instance]]
+id = "erddap_ioos"
+name = "US IOOS ERDDAP Oceanography Catalog"
+summary = "US Integrated Ocean Observing System ERDDAP OpenSearch catalog of real-time and historical buoy, glider, satellite, and coastal ocean datasets."
+aliases = ["ioos", "ioos erddap"]
+base_url = "https://erddap.ioos.us/erddap/opensearch1.1/description.xml"
+scopes = ["dataset", "reference.geo"]
+caps = ["search", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "temperature", limit = 3 }, min_results = 1 }
+
+[[instance]]
+id = "erddap_marine_ie"
+name = "Marine Institute Ireland ERDDAP"
+summary = "Ireland Marine Institute ERDDAP OpenSearch catalog providing North Atlantic oceanography, hydrography, and fisheries monitoring datasets."
+aliases = ["marine.ie", "ireland erddap"]
+base_url = "https://erddap.marine.ie/erddap/opensearch1.1/description.xml"
+scopes = ["dataset", "reference.geo"]
+caps = ["search", "dataset"]
+tier = 2
+probe = { op = "search", params = { query = "temperature", limit = 3 }, min_results = 1 }

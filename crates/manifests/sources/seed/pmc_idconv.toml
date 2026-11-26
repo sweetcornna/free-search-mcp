@@ -1,0 +1,39 @@
+id = "pmc_idconv"
+name = "PMC ID Converter"
+summary = "NCBI PubMed Central identifier converter mapping between PMID, PMCID, and DOI."
+aliases = ["idconv", "ncbi idconv", "pmc converter"]
+home_url = "https://pmc.ncbi.nlm.nih.gov/tools/id-converter-api/"
+tier = 1
+scopes = ["academic.biomed", "academic.openaccess"]
+caps = ["lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 3.0, burst = 5, concurrency = 3, timeout_ms = 6000, cache_ttl_s = 86400, host_bucket = "ncbi.nlm.nih.gov" }
+
+[op.convert]
+summary = "Convert one or more PMID, PMCID, or DOI identifiers via PMC ID Converter API v1."
+method = "GET"
+url = "https://pmc.ncbi.nlm.nih.gov/tools/idconv/api/v1/articles/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "json", tool = "free-search-mcp" }
+probe = { params = { ids = "23903748" }, min_results = 1, fixture = "fixtures/seed/pmc_idconv/convert/default.json" }
+
+[op.convert.params]
+ids = { type = "string", required = true, to = "ids", doc = "Comma-separated PMIDs, PMCIDs, or DOIs (up to 200)" }
+idtype = { type = "string", enum = ["pmcid", "pmid", "mid", "doi"], to = "idtype", doc = "Optional explicit input identifier type" }
+
+[op.convert.map]
+items = "(.records // [])[]"
+error = "if .status == \"error\" then (.message // \"PMC ID converter error\") else null end"
+record = '''{
+  requestedId: (if (."requested-id" // null) != null then (."requested-id" | tostring) else null end),
+  pmid: (if .pmid != null then (.pmid | tostring) else null end),
+  pmcid: (.pmcid // null),
+  doi: (.doi // null | doi_norm),
+  status: (.status // "ok"),
+  errmsg: (.errmsg // null),
+  live: (.live // null),
+  releaseDate: (."release-date" // null)
+}'''

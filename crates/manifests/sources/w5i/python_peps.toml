@@ -1,0 +1,103 @@
+id = "python_peps"
+name = "Python Enhancement Proposals (PEPs) API"
+summary = "Official keyless JSON index, RSS feed, and HTML specifications for all Python Enhancement Proposals (PEPs)."
+aliases = ["peps", "peps.python.org", "python pep"]
+home_url = "https://peps.python.org"
+tier = 1
+scopes = ["docs", "code"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 86400, host_bucket = "peps.python.org" }
+
+[op.search]
+summary = "Search Python Enhancement Proposals by number, title, author, or topic (client-side filter over official peps.json catalog)."
+method = "GET"
+url = "https://peps.python.org/api/peps.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { query = "typing", limit = 5 }, min_results = 2, fixture = "fixtures/w5i/python_peps/search/default.json" }
+examples = ['source.call("python_peps.search", {query: "typing", limit: 5})', 'source.call("python_peps.search", {query: "PEP 484"})']
+
+[op.search.params]
+query = { type = "string", required = true, in = "none", doc = "PEP number (e.g. 484, 0484, PEP 484) or case-insensitive keyword matched against title, authors, and topic" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "none", doc = "Maximum matching PEPs to return" }
+
+[op.search.map]
+items = '''(($p.query // "") | ascii_downcase | collapse_ws // "") as $q | ($q | sub("^pep[-\\s]*"; "") | sub("^0+"; "")) as $qnum | [to_entries[].value | select((($qnum != "") and ((.number | tostring) == $qnum)) or (((.title // "") | ascii_downcase) | contains($q)) or (((.authors // "") | ascii_downcase) | contains($q)) or (((.topic // "") | ascii_downcase) | contains($q)))] | sort_by(if ($qnum != "") and ((.number | tostring) == $qnum) then 0 elif ((.topic // "") | ascii_downcase) == $q then 1 elif ((.title // "") | ascii_downcase | contains($q)) then 2 else 3 end)[0:($p.limit // 10)][]'''
+record = '''(
+  ((.created // "") | if test("^[0-9]{1,2}-[A-Za-z]{3,9}-[0-9]{4}$") then (gsub("-"; " ") | parse_date) else parse_date end) as $dt |
+  {
+    number: .number,
+    title: ((.title // "") | collapse_ws // ""),
+    status: (.status // ""),
+    type: (.type // ""),
+    topic: (.topic // ""),
+    authors: (.author_names // []),
+    created: $dt,
+    pythonVersion: (.python_version // null),
+    url: (.url // "")
+  }
+)'''
+hit = '''(
+  ((.created // "") | if test("^[0-9]{1,2}-[A-Za-z]{3,9}-[0-9]{4}$") then (gsub("-"; " ") | parse_date) else parse_date end) as $dt |
+  {
+    title: ("PEP " + (.number | tostring) + ": " + ((.title // "") | collapse_ws // "")),
+    url: (.url // ""),
+    snippet: ([(.status // ""), (.type // ""), (.authors // "")] | map(select(length > 0)) | join(" · ")),
+    date: $dt,
+    dateSource: (if $dt != null then "api" else null end)
+  }
+)'''
+
+[op.recent]
+summary = "Fetch the newest Python Enhancement Proposals from the official RSS feed."
+method = "GET"
+url = "https://peps.python.org/peps.rss"
+headers = { Accept = "application/rss+xml" }
+response = "xml"
+returns = "records"
+probe = { params = {}, min_results = 2, fixture = "fixtures/w5i/python_peps/recent/default.json" }
+examples = ['source.call("python_peps.recent", {})']
+
+[op.recent.map]
+items = ".rss.channel.item | arr | .[]"
+record = '''{
+  title: ((.title | xml_text | collapse_ws) // ""),
+  url: (.link | xml_text),
+  description: (((.description | xml_text | strip_tags)) | if . == "" then null else . end),
+  author: (.author | first_str | collapse_ws),
+  pubDate: (.pubdate | first_str | parse_date)
+}'''
+
+[op.pep]
+summary = "Fetch rendered PEP HTML metadata (title, RFC 2822 header fields) by zero-padded 4-digit PEP number."
+method = "GET"
+url = "https://peps.python.org/pep-{number}/"
+headers = { Accept = "text/html" }
+response = "html"
+returns = "records"
+probe = { params = { number = "0020" }, min_results = 1, fixture = "fixtures/w5i/python_peps/pep/default.json" }
+examples = ['source.call("python_peps.pep", {number: "0020"})']
+
+[op.pep.params]
+number = { type = "string", required = true, in = "path", doc = "Zero-padded 4-digit PEP number (e.g. 0008, 0020, 0484)" }
+
+[op.pep.html]
+items_css = "section#pep-content"
+fields = { title = "h1.page-title | text", meta = "dl.rfc2822 | text", abstract = "section#abstract p | texts" }
+wall_markers = ["Access Denied", "Just a moment"]
+
+[op.pep.map]
+items = ".[]"
+record = '''(
+  ([(.abstract | arr)[] | collapse_ws | select(. != null and . != "")] | join("\n\n")) as $abs |
+  {
+    number: ($p.number // ""),
+    title: ((.title // "") | collapse_ws // ""),
+    metadata: ((.meta // "") | collapse_ws // ""),
+    abstractText: (if $abs != "" then $abs else null end),
+    url: ("https://peps.python.org/pep-" + ($p.number // "") + "/")
+  }
+)'''

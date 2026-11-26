@@ -1,0 +1,1903 @@
+<!doctype html>
+<html lang="en" class="view-grid">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Backdoor found in widely used Linux utility targets encrypted SSH connections - Ars Technica</title>
+<link rel="preconnect" href="https://c.arstechnica.com">
+<script>
+    window.snowplowQueue = window.snowplowQueue || [];
+    window.arsSP = {
+        entities: {"site":{"org_id":"4gKgcFGUFUvCGFzHakTPfYp85Yi8","site_env":"production","site_app_version":"multi-tenant","site_data_source":"web","site_section":"security"},"page":{"has_buy_button":false},"content":{"content_id":"9eaa7f9f0738cd736a83b3d4","content_type":"article","editor_name":"Ken Fisher","author_name":"Dan Goodin","date_display":"2026-11-25T12:56:58.800Z","content_source":"web","content_len":1,"content_title":"Backdoor found in widely used Linux utility targets encrypted SSH connections","author_id":"3","date_publish":"2024-03-29T18:50:34.000Z","date_last_modified":"2024-04-01T07:09:29.000Z","onsite_keywords":"backdoors|linux-2|supply-chain-attack|xz-utils","pagination_pages_tot":null,"word_count":821,"content_template":"standard","content_template_type":"mt_article_two_column","content_is_commerce":false}},
+        config: {"SNOWPLOW_COLLECTOR":"c.arstechnica.com","AVO_API_KEY":"FTJO6mVPBIzdGhjn2Ruy","APP_ID":"ars-technica","APP_NAME":"ars-technica","APP_ENV":"production","APP_VERSION":"1.0.0","COOKIE_DOMAIN":".arstechnica.com"}
+    };
+</script><script>
+  (function () {
+    var ChannelWildcard = {
+      ALL: '*',
+    };
+
+    function KendraEvent(historyLimit) {
+      this.listeners = new Map();
+      this.eventHistory = [];
+      this.historyLimit = historyLimit || 10;
+    }
+
+    KendraEvent.prototype.broadcast = function (channel, value, options) {
+      var opts = options || {};
+      var timestamp = Date.now();
+
+      if (opts.once) {
+        if (channel === ChannelWildcard.ALL) {
+          console.warn("'once: true' is not supported with ChannelWildcard.ALL");
+          return;
+        }
+
+        var hasBroadcasted = this.eventHistory.some(function (entry) {
+          return entry.channel === channel;
+        });
+
+        if (hasBroadcasted) {
+          return;
+        }
+      }
+
+      var entry = {
+        timestamp: timestamp,
+        value: value,
+        channel: channel,
+      };
+
+      this.eventHistory.push(entry);
+
+      if (this.eventHistory.length > this.historyLimit) {
+        this.eventHistory.shift();
+      }
+
+      if (channel === ChannelWildcard.ALL) {
+        this.listeners.forEach(function (listeners) {
+          listeners.forEach(function (listener) {
+            listener(value);
+          });
+        });
+        return;
+      }
+
+      var listeners = this.listeners.get(channel);
+      if (listeners) {
+        listeners.forEach(function (listener) {
+          listener(value);
+        });
+      }
+    };
+
+    KendraEvent.prototype.on = function (channel, listener, options) {
+      var opts = options || {};
+      var channels = Array.isArray(channel) ? channel : [channel];
+      var event = this;
+
+      channels.forEach(function (registeredChannel) {
+        if (!event.listeners.has(registeredChannel)) {
+          event.listeners.set(registeredChannel, new Set());
+        }
+
+        event.listeners.get(registeredChannel).add(listener);
+
+        if (opts.emitLast && registeredChannel !== ChannelWildcard.ALL) {
+          var lastValue = event.get(registeredChannel);
+          if (lastValue !== undefined) {
+            listener(lastValue);
+          }
+        }
+      });
+
+      return {
+        off: function () {
+          channels.forEach(function (registeredChannel) {
+            var listeners = event.listeners.get(registeredChannel);
+            if (listeners) {
+              listeners.delete(listener);
+            }
+          });
+        },
+      };
+    };
+
+    KendraEvent.prototype.off = function (channel, listener) {
+      var event = this;
+      var channels = Array.isArray(channel) ? channel : [channel];
+
+      channels.forEach(function (registeredChannel) {
+        var listeners = event.listeners.get(registeredChannel);
+        if (listeners) {
+          listeners.delete(listener);
+        }
+      });
+    };
+
+    KendraEvent.prototype.history = function () {
+      return this.eventHistory.slice().sort(function (a, b) {
+        return b.timestamp - a.timestamp;
+      });
+    };
+
+    KendraEvent.prototype.get = function (channel) {
+      var history;
+
+      if (channel) {
+        history = this.eventHistory.slice().reverse();
+        for (var i = 0; i < history.length; i++) {
+          if (history[i].channel === channel) {
+            return history[i].value;
+          }
+        }
+        return undefined;
+      }
+
+      var lastEntry = this.eventHistory[this.eventHistory.length - 1];
+      return lastEntry && lastEntry.value;
+    };
+
+    function KendraOrchestrator() {
+      this.registry = {};
+    }
+
+    KendraOrchestrator.prototype.register = function (key, event) {
+      if (this.registry[key]) {
+        return;
+      }
+
+      this.registry[key] = event;
+
+      if (!Object.prototype.hasOwnProperty.call(this, key)) {
+        Object.defineProperty(this, key, {
+          get: function () {
+            return this.registry[key];
+          },
+          enumerable: true,
+          configurable: false,
+        });
+      }
+    };
+
+    KendraOrchestrator.prototype.get = function (key) {
+      var event = this.registry[key];
+
+      if (!event) {
+        throw new Error('Event with key ' + key + ' is not registered.');
+      }
+
+      return event;
+    };
+
+    KendraOrchestrator.prototype.delete = function (key) {
+      delete this.registry[key];
+      delete this[key];
+    };
+
+    var kendra =
+      window.Kendra && typeof window.Kendra.register === 'function'
+        ? window.Kendra
+        : new KendraOrchestrator();
+
+    window.Kendra = kendra;
+
+    if (!kendra.ADS) {
+      kendra.register('ADS', new KendraEvent(50));
+    }
+
+    if (!kendra.USER_CONTEXT) {
+      kendra.register('USER_CONTEXT', new KendraEvent(5));
+    }
+
+    window.arsTracking = window.arsTracking || {};
+    window.arsTracking.initKendra = function () {
+      return window.Kendra;
+    };
+    window.arsTracking.publishUserContextUpdate =
+      window.arsTracking.publishUserContextUpdate ||
+      function (value) {
+        var payload = value || {};
+
+        window.Kendra.USER_CONTEXT.broadcast('UPDATED', payload);
+
+        if (window.cnBus && typeof window.cnBus.emit === 'function') {
+          window.cnBus.emit('user.context.updated', payload);
+        }
+      };
+  })();
+</script>
+
+<!-- The SEO Framework by Sybre Waaijer -->
+<meta name="robots" content="max-snippet:-1,max-image-preview:large,max-video-preview:-1" />
+<link rel="canonical" href="https://arstechnica.com/security/2024/03/backdoor-found-in-widely-used-linux-utility-breaks-encrypted-ssh-connections/" />
+<meta name="description" content="Malicious code planted in xz Utils has been circulating for more than a month." />
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_US" />
+<meta property="og:site_name" content="Ars Technica" />
+<meta property="og:title" content="Backdoor found in widely used Linux utility targets encrypted SSH connections" />
+<meta property="og:description" content="Malicious code planted in xz Utils has been circulating for more than a month." />
+<meta property="og:url" content="https://arstechnica.com/security/2024/03/backdoor-found-in-widely-used-linux-utility-breaks-encrypted-ssh-connections/" />
+<meta property="og:image" content="https://cdn.arstechnica.net/wp-content/uploads/2024/03/backdoor-1-1100x648.jpg" />
+<meta property="og:image:width" content="1100" />
+<meta property="og:image:height" content="648" />
+<meta property="article:published_time" content="2024-03-29T18:50:34+00:00" />
+<meta property="article:modified_time" content="2024-04-01T07:09:29+00:00" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Backdoor found in widely used Linux utility targets encrypted SSH connections" />
+<meta name="twitter:description" content="Malicious code planted in xz Utils has been circulating for more than a month." />
+<meta name="twitter:image" content="https://cdn.arstechnica.net/wp-content/uploads/2024/03/backdoor-1-1100x648.jpg" />
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://arstechnica.com/#/schema/WebSite","url":"https://arstechnica.com/","name":"Ars Technica","description":"Serving the Technologist since 1998. News, reviews, and analysis.","inLanguage":"en-US","potentialAction":{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https://arstechnica.com/search/{search_term_string}/"},"query-input":"required name=search_term_string"},"publisher":{"@type":"Organization","@id":"https://arstechnica.com/#/schema/Organization","name":"Ars Technica","url":"https://arstechnica.com/","logo":{"@type":"ImageObject","url":"https://cdn.arstechnica.net/wp-content/uploads/2016/10/cropped-ars-logo-512_480.png","contentUrl":"https://cdn.arstechnica.net/wp-content/uploads/2016/10/cropped-ars-logo-512_480.png","width":512,"height":512,"contentSize":"34417"}}},{"@type":"WebPage","@id":"https://arstechnica.com/security/2024/03/backdoor-found-in-widely-used-linux-utility-breaks-encrypted-ssh-connections/","url":"https://arstechnica.com/security/2024/03/backdoor-found-in-widely-used-linux-utility-breaks-encrypted-ssh-connections/","name":"Backdoor found in widely used Linux utility targets encrypted SSH connections - Ars Technica","description":"Malicious code planted in xz Utils has been circulating for more than a month.","inLanguage":"en-US","isPartOf":{"@id":"https://arstechnica.com/#/schema/WebSite"},"breadcrumb":{"@type":"BreadcrumbList","@id":"https://arstechnica.com/#/schema/BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"item":"https://arstechnica.com/","name":"Ars Technica"},{"@type":"ListItem","position":2,"item":"https://arstechnica.com/security/","name":"Category: Security"},{"@type":"ListItem","position":3,"name":"Backdoor found in widely used Linux utility targets encrypted SSH connections"}]},"potentialAction":{"@type":"ReadAction","target":"https://arstechnica.com/security/2024/03/backdoor-found-in-widely-used-linux-utility-breaks-encrypted-ssh-connections/"},"datePublished":"2024-03-29T18:50:34+00:00","dateModified":"2024-04-01T07:09:29+00:00","author":{"@type":"Person","@id":"https://arstechnica.com/#/schema/Person/837fa919071f5a28ded12e6ce1f54d1b","name":"Dan Goodin","description":"Dan Goodin is Senior Security Editor at Ars Technica, where he oversees coverage of malware, computer espionage, botnets, hardware hacking, encryption, and passwords. A journalist with more than 25 years experience, he has been chronicling the..."}}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"NewsArticle","mainEntityOfPage":{"@type":"WebPage","@id":"https://arstechnica.com/security/2024/03/backdoor-found-in-widely-used-linux-utility-breaks-encrypted-ssh-connections/"},"headline":"Backdoor found in widely used Linux utility targets encrypted SSH connections","image":{"@type":"ImageObject","url":"https://cdn.arstechnica.net/wp-content/uploads/2024/03/backdoor-1-1100x648.jpg","width":1100,"height":648},"datePublished":"2024-03-29T18:50:34+00:00","dateModified":"2024-04-01T07:09:29+00:00","author":{"@type":"Person","name":"Dan Goodin","url":"https://arstechnica.com/author/dan-goodin/"},"publisher":{"@type":"Organization","name":"Ars Technica","logo":{"@type":"ImageObject","url":"https://cdn.arstechnica.net/wp-content/uploads/2024/10/ars-logo-186x60.png","width":186,"height":60}},"description":"Malicious code planted in xz Utils has been circulating for more than a month."}</script>
+<!-- / The SEO Framework by Sybre Waaijer | 11.84ms meta | 0.16ms boot -->
+
+<script id="fides-js-loader">
+  (function() {
+    var fidesHost =
+      "https://privacy.condenastdigital.com/fides.js";
+    var fidesPropertyId = "FDS-MIKT8M";
+    var fidesSrc = fidesHost + "?property_id=" + fidesPropertyId + "&";
+    var searchParams = new URLSearchParams(location.search);
+    var debugRegion = (searchParams.get("ars_debug_region") || "").toLowerCase();
+    var debugConsentMode = (searchParams.get("ars_debug_consent") || "").toLowerCase();
+    var isLocalDebugHost =
+      location.hostname === "localhost" ||
+      location.hostname === "127.0.0.1" ||
+      location.hostname.indexOf("local.") === 0 ||
+      location.hostname.indexOf(".local.") !== -1;
+
+    var gtmOptions = {
+      flag_type: "boolean",
+      non_applicable_flag_mode: "include",
+    };
+
+    function buildDebugConsent(mode) {
+      if (mode === "accept" || mode === "all") {
+        return {
+          essential: true,
+          analytics: true,
+          functional: true,
+          sales_sharing_targeted_advertising: true,
+          social_media: true,
+          audience_measurement: true,
+        };
+      }
+
+      return {
+        essential: true,
+        analytics: false,
+        functional: false,
+        sales_sharing_targeted_advertising: false,
+        social_media: false,
+        audience_measurement: false,
+      };
+    }
+
+    function pushDebugFidesEvent(name, consent) {
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        event: name,
+        Fides: {
+          consent: consent,
+          timestamp: Math.round(performance.now()),
+          extraDetails: {
+            consentMethod: "ars_debug_region",
+            servingComponent: "banner",
+          },
+        },
+      });
+    }
+
+    function initDebugFides(region, consentMode) {
+      var body = window.document.body;
+      var initialConsentMode = consentMode || (region === "eu" ? "reject" : "accept");
+      var initialConsent = buildDebugConsent(initialConsentMode);
+
+      window.Fides = {
+        consent: initialConsent,
+        initialized: false,
+        experience: {
+          experience_config: {
+            id: "ars-debug-region-" + region,
+          },
+        },
+        gtm: function(options) {
+          window.__arsDebugFidesGtmOptions = options;
+        },
+      };
+
+      window.arsDebugFides = {
+        region: region,
+        getConsent: function() {
+          return window.Fides.consent;
+        },
+        setConsent: function(nextMode) {
+          var nextConsent = buildDebugConsent((nextMode || "").toLowerCase());
+          window.Fides.consent = nextConsent;
+          pushDebugFidesEvent("FidesUpdated", nextConsent);
+          window.dispatchEvent(new Event("FidesUpdated"));
+          return nextConsent;
+        },
+        showBanner: function() {
+          pushDebugFidesEvent("FidesUIShown", window.Fides.consent);
+          window.dispatchEvent(new Event("FidesUIShown"));
+        },
+      };
+
+      if (body) {
+        body.classList.add("ars-debug-region-" + region);
+        body.dataset.arsDebugRegion = region;
+      }
+
+      window.dispatchEvent(new Event("FidesInitializing"));
+      window.Fides.initialized = true;
+      window.dispatchEvent(new Event("FidesInitialized"));
+
+      if (region === "eu") {
+        window.arsDebugFides.showBanner();
+      }
+
+      pushDebugFidesEvent("FidesUpdated", initialConsent);
+      window.dispatchEvent(new Event("FidesUpdated"));
+    }
+
+    function insertFidesScript() {
+      addEventListener("FidesInitializing", function() {
+        window.Fides.gtm(gtmOptions);
+      });
+      addEventListener("FidesInitialized", function() {
+        try {
+          var experience = window.Fides.experience || {};
+          var config = experience.experience_config || {};
+          var id = config.id;
+          if (id) {
+            window.document.body.classList.add(id);
+          }
+        } catch (err) {
+          console.warn("Couldn't apply Fides experience ID to body.", err);
+        }
+      });
+
+      if (isLocalDebugHost && (debugRegion === "eu" || debugRegion === "us")) {
+        initDebugFides(debugRegion, debugConsentMode);
+        return;
+      }
+
+      var fidesPrefix = "fides_";
+      var fidesSearchParams = new URLSearchParams();
+      searchParams.forEach(function(key, value) {
+        if (key.startsWith(fidesPrefix)) {
+          fidesSearchParams.set(
+            key.replace(fidesPrefix, ""),
+            key === fidesPrefix + "cache_bust" ? Date.now().toString() : value
+          );
+        }
+      });
+      var src = fidesSrc + fidesSearchParams.toString();
+      var script = document.createElement("script");
+      script.async = false;
+      script.defer = false;
+      script.setAttribute("src", src);
+      script.setAttribute("id", "fides-js");
+      script.setAttribute("type", "text/javascript");
+      document.head.appendChild(script);
+    }
+
+    insertFidesScript();
+  })();
+</script>
+<!-- Google Tag Manager DataLayer -->
+<script>
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({"event":"data-layer-loaded","user":{"ars_userId":undefined,"amg_userId":undefined,"uID":undefined,"sID":undefined,"loginStatus":false,"subscriberStatus":"none","infinityId":undefined,"registrationSource":undefined,"mdw_cnd_id":undefined,"monthlyVisits":undefined,"accessPaywall":undefined,"view":"grid","theme":"system","show_comments":undefined},"content":{"pageTemplate":"single","pageType":"article|report","contentCategory":"homepage","section":"homepage","subsection":undefined,"contributor":"Dan Goodin","contentID":2013674,"contentLength":963,"display":"Backdoor found in widely used Linux utility targets encrypted SSH connections","contentSource":"web","pageAssets":undefined,"uniqueContentCount":undefined,"monthlyContentCount":undefined,"publishDate":"2024-03-29T18:50:34-04:00","modifiedDate":"2024-04-01T07:09:29-04:00","keywords":"backdoors|Linux|supply chain attack|xz utils","dataSource":undefined},"marketing":{"campaignName":undefined,"circCampaignId":undefined,"internalCampaignId":undefined,"brand":"Ars Technica","certified_mrc_data":undefined,"condeNastId":undefined},"page":{"pID":undefined,"syndicatorUrl":undefined,"pageURL":"https:\/\/arstechnica.com\/?p=2013674","canonical":"https:\/\/arstechnica.com\/security\/2024\/03\/backdoor-found-in-widely-used-linux-utility-breaks-encrypted-ssh-connections\/","canonicalPathName":"\/security\/2024\/03\/backdoor-found-in-widely-used-linux-utility-breaks-encrypted-ssh-connections\/"},"search":{"facets":undefined,"searchTerms":undefined},"site":{"appVersion":"1.0.0"}});
+</script>
+<!-- End Google Tag Manager DataLayer -->
+<!-- Google Tag Manager -->
+<script>
+    (function(w, d, s, l, i) {
+        w[l] = w[l] || [];
+        w[l].push({
+            'gtm.start': new Date().getTime(),
+            event: 'gtm.js'
+        });
+        var f = d.getElementsByTagName(s)[0],
+            j = d.createElement(s),
+            dl = l != 'dataLayer' ? '&l=' + l : '';
+        j.async = true;
+        j.src =
+            'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+        f.parentNode.insertBefore(j, f);
+    })(window, document, 'script', 'dataLayer', 'GTM-NLXNPCQ');
+</script>
+<!-- End Google Tag Manager -->
+<style id="wp-img-auto-sizes-contain-inline-css">
+img:is([sizes=auto i],[sizes^="auto," i]){contain-intrinsic-size:3000px 1500px}
+/*# sourceURL=wp-img-auto-sizes-contain-inline-css */
+</style>
+
+<style id="global-styles-inline-css">
+:root{--wp--preset--aspect-ratio--square: 1;--wp--preset--aspect-ratio--4-3: 4/3;--wp--preset--aspect-ratio--3-4: 3/4;--wp--preset--aspect-ratio--3-2: 3/2;--wp--preset--aspect-ratio--2-3: 2/3;--wp--preset--aspect-ratio--16-9: 16/9;--wp--preset--aspect-ratio--9-16: 9/16;--wp--preset--color--black: #000000;--wp--preset--color--cyan-bluish-gray: #abb8c3;--wp--preset--color--white: #ffffff;--wp--preset--color--pale-pink: #f78da7;--wp--preset--color--vivid-red: #cf2e2e;--wp--preset--color--luminous-vivid-orange: #ff6900;--wp--preset--color--luminous-vivid-amber: #fcb900;--wp--preset--color--light-green-cyan: #7bdcb5;--wp--preset--color--vivid-green-cyan: #00d084;--wp--preset--color--pale-cyan-blue: #8ed1fc;--wp--preset--color--vivid-cyan-blue: #0693e3;--wp--preset--color--vivid-purple: #9b51e0;--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple: linear-gradient(135deg,rgb(6,147,227) 0%,rgb(155,81,224) 100%);--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan: linear-gradient(135deg,rgb(122,220,180) 0%,rgb(0,208,130) 100%);--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange: linear-gradient(135deg,rgb(252,185,0) 0%,rgb(255,105,0) 100%);--wp--preset--gradient--luminous-vivid-orange-to-vivid-red: linear-gradient(135deg,rgb(255,105,0) 0%,rgb(207,46,46) 100%);--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray: linear-gradient(135deg,rgb(238,238,238) 0%,rgb(169,184,195) 100%);--wp--preset--gradient--cool-to-warm-spectrum: linear-gradient(135deg,rgb(74,234,220) 0%,rgb(151,120,209) 20%,rgb(207,42,186) 40%,rgb(238,44,130) 60%,rgb(251,105,98) 80%,rgb(254,248,76) 100%);--wp--preset--gradient--blush-light-purple: linear-gradient(135deg,rgb(255,206,236) 0%,rgb(152,150,240) 100%);--wp--preset--gradient--blush-bordeaux: linear-gradient(135deg,rgb(254,205,165) 0%,rgb(254,45,45) 50%,rgb(107,0,62) 100%);--wp--preset--gradient--luminous-dusk: linear-gradient(135deg,rgb(255,203,112) 0%,rgb(199,81,192) 50%,rgb(65,88,208) 100%);--wp--preset--gradient--pale-ocean: linear-gradient(135deg,rgb(255,245,203) 0%,rgb(182,227,212) 50%,rgb(51,167,181) 100%);--wp--preset--gradient--electric-grass: linear-gradient(135deg,rgb(202,248,128) 0%,rgb(113,206,126) 100%);--wp--preset--gradient--midnight: linear-gradient(135deg,rgb(2,3,129) 0%,rgb(40,116,252) 100%);--wp--preset--font-size--small: 13px;--wp--preset--font-size--medium: 20px;--wp--preset--font-size--large: 36px;--wp--preset--font-size--x-large: 42px;--wp--preset--spacing--20: 0.44rem;--wp--preset--spacing--30: 0.67rem;--wp--preset--spacing--40: 1rem;--wp--preset--spacing--50: 1.5rem;--wp--preset--spacing--60: 2.25rem;--wp--preset--spacing--70: 3.38rem;--wp--preset--spacing--80: 5.06rem;--wp--preset--shadow--natural: 6px 6px 9px rgba(0, 0, 0, 0.2);--wp--preset--shadow--deep: 12px 12px 50px rgba(0, 0, 0, 0.4);--wp--preset--shadow--sharp: 6px 6px 0px rgba(0, 0, 0, 0.2);--wp--preset--shadow--outlined: 6px 6px 0px -3px rgb(255, 255, 255), 6px 6px rgb(0, 0, 0);--wp--preset--shadow--crisp: 6px 6px 0px rgb(0, 0, 0);}.wp-block-button{--wp--preset--dimension--25: 25%;--wp--preset--dimension--50: 50%;--wp--preset--dimension--75: 75%;--wp--preset--dimension--100: 100%;}:where(body) { margin: 0; }:where(.is-layout-flex){gap: 0.5em;}:where(.is-layout-grid){gap: 0.5em;}body .is-layout-flex{display: flex;}.is-layout-flex{flex-wrap: wrap;align-items: center;}.is-layout-flex > :is(*, div){margin: 0;}body .is-layout-grid{display: grid;}.is-layout-grid > :is(*, div){margin: 0;}body{padding-top: 0px;padding-right: 0px;padding-bottom: 0px;padding-left: 0px;}:root :where(.wp-element-button, .wp-block-button__link){background-color: #32373c;border-width: 0;color: #fff;font-family: inherit;font-size: inherit;font-style: inherit;font-weight: inherit;letter-spacing: inherit;line-height: inherit;padding-top: calc(0.667em + 2px);padding-right: calc(1.333em + 2px);padding-bottom: calc(0.667em + 2px);padding-left: calc(1.333em + 2px);text-decoration: none;text-transform: inherit;}.has-black-color{color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-color{color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-color{color: var(--wp--preset--color--white) !important;}.has-pale-pink-color{color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-color{color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-color{color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-color{color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-color{color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-color{color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-color{color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-color{color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-color{color: var(--wp--preset--color--vivid-purple) !important;}.has-black-background-color{background-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-background-color{background-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-background-color{background-color: var(--wp--preset--color--white) !important;}.has-pale-pink-background-color{background-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-background-color{background-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-background-color{background-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-background-color{background-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-background-color{background-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-background-color{background-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-background-color{background-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-background-color{background-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-background-color{background-color: var(--wp--preset--color--vivid-purple) !important;}.has-black-border-color{border-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-border-color{border-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-border-color{border-color: var(--wp--preset--color--white) !important;}.has-pale-pink-border-color{border-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-border-color{border-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-border-color{border-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-border-color{border-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-border-color{border-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-border-color{border-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-border-color{border-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-border-color{border-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-border-color{border-color: var(--wp--preset--color--vivid-purple) !important;}.has-vivid-cyan-blue-to-vivid-purple-gradient-background{background: var(--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple) !important;}.has-light-green-cyan-to-vivid-green-cyan-gradient-background{background: var(--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan) !important;}.has-luminous-vivid-amber-to-luminous-vivid-orange-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange) !important;}.has-luminous-vivid-orange-to-vivid-red-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-orange-to-vivid-red) !important;}.has-very-light-gray-to-cyan-bluish-gray-gradient-background{background: var(--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray) !important;}.has-cool-to-warm-spectrum-gradient-background{background: var(--wp--preset--gradient--cool-to-warm-spectrum) !important;}.has-blush-light-purple-gradient-background{background: var(--wp--preset--gradient--blush-light-purple) !important;}.has-blush-bordeaux-gradient-background{background: var(--wp--preset--gradient--blush-bordeaux) !important;}.has-luminous-dusk-gradient-background{background: var(--wp--preset--gradient--luminous-dusk) !important;}.has-pale-ocean-gradient-background{background: var(--wp--preset--gradient--pale-ocean) !important;}.has-electric-grass-gradient-background{background: var(--wp--preset--gradient--electric-grass) !important;}.has-midnight-gradient-background{background: var(--wp--preset--gradient--midnight) !important;}.has-small-font-size{font-size: var(--wp--preset--font-size--small) !important;}.has-medium-font-size{font-size: var(--wp--preset--font-size--medium) !important;}.has-large-font-size{font-size: var(--wp--preset--font-size--large) !important;}.has-x-large-font-size{font-size: var(--wp--preset--font-size--x-large) !important;}
+/*# sourceURL=global-styles-inline-css */
+</style>
+
+<link rel='stylesheet' id='ep_general_styles-css' href='https://cdn.arstechnica.net/wp-content/mu-plugins/_composer_elasticpress/dist/css/general-styles.css?ver=66295efe92a630617c00' media='all' />
+<link rel='stylesheet' id='searchterm-highlighting-css' href='https://cdn.arstechnica.net/wp-content/mu-plugins/_composer_elasticpress/dist/css/highlighting-styles.css?ver=252562c4ed9241547293' media='all' />
+<link rel='stylesheet' id='app/0-css' href='https://cdn.arstechnica.net/wp-content/themes/ars-v9/public/css/app.405ba9fca00b63f8.css' media='all' />
+<link rel='stylesheet' id='ads/0-css' href='https://cdn.arstechnica.net/wp-content/themes/ars-v9/public/css/ads.aa3c57259de9c42d.css' media='all' />
+<script id="jquery-core-js" src="https://cdn.arstechnica.net/wp/wp-includes/js/jquery/jquery.min.js?ver=3.7.1"></script>
+<script data-wp-strategy="defer" defer id="aws-waf-challenge-js" src="https://8eb60cfff851.us-east-2.sdk.awswaf.com/8eb60cfff851/3d5d6f3ad3d5/challenge.js"></script>
+<meta name="ars-editor-tools" content="2013674">
+<meta property="article:published_time" content="2024-03-29T18:50:34+00:00">
+<meta property="article:modified_time" content="2024-04-01T07:09:29+00:00">
+<script>window.ars = {"subscriber":false,"hasAdFree":false,"hasTrackerFree":false,"loggedIn":false,"level":"GUEST","0":""}</script>
+<script>
+    const theme = "system";
+    let darkMode = false;
+    if (theme === "dark" || (theme === "system" && (window.matchMedia("(prefers-color-scheme: dark)").matches))) {
+        darkMode = true;
+        document.documentElement.classList.add("dark");
+    }
+    if (theme === "dusk" || (theme === "system" && (window.matchMedia("(prefers-color-scheme: light)").matches))) {
+        darkMode = false;
+        document.documentElement.classList.add("dusk");
+    }
+    if (theme === "light") {
+        darkMode = false;
+        document.documentElement.classList.add("light");
+    }
+    window.darkMode = darkMode;
+</script>
+<script>
+    const settings = JSON.parse(localStorage.getItem("text-settings")) || {};
+    const { size = "standard", links = "standard", width = "standard", position="story" } = settings;
+
+    const html = document.querySelector("html");
+    html.classList.add(`text-settings-size-${size}`);
+    html.classList.add(`text-settings-links-${links}`);
+    html.classList.add(`text-settings-width-${width}`);
+    html.classList.add(`text-settings-position-${position}`);
+</script>
+<meta name="twitter:site" content="@arstechnica" />
+<meta name="twitter:domain" content="arstechnica.com" />
+<meta property="facebook-domain-verification" content="qptjyerza2q11uv3fe6aay6hbsncr8" />
+<style>[x-cloak] { display: none !important; }</style>
+<link rel="preconnect" href="https://globalservices.conde.digital">
+<link rel="preconnect" href="https://player.cnevids.com">
+<script>
+  window.permutiveCohorts = {"cohorts":["evyh","bjfa","evys","byde","ewac","erpr","bybm","eexy","evzz","bxyg","erpt"],"activations":{"target_dfp":["evyh","bjfa","evys","byde","erpr","bybm","eexy","bxyg","erpt"]},"contextual_data":{"classifications":{"categories":[],"keywords":[],"entities":[],"sentiment":[],"emotion":[],"concepts":[]}},"gam":["evyh","bjfa","evys","byde","erpr","bybm","eexy","bxyg","erpt"],"xandr":[],"config":{"time_to_wait_for_consent_in_millis":4000},"cached_until":"2026-11-25T16:56:59+00:00"};
+  window.permutiveContextInfo = {"pageProperties":{"client":{"url":"https:\/\/arstechnica.com\/security\/2024\/03\/backdoor-found-in-widely-used-linux-utility-breaks-encrypted-ssh-connections\/","referrer":"","type":"web","user_agent":"Mozilla\/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/131.0.0.0 Safari\/537.36","domain":"arstechnica.com","title":"Backdoor found in widely used Linux utility targets encrypted SSH connections - Ars Technica"},"type":"article","article":{"id":"2013674","category":"security","subcategory":"","title":"Backdoor found in widely used Linux utility targets encrypted SSH connections","tags":["backdoors","linux-2","supply-chain-attack","xz-utils"]}},"url":"https:\/\/arstechnica.com\/security\/2024\/03\/backdoor-found-in-widely-used-linux-utility-breaks-encrypted-ssh-connections\/"};
+</script>
+<script src="https://www.googletagservices.com/tag/js/gpt.js" id="gpt-script" async></script>
+<script>
+  window.googletag = window.googletag || {};
+  window.googletag.cmd = window.googletag.cmd || [];
+  window.cns = window.cns || {};
+  window.cns.queue = [];
+  window.cns.pageContext = {"contentType":"article","templateType":"article","channel":"security","subChannel":"","slug":"backdoor-found-in-widely-used-linux-utility-breaks-encrypted-ssh-connections","server":"production","keywords":{"tags":["backdoors","linux-2","supply-chain-attack","xz-utils"],"cm":[],"platform":["wordpress"],"copilotid":""}};
+</script>
+
+
+<script src="https://ads-static.conde.digital/production/cns/builds/ars-technica/v6.js" async></script>
+<script type="text/javascript">!(function(o,_name){o[_name]=o[_name]||function $(){($.q=$.q||[]).push(arguments)},o[_name].v=o[_name].v||2,o[_name].s="1";!(function(o,t,e,n,c,a,f){function i(n,c){(n=(function(t,e){try{if(e=(t=o.localStorage).getItem("_aQS01Q0IwOTY5NTEzOUM2MDU3MEU5M0VGREEtNA"))return JSON.parse(e).lgk||[];if((f=t.getItem(decodeURI(decodeURI('%2576%2534%256%31%25%36%33%25%33%31%256%35%69%5a%72%253%30'))))&&f.split(",")[4]>0)return[[_name+"-engaged","true"]]}catch(n){}})())&&typeof n.forEach===e&&(c=o[t].pubads())&&n.forEach((function(o){o&&o[0]&&c.setTargeting(o[0],o[1]||"")}))}try{(a=o[t]=o[t]||{}).cmd=a.cmd||[],typeof a.pubads===e?i():typeof a.cmd.unshift===e?a.cmd.unshift(i):a.cmd.push(i)}catch(r){}})(window,"googletag","function");;})(window,decodeURI(decodeURI('%25%36%31%64%256%64%25%36%39ra%256%63')));!(function(t,c,o,$){o=t.createElement(c),t=t.getElementsByTagName(c)[0],o.async=1,o.src="https://planebasin.com/dist/25dd01b14_8715a062a12be6f05714ee41f1a252e6e86d0.index.js",($=0)&&$(o),t.parentNode.insertBefore(o,t)})(document,"script");</script>
+  
+<meta name="twitter:partner" content="tfwp"><meta name='parsely-page' content='{"title":"Backdoor found in widely used Linux utility targets encrypted SSH connections","link":"https:\/\/arstechnica.com\/security\/2024\/03\/backdoor-found-in-widely-used-linux-utility-breaks-encrypted-ssh-connections\/","type":"post","author":"Dan Goodin","post_id":2013674,"pub_date":"2024-03-29T14:50:34-04:00","section":"Security","tags":["backdoors","linux-2","supply-chain-attack","xz-utils"],"image_url":"https:\/\/cdn.arstechnica.net\/wp-content\/uploads\/2024\/03\/backdoor-1-500x500.jpg"}'>
+<meta name='parsely-metadata' content='{"type":"post","title":"Backdoor found in widely used Linux utility targets encrypted SSH connections","post_id":2013674,"lower_deck":"Malicious code planted in xz Utils has been circulating for more than a month.","image_url":"https:\/\/cdn.arstechnica.net\/wp-content\/uploads\/2024\/03\/backdoor-1-500x500.jpg","listing_image_url":"https:\/\/cdn.arstechnica.net\/wp-content\/uploads\/2024\/03\/backdoor-1-768x432.jpg"}'>
+<!-- Start Headline A/B -->
+<script type="text/javascript">
+  class ABTest {
+    constructor(post_id, init_method) {
+      this.post_id = post_id;
+      this.ajaxurl = '/services/ars-ajax-handler.php';
+      this.expireDays = 1 / 48; // 30 min
+      this.group = this.getGroup();
+      this.uid = this.getUid();
+      this.init_method = init_method;
+      this.setTitle();
+
+      if (this.init_method === 'click') {
+        this.click();
+      } else {
+        this.impression();
+      }
+    }
+
+    setCookie(name, value, days) {
+      var expires = "";
+      if (days) {
+        var date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        expires = "; expires=" + date.toUTCString();
+      }
+      document.cookie = name + "=" + (value || "") + expires + "; path=/; Secure";
+    }
+
+    getCookie(name) {
+      var nameEQ = name + "=";
+      var ca = document.cookie.split(';');
+      for (var i = 0; i < ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+      }
+      return null;
+    }
+
+    // Retrieves a unique id for determining whether the event should be recorded
+    getUid() {
+      var uid = this.getCookie('ars_ab_' + this.post_id + '_uid');
+      if (!uid) {
+        uid = (Math.random() + 1).toString(36).substring(2, 7);
+        this.setCookie('ars_ab_' + this.post_id + '_uid', uid, this.expireDays);
+      }
+      return uid;
+    };
+
+    // Places the user in either A or B for this post id
+    getGroup() {
+      var group = this.getCookie('ars_ab_' + this.post_id + '_group');
+      if (!group) {
+        group = String.fromCharCode(Math.floor(Math.random() * 2) + 65).toLowerCase();
+        this.setCookie('ars_ab_' + this.post_id + '_group', group, this.expireDays);
+      }
+      return group;
+    };
+
+    // Records a headline impression (from homepage or other listing)
+    impression() {
+      // Send fake ajax
+      var params = {
+        nonce: '1e3764c98b',
+        action: 'ars_ab_impression',
+        id: this.post_id,
+        group: this.group,
+        uid: this.uid,
+        ts: (new Date()).getTime()
+      };
+      var url = this.ajaxurl + '?' + this.encodeParams(params);
+      document.write('\x3Cscript type="text/javascript" src="' + url + '">\x3C/script>');
+    };
+
+    // Records a headline click from the actual post page
+    click() {
+      // Send fake ajax
+      var params = {
+        nonce: 'b537b35e35',
+        action: 'ars_ab_click',
+        id: this.post_id,
+        group: this.group,
+        uid: this.uid,
+        ts: (new Date()).getTime()
+      };
+      var url = this.ajaxurl + '?' + this.encodeParams(params);
+      document.write('\x3Cscript type="text/javascript" src="' + url + '">\x3C/script>');
+    };
+
+    // If user is in B group, dynamically set title
+    setTitle() {
+      if (this.group == 'b') {
+        var span = document.getElementById('ars_ab_' + this.post_id);
+        var title = span.parentNode;
+        title.innerHTML = span.getAttribute('data-title-b');
+      }
+    };
+
+    encodeParams(data) {
+      var ret = [];
+      for (var d in data)
+        ret.push(encodeURIComponent(d) + "=" + encodeURIComponent(data[d]));
+      return ret.join("&");
+    };
+
+  };
+</script>
+<!-- End Headline A/B -->
+<link rel="icon" href="https://cdn.arstechnica.net/wp-content/uploads/2016/10/cropped-ars-logo-512_480-60x60.png" sizes="32x32" />
+<link rel="icon" href="https://cdn.arstechnica.net/wp-content/uploads/2016/10/cropped-ars-logo-512_480-300x300.png" sizes="192x192" />
+<link rel="apple-touch-icon" href="https://cdn.arstechnica.net/wp-content/uploads/2016/10/cropped-ars-logo-512_480-300x300.png" />
+<meta name="msapplication-TileImage" content="https://cdn.arstechnica.net/wp-content/uploads/2016/10/cropped-ars-logo-512_480-300x300.png" />
+
+<!--
+	generated in 0.301 seconds
+	164476 bytes batcached for 300 seconds
+	view: grid
+	theme: system
+	xf_style_id: 3
+ -->
+</head>
+
+<body class="wp-singular post-template post-template-template-intro-image single single-post postid-2013674 single-format-standard wp-embed-responsive wp-theme-ars-v9 backdoor-found-in-widely-used-linux-utility-breaks-encrypted-ssh-connections bg-white dusk:bg-gray-100 text-gray-700 dark:text-gray-250 dark:bg-gray-50 singular is-guest">
+  <!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NLXNPCQ" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+  
+  <div id="app">
+    <a class="sr-only focus:not-sr-only" href="#main">
+  Skip to content
+</a>
+
+<div class="ad-wrapper is-fullwidth is-hero">
+      <div class="ad-wrapper-inner">
+        <div class="ad ad--hero"></div>
+      </div>
+    </div>
+  
+<header
+  class="banner font-impact xxl:max-w-xxl mdl:rounded-sm sticky top-0 z-30 mx-auto flex h-14 max-w-6xl flex-row flex-nowrap items-center justify-between bg-gray-700 px-[15px] font-semibold uppercase transition-[top] duration-500 sm:px-5 md:my-5 md:h-10 lg:my-10 dark:bg-black"
+  id="site-header">
+  <a id = "header-logo" href="https://arstechnica.com/" aria-label="Ars Technica home">
+    <span class="sr-only">Ars Technica home</span>
+          <svg class="h-[36px] w-[109px] md:h-[65px] md:w-[197px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 436 144.1"><defs><clipPath id="ars-full_svg__a"><path fill="none" d="M0 0h436v144.1H0z"/></clipPath><clipPath id="ars-full_svg__b"><path fill="none" d="M0 0h436v144.1H0z"/></clipPath></defs><g clip-path="url(#ars-full_svg__a)"><g fill="none" clip-path="url(#ars-full_svg__b)"><path fill="#ff4e00" d="M72 0c39.8 0 72.1 32.3 72.1 72.1s-32.3 72.1-72.1 72.1S0 111.8 0 72.1 32.3 0 72 0"/><path fill="#fff" d="m46.5 94-.9-5.9c-4 4.4-9.6 6.8-15.6 6.8-8 0-13-4.8-13-12.3 0-11 9.4-15.4 27.8-17.3v-1.9c0-5.6-3.3-7.5-8.4-7.5s-10.5 1.7-15.3 3.8L20 52.6c5.3-2.1 10.3-3.7 17.1-3.7 10.7 0 15.9 4.3 15.9 14.2v30.8h-6.7Zm-1.6-22.4c-16.3 1.6-19.7 6-19.7 10.6s2.4 5.9 6.6 5.9 9.4-2.4 13.1-6.2zm27.3-3.7v26H64v-44h6.6l1.4 9c3.1-5 8.2-9.5 15.5-9.9l1.3 7.9c-7.4.3-13.6 5.2-16.6 11m37.2 26.9c-5.6-.1-11.1-1.6-16.1-4.2l1.2-7.8c4.6 3.2 10 5 15.6 5.1 5.6 0 9-2.1 9-5.8s-2.5-5.6-10.5-7.5C98.2 72 94.1 68.9 94.1 61s5.9-12.2 15.6-12.2c5 0 9.9 1 14.5 3l-1.3 7.8c-4.1-2.4-8.7-3.7-13.4-3.8-5 0-7.6 1.9-7.6 5.1s2.2 4.6 9.2 6.4c10.9 2.8 15.8 5.9 15.8 14.3s-6.1 13.2-17.5 13.2m109.4-11.1c-4.4 3.7-8.4 5-12.8 5-7.7 0-12.7-5.3-13.5-14h24.8l.9-5.5h-25.7c.8-8.7 5.7-14.1 12.9-14.1s8.8 1.7 12.9 5.1l1-5.9c-4-2.9-8.8-4.4-13.7-4.3-10.7 0-19.2 7.8-19.2 21.9s8.3 21.9 18.9 21.9c5.2.1 10.2-1.6 14.3-4.8zm-48.7-27.5v36.9h-5.8V56.2h-13.4v-5.3H183l.9 5.3H170Zm74.5 37.6c-11.9 0-19.5-8.8-19.5-21.8s7.8-22 19.6-22c4.3-.1 8.5 1.1 12 3.5l-.9 5.9c-3.2-2.6-7.1-4-11.2-4.1-8.6 0-13.6 6.5-13.6 16.6s5.1 16.6 13.6 16.6c4.3 0 8.5-1.6 11.9-4.2l.9 5.4c-3.7 2.6-8.2 4.1-12.8 4.1M292 93V73.5h-21.4V93h-5.8V50.9h5.8v17.5H292V50.9h5.8V93zm42.9 0-23.2-32.8V93h-5.3V50.9h5.1l22.4 31.5V50.9h5.3V93zm13.4-42.1h5.8V93h-5.8zm32.6 42.9c-11.9 0-19.5-8.8-19.5-21.8s7.8-22 19.6-22c4.3-.1 8.5 1.1 12 3.5l-.9 5.9c-3.2-2.6-7.1-4-11.2-4.1-8.6 0-13.6 6.5-13.6 16.6s5.1 16.6 13.6 16.6c4.3 0 8.5-1.6 11.9-4.2l.9 5.4c-3.7 2.6-8.2 4.1-12.8 4.1m32.9-43.1h5.8l16.3 41.5-5.6 1.2-5-13.1h-17.4L403.1 93h-5.8zm-4 24.6h13.5l-6.8-17.9z"/></g></g></svg>
+      </a>
+
+  <div class="flex flex-row flex-nowrap items-center gap-3 md:gap-5 xl:gap-4">
+    
+          <div class="xxl:hidden">
+  <div x-data="arsDropdown()" @keydown.escape.prevent.stop="close($refs.button)"
+    @focusin.window="! $refs.panel.contains($event.target) && close()" x-id="['dropdown-button']">
+
+    <!-- Button -->
+    <button type="button" x-ref="button"
+      x-on:click="
+      toggle();
+      $dispatch('dropdown-opened', { panel: $refs.panel });
+      "
+      :aria-expanded="open" :aria-controls="$id('dropdown-button')" :class="{ selected: open }"
+      class="group flex items-center focus:outline-none" arial-label="" aria-label="Open Sections menu dropdown">
+      <svg class="group-with-selected:text-gray-200 h-5 w-5 text-gray-300 hover:text-gray-100 group-focus:text-gray-100 sm:hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><path fill="currentColor" d="M0 0h40v8H0zm0 16h40v8H0zm24 24H0v-8h16z"/><path fill="#04cc74" d="M23 32h17l-8 8h-.3z"/></svg>
+          <span
+            class="group-with-selected:text-gray-100 hidden flex-row flex-nowrap items-center gap-1 uppercase text-gray-300 hover:text-gray-100 group-focus:text-gray-100 sm:flex xl:text-sm">
+            Sections
+            <svg class="h-1 text-gray-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 19.3"><defs><clipPath id="arrow-down_svg__a"><path fill="none" d="M0 0h40v19.3H0z"/></clipPath><clipPath id="arrow-down_svg__b"><path fill="none" d="M0 0h40v19.3H0z"/></clipPath></defs><g clip-path="url(#arrow-down_svg__a)"><g fill="none" clip-path="url(#arrow-down_svg__b)"><path fill="currentColor" d="m0 0 18.9 18.9c.6.6 1.6.6 2.2 0L40 0z"/></g></g></svg>
+          </span>
+    </button>
+
+    <!-- Panel -->
+    <div x-cloak x-ref="panel" x-show="open" x-transition.origin.top.center x-on:click.outside="close()"
+      :id="$id('dropdown-button')" class="absolute overflow-hidden z-50 bg-gray-550 xxs:max-w-[400px] absolute right-0 top-14 mt-[1px] w-full rounded-sm sm:right-auto sm:max-w-[200px] md:top-10">
+      <nav class="topnav-sections">
+            
+            <div
+              class="flex flex-row flex-nowrap items-center justify-between bg-gray-700 px-10 py-2 sm:hidden sm:flex-col sm:items-start">
+              <a class="text-green-400 hover:text-green-500 focus:text-green-500" href="/civis/">
+                Forum
+              </a>
+
+                              
+                <div class="h-5 w-[1px] bg-gray-400"></div>
+
+                <a class="text-orange-400 hover:text-orange-500 focus:text-orange-500" href="/subscribe/">
+                  Subscribe
+                </a>
+              
+              
+              <div class="h-5 w-[1px] bg-gray-400"></div>
+
+              <a class="flex flex-row flex-nowrap items-center gap-2 text-gray-300 hover:text-gray-100 focus:text-gray-100"
+                href="/search/">
+                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><clipPath id="magnify_svg__a"><path fill="none" d="M0 0h40v40H0z"/></clipPath><clipPath id="magnify_svg__b"><path fill="none" d="M0 0h40v40H0z"/></clipPath></defs><g clip-path="url(#magnify_svg__a)"><g fill="none" clip-path="url(#magnify_svg__b)"><path fill="currentColor" d="M39.2 35.4 29 25.2c4.4-6.2 3.9-15-1.7-20.6C24.2 1.6 20.1 0 16 0S7.8 1.6 4.7 4.7c-6.2 6.2-6.2 16.4 0 22.6C7.8 30.4 11.9 32 16 32s6.5-1 9.3-3l10.2 10.2c.5.5 1.2.8 1.9.8s1.4-.3 1.9-.8c1-1 1-2.7 0-3.8M8.5 23.5c-2-2-3.1-4.7-3.1-7.5s1.1-5.5 3.1-7.5 4.7-3.1 7.5-3.1 5.5 1.1 7.5 3.1c4.2 4.2 4.2 10.9 0 15.1-2 2-4.7 3.1-7.5 3.1s-5.5-1.1-7.5-3.1"/></g></g></svg>
+                Search
+              </a>
+            </div>
+
+            <ul class="my-3 grid grid-cols-2 sm:grid-cols-1">
+                              <li>
+                  <a class="group flex flex-row items-center px-5 py-2 text-gray-300 hover:bg-gray-700 hover:text-green-400 focus:bg-gray-700 focus:text-green-400"
+                    href="https://arstechnica.com/ai/">
+                    <svg class="mr-2 inline-block h-5 w-5 text-gray-100 group-hover:text-green-400 group-focus:text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><clipPath id="section-ai_svg__a"><path fill="none" d="M0 0h40v40H0z"/></clipPath><clipPath id="section-ai_svg__b"><path fill="none" d="M0 0h40v40H0z"/></clipPath></defs><g clip-path="url(#section-ai_svg__a)"><g fill="currentColor" clip-path="url(#section-ai_svg__b)"><path d="M20 2.4c9.7 0 17.6 7.9 17.6 17.6S29.7 37.6 20 37.6 2.4 29.7 2.4 20 10.3 2.4 20 2.4M20 0C9 0 0 9 0 20s9 20 20 20 20-9 20-20S31 0 20 0"/><path d="M20 13q2.85 0 5.4.9c.7.2 1.4-.1 1.6-.9l1.4-5.5C26 5.9 23.1 4.9 20 4.9s-6 .9-8.4 2.6L13 13c.2.7.9 1.1 1.6.9Q17 13 20 13M8.9 18.3c.4-.8 1-1.5 1.7-2.1l-2.2-5.7C7 12.2 6 14.1 5.5 16.3l1.3 2.1c.5.8 1.7.8 2.2 0m24.3 0 1.3-2.1c-.5-2.2-1.5-4.1-2.9-5.8l-2.2 5.7c.7.6 1.3 1.3 1.7 2.1.5.8 1.6.9 2.2 0M23.2 20c0 1.8-1.5 3.2-3.2 3.2s-3.2-1.4-3.2-3.2 1.5-3.2 3.2-3.2 3.2 1.4 3.2 3.2"/></g></g></svg>
+                    AI
+                  </a>
+                </li>
+                              <li>
+                  <a class="group flex flex-row items-center px-5 py-2 text-gray-300 hover:bg-gray-700 hover:text-green-400 focus:bg-gray-700 focus:text-green-400"
+                    href="https://arstechnica.com/information-technology/">
+                    <svg class="mr-2 inline-block h-5 w-5 text-gray-100 group-hover:text-green-400 group-focus:text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><clipPath id="section-information-technology_svg__a"><path fill="none" d="M0 0h40v40H0z"/></clipPath><clipPath id="section-information-technology_svg__b"><path fill="none" d="M0 0h40v40H0z"/></clipPath></defs><g clip-path="url(#section-information-technology_svg__a)"><g fill="currentColor" clip-path="url(#section-information-technology_svg__b)"><path d="M35 0H5C2.2 0 0 2.2 0 5s2.2 5 5 5h30c2.8 0 5-2.2 5-5s-2.2-5-5-5m-6.9 7c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2m6 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2m.9 8H5c-2.8 0-5 2.2-5 5s2.2 5 5 5h30c2.8 0 5-2.2 5-5s-2.2-5-5-5m-6.9 7.2c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2m6 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2M35 30H5c-2.8 0-5 2.2-5 5s2.2 5 5 5h30c2.8 0 5-2.2 5-5s-2.2-5-5-5m-6.9 7.4c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2m6 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2"/></g></g></svg>
+                    Biz &amp; IT
+                  </a>
+                </li>
+                              <li>
+                  <a class="group flex flex-row items-center px-5 py-2 text-gray-300 hover:bg-gray-700 hover:text-green-400 focus:bg-gray-700 focus:text-green-400"
+                    href="https://arstechnica.com/cars/">
+                    <svg class="mr-2 inline-block h-5 w-5 text-gray-100 group-hover:text-green-400 group-focus:text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><clipPath id="section-cars_svg__a"><path fill="none" d="M0 0h40v40H0z"/></clipPath><clipPath id="section-cars_svg__b"><path fill="none" d="M0 0h40v40H0z"/></clipPath></defs><g clip-path="url(#section-cars_svg__a)"><g fill="none" clip-path="url(#section-cars_svg__b)"><path fill="currentColor" d="M39.7 23.5c.2-1.2.3-2.3.3-3.5s-.1-2.4-.3-3.5l-1.3-.4c-.1-.6-.3-1.2-.5-1.8l.9-1c-.8-2.3-2-4.3-3.5-6.1l-1.3.3c-.4-.4-.8-.9-1.3-1.3l.3-1.3a20.6 20.6 0 0 0-6.1-3.5l-1 .9c-.6-.2-1.2-.3-1.8-.5L23.7.5C22.4.1 21.2 0 20 0s-2.4.1-3.5.3l-.4 1.3c-.6.1-1.2.3-1.8.5l-1-.9C11 2 9 3.2 7.2 4.7L7.5 6c-.4.4-.9.8-1.3 1.3L4.9 7a20.6 20.6 0 0 0-3.5 6.1l.9 1c-.2.6-.3 1.2-.5 1.8l-1.3.4C.1 17.6 0 18.8 0 20s.1 2.4.3 3.5l1.3.4c.1.6.3 1.2.5 1.8l-.9 1c.8 2.3 2 4.3 3.5 6.1l1.3-.3c.4.4.8.9 1.3 1.3L7 35.1c1.8 1.5 3.9 2.7 6.1 3.5l1-.9c.6.2 1.2.3 1.8.5l.4 1.3c1.1.2 2.3.3 3.5.3s2.4-.1 3.5-.3l.4-1.3c.6-.1 1.2-.3 1.8-.5l1 .9c2.3-.8 4.3-2 6.1-3.5l-.3-1.3c.4-.4.9-.8 1.3-1.3l1.3.3c1.5-1.8 2.7-3.9 3.5-6.1l-.9-1c.2-.6.3-1.2.5-1.8l1.3-.4ZM25.9 8.2c1.3.6 2.4 1.5 3.4 2.5l-3.1 6.2-2.6.9c-.6-.9-1.5-1.6-2.6-1.9v-2.8zM22 19.9c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2M20 6.8q2.1 0 3.9.6L20 11.3l-3.9-3.9q1.8-.6 3.9-.6m-5.9 1.4 4.9 4.9v2.8c-1.1.3-2 .9-2.6 1.9l-2.6-.9-3.1-6.2c1-1 2.2-1.9 3.4-2.5m-4.8 4.2 2.5 4.9-4.9 2.5c0-2.7.9-5.3 2.4-7.4m.2 15.4 5.4-.9.9 5.4c-2.5-.9-4.7-2.5-6.3-4.5m5.7-2.9L8.4 26c-.6-1.2-1.1-2.6-1.3-4.1l6.2-3.1 2.6.9v.3c0 1 .4 2 1 2.7l-1.6 2.2Zm7 8c-.7.1-1.4.2-2.1.2s-1.4 0-2.1-.2l-1.1-6.8 1.6-2.2c.5.2 1 .3 1.6.3s1.1-.1 1.6-.3l1.6 2.2zm2.1-.5.9-5.4 5.4.9c-1.6 2.1-3.7 3.7-6.3 4.5m7.4-6.4-6.8-1.1-1.6-2.2c.6-.7 1-1.7 1-2.7v-.3l2.6-.9 6.2 3.1c-.2 1.4-.7 2.8-1.3 4.1m-3.4-8.7 2.5-4.9c1.5 2.1 2.4 4.6 2.4 7.4z"/></g></g></svg>
+                    Cars
+                  </a>
+                </li>
+                              <li>
+                  <a class="group flex flex-row items-center px-5 py-2 text-gray-300 hover:bg-gray-700 hover:text-green-400 focus:bg-gray-700 focus:text-green-400"
+                    href="https://arstechnica.com/culture/">
+                    <svg class="mr-2 inline-block h-5 w-5 text-gray-100 group-hover:text-green-400 group-focus:text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><clipPath id="section-culture_svg__a"><path fill="none" d="M0 0h40v40H0z"/></clipPath><clipPath id="section-culture_svg__b"><path fill="none" d="M0 0h40v40H0z"/></clipPath></defs><g clip-path="url(#section-culture_svg__a)"><g fill="currentColor" clip-path="url(#section-culture_svg__b)"><path d="M19 32v7.1c0 .5.4 1 1 1s1-.4 1-1V32zm2-24V1c0-.6-.5-1-1-1s-1 .4-1 1v7.1h2m-8.3 22.6L9.6 36c-.3.5-.1 1 .3 1.3.5.3 1 .1 1.3-.3l3.3-5.7c-.5-.1-1-.3-1.5-.4-.1 0-.3 0-.4-.1M27.3 9.3 30.4 4c.3-.5.1-1-.3-1.3-.5-.3-1-.1-1.3.3l-3.3 5.7c.5.1 1 .2 1.5.4.1 0 .3 0 .4.1m-21.8 18L3 28.7c-.5.3-.6.8-.3 1.3s.8.6 1.3.3l3.5-2-.9-.6-.9-.6m28.7-14.3 2.6-1.5c.5-.3.6-.8.3-1.3s-.8-.6-1.3-.3l-3.5 2c.3.2.6.3 1 .5zm-9 18.5 3.3 5.7c.3.5.8.6 1.3.3s.6-.8.3-1.3l-3.1-5.3c-.1 0-.3 0-.4.1-.5.2-1 .3-1.5.4M14.6 8.7 11.3 3c-.3-.5-.8-.6-1.3-.3s-.6.8-.3 1.3l3.1 5.3c.1 0 .3 0 .4-.1.5-.2 1-.3 1.5-.4m17.9 19.6 3.5 2c.5.3 1 .1 1.3-.3.3-.5.1-1-.3-1.3l-2.6-1.5-.9.6-.9.6M7.4 11.6l-3.5-2c-.5-.3-1-.1-1.3.3-.3.5-.1 1 .3 1.3l2.6 1.5.9-.6.9-.6m25.2 2.4c-.6-.4-1.3-.7-1.9-1.1-1.3-.7-2.7-1.3-4.3-1.8-.6-.2-1.3-.4-1.9-.5-1.1-.3-2.3-.4-3.4-.5h-2c-1.2 0-2.3.2-3.4.5-.6.1-1.3.3-1.9.5-1.5.5-2.9 1.1-4.3 1.8-.7.3-1.3.7-1.9 1.1C2.9 16.7 0 20 0 20s2.9 3.3 7.5 6.1c.6.4 1.3.7 1.9 1.1 1.3.7 2.7 1.3 4.3 1.8.6.2 1.3.4 1.9.5 1.1.3 2.3.4 3.4.5h2c1.2 0 2.3-.2 3.4-.5.6-.1 1.3-.3 1.9-.5 1.5-.5 2.9-1.1 4.3-1.8.7-.3 1.3-.7 1.9-1.1C37.1 23.3 40 20 40 20s-2.9-3.3-7.5-6.1M20 28c-4.4 0-8-3.6-8-8s3.6-8 8-8 8 3.6 8 8-3.6 8-8 8"/><path d="M25 20c0 2.8-2.2 5-5 5s-5-2.2-5-5 2.2-5 5-5 5 2.2 5 5"/></g></g></svg>
+                    Culture
+                  </a>
+                </li>
+                              <li>
+                  <a class="group flex flex-row items-center px-5 py-2 text-gray-300 hover:bg-gray-700 hover:text-green-400 focus:bg-gray-700 focus:text-green-400"
+                    href="https://arstechnica.com/gaming/">
+                    <svg class="mr-2 inline-block h-5 w-5 text-gray-100 group-hover:text-green-400 group-focus:text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><clipPath id="section-gaming_svg__a"><path fill="none" d="M0 0h40v40H0z"/></clipPath><clipPath id="section-gaming_svg__b"><path fill="none" d="M0 0h40v40H0z"/></clipPath></defs><g clip-path="url(#section-gaming_svg__a)"><g fill="none" clip-path="url(#section-gaming_svg__b)"><path fill="currentColor" d="M30.7 39.7c-.7-1.1-1.7-1.8-2.5-2.8-.9-1.2 0-2 .8-3 .6-.9 1-1.9.8-3-.6-2.7-3.4-3.3-5.8-3.6-.7-.1-1.8-.2-2.3-.7s-.5-1.4-.5-2.1v-.4l15.5-3.6c2.3-.5 3.7-2.8 3.2-5.1l-2.8-12C36.6 1.1 34.3-.3 32 .2L3.3 6.8C1 7.4-.4 9.7.1 12l2.8 12c.5 2.3 2.8 3.7 5.1 3.2l11.1-2.6c0 1 .2 2.1.7 2.9 1.7 2.7 6 .8 7.6 3.3.8 1.2-.5 2.3-1.1 3.3-.6.9-.9 2-.4 3 .4 1.1 1.4 1.8 2.2 2.6 0 .1.2.2.3.3h2.4c0-.1-.1-.2-.2-.3m.7-28.7c1.3-.3 2.7.5 3 1.9.3 1.3-.5 2.7-1.9 3-1.3.3-2.7-.5-3-1.9-.3-1.3.5-2.7 1.9-3m-6-3.7c1.3-.3 2.7.5 3 1.9.3 1.3-.5 2.7-1.9 3-1.3.3-2.7-.5-3-1.9-.3-1.3.5-2.7 1.9-3m-9.9 13.2-2.7.6-1-4.1-4.1 1-.6-2.7 4.1-1-1-4.1 2.7-.6 1 4.1 4.1-1 .6 2.7-4.1 1z"/></g></g></svg>
+                    Gaming
+                  </a>
+                </li>
+                              <li>
+                  <a class="group flex flex-row items-center px-5 py-2 text-gray-300 hover:bg-gray-700 hover:text-green-400 focus:bg-gray-700 focus:text-green-400"
+                    href="https://arstechnica.com/health/">
+                    <svg class="mr-2 inline-block h-5 w-5 text-gray-100 group-hover:text-green-400 group-focus:text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><clipPath id="section-health_svg__a"><path fill="none" d="M0 0h40v40H0z"/></clipPath><clipPath id="section-health_svg__b"><path fill="none" d="M0 0h40v40H0z"/></clipPath></defs><g clip-path="url(#section-health_svg__a)"><g fill="currentColor" clip-path="url(#section-health_svg__b)"><path d="M10.4 21.6c-.4-.4-1-.4-1.4 0l-3.9 3.9c-.4.4-.4 1 0 1.4s1 .4 1.4 0l3.9-3.9c.4-.4.4-1 0-1.4"/><path d="M40 10.6c0-2.7-1-5.4-3.1-7.5C33.8 0 29.2-.8 25.4.8c-1.3.5-2.5 1.3-3.5 2.3L3.1 21.9c-4.2 4.2-4.2 10.9 0 15C5.2 39 7.9 40 10.6 40s5.4-1 7.5-3.1l18.7-18.7c2.1-2.1 3.1-4.8 3.1-7.5m-6.6-4c-.4-.4-.4-1 0-1.4s1-.4 1.4 0c3 3 3 7.8 0 10.8L26 24.8c-.4.4-1 .4-1.4 0s-.4-1 0-1.4l8.7-8.7c2.2-2.2 2.2-5.8 0-8M10.6 38.1c-2.3 0-4.5-.9-6.1-2.5-3.4-3.4-3.4-8.8 0-12.2l7.6-7.6c.6 2.1 2.3 4.9 4.8 7.4s5.2 4.2 7.4 4.8l-7.6 7.6c-1.6 1.6-3.8 2.5-6.1 2.5"/></g></g></svg>
+                    Health
+                  </a>
+                </li>
+                              <li>
+                  <a class="group flex flex-row items-center px-5 py-2 text-gray-300 hover:bg-gray-700 hover:text-green-400 focus:bg-gray-700 focus:text-green-400"
+                    href="https://arstechnica.com/tech-policy/">
+                    <svg class="mr-2 inline-block h-5 w-5 text-gray-100 group-hover:text-green-400 group-focus:text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><clipPath id="section-tech-policy_svg__a"><path fill="none" d="M0 0h40v40H0z"/></clipPath><clipPath id="section-tech-policy_svg__b"><path fill="none" d="M0 0h40v40H0z"/></clipPath></defs><g clip-path="url(#section-tech-policy_svg__a)"><path fill="currentColor" d="M12.8 0 6.4 6.4 0 12.8l4 1.4L14.2 4z"/><g clip-path="url(#section-tech-policy_svg__b)"><path fill="currentColor" d="M34.8 31.7c-4.4-10.4-6.1-23.6-6.1-23.6L15.4 5.4l-9.9 10 2.7 13.3s13.2 1.6 23.6 6.1c-.4 1.4 0 2.9 1.1 4 1.4 1.4 3.6 1.6 5.2.6L18.5 19.8c-1.6 1-3.8.8-5.2-.6-1.6-1.6-1.6-4.3 0-5.9s4.3-1.6 5.9 0c1.4 1.4 1.6 3.6.6 5.2L39.3 38c1-1.6.8-3.8-.6-5.2-1.1-1.1-2.6-1.4-4-1.1"/></g></g></svg>
+                    Policy
+                  </a>
+                </li>
+                              <li>
+                  <a class="group flex flex-row items-center px-5 py-2 text-gray-300 hover:bg-gray-700 hover:text-green-400 focus:bg-gray-700 focus:text-green-400"
+                    href="https://arstechnica.com/science/">
+                    <svg class="mr-2 inline-block h-5 w-5 text-gray-100 group-hover:text-green-400 group-focus:text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><clipPath id="section-science_svg__a"><path fill="none" d="M0 0h40v40H0z"/></clipPath><clipPath id="section-science_svg__b"><path fill="none" d="M0 0h40v40H0z"/></clipPath></defs><g clip-path="url(#section-science_svg__a)"><g fill="none" clip-path="url(#section-science_svg__b)"><path fill="currentColor" d="M39.6 34.5 28 14.6V4h1.1c.5 0 .9-.4.9-.9V.9c0-.5-.4-.9-.9-.9H10.9c-.5 0-.9.4-.9.9V3c0 .5.4.9.9.9H12v10.6L.4 34.5C-.9 37 .8 40 3.6 40h32.8c2.7 0 4.5-3 3.2-5.5M21.9 13.2c1.7 0 3 1.3 3 3s-1.3 3-3 3-3-1.3-3-3 1.3-3 3-3m-5-6c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2M4.1 36l6-10.3c.2-.3.5-.5.8-.5H13c-.1-.3-.2-.6-.2-1 0-1.7 1.3-3 3-3s3 1.3 3 3 0 .7-.2 1h4.2c0-1.1.9-2 2-2s2 .9 2 2h2.1c.3 0 .6.2.8.5l6 10.3H4.2Z"/></g></g></svg>
+                    Science
+                  </a>
+                </li>
+                              <li>
+                  <a class="group flex flex-row items-center px-5 py-2 text-gray-300 hover:bg-gray-700 hover:text-green-400 focus:bg-gray-700 focus:text-green-400"
+                    href="https://arstechnica.com/security/">
+                    <svg class="mr-2 inline-block h-5 w-5 text-gray-100 group-hover:text-green-400 group-focus:text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><clipPath id="section-security_svg__a"><path fill="none" d="M0 0h40v40H0z"/></clipPath><clipPath id="section-security_svg__b"><path fill="none" d="M0 0h40v40H0z"/></clipPath></defs><g clip-path="url(#section-security_svg__a)"><g fill="none" clip-path="url(#section-security_svg__b)"><path fill="currentColor" d="M37.7 21.1C39.7 10.4 32.8 0 20.8 0h-1.6C7.2 0 .3 10.4 2.3 21.1c.5 2.6-2.3 3.5-2.3 6.6 0 3.2 3.5 4 5.9 4.1h2.8c1.3 0 1.8.5 1.8 1.6 0 1.5.2 4.1.3 5.6 0 .2.7.4 1.9.5v-3.4c0-.4.3-.8.7-.8s.8.3.8.8v3.5c.9 0 1.8.1 2.9.1v-3.6c0-.4.3-.8.8-.8s.8.3.8.8v3.7h2.9v-3.7c0-.4.3-.8.8-.8s.8.3.8.8v3.6c1 0 2 0 2.9-.1v-3.5c0-.4.3-.8.8-.8s.8.3.8.8v3.4c1.1-.1 1.8-.3 1.9-.5.1-1.5.3-4.1.3-5.6 0-1.1.5-1.7 1.8-1.6h2.8c2.4-.1 5.9-.9 5.9-4.1 0-3.1-2.8-4-2.3-6.7m-26.7 4.7c-4 0-6.6-4-4.9-7.2 1.1-2 3.1-3.2 5.2-3.7 4.1-.9 7.6 2.9 6.7 6.6-.7 2.7-3.5 3.9-7 4.2m8.6 2.1-1 3c-.2.5-.7.8-1.1.6s-.7-.8-.5-1.3l.9-3c.2-.5.7-.8 1.1-.6s.7.8.5 1.3m2.8 3.6c-.4.2-.9 0-1.1-.6l-1-3c-.2-.5 0-1.1.5-1.3.4-.2.9 0 1.1.6l.9 3c.2.5 0 1.1-.5 1.3m6.6-5.7c-3.5-.4-6.3-1.5-7-4.2-.9-3.7 2.6-7.6 6.7-6.6 2.1.5 4.1 1.7 5.2 3.7 1.8 3.2-.9 7.2-4.9 7.2"/></g></g></svg>
+                    Security
+                  </a>
+                </li>
+                              <li>
+                  <a class="group flex flex-row items-center px-5 py-2 text-gray-300 hover:bg-gray-700 hover:text-green-400 focus:bg-gray-700 focus:text-green-400"
+                    href="https://arstechnica.com/space/">
+                    <svg class="mr-2 inline-block h-5 w-5 text-gray-100 group-hover:text-green-400 group-focus:text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><clipPath id="section-space_svg__a"><path fill="none" d="M0 0h40v40H0z"/></clipPath><clipPath id="section-space_svg__b"><path fill="none" d="M0 0h40v40H0z"/></clipPath></defs><g clip-path="url(#section-space_svg__a)"><g fill="currentColor" clip-path="url(#section-space_svg__b)"><path d="M32.9 13.1c-2.5-4.7-7.5-7.8-13.2-7.8-8.3 0-15 6.7-15 15s3.1 10.6 7.7 13.1c3.1-2.5 6.9-5.8 11-10 3.9-3.9 7-7.4 9.4-10.3M14.4 34.3c1.6.6 3.4 1 5.2 1 8.3 0 15-6.7 15-15s-.3-3.5-.9-5.2c-2.5 3-5.5 6.4-8.9 9.7-3.6 3.6-7.2 6.9-10.4 9.5"/><path d="M28.5 5.8c.6.4 1.2.8 1.7 1.2 3.5-2.7 6.1-4.2 7.6-4.8-.5 1.4-2.1 4.1-4.8 7.6-2.6 3.4-6.2 7.5-10.9 12.3s-9.6 8.9-13 11.5c-3.2 2.4-5.5 3.7-6.9 4.2.5-1.3 1.9-3.7 4.2-6.9-.4-.5-.8-1.1-1.2-1.7-4 5.4-6 9.4-4.9 10.5s5.1-.9 10.5-4.9c3.8-2.9 8.2-6.8 12.7-11.3s7.9-8.4 10.7-12c4.4-5.7 6.7-10 5.5-11.2s-5.5 1.1-11.2 5.5"/></g></g></svg>
+                    Space
+                  </a>
+                </li>
+                              <li>
+                  <a class="group flex flex-row items-center px-5 py-2 text-gray-300 hover:bg-gray-700 hover:text-green-400 focus:bg-gray-700 focus:text-green-400"
+                    href="https://arstechnica.com/gadgets/">
+                    <svg class="mr-2 inline-block h-5 w-5 text-gray-100 group-hover:text-green-400 group-focus:text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><clipPath id="section-gadgets_svg__a"><path fill="none" d="M0 0h40v40H0z"/></clipPath><clipPath id="section-gadgets_svg__b"><path fill="none" d="M0 0h40v40H0z"/></clipPath></defs><g clip-path="url(#section-gadgets_svg__a)"><g fill="currentColor" clip-path="url(#section-gadgets_svg__b)"><path d="M38 22c1.1 0 2-.9 2-2s-.9-2-2-2h-2v-6h2c1.1 0 2-.9 2-2s-.9-2-2-2h-2V4h-4V2c0-1.1-.9-2-2-2s-2 .9-2 2v2h-6V2c0-1.1-.9-2-2-2s-2 .9-2 2v2h-6V2c0-1.1-.9-2-2-2S8 .9 8 2v2H4v4H2c-1.1 0-2 .9-2 2s.9 2 2 2h2v6H2c-1.1 0-2 .9-2 2s.9 2 2 2h2v6H2c-1.1 0-2 .9-2 2s.9 2 2 2h2v4h4v2c0 1.1.9 2 2 2s2-.9 2-2v-2h6v2c0 1.1.9 2 2 2s2-.9 2-2v-2h6v2c0 1.1.9 2 2 2s2-.9 2-2v-2h4v-4h2c1.1 0 2-.9 2-2s-.9-2-2-2h-2v-6zm-6 10H8V8h24z"/><path d="M24.7 17.3 20 12h-7.1c-.6 0-1 .4-1 1s.4 1 1 1h6.3l4.1 4.7L20 22h8v-8z"/><path d="m15.2 22.7 4.7 5.3H27c.6 0 1-.4 1-1s-.4-1-1-1h-6.3l-4.1-4.7 3.3-3.3h-8v8z"/></g></g></svg>
+                    Tech
+                  </a>
+                </li>
+                          </ul>
+
+            
+            <div class="mx-3 h-[1px] bg-gray-400"></div>
+
+            
+            <ul class="my-3 grid grid-cols-2 sm:grid-cols-1">
+              <li>
+                <a class="group flex flex-row items-center px-5 py-2 text-gray-300 hover:bg-gray-700 hover:text-green-400 focus:bg-gray-700 focus:text-green-400"
+                  href="/features/">
+                  <svg class="mr-2 inline-block h-5 w-5 text-gray-100 group-hover:text-green-400 group-focus:text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 37.8"><defs><clipPath id="star_svg__a"><path fill="none" d="M0 0h40v37.8H0z"/></clipPath></defs><g fill="none" clip-path="url(#star_svg__a)"><path fill="currentColor" d="m20 0-6.2 12.4-13.8 2L10 24 7.6 37.8 20 31.3l12.4 6.5L30 24l10-9.6-13.8-2z"/></g></svg>
+                  Feature
+                </a>
+              </li>
+              <li>
+                <a class="group flex flex-row items-center px-5 py-2 text-gray-300 hover:bg-gray-700 hover:text-green-400 focus:bg-gray-700 focus:text-green-400"
+                  href="/reviews/">
+                  <svg class="mr-2 inline-block h-5 w-5 text-gray-100 group-hover:text-green-400 group-focus:text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><clipPath id="section-reviews_svg__a"><path fill="none" d="M0 0h40v40H0z"/></clipPath><clipPath id="section-reviews_svg__b"><path fill="none" d="M0 0h40v40H0z"/></clipPath></defs><g clip-path="url(#section-reviews_svg__a)"><g fill="currentColor" clip-path="url(#section-reviews_svg__b)"><path d="M19.3 9.4V16l4.7 4.7h6.6l4.7-4.7V9.4l-4.7-4.7H24zm10.8.5c1.6 1.6 1.6 4.1 0 5.7s-4.1 1.6-5.7 0-1.6-4.1 0-5.7 4.1-1.6 5.7 0"/><path d="M31.4 22.7h-8.3l-5.9-5.9V8.5L25.9 0H12L6.9 5.1V19L0 25.9C0 33.7 6.3 40 14.1 40l6.9-6.9h13.9L40 28V14.1z"/></g></g></svg>
+                  Reviews
+                </a>
+              </li>
+            </ul>
+          </nav>
+    </div>
+  </div>
+</div>
+        
+
+    
+    <ul class="xxl:flex hidden gap-4 text-sm">
+              <li>
+          <a class="text-gray-250 hover:text-green-400 focus:text-green-400" href="https://arstechnica.com/ai/">
+            AI
+          </a>
+        </li>
+              <li>
+          <a class="text-gray-250 hover:text-green-400 focus:text-green-400" href="https://arstechnica.com/information-technology/">
+            Biz &amp; IT
+          </a>
+        </li>
+              <li>
+          <a class="text-gray-250 hover:text-green-400 focus:text-green-400" href="https://arstechnica.com/cars/">
+            Cars
+          </a>
+        </li>
+              <li>
+          <a class="text-gray-250 hover:text-green-400 focus:text-green-400" href="https://arstechnica.com/culture/">
+            Culture
+          </a>
+        </li>
+              <li>
+          <a class="text-gray-250 hover:text-green-400 focus:text-green-400" href="https://arstechnica.com/gaming/">
+            Gaming
+          </a>
+        </li>
+              <li>
+          <a class="text-gray-250 hover:text-green-400 focus:text-green-400" href="https://arstechnica.com/health/">
+            Health
+          </a>
+        </li>
+              <li>
+          <a class="text-gray-250 hover:text-green-400 focus:text-green-400" href="https://arstechnica.com/tech-policy/">
+            Policy
+          </a>
+        </li>
+              <li>
+          <a class="text-gray-250 hover:text-green-400 focus:text-green-400" href="https://arstechnica.com/science/">
+            Science
+          </a>
+        </li>
+              <li>
+          <a class="text-gray-250 hover:text-green-400 focus:text-green-400" href="https://arstechnica.com/security/">
+            Security
+          </a>
+        </li>
+              <li>
+          <a class="text-gray-250 hover:text-green-400 focus:text-green-400" href="https://arstechnica.com/space/">
+            Space
+          </a>
+        </li>
+              <li>
+          <a class="text-gray-250 hover:text-green-400 focus:text-green-400" href="https://arstechnica.com/gadgets/">
+            Tech
+          </a>
+        </li>
+          </ul>
+    
+
+    <a class="hidden text-green-400 sm:block xl:text-sm" href="/civis/">
+      Forum
+    </a>
+
+          
+      <div class="hidden h-5 w-[1px] bg-gray-400 lg:block"></div>
+
+      <a class="hidden text-orange-400 lg:block xl:text-sm" href="/subscribe/">
+        Subscribe
+      </a>
+    
+    
+    <div class="h-5 w-[1px] bg-gray-400"></div>
+
+    
+          <div class="text-settings-dropdown-nav">
+  <div x-data="arsDropdown()" @keydown.escape.prevent.stop="close($refs.button)"
+    @focusin.window="! $refs.panel.contains($event.target) && close()" x-id="['dropdown-button']">
+
+    <!-- Button -->
+    <button type="button" x-ref="button"
+      x-on:click="
+      toggle();
+      $dispatch('dropdown-opened', { panel: $refs.panel });
+      "
+      :aria-expanded="open" :aria-controls="$id('dropdown-button')" :class="{ selected: open }"
+      class="group flex items-center group" arial-label="" aria-label="Open text settings dropdown">
+      <svg class="h-5 w-5 text-gray-300 group-hover:text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><clipPath id="text-settings-open_svg__a"><path fill="none" stroke-width="0" d="M0 0h40v40H0z"/></clipPath><clipPath id="text-settings-open_svg__b"><path fill="none" stroke-width="0" d="M0 0h40v40H0z"/></clipPath></defs><g clip-path="url(#text-settings-open_svg__a)"><g fill="currentColor" clip-path="url(#text-settings-open_svg__b)"><path d="M26.38 23.2c-.19.21-.28.49-.28.85v.58c0 .4.11.72.34.93.23.22.59.33 1.09.33.42 0 .88-.09 1.37-.27q.735-.27 1.47-.75c.06-.04.11-.09.17-.13v-1.87h-3.23q-.66.015-.93.33"/><path d="M32 0H8C3.58 0 0 3.58 0 8v24.01C0 36.42 3.58 40 8 40h24c4.42 0 8-3.58 8-8V8c0-4.42-3.58-8-8-8M17.88 28.23l-1.23-4.42h-5.77l-1.23 4.42H5.84l4.88-15.77a1.316 1.316 0 0 1 1.28-.97h3.52q.465 0 .81.27c.23.18.39.41.47.7l4.85 15.77h-3.79Zm16.28 0H31.3l-.38-1.92c-.27.33-.59.65-.98.96-.44.35-.95.64-1.53.89-.58.24-1.25.36-1.99.36s-1.38-.13-1.97-.39q-.87-.39-1.38-1.14c-.34-.5-.51-1.12-.51-1.87v-1.24c0-.95.32-1.7.97-2.23s1.54-.8 2.67-.8h4.34v-.56c0-.57-.13-.98-.4-1.24s-.77-.39-1.52-.39c-.61 0-1.38.02-2.3.06s-1.87.09-2.84.16l-.34-2.38c.58-.11 1.25-.21 2.02-.29q1.14-.12 2.28-.21t2.04-.09c1 0 1.85.13 2.55.4.69.27 1.22.72 1.59 1.36.36.64.55 1.52.55 2.63v7.91Z"/><path d="M14.26 15.09c-.06-.28-.12-.55-.17-.81h-.65c-.05.26-.1.53-.16.81s-.12.56-.21.84l-1.42 5.1h4.22l-1.42-5.1c-.07-.27-.13-.55-.19-.84"/></g></g></svg>
+    </button>
+
+    <!-- Panel -->
+    <div x-cloak x-ref="panel" x-show="open" x-transition.origin.top.center x-on:click.outside="close()"
+      :id="$id('dropdown-button')" class="absolute overflow-hidden z-50 bg-gray-550 absolute right-0 top-14 mt-[1px] min-w-[200px] rounded-sm md:top-10">
+      <div class="text-settings">
+      <div class="text-settings-menu bg-gray-550 w-60">
+        <div class="flex items-center bg-gray-600 px-5 py-2">
+          <span class="font-impact text-gray-350 text-base font-semibold uppercase">Story text</span>
+        </div>
+
+        <div class="grid grid-cols-3 items-center gap-3 px-5 py-2">
+          <label class="font-impact w-20 text-base font-semibold uppercase text-gray-100" for="text-settings-size">Size</label>
+<select name="text-settings-size" class="text-settings-size col-span-2 bg-gray-600 text-sm text-gray-300">
+  <option value="small">Small</option>
+  <option value="standard" selected>Standard</option>
+  <option value="large">Large</option>
+</select>
+
+
+<label class="font-impact hidden w-20 text-base font-semibold uppercase text-gray-100 md:block"
+  for="text-settings-width">Width
+      <span class="text-gray-400">*</span>
+  </label>
+<select name="text-settings-width"
+  class="text-settings-width col-span-2 hidden bg-gray-600 text-sm text-gray-300 md:block">
+  <option value="standard" selected>Standard</option>
+  <option value="wide">Wide</option>
+</select>
+
+
+<label class="font-impact w-20 text-base font-semibold uppercase text-gray-100" for="text-settings-links">Links</label>
+<select name="text-settings-links" class="text-settings-links col-span-2 bg-gray-600 text-sm text-gray-300">
+  <option value="standard" selected>Standard</option>
+  <option value="orange">Orange</option>
+</select>
+
+
+  <div class="font-impact col-span-3 hidden text-sm font-semibold uppercase text-gray-400 md:block">
+    <span class="mb-0 italic">* Subscribers only</span><br>
+    &nbsp;&nbsp;<a href="/store/product/subscriptions/" class="text-green-400">Learn more</a>
+  </div>
+
+          
+          <button
+            class="font-impact text-settings-position col-span-3 mx-auto my-3 block rounded-sm border-2 border-green-400 px-3 py-1 text-base font-semibold uppercase text-gray-100"
+            value="story">
+            Pin to story
+          </button>
+        </div>
+      </div>
+    </div>
+    </div>
+  </div>
+</div>
+    
+    
+    <div class="">
+  <div x-data="arsDropdown()" @keydown.escape.prevent.stop="close($refs.button)"
+    @focusin.window="! $refs.panel.contains($event.target) && close()" x-id="['dropdown-button']">
+
+    <!-- Button -->
+    <button type="button" x-ref="button"
+      x-on:click="
+      toggle();
+      $dispatch('dropdown-opened', { panel: $refs.panel });
+      "
+      :aria-expanded="open" :aria-controls="$id('dropdown-button')" :class="{ selected: open }"
+      class="group flex items-center theme-selection-active group" arial-label="" aria-label="Open Theme selection dropdown">
+      <span class="sr-only">Theme</span>
+        
+        <svg class="theme-selection-active-dark hidden h-5 w-5 text-yellow-100 group-hover:text-yellow-200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 38.4 38.4"><defs><clipPath id="theme-dark_svg__a"><path fill="none" d="M0 0h38.4v38.4H0z"/></clipPath><clipPath id="theme-dark_svg__b"><path fill="none" d="M0 0h38.4v38.4H0z"/></clipPath></defs><g clip-path="url(#theme-dark_svg__a)"><g fill="currentColor" clip-path="url(#theme-dark_svg__b)"><path d="M14.5 11.4c0-4.3 1.4-8.2 3.7-11.4C8.8 1.3 1.6 9.3 1.6 19.1s8.6 19.3 19.3 19.3 12.1-3.1 15.6-7.9c-.9.1-1.8.2-2.7.2-10.7 0-19.3-8.6-19.3-19.3m17.8-6.8v2.1c0 .8-.6 1.4-1.4 1.4s-1.4-.6-1.4-1.4V4.6c0-.8.6-1.4 1.4-1.4s1.4.6 1.4 1.4m0 6.8v2.1c0 .8-.6 1.4-1.4 1.4s-1.4-.6-1.4-1.4v-2.1c0-.8.6-1.4 1.4-1.4s1.4.6 1.4 1.4m-5.8-3.7h2.1c.8 0 1.4.6 1.4 1.4s-.6 1.4-1.4 1.4h-2.1c-.8 0-1.4-.6-1.4-1.4s.6-1.4 1.4-1.4m6.8 0h2.1c.8 0 1.4.6 1.4 1.4s-.6 1.4-1.4 1.4h-2.1c-.8 0-1.4-.6-1.4-1.4s.6-1.4 1.4-1.4"/></g></g></svg>
+        <svg class="theme-selection-active-dusk hidden h-5 w-5 text-yellow-400 group-hover:text-yellow-200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 38.18 40"><defs><clipPath id="theme-dusk_svg__a"><path fill="none" d="M0 0h38.18v40H0z"/></clipPath><clipPath id="theme-dusk_svg__b"><path fill="none" d="M0 0h38.18v40H0z"/></clipPath></defs><g clip-path="url(#theme-dusk_svg__a)"><g fill="currentColor" clip-path="url(#theme-dusk_svg__b)"><path d="M19.09 5.86C11.28 5.86 4.95 12.19 4.95 20s6.33 14.14 14.14 14.14S33.23 27.81 33.23 20 26.9 5.86 19.09 5.86m0 26.28C12.4 32.14 6.95 26.69 6.95 20c0-6.13 4.57-11.2 10.48-12.01a12.07 12.07 0 0 0-2.63 7.52c0 6.7 5.45 12.14 12.14 12.14.56 0 1.11-.05 1.66-.13-2.23 2.81-5.66 4.62-9.52 4.62m1.43-30.72v2.17c0 .78-.63 1.42-1.42 1.42s-1.42-.63-1.42-1.42V1.42a1.419 1.419 0 1 1 2.84 0M9.31 4.13l1.27 1.75c.46.63.32 1.52-.31 1.98s-1.52.32-1.98-.31L7.02 5.8a1.42 1.42 0 0 1 .31-1.98 1.42 1.42 0 0 1 1.98.31m-7.45 8.78 2.06.67c.74.24 1.15 1.04.91 1.79s-1.04 1.15-1.79.91l-2.06-.67a1.417 1.417 0 0 1-.91-1.78c.24-.74 1.04-1.15 1.79-.91M.98 24.39l2.06-.67c.74-.24 1.54.16 1.79.91.24.74-.17 1.54-.91 1.78l-2.06.67a1.42 1.42 0 0 1-1.79-.91c-.24-.74.17-1.54.91-1.79m6.04 9.82 1.27-1.75a1.42 1.42 0 0 1 1.98-.31c.63.46.77 1.35.31 1.98l-1.27 1.75c-.46.63-1.35.77-1.98.31a1.42 1.42 0 0 1-.31-1.98m10.65 4.38v-2.16c0-.78.63-1.42 1.42-1.42s1.42.63 1.42 1.42v2.16c0 .78-.63 1.42-1.42 1.42s-1.42-.63-1.42-1.42m11.2-2.71-1.27-1.75a1.42 1.42 0 0 1 .31-1.98 1.42 1.42 0 0 1 1.98.31l1.27 1.75c.46.63.32 1.52-.31 1.98s-1.52.32-1.98-.31m7.46-8.78-2.06-.67a1.424 1.424 0 0 1-.91-1.79c.24-.74 1.04-1.15 1.79-.91l2.06.67c.74.24 1.15 1.04.91 1.78s-1.04 1.15-1.79.91m.87-11.47-2.06.67c-.74.24-1.54-.17-1.79-.91-.24-.74.17-1.54.91-1.78l2.06-.67c.74-.24 1.54.16 1.79.91.24.74-.17 1.54-.91 1.79M31.16 5.8l-1.27 1.75c-.46.63-1.34.77-1.98.31a1.42 1.42 0 0 1-.31-1.98l1.27-1.75a1.42 1.42 0 0 1 1.98-.31c.63.46.77 1.35.31 1.98"/></g></g></svg>
+        <svg class="theme-selection-active-light hidden h-5 w-5 text-yellow-400 group-hover:text-yellow-200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><clipPath id="theme-light_svg__a"><path fill="none" d="M0 0h40v40H0z"/></clipPath><clipPath id="theme-light_svg__b"><path fill="none" d="M0 0h40v40H0z"/></clipPath></defs><g clip-path="url(#theme-light_svg__a)"><g fill="currentColor" clip-path="url(#theme-light_svg__b)"><path d="M30 20c0 5.5-4.5 10-10 10s-10-4.5-10-10 4.5-10 10-10 10 4.5 10 10m8.6 1.4h-2.2c-.8 0-1.4-.6-1.4-1.4s.6-1.4 1.4-1.4h2.2c.8 0 1.4.6 1.4 1.4s-.6 1.4-1.4 1.4M34.1 7.9l-1.5 1.5c-.6.6-1.5.6-2 0-.6-.6-.6-1.5 0-2l1.5-1.5c.6-.6 1.5-.6 2 0 .6.6.6 1.5 0 2M21.4 1.4v2.2c0 .8-.6 1.4-1.4 1.4s-1.4-.6-1.4-1.4V1.4c0-.8.6-1.4 1.4-1.4s1.4.6 1.4 1.4M7.9 5.9l1.5 1.5c.6.6.6 1.5 0 2-.6.6-1.5.6-2 0L5.9 7.9c-.6-.6-.6-1.5 0-2 .6-.6 1.5-.6 2 0M1.4 18.6h2.2c.8 0 1.4.6 1.4 1.4s-.6 1.4-1.4 1.4H1.4C.6 21.4 0 20.8 0 20s.6-1.4 1.4-1.4m4.5 13.5 1.5-1.5c.6-.6 1.4-.6 2 0s.6 1.5 0 2l-1.5 1.5c-.6.6-1.5.6-2 0-.6-.6-.6-1.5 0-2m12.7 6.5v-2.2c0-.8.6-1.4 1.4-1.4s1.4.6 1.4 1.4v2.2c0 .8-.6 1.4-1.4 1.4s-1.4-.6-1.4-1.4m13.5-4.5-1.5-1.5c-.6-.6-.6-1.4 0-2s1.5-.6 2 0l1.5 1.5c.6.6.6 1.5 0 2-.6.6-1.5.6-2 0"/></g></g></svg>
+    </button>
+
+    <!-- Panel -->
+    <div x-cloak x-ref="panel" x-show="open" x-transition.origin.top.center x-on:click.outside="close()"
+      :id="$id('dropdown-button')" class="absolute overflow-hidden z-50 bg-gray-550 absolute right-0 top-14 mt-[1px] min-w-[200px] rounded-sm py-3 md:top-10">
+      <nav>
+          <ul class="theme-selection-dropdown">
+                          <li
+                class="theme-selection-item group flex w-full cursor-pointer flex-row items-center px-5 py-2 text-gray-300 hover:bg-gray-700 hover:text-green-400 focus:bg-gray-700 focus:text-green-400"
+                data-theme="light"
+                data-selected="false">
+                <svg class="theme-selection-icon mr-2 inline-block h-5 w-5 text-gray-100 group-hover:text-green-400 group-focus:text-inherit" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><clipPath id="theme-light_svg__a"><path fill="none" d="M0 0h40v40H0z"/></clipPath><clipPath id="theme-light_svg__b"><path fill="none" d="M0 0h40v40H0z"/></clipPath></defs><g clip-path="url(#theme-light_svg__a)"><g fill="currentColor" clip-path="url(#theme-light_svg__b)"><path d="M30 20c0 5.5-4.5 10-10 10s-10-4.5-10-10 4.5-10 10-10 10 4.5 10 10m8.6 1.4h-2.2c-.8 0-1.4-.6-1.4-1.4s.6-1.4 1.4-1.4h2.2c.8 0 1.4.6 1.4 1.4s-.6 1.4-1.4 1.4M34.1 7.9l-1.5 1.5c-.6.6-1.5.6-2 0-.6-.6-.6-1.5 0-2l1.5-1.5c.6-.6 1.5-.6 2 0 .6.6.6 1.5 0 2M21.4 1.4v2.2c0 .8-.6 1.4-1.4 1.4s-1.4-.6-1.4-1.4V1.4c0-.8.6-1.4 1.4-1.4s1.4.6 1.4 1.4M7.9 5.9l1.5 1.5c.6.6.6 1.5 0 2-.6.6-1.5.6-2 0L5.9 7.9c-.6-.6-.6-1.5 0-2 .6-.6 1.5-.6 2 0M1.4 18.6h2.2c.8 0 1.4.6 1.4 1.4s-.6 1.4-1.4 1.4H1.4C.6 21.4 0 20.8 0 20s.6-1.4 1.4-1.4m4.5 13.5 1.5-1.5c.6-.6 1.4-.6 2 0s.6 1.5 0 2l-1.5 1.5c-.6.6-1.5.6-2 0-.6-.6-.6-1.5 0-2m12.7 6.5v-2.2c0-.8.6-1.4 1.4-1.4s1.4.6 1.4 1.4v2.2c0 .8-.6 1.4-1.4 1.4s-1.4-.6-1.4-1.4m13.5-4.5-1.5-1.5c-.6-.6-.6-1.4 0-2s1.5-.6 2 0l1.5 1.5c.6.6.6 1.5 0 2-.6.6-1.5.6-2 0"/></g></g></svg>
+                HyperLight
+              </li>
+                          <li
+                class="theme-selection-item group flex w-full cursor-pointer flex-row items-center px-5 py-2 text-gray-300 hover:bg-gray-700 hover:text-green-400 focus:bg-gray-700 focus:text-green-400"
+                data-theme="dusk"
+                data-selected="false">
+                <svg class="theme-selection-icon mr-2 inline-block h-5 w-5 text-gray-100 group-hover:text-green-400 group-focus:text-inherit" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 38.18 40"><defs><clipPath id="theme-dusk_svg__a"><path fill="none" d="M0 0h38.18v40H0z"/></clipPath><clipPath id="theme-dusk_svg__b"><path fill="none" d="M0 0h38.18v40H0z"/></clipPath></defs><g clip-path="url(#theme-dusk_svg__a)"><g fill="currentColor" clip-path="url(#theme-dusk_svg__b)"><path d="M19.09 5.86C11.28 5.86 4.95 12.19 4.95 20s6.33 14.14 14.14 14.14S33.23 27.81 33.23 20 26.9 5.86 19.09 5.86m0 26.28C12.4 32.14 6.95 26.69 6.95 20c0-6.13 4.57-11.2 10.48-12.01a12.07 12.07 0 0 0-2.63 7.52c0 6.7 5.45 12.14 12.14 12.14.56 0 1.11-.05 1.66-.13-2.23 2.81-5.66 4.62-9.52 4.62m1.43-30.72v2.17c0 .78-.63 1.42-1.42 1.42s-1.42-.63-1.42-1.42V1.42a1.419 1.419 0 1 1 2.84 0M9.31 4.13l1.27 1.75c.46.63.32 1.52-.31 1.98s-1.52.32-1.98-.31L7.02 5.8a1.42 1.42 0 0 1 .31-1.98 1.42 1.42 0 0 1 1.98.31m-7.45 8.78 2.06.67c.74.24 1.15 1.04.91 1.79s-1.04 1.15-1.79.91l-2.06-.67a1.417 1.417 0 0 1-.91-1.78c.24-.74 1.04-1.15 1.79-.91M.98 24.39l2.06-.67c.74-.24 1.54.16 1.79.91.24.74-.17 1.54-.91 1.78l-2.06.67a1.42 1.42 0 0 1-1.79-.91c-.24-.74.17-1.54.91-1.79m6.04 9.82 1.27-1.75a1.42 1.42 0 0 1 1.98-.31c.63.46.77 1.35.31 1.98l-1.27 1.75c-.46.63-1.35.77-1.98.31a1.42 1.42 0 0 1-.31-1.98m10.65 4.38v-2.16c0-.78.63-1.42 1.42-1.42s1.42.63 1.42 1.42v2.16c0 .78-.63 1.42-1.42 1.42s-1.42-.63-1.42-1.42m11.2-2.71-1.27-1.75a1.42 1.42 0 0 1 .31-1.98 1.42 1.42 0 0 1 1.98.31l1.27 1.75c.46.63.32 1.52-.31 1.98s-1.52.32-1.98-.31m7.46-8.78-2.06-.67a1.424 1.424 0 0 1-.91-1.79c.24-.74 1.04-1.15 1.79-.91l2.06.67c.74.24 1.15 1.04.91 1.78s-1.04 1.15-1.79.91m.87-11.47-2.06.67c-.74.24-1.54-.17-1.79-.91-.24-.74.17-1.54.91-1.78l2.06-.67c.74-.24 1.54.16 1.79.91.24.74-.17 1.54-.91 1.79M31.16 5.8l-1.27 1.75c-.46.63-1.34.77-1.98.31a1.42 1.42 0 0 1-.31-1.98l1.27-1.75a1.42 1.42 0 0 1 1.98-.31c.63.46.77 1.35.31 1.98"/></g></g></svg>
+                Day & Night
+              </li>
+                          <li
+                class="theme-selection-item group flex w-full cursor-pointer flex-row items-center px-5 py-2 text-gray-300 hover:bg-gray-700 hover:text-green-400 focus:bg-gray-700 focus:text-green-400"
+                data-theme="dark"
+                data-selected="false">
+                <svg class="theme-selection-icon mr-2 inline-block h-5 w-5 text-gray-100 group-hover:text-green-400 group-focus:text-inherit" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 38.4 38.4"><defs><clipPath id="theme-dark_svg__a"><path fill="none" d="M0 0h38.4v38.4H0z"/></clipPath><clipPath id="theme-dark_svg__b"><path fill="none" d="M0 0h38.4v38.4H0z"/></clipPath></defs><g clip-path="url(#theme-dark_svg__a)"><g fill="currentColor" clip-path="url(#theme-dark_svg__b)"><path d="M14.5 11.4c0-4.3 1.4-8.2 3.7-11.4C8.8 1.3 1.6 9.3 1.6 19.1s8.6 19.3 19.3 19.3 12.1-3.1 15.6-7.9c-.9.1-1.8.2-2.7.2-10.7 0-19.3-8.6-19.3-19.3m17.8-6.8v2.1c0 .8-.6 1.4-1.4 1.4s-1.4-.6-1.4-1.4V4.6c0-.8.6-1.4 1.4-1.4s1.4.6 1.4 1.4m0 6.8v2.1c0 .8-.6 1.4-1.4 1.4s-1.4-.6-1.4-1.4v-2.1c0-.8.6-1.4 1.4-1.4s1.4.6 1.4 1.4m-5.8-3.7h2.1c.8 0 1.4.6 1.4 1.4s-.6 1.4-1.4 1.4h-2.1c-.8 0-1.4-.6-1.4-1.4s.6-1.4 1.4-1.4m6.8 0h2.1c.8 0 1.4.6 1.4 1.4s-.6 1.4-1.4 1.4h-2.1c-.8 0-1.4-.6-1.4-1.4s.6-1.4 1.4-1.4"/></g></g></svg>
+                Dark
+              </li>
+                          <li
+                class="theme-selection-item group flex w-full cursor-pointer flex-row items-center px-5 py-2 text-gray-300 hover:bg-gray-700 hover:text-green-400 focus:bg-gray-700 focus:text-green-400"
+                data-theme="system"
+                data-selected="true">
+                <svg class="theme-selection-icon mr-2 inline-block h-5 w-5 text-gray-100 group-hover:text-green-400 group-focus:text-inherit" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><clipPath id="theme-system_svg__a"><path fill="none" d="M0 0h40v40H0z"/></clipPath><clipPath id="theme-system_svg__b"><path fill="none" d="M0 0h40v40H0z"/></clipPath></defs><g clip-path="url(#theme-system_svg__a)"><g clip-path="url(#theme-system_svg__b)"><path fill="currentColor" d="M20 0C8.95 0 0 8.95 0 20s8.95 20 20 20 20-8.95 20-20S31.05 0 20 0m0 38V2c9.92 0 18 8.08 18 18s-8.08 18-18 18"/></g></g></svg>
+                System
+              </li>
+                      </ul>
+        </nav>
+    </div>
+  </div>
+</div>
+    
+
+    
+    <a class="flex flex-row flex-nowrap items-center gap-2 text-gray-300 hover:text-gray-100 focus:text-gray-100"
+      href="/search/" title="Search" aria-label="Open search page">
+      <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><clipPath id="magnify_svg__a"><path fill="none" d="M0 0h40v40H0z"/></clipPath><clipPath id="magnify_svg__b"><path fill="none" d="M0 0h40v40H0z"/></clipPath></defs><g clip-path="url(#magnify_svg__a)"><g fill="none" clip-path="url(#magnify_svg__b)"><path fill="currentColor" d="M39.2 35.4 29 25.2c4.4-6.2 3.9-15-1.7-20.6C24.2 1.6 20.1 0 16 0S7.8 1.6 4.7 4.7c-6.2 6.2-6.2 16.4 0 22.6C7.8 30.4 11.9 32 16 32s6.5-1 9.3-3l10.2 10.2c.5.5 1.2.8 1.9.8s1.4-.3 1.9-.8c1-1 1-2.7 0-3.8M8.5 23.5c-2-2-3.1-4.7-3.1-7.5s1.1-5.5 3.1-7.5 4.7-3.1 7.5-3.1 5.5 1.1 7.5 3.1c4.2 4.2 4.2 10.9 0 15.1-2 2-4.7 3.1-7.5 3.1s-5.5-1.1-7.5-3.1"/></g></g></svg>
+      <span class="sr-only">Search</span>
+    </a>
+    
+
+    
+    
+
+    
+    <div class="h-5 w-[1px] bg-gray-400"></div>
+
+    
+          
+      <div class="flex md:justify-center" data-modal-id="sign-in" x-data="arsModal()">
+  
+  <button type="button" aria-label="Sign in dialog..." class="whitespace-nowrap text-gray-300 hover:text-gray-100" aria-label="Open sign in dialog" x-on:click="show()">
+    Sign In
+  </button>
+
+  
+  <template x-teleport="body">
+    <div class="fixed inset-0 z-[99999] overflow-y-auto" role="dialog" aria-modal="true" x-cloak x-show="open"
+      x-on:keydown.escape.window.prevent.stop="hide()" x-id="['modal-title']" x-ref="panel"
+      :aria-labelledby="$id('modal-title')">
+
+      
+      <div class="fixed inset-0 bg-slate-900/80 opacity-100 backdrop-blur" x-show="open" x-transition.duration.150ms>
+      </div>
+
+      
+      <div class="relative flex min-h-screen items-center justify-center" x-on:click="hide()" x-show="open"
+        x-transition.duration.150ms>
+        <div  x-on:click.stop x-trap.noscroll.inert="open">
+          
+          <span class="sr-only" :id="$id('modal-title')">
+            Sign in dialog...
+          </span>
+
+          
+          <div
+  class="sign-in-panel absolute left-1/2 top-1/2 w-3/4 min-w-[320px] max-w-xl -translate-x-1/2 -translate-y-1/2"
+>
+  
+  <header
+    class="font-impact flex items-center justify-between bg-gray-600 px-7 py-4 font-semibold uppercase"
+  >
+    <div class="text-gray-350 flex items-center gap-3">
+      <svg class="h-3 w-3 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><clipPath id="arrow-blocks-right_svg__a"><path fill="none" d="M0 0h40v40H0z"/></clipPath></defs><g fill="currentColor" clip-path="url(#arrow-blocks-right_svg__a)"><path d="M32 16h8v8h-8zm-8 8h8v8h-8zm-8 8h8v8h-8zm8-24h8v8h-8zm-8-8h8v8h-8zM0 16h16v8H0z"/></g></svg>
+      Sign in
+    </div>
+    <button
+      class="text-gray-300 hover:text-gray-100 focus:text-gray-100"
+      x-on:click="open = false"
+    >
+      <svg class="h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 34.7 40"><defs><clipPath id="x_svg__a"><path fill="none" d="M0 0h34.7v40H0z"/></clipPath></defs><g fill="none" clip-path="url(#x_svg__a)"><path fill="currentColor" d="m26.4 0-8.5 16.9h-1.1L8.3 0H.8l10.1 19.4L0 40h7.6l9.2-18.3h1.1L27.1 40h7.6L23.8 19.4 33.9 0z"/></g></svg>
+    </button>
+  </header>
+
+  
+  <div class="sign-in-panel-body bg-gray-700 px-7 py-4">
+
+    
+    <div
+      class="col-span-3 normal-case text-gray-300"
+      x-data="arsSignInPanel()"
+      x-on:modal-opened.window="onModalOpened($event)"
+    >
+      <div class="sign-in-form" x-ref="form"></div>
+    </div>
+  </div>
+  
+</div>
+        </div>
+      </div>
+    </div>
+  </template>
+</div>
+        
+  </div>
+</header>
+
+<main class="main relative -mt-4 lg:mt-6" id="main">
+            <article class="double-column h-entry post-2013674 post type-post status-publish format-standard has-post-thumbnail hentry category-information-technology category-security tag-backdoors tag-linux-2 tag-supply-chain-attack tag-xz-utils" data-id="2013674">
+  
+  <header>
+  <div class="dusk:bg-gray-700 my-4 bg-white py-4 md:my-10 md:py-8 dark:bg-gray-700">
+  <div class="mx-auto max-w-2xl px-4 md:px-8 lg:grid lg:max-w-6xl">
+    <div class="md:mb-2">
+      <div
+  class="upper-deck font-impact text-green-450 dusk:text-green-400 inline-flex flex-row flex-nowrap items-center gap-2 text-left text-sm font-semibold uppercase leading-tight dark:text-green-400">
+  <span class="upper-deck__icon">
+    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><clipPath id="section-security_svg__a"><path fill="none" d="M0 0h40v40H0z"/></clipPath><clipPath id="section-security_svg__b"><path fill="none" d="M0 0h40v40H0z"/></clipPath></defs><g clip-path="url(#section-security_svg__a)"><g fill="none" clip-path="url(#section-security_svg__b)"><path fill="currentColor" d="M37.7 21.1C39.7 10.4 32.8 0 20.8 0h-1.6C7.2 0 .3 10.4 2.3 21.1c.5 2.6-2.3 3.5-2.3 6.6 0 3.2 3.5 4 5.9 4.1h2.8c1.3 0 1.8.5 1.8 1.6 0 1.5.2 4.1.3 5.6 0 .2.7.4 1.9.5v-3.4c0-.4.3-.8.7-.8s.8.3.8.8v3.5c.9 0 1.8.1 2.9.1v-3.6c0-.4.3-.8.8-.8s.8.3.8.8v3.7h2.9v-3.7c0-.4.3-.8.8-.8s.8.3.8.8v3.6c1 0 2 0 2.9-.1v-3.5c0-.4.3-.8.8-.8s.8.3.8.8v3.4c1.1-.1 1.8-.3 1.9-.5.1-1.5.3-4.1.3-5.6 0-1.1.5-1.7 1.8-1.6h2.8c2.4-.1 5.9-.9 5.9-4.1 0-3.1-2.8-4-2.3-6.7m-26.7 4.7c-4 0-6.6-4-4.9-7.2 1.1-2 3.1-3.2 5.2-3.7 4.1-.9 7.6 2.9 6.7 6.6-.7 2.7-3.5 3.9-7 4.2m8.6 2.1-1 3c-.2.5-.7.8-1.1.6s-.7-.8-.5-1.3l.9-3c.2-.5.7-.8 1.1-.6s.7.8.5 1.3m2.8 3.6c-.4.2-.9 0-1.1-.6l-1-3c-.2-.5 0-1.1.5-1.3.4-.2.9 0 1.1.6l.9 3c.2.5 0 1.1-.5 1.3m6.6-5.7c-3.5-.4-6.3-1.5-7-4.2-.9-3.7 2.6-7.6 6.7-6.6 2.1.5 4.1 1.7 5.2 3.7 1.8 3.2-.9 7.2-4.9 7.2"/></g></g></svg>
+  </span>
+  <span class="upper-deck__text">
+    SUPPLY CHAIN ATTACK
+  </span>
+</div>
+    </div>
+
+    <h1
+      class="dusk:text-gray-100 mb-3 font-serif text-4xl font-bold text-gray-700 md:text-6xl md:leading-[1.05] dark:text-gray-100">
+      Backdoor found in widely used Linux utility targets encrypted SSH connections
+    </h1>
+
+    <p class="text-gray-550 dark:text-gray-250 dusk:text-gray-250 my-3 text-2xl leading-[1.1] md:leading-[1.2]">
+      Malicious code planted in xz Utils has been circulating for more than a month.
+    </p>
+
+          <div class="my-3 md:mb-6 md:mt-0">
+        <div class="font-impact text-xs font-semibold uppercase text-gray-300"><a class="text-orange-400 hover:text-orange-500" href="https://arstechnica.com/author/dan-goodin/">
+    Dan Goodin
+  </a>
+  –
+  <span class="whitespace-nowrap">
+    <time class="mr-[2px] inline-block cursor-default" title="2024-03-29T14:50:34-04:00" datetime="2024-03-29T14:50:34-04:00" data-mode="dateTime"
+  data-time-separator=" " data-updated-timestamp="false"
+  x-data="arsTimestamp()" x-text="format()">
+  Mar 29, 2024 2:50 pm
+</time>
+    <span class="text-gray-550">|</span> <a class="view-comments text-gray-300 hover:text-gray-500"
+    href="https://arstechnica.com/security/2024/03/backdoor-found-in-widely-used-linux-utility-breaks-encrypted-ssh-connections/#comments" title="237 comments">
+    <svg class="-mt-1 ml-1 mr-[2px] inline-block h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><defs><clipPath id="bubble-zero_svg__a"><path fill="none" stroke-width="0" d="M0 0h80v80H0z"/></clipPath><clipPath id="bubble-zero_svg__b"><path fill="none" stroke-width="0" d="M0 0h80v80H0z"/></clipPath></defs><g clip-path="url(#bubble-zero_svg__a)"><g fill="currentColor" clip-path="url(#bubble-zero_svg__b)"><path d="M80 40c0 22.09-17.91 40-40 40S0 62.09 0 40 17.91 0 40 0s40 17.91 40 40"/><path d="M40 40 .59 76.58C-.67 77.84.22 80 2.01 80H40z"/></g></g></svg>
+    237
+  </a>
+  </span>
+
+        
+                  <template data-editor-stats></template>
+  <template id="ars-editor-stats-template"><div class="overlay-stats flex gap-2 py-2 text-xs font-semibold uppercase text-gray-700">
+      <div
+      class="overlay-stat overlay-views bg-gray-250 flex h-5 w-auto items-center gap-1 rounded-full pr-2">
+      <svg class="overlay-stat-icon h-full w-auto overflow-hidden rounded-full text-gray-700 outline outline-2 outline-gray-700" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><clipPath id="views_svg__a"><path fill="none" d="M0 0h40v40H0z"/></clipPath><clipPath id="views_svg__b"><path fill="none" d="M0 0h40v40H0z"/></clipPath><clipPath id="views_svg__c"><path fill="none" d="M0 6.7h40v26.7H0z"/></clipPath><clipPath id="views_svg__d"><path fill="none" d="M0 6.7h40v26.7H0z"/></clipPath></defs><g clip-path="url(#views_svg__a)"><g clip-path="url(#views_svg__b)"><g clip-path="url(#views_svg__c)"><g fill="none" clip-path="url(#views_svg__d)"><path fill="currentColor" d="M18.9 16.2c0-1.5-1.2-2.7-2.7-2.7s-1.2.2-1.7.6c1.4-1.3 3.4-2.2 5.5-2.2h.8c4 .4 7.2 3.8 7.2 8s-3.6 8-8 8-8-3.6-8-8 .8-4 2.2-5.5c-.4.5-.6 1.1-.6 1.7 0 1.5 1.2 2.7 2.7 2.7s2.7-1.2 2.7-2.7"/><path fill="currentColor" d="M32.5 11.9c4.6 3.7 7.6 8.1 7.6 8.1s-3 4.4-7.6 8.1c-.6.5-1.2 1-1.9 1.4-1.3.9-2.8 1.7-4.2 2.4-.6.3-1.3.5-1.9.7-1.1.3-2.3.6-3.4.6h-1.9c-1.2 0-2.3-.3-3.4-.6-.7-.2-1.3-.4-1.9-.7-1.5-.6-2.9-1.5-4.3-2.4-.7-.5-1.3-.9-1.9-1.4C2.9 24.4 0 20 0 20s3-4.4 7.5-8.1c.6-.5 1.2-1 1.9-1.5 1.3-.9 2.8-1.7 4.3-2.4.6-.3 1.2-.5 1.9-.7 1.1-.3 2.2-.6 3.4-.6h1.9c1.2 0 2.3.3 3.4.6.6.2 1.3.4 1.9.7 1.5.6 2.9 1.5 4.2 2.4.7.5 1.3 1 1.9 1.5m3.1 8.1c-1-1.3-3-3.7-5.6-5.8-.5-.4-1.1-.8-1.6-1.2-1.1-.8-2.3-1.5-3.5-1.9l-1.5-.6c-.8-.2-1.6-.4-2.3-.5h-1.7c-.9 0-1.8.2-2.6.5-.5.2-1 .3-1.5.6-1.1.5-2.3 1.1-3.5 1.9-.5.4-1.1.8-1.6 1.2-2.6 2.1-4.5 4.5-5.6 5.8 1 1.3 3 3.7 5.6 5.8.5.4 1.1.8 1.6 1.2 1.2.8 2.3 1.5 3.5 1.9l1.5.6c.9.3 1.8.4 2.6.5h1.4c.9 0 1.8-.2 2.7-.5.5-.2 1-.3 1.5-.6 1.1-.5 2.3-1.1 3.5-1.9.5-.4 1.1-.8 1.6-1.2 2.6-2.1 4.5-4.5 5.6-5.8"/><path fill="#e9eaed" d="M14.5 14.2c-.1.1-.2.2-.3.4.1-.1.2-.2.3-.4"/></g></g></g></g></svg>
+      <span class="overlay-stat-value ml-1">...</span>
+    </div>
+      <div
+      class="overlay-stat overlay-visitors bg-gray-250 flex h-5 w-auto items-center gap-1 rounded-full pr-2">
+      <svg class="overlay-stat-icon h-full w-auto overflow-hidden rounded-full text-gray-700 outline outline-2 outline-gray-700" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36.4 36.4"><defs><clipPath id="visitors_svg__a"><path fill="none" d="M0 0h36.4v36.4H0z"/></clipPath><clipPath id="visitors_svg__b"><path fill="none" d="M0 0h36.4v36.4H0z"/></clipPath></defs><g clip-path="url(#visitors_svg__a)"><g fill="currentColor" clip-path="url(#visitors_svg__b)"><path d="M21.6 20.8c3-1.3 5.1-4.3 5.1-7.8s-3.8-8.5-8.5-8.5S9.7 8.3 9.7 13s2.1 6.5 5.1 7.8c-4.8 1-8.8 4.3-10.9 8.6-2.4-3.1-3.9-7-3.9-11.2v18.2h36.4V18.2c0 4.2-1.5 8.1-3.9 11.2-2.1-4.3-6.1-7.5-10.9-8.6"/><path d="M18.2 0H0v18.2C0 8.1 8.1 0 18.2 0m0 0c10 0 18.2 8.1 18.2 18.2V0z"/></g></g></svg>
+      <span class="overlay-stat-value ml-1">...</span>
+    </div>
+      <div
+      class="overlay-stat overlay-minutes bg-gray-250 flex h-5 w-auto items-center gap-1 rounded-full pr-2">
+      <svg class="overlay-stat-icon h-full w-auto overflow-hidden rounded-full text-gray-700 outline outline-2 outline-gray-700" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><clipPath id="minutes_svg__a"><path fill="none" d="M0 0h40v40H0z"/></clipPath><clipPath id="minutes_svg__b"><path fill="none" d="M0 0h40v40H0z"/></clipPath><clipPath id="minutes_svg__c"><path fill="none" d="M18 10.9h13.9v21H18z"/></clipPath><clipPath id="minutes_svg__d"><path fill="none" d="M18 10.9h13.9v21H18z"/></clipPath></defs><g clip-path="url(#minutes_svg__a)"><g clip-path="url(#minutes_svg__b)"><g clip-path="url(#minutes_svg__c)"><g fill="none" clip-path="url(#minutes_svg__d)"><path fill="currentColor" d="M31.3 31.3c-.8.8-2 .8-2.8 0l-9.9-9.9c-.8-.8-.8-2 0-2.8l7.1-7.1c.8-.8 2-.8 2.8 0s.8 2 0 2.8L22.8 20l8.5 8.5c.8.8.8 2.1 0 2.8"/></g></g></g></g></svg>
+      <span class="overlay-stat-value ml-1">...</span>
+    </div>
+  </div>
+</template></div>
+      </div>
+    
+    <div class="relative">
+              <div class="ars-lightbox">
+          <div class="ars-lightbox-item">
+            <a class="cursor-zoom-in" data-pswp-width="1100"
+              data-pswp-height="733" data-pswp-srcset="https://cdn.arstechnica.net/wp-content/uploads/2024/03/backdoor-1.jpg 1100w, https://cdn.arstechnica.net/wp-content/uploads/2024/03/backdoor-1-300x200.jpg 300w, https://cdn.arstechnica.net/wp-content/uploads/2024/03/backdoor-1-640x426.jpg 640w, https://cdn.arstechnica.net/wp-content/uploads/2024/03/backdoor-1-768x512.jpg 768w, https://cdn.arstechnica.net/wp-content/uploads/2024/03/backdoor-1-980x653.jpg 980w"
+              data-cropped="false" href="https://cdn.arstechnica.net/wp-content/uploads/2024/03/backdoor-1.jpg" target="_blank">
+              <img width="1100" height="733" src="https://cdn.arstechnica.net/wp-content/uploads/2024/03/backdoor-1.jpg" class="intro-image" alt="" loading="eager" decoding="async" fetchpriority="high" srcset="https://cdn.arstechnica.net/wp-content/uploads/2024/03/backdoor-1.jpg 1100w, https://cdn.arstechnica.net/wp-content/uploads/2024/03/backdoor-1-300x200.jpg 300w, https://cdn.arstechnica.net/wp-content/uploads/2024/03/backdoor-1-640x426.jpg 640w, https://cdn.arstechnica.net/wp-content/uploads/2024/03/backdoor-1-768x512.jpg 768w, https://cdn.arstechnica.net/wp-content/uploads/2024/03/backdoor-1-980x653.jpg 980w" sizes="(max-width: 1100px) 100vw, 1100px" />
+            </a>
+            <div class="pswp-caption-content" id="caption-2013700">
+              <div
+    class="caption font-impact dusk:text-gray-300 mb-4 mt-2 inline-flex flex-row items-stretch gap-1 text-base leading-tight text-gray-400 dark:text-gray-300">
+    <div class="caption-icon bg-[left_top_5px] w-[10px] shrink-0"></div>
+    <div class="caption-content">
+      Internet Backdoor in a string of binary code in a shape of an eye.
+
+              <span class="caption-credit mt-2 text-xs">
+          Credit:
+
+          
+          Getty Images
+
+                  </span>
+          </div>
+  </div>
+            </div>
+          </div>
+        </div>
+          </div>
+
+    <div>
+      <div
+    class="caption font-impact dusk:text-gray-300 mb-4 mt-2 inline-flex flex-row items-stretch gap-1 text-base leading-tight text-gray-400 dark:text-gray-300">
+    <div class="caption-icon bg-[left_top_5px] w-[10px] shrink-0"></div>
+    <div class="caption-content">
+      Internet Backdoor in a string of binary code in a shape of an eye.
+
+              <span class="caption-credit mt-2 text-xs">
+          Credit:
+
+          
+          Getty Images
+
+                  </span>
+          </div>
+  </div>
+    </div>
+  </div>
+</div>
+</header>
+<div class="text-settings-dropdown-story mdl:absolute mdl:z-10 mdl:mb-0 mdl:mt-1 relative -mt-4 mb-2">
+  <div x-data="arsDropdown()" @keydown.escape.prevent.stop="close($refs.button)"
+    @focusin.window="! $refs.panel.contains($event.target) && close()" x-id="['dropdown-button']">
+
+    <!-- Button -->
+    <button type="button" x-ref="button"
+      x-on:click="
+      toggle();
+      $dispatch('dropdown-opened', { panel: $refs.panel });
+      "
+      :aria-expanded="open" :aria-controls="$id('dropdown-button')" :class="{ selected: open }"
+      class="group flex items-center bg-gray-150 dark:bg-gray-550 mdl:flex-col mdl:bg-transparent mdl:p-0 mdl:dark:bg-transparent flex w-full items-center justify-between px-[15px] py-2.5 sm:px-5 lg:px-8" arial-label="" aria-label="Open text settings dropdown">
+      <div class="flex items-center gap-2">
+      <svg class="dark:text-gray-250 mdl:h-7 mdl:w-7 h-5 w-5 text-gray-300 group-hover:text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 43 43"><defs><clipPath id="text-settings_svg__a"><path fill="none" stroke-width="0" d="M0 0h43v43H0z"/></clipPath><clipPath id="text-settings_svg__b"><path fill="none" stroke-width="0" d="M0 0h43v43H0z"/></clipPath></defs><g clip-path="url(#text-settings_svg__a)"><g fill="currentColor" clip-path="url(#text-settings_svg__b)"><path d="M33.52 17.82c-.69-.27-1.55-.4-2.55-.4-.6 0-1.28.03-2.04.08-.76.06-1.52.12-2.28.21-.76.08-1.43.18-2.01.29l.34 2.38c.97-.06 1.92-.12 2.84-.16q1.38-.06 2.31-.06c.74 0 1.25.13 1.52.39s.4.67.4 1.24v.56h-4.34c-1.13 0-2.02.27-2.67.8s-.97 1.28-.97 2.23v1.24c0 .75.17 1.37.51 1.87q.51.75 1.38 1.14c.58.26 1.24.39 1.97.39s1.41-.12 1.99-.36a6.34 6.34 0 0 0 2.51-1.85l.38 1.92h2.86v-7.91c0-1.12-.18-1.99-.55-2.63a3 3 0 0 0-1.59-1.36m-1.49 8.42c-.06.04-.11.09-.17.13q-.735.48-1.47.75c-.49.18-.95.27-1.37.27-.5 0-.87-.11-1.09-.33-.23-.22-.34-.53-.34-.93v-.58c0-.36.09-.64.28-.85s.5-.31.94-.31l3.23-.02v1.87Zm-14.2-13q-.36-.27-.81-.27h-3.52q-.465 0-.81.27c-.23.18-.39.41-.47.7L7.35 29.72h3.81l1.23-4.42h5.77l1.23 4.42h3.79l-4.85-15.77a1.3 1.3 0 0 0-.47-.7m-4.71 9.27 1.42-5.1q.12-.405.21-.84c.06-.28.11-.55.16-.81h.65c.05.26.1.53.17.81s.13.56.19.84l1.42 5.1z"/><path d="M33.5 4.5c2.76 0 5 2.24 5 5v24.01c0 2.76-2.24 5-5 5h-24c-2.76 0-5-2.24-5-5V9.5c0-2.76 2.24-5 5-5zm0-3h-24c-4.42 0-8 3.58-8 8v24.01c0 4.42 3.58 8 8 8h24c4.42 0 8-3.58 8-8V9.5c0-4.42-3.58-8-8-8"/></g></g></svg>
+      <span
+        class="font-impact settings-text dark:text-gray-250 mdl:hidden text-xs font-semibold uppercase text-gray-300">Text
+        settings</span>
+    </div>
+    <span class="settings-icon">
+      <svg class="dark:text-gray-250 mdl:hidden h-4 w-4 text-gray-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 39.8 40"><defs><clipPath id="settings_svg__a"><path fill="none" d="M0 0h39.8v40H0z"/></clipPath><clipPath id="settings_svg__b"><path fill="none" d="M0 0h39.8v40H0z"/></clipPath></defs><g clip-path="url(#settings_svg__a)"><g fill="currentColor" clip-path="url(#settings_svg__b)"><path d="M17.4 3c-.8-1.8-2.5-3-4.5-3S9.1 1.2 8.3 3H0v4h8.3c.8 1.8 2.5 3 4.6 3s3.8-1.2 4.6-3h22.4V3H17.5Zm-4.6 4.5c-1.4 0-2.5-1.1-2.5-2.5s1.1-2.5 2.5-2.5 2.5 1.1 2.5 2.5-1.1 2.5-2.5 2.5M27 15c-2 0-3.8 1.2-4.6 3H0v4h22.4c.8 1.8 2.5 3 4.6 3s3.8-1.2 4.6-3h8.3v-4h-8.3c-.8-1.8-2.5-3-4.6-3m0 7.5c-1.4 0-2.5-1.1-2.5-2.5s1.1-2.5 2.5-2.5 2.5 1.1 2.5 2.5-1.1 2.5-2.5 2.5M12.9 30c-2 0-3.8 1.2-4.6 3H0v4h8.3c.8 1.8 2.5 3 4.6 3s3.8-1.2 4.6-3h22.4v-4H17.5c-.8-1.8-2.5-3-4.6-3m0 7.5c-1.4 0-2.5-1.1-2.5-2.5s1.1-2.5 2.5-2.5 2.5 1.1 2.5 2.5-1.1 2.5-2.5 2.5"/></g></g></svg>
+      <svg class="dark:text-gray-250 mdl:block mt-[3px] hidden h-auto w-5 text-gray-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 25.17"><defs><clipPath id="settings-compact_svg__a"><path fill="none" stroke-width="0" d="M0 0h40v25.17H0z"/></clipPath><clipPath id="settings-compact_svg__b"><path fill="none" stroke-width="0" d="M0 0h40v25.17H0z"/></clipPath></defs><g clip-path="url(#settings-compact_svg__a)"><g fill="currentColor" clip-path="url(#settings-compact_svg__b)"><path d="M27.09.09c-2.05 0-3.81 1.24-4.58 3H0v4h22.51c.77 1.76 2.53 3 4.58 3s3.81-1.24 4.58-3H40v-4h-8.33c-.77-1.76-2.53-3-4.58-3m0 7.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5m-14.18 7.58c-2.05 0-3.81 1.24-4.58 3H0v4h8.34c.77 1.76 2.53 3 4.58 3s3.81-1.24 4.58-3h22.51v-4H17.5c-.77-1.76-2.53-3-4.58-3m-.01 7.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5"/></g></g></svg>
+    </span>
+    </button>
+
+    <!-- Panel -->
+    <div x-cloak x-ref="panel" x-show="open" x-transition.origin.top.center x-on:click.outside="close()"
+      :id="$id('dropdown-button')" class="absolute overflow-hidden z-50 bg-gray-550 absolute left-0 top-0">
+      <div class="text-settings">
+      <div class="text-settings-menu bg-gray-550 w-60">
+        <div class="flex items-center justify-between bg-gray-600 px-5 py-2">
+          <div class="flex items-center gap-2">
+            <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><clipPath id="text-settings-open_svg__a"><path fill="none" stroke-width="0" d="M0 0h40v40H0z"/></clipPath><clipPath id="text-settings-open_svg__b"><path fill="none" stroke-width="0" d="M0 0h40v40H0z"/></clipPath></defs><g clip-path="url(#text-settings-open_svg__a)"><g fill="currentColor" clip-path="url(#text-settings-open_svg__b)"><path d="M26.38 23.2c-.19.21-.28.49-.28.85v.58c0 .4.11.72.34.93.23.22.59.33 1.09.33.42 0 .88-.09 1.37-.27q.735-.27 1.47-.75c.06-.04.11-.09.17-.13v-1.87h-3.23q-.66.015-.93.33"/><path d="M32 0H8C3.58 0 0 3.58 0 8v24.01C0 36.42 3.58 40 8 40h24c4.42 0 8-3.58 8-8V8c0-4.42-3.58-8-8-8M17.88 28.23l-1.23-4.42h-5.77l-1.23 4.42H5.84l4.88-15.77a1.316 1.316 0 0 1 1.28-.97h3.52q.465 0 .81.27c.23.18.39.41.47.7l4.85 15.77h-3.79Zm16.28 0H31.3l-.38-1.92c-.27.33-.59.65-.98.96-.44.35-.95.64-1.53.89-.58.24-1.25.36-1.99.36s-1.38-.13-1.97-.39q-.87-.39-1.38-1.14c-.34-.5-.51-1.12-.51-1.87v-1.24c0-.95.32-1.7.97-2.23s1.54-.8 2.67-.8h4.34v-.56c0-.57-.13-.98-.4-1.24s-.77-.39-1.52-.39c-.61 0-1.38.02-2.3.06s-1.87.09-2.84.16l-.34-2.38c.58-.11 1.25-.21 2.02-.29q1.14-.12 2.28-.21t2.04-.09c1 0 1.85.13 2.55.4.69.27 1.22.72 1.59 1.36.36.64.55 1.52.55 2.63v7.91Z"/><path d="M14.26 15.09c-.06-.28-.12-.55-.17-.81h-.65c-.05.26-.1.53-.16.81s-.12.56-.21.84l-1.42 5.1h4.22l-1.42-5.1c-.07-.27-.13-.55-.19-.84"/></g></g></svg>
+            <span class="font-impact text-gray-350 text-base font-semibold uppercase">Story text</span>
+          </div>
+          <span class="text-settings-close" x-on:click="close();">
+            <svg class="h-4 w-4 text-gray-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><clipPath id="close_svg__a"><path fill="none" d="M0 0h40v40H0z"/></clipPath></defs><g fill="none" clip-path="url(#close_svg__a)"><path fill="currentColor" d="M34.3 0 20 14.3 5.7 0H0v5.7L14.3 20 0 34.3V40h5.7L20 25.7 34.3 40H40v-5.7L25.7 20 40 5.7V0z"/></g></svg>
+          </span>
+        </div>
+
+        <div class="grid grid-cols-3 items-center gap-3 px-5 py-2">
+          <label class="font-impact w-20 text-base font-semibold uppercase text-gray-100" for="text-settings-size">Size</label>
+<select name="text-settings-size" class="text-settings-size col-span-2 bg-gray-600 text-sm text-gray-300">
+  <option value="small">Small</option>
+  <option value="standard" selected>Standard</option>
+  <option value="large">Large</option>
+</select>
+
+
+<label class="font-impact hidden w-20 text-base font-semibold uppercase text-gray-100 md:block"
+  for="text-settings-width">Width
+      <span class="text-gray-400">*</span>
+  </label>
+<select name="text-settings-width"
+  class="text-settings-width col-span-2 hidden bg-gray-600 text-sm text-gray-300 md:block">
+  <option value="standard" selected>Standard</option>
+  <option value="wide">Wide</option>
+</select>
+
+
+<label class="font-impact w-20 text-base font-semibold uppercase text-gray-100" for="text-settings-links">Links</label>
+<select name="text-settings-links" class="text-settings-links col-span-2 bg-gray-600 text-sm text-gray-300">
+  <option value="standard" selected>Standard</option>
+  <option value="orange">Orange</option>
+</select>
+
+
+  <div class="font-impact col-span-3 hidden text-sm font-semibold uppercase text-gray-400 md:block">
+    <span class="mb-0 italic">* Subscribers only</span><br>
+    &nbsp;&nbsp;<a href="/store/product/subscriptions/" class="text-green-400">Learn more</a>
+  </div>
+
+          
+          <button
+            class="font-impact text-settings-position col-span-3 mx-auto my-3 block rounded-sm border-2 border-green-400 px-3 py-1 text-base font-semibold uppercase text-gray-100"
+            value="nav">
+            Minimize to nav
+          </button>
+        </div>
+      </div>
+    </div>
+    </div>
+  </div>
+</div>
+
+  
+
+  
+      
+    
+    <div
+      class="my-2.5 mx-auto px-[15px] sm:px-5 lg:grid lg:max-w-5xl lg:grid-cols-3 lg:gap-6 lg:px-8 xl:px-0">
+      <div class="relative lg:col-span-2">
+
+        
+        <div class="post-content post-content-double">
+                      
+                      
+          <p>Researchers have found a malicious backdoor in a compression tool that made its way into widely used Linux distributions, including those from Red Hat and Debian.</p>
+<p>The compression utility, known as <a href="https://github.com/tukaani-project/xz">xz Utils</a>, introduced the malicious code in versions ​​5.6.0 and 5.6.1, <a href="https://www.openwall.com/lists/oss-security/2024/03/29/4">according to</a> Andres Freund, the developer who discovered it. There are no known reports of those versions being incorporated into any production releases for major Linux distributions, but both <a href="https://www.redhat.com/en/blog/urgent-security-alert-fedora-41-and-rawhide-users">Red Hat</a> and <a href="https://lists.debian.org/debian-security-announce/2024/msg00057.html">Debian</a> reported that recently published beta releases used at least one of the backdoored versions—specifically, in Fedora Rawhide and Debian testing, unstable and experimental distributions. A stable release of Arch Linux is also affected. That distribution, however, isn’t used in production systems.</p>
+<p>Because the backdoor was discovered before the malicious versions of xz Utils were added to production versions of Linux, “it’s not really affecting anyone in the real world,” Will Dormann, a senior vulnerability analyst at security firm Analygence, said in an online interview. “BUT that’s only because it was discovered early due to bad actor sloppiness. Had it not been discovered, it would have been catastrophic to the world.”</p>
+<p>Several people, including two Ars readers, reported that the multiple apps included in the HomeBrew package manager for macOS rely on the backdoored 5.6.1 version of xz Utils. HomeBrew has now rolled back the utility to version 5.4.6. Maintainers have more details available <a href="https://github.com/orgs/Homebrew/discussions/5243#discussioncomment-8954951">here</a>.</p>
+<h2>Targeting sshd</h2>
+<p>The first signs of the backdoor were introduced in a February 23 update that added obfuscated code, officials from Red Hat said in an email. An update the following day included a malicious install script that injected itself into functions used by sshd, the binary file that makes SSH work. The malicious code has resided only in the archived releases—known as tarballs—which are released upstream. So-called GIT code available in repositories aren’t affected, although they do contain second-stage artifacts allowing the injection during the build time. In the event the obfuscated code introduced on February 23 is present, the artifacts in the GIT version allow the backdoor to operate.</p>
+
+          
+                      <div class="ars-interlude-container in-content-interlude mx-auto max-w-xl">
+            </div>
+                  </div>
+
+              </div>
+
+      
+      <div class="dusk:bg-gray-100 hidden min-w-[300px] justify-self-end lg:block dark:bg-gray-50">
+        
+                  <div class="ad-wrapper is-sticky is-rail">
+      <div class="ad-wrapper-inner">
+        <div class="ad ad--rail"></div>
+      </div>
+    </div>
+                </div>
+    </div>
+                    
+        <div class="ad-wrapper with-label is-fullwidth">
+      <div class="ad-wrapper-inner">
+        <div class="ad ad--mid-content">
+          </div>
+      </div>
+    </div>
+            
+    
+    <div
+      class="my-2.5 mx-auto px-[15px] sm:px-5 lg:grid lg:max-w-5xl lg:grid-cols-3 lg:gap-6 lg:px-8 xl:px-0">
+      <div class="relative lg:col-span-2">
+
+        
+        <div class="post-content post-content-double">
+          
+          
+<p>The malicious changes were submitted by JiaT75, one of the two main xz Utils developers with years of contributions to the project.</p>
+<p>“Given the activity over several weeks, the committer is either directly involved or there was some quite severe compromise of their system,” Freund wrote. “Unfortunately the latter looks like the less likely explanation, given they communicated on various lists about the ‘fixes’” provided in recent updates. Those updates and fixes can be found <a href="https://github.com/tukaani-project/xz/commit/e5faaebbcf02ea880cfc56edc702d4f7298788ad">here</a>, <a href="https://github.com/tukaani-project/xz/commit/72d2933bfae514e0dbb123488e9f1eb7cf64175f">here</a>, <a href="https://github.com/tukaani-project/xz/commit/82ecc538193b380a21622aea02b0ba078e7ade92">here</a>, and <a href="https://github.com/tukaani-project/xz/commit/6e636819e8f070330d835fce46289a3ff72a7b89">here</a>.</p>
+<p>On Thursday, someone using the developer’s name took to a developer site for Ubuntu to ask that the backdoored version 5.6.1 be <a href="https://bugs.launchpad.net/ubuntu/+source/xz-utils/+bug/2059417">incorporated into production versions</a> because it fixed bugs that caused a tool known as Valgrind to malfunction.</p>
+<p>“This could break build scripts and test pipelines that expect specific output from Valgrind in order to pass,” the person warned, from an account that was created the same day.</p>
+<p>One of maintainers for Fedora <a href="https://news.ycombinator.com/item?id=39866275">said Friday</a> that the same developer approached them in recent weeks to ask that Fedora 40, a beta release, incorporate one of the backdoored utility versions.</p>
+<p>“We even worked with him to fix the valgrind issue (which it turns out now was caused by the backdoor he had added),” the Ubuntu maintainer said. “He has been part of the xz project for two years, adding all sorts of binary test files, and with this level of sophistication, we would be suspicious of even older versions of xz until proven otherwise.”</p>
+<p>Maintainers for xz Utils didn’t immediately respond to emails asking questions.</p>
+
+          
+                  </div>
+
+              </div>
+
+      
+      <div class="dusk:bg-gray-100 hidden min-w-[300px] justify-self-end lg:block dark:bg-gray-50">
+        
+                  <div class="ad-wrapper is-sticky is-rail">
+      <div class="ad-wrapper-inner">
+        <div class="ad ad--rail"></div>
+      </div>
+    </div>
+                </div>
+    </div>
+                    
+        <div class="ad-wrapper with-label is-fullwidth">
+      <div class="ad-wrapper-inner">
+        <div class="ad ad--mid-content">
+          </div>
+      </div>
+    </div>
+            
+    
+    <div
+      class="mt-2.5 mx-auto px-[15px] sm:px-5 lg:grid lg:max-w-5xl lg:grid-cols-3 lg:gap-6 lg:px-8 xl:px-0">
+      <div class="relative lg:col-span-2">
+
+        
+        <div class="post-content post-content-double">
+          
+          
+<p>The malicious versions, researchers said, intentionally interfere with authentication performed by SSH, a commonly used protocol for connecting remotely to systems. SSH provides robust encryption to ensure that only authorized parties connect to a remote system. The backdoor is designed to allow a malicious actor to break the authentication and, from there, gain unauthorized access to the entire system. The backdoor works by injecting code during a key phase of the login process.</p>
+<p>“I have not yet analyzed precisely what is being checked for in the injected code, to allow unauthorized access,” Freund wrote. “Since this is running in a pre-authentication context, it seems likely to allow some form of access or other form of remote code execution.”</p>
+<p>[<b>Update:</b> Researchers who spent the weekend reverse engineering the updates say that the backdoor injected malicious code during SSH operations, rather than bypassed authenticatiion.]</p>
+<p>In some cases, the backdoor has been unable to work as intended. The build environment on Fedora 40, for example, contains incompatibilities that prevent the injection from correctly occurring. Fedora 40 has now reverted to the 5.4.x versions of xz Utils.</p>
+<p>Xz Utils is available for most if not all Linux distributions, but not all of them include it by default. Anyone using Linux should check with their distributor immediately to determine if their system is affected. Freund provided a script for detecting if an SSH system is vulnerable.</p>
+
+
+          
+                  </div>
+
+                  
+          <div class="-mx-2.5 sm:mx-0">
+  </div>
+
+
+  <div class="listing-credit my-2">
+    <p class="text-gray-350 font-impact text-sm font-semibold">
+    Listing image:
+    Getty Images
+  </p>
+  </div>
+
+
+
+
+  <div class="author-mini-bio">
+    <div class="flex flex-col items-start gap-5 border-t-4 py-5 sm:flex-row dark:border-gray-700">
+  <div class="flex items-center gap-3">
+          <a class="relative block aspect-square h-24 w-24 shrink-0 overflow-hidden rounded-full border-4 border-green-400"
+        href="https://arstechnica.com/author/dan-goodin/"><img class="absolute left-0 top-0 min-h-full min-w-full object-cover"
+          src="https://cdn.arstechnica.net/wp-content/uploads/2018/10/Dang.jpg" alt="Photo of Dan Goodin"></a>
+        <div class="font-impact mb-0 text-left text-base font-semibold uppercase sm:hidden">
+      <a href="https://arstechnica.com/author/dan-goodin/">
+                  Dan Goodin
+              </a>
+
+      <span class="block font-sans text-sm font-normal italic sm:inline-block">Senior Security Editor</span>
+    </div>
+  </div>
+
+  <div>
+    <div class="font-impact mb-0 hidden text-left text-base font-semibold uppercase sm:block">
+      <a href="https://arstechnica.com/author/dan-goodin/">
+                  Dan Goodin
+              </a>
+      <span class="block font-sans text-sm font-normal italic sm:ml-2 sm:inline-block">Senior Security Editor</span>
+    </div>
+
+    <div class="text-left text-base leading-5 text-gray-400" itemprop="description">
+      Dan Goodin is Senior Security Editor at Ars Technica, where he oversees coverage of malware, computer espionage, botnets, hardware hacking, encryption, and passwords. In his spare time, he enjoys gardening, cooking, and following the independent music scene. Dan is based in San Francisco. Follow him at <a href="https://infosec.exchange/@dangoodin" rel="me">here</a> on Mastodon and <a href="https://bsky.app/profile/dangoodin.bsky.social">here</a> on Bluesky. Contact him on Signal at DanArs.82.
+    </div>
+  </div>
+</div>
+  </div>
+
+
+  <div
+    class="story-tools flex items-center justify-between border-b-4 border-t-4 text-sm sm:text-lg dark:border-gray-700">
+    <a class="view-comments font-impact my-5 flex items-center gap-2 whitespace-nowrap font-semibold uppercase"
+    href="https://arstechnica.com/security/2024/03/backdoor-found-in-widely-used-linux-utility-breaks-encrypted-ssh-connections/#comments" title="237 comments">
+    <svg class="text-gray-300 hover:text-gray-500 h-6 w-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><defs><clipPath id="bubble-zero_svg__a"><path fill="none" stroke-width="0" d="M0 0h80v80H0z"/></clipPath><clipPath id="bubble-zero_svg__b"><path fill="none" stroke-width="0" d="M0 0h80v80H0z"/></clipPath></defs><g clip-path="url(#bubble-zero_svg__a)"><g fill="currentColor" clip-path="url(#bubble-zero_svg__b)"><path d="M80 40c0 22.09-17.91 40-40 40S0 62.09 0 40 17.91 0 40 0s40 17.91 40 40"/><path d="M40 40 .59 76.58C-.67 77.84.22 80 2.01 80H40z"/></g></g></svg>
+    237 Comments
+  </a>
+      </div>
+              </div>
+
+      
+      <div class="dusk:bg-gray-100 hidden min-w-[300px] justify-self-end lg:block dark:bg-gray-50">
+        
+                  <div class="ad-wrapper is-sticky is-rail">
+      <div class="ad-wrapper-inner">
+        <div class="ad ad--rail"></div>
+      </div>
+    </div>
+                </div>
+    </div>
+  </article>
+
+
+  <div class="relative">
+    <section class="dusk:bg-none bg-gray-100 dark:bg-gray-50" id="comments">
+  <div
+    class="comments-container mx-auto px-[15px] sm:px-5 lg:grid lg:max-w-5xl lg:grid-cols-3 lg:gap-y-6 lg:px-8 xl:px-0">
+          <div class="relative py-5 lg:col-span-2">
+        <div class="staff-picks dusk:bg-white bg-white dark:bg-gray-700">
+    <div
+      class="staff-picks-title font-impact xs:justify-center flex flex-row items-center gap-2 bg-gray-600 px-5 py-2 text-xl font-extrabold uppercase text-green-400 lg:text-2xl">
+      <svg class="h-5 w-5 text-gray-100" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><clipPath id="pencil_svg__a"><path fill="none" d="M0 0h40v40H0z"/></clipPath><clipPath id="pencil_svg__b"><path fill="none" d="M0 0h40v40H0z"/></clipPath></defs><g clip-path="url(#pencil_svg__a)"><g fill="currentColor" clip-path="url(#pencil_svg__b)"><path d="M36 36H4V4h19.3l4-4H4C1.8 0 0 1.8 0 4v32c0 2.2 1.8 4 4 4h32c2.2 0 4-1.8 4-4V12.7l-4 4z"/><path d="M12.241 20.768 25.96 7.05l2.829 2.828L15.07 23.596zm4.14 4.2L30.099 11.25l2.828 2.828L19.21 27.796zM8.8 31.2l9.1-2-7.1-7.1zM39.5 5.3 34.7.5c-.6-.6-1.6-.6-2.2 0l-5.1 5.1 7.1 7.1 5.1-5.1c.6-.6.6-1.6 0-2.2"/></g></g></svg>
+      <span>Staff Picks</span>
+    </div>
+
+    <div class="comments-picks-list">
+              <article class="comment-pick">
+          <header>
+            <span class="ars-avatar" style="color: #b388ff; background-color: #4527a0;"><img class="ars-avatar-image" src="https://cdn.arstechnica.net/civis/data/avatars/m/15/15625.jpg?1668050701" srcset="https://cdn.arstechnica.net/civis/data/avatars/m/15/15625.jpg?1668050701 1x, https://cdn.arstechnica.net/civis/data/avatars/l/15/15625.jpg?1668050701 2x" alt="adamsc" /></span>
+
+            <div class="text-base font-bold sm:text-xl">
+              <a class="text-gray-550 hover:text-gray-400 dark:text-gray-300 dark:hover:text-gray-400"
+                href="https://arstechnica.com/civis/members/adamsc.15625/" target="_blank">adamsc</a>
+            </div>
+          </header>
+
+          <div class="comments-pick-content">
+            <blockquote class="xfBb-quote" data-name="torp">Oh, so having one init to rule them all and take over every function of your system was a great idea right?</blockquote>Please take the systemd trolling back to Reddit. The only connection here is that they call sd_notify to report when the process is healthy so the systemd status is accurate and can be used to trigger other things:<br />
+<br />
+<a href="https://salsa.debian.org/ssh-team/openssh/-/blob/master/debian/patches/systemd-readiness.patch" target="_blank" class="link link--external" rel="nofollow ugc noopener">https://salsa.debian.org/ssh-team/openssh/-/blob/master/debian/patches/systemd-readiness.patch</a><br />
+… and to support the socketd activation mode where sshd does not need elevated permissions so it can listen to a privileged port:<br />
+<br />
+<a href="https://salsa.debian.org/ssh-team/openssh/-/blob/master/debian/patches/systemd-socket-activation.patch" target="_blank" class="link link--external" rel="nofollow ugc noopener">https://salsa.debian.org/ssh-team/o...ebian/patches/systemd-socket-activation.patch</a><br />
+Both of those are reasonable features, one of which is a security improvement, and all your trolling is doing is distracting from a carefully premeditated attack which could have been carried out against almost anything. The reason they picked xz is no doubt because it&#039;s popular and widely used. If that didn&#039;t exist, they could have picked one of the 40-odd other packages it depends on or found something else.
+          </div>
+
+          <div class="comments-pick-timestamp">
+            <a href="https://arstechnica.com/civis/posts/42712026/" target="_blank">
+              <time  datetime="2024-03-29T20:25:28+00:00" data-mode="dateTime"
+  data-time-separator=" at " data-updated-timestamp="false"
+  x-data="arsTimestamp()" x-text="format()">
+  March 29, 2024 at 8:25 pm
+</time>
+            </a>
+          </div>
+        </article>
+              <article class="comment-pick">
+          <header>
+            <span class="ars-avatar" style="color: #b388ff; background-color: #4527a0;"><img class="ars-avatar-image" src="https://cdn.arstechnica.net/civis/data/avatars/m/15/15625.jpg?1668050701" srcset="https://cdn.arstechnica.net/civis/data/avatars/m/15/15625.jpg?1668050701 1x, https://cdn.arstechnica.net/civis/data/avatars/l/15/15625.jpg?1668050701 2x" alt="adamsc" /></span>
+
+            <div class="text-base font-bold sm:text-xl">
+              <a class="text-gray-550 hover:text-gray-400 dark:text-gray-300 dark:hover:text-gray-400"
+                href="https://arstechnica.com/civis/members/adamsc.15625/" target="_blank">adamsc</a>
+            </div>
+          </header>
+
+          <div class="comments-pick-content">
+            <blockquote class="xfBb-quote" data-name="wardred">While this is particularly pernicious in open source since anybody can see the code, who contributed, etc., I don&#039;t believe it would be difficult to do this with corporate code.<br />
+<br />
+With a little social engineering you could figure out who works on what bits of Windows and/or OSX.<br />
+<br />
+With the right convincing said developer could sneak code into those projects.  Particularly if they&#039;re messing with macros, changing flags to valgrind or its equivalent, etc.</blockquote><br />
+Yeah, my point wasn&#039;t that closed source is better but simply that open source projects are exposed because there are many projects which are widely used, accept contributions from anyone on the internet, but have only a handful of maintainers. Microsoft doesn&#039;t accept pull requests for Windows on GitHub but if they did, they&#039;d also have the budget to hire people whose full-time job would be to review things. <br />
+<br />
+As a long-time open source contributor, this trend has been fairly sad because so much of the internet used to run on a community trust model that frankly isn&#039;t sustainable. Most of the ways we could combat this are going to directly impact one of the things I used to like the most: people are going to rely more on reputation, which means someone with a contribution from, say, @google.com is going to get their stuff merged faster than someone at <a href="https://arstechnica.com/civis/members/870841/">@Gmail.com</a>, which I don&#039;t like even if I completely understand why that will happen.
+          </div>
+
+          <div class="comments-pick-timestamp">
+            <a href="https://arstechnica.com/civis/posts/42712045/" target="_blank">
+              <time  datetime="2024-03-29T20:31:36+00:00" data-mode="dateTime"
+  data-time-separator=" at " data-updated-timestamp="false"
+  x-data="arsTimestamp()" x-text="format()">
+  March 29, 2024 at 8:31 pm
+</time>
+            </a>
+          </div>
+        </article>
+              <article class="comment-pick">
+          <header>
+            <span class="ars-avatar" style="color: #b9f6ca; background-color: #2e7d32;"><span class="ars-avatar-letter">G</span></span>
+
+            <div class="text-base font-bold sm:text-xl">
+              <a class="text-gray-550 hover:text-gray-400 dark:text-gray-300 dark:hover:text-gray-400"
+                href="https://arstechnica.com/civis/members/golbatseverywhere.755805/" target="_blank">GolbatsEverywhere</a>
+            </div>
+          </header>
+
+          <div class="comments-pick-content">
+            This might have been the worst Linux backdoor in history except that it was caught so soon. An SSH authentication backdoor is surely worse than the Debian weak keys incident and also worse than Heartbleed, the two most notorious Linux security incidents that I can think of. Probably this would have been abused to hack most if not all of the Fortune 500, except Mr. Freund decided to investigate some small performance issue that anybody else would have dismissed as unimportant. We are spared only due to sheer dumb luck. This guy has probably just averted <i>at least</i> billions of dollars worth of damages. Cannot emphasize enough how grateful we should be to him right now.<br />
+<br />
+But who knows how many other Linux packages are backdoored by other malicious upstream software developers. If it can be done to one project, it can be done to others just the same.<br />
+<br />
+P.S. Address sanitizer really does need to be disabled when working with ifuncs, <a href="https://gcc.gnu.org/bugzilla/show_bug.cgi?id=110442" target="_blank" class="link link--external" rel="nofollow ugc noopener">https://gcc.gnu.org/bugzilla/show_bug.cgi?id=110442</a>. Maybe valgrind has a similar bug? (Not sure; that&#039;s pure speculation.) That could explain why the other developers were not more suspicious of the malicious commits that hid the problems.
+          </div>
+
+          <div class="comments-pick-timestamp">
+            <a href="https://arstechnica.com/civis/posts/42712447/" target="_blank">
+              <time  datetime="2024-03-29T23:25:50+00:00" data-mode="dateTime"
+  data-time-separator=" at " data-updated-timestamp="false"
+  x-data="arsTimestamp()" x-text="format()">
+  March 29, 2024 at 11:25 pm
+</time>
+            </a>
+          </div>
+        </article>
+          </div>
+  </div>
+      </div>
+        <div class="comments-wrapper col-span-3 hidden py-5">
+      <div class="lg:grid lg:grid-cols-3 lg:gap-6">
+        <div class="lg:col-span-2">
+          <div class="wp-forum-connect-comments relative">
+  <div
+    class="comments-title font-impact xs:justify-center flex flex-row items-center gap-2 bg-gray-600 px-5 py-2 text-xl font-extrabold uppercase text-green-400 lg:text-2xl">
+    <svg class="h-6 w-6 rotate-[-75deg] text-gray-100" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 49 49"><defs><clipPath id="bubble_svg__a"><path fill="none" d="M.011 10.382 38.648.029l10.353 38.637L10.364 49.02z"/></clipPath><clipPath id="bubble_svg__b"><path fill="none" d="M.011 10.382 38.648.029l10.353 38.637L10.364 49.02z"/></clipPath></defs><g clip-path="url(#bubble_svg__a)"><g fill="currentColor" clip-path="url(#bubble_svg__b)"><path d="M29.7 43.8C19 46.7 8.1 40.3 5.2 29.7S8.7 8.1 19.3 5.2s21.6 3.5 24.5 14.1c2.9 10.7-3.5 21.6-14.1 24.5"/><path d="M24.5 24.5 1.7 10.2c-.8-.4-1.7.3-1.5 1.1l3.3 12.2 1.7 6.2z"/></g></g></svg>
+    Comments
+  </div>
+
+  <a class="font-impact absolute bottom-0 right-5 top-0 flex flex-row items-center gap-2 text-base font-semibold uppercase text-gray-300 hover:text-gray-200"
+    href="https://arstechnica.com/civis/threads/backdoor-found-in-widely-used-linux-utility-breaks-encrypted-ssh-connections.1499791/" target="_blank">
+    <svg class="h-5 w-5 text-gray-200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><clipPath id="forum-arrow_svg__a"><path fill="none" d="M0 0h40v40H0z"/></clipPath><clipPath id="forum-arrow_svg__b"><path fill="none" d="M0 0h40v40H0z"/></clipPath></defs><g clip-path="url(#forum-arrow_svg__a)"><g fill="none" clip-path="url(#forum-arrow_svg__b)"><path fill="#ff4e00" d="M23 0c-1.1 0-2 .9-2 2s.9 2 2 2h10.2L16.6 20.6c-.8.8-.8 2 0 2.8.4.4.9.6 1.4.6s1-.2 1.4-.6L36 6.8V17c0 1.1.9 2 2 2s2-.9 2-2V0z"/><path fill="currentColor" d="M30 24v12H4V10h12l4-4H4c-2.2 0-4 1.8-4 4v26c0 2.2 1.8 4 4 4h26c2.2 0 4-1.8 4-4V20z"/></g></g></svg>
+    <span class="hidden sm:inline">Forum view</span>
+  </a>
+</div>
+
+<div class="xf_thread_iframe_wrapper relative min-h-screen">
+  <div class="xf_thread_iframe_loading flex items-center justify-center">
+    <div class="my-20">
+      <img class="h-10 w-10" src="https://cdn.arstechnica.net/wp-content/themes/ars-v9/public/images/firework-loader.1aaa7fe5bba8356d.gif" alt="Loading" />
+      Loading comments...
+    </div>
+  </div>
+
+  <div class="xf_thread_iframe_container" id="xf_thread_iframe_container" data-thread-id="1499791"
+    data-url="https://arstechnica.com/civis/threads/backdoor-found-in-widely-used-linux-utility-breaks-encrypted-ssh-connections.1499791/unread?in_iframe=1&amp;theme=auto&amp;wp_data=eyJ1cmwiOiJodHRwczpcL1wvYXJzdGVjaG5pY2EuY29tXC9zZWN1cml0eVwvMjAyNFwvMDNcL2JhY2tkb29yLWZvdW5kLWluLXdpZGVseS11c2VkLWxpbnV4LXV0aWxpdHktYnJlYWtzLWVuY3J5cHRlZC1zc2gtY29ubmVjdGlvbnNcLyIsIm9wZW5fY29tbWVudHMiOiJjb21tZW50cz0xIn0=&amp;"
+    data-open="0"
+    data-open-default="0"></div>
+</div>
+        </div>
+        
+        <div class="dusk:bg-gray-100 row-span-2 hidden min-w-[300px] justify-self-end dark:bg-gray-50 lg:block">
+          
+                      <div class="ad-wrapper is-sticky is-rail">
+      <div class="ad-wrapper-inner">
+        <div class="ad ad--rail"></div>
+      </div>
+    </div>
+                    </div>
+      </div>
+    </div>
+  </div>
+</section>
+  </div>
+
+
+  <div class="mx-auto mb-2.5 px-[15px] sm:px-5 lg:grid lg:max-w-5xl lg:grid-cols-3 lg:gap-6 lg:px-8 xl:px-0">
+    <div class="col-span-2 py-5">
+      <div class="post-navigation">
+  
+  <div class="nav-previous post-navigation-link-wrapper">
+          <a class="post-navigation-link" rel="nofollow" href="https://arstechnica.com/tech-policy/2024/03/jails-banned-family-visits-to-make-more-money-on-video-calls-lawsuits-claim/"
+        title="Go to: Jails banned visits in “quid pro quo” with prison phone companies, lawsuits say"><svg class="text-orange-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><clipPath id="arrow-blocks-right_svg__a"><path fill="none" d="M0 0h40v40H0z"/></clipPath></defs><g fill="currentColor" clip-path="url(#arrow-blocks-right_svg__a)"><path d="M32 16h8v8h-8zm-8 8h8v8h-8zm-8 8h8v8h-8zm8-24h8v8h-8zm-8-8h8v8h-8zM0 16h16v8H0z"/></g></svg>
+<span class="post-navigation-link-text">Prev story</span></a>
+      </div>
+
+  
+  <div class="nav-next post-navigation-link-wrapper">
+          <a class="post-navigation-link" rel="nofollow" href="https://arstechnica.com/ai/2024/03/nycs-government-chatbot-is-lying-about-city-laws-and-regulations/"
+        title="Go to: NYC’s government chatbot is lying about city laws and regulations"><span class="post-navigation-link-text">Next story</span><svg class="text-orange-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><clipPath id="arrow-blocks-right_svg__a"><path fill="none" d="M0 0h40v40H0z"/></clipPath></defs><g fill="currentColor" clip-path="url(#arrow-blocks-right_svg__a)"><path d="M32 16h8v8h-8zm-8 8h8v8h-8zm-8 8h8v8h-8zm8-24h8v8h-8zm-8-8h8v8h-8zM0 16h16v8H0z"/></g></svg>
+</a>
+      </div>
+</div>
+    </div>
+  </div>
+
+
+  <div class="mx-auto -mt-2 mb-5 max-w-md sm:max-w-3xl sm:px-5 lg:grid lg:max-w-6xl lg:grid-cols-3 lg:gap-16 xl:px-0">
+    <div class="single-most-read dusk:bg-gray-700 relative col-span-2 bg-gray-100 dark:bg-gray-700">
+      <div
+  class="component-most-read font-impact flex h-full min-h-[300px] flex-col flex-nowrap gap-5 pb-5 uppercase text-white">
+  <div>
+    <header class="flex flex-row flex-nowrap items-center justify-center gap-2 bg-gray-600 px-5 py-2">
+      <svg class="h-[20px] w-[30px] text-gray-100" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 26"><defs><clipPath id="most-read_svg__a"><path fill="none" d="M0 0h40v26H0z"/></clipPath><clipPath id="most-read_svg__b"><path fill="none" d="M0 0h40v26H0z"/></clipPath></defs><g clip-path="url(#most-read_svg__a)"><g fill="none" clip-path="url(#most-read_svg__b)"><path fill="currentColor" d="M20 2h.8q1.5 0 3 .6c.6.2 1.1.4 1.7.6 1.3.5 2.6 1.3 3.9 2.1.6.4 1.2.8 1.8 1.3 2.9 2.3 5.1 4.9 6.3 6.4-1.1 1.5-3.4 4-6.3 6.4-.6.5-1.2.9-1.8 1.3q-1.95 1.35-3.9 2.1c-.6.2-1.1.4-1.7.6q-1.5.45-3 .6h-1.6q-1.5 0-3-.6c-.6-.2-1.1-.4-1.7-.6-1.3-.5-2.6-1.3-3.9-2.1-.6-.4-1.2-.8-1.8-1.3-2.9-2.3-5.1-4.9-6.3-6.4 1.1-1.5 3.4-4 6.3-6.4.6-.5 1.2-.9 1.8-1.3q1.95-1.35 3.9-2.1c.6-.2 1.1-.4 1.7-.6q1.5-.45 3-.6zm0-2h-1c-1.2 0-2.3.3-3.4.6-.6.2-1.3.4-1.9.7-1.5.6-2.9 1.4-4.3 2.3-.7.5-1.3.9-1.9 1.4C2.9 8.7 0 13 0 13s2.9 4.3 7.5 7.9c.6.5 1.3 1 1.9 1.4 1.3.9 2.7 1.7 4.3 2.3.6.3 1.3.5 1.9.7 1.1.3 2.3.6 3.4.6h2c1.2 0 2.3-.3 3.4-.6.6-.2 1.3-.4 1.9-.7 1.5-.6 2.9-1.4 4.3-2.3.7-.5 1.3-.9 1.9-1.4C37.1 17.3 40 13 40 13s-2.9-4.3-7.5-7.9c-.6-.5-1.3-1-1.9-1.4-1.3-.9-2.8-1.7-4.3-2.3-.6-.3-1.3-.5-1.9-.7C23.3.4 22.1.1 21 .1h-1"/><path fill="#ff4e00" d="M20 5c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8m0 11c-1.7 0-3-1.3-3-3s1.3-3 3-3 3 1.3 3 3-1.3 3-3 3"/></g></g></svg>
+      <div class="font-impact inline text-xl font-extrabold uppercase text-green-400">
+        Most Read</div>
+    </header>
+    <ol>
+              <li class="group relative">
+                      <a href="https://arstechnica.com/cars/2026/11/new-york-says-no-more-subscriptions-for-in-car-features-or-does-it/">
+              <img class="aspect-video h-auto w-full rounded-sm object-cover group-hover:saturate-150"
+                src="https://cdn.arstechnica.net/wp-content/uploads/2026/11/GettyImages-2153520868-500x500.jpg"
+                alt="Listing image for first story in Most Read: No more heated seat subscriptions for cars in New York from 2027"
+                decoding="async" loading="lazy">
+            </a>
+                    <div class="relative px-[15px] py-4 sm:px-5">
+                          <div class="most-read-divider absolute left-5 top-[-3px] h-[5px] w-1/4 bg-green-400">
+              </div>
+              <span
+                class="flex flex-row flex-nowrap items-start gap-4 font-serif text-xl font-bold normal-case leading-tight">
+                <span class="shrink-0 text-green-400">1.</span>
+                <a class="most-read-title text-gray-100 visited:text-gray-400 hover:text-orange-400"
+                  href="https://arstechnica.com/cars/2026/11/new-york-says-no-more-subscriptions-for-in-car-features-or-does-it/">No more heated seat subscriptions for cars in New York from 2027</a>
+              </span>
+                      </div>
+        </li>
+                      <li class="group relative">
+                    <div class="relative px-[15px] py-4 sm:px-5">
+                          <div class="most-read-divider absolute left-5 top-0 h-[1px] w-1/4 bg-gray-400">
+              </div>
+              <span
+                class="flex flex-row flex-nowrap items-start gap-4 font-serif text-xl font-bold normal-case leading-tight">
+                <span class="shrink-0 text-green-400">2.</span>
+                <a class="most-read-title text-gray-100 visited:text-gray-400 hover:text-orange-400"
+                  href="https://arstechnica.com/health/2026/11/trump-halts-iowa-detonation-says-new-governor-to-blame-if-it-blows-accidentally/">Trump halts Iowa detonation, says new governor to blame if it blows accidentally</a>
+              </span>
+                      </div>
+        </li>
+                      <li class="group relative">
+                    <div class="relative px-[15px] py-4 sm:px-5">
+                          <div class="most-read-divider absolute left-5 top-0 h-[1px] w-1/4 bg-gray-400">
+              </div>
+              <span
+                class="flex flex-row flex-nowrap items-start gap-4 font-serif text-xl font-bold normal-case leading-tight">
+                <span class="shrink-0 text-green-400">3.</span>
+                <a class="most-read-title text-gray-100 visited:text-gray-400 hover:text-orange-400"
+                  href="https://arstechnica.com/ai/2026/11/whats-going-on-with-the-riemann-hypothesis/">What's going on with the Riemann hypothesis?</a>
+              </span>
+                      </div>
+        </li>
+                      <li class="group relative">
+                    <div class="relative px-[15px] py-4 sm:px-5">
+                          <div class="most-read-divider absolute left-5 top-0 h-[1px] w-1/4 bg-gray-400">
+              </div>
+              <span
+                class="flex flex-row flex-nowrap items-start gap-4 font-serif text-xl font-bold normal-case leading-tight">
+                <span class="shrink-0 text-green-400">4.</span>
+                <a class="most-read-title text-gray-100 visited:text-gray-400 hover:text-orange-400"
+                  href="https://arstechnica.com/gadgets/2026/11/one-terminal-command-gave-my-forgotten-android-device-a-desk-job/">One terminal command gave my forgotten Android device a desk job</a>
+              </span>
+                      </div>
+        </li>
+                      <li class="group relative">
+                    <div class="relative px-[15px] py-4 sm:px-5">
+                          <div class="most-read-divider absolute left-5 top-0 h-[1px] w-1/4 bg-gray-400">
+              </div>
+              <span
+                class="flex flex-row flex-nowrap items-start gap-4 font-serif text-xl font-bold normal-case leading-tight">
+                <span class="shrink-0 text-green-400">5.</span>
+                <a class="most-read-title text-gray-100 visited:text-gray-400 hover:text-orange-400"
+                  href="https://arstechnica.com/space/2026/11/amazon-surges-launches-with-rival-spacex-after-ula-fails-to-deliver/">Amazon discovers Falcon 9 and Ariane 6 can deliver when nobody else can</a>
+              </span>
+                      </div>
+        </li>
+                      </ol>
+  </div>
+  <div class="most-read-customize text-center">
+    <button
+      class="btn-customize font-impact mt-5 inline-flex flex-row flex-nowrap items-center justify-center gap-2 font-semibold uppercase text-gray-300 hover:text-gray-100"
+      aria-label="Customize view settings" x-data x-on:click="$dispatch('view-settings-bar-open');">
+      <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 39.8 40"><defs><clipPath id="settings_svg__a"><path fill="none" d="M0 0h39.8v40H0z"/></clipPath><clipPath id="settings_svg__b"><path fill="none" d="M0 0h39.8v40H0z"/></clipPath></defs><g clip-path="url(#settings_svg__a)"><g fill="currentColor" clip-path="url(#settings_svg__b)"><path d="M17.4 3c-.8-1.8-2.5-3-4.5-3S9.1 1.2 8.3 3H0v4h8.3c.8 1.8 2.5 3 4.6 3s3.8-1.2 4.6-3h22.4V3H17.5Zm-4.6 4.5c-1.4 0-2.5-1.1-2.5-2.5s1.1-2.5 2.5-2.5 2.5 1.1 2.5 2.5-1.1 2.5-2.5 2.5M27 15c-2 0-3.8 1.2-4.6 3H0v4h22.4c.8 1.8 2.5 3 4.6 3s3.8-1.2 4.6-3h8.3v-4h-8.3c-.8-1.8-2.5-3-4.6-3m0 7.5c-1.4 0-2.5-1.1-2.5-2.5s1.1-2.5 2.5-2.5 2.5 1.1 2.5 2.5-1.1 2.5-2.5 2.5M12.9 30c-2 0-3.8 1.2-4.6 3H0v4h8.3c.8 1.8 2.5 3 4.6 3s3.8-1.2 4.6-3h22.4v-4H17.5c-.8-1.8-2.5-3-4.6-3m0 7.5c-1.4 0-2.5-1.1-2.5-2.5s1.1-2.5 2.5-2.5 2.5 1.1 2.5 2.5-1.1 2.5-2.5 2.5"/></g></g></svg>
+      <span>Customize</span>
+    </button>
+  </div>
+</div>
+    </div>
+  </div>
+  </main>
+
+
+<div class="ad-wrapper is-fullwidth">
+      <div class="ad-wrapper-inner">
+        <div class="ad ad--footer"></div>
+      </div>
+    </div>
+  
+<footer class="site-footer bg-black">
+  <div class="mx-auto max-w-6xl px-4 text-gray-300">
+    <div class="justify-between gap-10 py-8 md:flex">
+      <div class="site-footer-statement text-center md:w-3/5 md:text-left">
+        <a href="/"><svg class="mb-6 inline h-10 md:mb-4 md:h-12 lg:h-14" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 436 144.1"><defs><clipPath id="ars-full-mono_svg__a"><path fill="none" d="M0 0h436v144.1H0z"/></clipPath><clipPath id="ars-full-mono_svg__b"><path fill="none" d="M0 0h436v144.1H0z"/></clipPath></defs><g clip-path="url(#ars-full-mono_svg__a)"><g fill="currentColor" clip-path="url(#ars-full-mono_svg__b)"><path d="M218.8 83.7c-4.4 3.7-8.4 5-12.8 5-7.7 0-12.7-5.3-13.5-14h24.8l.9-5.5h-25.7c.8-8.7 5.7-14.1 12.9-14.1s8.8 1.7 12.9 5.1l1-5.9c-4-2.9-8.8-4.4-13.7-4.3-10.7 0-19.2 7.8-19.2 21.9s8.3 21.9 18.9 21.9c5.2.1 10.2-1.6 14.3-4.8zm-48.7-27.5v36.9h-5.8V56.2h-13.4v-5.3H183l.9 5.3H170Zm74.5 37.6c-11.9 0-19.5-8.8-19.5-21.8s7.8-22 19.6-22c4.3-.1 8.5 1.1 12 3.5l-.9 5.9c-3.2-2.6-7.1-4-11.2-4.1-8.6 0-13.6 6.5-13.6 16.6s5.1 16.6 13.6 16.6c4.3 0 8.5-1.6 11.9-4.2l.9 5.4c-3.7 2.6-8.2 4.1-12.8 4.1M292 93V73.5h-21.4V93h-5.8V50.9h5.8v17.5H292V50.9h5.8V93zm42.9 0-23.2-32.8V93h-5.3V50.9h5.1l22.4 31.5V50.9h5.3V93zm13.4-42.1h5.8V93h-5.8zm32.6 42.9c-11.9 0-19.5-8.8-19.5-21.8s7.8-22 19.6-22c4.3-.1 8.5 1.1 12 3.5l-.9 5.9c-3.2-2.6-7.1-4-11.2-4.1-8.6 0-13.6 6.5-13.6 16.6s5.1 16.6 13.6 16.6c4.3 0 8.5-1.6 11.9-4.2l.9 5.4c-3.7 2.6-8.2 4.1-12.8 4.1m32.9-43.1h5.8l16.3 41.5-5.6 1.2-5-13.1h-17.4L403.1 93h-5.8zm-4 24.6h13.5l-6.8-17.9zM72 0C32.3 0 0 32.3 0 72.1s32.3 72.1 72 72.1 72.1-32.3 72.1-72.1S111.8 0 72 0M53 94h-6.6l-.9-5.9c-4 4.4-9.6 6.8-15.6 6.8-8 0-13-4.8-13-12.3 0-11 9.4-15.4 27.8-17.3v-1.9c0-5.6-3.3-7.5-8.4-7.5S25.8 57.6 21 59.7l-1.1-7.1c5.3-2.1 10.3-3.7 17.1-3.7 10.7 0 15.9 4.3 15.9 14.2v30.8Zm19.2-26v26H64V50h6.6l1.4 9c3.1-5 8.2-9.5 15.5-9.9l1.3 7.9c-7.4.3-13.6 5.2-16.6 11m37.2 26.9c-5.6-.1-11.1-1.6-16.1-4.2l1.2-7.8c4.6 3.2 10 5 15.6 5.1 5.6 0 9-2.1 9-5.8s-2.5-5.6-10.5-7.5C98.2 72.1 94.1 69 94.1 61.1s5.9-12.2 15.6-12.2c5 0 9.9 1 14.5 3l-1.3 7.8c-4.1-2.4-8.7-3.7-13.4-3.8-5 0-7.6 1.9-7.6 5.1s2.2 4.6 9.2 6.4c10.9 2.8 15.8 5.9 15.8 14.3s-6.1 13.2-17.5 13.2"/><path d="M25.2 82.2c0 4.6 2.4 5.9 6.6 5.9s9.4-2.4 13.1-6.2V71.6c-16.3 1.6-19.7 6-19.7 10.6"/></g></g></svg>
+</a>
+        <p>Ars Technica has been separating the signal from
+          the noise for over 25 years. With our unique combination of
+          technical savvy and wide-ranging interest in the technological arts
+          and sciences, Ars is the trusted source in a sea of information. After
+          all, you don’t need to know everything, only what’s important.</p>
+        <p class="mt-4">
+          <a href="https://bsky.app/profile/arstechnica.com" aria-label="Follow Ars Technica on Bluesky">
+            <svg class="inline h-12 w-12" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><clipPath id="bluesky-logo_svg__a"><path fill="none" d="M0 0h40v40H0z"/></clipPath><clipPath id="bluesky-logo_svg__b"><path fill="none" d="M0 0h40v40H0z"/></clipPath></defs><g clip-path="url(#bluesky-logo_svg__a)"><g clip-path="url(#bluesky-logo_svg__b)"><path fill="currentColor" d="M14.34 12.38c2.29 1.72 4.76 5.21 5.67 7.08.9-1.87 3.37-5.36 5.66-7.08 1.65-1.24 4.34-2.2 4.34.85 0 .61-.35 5.13-.56 5.86-.71 2.55-3.32 3.2-5.63 2.81 4.05.69 5.07 2.97 2.85 5.25-4.22 4.33-6.07-1.09-6.54-2.47-.09-.26-.13-.37-.13-.27 0-.1-.04.02-.13.27-.47 1.39-2.32 6.81-6.54 2.47-2.22-2.28-1.19-4.56 2.85-5.25-2.31.39-4.92-.26-5.63-2.81-.2-.73-.56-5.25-.56-5.86 0-3.06 2.68-2.1 4.34-.85Z"/></g></g></svg>
+          </a>
+          <a href="https://mastodon.social/@arstechnica" aria-label="Follow Ars Technica on Mastodon">
+            <svg class="inline h-12 w-12" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><clipPath id="mastodon-logo_svg__a"><path fill="none" d="M0 0h40v40H0z"/></clipPath><clipPath id="mastodon-logo_svg__b"><path fill="none" d="M0 0h40v40H0z"/></clipPath></defs><g clip-path="url(#mastodon-logo_svg__a)"><g clip-path="url(#mastodon-logo_svg__b)"><path fill="currentColor" d="M29.15 16.58c0-4.3-2.8-5.6-2.8-5.6-1.4-.7-3.9-.9-6.5-1-2.6 0-5 .3-6.4 1 0 0-2.8 1.3-2.8 5.6v3.4c.1 4.2.8 8.4 4.7 9.5 1.8.5 3.4.6 4.6.5 2.3-.1 3.5-.8 3.5-.8v-1.6s-1.7.5-3.5.4c-1.8 0-3.7-.2-4-2.4v-.6s1.8.4 4 .5c1.4 0 2.7 0 4-.2 2.5-.3 4.7-1.8 5-3.3.4-2.2.4-5.4.4-5.4zm-3.4 5.6h-2.1v-5.1c0-1.1-.5-1.6-1.4-1.6s-1.5.6-1.5 1.9v2.8h-2.1v-2.8c0-1.3-.5-1.9-1.5-1.9s-1.4.5-1.4 1.6v5.1h-2.1v-5.3c0-1.1.3-1.9.8-2.6.6-.6 1.3-1 2.2-1s1.9.4 2.4 1.2l.5.9.5-.9q.75-1.2 2.4-1.2c1.6 0 1.7.3 2.2 1 .6.6.8 1.5.8 2.6v5.3z"/></g></g></svg>
+          </a>
+          <a href="https://www.facebook.com/arstechnica" aria-label="Follow Ars Technica on Facebook">
+            <svg class="inline h-12 w-12" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><clipPath id="facebook-logo_svg__a"><path fill="none" d="M0 0h40v40H0z"/></clipPath><clipPath id="facebook-logo_svg__b"><path fill="none" d="M0 0h40v40H0z"/></clipPath></defs><g clip-path="url(#facebook-logo_svg__a)"><g clip-path="url(#facebook-logo_svg__b)"><path fill="currentColor" d="M17.3 13.8v2.8h-2V20h2v10h4.2V20h2.8s.3-1.6.4-3.4h-3.2v-2.3c0-.3.5-.8.9-.8h2.3V10h-3.1c-4.4 0-4.3 3.4-4.3 3.9"/></g></g></svg>
+          </a>
+          <a href="https://www.youtube.com/@arstechnica" aria-label="Follow Ars Technica on YouTube">
+            <svg class="inline h-12 w-12" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><clipPath id="youtube-logo_svg__a"><path fill="none" d="M0 0h40v40H0z"/></clipPath><clipPath id="youtube-logo_svg__b"><path fill="none" d="M0 0h40v40H0z"/></clipPath></defs><g clip-path="url(#youtube-logo_svg__a)"><g clip-path="url(#youtube-logo_svg__b)"><path fill="currentColor" d="M29.5 15.2c-.1-.4-.3-.8-.6-1.1s-.7-.5-1.1-.7C26.2 13 20 13 20 13s-6.3 0-7.8.4c-.4.1-.8.3-1.1.7-.3.3-.5.7-.6 1.1-.4 1.6-.4 4.8-.4 4.8s0 3.3.4 4.8c.1.4.3.8.6 1.1s.7.5 1.1.7c1.6.4 7.8.4 7.8.4s6.3 0 7.8-.4c.4-.1.8-.3 1.1-.7s.5-.7.6-1.1c.4-1.6.4-4.8.4-4.8s0-3.3-.4-4.8M17.9 23v-5.9l5.2 3-5.2 3z"/></g></g></svg>
+          </a>
+          <a href="https://www.instagram.com/arstechnica/" aria-label="Follow Ars Technica on Instagram">
+            <svg class="inline h-12 w-12" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><defs><clipPath id="insta-logo_svg__a"><path fill="none" d="M0 0h40v40H0z"/></clipPath><clipPath id="insta-logo_svg__b"><path fill="none" d="M0 0h40v40H0z"/></clipPath></defs><g clip-path="url(#insta-logo_svg__a)"><g clip-path="url(#insta-logo_svg__b)"><path fill="currentColor" d="M20 10h4.1c1.1 0 1.8.2 2.4.5.7.3 1.2.6 1.8 1.2s.9 1.1 1.2 1.8c.2.6.4 1.4.5 2.4v8.2c0 1.1-.2 1.8-.5 2.4-.3.7-.6 1.3-1.2 1.8-.6.6-1.1.9-1.8 1.2-.6.2-1.4.4-2.4.5h-8.2c-1.1 0-1.8-.2-2.4-.5-.7-.3-1.3-.6-1.8-1.2q-.75-.75-1.2-1.8c-.2-.6-.4-1.4-.5-2.4v-8.2c0-1.1.2-1.8.5-2.4.3-.7.6-1.2 1.2-1.8s1.1-.9 1.8-1.2c.6-.2 1.4-.4 2.4-.5zm0 2.5h-3.7c-.9 0-1.4.2-1.7.3-.4.1-.8.4-1.1.7s-.5.6-.7 1.1c-.1.3-.3.8-.3 1.7v7.4c0 .9.2 1.4.3 1.7.2.4.4.7.7 1.1.3.3.6.5 1.1.7.3.1.8.3 1.7.3h7.4c.9 0 1.4-.2 1.7-.3.4-.2.7-.4 1.1-.7.3-.3.5-.6.7-1.1.1-.3.3-.8.3-1.7v-7.4c0-.9-.2-1.4-.3-1.7-.1-.4-.4-.8-.7-1.1s-.7-.5-1.1-.7c-.3-.1-.8-.3-1.7-.3zm0 2.2c.7 0 1.4.1 2 .4s1.2.7 1.7 1.1c.5.5.9 1.1 1.1 1.7.3.6.4 1.3.4 2s-.1 1.4-.4 2-.7 1.2-1.1 1.7c-.5.5-1.1.9-1.7 1.1-.6.3-1.3.4-2 .4-1.4 0-2.7-.6-3.7-1.5-1-1-1.5-2.3-1.5-3.7s.6-2.7 1.5-3.7 2.3-1.5 3.7-1.5m0 8.3q1.2 0 2.1-.9T23 20c0-1.2-.3-1.5-.9-2.1S20.8 17 20 17c-1.2 0-1.5.3-2.1.9q-.9.9-.9 2.1c0 1.2.3 1.5.9 2.1q.9.9 2.1.9m6.6-8.1c0 .4-.2.7-.4 1s-.6.4-1 .4-.7-.2-1-.4c-.3-.3-.4-.6-.4-1s.2-.7.4-1c.3-.3.6-.4 1-.4s.7.2 1 .4c.3.3.4.6.4 1"/></g></g></svg>
+          </a>
+        </p>
+      </div>
+      <div class="text-center md:w-1/5 md:text-left">
+        <span class="font-impact mb-4 mt-6 block font-semibold uppercase">More
+          from Ars
+        </span>
+        <ul id="menu-more_navigation" class="menu"><li id="menu-item-1971876" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-1971876"><a href="https://arstechnica.com/about-us/">About Us</a></li>
+<li id="menu-item-1971877" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-1971877"><a href="https://arstechnica.com/staff-directory/">Staff Directory</a></li>
+<li id="menu-item-2174180" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-2174180"><a href="/newsletters/">Newsletters</a></li>
+<li id="menu-item-1971879" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-1971879"><a href="https://arstechnica.com/general-faq/">General FAQ</a></li>
+<li id="menu-item-2106316" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-2106316"><a href="https://arstechnica.com/ars-technica-posting-guidelines-v3-0/">Posting Guidelines</a></li>
+<li id="menu-item-2151139" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-2151139"><a href="https://arstechnica.com/ai-policy/">AI Policy</a></li>
+<li id="menu-item-1971880" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-1971880"><a href="https://arstechnica.com/rss-feeds/">RSS Feeds</a></li>
+</ul>
+      </div>
+      <div class="text-center md:w-1/5 md:text-left">
+        <span class="font-impact mb-4 mt-6 block font-semibold uppercase">Contact</span>
+        <ul id="menu-contact_navigation" class="menu"><li id="menu-item-1971881" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-1971881"><a href="https://arstechnica.com/contact-us/">Contact us</a></li>
+<li id="menu-item-1971884" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-1971884"><a target="_blank" href="mailto:adinquiries@condenast.com">Advertise with us</a></li>
+<li id="menu-item-1971882" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-1971882"><a href="https://arstechnica.com/reprints/">Reprints</a></li>
+</ul>
+      </div>
+    </div>
+
+    <div class="pb-10 pt-5" id="copyright-terms">
+              <div class="mb-4 flex flex-row flex-nowrap items-center gap-2">
+          <svg class="h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 14"><path d="M7.4 12.8h6.8l3.1-11.6H7.4C4.2 1.2 1.6 3.8 1.6 7s2.6 5.8 5.8 5.8" style="fill-rule:evenodd;clip-rule:evenodd;fill:#fff"/><path d="M22.6 0H7.4c-3.9 0-7 3.1-7 7s3.1 7 7 7h15.2c3.9 0 7-3.1 7-7s-3.2-7-7-7m-21 7c0-3.2 2.6-5.8 5.8-5.8h9.9l-3.1 11.6H7.4c-3.2 0-5.8-2.6-5.8-5.8" style="fill-rule:evenodd;clip-rule:evenodd;fill:#06f"/><path d="M24.6 4c.2.2.2.6 0 .8L22.5 7l2.2 2.2c.2.2.2.6 0 .8s-.6.2-.8 0l-2.2-2.2-2.2 2.2c-.2.2-.6.2-.8 0s-.2-.6 0-.8L20.8 7l-2.2-2.2c-.2-.2-.2-.6 0-.8s.6-.2.8 0l2.2 2.2L23.8 4c.2-.2.6-.2.8 0" style="fill:#fff"/><path d="M12.7 4.1c.2.2.3.6.1.8L8.6 9.8c-.1.1-.2.2-.3.2-.2.1-.5.1-.7-.1L5.4 7.7c-.2-.2-.2-.6 0-.8s.6-.2.8 0L8 8.6l3.8-4.5c.2-.2.6-.2.9 0" style="fill:#06f"/></svg>
+          <button id="fides-modal-link">
+            Manage Preferences
+          </button>
+        </div>
+      
+      © 2026 Condé Nast. All rights reserved. Use of and/or
+      registration on any portion of this site constitutes acceptance of our <a
+        href="https://www.condenast.com/user-agreement/">User Agreement</a> and
+      <a href="https://www.condenast.com/privacy-policy/">Privacy Policy and
+        Cookie Statement</a> and <a href="/amendment-to-conde-nast-user-agreement-privacy-policy/">Ars
+        Technica Addendum</a> and <a href="https://www.condenast.com/privacy-policy/#california">Your
+        California Privacy Rights</a>. Ars Technica may earn compensation on
+      sales from links on this site. <a href="/affiliate-link-policy/">Read our
+        affiliate link policy</a>. The material on this site may not be
+      reproduced, distributed, transmitted, cached or otherwise used, except
+      with the prior written permission of Condé Nast. <a href="https://www.aboutads.info/">Ad
+        Choices</a>
+    </div>
+  </div>
+</footer>
+  </div>
+
+    <script type="speculationrules">
+{"prefetch":[{"source":"document","where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":["/wp/wp-*.php","/wp/wp-admin/*","/wp-content/uploads/*","/wp-content/*","/wp-content/plugins/*","/wp-content/themes/ars-v9/*","/*\\?(.+)"]}},{"not":{"selector_matches":"a[rel~=\"nofollow\"]"}},{"not":{"selector_matches":".no-prefetch, .no-prefetch a"}}]},"eagerness":"conservative"}]}
+</script>
+<template id="ars-editor-toolbar-template" data-admin-bar-css="https://arstechnica.com/wp/wp-includes/css/admin-bar.min.css?ver=7.1.4" data-dashicons-css="https://arstechnica.com/wp/wp-includes/css/dashicons.min.css?ver=7.1.4">		<div id="wpadminbar" class="nojq nojs">
+						<div class="quicklinks" id="wp-toolbar" role="navigation" aria-label="Toolbar">
+				<ul role='menu' id='wp-admin-bar-root-default' class="ab-top-menu"><li role='group' id='wp-admin-bar-site-name'><a class='ab-item' role="menuitem" href='#' title='Dashboard'>Dashboard</a></li><li role='group' id='wp-admin-bar-edit'><a class='ab-item' role="menuitem" href='#'>Edit Post</a></li></ul><ul role='menu' id='wp-admin-bar-top-secondary' class="ab-top-secondary ab-top-menu"><li role='group' id='wp-admin-bar-my-account' class="menupop"><a class='ab-item' role="menuitem" aria-expanded="false" href='#'>Howdy, <span class="display-name" data-editor-account-name>Account</span></a><div class="ab-sub-wrapper"><ul role='menu' aria-label='My Account' id='wp-admin-bar-user-actions' class="ab-submenu"><li role='group' id='wp-admin-bar-user-info'><a class='ab-item' role="menuitem" href='#'><span class="display-name" data-editor-account-name>Account</span><span class="display-name edit-profile">Edit Profile</span></a></li><li role='group' id='wp-admin-bar-logout'><a class='ab-item' role="menuitem" href='#'>Log Out</a></li></ul></div></li><li role='group' id='wp-admin-bar-ars-editor-status'><div class="ab-item ab-empty-item" role="menuitem"><span role="status" aria-live="polite">Connecting…</span></div></li></ul>			</div>
+		</div>
+
+		</template><script src=""></script>
+<script type="text/javascript" src="https://s.skimresources.com/js/100098X1555750.skimlinks.js"></script>
+<script>
+  function loadInterlude() {
+    const div = document.querySelector('.ars-interlude-container');
+    if (!div) {
+      return;
+    }
+
+    // Exclude on sponsored posts
+    if (document.querySelector('.single-ars_sponsored_post')) {
+      return;
+    }
+
+    // If on an article page and the interlude container exists
+    if (document.querySelector('body.single')) {
+      const parent = div.parentElement;
+
+      // Get all the top level elements in the parent that aren't the interlude container
+      const elems = Array.from(parent.children).filter((elem) => elem !== div);
+      // Loop over the elements in reverse order
+      for (let i = elems.length - 1; i >= 0; i--) {
+        const elem = elems[i];
+        // If the next element isn't one of: h1, h2, h3, h4, h5, h6, or div, insert the interlude container before it
+        const nextElem = elems[i - 1];
+        if (nextElem && !['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'DIV'].includes(nextElem.tagName)) {
+          // Add .my-5 to the interlude container
+          div.classList.add('my-5');
+          parent.insertBefore(div, elem);
+
+          const src =
+            'https://player.cnevids.com/interlude/arstechnica.js?videoEmbedPosition=inlineEmbedded';
+          const s = document.createElement('script');
+          s.setAttribute('async', true);
+          s.setAttribute('src', src);
+          document.body.appendChild(s);
+
+          break;
+        }
+      }
+    }
+  }
+
+  // Only load the video player if we have analytics consent (post-consent)
+  function checkAndLoadInterlude() {
+    if (window.Fides?.consent?.analytics) {
+      loadInterlude();
+    }
+  }
+
+  // Check if Fides is already initialized
+  if (window.Fides?.initialized) {
+    checkAndLoadInterlude();
+  } else {
+    // Wait for Fides to initialize
+    window.addEventListener('FidesInitialized', checkAndLoadInterlude);
+  }
+
+  // Re-check whenever consent is updated
+  window.addEventListener('FidesUpdated', checkAndLoadInterlude);
+</script>
+<!-- Parse.ly start -->
+<script>
+  // Conditionally load Parse.ly script if Fides.consent.analytics is true
+  function loadParsely() {
+    const existingScript = document.getElementById("parsely-cfg");
+    if (window.Fides?.consent?.analytics && !existingScript) {
+      var script = document.createElement("script");
+      script.src = "//fpa-cdn.arstechnica.com/keys/arstechnica.com/p.js";
+      script.async = true;
+      script.setAttribute("id", "parsely-cfg");
+      document.head.appendChild(script);
+    } else if (!window.Fides?.consent?.analytics && existingScript) {
+      existingScript.remove();
+    }
+  }
+  if (window.Fides?.initialized) {
+    loadParsely();
+  } else {
+    window.addEventListener("FidesInitialized", loadParsely);
+  }
+  addEventListener("FidesUpdated", loadParsely);
+</script>
+<!-- Parse.ly end -->
+<script id="article_forum_connect_iframe_resizer-js" src="https://cdn.arstechnica.net/wp-content/plugins/article-forum-connect/public/js/iframe-resizer.parent.js?ver=5.3.1"></script>
+<script id="article_forum_connect_iframe-js" src="https://cdn.arstechnica.net/wp-content/plugins/article-forum-connect/public/js/iframe.js?ver=1.2.4"></script>
+<script id="app/0-js-before">
+(()=>{"use strict";var e={};const t={};function r(n){const o=t[n];if(void 0!==o)return o.exports;const a=t[n]={exports:{}};return e[n].call(a.exports,a,a.exports,r),a.exports}r.m=e,(()=>{const e=Symbol("webpack queues"),t=Symbol("webpack exports"),n=Symbol("webpack error"),o=e=>{e?.d<1&&(e.d=1,e.forEach(e=>e.r--),e.forEach(e=>e.r--?e.r++:e()))};r.a=(r,a,s)=>{let c;s&&((c=[]).d=-1);const i=new Set,l=r.exports;let u,d,f;const p=new Promise((e,t)=>{f=t,d=e});p[t]=l,p[e]=e=>(c&&e(c),i.forEach(e),p.catch(e=>{})),r.exports=p,a(r=>{let a;u=(r=>r.map(r=>{if(null!==r&&"object"==typeof r){if(r[e])return r;if(r.then){const a=[];a.d=0,r.then(e=>{s[t]=e,o(a)},e=>{s[n]=e,o(a)});const s={};return s[e]=e=>e(a),s}}const a={};return a[e]=e=>{},a[t]=r,a}))(r);const s=()=>u.map(e=>{if(e[n])throw e[n];return e[t]}),l=new Promise(t=>{a=()=>t(s),a.r=0;const r=e=>e!==c&&!i.has(e)&&(i.add(e),e&&!e.d&&(a.r++,e.push(a)));u.forEach(t=>t[e](r))});return a.r?l:s()},e=>(e?f(p[n]=e):d(l),o(c))),c?.d<0&&(c.d=0)}})(),(()=>{const e=[];r.O=(t,n,o)=>{if(!n){for(var a=0;a<e.length;a++){let[n,o]=e[a],c=!0;for(var s=0;s<n.length;s++)Object.keys(r.O).every(e=>r.O[e](n[s]))?n.splice(s--,1):c=!1;if(c){e.splice(a--,1);const r=o();void 0!==r&&(t=r)}}return t}e.push([n,o])}})(),r.cw=e=>{var t;return()=>{if(e){var r=e;e=0,t={exports:{}},r.call(t.exports,t,t.exports)}return t.exports}},r.d=(e,t)=>{if(Array.isArray(t))for(var n=0;n<t.length;){var o=t[n++],a=t[n++],s=0===a?{enumerable:!0,value:t[n++]}:{enumerable:!0,get:a};r.o(e,o)||Object.defineProperty(e,o,s)}else for(var o in t)r.o(t,o)&&!r.o(e,o)&&Object.defineProperty(e,o,{enumerable:!0,get:t[o]})},r.f={},r.e=e=>Promise.all(Object.keys(r.f).reduce((t,n)=>(r.f[n](e,t),t),[])),r.u=e=>"js/"+{233:"db",321:"subscribe",471:"cntracking",698:"editor-tools"}[e]+"."+{233:"2bc4a88baf2a22d9",321:"83d6e4a441ab0ab6",471:"7e94c2408eb3c54d",698:"7c6dbe74cc899dd4"}[e]+".js",r.miniCssF=e=>"css/editor-tools.2a424c7b377cf87d.css",r.o=(e,t)=>Object.hasOwn(e,t),(()=>{const e={},t="ars-v9:";r.l=(n,o,a,s)=>{if(e[n])return void e[n].push(o);let c,i;if(void 0!==a){const e=document.getElementsByTagName("script");for(var l=0;l<e.length;l++){const r=e[l];if(r.getAttribute("src")==n||r.getAttribute("data-webpack")==t+a){c=r;break}}}c||(i=!0,c=document.createElement("script"),c.charset="utf-8",r.nc&&c.setAttribute("nonce",r.nc),c.setAttribute("data-webpack",t+a),c.src=n),e[n]=[o];const u=(t,r)=>{c.onerror=c.onload=null,clearTimeout(d);const o=e[n];if(delete e[n],c.parentNode?.removeChild(c),o?.forEach(e=>e(r)),t)return t(r)},d=setTimeout(u.bind(null,void 0,{type:"timeout",target:c}),12e4);c.onerror=u.bind(null,c.onerror),c.onload=u.bind(null,c.onload),i&&document.head.appendChild(c)}})(),r.r=e=>{Object.defineProperty(e,Symbol.toStringTag,{value:"Module"}),Object.defineProperty(e,"__esModule",{value:!0})},r.dn=e=>{var t=Object.getOwnPropertyDescriptor(e,"name");(!t||!t.writable&&t.configurable)&&Object.defineProperty(e,"name",{value:"default",configurable:!0})},r.p="/wp-content/themes/ars-v9/public/",(()=>{if("undefined"!=typeof document){var e={121:0};r.f.miniCss=(t,n)=>{e[t]?n.push(e[t]):0!==e[t]&&{698:1}[t]&&n.push(e[t]=(e=>new Promise((t,n)=>{var o=r.miniCssF(e),a=r.p+o;if(((e,t)=>{for(var r=document.getElementsByTagName("link"),n=0;n<r.length;n++){var o=(s=r[n]).getAttribute("data-href")||s.getAttribute("href");if("stylesheet"===s.rel&&(o===e||o===t))return s}var a=document.getElementsByTagName("style");for(n=0;n<a.length;n++){var s;if((o=(s=a[n]).getAttribute("data-href"))===e||o===t)return s}})(o,a))return t();((e,t,n,o,a)=>{var s=document.createElement("link");s.rel="stylesheet",s.type="text/css",r.nc&&(s.nonce=r.nc),s.onerror=s.onload=r=>{if(s.onerror=s.onload=null,"load"===r.type)o();else{var n=r&&r.type,c=r&&r.target&&r.target.href||t,i=new Error("Loading CSS chunk "+e+" failed.\n("+n+": "+c+")");i.name="ChunkLoadError",i.code="CSS_CHUNK_LOAD_FAILED",i.type=n,i.request=c,s.parentNode&&s.parentNode.removeChild(s),a(i)}},s.href=t,document.head.appendChild(s)})(e,a,0,t,n)}))(t).then(()=>{e[t]=0},r=>{throw delete e[t],r}))}}})(),(()=>{const e={121:0};r.f.j=(t,n)=>{let o=r.o(e,t)?e[t]:void 0;if(0!==o)if(o)n.push(o[2]);else if(121!=t){const a=new Promise((r,n)=>o=e[t]=[r,n]);n.push(o[2]=a);const s=new Error,c=n=>{if(r.o(e,t)&&(o=e[t],0!==o&&(e[t]=void 0),o)){const e=n&&("load"===n.type?"missing":n.type),r=n&&n.target&&n.target.src;s.message="Loading chunk "+t+" failed.\n("+e+": "+r+")",s.name="ChunkLoadError",s.type=e,s.request=r,s.event=n,o[1](s)}};r.l(r.p+r.u(t),c,"chunk-"+t,t)}else e[t]=0},r.O.j=t=>0===e[t];const t=(t,n)=>{let[o,a,s]=n;var c,i,l=0;if(o.some(t=>0!==e[t])){for(c in a)r.o(a,c)&&(r.m[c]=a[c]);if(s)var u=s(r)}for(t&&t(n);l<o.length;l++)i=o[l],r.o(e,i)&&e[i]&&e[i][0](),e[i]=0;return r.O(u)},n=globalThis.webpackChunkars_v9||=[];n.forEach(t.bind(null,0)),n.push=t.bind(null,n.push.bind(n))})()})();
+//# sourceURL=app%2F0-js-before
+</script>
+<script id="app/0-js" src="https://cdn.arstechnica.net/wp-content/themes/ars-v9/public/js/app.c4fb404fa8e90019.js"></script>
+<script id="ads/0-js" src="https://cdn.arstechnica.net/wp-content/themes/ars-v9/public/js/ads.a504d6283133928a.js"></script>
+<script id="stats/0-js" src="https://cdn.arstechnica.net/wp-content/themes/ars-v9/public/js/stats.041469003783c6d7.js"></script>
+</body>
+
+</html>
+
+<!-- Performance optimized by Redis Object Cache. Learn more: https://wprediscache.com -->

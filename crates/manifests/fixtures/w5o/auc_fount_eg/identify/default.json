@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "source": "auc_fount_eg",
+  "op": "identify",
+  "recordedAt": "2026-11-25T12:44:39Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://fount.aucegypt.edu/do/oai/?verb=Identify",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/xml"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<OAI-PMH\n\txmlns=\"http://www.openarchives.org/OAI/2.0/\"\n\txmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n\txsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/\n\t\thttp://www.openarchives.org/OAI/2.0/OAI-PMH.xsd\">\n\t<responseDate>2026-11-25T12:08:13Z</responseDate>\n\t<request verb=\"Identify\">http://fount.aucegypt.edu/do/oai/</request>\n\t\n\t<Identify>\n<repositoryName>AUC Knowledge Fountain</repositoryName>\n<baseURL>http://fount.aucegypt.edu/do/oai/</baseURL>\n<protocolVersion>2.0</protocolVersion>\n<adminEmail>dc-support@elsevier.com</adminEmail>\n<earliestDatestamp>2000-01-19T00:00:00Z</earliestDatestamp>\n<deletedRecord>no</deletedRecord>\n<granularity>YYYY-MM-DDThh:mm:ssZ</granularity>\n<description>\n\t<oai-identifier \n\t        xmlns=\"http://www.openarchives.org/OAI/2.0/oai-identifier\"\n\t        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n\t        xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/oai-identifier\n\t\t        http://www.openarchives.org/OAI/2.0/oai-identifier.xsd\">\n\t\t<scheme>oai</scheme> \n\t\t<repositoryIdentifier>fount.aucegypt.edu</repositoryIdentifier>    \n\t\t<delimiter>:</delimiter> \n\t\t<sampleIdentifier>oai:fount.aucegypt.edu:bejte-1005</sampleIdentifier>\n\t</oai-identifier> \n</description>\n<description>\n\t<eprints xmlns='http://www.openarchives.org/OAI/1.1/eprints' xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/1.1/eprints http://www.openarchives.org/OAI/1.1/eprints.xsd\">\n\t\t<content>\n\t\t\t<text>AUC Knowledge Fountain archive</text>\n\t\t</content>\n\t\t<metadataPolicy>\n\t\t\t<text>Metadata can be used by commercial and non-commercial service providers</text>\n\t\t</metadataPolicy>\n\t\t<dataPolicy>\n\t\t\t<text>Full content may not be harvested by robots without prior, written approval of AUC Knowledge Fountain.</text>\n\t\t</dataPolicy>\n\t\t<submissionPolicy>\n\t\t</submissionPolicy>\n\t</eprints>\n</description>\t</Identify>\n</OAI-PMH>\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "nlm_clinicaltables",
+  "op": "search",
+  "recordedAt": "2026-11-25T13:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=diabetes&maxList=3&offset=0&sf=code%2Cname",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ],
+          [
+            "etag",
+            "W/\"97-Pv+lT9TnJ9XShu97Ke83n2hi0zY\""
+          ]
+        ],
+        "bodyText": "[481,[\"E23.2\",\"N25.1\",\"P70.2\"],null,[[\"E23.2\",\"Diabetes insipidus\"],[\"N25.1\",\"Nephrogenic diabetes insipidus\"],[\"P70.2\",\"Neonatal diabetes mellitus\"]]]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

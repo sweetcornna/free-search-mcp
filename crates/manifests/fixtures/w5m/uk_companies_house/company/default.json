@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "uk_companies_house",
+  "op": "company",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.company-information.service.gov.uk/company/01026167",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"company_name\":\"BARCLAYS BANK PLC\",\"company_number\":\"01026167\",\"company_status\":\"active\",\"type\":\"plc\",\"jurisdiction\":\"england-wales\",\"date_of_creation\":\"1971-10-04\",\"sic_codes\":[\"64191\"],\"registered_office_address\":{\"premises\":\"1\",\"address_line_1\":\"Churchill Place\",\"locality\":\"London\",\"postal_code\":\"E14 5HP\",\"country\":\"United Kingdom\"},\"accounts\":{\"next_due\":\"2027-06-30\",\"overdue\":false}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

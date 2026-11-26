@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "lmfdb_math",
+  "op": "curve",
+  "recordedAt": "2026-11-25T13:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.lmfdb.org/api/ec_curvedata/?lmfdb_label=11.a2&_format=json&_max_count=1",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\n  \"table\": \"ec_curvedata\",\n  \"timestamp\": \"2026-11-25T13:02:56.353051\",\n  \"data\": [\n    {\n      \"id\": 0,\n      \"Ciso\": \"11a\",\n      \"Clabel\": \"11a1\",\n      \"Cnumber\": 1,\n      \"abc_quality\": 1.012998630378065,\n      \"absD\": 161051,\n      \"adelic_genus\": 37,\n      \"adelic_index\": 1200,\n      \"adelic_level\": 550,\n      \"ainvs\": [\n        0,\n        -1,\n        1,\n        -10,\n        -20\n      ],\n      \"analytic_rank\": 0,\n      \"bad_primes\": [\n        11\n      ],\n      \"class_deg\": 25,\n      \"class_size\": 3,\n      \"cm\": 0,\n      \"conductor\": 11,\n      \"degree\": 1,\n      \"elladic_images\": [\n        \"5.120.0.1\"\n      ],\n      \"faltings_height\": {\n        \"__RealLiteral__\": 0,\n        \"data\": \"-0.30800984111840306468901426146\",\n        \"prec\": 97\n      },\n      \"faltings_index\": 1,\n      \"faltings_ratio\": 5,\n      \"intrinsic_torsion\": 1,\n      \"iso_nlabel\": 0,\n      \"isogeny_degrees\": [\n        1,\n        5\n      ],\n      \"jinv\": [\n        -122023936,\n        161051\n      ],\n      \"lmfdb_iso\": \"11.a\",\n      \"lmfdb_label\": \"11.a2\",\n      \"lmfdb_number\": 2,\n      \"manin_constant\": 1,\n      \"min_quad_twist_ainvs\": [\n        0,\n        -1,\n        1,\n        -10,\n        -20\n      ],\n      \"min_quad_twist_disc\": 1,\n      \"modell_images\": [\n        \"5Cs.1.1\"\n      ],\n      \"modm_images\": [\n        \"5.120.0-5.a.1.2\",\n        \"22.2.0.a.1\",\n        \"110.240.5.?\",\n        \"275.600.12.?\",\n        \"550.1200.37.?\"\n      ],\n      \"nonmax_primes\": [\n        5\n      ],\n      \"nonmax_rad\": 5,\n      \"num_bad_primes\": 1,\n      \"num_int_pts\": 4,\n      \"optimality\": 1,\n      \"potential_good_reduction\": false,\n      \"rank\": 0,\n      \"regulator\": 1,\n      \"semistable\": true,\n      \"serre_invariants\": [\n        [\n          5,\n          2,\n          1\n        ],\n        [\n          11,\n          12,\n          1\n        ]\n      ],\n      \"sha\": 1,\n      \"sha_primes\": [],\n      \"signD\": -1,\n      \"stable_faltings_height\": {\n        \"__RealLiteral__\": 0,\n        \"data\": \"-0.30800984111840306468901426146\",\n        \"prec\": 97\n      },\n      \"szpiro_ratio\": 8.26048375415454,\n      \"torsion\": 5,\n      \"torsion_primes\": [\n        5\n      ],\n      \"torsion_structure\": [\n        5\n      ]\n    }\n  ],\n  \"start\": 0,\n  \"offset\": 1,\n  \"query\": \"/api/ec_curvedata/?lmfdb_label=11.a2&_format=json&_max_count=1&_offset=0\",\n  \"next\": \"/api/ec_curvedata/?lmfdb_label=11.a2&_format=json&_max_count=1&_offset=1\",\n  \"rec_id\": \"lmfdb_label\"\n}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

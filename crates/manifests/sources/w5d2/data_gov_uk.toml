@@ -1,0 +1,87 @@
+id = "data_gov_uk"
+name = "data.gov.uk Open Data Portal"
+summary = "UK central government, local authority, and public-body open datasets catalog via CKAN Action API."
+aliases = ["data.gov.uk", "uk open data", "datagovuk"]
+home_url = "https://www.data.gov.uk"
+tier = 1
+scopes = ["gov", "dataset"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 4, concurrency = 3, timeout_ms = 12000, cache_ttl_s = 21600 }
+
+[op.search]
+summary = "Search UK public-sector datasets on data.gov.uk."
+method = "GET"
+url = "https://data.gov.uk/api/action/package_search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "start", start = 0, max_pages = 3 }
+probe = { params = { query = "climate", limit = 3 }, min_results = 2, fixture = "fixtures/w5d2/data_gov_uk/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Dataset search query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "rows", doc = "Datasets per page" }
+offset = { type = "int", min = 0, to = "start", doc = "Pagination offset" }
+fq = { type = "string", to = "fq", doc = "Optional Solr filter query, e.g. organization:environment-agency" }
+
+[op.search.map]
+items = "(.result.results // [])[]"
+total = ".result.count"
+error = "if .success == false then (.error.message // (.error | tostring)) else null end"
+record = '''{
+  id: .id,
+  name: .name,
+  title: ((.title // .name // "") | collapse_ws // ""),
+  notes: ((((.notes // "") | strip_tags // "") | .[0:500]) | collapse_ws // ""),
+  organization: (.organization.title // null),
+  licenseTitle: (.license_title // null),
+  numResources: (.num_resources // ((.resources // []) | length)),
+  issuedDate: ([(.extras // [])[] | select(.key == "dcat_issued") | .value | parse_date | select(. != null)][0] // null),
+  modifiedDate: ([(.extras // [])[] | select(.key == "dcat_modified") | .value | parse_date | select(. != null)][0] // null),
+  metadataModified: ((.metadata_modified // null) | parse_date),
+  url: ("https://www.data.gov.uk/dataset/" + .id + "/" + .name)
+}'''
+hit = '''{
+  title: ((.title // .name // "") | collapse_ws // ""),
+  url: ("https://www.data.gov.uk/dataset/" + .id + "/" + .name),
+  snippet: (
+    [
+      .organization.title,
+      .license_title,
+      (((.notes // "") | strip_tags // "") | if length > 0 then (.[0:220] | collapse_ws) else null end)
+    ] | map(select(. != null)) | join(" · ")
+  ),
+  date: (([(.extras // [])[] | select(.key == "dcat_modified") | .value | parse_date | select(. != null)][0]) // ([(.extras // [])[] | select(.key == "dcat_issued") | .value | parse_date | select(. != null)][0]) // ((.metadata_modified // null) | parse_date)),
+  dateSource: "api"
+}'''
+
+[op.dataset]
+summary = "Fetch full metadata and downloadable resource URLs for a data.gov.uk dataset by slug or UUID."
+method = "GET"
+url = "https://data.gov.uk/api/action/package_show"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "climate-resilience-documents" }, min_results = 1, fixture = "fixtures/w5d2/data_gov_uk/dataset/default.json" }
+
+[op.dataset.params]
+id = { type = "string", required = true, to = "id", doc = "Dataset slug or UUID, e.g. climate-resilience-documents" }
+
+[op.dataset.map]
+items = ".result"
+error = "if .success == false then (.error.message // (.error | tostring)) else null end"
+record = '''{
+  id: .id,
+  name: .name,
+  title: ((.title // .name // "") | collapse_ws // ""),
+  notes: ((.notes // "") | strip_tags // ""),
+  organization: (.organization.title // null),
+  licenseTitle: (.license_title // null),
+  issuedDate: ([(.extras // [])[] | select(.key == "dcat_issued") | .value | parse_date | select(. != null)][0] // null),
+  modifiedDate: ([(.extras // [])[] | select(.key == "dcat_modified") | .value | parse_date | select(. != null)][0] // null),
+  metadataModified: ((.metadata_modified // null) | parse_date),
+  resources: [(.resources // [])[] | {name: ((.name // .description // "") | collapse_ws // ""), format: (.format // null), url: (.url // null)}],
+  url: ("https://www.data.gov.uk/dataset/" + .id + "/" + .name)
+}'''

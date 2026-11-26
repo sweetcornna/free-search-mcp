@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "ons_uk_stats",
+  "op": "datasets",
+  "recordedAt": "2026-11-25T13:05:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.beta.ons.gov.uk/v1/datasets?limit=3&offset=0",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"items\":[{\"contacts\":[{\"email\":\"qualityoflife@ons.gov.uk\",\"name\":\"Will Shufflebottom, Owain Birrell, Pavan Bains and Geeta Kerai\",\"telephone\":\"+44 300 0671543\"}],\"description\":\"Seasonally and non seasonally-adjusted quarterly estimates of life satisfaction, feeling that the things done in life are worthwhile, happiness and anxiety in the UK.\",\"keywords\":[\"well-being\"],\"id\":\"wellbeing-quarterly\",\"last_updated\":\"2023-12-13T09:40:24.204Z\",\"links\":{\"editions\":{\"href\":\"https://api.beta.ons.gov.uk/v1/datasets/wellbeing-quarterly/editions\"},\"latest_version\":{\"href\":\"https://api.beta.ons.gov.uk/v1/datasets/wellbeing-quarterly/editions/time-series/versions/9\",\"id\":\"9\"},\"self\":{\"href\":\"https://api.beta.ons.gov.uk/v1/datasets/wellbeing-quarterly\"},\"taxonomy\":{\"href\":\"https://api.beta.ons.gov.uk/v1/peoplepopulationandcommunity/wellbeing\"}},\"methodologies\":[{\"href\":\"https://www.ons.gov.uk/peoplepopulationandcommunity/wellbeing/methodologies/personalwellbeingquarterlyestimatestechnicalreport\",\"title\":\"Personal well-being quarterly estimates technical report\"}],\"national_statistic\":false,\"next_release\":\"TBC\",\"qmi\":{\"href\":\"https://www.ons.gov.uk/peoplepopulationandcommunity/wellbeing/methodologies/personalwellbeingintheukqmi\"},\"related_datasets\":[{\"href\":\"https://www.ons.gov.uk/peoplepopulationandcommunity/wellbeing/datasets/ukmeasuresofnationalwellbeing\",\"title\":\"Personal well-being in the UK\"}],\"release_frequency\":\"Quarterly\",\"state\":\"published\",\"title\":\"Quarterly personal well-being estimates\",\"unit_of_measure\":\"Percentage\"},{\"contacts\":[{\"email\":\"QualityOfLife@ons.gov.uk\",\"name\":\"Rachel Mullis, Joe Shepherd and Geeta Kerai\",\"telephone\":\"+44 3000 671 543\"}],\"description\":\"Estimates of life satisfaction, feeling that the things done in life are worthwhile, happiness and anxiety at the UK, country, regional, county, local and unitary authority level.\",\"keywords\":[\"well-being\"],\"id\":\"wellbeing-local-authority\",\"last_updated\":\"2023-12-13T09:40:21.928Z\",\"links\":{\"editions\":{\"href\":\"https://api.beta.ons.gov.uk/v1/datasets/wellbeing-local-authority/editions\"},\"latest_version\":{\"href\":\"https://api.beta.ons.gov.uk/v1/datasets/wellbeing-local-authority/editions/time-series/versions/4\",\"id\":\"4\"},\"self\":{\"href\":\"https://api.beta.ons.gov.uk/v1/datasets/wellbeing-local-authority\"},\"taxonomy\":{\"href\":\"https://api.beta.ons.gov.uk/v1/peoplepopulationandcommunity/wellbeing\"}},\"national_statistic\":true,\"next_release\":\"TBC\",\"qmi\":{\"href\":\"https://www.ons.gov.uk/peoplepopulationandcommunity/wellbeing/methodologies/personalwellbeingintheukqmi\"},\"related_datasets\":[{\"href\":\"https://www.ons.gov.uk/peoplepopulationandcommunity/wellbeing/bulletins/measuringnationalwellbeing/april2022tomarch2023\",\"title\":\"Personal well-being in the UK: April 2022 to March 2023\"}],\"release_frequency\":\"Annual\",\"state\":\"published\",\"title\":\"Personal well-being estimates by local authority\",\"unit_of_measure\":\"Percentage\"},{\"contacts\":[{\"email\":\"health.data@ons.gov.uk\",\"name\":\"Data Insights and Data Science team\",\"telephone\":\"+44 1329 444110\"}],\"description\":\"Provisional counts of the number of deaths registered in England and Wales, by region, in the latest weeks for which data are available.\",\"keywords\":[\"Deaths\",\"weekly deaths\"],\"id\":\"weekly-deaths-region\",\"last_updated\":\"2026-07-01T10:46:27.849Z\",\"links\":{\"editions\":{\"href\":\"https://api.beta.ons.gov.uk/v1/datasets/weekly-deaths-region/editions\"},\"latest_version\":{\"href\":\"https://api.beta.ons.gov.uk/v1/datasets/weekly-deaths-region/editions/time-series/versions/121\",\"id\":\"121\"},\"self\":{\"href\":\"https://api.beta.ons.gov.uk/v1/datasets/weekly-deaths-region\"},\"taxonomy\":{\"href\":\"https://api.beta.ons.gov.uk/v1/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths\"}},\"national_statistic\":true,\"next_release\":\"24 June 2026\",\"qmi\":{\"href\":\"https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/methodologies/mortalitystatisticsinenglandandwalesqmi\"},\"release_frequency\":\"Weekly\",\"state\":\"published\",\"title\":\"Deaths registered weekly in England and Wales by region\"}],\"count\":3,\"offset\":0,\"limit\":3,\"total_count\":339}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

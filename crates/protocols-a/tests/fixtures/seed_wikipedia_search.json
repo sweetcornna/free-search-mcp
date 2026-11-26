@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "source": "wikipedia",
+  "op": "search",
+  "recordedAt": "2026-11-25T14:25:06Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=Alan+Turing&srlimit=3&format=json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"batchcomplete\":\"\",\"continue\":{\"sroffset\":3,\"continue\":\"-||\"},\"query\":{\"searchinfo\":{\"totalhits\":2409,\"suggestion\":\"alan touring\",\"suggestionsnippet\":\"alan touring\"},\"search\":[{\"ns\":0,\"title\":\"Alan Turing\",\"pageid\":1208,\"size\":176555,\"wordcount\":16771,\"snippet\":\"apologised for the &quot;appalling way [<span class=\\\"searchmatch\\\">Turing</span>] was treated&quot;, and Queen Elizabeth II granted <span class=\\\"searchmatch\\\">Turing</span> a pardon in 2013. The <span class=\\\"searchmatch\\\">Alan</span> <span class=\\\"searchmatch\\\">Turing</span> law refers to part of a 2017\",\"timestamp\":\"2026-11-21T11:57:09Z\"},{\"ns\":0,\"title\":\"Alan Turing Institute\",\"pageid\":42264629,\"size\":25627,\"wordcount\":2317,\"snippet\":\"The <span class=\\\"searchmatch\\\">Alan</span> <span class=\\\"searchmatch\\\">Turing</span> Institute is the United Kingdom&#039;s national institute for data science and artificial intelligence, founded in 2015 and largely funded\",\"timestamp\":\"2026-11-02T17:04:27Z\"},{\"ns\":0,\"title\":\"Turing Award\",\"pageid\":31093,\"size\":80706,\"wordcount\":3734,\"snippet\":\"Staff (2014). &quot;ACM&#039;s <span class=\\\"searchmatch\\\">Turing</span> Award prize raised to $1 million&quot;. Communications of the ACM. 57 (12): 20. doi:10.1145/2685372. &quot;A. M. <span class=\\\"searchmatch\\\">Turing</span> Award&quot;. Association\",\"timestamp\":\"2026-11-17T04:23:01Z\"}]}}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://zh.wikipedia.org/w/api.php?action=query&list=search&srsearch=%E5%9B%BE%E7%81%B5&srlimit=1&format=json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"batchcomplete\":\"\",\"continue\":{\"sroffset\":1,\"continue\":\"-||\"},\"query\":{\"searchinfo\":{\"totalhits\":38082},\"search\":[{\"ns\":0,\"title\":\"\\u827e\\u4f26\\u00b7\\u56fe\\u7075\",\"pageid\":3999,\"size\":46955,\"wordcount\":5312,\"snippet\":\"\\u827e\\u4f26\\u00b7\\u9ea6\\u5e2d\\u68ee\\u00b7<span class=\\\"searchmatch\\\">\\u56fe</span><span class=\\\"searchmatch\\\">\\u7075</span>\\uff08\\u82f1\\u8a9e\\uff1aAlan Mathison Turing\\uff1b1912\\u5e746\\u670823\\u65e5\\u20141954\\u5e746\\u67087\\u65e5\\uff09\\uff0c\\u82f1\\u56fd\\u96fb\\u8166\\u79d1\\u5b78\\u5bb6\\u3001\\u6578\\u5b78\\u5bb6\\u3001\\u908f\\u8f2f\\u5b78\\u5bb6\\u3001\\u5bc6\\u78bc\\u5206\\u6790\\u5b78\\u5bb6\\u3001\\u54f2\\u5b78\\u5bb6\\u53ca\\u6578\\u7406\\u751f\\u7269\\u5b78\\u5bb6\\u3002\\u4ed6\\u662f\\u7406\\u8ad6\\u8a08\\u7b97\\u6a5f\\u79d1\\u5b78\\u4e4b\\u7236\\uff0c\\u66fe\\u63d0\\u51fa<span class=\\\"searchmatch\\\">\\u56fe</span>\\u7075\\u673a\\u6a21\\u578b\\uff0c\\u5f62\\u5f0f\\u5316\\u7b97\\u6cd5\\u548c\\u8a08\\u7b97\\u7b49\\u6982\\u5ff5\\uff0c\\u6210\\u70ba\\u901a\\u7528\\u578b\\u96fb\\u8166\\u7684\\u4e00\\u7a2e\\u6a21\\u578b\\u3002 <span class=\\\"searchmatch\\\">\\u5716</span><span class=\\\"searchmatch\\\">\\u9748</span>\",\"timestamp\":\"2026-11-10T13:27:37Z\"}]}}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://fr.wikipedia.org/w/api.php?action=query&list=search&srsearch=Alan+Turing&srlimit=1&format=json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"batchcomplete\":\"\",\"continue\":{\"sroffset\":1,\"continue\":\"-||\"},\"query\":{\"searchinfo\":{\"totalhits\":798,\"suggestion\":\"alan turin\",\"suggestionsnippet\":\"alan turin\"},\"search\":[{\"ns\":0,\"title\":\"Alan Turing\",\"pageid\":7239,\"size\":78384,\"wordcount\":8834,\"snippet\":\"Pour les articles homonymes, voir <span class=\\\"searchmatch\\\">Turing</span>. <span class=\\\"searchmatch\\\">Alan</span> <span class=\\\"searchmatch\\\">Turing</span> <span class=\\\"searchmatch\\\">Alan</span> <span class=\\\"searchmatch\\\">Turing</span> en 1936. <span class=\\\"searchmatch\\\">Alan</span> Mathison <span class=\\\"searchmatch\\\">Turing</span>, n\\u00e9 le 23 juin 1912 \\u00e0 Londres et mort le 7 juin 1954 \\u00e0\",\"timestamp\":\"2026-11-16T14:24:12Z\"}]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

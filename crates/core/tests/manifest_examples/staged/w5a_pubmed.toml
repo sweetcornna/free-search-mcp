@@ -1,0 +1,112 @@
+# W0a test vector: copy of crates/manifests/staging/w5a/pubmed.toml (2026-11-25), A1 §F.2 applied: in = "none" on op.search params query/limit; on_empty = "empty" on the pre step.
+id = "pubmed"
+name = "PubMed (NCBI E-utilities)"
+summary = "US NLM biomedical and life-sciences citation index (37M+ articles via E-utilities)."
+aliases = ["ncbi pubmed", "medline", "pmid"]
+home_url = "https://pubmed.ncbi.nlm.nih.gov"
+tier = 1
+scopes = ["academic", "academic.biomed"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 3.0, burst = 5, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 43200, host_bucket = "ncbi.nlm.nih.gov" }
+
+[auth]
+mode = "optional"
+env = "SEARCH_MCP_NCBI_API_KEY"
+in = "query"
+name = "api_key"
+route_requires_key = false
+
+[op.search]
+summary = "Search PubMed biomedical articles (two-step esearch + esummary)."
+method = "GET"
+url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?id={pre}"
+response = "json"
+returns = "works"
+const_query = { db = "pubmed", retmode = "json", tool = "free-search-mcp" }
+probe = { params = { query = "crispr", limit = 3 }, min_results = 2, fixture = "fixtures/w5a/pubmed/search/default.json" }
+
+[[op.search.pre]]
+method = "GET"
+url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
+const_query = { db = "pubmed", retmode = "json", sort = "relevance", tool = "free-search-mcp" }
+params = { term = "{query}", retmax = "{limit}" }
+response = "json"
+bind = '''[.esearchresult.idlist[]? | select(test("^[0-9]+$"))] | join(",")'''
+on_empty = "empty"
+
+[op.search.params]
+query = { type = "string", required = true, in = "none", doc = "Entrez PubMed query (supports MeSH terms)" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "none", doc = "Max articles to return" }
+
+[op.search.map]
+items = '''(.result.uids // []) as $uids | .result as $res | $uids[] | $res[.] | select(type == "object")'''
+error = '''if .error then .error else null end'''
+work = '''{
+  title: (.title // "" | sub("\\.$"; "")),
+  authors: [(.authors // [])[] | select(.name != null) | {name: .name}],
+  year: (((.sortpubdate // "")[0:4] | tonumber?) // null),
+  publishedDate: (if ((.sortpubdate // "") | test("^[0-9]{4}/[0-9]{2}/[0-9]{2}")) then ((.sortpubdate | split(" ")[0]) | gsub("/"; "-")) else null end),
+  venue: (if (.fulljournalname // "") != "" then .fulljournalname elif (.source // "") != "" then .source else null end),
+  workType: "article",
+  ids: {
+    pmid: (.uid // null),
+    pmcid: (([(.articleids // [])[] | select(.idtype == "pmc") | .value][0]) // null),
+    doi: (([(.articleids // [])[] | select(.idtype == "doi") | .value][0]) // null | doi_norm)
+  },
+  retracted: ((.pubtype // []) | any(. == "Retracted Publication")),
+  versions: [],
+  url: ("https://pubmed.ncbi.nlm.nih.gov/" + (.uid // "") + "/"),
+  sources: ["pubmed"]
+}'''
+hit = '''{
+  title: (.title // "" | sub("\\.$"; "")),
+  url: ("https://pubmed.ncbi.nlm.nih.gov/" + (.uid // "") + "/"),
+  snippet: (([(.authors // [])[:3][] | .name] | join(", ")) + (if ((.authors // []) | length) > 3 then " et al." else "" end) + (if (.source // "") != "" then (" — " + .source) else "" end)),
+  date: (if ((.sortpubdate // "") | test("^[0-9]{4}/[0-9]{2}/[0-9]{2}")) then ((.sortpubdate | split(" ")[0]) | gsub("/"; "-")) else null end),
+  dateSource: "api"
+}'''
+
+[op.work]
+summary = "Fetch full PubMed article record including abstract via efetch XML by PMID."
+method = "GET"
+url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
+response = "xml"
+returns = "works"
+const_query = { db = "pubmed", retmode = "xml", tool = "free-search-mcp" }
+probe = { params = { pmid = "25315507" }, min_results = 1, fixture = "fixtures/w5a/pubmed/work/default.json" }
+
+[op.work.params]
+pmid = { type = "string", required = true, to = "id", doc = "PubMed ID (numeric PMID)" }
+
+[op.work.map]
+items = ".pubmedarticleset.pubmedarticle | arr | .[]"
+work = '''(
+  .medlinecitation as $mc |
+  $mc.article as $art |
+  (.pubmeddata.articleidlist.articleid | arr) as $aids |
+  ($mc.pmid | if type == "object" then ."#text" else . end) as $pmid |
+  ([($art.abstract.abstracttext | arr)[] | if type == "object" then ."#text" else . end | select(type == "string")] | join(" ")) as $abs |
+  {
+    title: (($art.articletitle | if type == "object" then ."#text" else . end) // "" | sub("\\.$"; "")),
+    authors: [($art.authorlist.author | arr)[] | {
+      name: ([.forename, .lastname] | map(select(type == "string" and length > 0)) | join(" ")),
+      affiliation: ([(.affiliationinfo | arr)[] | .affiliation | select(type == "string")][0] // null)
+    } | select(.name != "")],
+    year: ((($art.journal.journalissue.pubdate.year // $art.articledate.year // "") | tonumber?) // null),
+    publishedDate: (if $art.articledate.year != null and $art.articledate.month != null and $art.articledate.day != null then ($art.articledate.year + "-" + $art.articledate.month + "-" + $art.articledate.day) else null end),
+    venue: ($art.journal.title // $art.journal.isoabbreviation // null),
+    workType: "article",
+    ids: {
+      pmid: ($pmid // null),
+      pmcid: ([$aids[] | select(."@idtype" == "pmc") | ."#text"][0] // null),
+      doi: (([$aids[] | select(."@idtype" == "doi") | ."#text"][0] // null) | doi_norm)
+    },
+    abstractText: (if $abs != "" then $abs else null end),
+    retracted: ([($art.publicationtypelist.publicationtype | arr)[] | if type == "object" then ."#text" else . end] | any(. == "Retracted Publication")),
+    versions: [],
+    url: ("https://pubmed.ncbi.nlm.nih.gov/" + ($pmid // "") + "/"),
+    sources: ["pubmed"]
+  }
+)'''

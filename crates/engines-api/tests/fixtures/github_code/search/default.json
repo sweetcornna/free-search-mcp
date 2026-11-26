@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "source": "github_code",
+  "op": "search",
+  "recordedAt": "2026-11-25T10:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.github.com/search/code?q=asyncio.run&per_page=5",
+        "headersSubset": {
+          "accept": "application/vnd.github+json",
+          "x-github-api-version": "2022-11-28"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [["content-type", "application/json; charset=utf-8"]],
+        "bodyText": "{\"items\":[{\"path\":\"src/main.py\",\"html_url\":\"https://github.com/o/r/blob/main/src/main.py\",\"repository\":{\"full_name\":\"o/r\",\"description\":\"a repo\"}}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

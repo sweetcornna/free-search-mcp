@@ -1,0 +1,78 @@
+protocol = "opendatasoft"
+
+[[instance]]
+id = "ods_public"
+name = "OpenDataSoft Public Data Hub"
+summary = "Curated global public dataset catalog hosted by OpenDataSoft spanning demographics, geospatial boundaries, climate, and mobility."
+aliases = ["opendatasoft", "ods", "public.opendatasoft.com"]
+base_url = "https://public.opendatasoft.com"
+scopes = ["dataset", "reference"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "population", limit = 2 }, min_results = 1 }
+
+[[instance]]
+id = "france_economie"
+name = "French Ministry of Economy & Finance Open Data"
+summary = "Official French macroeconomic, fiscal, public procurement, business registry, and consumer price open datasets."
+aliases = ["bercy", "data.economie.gouv.fr", "dgfip"]
+base_url = "https://data.economie.gouv.fr"
+scopes = ["dataset", "gov", "finance"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "energie", limit = 3 }, min_results = 1 }
+
+[[instance]]
+id = "france_esr"
+name = "French Higher Education & Research Open Data"
+summary = "French Ministry of Higher Education and Research (#dataESR) datasets on universities, research laboratories, open science, and funding."
+aliases = ["dataesr", "mesr", "data.enseignementsup-recherche.gouv.fr"]
+base_url = "https://data.enseignementsup-recherche.gouv.fr"
+scopes = ["dataset", "academic", "gov"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "recherche", limit = 3 }, min_results = 1 }
+
+[[instance]]
+id = "france_odre"
+name = "ODRE French Energy Networks Open Data"
+summary = "Open Data Reseaux Energies (RTE, GRTgaz, Terega) electricity and gas generation, consumption, renewable, and grid telemetry datasets."
+aliases = ["odre", "rte france", "odre.opendatasoft.com"]
+base_url = "https://odre.opendatasoft.com"
+scopes = ["dataset", "gov"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "energie", limit = 3 }, min_results = 1 }
+
+[[instance]]
+id = "banque_de_france"
+name = "Banque de France Webstat Open Data"
+summary = "Central bank statistical portal providing French and Eurozone interest rates, monetary aggregates, balance of payments, and credit series."
+aliases = ["webstat", "bdf", "webstat.banque-france.fr"]
+base_url = "https://webstat.banque-france.fr"
+scopes = ["dataset", "finance"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "taux", limit = 3 }, min_results = 1 }
+
+[[instance]]
+id = "sbb_swiss_rail"
+name = "Swiss Federal Railways (SBB) Open Data"
+summary = "SBB CFF FFS public rail infrastructure, station passenger flows, timetables, energy usage, and Swiss mobility datasets."
+aliases = ["sbb", "cff", "data.sbb.ch"]
+base_url = "https://data.sbb.ch"
+scopes = ["dataset", "reference.geo"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "bahnhof", limit = 3 }, min_results = 1 }
+
+[[instance]]
+id = "vancouver_open_data"
+name = "City of Vancouver Open Data"
+summary = "City of Vancouver municipal open datasets covering urban planning, zoning, parks, transportation, and climate action."
+aliases = ["vancouver data", "opendata.vancouver.ca"]
+base_url = "https://opendata.vancouver.ca"
+scopes = ["dataset", "gov", "reference.geo"]
+caps = ["search", "lookup", "dataset"]
+tier = 2
+probe = { op = "search", params = { query = "park", limit = 3 }, min_results = 1 }

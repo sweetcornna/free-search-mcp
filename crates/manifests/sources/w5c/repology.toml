@@ -1,0 +1,80 @@
+id = "repology"
+name = "Repology"
+summary = "Cross-distribution software package version tracker across 100+ Linux, BSD, macOS, and Windows repositories."
+aliases = ["repology packages", "distro versions"]
+home_url = "https://repology.org"
+tier = 2
+scopes = ["code"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 0.5, burst = 1, concurrency = 1, timeout_ms = 10000, cache_ttl_s = 43200 }
+
+[op.search]
+summary = "Search software projects across package repositories by name substring."
+method = "GET"
+url = "https://repology.org/api/v1/projects/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { query = "hyperfine" }, min_results = 1, fixture = "fixtures/w5c/repology/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "search", doc = "Project name substring" }
+inrepo = { type = "string", to = "inrepo", doc = "Filter projects present in this repository slug" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "none", doc = "Max projects to return" }
+
+[op.search.map]
+items = "to_entries[0:($p.limit // 10)][]"
+error = "if (type == \"object\") and (.error | type) == \"string\" then .error else null end"
+record = '''
+([.value[] | select(.status == "newest") | .version] | unique) as $newest |
+{
+  project: .key,
+  url: ("https://repology.org/project/" + .key + "/versions"),
+  newestVersions: $newest,
+  repoCount: (.value | length),
+  summary: ([.value[] | .summary | select(type == "string" and length > 0)][0] // ""),
+  licenses: ([.value[] | (.licenses // [])[]] | unique)
+}'''
+hit = '''
+([.value[] | select(.status == "newest") | .version] | unique) as $newest |
+([.value[] | .summary | select(type == "string" and length > 0)][0] // "") as $sum |
+{
+  title: (.key + (if ($newest | length) > 0 then " (\($newest[0]))" else "" end)),
+  url: ("https://repology.org/project/" + .key + "/versions"),
+  snippet: ([
+    (if ($newest | length) > 0 then "newest: \($newest | join(", "))" else empty end),
+    "\(.value | length) repo entries",
+    (if ($sum | length) > 0 then $sum else empty end)
+  ] | join(" · ")),
+  date: null,
+  dateSource: null
+}'''
+
+[op.project]
+summary = "Fetch all repository package entries for a specific Repology project name."
+method = "GET"
+url = "https://repology.org/api/v1/project/{name}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { name = "hyperfine" }, min_results = 5, fixture = "fixtures/w5c/repology/project/default.json" }
+
+[op.project.params]
+name = { type = "string", required = true, in = "path", doc = "Exact Repology project slug e.g. hyperfine" }
+limit = { type = "int", default = 50, min = 1, max = 200, in = "none", doc = "Max repository entries to return" }
+
+[op.project.map]
+items = ".[0:($p.limit // 50)][]"
+error = "@ref:op.search.map.error"
+record = '''{
+  repo: .repo,
+  subrepo: .subrepo,
+  name: (.visiblename // .srcname // .binname // ""),
+  version: .version,
+  origVersion: .origversion,
+  status: .status,
+  summary: .summary,
+  licenses: (.licenses // [])
+}'''

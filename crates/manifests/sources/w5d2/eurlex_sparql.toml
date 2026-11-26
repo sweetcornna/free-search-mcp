@@ -1,0 +1,69 @@
+id = "eurlex_sparql"
+name = "EUR-Lex / EU CELLAR SPARQL"
+summary = "European Union Publications Office CELLAR SPARQL endpoint for EU directives, regulations, treaties, and CJEU case law."
+aliases = ["eur-lex", "eurlex", "eu cellar", "celex", "eu law", "eu legislation", "droit européen", "eu-recht"]
+home_url = "https://eur-lex.europa.eu"
+tier = 1
+scopes = ["gov", "gov.law"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 15000, cache_ttl_s = 43200 }
+
+[op.search]
+summary = "Search EU legislation titles in CELLAR via Virtuoso full-text SPARQL."
+method = "POST"
+url = "https://publications.europa.eu/webapi/rdf/sparql"
+headers = { Accept = "application/sparql-results+json", Content-Type = "application/sparql-query" }
+response = "json"
+returns = "records"
+body = { kind = "sparql", jaq = '''"PREFIX cdm: <http://publications.europa.eu/ontology/cdm#>\nSELECT DISTINCT ?celex ?title ?date WHERE {\n  ?exp cdm:expression_title ?title .\n  ?title bif:contains '\"" + (($p.query // "") | gsub("[\"'\\\\\\r\\n]"; " ")) + "\"' .\n  ?exp cdm:expression_uses_language <http://publications.europa.eu/resource/authority/language/" + ((($p.lang // "ENG") | ascii_upcase | split("-")[0]) as $lc | {"EN":"ENG","ENG":"ENG","FR":"FRA","FRA":"FRA","DE":"DEU","DEU":"DEU","ES":"SPA","SPA":"SPA","IT":"ITA","ITA":"ITA","NL":"NLD","NLD":"NLD","PL":"POL","POL":"POL","PT":"POR","POR":"POR"}[$lc] // "ENG") + "> .\n  ?exp cdm:expression_belongs_to_work ?work .\n  ?work cdm:resource_legal_id_celex ?celex .\n  OPTIONAL { ?work cdm:work_date_document ?date }\n} ORDER BY DESC(?date) LIMIT " + (($p.limit // 10) | tostring) + (if ($p.offset // 0) > 0 then (" OFFSET " + ($p.offset | tostring)) else "" end)''' }
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "artificial intelligence", limit = 3 }, min_results = 2, fixture = "fixtures/w5d2/eurlex_sparql/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, in = "body", doc = "Phrase or keywords to match in EU act titles" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "body", doc = "Maximum rows returned" }
+offset = { type = "int", min = 0, in = "body", doc = "Result offset for pagination" }
+lang = { type = "string", default = "ENG", in = "body", doc = "Language code (ISO 639-1 e.g. en/fr/de or ISO 639-2/B e.g. ENG/FRA/DEU)" }
+
+[op.search.map]
+items = ".results.bindings[]"
+record = '''{
+  celex: (.celex.value // ""),
+  title: ((.title.value // "") | collapse_ws // ""),
+  date: ((.date.value // null) | parse_date),
+  url: ("https://eur-lex.europa.eu/legal-content/" + ((($p.lang // "ENG") | ascii_upcase | split("-")[0]) as $lc | {"EN":"EN","ENG":"EN","FR":"FR","FRA":"FR","DE":"DE","DEU":"DE","ES":"ES","SPA":"ES","IT":"IT","ITA":"IT","NL":"NL","NLD":"NL","PL":"PL","POL":"PL","PT":"PT","POR":"PT"}[$lc] // "EN") + "/TXT/?uri=CELEX:" + (.celex.value // ""))
+}'''
+hit = '''{
+  title: ((.title.value // .celex.value // "") | collapse_ws // ""),
+  url: ("https://eur-lex.europa.eu/legal-content/" + ((($p.lang // "ENG") | ascii_upcase | split("-")[0]) as $lc | {"EN":"EN","ENG":"EN","FR":"FR","FRA":"FR","DE":"DE","DEU":"DE","ES":"ES","SPA":"ES","IT":"IT","ITA":"IT","NL":"NL","NLD":"NL","PL":"PL","POL":"PL","PT":"PT","POR":"PT"}[$lc] // "EN") + "/TXT/?uri=CELEX:" + (.celex.value // "")),
+  snippet: ("CELEX " + (.celex.value // "") + (if (.date.value | parse_date) then (" · " + (.date.value | parse_date)) else "" end)),
+  date: ((.date.value // null) | parse_date),
+  dateSource: "api"
+}'''
+
+[op.celex]
+summary = "Look up an EU legal act by exact CELEX identifier (e.g. 32016R0679 for GDPR)."
+method = "POST"
+url = "https://publications.europa.eu/webapi/rdf/sparql"
+headers = { Accept = "application/sparql-results+json", Content-Type = "application/sparql-query" }
+response = "json"
+returns = "records"
+body = { kind = "sparql", jaq = '''"PREFIX cdm: <http://publications.europa.eu/ontology/cdm#>\nSELECT DISTINCT ?work ?celex ?title ?date ?eli WHERE {\n  ?work cdm:resource_legal_id_celex \"" + (($p.celex // "") | gsub("[^A-Za-z0-9/_()-]"; "")) + "\"^^<http://www.w3.org/2001/XMLSchema#string> .\n  ?work cdm:resource_legal_id_celex ?celex .\n  ?exp cdm:expression_belongs_to_work ?work .\n  ?exp cdm:expression_uses_language <http://publications.europa.eu/resource/authority/language/" + ((($p.lang // "ENG") | ascii_upcase | split("-")[0]) as $lc | {"EN":"ENG","ENG":"ENG","FR":"FRA","FRA":"FRA","DE":"DEU","DEU":"DEU","ES":"SPA","SPA":"SPA","IT":"ITA","ITA":"ITA","NL":"NLD","NLD":"NLD","PL":"POL","POL":"POL","PT":"POR","POR":"POR"}[$lc] // "ENG") + "> .\n  ?exp cdm:expression_title ?title .\n  OPTIONAL { ?work cdm:work_date_document ?date }\n  OPTIONAL { ?work cdm:resource_legal_eli ?eli }\n} LIMIT 5"''' }
+probe = { params = { celex = "32016R0679" }, min_results = 1, fixture = "fixtures/w5d2/eurlex_sparql/celex/default.json" }
+
+[op.celex.params]
+celex = { type = "string", required = true, in = "body", doc = "CELEX number, e.g. 32016R0679" }
+lang = { type = "string", default = "ENG", in = "body", doc = "Language code (ISO 639-1 e.g. en/fr/de or ISO 639-2/B e.g. ENG/FRA/DEU)" }
+
+[op.celex.map]
+items = ".results.bindings[]"
+record = '''{
+  celex: (.celex.value // ""),
+  title: ((.title.value // "") | collapse_ws // ""),
+  date: ((.date.value // null) | parse_date),
+  cellarUri: (.work.value // null),
+  eli: (.eli.value // null),
+  url: ("https://eur-lex.europa.eu/legal-content/" + ((($p.lang // "ENG") | ascii_upcase | split("-")[0]) as $lc | {"EN":"EN","ENG":"EN","FR":"FR","FRA":"FR","DE":"DE","DEU":"DE","ES":"ES","SPA":"ES","IT":"IT","ITA":"IT","NL":"NL","NLD":"NL","PL":"PL","POL":"PL","PT":"PT","POR":"PT"}[$lc] // "EN") + "/TXT/?uri=CELEX:" + (.celex.value // ""))
+}'''

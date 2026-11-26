@@ -1,0 +1,59 @@
+id = "medlineplus_connect"
+name = "MedlinePlus Connect Code Resolver"
+summary = "NLM clinical terminology resolver mapping ICD-10-CM, SNOMED-CT, LOINC, and RxCUI codes to MedlinePlus health and drug information."
+aliases = ["mplus connect", "icd10 resolver", "clinical code lookup"]
+home_url = "https://medlineplus.gov/connect/overview.html"
+tier = 1
+scopes = ["academic.biomed", "reference"]
+caps = ["lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 2, concurrency = 1, timeout_ms = 8000, cache_ttl_s = 43200, host_bucket = "connect.medlineplus.gov" }
+
+[op.lookup]
+summary = "Resolve a clinical diagnosis, lab, or drug code (ICD-10-CM, SNOMED-CT, RxCUI, LOINC, NDC) to MedlinePlus topics."
+method = "GET"
+url = "https://connect.medlineplus.gov/service"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { knowledgeResponseType = "application/json" }
+probe = { params = { code = "E11" }, min_results = 1, fixture = "fixtures/w5j/medlineplus_connect/lookup/default.json" }
+examples = ["source.call('medlineplus_connect.lookup', { code: 'E11', system: '2.16.840.1.113883.6.90' })"]
+
+[op.lookup.params]
+code = { type = "string", required = true, to = "mainSearchCriteria.v.c", doc = "Clinical terminology code (e.g. E11 for Type 2 diabetes, 6809 for metformin RxCUI)" }
+system = { type = "string", default = "2.16.840.1.113883.6.90", enum = ["2.16.840.1.113883.6.90", "2.16.840.1.113883.6.96", "2.16.840.1.113883.6.88", "2.16.840.1.113883.6.1", "2.16.840.1.113883.6.69", "2.16.840.1.113883.6.103"], to = "mainSearchCriteria.v.cs", doc = "HL7 OID code system (6.90=ICD-10-CM, 6.96=SNOMED-CT, 6.88=RxCUI, 6.1=LOINC, 6.69=NDC, 6.103=ICD-9-CM)" }
+lang = { type = "string", default = "en", enum = ["en", "es"], to = "informationRecipient.languageCode.c", doc = "Response language (en or es)" }
+
+[op.lookup.map]
+items = "(.feed.entry // [])[]"
+record = '''(
+  ((.summary._value // "") | gsub("</?(a|span|em|strong|b|i)[^>]*>"; "") | gsub("</?(p|h[1-6]|li|ul|ol|br|div)[^>]*>"; " ") | strip_tags // "") as $sum |
+  {
+    id: (.id._value // null),
+    title: (.title._value | collapse_ws // ""),
+    url: (.link[0].href // "https://medlineplus.gov"),
+    summary: (if ($sum | length) > 800 then ($sum[0:800] + "...") else $sum end),
+    updated: (.updated._value | parse_date)
+  }
+)'''
+
+[op.drug]
+summary = "Resolve an RxNorm RxCUI drug code to MedlinePlus drug information."
+method = "GET"
+url = "https://connect.medlineplus.gov/service"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { knowledgeResponseType = "application/json", "mainSearchCriteria.v.cs" = "2.16.840.1.113883.6.88" }
+probe = { params = { rxcui = "6809" }, min_results = 1, fixture = "fixtures/w5j/medlineplus_connect/drug/default.json" }
+examples = ["source.call('medlineplus_connect.drug', { rxcui: '6809' })"]
+
+[op.drug.params]
+rxcui = { type = "string", required = true, to = "mainSearchCriteria.v.c", doc = "RxNorm concept unique identifier (e.g. 6809 for metformin)" }
+lang = { type = "string", default = "en", enum = ["en", "es"], to = "informationRecipient.languageCode.c", doc = "Response language (en or es)" }
+
+[op.drug.map]
+items = "(.feed.entry // [])[]"
+record = "@ref:op.lookup.map.record"

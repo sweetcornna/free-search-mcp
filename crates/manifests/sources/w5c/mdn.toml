@@ -1,0 +1,86 @@
+id = "mdn"
+name = "MDN Web Docs"
+summary = "Reference documentation for HTML, CSS, JavaScript, Web APIs, and HTTP on Mozilla Developer Network."
+aliases = ["mdn web docs", "mozilla docs", "web docs", "前端", "mdn文档"]
+home_url = "https://developer.mozilla.org"
+tier = 1
+scopes = ["docs", "code"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "direct_claimant"
+limits = { rps = 5.0, burst = 10, concurrency = 4, timeout_ms = 5000, cache_ttl_s = 86400 }
+
+[claims]
+patterns = [
+  '(?i)\w+\.prototype\.\w+',
+  '(?i)\bmdn\b',
+  '(?i)\b(?:web ?api|fetch api|service worker|indexeddb)\b',
+]
+keywords = [
+  "css", "html", "javascript", "typescript", "dom",
+  "webgl", "webrtc", "websocket", "http header",
+  "前端", "浏览器 api",
+]
+max_per_search = 3
+
+[op.search]
+summary = "Search MDN Web Docs reference pages."
+method = "GET"
+url = "https://developer.mozilla.org/api/v1/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "fetch", limit = 3 }, min_results = 2, fixture = "fixtures/w5c/mdn/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Web platform topic, API, or CSS property" }
+locale = { type = "string", default = "en-US", to = "locale", doc = "MDN locale (e.g. en-US, zh-CN, ja)" }
+limit = { type = "int", default = 10, min = 1, max = 10, in = "none", doc = "Max results to return from page (MDN always serves 10 per page)" }
+page = { type = "int", min = 1, to = "page", doc = "1-based page number" }
+
+[op.search.map]
+items = ".documents[0:($p.limit // 10)][]"
+total = ".metadata.total.value"
+error = "if (.error | type) == \"string\" and (.error | length) > 0 then .error else null end"
+record = '''{
+  title: (.title // ""),
+  slug: .slug,
+  locale: .locale,
+  url: ((.mdn_url // "") | resolve_url("https://developer.mozilla.org") // ""),
+  summary: ((.summary // "") | collapse_ws),
+  score: .score
+}'''
+hit = '''{
+  title: (.title // ""),
+  url: ((.mdn_url // "") | resolve_url("https://developer.mozilla.org") // ""),
+  snippet: ((.summary // "") | collapse_ws),
+  date: null,
+  dateSource: null
+}'''
+
+[op.doc]
+summary = "Fetch structured MDN document JSON by locale and document slug."
+method = "GET"
+url = "https://developer.mozilla.org/{locale}/docs/{slug}/index.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { slug = "Web/API/Fetch_API" }, min_results = 1, fixture = "fixtures/w5c/mdn/doc/default.json" }
+
+[op.doc.params]
+slug = { type = "string", required = true, in = "path", encode = "raw", doc = "Document path slug e.g. Web/API/Fetch_API" }
+locale = { type = "string", default = "en-US", in = "path", doc = "MDN locale" }
+
+[op.doc.map]
+items = ".doc"
+error = "@ref:op.search.map.error"
+record = '''{
+  title: (.title // ""),
+  url: ((.mdn_url // "") | resolve_url("https://developer.mozilla.org") // ""),
+  summary: ((.summary // "") | collapse_ws),
+  pageType: .pageType,
+  modified: .modified,
+  toc: [(.toc // [])[] | { id, text }],
+  sections: [(.body // [])[] | select(.type == "prose") | { heading: (.value.title // "Overview"), content: ((.value.content // "") | strip_tags) } | select((.content | length) > 0)]
+}'''

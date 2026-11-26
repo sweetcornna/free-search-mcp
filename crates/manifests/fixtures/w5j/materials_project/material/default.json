@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "materials_project",
+  "op": "material",
+  "recordedAt": "2026-11-25T13:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.materialsproject.org/materials/summary/mp-7000/?_fields=material_id%2Cformula_pretty%2Cchemsys%2Csymmetry%2Cband_gap%2Cis_gap_direct%2Cis_metal%2Cformation_energy_per_atom%2Cenergy_above_hull%2Cis_stable%2Cvolume%2Cdensity%2Cnsites%2Cbulk_modulus%2Cshear_modulus%2Ctheoretical",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"data\":[{\"material_id\":\"mp-7000\",\"formula_pretty\":\"SiO2\",\"chemsys\":\"O-Si\",\"symmetry\":{\"crystal_system\":\"Trigonal\",\"symbol\":\"P3_221\",\"number\":154,\"point_group\":\"32\",\"hall\":\"P 32 2\\\"\"},\"band_gap\":5.8394,\"is_gap_direct\":false,\"is_metal\":false,\"formation_energy_per_atom\":-3.1742,\"energy_above_hull\":0.0,\"is_stable\":true,\"volume\":118.42,\"density\":2.527,\"nsites\":9,\"bulk_modulus\":{\"voigt\":39.2,\"reuss\":37.8,\"vrh\":38.5},\"shear_modulus\":{\"voigt\":46.1,\"reuss\":42.3,\"vrh\":44.2},\"theoretical\":false}],\"meta\":{\"api_version\":\"0.88.3\",\"time_stamp\":\"2026-11-25T13:00:00Z\",\"total_doc\":1,\"max_limit\":1000},\"errors\":null}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

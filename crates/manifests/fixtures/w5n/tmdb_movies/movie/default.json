@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "tmdb_movies",
+  "op": "movie",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.themoviedb.org/3/movie/27205?language=en-US",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"adult\":false,\"backdrop_path\":\"/8ZTVqvKDQ8emSGUEMjsS4yHAwrp.jpg\",\"budget\":160000000,\"genres\":[{\"id\":28,\"name\":\"Action\"},{\"id\":878,\"name\":\"Science Fiction\"},{\"id\":12,\"name\":\"Adventure\"}],\"homepage\":\"https://www.warnerbros.com/movies/inception\",\"id\":27205,\"imdb_id\":\"tt1375666\",\"origin_country\":[\"US\",\"GB\"],\"original_language\":\"en\",\"original_title\":\"Inception\",\"overview\":\"Cobb, a skilled thief who commits corporate espionage by infiltrating the subconscious of his targets is offered a chance to regain his old life as payment for a task considered to be impossible.\",\"popularity\":83.952,\"poster_path\":\"/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg\",\"production_companies\":[{\"id\":923,\"name\":\"Legendary Pictures\",\"origin_country\":\"US\"},{\"id\":9996,\"name\":\"Syncopy\",\"origin_country\":\"GB\"}],\"release_date\":\"2010-07-15\",\"revenue\":825532764,\"runtime\":148,\"status\":\"Released\",\"tagline\":\"Your mind is the scene of the crime.\",\"title\":\"Inception\",\"video\":false,\"vote_average\":8.367,\"vote_count\":35120}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

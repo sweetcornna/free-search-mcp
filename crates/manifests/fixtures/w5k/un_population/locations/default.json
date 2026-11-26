@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "un_population",
+  "op": "locations",
+  "recordedAt": "2026-11-25T13:05:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://population.un.org/dataportalapi/api/v1/locations?format=json&pageSize=3&pageNumber=1",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"pageNumber\":1,\"pageSize\":3,\"previousPage\":null,\"nextPage\":\"https://population.un.org/dataportalapi/api/v1/locations?pageNumber=2&pageSize=3&format=json\",\"pages\":100,\"total\":300,\"data\":[{\"id\":4,\"name\":\"Afghanistan\",\"iso3\":\"AFG\",\"iso2\":\"AF\",\"longitude\":67.70995330810547,\"latitude\":33.939109802246094},{\"id\":8,\"name\":\"Albania\",\"iso3\":\"ALB\",\"iso2\":\"AL\",\"longitude\":20.16833114624023,\"latitude\":41.1533317565918},{\"id\":12,\"name\":\"Algeria\",\"iso3\":\"DZA\",\"iso2\":\"DZ\",\"longitude\":1.659626007080078,\"latitude\":28.033885955810547}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,91 @@
+id = "nasa_ntrs"
+name = "NASA Technical Reports Server (NTRS)"
+summary = "600k+ NASA aerospace technical reports, contractor reports, conference papers, theses, and direct public-domain PDFs."
+aliases = ["ntrs", "ntrs.nasa.gov", "nasa reports", "spacecraft", "spaceflight", "rockets"]
+home_url = "https://ntrs.nasa.gov"
+tier = 1
+scopes = ["academic", "academic.physics", "academic.openaccess"]
+caps = ["search", "lookup", "fulltext"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 10000, cache_ttl_s = 43200, host_bucket = "ntrs.nasa.gov" }
+
+[op.search]
+summary = "Search NASA NTRS aerospace technical reports and STI citations."
+method = "GET"
+url = "https://ntrs.nasa.gov/api/citations/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+paginate = { style = "offset", param = "page[from]", start = 0, max_pages = 3 }
+probe = { params = { query = "propulsion", limit = 3 }, min_results = 2, fixture = "fixtures/w5i/nasa_ntrs/search/default.json" }
+examples = ['source.call("nasa_ntrs.search", {query: "propulsion", limit: 5})']
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Keyword or technical report query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "page[size]", doc = "Results per page" }
+offset = { type = "int", min = 0, to = "page[from]", doc = "Result offset" }
+sti_type = { type = "string", to = "stiType", doc = "Optional STI type filter (e.g. TECHNICAL_MEMORANDUM, CONTRACTOR_REPORT, CONFERENCE_PAPER)" }
+
+[op.search.map]
+items = ".results[]"
+total = ".stats.total"
+error = '''if type == "object" and .statusCode != null and .statusCode >= 400 then (.message // (.statusCode | tostring)) else null end'''
+work = '''(
+  ("https://ntrs.nasa.gov/citations/" + (.id | tostring)) as $url |
+  ((.publications | arr | .[0] | if type == "object" then . else {} end)) as $pub |
+  (($pub.publicationDate // .distributionDate) | parse_date) as $dt |
+  ([(.downloads // [])[] | (.links.pdf // (if ((.links.original // "") | ascii_downcase | endswith(".pdf")) then .links.original else null end)) | select(type == "string" and length > 0)][0] | resolve_url("https://ntrs.nasa.gov/")) as $pdfUrl |
+  {
+    title: ((.title // "") | collapse_ws // ""),
+    authors: [(.authorAffiliations // [])[] | {
+      name: ((.meta.author.name // "") | collapse_ws // ""),
+      affiliation: (.meta.organization.name | collapse_ws)
+    } | select(.name != "")],
+    year: (($dt // "")[0:4] | to_int),
+    publishedDate: $dt,
+    venue: (($pub.publicationName // .center.name) | collapse_ws // "NASA NTRS"),
+    workType: (if .stiType == "CONFERENCE_PAPER" then "proceedings-article" elif .stiType == "DISSERTATION_THESIS" then "dissertation" else "report" end),
+    ids: { doi: ($pub.doi | doi_norm) },
+    abstractText: ((.abstract | collapse_ws) | if . == "" then null else . end),
+    oa: {
+      status: (if $pdfUrl != null then "diamond" else "closed" end),
+      url: $url,
+      pdfUrl: $pdfUrl
+    },
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["nasa_ntrs"]
+  }
+)'''
+hit = '''(
+  ("https://ntrs.nasa.gov/citations/" + (.id | tostring)) as $url |
+  ((.publications | arr | .[0] | if type == "object" then . else {} end)) as $pub |
+  (($pub.publicationDate // .distributionDate) | parse_date) as $dt |
+  {
+    title: ((.title // "") | collapse_ws // ""),
+    url: $url,
+    snippet: ([(.stiType // ""), (.center.name // ""), ((.abstract | collapse_ws) // "" | .[0:220])] | map(select(length > 0)) | join(" · ")),
+    date: $dt,
+    dateSource: (if $dt != null then "api" else null end)
+  }
+)'''
+
+[op.work]
+summary = "Fetch a single NASA NTRS citation record by numeric ID."
+method = "GET"
+url = "https://ntrs.nasa.gov/api/citations/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+probe = { params = { id = "19670002787" }, min_results = 1, fixture = "fixtures/w5i/nasa_ntrs/work/default.json" }
+examples = ['source.call("nasa_ntrs.work", {id: "19670002787"})']
+
+[op.work.params]
+id = { type = "string", required = true, in = "path", doc = "NASA NTRS numeric citation ID (e.g. 19670002787)" }
+
+[op.work.map]
+items = "."
+error = '''if type == "object" and .statusCode != null and .statusCode >= 400 then (.message // (.statusCode | tostring)) else null end'''
+work = "@ref:op.search.map.work"

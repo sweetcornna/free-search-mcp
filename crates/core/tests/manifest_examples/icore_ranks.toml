@@ -1,0 +1,28 @@
+id = "icore_ranks"
+name = "ICORE Conference Portal"
+summary = "CORE/ICORE computer science conference tiers (A*, A, B, C)."
+aliases = ["core ranks", "cs conferences"]
+home_url = "https://portal.core.edu.au/conf-ranks/"
+tier = 2
+scopes = ["academic.cs"]
+caps = ["venue"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 2.0, burst = 4, concurrency = 2, timeout_ms = 6000, cache_ttl_s = 604800 }
+
+[op.rank]
+summary = "Look up ICORE conference rank by acronym or name."
+method = "GET"
+url = "https://portal.core.edu.au/conf-ranks/"
+response = "html"
+returns = "records"
+const_query = { by = "all", source = "CORE2023", sort = "atitle", page = "1" }
+probe = { params = { query = "ICML" }, min_results = 1, fixture = "fixtures/academic_domain/icore_ranks/rank/default.json" }
+
+[op.rank.params]
+query = { type = "string", required = true, to = "search", doc = "Conference acronym or name" }
+
+[op.rank.html]
+items_css = "table tbody tr"
+fields = { name = "td:nth-child(1) | text", acronym = "td:nth-child(2) | text", icoreRank = "td:nth-child(4) | text" }
+wall_markers = ["Access Denied"]

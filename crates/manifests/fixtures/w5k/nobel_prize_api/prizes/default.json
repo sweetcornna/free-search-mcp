@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "nobel_prize_api",
+  "op": "prizes",
+  "recordedAt": "2026-11-25T13:05:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.nobelprize.org/2.1/nobelPrizes?nobelPrizeCategory=phy&nobelPrizeYear=2024&limit=3&offset=0",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json;charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"nobelPrizes\":[{\"awardYear\":\"2024\",\"category\":{\"en\":\"Physics\",\"no\":\"Fysikk\",\"se\":\"Fysik\"},\"categoryFullName\":{\"en\":\"The Nobel Prize in Physics\",\"no\":\"Nobelprisen i fysikk\",\"se\":\"Nobelpriset i fysik\"},\"dateAwarded\":\"2024-10-08\",\"prizeAmount\":11000000,\"prizeAmountAdjusted\":11060312,\"links\":[{\"rel\":\"nobelPrize\",\"href\":\"https://api.nobelprize.org/2/nobelPrize/phy/2024\",\"action\":\"GET\",\"types\":\"application/json\"}],\"laureates\":[{\"id\":\"1037\",\"knownName\":{\"en\":\"John J. Hopfield\"},\"fullName\":{\"en\":\"John J. Hopfield\"},\"portion\":\"1/2\",\"sortOrder\":\"1\",\"motivation\":{\"en\":\"for foundational discoveries and inventions that enable machine learning with artificial neural networks\",\"se\":\"för grundläggande upptäckter och uppfinningar som möjliggör maskininlärning med artificiella neuronnätverk\"},\"links\":[{\"rel\":\"laureate\",\"href\":\"https://api.nobelprize.org/2/laureate/1037\",\"action\":\"GET\",\"types\":\"application/json\"}]},{\"id\":\"1038\",\"knownName\":{\"en\":\"Geoffrey Hinton\"},\"fullName\":{\"en\":\"Geoffrey Hinton\"},\"portion\":\"1/2\",\"sortOrder\":\"2\",\"motivation\":{\"en\":\"for foundational discoveries and inventions that enable machine learning with artificial neural networks\",\"se\":\"för grundläggande upptäckter och uppfinningar som möjliggör maskininlärning med artificiella neuronnätverk\"},\"links\":[{\"rel\":\"laureate\",\"href\":\"https://api.nobelprize.org/2/laureate/1038\",\"action\":\"GET\",\"types\":\"application/json\"}]}]}],\"meta\":{\"offset\":0,\"limit\":3,\"nobelPrizeYear\":2024,\"nobelPrizeCategory\":\"phy\",\"count\":1,\"terms\":\"https://www.nobelprize.org/about/terms-of-use-for-api-nobelprize-org-and-data-nobelprize-org/\",\"license\":\"https://www.nobelprize.org/about/terms-of-use-for-api-nobelprize-org-and-data-nobelprize-org/#licence\",\"disclaimer\":\"https://www.nobelprize.org/about/terms-of-use-for-api-nobelprize-org-and-data-nobelprize-org/#disclaimer\"}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

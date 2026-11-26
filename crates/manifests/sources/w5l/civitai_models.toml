@@ -1,0 +1,99 @@
+id = "civitai_models"
+name = "Civitai Generative AI Models"
+summary = "Open image and video diffusion model checkpoints and LoRAs via Civitai v1 API (enforces nsfw=false by default)."
+aliases = ["civitai", "diffusion models", "lora models", "flux models"]
+home_url = "https://civitai.com"
+tier = 2
+scopes = ["code", "media"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 21600 }
+
+[op.search]
+summary = "Search SFW generative AI checkpoints, LoRAs, and ControlNets on Civitai (enforces nsfw=false)."
+method = "GET"
+url = "https://civitai.com/api/v1/models"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { nsfw = "false", primaryFileOnly = "true" }
+paginate = { style = "cursor", param = "cursor", max_pages = 3 }
+probe = { params = { query = "flux", limit = 2 }, min_results = 2, fixture = "fixtures/w5l/civitai_models/search/default.json" }
+examples = [
+  'source.call("civitai_models.search", { query: "flux", types: "Checkpoint", limit: 5 })',
+]
+
+[op.search.params]
+query = { type = "string", required = true, to = "query", doc = "Model name or keyword query" }
+limit = { type = "int", default = 5, min = 1, max = 20, to = "limit", doc = "Models per page" }
+types = { type = "string", enum = ["Checkpoint", "TextualInversion", "Hypernetwork", "AestheticGradient", "LORA", "Controlnet", "Poses"], to = "types", doc = "Optional model architecture type" }
+sort = { type = "string", enum = ["Highest Rated", "Most Downloaded", "Newest"], to = "sort", doc = "Sort order" }
+cursor = { type = "string", to = "cursor", doc = "Pagination cursor from metadata.nextCursor" }
+
+[op.search.map]
+items = "(.items // [])[]"
+next_cursor = ".metadata.nextCursor"
+error = "if .error then (.error | tostring) else null end"
+record = '''{
+  id: .id,
+  name: (.name // ""),
+  type: (.type // ""),
+  nsfw: (.nsfw // false),
+  creator: (.creator.username // null),
+  tags: (.tags // []),
+  baseModels: (.baseModels // []),
+  downloadCount: (.stats.downloadCount // 0),
+  thumbsUpCount: (.stats.thumbsUpCount // 0),
+  latestVersion: ((.modelVersions // [])[0].name // null),
+  baseModel: ((.modelVersions // [])[0].baseModel // null),
+  publishedAt: ((.modelVersions // [])[0].publishedAt // null),
+  url: ("https://civitai.com/models/" + (.id | tostring))
+}'''
+hit = '''(
+  ((.description // "") | gsub("<[^>]+>"; " ") | unescape_html | collapse_ws // "") as $desc |
+  {
+    title: ((.name // "") + (if (.type // "") != "" then " [" + .type + "]" else "" end)),
+    url: ("https://civitai.com/models/" + (.id | tostring)),
+    snippet: (
+      [
+        (if ((.modelVersions // [])[0].baseModel // "") != "" then ("base: " + .modelVersions[0].baseModel) else null end),
+        (((.stats.downloadCount // 0) | tostring) + " downloads"),
+        (if $desc != "" then $desc[0:180] else null end)
+      ] | map(select(. != null)) | join(" · ")
+    )[0:280],
+    date: (((.modelVersions // [])[0].publishedAt // null) | parse_date),
+    dateSource: "api"
+  }
+)'''
+
+[op.model]
+summary = "Fetch detailed model metadata, versions, base model, and download URLs by numeric Civitai model ID."
+method = "GET"
+url = "https://civitai.com/api/v1/models/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = 618692 }, min_results = 1, fixture = "fixtures/w5l/civitai_models/model/default.json" }
+examples = [
+  'source.call("civitai_models.model", { id: 618692 })',
+]
+
+[op.model.params]
+id = { type = "int", required = true, in = "path", doc = "Numeric Civitai model ID" }
+
+[op.model.map]
+items = "."
+error = "@ref:op.search.map.error"
+record = '''{
+  id: .id,
+  name: (.name // ""),
+  type: (.type // ""),
+  nsfw: (.nsfw // false),
+  creator: (.creator.username // null),
+  tags: (.tags // []),
+  downloadCount: (.stats.downloadCount // 0),
+  thumbsUpCount: (.stats.thumbsUpCount // 0),
+  versions: [(.modelVersions // [])[:5][] | { id, name, baseModel, publishedAt, downloadUrl }],
+  url: ("https://civitai.com/models/" + (.id | tostring))
+}'''

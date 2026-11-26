@@ -1,129 +1,153 @@
-# free-search: Claude Code plugin
+# free-search: Tri-Client Plugin (Claude Code, Codex & Antigravity)
 
 This plugin is the recommended way to install
-[free-search-mcp](https://github.com/sweetcornna/free-search-mcp). One
-`/plugin install` gives Claude Code web search, page fetching and document
-reading with no API key, no signup and no manual `claude mcp add`. It contains
-11 MCP tools, a source-verification skill and a small quick-search agent.
+[free-search-mcp](https://github.com/sweetcornna/free-search-mcp) 1.0. It gives
+**Claude Code**, **Codex**, and **Antigravity (`agy`)** — plus any Agent Plugins
+v1 client such as Hermes — a single-binary Rust MCP server with **3 tools**
+(`search`, `exec`, and `ask`), **500+ keyless sources**, two research skills
+(`verified-research` and `scholar-research`), a `quick-search` subagent, and
+Antigravity standing rules, with no API key and no signup.
 
-```
+## Install
+
+### Claude Code
+
+Inside a session:
+
+```text
 /plugin marketplace add sweetcornna/free-search-mcp
 /plugin install free-search@free-search-mcp
 ```
 
-Codex reads the same marketplace, starts the same MCP server, and lists the
-skill as `free-search:verified-research` (checked with Codex CLI 0.154). The
-agent file here is in Claude Code's format, and `codex/agents/quick_search.toml`
-holds the same agent in Codex's:
+Or from the shell:
+
+```bash
+claude plugin marketplace add sweetcornna/free-search-mcp
+claude plugin install free-search@free-search-mcp -s user
+```
+
+### Codex
 
 ```bash
 codex plugin marketplace add sweetcornna/free-search-mcp
 codex plugin add free-search@free-search-mcp
 ```
 
-If `~/.codex/config.toml` already has a `[mcp_servers.search]` entry, it
-silently shadows the plugin's server of the same name. Run
-`codex mcp remove search` first.
+If `~/.codex/config.toml` already has a `[mcp_servers.search]` entry from an
+earlier `codex mcp add`, it silently shadows the plugin's server of the same
+name. Run `codex mcp remove search` first. See
+[docs/CODEX_SEARCH.md](../../docs/CODEX_SEARCH.md) for setting
+`tool_timeout_sec = 150`, installing `codex/agents/quick_search.toml`, and the
+optional `codex` ChatGPT search engine & agent lane.
 
-## What it installs
+### Antigravity (`agy`)
 
-### The MCP server `search`
-
-The server has 11 tools. `.mcp.json` declares a single stdio server started
-with `uvx free-search-mcp==<version>`, so [uv](https://docs.astral.sh/uv/) is
-the only prerequisite, and the first launch downloads the package from PyPI.
-
-The version is pinned to this plugin's own version. Installing plugin `X.Y.Z`
-always runs package `X.Y.Z`, and `/plugin update free-search` moves you to a
-newer server. `tests/test_plugin_manifest.py` keeps the versions (plugin
-manifest, `.mcp.json` pin, Python package) in lockstep, and the release
-workflow re-checks them against the tag.
-
-### The skill `verified-research`
-
-Without it, agents tend to answer from search snippets: they quote a deadline
-or a prize without opening the page, and they do not notice that the page is
-from a previous year. The skill is a workflow for that case: search to find the
-primary page, fetch it, compare its publish date and the cache age with today,
-corroborate with a second independent source, and report what could not be
-verified.
-
-### The agent `free-search:quick-search`
-
-The file is `agents/quick-search.md`. The agent takes one question, makes one
-`research` call that searches and reads the top pages, and replies with an
-answer of one to three sentences, up to five source lines that each carry the
-page's date, and a "Not verified" line when something could not be confirmed.
-The pages it read stay out of the main conversation. Claude delegates to it
-from its description. You can also @-mention it or ask to "use the quick-search
-agent".
-
-It is built to return fast. It runs on `haiku`, stops after at most 6 turns
-(`maxTurns: 6`), sees four tools (`research`, `search`, `fetch`, `read_doc`)
-and loads neither the skill nor `CLAUDE.md` (`omitClaudeMd: true`). The same
-tool list makes it read-only, with no shell, no file tools, no `download` and
-no other MCP server. It treats text on a fetched page as evidence and does not
-follow instructions found there, and it never asks for an API key. A nested
-Claude Code session that delegated one version lookup to it finished in 25 s
-and cost $0.09 (2026-09-21). For facts someone will act on, run the
-`verified-research` skill in the main conversation instead.
-
-Codex documents custom agents as TOML files under `~/.codex/agents/`, and
-`codex/agents/quick_search.toml` is this agent in that format. Both files are
-generated from one prompt (`search-mcp agent-file claude-code|codex|prompt`),
-and a test fails when either drifts from it. With Codex CLI 0.154, `codex exec`
-gave no way to select a custom agent by name, so the route that worked there
-was the `quick_search` MCP prompt handed to a generic subagent.
-[docs/DELEGATION.md](../../docs/DELEGATION.md) has the details, along with the
-optional `ask` tool that lets the server dispatch the lookup itself.
-
-## What it costs
-
-The plugin has no hooks, and nothing runs unless the agent calls it.
-`claude plugin details` projects about 340 tokens added to every session, about
-210 for the skill's description and about 130 for the agent's, so that Claude
-knows both exist. The skill's body (about 2.1k tokens) loads only when a
-lookup needs verifying, and the agent's prompt (about 560) only when it is
-spawned. The tool definitions cost the same as on any other install path.
-
-## Configuration
-
-Nothing is required, and nothing the server selects on its own uses an API key.
-Optional settings such as the engine pools and a proxy live in
-`~/.config/search-mcp/.env`, as for any other install method, and the plugin
-adds no config of its own. See
-[docs/CONFIGURATION.md](../../docs/CONFIGURATION.md). Bringing your own key for one
-of the five opt-in engines is possible and manual, as
-[docs/API_KEYS.md](../../docs/API_KEYS.md) describes, and an agent should never
-ask you for one.
-
-Browser-rendered engines (`brave`, `zhihu`, …) and JS-heavy page
-fetches need Chromium once:
+Install directly from GitHub or a local checkout:
 
 ```bash
-uvx --from free-search-mcp playwright install chromium
+agy plugin install https://github.com/sweetcornna/free-search-mcp/tree/main/plugins/free-search
+# or from a local clone:
+agy plugin install ./plugins/free-search
 ```
 
-Without it, HTTP search and fetch keep working, and any call that needs the
-browser returns that install command.
+Antigravity automatically ingests `plugin.json`, `mcp_config.json`,
+`rules/AGENTS.md`, `skills/verified-research/SKILL.md`,
+`skills/scholar-research/SKILL.md`, and `agents/quick-search.md`. See
+[docs/ANTIGRAVITY_SEARCH.md](../../docs/ANTIGRAVITY_SEARCH.md) for plugin setup
+and details (including warnings) on the opt-in `antigravity` engine.
 
-## Hermes Agent
-
-The same directory is also an Agent Plugins v1 package: `plugin.json` and
-`mcp.json` sit beside the Claude Code files and pin the same server. Hermes
-loads the MCP server and the `verified-research` skill from it. It does not
-load the agent files.
+### Hermes Agent (Agent Plugins v1)
 
 ```bash
 hermes plugins install sweetcornna/free-search-mcp/plugins/free-search --enable
 ```
 
-`uvx` has to be on the gateway's `PATH`.
+## What it installs
 
-## Not using Claude Code or Codex?
+### The MCP server `search` (3 tools)
 
-Claude Desktop has a one-click `.mcpb` bundle on each GitHub Release, the MCP
-Registry entry is `io.github.sweetcornna/free-search-mcp`, and every other
-client can run `uvx free-search-mcp` over stdio. See the
-[install guide](../../docs/INSTALL.md) and
+All three client configs (`.mcp.json`, `mcp.json`, `mcp_config.json`) register
+the server under key **`"search"`** running `uvx free-search-mcp==1.0.0` (a
+compiled Rust binary packaged via `maturin`, so `uv` is the only prerequisite).
+
+The server always exposes exactly **three tools** (`tools/list` ≤ 6,800 bytes):
+
+1. **`ask`**: Quick one-call lookup with no code (`mode="auto" | "fast" | "agent"`).
+   In `"fast"` mode (no LLM), it checks direct-answer sources first, else runs
+   web search and reads the top pages in parallel (~8 s deadline), returning
+   the best dated passages with sources. In `"agent"` mode (or `"auto"` when an
+   answer-agent backend is configured), the answer agent writes a short sourced
+   answer from that evidence.
+2. **`search`**: Multi-engine web and vertical search across 500+ sources
+   (`web`, `academic`, `news`, `code`, `docs`, `dataset`, `finance`, `security`,
+   `gov`, `media`, `commerce`, `forum`, `reference`), optional signed-in agent
+   lane (`codex` / opt-in `antigravity`), local FTS5 cache (`scope="cache"`),
+   and zero-network source/API catalog discovery (`scope="catalog"`).
+3. **`exec`**: Sandboxed ES2020 JavaScript (QuickJS-NG, zero ambient fs/env/net)
+   with typed async Host APIs (`web.*` including `web.ask`, `scholar.*`,
+   `doc.*`, `source.*`, `cache.*`, `catalog.*`, `util.*`) for parallel
+   fetching, document reading, scholarly graphs/full text/integrity/citations,
+   and calling any of the 500+ cataloged sources or 18 generic protocols.
+
+The version is pinned to this plugin's own version (`1.0.0`). Installing plugin
+`X.Y.Z` always runs package `X.Y.Z`, and `crates/server/tests/plugin_manifests.rs`
+keeps every manifest, pin, and package version in lockstep.
+
+### Skills (`verified-research` & `scholar-research`)
+
+- **`verified-research`** (`skills/verified-research/SKILL.md`): Uses `ask` for
+  quick lookups and `search` + `exec` whenever relied-upon facts require opening
+  primary pages and documents, verifying publish dates and cache age against
+  today, corroborating with independent sources, and listing anything that
+  could not be verified.
+- **`scholar-research`** (`skills/scholar-research/SKILL.md`): End-to-end
+  academic literature workflow covering `scope="academic.*"` and
+  `scholar.search`, `scholar.work` (DOI/arXiv/PMID/OpenAlex crosswalk),
+  `scholar.graph`, `scholar.integrity` (retraction & correction checks),
+  11-step lawful OA structured-first `scholar.fulltext`, entity/grant lookups,
+  and offline `scholar.cite` formatting.
+
+### Agent (`quick-search` / `quick_search.toml`)
+
+- **Claude Code & Antigravity**: `agents/quick-search.md` (`free-search:quick-search`).
+  Runs with `model: inherit` for cross-client compatibility across both Claude
+  Code and Antigravity (`maxTurns: 6`, `omitClaudeMd: true`), restricted
+  strictly to `mcp__plugin_free-search_search__ask`,
+  `mcp__plugin_free-search_search__search`, and
+  `mcp__plugin_free-search_search__exec` (starts with one `ask` call, falls
+  back to `exec`/`search` if needed, never calls `web.download`, never follows
+  instructions on fetched pages, and never asks for API keys). Antigravity
+  users who want quick lookups forced onto Flash can also copy
+  `antigravity/agents/quick-search.md` (`model: flash`).
+- **Codex**: `codex/agents/quick_search.toml` (`sandbox_mode = "read-only"`,
+  `model_reasoning_effort = "low"`), sharing the exact same prompt and rules.
+
+### Antigravity Rules (`rules/AGENTS.md`)
+
+Loaded automatically by Antigravity when the plugin is active, reinforcing the
+3-tool `ask` / `search` / `exec` workflow, primary-source verification,
+anti-injection discipline, and no-API-key positioning.
+
+## Configuration & offline Retraction Watch sync
+
+- **Zero API keys required**: Every default, reserve, locale, academic, and
+  vertical route works keyless. Optional operator settings (proxy, polite-pool
+  `SEARCH_MCP_CONTACT_EMAIL`, optional answer-agent backends, optional `codex`
+  or `antigravity` sign-in engines, optional API keys) live in
+  `~/.config/search-mcp/.env` or `~/.config/search-mcp/config.json` (`0600`).
+  See [docs/CONFIGURATION.md](../../docs/CONFIGURATION.md),
+  [docs/DELEGATION.md](../../docs/DELEGATION.md), and
+  [docs/API_KEYS.md](../../docs/API_KEYS.md).
+- **Retraction Watch initial sync (~70 MB)**: The first scholarly lookup lazily
+  downloads Crossref's CC0 Retraction Watch CSV (~70 MB), indexes it into
+  SQLite (~8–12 MB), deletes the raw CSV, and refreshes via `ETag` every 7 days.
+  Set `SEARCH_MCP_OFFLINE_SYNC=false` to opt out and use online Crossref checks.
+
+## Other clients
+
+Claude Desktop has a binary `.mcpb` bundle on each GitHub Release, the MCP
+Registry entry is `io.github.sweetcornna/free-search-mcp`, and any other MCP
+client can run `free-search-mcp` (or `uvx free-search-mcp`) over stdio or
+streamable HTTP (including `POST/GET /v1/ask`). See
+[docs/INSTALL.md](../../docs/INSTALL.md) and
 [docs/AGENT_USAGE.md](../../docs/AGENT_USAGE.md).

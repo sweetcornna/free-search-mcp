@@ -1,0 +1,72 @@
+id = "hal"
+name = "HAL Open Archive"
+summary = "French national multidisciplinary open archive (3.8M+ records, 1.4M+ open-access preprints, articles, and theses)."
+aliases = ["hal.science", "Hyper Articles en Ligne", "archives ouvertes", "archives-ouvertes", "hal cnrs"]
+home_url = "https://hal.science"
+tier = 2
+scopes = ["academic", "academic.preprint", "academic.openaccess", "academic.theses"]
+caps = ["search", "lookup", "fulltext", "thesis"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 43200, host_bucket = "api.archives-ouvertes.fr" }
+
+[op.search]
+summary = "Search HAL open-access records via official Solr JSON API."
+method = "GET"
+url = "https://api.archives-ouvertes.fr/search/"
+response = "json"
+returns = "works"
+const_query = { fl = "halId_s,docid,title_s,authFullName_s,publicationDate_s,publicationDateY_i,doiId_s,arxivId_s,pubmedId_s,uri_s,abstract_s,journalTitle_s,conferenceTitle_s,bookTitle_s,docType_s,fileMain_s,openAccess_bool,licence_s", wt = "json" }
+paginate = { style = "offset", param = "start", start = 0, max_pages = 3 }
+probe = { params = { query = "graph neural network", limit = 3 }, min_results = 2, fixture = "fixtures/w5a/hal/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "HAL Solr query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "rows", doc = "Max results" }
+offset = { type = "int", min = 0, to = "start", doc = "Offset" }
+
+[op.search.map]
+items = ".response.docs[]"
+total = ".response.numFound"
+error = '''if .error != null then (.error.msg // (.error | tostring)) else null end'''
+work = '''(
+  (.uri_s // ("https://hal.science/" + (.halId_s // ""))) as $url |
+  ((.publicationDate_s | parse_date) // (if .publicationDateY_i != null then (.publicationDateY_i | tostring | parse_date) else null end)) as $dt |
+  (((.abstract_s | first_str) // "") | unescape_html | collapse_ws) as $abs |
+  {
+    title: (((.title_s | first_str) // "") | unescape_html | collapse_ws),
+    authors: [(.authFullName_s // [])[] | collapse_ws | select(length > 0) | {name: .}],
+    year: ((.publicationDateY_i | to_int) // (if $dt != null then ($dt[0:4] | to_int) else null end)),
+    publishedDate: $dt,
+    venue: ((.journalTitle_s // .conferenceTitle_s // .bookTitle_s // "HAL") | collapse_ws),
+    workType: (if (.docType_s // "") == "THESE" then "thesis" elif (.docType_s // "") == "COMM" then "proceedings-article" elif (.docType_s // "") == "ART" then "article" else "preprint" end),
+    ids: {
+      doi: (.doiId_s // null | doi_norm),
+      arxiv: (.arxivId_s // null),
+      pmid: (.pubmedId_s // null)
+    },
+    abstractText: (if ($abs // "") != "" then $abs else null end),
+    oa: (if (.openAccess_bool // false) or ((.fileMain_s // "") != "") then { status: "green", url: $url, pdfUrl: (.fileMain_s // null), license: ((.licence_s | first_str) // null) } else null end),
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["hal"]
+  }
+)'''
+
+[op.work]
+summary = "Fetch a single HAL record by HAL identifier (e.g. hal-04642650)."
+method = "GET"
+url = "https://api.archives-ouvertes.fr/search/"
+response = "json"
+returns = "works"
+const_query = { fl = "halId_s,docid,title_s,authFullName_s,publicationDate_s,publicationDateY_i,doiId_s,arxivId_s,pubmedId_s,uri_s,abstract_s,journalTitle_s,conferenceTitle_s,bookTitle_s,docType_s,fileMain_s,openAccess_bool,licence_s", rows = "1", wt = "json" }
+probe = { params = { id = "hal-04642650" }, min_results = 1, fixture = "fixtures/w5a/hal/work/default.json" }
+
+[op.work.params]
+id = { type = "string", required = true, to = "q", template = "halId_s:{id}", doc = "HAL ID e.g. hal-04642650" }
+
+[op.work.map]
+items = ".response.docs[]"
+error = "@ref:op.search.map.error"
+work = "@ref:op.search.map.work"

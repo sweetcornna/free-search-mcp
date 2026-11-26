@@ -1,0 +1,72 @@
+id = "oasisbr_br"
+name = "Brazil Oasisbr Open Access Portal (IBICT)"
+summary = "Brazilian Institute of Information in Science and Technology (IBICT) national open-access aggregator of 4M+ Portuguese/English papers, theses, and datasets via VuFind JSON API."
+aliases = ["oasisbr", "ibict oasisbr", "brazil oa", "Portal Brasileiro de Publicações Científicas", "acesso aberto brasil", "IBICT"]
+home_url = "https://oasisbr.ibict.br"
+tier = 1
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["search", "lookup", "thesis"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.5, burst = 4, concurrency = 2, timeout_ms = 15000, cache_ttl_s = 43200, host_bucket = "oasisbr.ibict.br" }
+
+[op.search]
+summary = "Search Brazilian and Lusophone open-access articles, theses, and dissertations via Oasisbr VuFind API."
+method = "GET"
+url = "https://oasisbr.ibict.br/vufind/api/v1/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+const_query = { "field[]" = ["id", "title", "authors", "formats", "languages", "urls", "publicationDates", "summary", "publishers", "subjects", "cleanDoi", "dc.identifier.doi", "containerTitle", "issns"] }
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "neural", limit = 3 }, min_results = 2, fixture = "fixtures/w5h/oasisbr_br/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "lookfor", doc = "Search query (Portuguese or English)" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Records per page" }
+page = { type = "int", default = 1, min = 1, to = "page", doc = "1-based page number" }
+
+[op.search.map]
+items = "(.records // [])[]"
+total = ".resultCount"
+error = '''if (.status // "OK") != "OK" then (.statusMessage // .status) else null end'''
+work = '''(
+  (.urls[0]?.url // ("https://oasisbr.ibict.br/vufind/Record/" + (.id // ""))) as $url |
+  ([((.authors.primary | if type == "object" then keys else [] end) + (.authors.secondary | if type == "object" then keys else [] end) + (.authors.corporate | if type == "object" then keys else [] end))[] | select(length > 0) | { name: (. | collapse_ws) }]) as $auths |
+  (((.summary // [])[0]? // null) | strip_tags) as $abs |
+  (((.publicationDates // [])[0]? // null) | tostring) as $raw_date |
+  ((.cleanDoi // ((."dc.identifier.doi" | arr)[0]?) // null) | doi_norm) as $doi |
+  {
+    title: (.title // "" | strip_tags),
+    authors: $auths,
+    year: ((($raw_date)[0:4]) | to_int),
+    publishedDate: (if ($raw_date | length) >= 7 then ($raw_date | parse_date) else null end),
+    venue: (.containerTitle // (.publishers // [])[0]? // null | collapse_ws),
+    workType: (if ((.formats // []) | any(test("thesis|doctoral|master|disserta|tese"; "i"))) then "thesis" else ((.formats[0]? // "article") | ascii_downcase) end),
+    ids: { doi: $doi },
+    abstractText: (if ($abs | type) == "string" and ($abs | length) > 0 then $abs else null end),
+    oa: { status: "green", url: $url },
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["oasisbr_br"]
+  }
+)'''
+
+[op.work]
+summary = "Fetch a single Oasisbr record by VuFind record ID."
+method = "GET"
+url = "https://oasisbr.ibict.br/vufind/api/v1/record"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+const_query = { "field[]" = ["id", "title", "authors", "formats", "languages", "urls", "publicationDates", "summary", "publishers", "subjects", "cleanDoi", "dc.identifier.doi", "containerTitle", "issns"] }
+probe = { params = { id = "UFSM-23_5e828dbf9d1ab8c4fef67698c0e225a0" }, min_results = 1, fixture = "fixtures/w5h/oasisbr_br/work/default.json" }
+
+[op.work.params]
+id = { type = "string", required = true, to = "id", doc = "Oasisbr VuFind record ID" }
+
+[op.work.map]
+items = "(.records // [])[]"
+error = "@ref:op.search.map.error"
+work = "@ref:op.search.map.work"

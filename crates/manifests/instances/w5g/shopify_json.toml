@@ -1,0 +1,34 @@
+protocol = "shopify_json"
+
+[[instance]]
+id = "arduino_store"
+name = "Arduino Official Store (US)"
+summary = "Official Arduino open-source microcontroller boards, sensors, kits, and hardware specifications."
+aliases = ["store-usa.arduino.cc", "arduino hardware"]
+base_url = "https://store-usa.arduino.cc"
+scopes = ["reference"]
+caps = ["search"]
+tier = 1
+probe = { op = "search", params = { query = "uno", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "pimoroni"
+name = "Pimoroni"
+summary = "Open-source electronics, Raspberry Pi HATs, RP2040/RP2350 boards, and laboratory sensor modules."
+aliases = ["shop.pimoroni.com", "pimoroni hardware"]
+base_url = "https://shop.pimoroni.com"
+scopes = ["reference"]
+caps = ["search"]
+tier = 1
+probe = { op = "search", params = { query = "pico", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "m5stack"
+name = "M5Stack Store"
+summary = "Modular ESP32 development kits, industrial IoT sensors, and embedded prototyping hardware."
+aliases = ["shop.m5stack.com", "m5stack esp32"]
+base_url = "https://shop.m5stack.com"
+scopes = ["reference"]
+caps = ["search"]
+tier = 1
+probe = { op = "search", params = { query = "esp32", limit = 3 }, min_results = 2 }

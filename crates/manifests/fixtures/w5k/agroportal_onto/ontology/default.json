@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "agroportal_onto",
+  "op": "ontology",
+  "recordedAt": "2026-11-25T13:05:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://data.agroportal.eu/ontologies/AGRO",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"@id\": \"https://data.agroportal.eu/ontologies/AGRO\", \"acronym\": \"AGRO\", \"name\": \"Agronomy Ontology\", \"summaryOnly\": false, \"ontologyType\": \"ONTOLOGY\", \"links\": {\"submissions\": \"https://data.agroportal.eu/ontologies/AGRO/submissions\", \"classes\": \"https://data.agroportal.eu/ontologies/AGRO/classes\", \"ui\": \"https://agroportal.lirmm.fr/ontologies/AGRO\"}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

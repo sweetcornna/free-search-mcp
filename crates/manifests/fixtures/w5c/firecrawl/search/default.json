@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "firecrawl",
+  "op": "search",
+  "recordedAt": "2026-11-25T15:02:23Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://api.firecrawl.dev/v2/search",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": "93a3b9ebc8b0158d9b1ee68e2275480e613a802ec1a958f265b6c69c8498d007"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ],
+          [
+            "etag",
+            "W/\"b44-e//awZQ8gvege9jzvsdjSaHI8NE\""
+          ]
+        ],
+        "bodyText": "{\"success\":true,\"data\":{\"web\":[{\"url\":\"https://www.rust-lang.org/en-US\",\"title\":\"Rust\",\"description\":\"Rust is blazingly fast and memory-efficient: with no runtime or garbage collector, it can power performance-critical services, run on embedded devices, and ...\",\"position\":1},{\"url\":\"https://en.wikipedia.org/wiki/Rust_(programming_language)\",\"title\":\"Rust (programming language)\",\"description\":\"# Rust (programming language)\\nGeneral-purpose programming language\\n\\n| Rust |\\n|-|\\n| [Paradigms](https://en.wikipedia.org/wiki/Programming_paradigm) | - [Multi-paradigm](https://en.wikipedia.org/wiki/Comparison_of_multi-paradigm_programming_languages):<br>   [concurrent](https://en.wikipedia.org/wiki/Concurrent_computing)<br>- [functional](https://en.wikipedia.org/wiki/Functional_programming)<br>- [generic](https://en.wikipedia.org/wiki/Generic_programming)<br>- [imperative](https://en.wikipedia.org/wiki/Imperative_programming)<br>- [structured](https://en.wikipedia.org/wiki/Structured_programming) |\\n| Firstappeared | January20, 2012;14 years ago(2012-01-20)[[1]](https://en.wikipedia.org/wiki/Rust_(programming_language)#cite_note-Rust0.1a-1) |\\n|  |\\n| [Stable release](https://en.wikipedia.org/wiki/Software_release_life_cycle) | 1.100.0[[2]](https://en.wikipedia.org/wiki/Rust_(programming_language)#cite_note-wikidata-e8f68e73306cbb7a7edfd4e1f63081a410cb6f6b-v22-2)[![Edit this on Wikidata](https://thumb.wikimedia.org/wikipedia/en/thumb/8/8a/OOjs_UI_icon_edit-ltr-progressive.svg/20px-OOjs_UI_icon_edit-ltr-progressive.svg.png?utm_source=en.wikipedia.org&utm_campaign=parser&utm_content=thumbnail)](https://www.wikidata.org/wiki/Q575650?uselang=en#P348)<br>/ November 12, 2026;5 days ago(November 12, 2026) |\\n|  |\\n| [Typing discipline](https://en.wikipedia.org/wiki/Type_system) | - [Affine](https://en.wikipedia.org/wiki/Affine_type_system)<br>- [inferred](https://en.wikipedia.org/wiki/Type_inference)<br>- [nominal](https://en.wikipedia.org/wiki/Nominal_type_system)<br>- [static](https://en.wikipedia.org/wiki/Static_typing)<br>- [strong](https://en.wikipedia.org/wiki/Strong_and_weak_typing) |\\n| [License](https://en.wikipedia.org/wiki/Software_license) | [MIT](https://en.wikipedia.org/wiki/MIT_License), [Apache 2.0](https://en.wikipedia.org/wiki/Apache_License)[[note 3]](https://en.wikipedia.org/wiki/Rust_(programming_language)#cite_note-8) |\\n| [Filename extensions](https://en.wikipedia.org/wiki/Filename_extension) | `.rs`, `.rlib` |\\n| Website | [rust-lang.org](https://www.rust-lang.org/) |\\n| Influenced by |\\n| Influenced |\\n\\n## References\\n### Others\\n149. [↑](https://en.wikipedia.org/wiki/Rust_(programming_language)#cite_ref-155)[\\\"rust-lang/rust-clippy\\\"](https://github.com/rust-lang/rust-clippy). The Rust Programming Language. 2026-01-04. Retrieved 2026-01-04.\",\"position\":2}]},\"creditsUsed\":2,\"id\":\"01a2133a-ae78-7245-8b25-9fe84e17114a\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

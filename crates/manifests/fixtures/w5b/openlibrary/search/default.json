@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "openlibrary",
+  "op": "search",
+  "recordedAt": "2026-11-25T11:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://openlibrary.org/search.json?q=rust+programming&limit=3&fields=title,key,author_name,first_publish_year,edition_count,isbn,publisher,language",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"numFound\":111,\"start\":0,\"numFoundExact\":true,\"num_found\":111,\"documentation_url\":\"https://openlibrary.org/dev/docs/api/search\",\"q\":\"rust programming\",\"offset\":null,\"docs\":[{\"author_name\":[\"Steve Klabnik\",\"Carol Nichols\",\"Carol Nichols\"],\"edition_count\":4,\"first_publish_year\":2018,\"isbn\":[\"9781718503106\",\"9781718500440\",\"9781593278281\",\"1718500440\",\"1593278284\",\"1718503105\"],\"key\":\"/works/OL19080231W\",\"language\":[\"eng\"],\"publisher\":[\"No Starch Press, Incorporated\",\"No Starch Press\"],\"title\":\"The Rust Programming Language\"},{\"author_name\":[\"Ric Messier\"],\"edition_count\":3,\"first_publish_year\":2021,\"isbn\":[\"1119712874\",\"9781119712978\",\"9781119712985\",\"9781119712879\",\"111971298X\",\"1119712971\"],\"key\":\"/works/OL25259080W\",\"language\":[\"eng\"],\"publisher\":[\"Wiley & Sons, Incorporated, John\",\"Wiley & Sons, Limited, John\"],\"title\":\"Beginning Rust Programming\"},{\"author_name\":[\"John Stern\"],\"edition_count\":1,\"first_publish_year\":2022,\"isbn\":[\"9798837294051\"],\"key\":\"/works/OL31089644W\",\"language\":[\"eng\"],\"publisher\":[\"Independently Published\"],\"title\":\"Rust Programming Guide for Beginners\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

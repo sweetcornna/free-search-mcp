@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "source": "semanticscholar",
+  "op": "paper",
+  "recordedAt": "2026-11-25T14:07:12Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.semanticscholar.org/graph/v1/paper/DOI:10.9999/fsm-scholar-nonexistent?fields=paperId%2Ctitle%2Cabstract%2Cyear%2CpublicationDate%2Cvenue%2CcitationCount%2CinfluentialCitationCount%2CisOpenAccess%2CopenAccessPdf%2CexternalIds%2Cauthors"
+      },
+      "response": {
+        "status": 404,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"error\":\"Paper with id DOI:10.9999/fsm-scholar-nonexistent not found\"}\n"
+      }
+    }
+  ]
+}

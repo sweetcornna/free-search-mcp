@@ -1,0 +1,96 @@
+id = "google_books"
+name = "Google Books API v1"
+summary = "Global academic monographs, textbooks, and published books searchable by title, author, subject, or ISBN with preview snippets."
+aliases = ["gbooks", "books.googleapis.com"]
+home_url = "https://developers.google.com/books"
+tier = 3
+scopes = ["academic", "academic.books"]
+caps = ["search", "lookup", "book"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 86400, host_bucket = "books.googleapis.com" }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_GOOGLE_BOOKS_API_KEY"
+in = "query"
+name = "key"
+format = "{key}"
+route_requires_key = true
+
+[op.search]
+summary = "Search Google Books volumes by keywords, intitle:, inauthor:, isbn:, or subject:."
+method = "GET"
+url = "https://books.googleapis.com/books/v1/volumes"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+paginate = { style = "offset", param = "startIndex", start = 0, max_pages = 3 }
+probe = { params = { query = "graph neural network", limit = 3 }, min_results = 2, fixture = "fixtures/w5i/google_books/search/default.json" }
+examples = ['source.call("google_books.search", {query: "graph neural network", limit: 5})']
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Book search query (supports intitle:, inauthor:, isbn:, subject:)" }
+limit = { type = "int", default = 10, min = 1, max = 40, to = "maxResults", doc = "Max volumes per page (1-40)" }
+offset = { type = "int", min = 0, to = "startIndex", doc = "0-based start index" }
+order_by = { type = "string", enum = ["relevance", "newest"], to = "orderBy", doc = "Sort order" }
+filter = { type = "string", enum = ["partial", "full", "free-ebooks", "paid-ebooks", "ebooks"], to = "filter", doc = "Optional availability filter" }
+
+[op.search.map]
+items = "(.items // [])[]"
+total = ".totalItems"
+error = "if .error then (.error.message // (.error | tostring)) else null end"
+work = '''(
+  (.volumeInfo // {}) as $v |
+  ($v.canonicalVolumeLink // $v.infoLink // $v.previewLink // ("https://books.google.com/books?id=" + (.id // ""))) as $url |
+  ($v.publishedDate | parse_date) as $dt |
+  {
+    title: ([$v.title, $v.subtitle] | map(select(type == "string") | collapse_ws | select(. != null and . != "")) | join(": ")),
+    authors: [($v.authors // [])[] | select(type == "string") | collapse_ws | select(. != null and . != "") | {name: .}],
+    year: (($dt // "")[0:4] | to_int),
+    publishedDate: $dt,
+    venue: (($v.publisher | collapse_ws) // "Google Books"),
+    workType: "book",
+    ids: {},
+    abstractText: ((($v.description // .searchInfo.textSnippet) | strip_tags) | if . == "" then null else . end),
+    oa: {
+      status: (if (.accessInfo.publicDomain // false) then "diamond" elif (.accessInfo.viewability // "") == "ALL_PAGES" then "bronze" else "closed" end),
+      url: ($v.previewLink // $url),
+      pdfUrl: (.accessInfo.pdf.downloadLink // null)
+    },
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["google_books"]
+  }
+)'''
+hit = '''(
+  (.volumeInfo // {}) as $v |
+  ($v.canonicalVolumeLink // $v.infoLink // ("https://books.google.com/books?id=" + (.id // ""))) as $url |
+  ($v.publishedDate | parse_date) as $dt |
+  {
+    title: ([$v.title, $v.subtitle] | map(select(type == "string") | collapse_ws | select(. != null and . != "")) | join(": ")),
+    url: $url,
+    snippet: ([([($v.authors // [])[] | select(type == "string")] | join(", ")), (($v.publisher | collapse_ws) // ""), (((.searchInfo.textSnippet // $v.description) | strip_tags) // "" | .[0:200])] | map(select(length > 0)) | join(" · ")),
+    date: $dt,
+    dateSource: (if $dt != null then "api" else null end)
+  }
+)'''
+
+[op.volume]
+summary = "Fetch detailed bibliographic metadata for a single Google Books volume by volume ID."
+method = "GET"
+url = "https://books.googleapis.com/books/v1/volumes/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+probe = { params = { id = "SYNTH_GNN_001" }, min_results = 1, fixture = "fixtures/w5i/google_books/volume/default.json" }
+examples = ['source.call("google_books.volume", {id: "zyTCAlFPjgYC"})']
+
+[op.volume.params]
+id = { type = "string", required = true, in = "path", doc = "Google Books volume ID (e.g. zyTCAlFPjgYC)" }
+
+[op.volume.map]
+items = "."
+error = "if .error then (.error.message // (.error | tostring)) else null end"
+work = "@ref:op.search.map.work"

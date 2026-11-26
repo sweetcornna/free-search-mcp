@@ -1,0 +1,93 @@
+id = "dpla"
+name = "Digital Public Library of America (DPLA)"
+summary = "50M+ digitized US library, archive, and museum items including books, maps, photographs, and primary sources (requires free DPLA API key)."
+aliases = ["dp.la", "digital public library"]
+home_url = "https://dp.la"
+tier = 3
+scopes = ["academic.humanities", "academic.books", "media", "reference"]
+caps = ["search", "lookup", "book"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 10000, cache_ttl_s = 43200 }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_DPLA_API_KEY"
+in = "query"
+name = "api_key"
+format = "{key}"
+route_requires_key = true
+
+[op.search]
+summary = "Search DPLA digitized collections across US libraries, museums, and archives."
+method = "GET"
+url = "https://api.dp.la/v2/items"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "railroad", limit = 3 }, min_results = 2, fixture = "fixtures/w5d2/dpla/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Keyword search query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "page_size", doc = "Items per page" }
+page = { type = "int", min = 1, to = "page", doc = "1-based page number" }
+item_type = { type = "string", to = "sourceResource.type", doc = "Optional media type filter, e.g. text, image, sound" }
+
+[op.search.map]
+items = "(.docs // [])[]"
+total = ".count"
+error = "if .error then (.message // (.error | tostring)) else null end"
+record = '''{
+  id: .id,
+  title: ((.sourceResource.title | first_str // "") | strip_tags // ""),
+  creators: (.sourceResource.creator | arr),
+  date: ((.sourceResource.date | arr | .[0] | (.begin // .displayDate // null)) | parse_date),
+  description: ((.sourceResource.description | first_str) | strip_tags),
+  type: (.sourceResource.type | first_str),
+  dataProvider: (if (.dataProvider | type) == "object" then .dataProvider.name else .dataProvider end),
+  provider: (.provider.name // null),
+  url: (.isShownAt // ("https://dp.la/item/" + (.id // "")))
+}'''
+hit = '''{
+  title: ((.sourceResource.title | first_str // .id // "DPLA Item") | strip_tags // "DPLA Item"),
+  url: (.isShownAt // ("https://dp.la/item/" + (.id // ""))),
+  snippet: (
+    [
+      (if (.dataProvider | type) == "object" then .dataProvider.name else .dataProvider end),
+      (.sourceResource.creator | first_str),
+      (((.sourceResource.description | first_str) | strip_tags) | if . then .[0:200] else null end)
+    ] | map(select(. != null)) | join(" · ")
+  ),
+  date: ((.sourceResource.date | arr | .[0] | (.begin // .displayDate // null)) | parse_date),
+  dateSource: "api"
+}'''
+
+[op.item]
+summary = "Fetch full JSON-LD item metadata from DPLA by item ID."
+method = "GET"
+url = "https://api.dp.la/v2/items/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "58923a1a8c20579e01331c265bf86961" }, min_results = 1, fixture = "fixtures/w5d2/dpla/item/default.json" }
+
+[op.item.params]
+id = { type = "string", required = true, in = "path", doc = "DPLA item hash ID, e.g. 58923a1a8c20579e01331c265bf86961" }
+
+[op.item.map]
+items = "(.docs // [])[]"
+error = "if .error then (.message // (.error | tostring)) else null end"
+record = '''{
+  id: .id,
+  title: ((.sourceResource.title | first_str // "") | strip_tags // ""),
+  creators: (.sourceResource.creator | arr),
+  date: ((.sourceResource.date | arr | .[0] | (.begin // .displayDate // null)) | parse_date),
+  description: ((.sourceResource.description | first_str) | strip_tags),
+  subjects: [(.sourceResource.subject | arr)[] | .name | select(. != null)],
+  rights: ((.sourceResource.rights // .rights) | arr),
+  dataProvider: (if (.dataProvider | type) == "object" then .dataProvider.name else .dataProvider end),
+  provider: (.provider.name // null),
+  thumbnailUrl: (.object // null),
+  url: (.isShownAt // ("https://dp.la/item/" + (.id // "")))
+}'''

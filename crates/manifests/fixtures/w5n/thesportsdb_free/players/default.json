@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "thesportsdb_free",
+  "op": "players",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.thesportsdb.com/api/v1/json/123/searchplayers.php?p=Lionel_Messi",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"player\":[{\"idPlayer\":\"34146370\",\"idTeam\":\"137699\",\"strPlayer\":\"Lionel Messi\",\"strTeam\":\"Inter Miami\",\"strSport\":\"Soccer\",\"strThumb\":\"https:\\/\\/r2.thesportsdb.com\\/images\\/media\\/player\\/thumb\\/kpfsvp1725295651.jpg\",\"strCutout\":\"https:\\/\\/r2.thesportsdb.com\\/images\\/media\\/player\\/cutout\\/e0i2051750317027.png\",\"strNationality\":\"Argentina\",\"dateBorn\":\"1987-06-24\",\"strStatus\":\"Active\",\"strGender\":\"Male\",\"strPosition\":\"Right Winger\",\"relevance\":\"26.29633140563965\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

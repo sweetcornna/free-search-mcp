@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "oecd_sdmx",
+  "op": "dataflows",
+  "recordedAt": "2026-11-25T12:12:19Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://sdmx.oecd.org/public/rest/dataflow/OECD.SDD.STES?detail=allstubs",
+        "headersSubset": {
+          "accept": "application/vnd.sdmx.structure+json;version=1.0"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/vnd.sdmx.structure+json; charset=utf-8; version=1.0"
+          ]
+        ],
+        "bodyText": "{\"data\":{\"dataflows\":[{\"id\":\"DSD_KEI@DF_KEI\",\"links\":[{\"href\":\"https://sdmx.oecd.org/public/rest/dataflow/OECD.SDD.STES/DSD_KEI@DF_KEI/4.0\",\"rel\":\"external\"}],\"version\":\"4.0\",\"agencyID\":\"OECD.SDD.STES\",\"isExternalReference\":true,\"isFinal\":true,\"name\":\"Key short-term economic indicators\",\"names\":{\"en\":\"Key short-term economic indicators\"}},{\"id\":\"DSD_STES@DF_BTS\",\"links\":[{\"href\":\"https://sdmx.oecd.org/public/rest/dataflow/OECD.SDD.STES/DSD_STES@DF_BTS/4.0\",\"rel\":\"external\"}],\"version\":\"4.0\",\"agencyID\":\"OECD.SDD.STES\",\"isExternalReference\":true,\"isFinal\":true,\"name\":\"Business tendency surveys\",\"names\":{\"en\":\"Business tendency surveys\"}},{\"id\":\"DSD_STES@DF_CLI\",\"links\":[{\"href\":\"https://sdmx.oecd.org/public/rest/dataflow/OECD.SDD.STES/DSD_STES@DF_CLI/4.1\",\"rel\":\"external\"}],\"version\":\"4.1\",\"agencyID\":\"OECD.SDD.STES\",\"isExternalReference\":true,\"isFinal\":true,\"name\":\"Composite leading indicators\",\"names\":{\"en\":\"Composite leading indicators\"}},{\"id\":\"DSD_STES@DF_CS\",\"links\":[{\"href\":\"https://sdmx.oecd.org/public/rest/dataflow/OECD.SDD.STES/DSD_STES@DF_CS/4.0\",\"rel\":\"external\"}],\"version\":\"4.0\",\"agencyID\":\"OECD.SDD.STES\",\"isExternalReference\":true,\"isFinal\":true,\"name\":\"Consumer opinion surveys\",\"names\":{\"en\":\"Consumer opinion surveys\"}},{\"id\":\"DSD_STES@DF_CSBAR\",\"links\":[{\"href\":\"https://sdmx.oecd.org/public/rest/dataflow/OECD.SDD.STES/DSD_STES@DF_CSBAR/4.0\",\"rel\":\"external\"}],\"version\":\"4.0\",\"agencyID\":\"OECD.SDD.STES\",\"isExternalReference\":true,\"isFinal\":true,\"name\":\"Consumer barometer\",\"names\":{\"en\":\"Consumer barometer\"}},{\"id\":\"DSD_STES@DF_FINMARK\",\"links\":[{\"href\":\"https://sdmx.oecd.org/public/rest/dataflow/OECD.SDD.STES/DSD_STES@DF_FINMARK/4.0\",\"rel\":\"external\"}],\"version\":\"4.0\",\"agencyID\":\"OECD.SDD.STES\",\"isExternalReference\":true,\"isFinal\":true,\"name\":\"Financial market\",\"names\":{\"en\":\"Financial market\"}},{\"id\":\"DSD_STES@DF_INDSERV\",\"links\":[{\"href\":\"https://sdmx.oecd.org/public/rest/dataflow/OECD.SDD.STES/DSD_STES@DF_INDSERV/4.3\",\"rel\":\"external\"}],\"version\":\"4.3\",\"agencyID\":\"OECD.SDD.STES\",\"isExternalReference\":true,\"isFinal\":true,\"name\":\"Production, sales, work started and orders\",\"names\":{\"en\":\"Production, sales, work started and orders\"}},{\"id\":\"DSD_STES@DF_MONAGG\",\"links\":[{\"href\":\"https://sdmx.oecd.org/public/rest/dataflow/OECD.SDD.STES/DSD_STES@DF_MONAGG/4.0\",\"rel\":\"external\"}],\"version\":\"4.0\",\"agencyID\":\"OECD.SDD.STES\",\"isExternalReference\":true,\"isFinal\":true,\"name\":\"Monetary aggregates\",\"names\":{\"en\":\"Monetary aggregates\"}},{\"id\":\"DSD_STES@DF_SAHM\",\"links\":[{\"href\":\"https://sdmx.oecd.org/public/rest/dataflow/OECD.SDD.STES/DSD_STES@DF_SAHM/1.0\",\"rel\":\"external\"}],\"version\":\"1.0\",\"agencyID\":\"OECD.SDD.STES\",\"isExternalReference\":true,\"isFinal\":true,\"name\":\"Sahm rule recession indicator\",\"names\":{\"en\":\"Sahm rule recession indicator\"}},{\"id\":\"DSD_STES_REVISIONS@DF_STES_REVISIONS\",\"links\":[{\"href\":\"https://sdmx.oecd.org/public/rest/dataflow/OECD.SDD.STES/DSD_STES_REVISIONS@DF_STES_REVISIONS/4.0\",\"rel\":\"external\"}],\"version\":\"4.0\",\"agencyID\":\"OECD.SDD.STES\",\"isExternalReference\":true,\"isFinal\":true,\"name\":\"Short-term economic statistics revisions\",\"names\":{\"en\":\"Short-term economic statistics revisions\"}}]},\"meta\":{\"schema\":\"https://raw.githubusercontent.com/sdmx-twg/sdmx-json/develop/structure-message/tools/schemas/1.0/sdmx-json-structure-schema.json\",\"contentLanguages\":[\"en\"],\"id\":\"IDREF9245\",\"prepared\":\"2026-11-25T11:52:22Z\",\"test\":false,\"sender\":{\"id\":\"Unknown\"},\"receiver\":[{\"id\":\"Unknown\"}]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

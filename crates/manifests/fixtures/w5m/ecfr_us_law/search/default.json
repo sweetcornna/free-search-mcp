@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "ecfr_us_law",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.ecfr.gov/api/search/v1/results?query=privacy&per_page=3&page=1",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ],
+          [
+            "cache-control",
+            "no-store, no-cache, must-revalidate, private"
+          ]
+        ],
+        "bodyText": "{\"results\":[{\"starts_on\":\"2016-12-22\",\"ends_on\":null,\"type\":\"Section\",\"hierarchy\":{\"title\":\"6\",\"subtitle\":null,\"chapter\":\"X\",\"subchapter\":null,\"part\":\"1002\",\"subpart\":null,\"subject_group\":null,\"section\":\"1002.3\",\"appendix\":null},\"hierarchy_headings\":{\"title\":\"Title 6\",\"subtitle\":null,\"chapter\":\" Chapter X\",\"subchapter\":null,\"part\":\"Part 1002\",\"subpart\":null,\"subject_group\":null,\"section\":\"§ 1002.3\",\"appendix\":null},\"headings\":{\"title\":\"Domestic Security\",\"subtitle\":null,\"chapter\":\"\\u003cstrong\\u003ePrivacy\\u003c/strong\\u003e and Civil Liberties Oversight Board\",\"subchapter\":null,\"part\":\"Implementation of the \\u003cstrong\\u003ePrivacy\\u003c/strong\\u003e Act of 1974\",\"subpart\":null,\"subject_group\":null,\"section\":\"\\u003cstrong\\u003ePrivacy\\u003c/strong\\u003e Act requests.\",\"appendix\":null},\"full_text_excerpt\":\"request to the \\u003cstrong\\u003ePrivacy\\u003c/strong\\u003e Act Officer. Written requests may be sent to: \\u003cstrong\\u003ePrivacy\\u003c/strong\\u003e Act Officer\\u003cspan class=\\\"elipsis\\\"\\u003e…\\u003c/span\\u003eOfficer, \\u003cstrong\\u003ePrivacy\\u003c/strong\\u003e and Civil Liberties Oversight Board, 2100 K Street NW., Suite 500, Washington\\u003cspan class=\\\"elipsis\\\"\\u003e…\\u003c/span\\u003eyour letter and envelope should be marked “\\u003cstrong\\u003ePrivacy\\u003c/strong\\u003e Act Request”. (5) In person requests. In\",\"score\":33.86545,\"structure_index\":10415,\"reserved\":false,\"removed\":false,\"change_types\":[\"effective\",\"initial\"]},{\"starts_on\":\"2017-01-19\",\"ends_on\":null,\"type\":\"Section\",\"hierarchy\":{\"title\":\"48\",\"subtitle\":null,\"chapter\":\"1\",\"subchapter\":\"D\",\"part\":\"24\",\"subpart\":\"24.3\",\"subject_group\":null,\"section\":\"24.301\",\"appendix\":null},\"hierarchy_headings\":{\"title\":\"Title 48\",\"subtitle\":null,\"chapter\":\" Chapter 1\",\"subchapter\":\"Subchapter D\",\"part\":\"Part 24\",\"subpart\":\"Subpart 24.3\",\"subject_group\":null,\"section\":\"24.301\",\"appendix\":null},\"headings\":{\"title\":\"Federal Acquisition Regulations System\",\"subtitle\":null,\"chapter\":\"Federal Acquisition Regulation\",\"subchapter\":\"Socioeconomic Programs\",\"part\":\"Protection of \\u003cstrong\\u003ePrivacy\\u003c/strong\\u003e and Freedom of Information\",\"subpart\":\"\\u003cstrong\\u003ePrivacy\\u003c/strong\\u003e Training\",\"subject_group\":null,\"section\":\"\\u003cstrong\\u003ePrivacy\\u003c/strong\\u003e training.\",\"appendix\":null},\"full_text_excerpt\":\"for ensuring that initial \\u003cstrong\\u003eprivacy\\u003c/strong\\u003e training, and annual \\u003cstrong\\u003eprivacy\\u003c/strong\\u003e training thereafter, is completed\\u003cspan class=\\\"elipsis\\\"\\u003e…\\u003c/span\\u003e(see FAR subpart 24.1 and 39.105). (b) \\u003cstrong\\u003ePrivacy\\u003c/strong\\u003e training shall address the key elements\\u003cspan class=\\\"elipsis\\\"\\u003e…\\u003c/span\\u003eminimum, the \\u003cstrong\\u003eprivacy\\u003c/strong\\u003e training shall cover— (1) The provisions of the \\u003cstrong\\u003ePrivacy\\u003c/strong\\u003e Act of 1974\",\"score\":33.667015,\"structure_index\":11397,\"reserved\":false,\"removed\":false,\"change_types\":[\"effective\",\"initial\"]},{\"starts_on\":\"2016-12-22\",\"ends_on\":null,\"type\":\"Section\",\"hierarchy\":{\"title\":\"6\",\"subtitle\":null,\"chapter\":\"X\",\"subchapter\":null,\"part\":\"1002\",\"subpart\":null,\"subject_group\":null,\"section\":\"1002.4\",\"appendix\":null},\"hierarchy_headings\":{\"title\":\"Title 6\",\"subtitle\":null,\"chapter\":\" Chapter X\",\"subchapter\":null,\"part\":\"Part 1002\",\"subpart\":null,\"subject_group\":null,\"section\":\"§ 1002.4\",\"appendix\":null},\"headings\":{\"title\":\"Domestic Security\",\"subtitle\":null,\"chapter\":\"\\u003cstrong\\u003ePrivacy\\u003c/strong\\u003e and Civil Liberties Oversight Board\",\"subchapter\":null,\"part\":\"Implementation of the \\u003cstrong\\u003ePrivacy\\u003c/strong\\u003e Act of 1974\",\"subpart\":null,\"subject_group\":null,\"section\":\"Responses to \\u003cstrong\\u003ePrivacy\\u003c/strong\\u003e Act requests.\",\"appendix\":null},\"full_text_excerpt\":\"(a) Acknowledgement. The \\u003cstrong\\u003ePrivacy\\u003c/strong\\u003e Act Officer shall provide you with a written acknowledgment\\u003cspan class=\\\"elipsis\\\"\\u003e…\\u003c/span\\u003eIf you make your request in person, the \\u003cstrong\\u003ePrivacy\\u003c/strong\\u003e Act Officer shall respond to your request\\u003cspan class=\\\"elipsis\\\"\\u003e…\\u003c/span\\u003eperson. If your request is in writing, the \\u003cstrong\\u003ePrivacy\\u003c/strong\\u003e Act Officer shall provide you with written\",\"score\":33.19722,\"structure_index\":10416,\"reserved\":false,\"removed\":false,\"change_types\":[\"effective\",\"initial\"]}],\"meta\":{\"current_page\":1,\"total_pages\":2594,\"total_count\":7781,\"max_score\":33.86545,\"description\":\"Changes to sections matching 'privacy'\"}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

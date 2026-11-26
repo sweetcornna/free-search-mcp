@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "nominatim",
+  "op": "reverse",
+  "recordedAt": "2026-11-25T12:12:19Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&lat=52.517&lon=13.395",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"place_id\":144586336,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":15976892,\"lat\":\"52.5167029\",\"lon\":\"13.3947383\",\"category\":\"amenity\",\"type\":\"theatre\",\"place_rank\":30,\"importance\":0.553840744812458,\"addresstype\":\"amenity\",\"name\":\"Staatsoper Unter den Linden\",\"display_name\":\"Staatsoper Unter den Linden, 7, Unter den Linden, Friedrichswerder, Dorotheenstadt, Mitte, Berlin, 10117, Deutschland\",\"address\":{\"amenity\":\"Staatsoper Unter den Linden\",\"house_number\":\"7\",\"road\":\"Unter den Linden\",\"neighbourhood\":\"Friedrichswerder\",\"quarter\":\"Dorotheenstadt\",\"suburb\":\"Mitte\",\"borough\":\"Mitte\",\"city\":\"Berlin\",\"ISO3166-2-lvl4\":\"DE-BE\",\"postcode\":\"10117\",\"country\":\"Deutschland\",\"country_code\":\"de\"},\"boundingbox\":[\"52.5162507\",\"52.5171350\",\"13.3943440\",\"13.3951886\"]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

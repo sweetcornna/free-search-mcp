@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "core_ac",
+  "op": "work",
+  "recordedAt": "2026-11-25T12:18:02Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.core.ac.uk/v3/works/168955695",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"acceptedDate\":\"\",\"arxivId\":null,\"authors\":[{\"name\":\"MOHAMMADI, SOLMAZ\"}],\"citationCount\":0,\"contributors\":[\"SPERDUTI, ALESSANDRO\"],\"outputs\":[\"https:\\/\\/api.core.ac.uk\\/v3\\/outputs\\/620851279\"],\"createdDate\":\"2025-02-25T13:32:44+00:00\",\"dataProviders\":[{\"id\":22186,\"name\":\"Padua Thesis and Dissertation Archive\",\"url\":\"https:\\/\\/api.core.ac.uk\\/v3\\/data-providers\\/22186\",\"logo\":\"https:\\/\\/api.core.ac.uk\\/data-providers\\/22186\\/logo\"}],\"depositedDate\":\"2024-10-17T20:45:06+01:00\",\"abstract\":\"openThis thesis addresses the challenge of feature-smoothing common in deep graph neural networks (GNNs), a topic of considerable interest over the past decade. Despite the expansion of GNN models aiming to capture richer representations of graph-structured data, the deep variants often encounter the issue of \\u0022feature-smoothing.\\u0022 This phenomenon inhibits their performance potential, limiting their ability to extract and preserve meaningful information from graph inputs. To tackle this challenge, I propose the Hierarchical Line Graph Neural Network (HLGNN), a novel framework that leverages the concept of iterated line graphs from graph theory. While line graph transformation\\u2014a method for converting a graph into its line graph representation to capture higher-order connectivity patterns\\u2014has gained attention in graph theory, its application within the realm of graph neural networks remains under-explored. Inspired by the principles of hierarchical and higher-order GNNs, I introduce a message-passing mechanism within HLGNN that facilitates the flow of information across both intra-graph and inter-graph levels. This hierarchical approach enables HLGNN to address the feature-smoothing problem effectively while enhancing the model\\u0027s capacity to capture complex graph structures. The versatility of HLGNN extends to various graph-related tasks, including node classification, graph classification, and community detection. Throughout this thesis, I conduct experiments to evaluate the efficacy of the proposed framework, focusing particularly on node classification and graph classification tasks.This thesis addresses the challenge of feature-smoothing common in deep graph neural networks (GNNs), a topic of considerable interest over the past decade. Despite the expansion of GNN models aiming to capture richer representations of graph-structured data, the deep variants often encounter the issue of \\u0022feature-smoothing.\\u0022 This phenomenon inhibits their performance potential, limiting their ability to extract and preserve meaningful information from graph inputs. To tackle this challenge, I propose the Hierarchical Line Graph Neural Network (HLGNN), a novel framework that leverages the concept of iterated line graphs from graph theory. While line graph transformation\\u2014a method for converting a graph into its line graph representation to capture higher-order connectivity patterns\\u2014has gained attention in graph theory, its application within the realm of graph neural networks remains under-explored. Inspired by the principles of hierarchical and higher-order GNNs, I introduce a message-passing mechanism within HLGNN that facilitates the flow of information across both intra-graph and inter-graph levels. This hierarchical approach enables HLGNN to address the feature-smoothing problem effectively while enhancing the model\\u0027s capacity to capture complex graph structures. The versatility of HLGNN extends to various graph-related tasks, including node classification, graph classification, and community detection. Throughout this thesis, I conduct experiments to evaluate the efficacy of the proposed framework, focusing particularly on node classification and graph classification tasks\",\"documentType\":null,\"doi\":null,\"downloadUrl\":\"https:\\/\\/core.ac.uk\\/download\\/620851279.pdf\",\"fieldOfStudy\":\"Graph Neural Network\",\"fullText\":\"Not available for public API users.\",\"id\":168955695,\"identifiers\":[{\"identifier\":\"620851279\",\"type\":\"core_id\"},{\"identifier\":\"oai:thesis.unipd.it:20.500.12608\\/68875\",\"type\":\"oai_id\"},{\"identifier\":\"oai:thesis.unipd.it:20.500.12608\\/68875\",\"type\":\"oai\"}],\"title\":\"Hierarchical Line Graph Neural Network: A Study on Alternative Representations of Graph-Structured Data\",\"language\":{\"code\":\"en\",\"name\":\"English\"},\"magId\":null,\"oaiIds\":[\"oai:thesis.unipd.it:20.500.12608\\/68875\"],\"publishedDate\":\"\",\"publisher\":\"\",\"pubmedId\":null,\"references\":[],\"sourceFulltextUrls\":[\"https:\\/\\/core.ac.uk\\/download\\/620851279.pdf\"],\"updatedDate\":\"\",\"yearPublished\":2024,\"journals\":[],\"links\":[{\"type\":\"download\",\"url\":\"https:\\/\\/core.ac.uk\\/download\\/620851279.pdf\"},{\"type\":\"reader\",\"url\":\"https:\\/\\/core.ac.uk\\/reader\\/620851279\"},{\"type\":\"thumbnail_m\",\"url\":\"https:\\/\\/core.ac.uk\\/image\\/620851279\\/large\"},{\"type\":\"thumbnail_l\",\"url\":\"https:\\/\\/core.ac.uk\\/image\\/620851279\\/large\"},{\"type\":\"display\",\"url\":\"https:\\/\\/core.ac.uk\\/works\\/168955695\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

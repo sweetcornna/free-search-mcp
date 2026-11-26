@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "source": "rxnorm_nlm",
+  "op": "properties",
+  "recordedAt": "2026-11-25T13:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://rxnav.nlm.nih.gov/REST/rxcui/6809/properties.json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json;charset=utf-8"
+          ],
+          [
+            "cache-control",
+            "public, max-age=300, must-revalidate"
+          ],
+          [
+            "etag",
+            "W/\"20AA_261102F;1793130400;3.1.358\""
+          ]
+        ],
+        "bodyText": "{\"properties\":{\"rxcui\":\"6809\",\"name\":\"metformin\",\"synonym\":\"\",\"tty\":\"IN\",\"language\":\"ENG\",\"suppress\":\"N\",\"umlscui\":\"\"}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

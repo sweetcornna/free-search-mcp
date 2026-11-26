@@ -1,0 +1,101 @@
+id = "nobel_prize_api"
+name = "Nobel Prize Official API v2.1"
+summary = "Official Nobel Foundation open JSON API for Nobel laureates, prize motivations, affiliations, biographies, and annual prize awards since 1901."
+aliases = ["nobel", "nobel prize", "nobel laureates"]
+home_url = "https://www.nobelprize.org/about/developer-zone-2/"
+tier = 1
+scopes = ["academic", "academic.index", "reference"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 86400, host_bucket = "api.nobelprize.org" }
+
+[op.search]
+summary = "Search Nobel Prize laureates by name."
+method = "GET"
+url = "https://api.nobelprize.org/2.1/laureates"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "Curie", limit = 3, offset = 0 }, min_results = 2, fixture = "fixtures/w5k/nobel_prize_api/search/default.json" }
+examples = ['source.call("nobel_prize_api.search", { query: "Curie", limit: 5 })']
+
+[op.search.params]
+query = { type = "string", required = true, to = "name", doc = "Laureate name substring e.g. Curie, Einstein" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Laureates per page" }
+offset = { type = "int", default = 0, min = 0, to = "offset", doc = "Pagination offset" }
+
+[op.search.map]
+items = "(.laureates // [])[]"
+total = ".meta.count"
+record = '''{
+  id: (.id // ""),
+  name: ((.knownName.en // .orgName.en // .fullName.en // "") | collapse_ws),
+  fullName: ((.fullName.en // .orgName.en) | collapse_ws),
+  gender: (.gender // null),
+  birthDate: (.birth.date | parse_date),
+  birthCountry: (.birth.place.country.en // null),
+  deathDate: (.death.date | parse_date),
+  prizes: [(.nobelPrizes // [])[] | { year: .awardYear, dateAwarded: (.dateAwarded | parse_date), category: (.category.en // ""), motivation: (.motivation.en | collapse_ws), affiliations: [(.affiliations // [])[] | .name.en | select(. != null)] }],
+  wikipedia: (.wikipedia.english // null),
+  wikidata: (.wikidata.url // null),
+  url: (.wikipedia.english // ("https://www.nobelprize.org/laureate/" + (.id // "")))
+}'''
+hit = '''(
+  ((.nobelPrizes[0]?.dateAwarded // .nobelPrizes[0]?.awardYear) | parse_date) as $d |
+  {
+    title: ((.knownName.en // .orgName.en // .fullName.en // "") | collapse_ws),
+    url: (.wikipedia.english // ("https://www.nobelprize.org/laureate/" + (.id // ""))),
+    snippet: ([(.nobelPrizes // [])[] | ((.awardYear // "") + " " + (.category.en // "") + ": " + ((.motivation.en // "") | collapse_ws))] | join("; ")),
+    date: $d,
+    dateSource: (if $d != null then "api" else null end)
+  }
+)'''
+
+[op.laureate]
+summary = "Fetch complete Nobel Prize record for a single laureate ID."
+method = "GET"
+url = "https://api.nobelprize.org/2.1/laureate/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "26" }, min_results = 1, fixture = "fixtures/w5k/nobel_prize_api/laureate/default.json" }
+examples = ['source.call("nobel_prize_api.laureate", { id: "26" })']
+
+[op.laureate.params]
+id = { type = "string", required = true, in = "path", doc = "Nobel laureate numeric ID e.g. 26 (Albert Einstein)" }
+
+[op.laureate.map]
+items = ".[]"
+record = "@ref:op.search.map.record"
+
+[op.prizes]
+summary = "List Nobel Prizes filtered by category code and/or award year."
+method = "GET"
+url = "https://api.nobelprize.org/2.1/nobelPrizes"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { category = "phy", year = "2024", limit = 3, offset = 0 }, min_results = 1, fixture = "fixtures/w5k/nobel_prize_api/prizes/default.json" }
+examples = ['source.call("nobel_prize_api.prizes", { category: "phy", year: "2024" })']
+
+[op.prizes.params]
+category = { type = "string", enum = ["che", "eco", "lit", "pea", "phy", "med"], to = "nobelPrizeCategory", doc = "Category code (che, eco, lit, pea, phy, med)" }
+year = { type = "string", to = "nobelPrizeYear", doc = "4-digit award year YYYY" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Prizes per page" }
+offset = { type = "int", default = 0, min = 0, to = "offset", doc = "Pagination offset" }
+
+[op.prizes.map]
+items = "(.nobelPrizes // [])[]"
+total = ".meta.count"
+record = '''{
+  awardYear: (.awardYear // ""),
+  category: (.category.en // ""),
+  categoryFullName: (.categoryFullName.en // null),
+  dateAwarded: (.dateAwarded | parse_date),
+  prizeAmountSek: (.prizeAmount // null),
+  laureates: [(.laureates // [])[] | { id: .id, name: (.knownName.en // .orgName.en // ""), portion: (.portion // null), motivation: (.motivation.en // null) }],
+  url: ("https://www.nobelprize.org/prizes/" + ((.category.en // "") | ascii_downcase | gsub("\\s+"; "-")) + "/" + (.awardYear // "") + "/summary/")
+}'''

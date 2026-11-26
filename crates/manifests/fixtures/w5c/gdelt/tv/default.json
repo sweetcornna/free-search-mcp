@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "gdelt",
+  "op": "tv",
+  "recordedAt": "2026-11-25T11:55:26Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.gdeltproject.org/api/v2/tv/tv?mode=clipgallery&format=json&query=climate+station:CNN&maxrecords=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"query_details\": {\"title\": \"climate station:CNN\"}, \"clips\": [ { \"preview_url\": \"https://archive.org/details/CNNW_20120314_030000_Erin_Burnett_OutFront#start/1301/end/1336\", \"ia_show_id\": \"CNNW_20120314_030000_Erin_Burnett_OutFront\", \"date\": \"2012-03-14T03:21:56Z\", \"station\": \"CNN\", \"show\": \"Erin Burnett OutFront\", \"show_date\": \"2012-03-14T03:00:00Z\", \"preview_thumb\": \"https://archive.org/download/CNNW_20120314_030000_Erin_Burnett_OutFront/CNNW_20120314_030000_Erin_Burnett_OutFront.thumbs/CNNW_20120314_030000_Erin_Burnett_OutFront_001290.jpg\", \"snippet\": \"role? i think it did. a month ago or six weeks uz go, you could say of course this is good santorum regions. santorum goes in as the guy who says he's anti-climate size,\" },{ \"preview_url\": \"https://archive.org/details/CNNW_20160311_070000_CNN_Special_Program#start/1514/end/1549\", \"ia_show_id\": \"CNNW_20160311_070000_CNN_Special_Program\", \"date\": \"2016-03-11T07:25:29Z\", \"station\": \"CNN\", \"show\": \"CNN Special Program\", \"show_date\": \"2016-03-11T07:00:00Z\", \"preview_thumb\": \"https://archive.org/download/CNNW_20160311_070000_CNN_Special_Program/CNNW_20160311_070000_CNN_Special_Program.thumbs/CNNW_20160311_070000_CNN_Special_Program_001498.jpg\", \"snippet\": \"scientific consensus of climate change and pledge to do something about it? sure the climate is changing and one of the reasons is because the climate has always been changing. there has never been a time when the climate has not changed. i think the fundamental question for a policy making is is the climate changing because of certainly we are doing and if so, is there a law you can pass to fix it?\" }] }",
+        "bodyB64": null
+      }
+    }
+  ]
+}

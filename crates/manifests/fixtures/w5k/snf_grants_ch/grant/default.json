@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "source": "snf_grants_ch",
+  "op": "grant",
+  "recordedAt": "2026-11-25T13:05:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://data.snf.ch/api/grants/search",
+        "headersSubset": {
+          "accept": "application/json",
+          "content-type": "application/json"
+        },
+        "bodySha256": "46f6c63c724137e1392f56878470116f13ede95619d736b0939c7a429b59458c"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"took\":29,\"timed_out\":false,\"_shards\":{\"total\":2,\"successful\":2,\"skipped\":0,\"failed\":0},\"hits\":{\"total\":{\"value\":1,\"relation\":\"eq\"},\"max_score\":null,\"hits\":[{\"_index\":\"odp_dp_application_flat_part2_20261125_040333\",\"_id\":\"3b01d5ea49793a26ff275d5a74a5f33b\",\"_score\":null,\"_source\":{\"application_number\":225229,\"title\":\"RESQUE: Rethinking Quantum Simulations in the Quantum Utility Era\",\"effective_start_date\":\"2025-01-01\",\"effective_end_date\":\"2028-12-31\",\"approved_amount\":1486768,\"keywords\":\"Hybrid quantum-classical algorithms, Materials science, Quantum Utility, Quantum chemistry, Quantum computing, Quantum dynamics, Tensor Network States\",\"state_name_de\":\"Laufend\",\"state_name_en\":\"ongoing\",\"state_name_fr\":\"en cours\",\"call_reporting_year\":2024,\"funding_scheme_name_de\":\"Quantum\",\"funding_scheme_name_fr\":\"Quantum\",\"funding_scheme_name_en\":\"Quantum\",\"main_applicant_number\":\"114134\",\"main_applicant_full_name\":\"Ivano Tavernelli\",\"applicants_count\":3,\"output_awards_count\":0,\"output_collaborations_count\":0,\"research_institution_name_de\":\"Firmen/Privatwirtschaft – FP\",\"research_institution_name_en\":\"Companies/  Private Industry – FP\",\"research_institution_name_fr\":\"Entreprises/secteur privé – FP\",\"main_discipline_de\":\"Andere Gebiete der Physik\",\"main_discipline_en\":\"Other disciplines of Physics\",\"main_discipline_fr\":\"Autres secteurs de la physique\",\"is_submitted_with_discipline\":true,\"main_field_of_research_de\":\"\",\"main_field_of_research_en\":\"Physical Sciences\",\"main_field_of_research_fr\":\"\",\"output_academicevents_count\":0,\"output_datasets_count\":0,\"output_publiccommunications_count\":0,\"output_knowledgetransfers_count\":0,\"output_useinspired_count\":0,\"output_publications_count\":0},\"sort\":[2,1735689600000,\"225229\"]}]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

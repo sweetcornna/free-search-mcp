@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "source": "ipaustralia_patents",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://production.api.ipaustralia.gov.au/public/australian-patent-search-api/v1/search/quick",
+        "headersSubset": {
+          "accept": "application/json",
+          "content-type": "application/json"
+        },
+        "bodySha256": "44de47f0676fd1e7a3d772118f57674b9185298fc4674b62b30e1647a64d49b4"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ]
+        ],
+        "bodyText": "{\"totalResults\":2,\"results\":[{\"ipRightIdentifier\":\"2020100000\",\"applicationNumber\":\"2020100000\",\"title\":\"High-Efficiency Perovskite-Silicon Tandem Solar Cell Architecture\",\"status\":\"Granted\",\"applicantNames\":[\"Australian Solar Energy Research Pty Ltd\"],\"inventorNames\":[\"Jane Smith\",\"Alex Chen\"],\"filingDate\":\"2020-01-15\",\"ipcClasses\":[\"H01L 31/04\",\"H01L 31/078\"]},{\"ipRightIdentifier\":\"2021204512\",\"applicationNumber\":\"2021204512\",\"title\":\"Bifacial Photovoltaic Array Tracking Control Method\",\"status\":\"Published\",\"applicantNames\":[\"University of New South Wales\"],\"inventorNames\":[\"David Patel\"],\"filingDate\":\"2021-06-29\",\"ipcClasses\":[\"H02S 20/32\"]}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

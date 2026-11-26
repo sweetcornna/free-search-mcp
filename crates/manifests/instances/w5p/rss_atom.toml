@@ -1,0 +1,133 @@
+protocol = "rss_atom"
+
+[[instance]]
+id = "unicode_blog_rss"
+name = "Unicode Consortium Official Blog (Atom)"
+summary = "Official Unicode Consortium Atom feed covering Unicode Standard releases, CLDR locale data, emoji encoding, and internationalization."
+aliases = ["unicode blog", "unicode rss", "blog.unicode.org"]
+base_url = "https://blog.unicode.org/feeds/posts/summary?max-results=10"
+scopes = ["docs", "code"]
+caps = ["search", "harvest"]
+tier = 1
+probe = { op = "search", params = { limit = 5 }, min_results = 2 }
+
+[[instance]]
+id = "linux_foundation_rss"
+name = "The Linux Foundation Blog Feed"
+summary = "Official Linux Foundation RSS feed covering open-source standards, kernel/cloud-native governance, security, and research reports."
+aliases = ["linux foundation blog", "lf rss"]
+base_url = "https://www.linuxfoundation.org/blog/rss.xml"
+scopes = ["docs", "code", "news"]
+caps = ["search", "harvest"]
+tier = 1
+probe = { op = "search", params = { limit = 5 }, min_results = 2 }
+
+[[instance]]
+id = "pyfound_blog_rss"
+name = "Python Software Foundation News (Atom)"
+summary = "Official Python Software Foundation Atom feed announcing Python ecosystem governance, grants, packaging standards, and community releases."
+aliases = ["psf blog", "python software foundation rss"]
+base_url = "https://pyfound.blogspot.com/feeds/posts/summary?max-results=10"
+scopes = ["code", "docs", "news"]
+caps = ["search", "harvest"]
+tier = 1
+probe = { op = "search", params = { limit = 5 }, min_results = 2 }
+
+[[instance]]
+id = "esa_science_rss"
+name = "European Space Agency (ESA) Space News Feed"
+summary = "Official European Space Agency RSS feed reporting space science telescopes, planetary exploration, launchers, and Earth observation missions."
+aliases = ["esa news", "esa rss", "esa space science"]
+base_url = "https://www.esa.int/rss/latest-news-homepage.rss"
+scopes = ["news", "reference"]
+caps = ["search", "harvest"]
+tier = 1
+probe = { op = "search", params = { limit = 5 }, min_results = 2 }
+
+[[instance]]
+id = "mpg_research_rss"
+name = "Max Planck Society Research News Feed"
+summary = "Official Max Planck Society (MPG) English research RSS feed covering breakthroughs across physics, astronomy, biology, chemistry, and humanities."
+aliases = ["max planck rss", "mpg news", "max planck research"]
+base_url = "https://www.mpg.de/en/research.rss"
+scopes = ["news", "reference"]
+caps = ["search", "harvest"]
+tier = 1
+probe = { op = "search", params = { limit = 5 }, min_results = 2 }
+
+[[instance]]
+id = "cnrs_news_rss"
+name = "CNRS News (French National Centre for Scientific Research)"
+summary = "Official English-language RSS feed from France's CNRS covering fundamental science discoveries, environment, physics, and humanities."
+aliases = ["cnrs rss", "news.cnrs.fr"]
+base_url = "https://news.cnrs.fr/rss"
+scopes = ["news", "reference"]
+caps = ["search", "harvest"]
+tier = 1
+probe = { op = "search", params = { limit = 5 }, min_results = 2 }
+
+[[instance]]
+id = "nsf_news_rss"
+name = "US National Science Foundation (NSF) News Feed"
+summary = "Official US National Science Foundation RSS feed covering major federally funded research discoveries and science funding policy announcements."
+aliases = ["nsf rss", "nsf news"]
+base_url = "https://www.nsf.gov/rss/rss_www_news.xml"
+scopes = ["news", "gov", "reference"]
+caps = ["search", "harvest"]
+tier = 1
+probe = { op = "search", params = { limit = 5 }, min_results = 2 }
+
+[[instance]]
+id = "fda_press_rss"
+name = "US FDA Press Announcements Feed"
+summary = "Official US Food and Drug Administration RSS feed for drug and biologic approvals, clinical safety alerts, and biomedical regulatory decisions."
+aliases = ["fda rss", "fda press releases"]
+base_url = "https://www.fda.gov/about-fda/contact-fda/stay-informed/rss-feeds/press-releases/rss.xml"
+scopes = ["news", "gov", "reference"]
+caps = ["search", "harvest"]
+tier = 1
+probe = { op = "search", params = { limit = 5 }, min_results = 2 }
+
+[[instance]]
+id = "ema_news_rss"
+name = "European Medicines Agency (EMA) News Feed"
+summary = "Official European Medicines Agency RSS feed covering EU medicinal product recommendations, vaccine guidance, and pharmacovigilance."
+aliases = ["ema rss", "ema news", "european medicines agency"]
+base_url = "https://www.ema.europa.eu/en/news.xml"
+scopes = ["news", "gov", "reference"]
+caps = ["search", "harvest"]
+tier = 1
+probe = { op = "search", params = { limit = 5 }, min_results = 2 }
+
+[[instance]]
+id = "ecdc_news_rss"
+name = "ECDC Epidemiological Updates Feed"
+summary = "European Centre for Disease Prevention and Control official RSS feed reporting infectious disease outbreaks and public health risk assessments."
+aliases = ["ecdc rss", "ecdc epidemiology"]
+base_url = "https://www.ecdc.europa.eu/en/taxonomy/term/1310/feed"
+scopes = ["news", "gov", "reference"]
+caps = ["search", "harvest"]
+tier = 1
+probe = { op = "search", params = { limit = 5 }, min_results = 2 }
+
+[[instance]]
+id = "yale_news_rss"
+name = "YaleNews Research Feed"
+summary = "Official Yale University RSS feed covering peer-reviewed biomedical, physical science, economics, AI, and humanities research announcements."
+aliases = ["yale news", "yale rss"]
+base_url = "https://news.yale.edu/news-rss"
+scopes = ["news", "reference"]
+caps = ["search", "harvest"]
+tier = 1
+probe = { op = "search", params = { limit = 5 }, min_results = 2 }
+
+[[instance]]
+id = "princeton_news_rss"
+name = "Princeton University News Feed"
+summary = "Official Princeton University RSS feed reporting faculty research breakthroughs, physics, computing, public policy, and institutional announcements."
+aliases = ["princeton news", "princeton rss"]
+base_url = "https://www.princeton.edu/feed"
+scopes = ["news", "reference"]
+caps = ["search", "harvest"]
+tier = 1
+probe = { op = "search", params = { limit = 5 }, min_results = 2 }

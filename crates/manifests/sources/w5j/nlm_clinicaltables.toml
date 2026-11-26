@@ -1,0 +1,99 @@
+id = "nlm_clinicaltables"
+name = "NLM Clinical Tables Search API"
+summary = "US NLM millisecond search across ICD-10-CM diagnosis codes, HPO human phenotypes, LOINC lab codes, RxTerms, and medical conditions."
+aliases = ["clinicaltables", "icd10cm", "hpo", "loinc", "nlm coding"]
+home_url = "https://clinicaltables.nlm.nih.gov"
+tier = 1
+scopes = ["academic.biomed", "reference"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 5.0, burst = 10, concurrency = 4, timeout_ms = 6000, cache_ttl_s = 86400, host_bucket = "clinicaltables.nlm.nih.gov" }
+
+[op.search]
+summary = "Search NLM ICD-10-CM clinical diagnosis codes and descriptions."
+method = "GET"
+url = "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { sf = "code,name" }
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "diabetes", limit = 3 }, min_results = 2, fixture = "fixtures/w5j/nlm_clinicaltables/search/default.json" }
+examples = ["source.call('nlm_clinicaltables.search', { query: 'diabetes', limit: 5 })"]
+
+[op.search.params]
+query = { type = "string", required = true, to = "terms", doc = "Diagnosis keyword or ICD-10-CM code prefix" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "maxList", doc = "Maximum matching codes" }
+offset = { type = "int", default = 0, min = 0, to = "offset", doc = "0-based result offset" }
+
+[op.search.map]
+items = "[range(0; ((.[1] // []) | length)) as $i | {code: .[1][$i], display: (.[3][$i] // [])}][]"
+total = ".[0]"
+record = '''{
+  code: (.code // ""),
+  label: (if ((.display | length) > 1 and (.display[0] == .code)) then (.display[1] // .code) else ((.display | join(" — ")) // .code) end),
+  display: (.display // []),
+  url: "https://clinicaltables.nlm.nih.gov/apidoc/icd10cm/v3/doc.html"
+}'''
+hit = '''{
+  title: ((.code // "") + (if ((.display | length) > 1 and (.display[0] == .code)) then (" — " + (.display[1] // "")) elif ((.display | length) > 0 and (.display[0] != .code)) then (" — " + (.display | join(" "))) else "" end)),
+  url: "https://clinicaltables.nlm.nih.gov/apidoc/icd10cm/v3/doc.html",
+  snippet: ((.display // []) | join(" · ")),
+  date: null,
+  dateSource: "api"
+}'''
+
+[op.conditions]
+summary = "Search NLM Medical Conditions table with ICD-10-CM codes and synonyms."
+method = "GET"
+url = "https://clinicaltables.nlm.nih.gov/api/conditions/v3/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { ef = "primary_name,icd10cm_codes,synonyms" }
+probe = { params = { query = "asthma", limit = 3 }, min_results = 2, fixture = "fixtures/w5j/nlm_clinicaltables/conditions/default.json" }
+examples = ["source.call('nlm_clinicaltables.conditions', { query: 'asthma', limit: 5 })"]
+
+[op.conditions.params]
+query = { type = "string", required = true, to = "terms", doc = "Medical condition name or synonym" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "maxList", doc = "Maximum matching conditions" }
+
+[op.conditions.map]
+items = "[range(0; ((.[1] // []) | length)) as $i | {id: .[1][$i], primaryName: (.[2].primary_name[$i] // .[3][$i][0] // \"\"), icd10cm: (.[2].icd10cm_codes[$i] // null), synonyms: (.[2].synonyms[$i] // [])}][]"
+total = ".[0]"
+record = '''{
+  id: (.id // ""),
+  name: (.primaryName // ""),
+  icd10cm: (.icd10cm // null),
+  synonyms: (.synonyms // []),
+  url: "https://clinicaltables.nlm.nih.gov/apidoc/conditions/v3/doc.html"
+}'''
+
+[op.table]
+summary = "Search any NLM Clinical Tables vocabulary (HPO human phenotypes, LOINC, RxTerms, NCBI genes, procedures)."
+method = "GET"
+url = "https://clinicaltables.nlm.nih.gov/api/{table}/v3/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { table = "hpo", query = "ataxia", limit = 3 }, min_results = 2, fixture = "fixtures/w5j/nlm_clinicaltables/table/default.json" }
+examples = ["source.call('nlm_clinicaltables.table', { table: 'hpo', query: 'ataxia', limit: 5 })"]
+
+[op.table.params]
+table = { type = "string", default = "hpo", enum = ["hpo", "loinc_items", "rxterms", "ncbi_genes", "procedures"], in = "path", doc = "Clinical Tables vocabulary identifier" }
+query = { type = "string", required = true, to = "terms", doc = "Term, phenotype, or code query" }
+search_fields = { type = "string", to = "sf", doc = "Optional comma-separated search fields override" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "maxList", doc = "Maximum matching entries" }
+offset = { type = "int", default = 0, min = 0, to = "offset", doc = "0-based offset" }
+
+[op.table.map]
+items = "@ref:op.search.map.items"
+total = "@ref:op.search.map.total"
+record = '''{
+  code: (.code // ""),
+  label: (if ((.display | length) > 1 and (.display[0] == .code)) then (.display[1] // .code) else ((.display | join(" — ")) // .code) end),
+  display: (.display // []),
+  url: ("https://clinicaltables.nlm.nih.gov/apidoc/" + ($p.table // "hpo") + "/v3/doc.html")
+}'''

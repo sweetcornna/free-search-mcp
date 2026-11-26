@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "ipaustralia_patents",
+  "op": "patent",
+  "recordedAt": "2026-11-25T12:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://production.api.ipaustralia.gov.au/public/australian-patent-search-api/v1/patent/2020100000",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ]
+        ],
+        "bodyText": "{\"ipRightIdentifier\":\"2020100000\",\"applicationNumber\":\"2020100000\",\"patentType\":\"Standard\",\"title\":\"High-Efficiency Perovskite-Silicon Tandem Solar Cell Architecture\",\"abstract\":\"A monolithic perovskite-silicon tandem solar cell incorporating a textured interfacial passivation layer that reduces non-radiative recombination losses and improves long-term damp-heat stability.\",\"status\":\"Granted\",\"filingDate\":\"2020-01-15\",\"publicationDate\":\"2021-07-22\",\"grantDate\":\"2023-03-09\",\"applicantNames\":[\"Australian Solar Energy Research Pty Ltd\"],\"inventorNames\":[\"Jane Smith\",\"Alex Chen\"],\"ipcClasses\":[\"H01L 31/04\",\"H01L 31/078\"]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

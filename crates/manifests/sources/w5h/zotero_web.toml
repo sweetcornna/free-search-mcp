@@ -1,0 +1,109 @@
+id = "zotero_web"
+name = "Zotero Web API v3"
+summary = "Zotero cloud reference library search, single-item metadata, and collections for public or personal libraries (optional personal API key for private libraries)."
+aliases = ["zotero", "zotero api", "zotero library"]
+home_url = "https://www.zotero.org/support/dev/web_api/v3/start"
+tier = 2
+scopes = ["academic"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 2.0, burst = 5, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 3600, host_bucket = "api.zotero.org" }
+
+[auth]
+mode = "optional"
+env = "SEARCH_MCP_ZOTERO_API_KEY"
+in = "header"
+name = "Zotero-API-Key"
+format = "{key}"
+route_requires_key = false
+
+[op.search]
+summary = "Search items in a Zotero user or group library (defaults to Zotero public test library users/475425)."
+method = "GET"
+url = "https://api.zotero.org/{library_type}/{user_id}/items"
+headers = { Accept = "application/json", "Zotero-API-Version" = "3" }
+response = "json"
+returns = "works"
+paginate = { style = "offset", param = "start", start = 0, max_pages = 3 }
+probe = { params = { user_id = "475425", query = "history", limit = 3 }, min_results = 2, fixture = "fixtures/w5h/zotero_web/search/default.json" }
+
+[op.search.params]
+library_type = { type = "string", default = "users", enum = ["users", "groups"], in = "path", doc = "Zotero library namespace: users or groups" }
+user_id = { type = "string", default = "475425", in = "path", doc = "Numeric Zotero user or group ID (defaults to public test library 475425)" }
+query = { type = "string", required = true, to = "q", doc = "Search query across title, creators, and year" }
+tag = { type = "string", to = "tag", doc = "Optional Zotero tag filter" }
+item_type = { type = "string", to = "itemType", doc = "Optional itemType filter e.g. journalArticle, book" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Items per page" }
+start = { type = "int", default = 0, min = 0, to = "start", doc = "0-based offset" }
+
+[op.search.map]
+items = ".[]"
+error = '''if (type == "object" and .error != null) then (.error | tostring) elif (type == "string" and length > 0) then . else null end'''
+work = '''(
+  (.data // {}) as $d |
+  ((if ($d.url // "") != "" then $d.url else null end) // .links.alternate.href // .links.self.href // "") as $url |
+  ((.meta.parsedDate // $d.date // null) | parse_date) as $pdate |
+  {
+    title: ($d.title // "" | collapse_ws),
+    authors: [($d.creators // [])[] | {
+      name: ((if (.name // "") != "" then .name else ([(.firstName // ""), (.lastName // "")] | map(select(length > 0)) | join(" ")) end) | collapse_ws)
+    } | select(.name != "")],
+    year: (((($pdate // $d.date // "") | tostring | if test("[0-9]{4}") then (capture("(?<y>[0-9]{4})").y) else "" end)) | to_int),
+    publishedDate: (if ($pdate | type) == "string" and ($pdate | length) >= 7 then $pdate else null end),
+    venue: ((if ($d.publicationTitle // "") != "" then $d.publicationTitle elif ($d.publisher // "") != "" then $d.publisher else null end) | collapse_ws),
+    workType: ($d.itemType // "article"),
+    ids: { doi: ((if ($d.DOI // "") != "" then $d.DOI else null end) | doi_norm) },
+    abstractText: (if ($d.abstractNote // "") != "" then ($d.abstractNote | strip_tags) else null end),
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["zotero_web"]
+  }
+)'''
+
+[op.item]
+summary = "Fetch a single Zotero item by user or group ID and item key."
+method = "GET"
+url = "https://api.zotero.org/{library_type}/{user_id}/items/{item_key}"
+headers = { Accept = "application/json", "Zotero-API-Version" = "3" }
+response = "json"
+returns = "works"
+probe = { params = { user_id = "475425", item_key = "3RDD646E" }, min_results = 1, fixture = "fixtures/w5h/zotero_web/item/default.json" }
+
+[op.item.params]
+library_type = { type = "string", default = "users", enum = ["users", "groups"], in = "path", doc = "Zotero library namespace: users or groups" }
+user_id = { type = "string", default = "475425", in = "path", doc = "Numeric Zotero user or group ID" }
+item_key = { type = "string", required = true, in = "path", doc = "8-character Zotero item key e.g. 3RDD646E" }
+
+[op.item.map]
+items = "."
+error = "@ref:op.search.map.error"
+work = "@ref:op.search.map.work"
+
+[op.collections]
+summary = "List collections in a Zotero user or group library."
+method = "GET"
+url = "https://api.zotero.org/{library_type}/{user_id}/collections"
+headers = { Accept = "application/json", "Zotero-API-Version" = "3" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "start", start = 0, max_pages = 3 }
+probe = { params = { user_id = "475425", limit = 3 }, min_results = 2, fixture = "fixtures/w5h/zotero_web/collections/default.json" }
+
+[op.collections.params]
+library_type = { type = "string", default = "users", enum = ["users", "groups"], in = "path", doc = "Zotero library namespace: users or groups" }
+user_id = { type = "string", default = "475425", in = "path", doc = "Numeric Zotero user or group ID" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Collections per page" }
+start = { type = "int", min = 0, to = "start", doc = "Optional 0-based offset" }
+
+[op.collections.map]
+items = ".[]"
+error = "@ref:op.search.map.error"
+record = '''{
+  key: (.key // ""),
+  name: (.data.name // ""),
+  parentCollection: (if (.data.parentCollection | type) == "string" then .data.parentCollection else null end),
+  numItems: (.meta.numItems // 0),
+  url: (.links.alternate.href // "")
+}'''

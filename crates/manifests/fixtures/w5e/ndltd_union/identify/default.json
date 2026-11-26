@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "source": "ndltd_union",
+  "op": "identify",
+  "recordedAt": "2026-11-25T12:13:54Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://union.ndltd.org/oai-pmh/?verb=Identify",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/xml; charset=utf-8"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\"\n         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n         xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/\n         http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd\">\n  <responseDate>2026-11-25T12:13:53Z</responseDate>\n  <request>https://union.ndltd.org/oai-pmh/?verb=Identify</request>\n  <Identify><repositoryName>NDLTD Union Catalog</repositoryName><baseURL>https://union.ndltd.org/oai-pmh/</baseURL><protocolVersion>2.0</protocolVersion><adminEmail>admin@ndltd.org</adminEmail><earliestDatestamp>2026-11-16T04:28:42Z</earliestDatestamp><deletedRecord>persistent</deletedRecord><granularity>YYYY-MM-DDThh:mm:ssZ</granularity><description><oai-identifier xmlns=\"http://www.openarchives.org/OAI/2.0/oai-identifier\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/oai-identifier http://www.openarchives.org/OAI/2.0/oai-identifier.xsd\"><scheme>oai</scheme><repositoryIdentifier>union.ndltd.org</repositoryIdentifier><delimiter>:</delimiter><sampleIdentifier>oai:union.ndltd.org:repo:vt:oai:vtechworks.lib.vt.edu:10919/12345</sampleIdentifier></oai-identifier></description></Identify>\n</OAI-PMH>",
+        "bodyB64": null
+      }
+    }
+  ]
+}

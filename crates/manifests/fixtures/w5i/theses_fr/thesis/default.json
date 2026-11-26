@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "theses_fr",
+  "op": "thesis",
+  "recordedAt": "2026-11-25T12:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://theses.fr/api/v1/theses/recherche/?nombre=1&q=2023STRAB011",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "cache-control",
+            "no-cache, no-store, max-age=0, must-revalidate"
+          ],
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"totalHits\":1,\"took\":38,\"theses\":[{\"id\":\"2023STRAB011\",\"titrePrincipal\":\"Artificial intelligence in science : diffusion and impact\",\"titreEN\":\"Intelligence artificielle en science : diffusion et impact\",\"etabSoutenanceN\":\"Strasbourg\",\"etabSoutenancePpn\":\"131056549\",\"dateSoutenance\":\"23/06/2023\",\"datePremiereInscriptionDoctorat\":null,\"auteurs\":[{\"ppn\":\"279203926\",\"nom\":\"Pelletier\",\"prenom\":\"Pierre\"}],\"directeurs\":[{\"ppn\":\"193125463\",\"nom\":\"Bianchini\",\"prenom\":\"Stefano\"}],\"rapporteurs\":[{\"ppn\":\"07600290X\",\"nom\":\"Geuna\",\"prenom\":\"Aldo\"},{\"ppn\":\"250410389\",\"nom\":\"Pezzoni\",\"prenom\":\"Michele\"}],\"examinateurs\":[{\"ppn\":\"229669980\",\"nom\":\"Veugelers\",\"prenom\":\"Reinhilde\"},{\"ppn\":\"132138123\",\"nom\":\"Wolff\",\"prenom\":\"Sandrine\"},{\"ppn\":\"033931607\",\"nom\":\"Mairesse\",\"prenom\":\"Jacques\"}],\"president\":{\"ppn\":\"07600290X\",\"nom\":\"Geuna\",\"prenom\":\"Aldo\"},\"nnt\":\"2023STRAB011\",\"doi\":\"10.70675/fc43f61bz2953z4917zbc1fz2174eac43ee8\",\"discipline\":\"Sciences économiques\",\"status\":\"soutenue\",\"ecolesDoctorale\":[{\"ppn\":\"156507013\",\"nom\":\"École doctorale Augustin Cournot (Strasbourg ; 1995-....)\",\"type\":null}],\"partenairesDeRecherche\":[{\"ppn\":\"026362767\",\"nom\":\"Bureau d'économie théorique et appliquée (Strasbourg ; 1972-....)\",\"type\":\"Laboratoire\"}],\"sujets\":[{\"langue\":\"fr\",\"libelle\":\"Intelligence artificielle\"},{\"langue\":\"fr\",\"libelle\":\"Equipes scientifiques\"},{\"langue\":\"fr\",\"libelle\":\"Adoption de l'IA\"},{\"langue\":\"fr\",\"libelle\":\"Nouveauté combinatoire\"},{\"langue\":\"fr\",\"libelle\":\"Impact Scientifique\"},{\"langue\":\"en\",\"libelle\":\"Artificial intelligence\"},{\"langue\":\"en\",\"libelle\":\"Scientific teams\"},{\"langue\":\"en\",\"libelle\":\"AI adoption\"},{\"langue\":\"en\",\"libelle\":\"Combinatorial novelty\"},{\"langue\":\"en\",\"libelle\":\"Scientific impact\"}],\"sujetsRameau\":[{\"ppn\":\"027234541\",\"libelle\":\"Intelligence artificielle\"},{\"ppn\":\"027315754\",\"libelle\":\"Recherche\"}]}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

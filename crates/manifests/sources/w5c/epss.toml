@@ -1,0 +1,67 @@
+id = "epss"
+name = "FIRST EPSS"
+summary = "Exploit Prediction Scoring System (FIRST.org) probability and percentile scores for CVEs."
+aliases = ["first epss", "exploit prediction"]
+home_url = "https://www.first.org/epss/"
+tier = 1
+scopes = ["security"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 3.0, burst = 6, concurrency = 2, timeout_ms = 6000, cache_ttl_s = 43200 }
+
+[op.search]
+summary = "Search EPSS scores by CVE substring or threshold filters."
+method = "GET"
+url = "https://api.first.org/data/v1/epss"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "2024-3094", limit = 3 }, min_results = 2, fixture = "fixtures/w5c/epss/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "CVE substring e.g. 2024-3094" }
+limit = { type = "int", default = 10, min = 1, max = 100, to = "limit", doc = "Max rows" }
+offset = { type = "int", min = 0, to = "offset", doc = "Offset" }
+epss_gt = { type = "float", min = 0.0, max = 1.0, to = "epss-gt", doc = "Minimum EPSS score (0..1)" }
+percentile_gt = { type = "float", min = 0.0, max = 1.0, to = "percentile-gt", doc = "Minimum percentile (0..1)" }
+
+[op.search.map]
+items = ".data[]"
+total = ".total"
+error = "if .status != \"OK\" then (.message // .status // \"EPSS error\") else null end"
+record = '''{
+  cve: .cve,
+  epss: (.epss | to_num),
+  percentile: (.percentile | to_num),
+  date: (.date | parse_date),
+  url: ("https://nvd.nist.gov/vuln/detail/" + (.cve // ""))
+}'''
+hit = '''
+(.date | parse_date) as $dt |
+{
+  title: ("\(.cve) EPSS \(.epss)"),
+  url: ("https://nvd.nist.gov/vuln/detail/" + (.cve // "")),
+  snippet: ("EPSS probability \(.epss) · percentile \(.percentile) · scored \(.date // "")"),
+  date: $dt,
+  dateSource: (if $dt != null then "api" else null end)
+}'''
+
+[op.cve]
+summary = "Look up exact EPSS score for one or more comma-separated CVE IDs."
+method = "GET"
+url = "https://api.first.org/data/v1/epss"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { cve = "CVE-2024-3094" }, min_results = 1, fixture = "fixtures/w5c/epss/cve/default.json" }
+
+[op.cve.params]
+cve = { type = "string", required = true, to = "cve", doc = "CVE ID or comma-separated list of CVE IDs" }
+
+[op.cve.map]
+items = ".data[]"
+error = "@ref:op.search.map.error"
+record = "@ref:op.search.map.record"
+hit = "@ref:op.search.map.hit"

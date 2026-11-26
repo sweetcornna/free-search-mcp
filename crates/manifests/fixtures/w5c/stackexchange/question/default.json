@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "stackexchange",
+  "op": "question",
+  "recordedAt": "2026-11-25T15:02:31Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.stackexchange.com/2.3/questions/45600579?filter=withbody&site=stackoverflow",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"items\":[{\"tags\":[\"python\",\"python-asyncio\",\"python-3.5\"],\"owner\":{\"account_id\":8650873,\"reputation\":1293,\"user_id\":6520128,\"user_type\":\"registered\",\"profile_image\":\"https://www.gravatar.com/avatar/3febe3657f0b78812f5fe6b2222ed1b7?s=256&d=identicon&r=PG&f=y&so-version=2\",\"display_name\":\"TryingToTry\",\"link\":\"https://stackoverflow.com/users/6520128/tryingtotry\"},\"is_answered\":true,\"view_count\":199398,\"accepted_answer_id\":45600858,\"answer_count\":3,\"score\":137,\"last_activity_date\":1642529363,\"creation_date\":1502312506,\"last_edit_date\":1616435548,\"question_id\":45600579,\"content_license\":\"CC BY-SA 4.0\",\"link\":\"https://stackoverflow.com/questions/45600579/asyncio-event-loop-is-closed-when-getting-loop\",\"title\":\"&quot;Asyncio Event Loop is Closed&quot; when getting loop\",\"body\":\"<p>When trying to run the asyncio hello world code example given in the docs:</p>\\n\\n<pre><code>import asyncio\\n\\nasync def hello_world():\\n    print(\\\"Hello World!\\\")\\n\\nloop = asyncio.get_event_loop()\\n# Blocking call which returns when the hello_world() coroutine is done\\nloop.run_until_complete(hello_world())\\nloop.close()\\n</code></pre>\\n\\n<p>I get the error: </p>\\n\\n<pre><code>RuntimeError: Event loop is closed\\n</code></pre>\\n\\n<p>I am using python 3.5.3.</p>\\n\"}],\"has_more\":false,\"quota_max\":300,\"quota_remaining\":293}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

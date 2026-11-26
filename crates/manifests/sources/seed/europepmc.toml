@@ -1,0 +1,193 @@
+id = "europepmc"
+name = "Europe PMC"
+summary = "EMBL-EBI archive of 40M+ life-science articles and preprints with abstracts, citations, and open-access full text."
+aliases = ["epmc", "europe pmc", "ebi europepmc"]
+home_url = "https://europepmc.org"
+tier = 1
+scopes = ["academic", "academic.biomed", "academic.preprint", "academic.openaccess"]
+caps = ["search", "lookup", "graph", "fulltext"]
+transport = "plain"
+pool_role = "default"
+limits = { rps = 5.0, burst = 10, concurrency = 4, timeout_ms = 20000, cache_ttl_s = 21600, host_bucket = "www.ebi.ac.uk" }
+
+[op.search]
+summary = "Search Europe PMC articles and preprints with full core metadata."
+method = "GET"
+url = "https://www.ebi.ac.uk/europepmc/webservices/rest/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+const_query = { format = "json", resultType = "core" }
+query_jaq = '''(
+  if $cfg.freshness != null then
+    (if $cfg.freshness == "day" then 1 elif $cfg.freshness == "week" then 7 elif $cfg.freshness == "month" then 31 else 366 end) as $days |
+    (now | floor) as $now_s |
+    (($now_s | epoch_to_iso)[0:10]) as $end_d |
+    ((($now_s - ($days * 86400)) | epoch_to_iso)[0:10]) as $start_d |
+    [["query", ($p.query + " AND (FIRST_PDATE:[" + $start_d + " TO " + $end_d + "])")]]
+  else
+    [["query", $p.query]]
+  end
+)'''
+paginate = { style = "cursor", param = "cursorMark", max_pages = 3 }
+probe = { params = { query = "crispr", limit = 3 }, min_results = 2, fixture = "fixtures/seed/europepmc/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, in = "none", doc = "Europe PMC query (supports fielded clauses like SRC:PPR or OPEN_ACCESS:Y)" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "pageSize", doc = "Maximum articles to return" }
+cursor = { type = "string", to = "cursorMark", doc = "Pagination cursor mark" }
+sort = { type = "string", to = "sort", doc = "Optional sort clause, e.g. CITED desc or P_PDATE_D desc" }
+
+[op.search.map]
+items = "(.resultList.result // [])[] | select((.title // \"\") != \"\")"
+total = ".hitCount // null"
+next_cursor = ".nextCursorMark // null"
+error = "if .errMsg then .errMsg else null end"
+work = '''(
+  (.doi | doi_norm) as $doi |
+  (.citedByCount | to_int) as $cites |
+  ((.fullTextUrlList.fullTextUrl // []) | map(select(.availabilityCode == "OA" and ((.url // "") | startswith("http"))))) as $oa_urls |
+  (([$oa_urls[] | select(.documentStyle == "html") | .url][0]) // ([$oa_urls[] | select(.documentStyle == "pdf") | .url][0]) // null) as $oa_best |
+  (([$oa_urls[] | select(.documentStyle == "pdf") | .url][0]) // null) as $oa_pdf |
+  (if (.source // "") != "" and (.id // "") != "" then ("https://europepmc.org/article/" + .source + "/" + (.id | tostring)) elif $doi != null then ("https://doi.org/" + $doi) else "" end) as $rec_url |
+  {
+    title: ((.title // "") | sub("\\.$"; "") | strip_tags | collapse_ws),
+    authors: (
+      if (.authorList.author // [] | length) > 0 then
+        [.authorList.author[] | {
+          name: (
+            if (.fullName // "") != "" then .fullName
+            elif ([.firstName, .lastName] | map(select(type == "string" and length > 0)) | length) > 0 then
+              ([.firstName, .lastName] | map(select(type == "string" and length > 0)) | join(" "))
+            else (.collectiveName // "")
+            end
+          ),
+          orcid: (([(.authorId // null) | select(type == "object" and .type == "ORCID") | .value][0]) // null),
+          affiliation: (.authorAffiliationDetailsList.authorAffiliation[0]?.affiliation // .affiliation // null)
+        } | select(.name != "")]
+      elif (.authorString // "") != "" then
+        [.authorString | split(", ")[] | { name: (. | sub("\\.$"; "") | collapse_ws) } | select(.name != "")]
+      else [] end
+    ),
+    year: ((.pubYear // ((.firstPublicationDate // "")[0:4])) | to_int),
+    publishedDate: (.firstPublicationDate | parse_date),
+    venue: (.journalInfo.journal.title // .journalTitle // .bookOrReportDetails.publisher // null),
+    workType: (if .source == "PPR" then "preprint" else "article" end),
+    ids: {
+      doi: $doi,
+      pmid: (if (.pmid // "") != "" then (.pmid | tostring) elif .source == "MED" and (.id // "") != "" then (.id | tostring) else null end),
+      pmcid: (.pmcid // null)
+    },
+    abstractText: (if (.abstractText // "") != "" then (.abstractText | strip_tags | collapse_ws) else null end),
+    citedBy: $cites,
+    citedBySource: (if $cites != null then "europepmc" else null end),
+    oa: (if (.isOpenAccess == "Y") or ($oa_best != null) then {
+      status: "green",
+      url: ($oa_best // $rec_url),
+      pdfUrl: $oa_pdf,
+      structuredFormat: (if (.pmcid // "") != "" then "jats" else null end)
+    } else null end),
+    retracted: false,
+    versions: [],
+    url: ($oa_best // $rec_url),
+    sources: ["europepmc"]
+  }
+)'''
+
+[op.work]
+summary = "Look up a single Europe PMC work by PMID, PMCID, or DOI query (e.g. EXT_ID:25315507)."
+method = "GET"
+url = "https://www.ebi.ac.uk/europepmc/webservices/rest/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+const_query = { format = "json", resultType = "core", pageSize = "1" }
+probe = { params = { query = "EXT_ID:25315507" }, min_results = 1, fixture = "fixtures/seed/europepmc/work/default.json" }
+
+[op.work.params]
+query = { type = "string", required = true, to = "query", doc = "Identifier query, e.g. EXT_ID:25315507 or DOI:10.1038/nature12373" }
+
+[op.work.map]
+items = "@ref:op.search.map.items"
+error = "@ref:op.search.map.error"
+work = "@ref:op.search.map.work"
+
+[op.citations]
+summary = "Fetch papers citing a Europe PMC record (by source code e.g. MED and article ID)."
+method = "GET"
+url = "https://www.ebi.ac.uk/europepmc/webservices/rest/{source}/{id}/citations"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+const_query = { format = "json" }
+probe = { params = { source = "MED", id = "25315507", limit = 3 }, min_results = 1, fixture = "fixtures/seed/europepmc/citations/default.json" }
+
+[op.citations.params]
+source = { type = "string", default = "MED", in = "path", doc = "Europe PMC source code (MED, PMC, PPR, etc.)" }
+id = { type = "string", required = true, in = "path", doc = "Article ID within the source (e.g. PMID 25315507)" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "pageSize", doc = "Maximum citing papers" }
+
+[op.citations.map]
+items = "(.citationList.citation // [])[] | select((.title // \"\") != \"\")"
+total = ".hitCount // null"
+work = '''(
+  (if (.source // "") != "" and (.id // "") != "" then ("https://europepmc.org/article/" + .source + "/" + (.id | tostring)) else "" end) as $rec_url |
+  (.citedByCount | to_int) as $cites |
+  {
+    title: ((.title // "") | sub("\\.$"; "") | strip_tags | collapse_ws),
+    authors: (if (.authorString // "") != "" then [.authorString | split(", ")[] | { name: (. | sub("\\.$"; "") | collapse_ws) } | select(.name != "")] else [] end),
+    year: (.pubYear | to_int),
+    venue: (.journalAbbreviation // null),
+    workType: "article",
+    ids: {
+      pmid: (if .source == "MED" and (.id // "") != "" then (.id | tostring) else null end)
+    },
+    citedBy: $cites,
+    citedBySource: (if $cites != null then "europepmc" else null end),
+    retracted: false,
+    versions: [],
+    url: $rec_url,
+    sources: ["europepmc"]
+  }
+)'''
+
+[op.references]
+summary = "Fetch papers referenced by a Europe PMC record (by source code e.g. MED and article ID)."
+method = "GET"
+url = "https://www.ebi.ac.uk/europepmc/webservices/rest/{source}/{id}/references"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+const_query = { format = "json" }
+probe = { params = { source = "MED", id = "23903748", limit = 3 }, min_results = 1, fixture = "fixtures/seed/europepmc/references/default.json" }
+
+[op.references.params]
+source = { type = "string", default = "MED", in = "path", doc = "Europe PMC source code (MED, PMC, PPR, etc.)" }
+id = { type = "string", required = true, in = "path", doc = "Article ID within the source (e.g. PMID 23903748)" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "pageSize", doc = "Maximum referenced papers" }
+
+[op.references.map]
+items = "(.referenceList.reference // [])[] | select((.title // \"\") != \"\")"
+total = ".hitCount // null"
+work = '''(
+  (.doi | doi_norm) as $doi |
+  (if (.source // "") != "" and (.id // "") != "" then ("https://europepmc.org/article/" + .source + "/" + (.id | tostring)) elif $doi != null then ("https://doi.org/" + $doi) else "" end) as $rec_url |
+  (.citedByCount | to_int) as $cites |
+  {
+    title: ((.title // "") | sub("\\.$"; "") | strip_tags | collapse_ws),
+    authors: (if (.authorString // "") != "" then [.authorString | split(", ")[] | { name: (. | sub("\\.$"; "") | collapse_ws) } | select(.name != "")] else [] end),
+    year: (.pubYear | to_int),
+    venue: (.journalAbbreviation // null),
+    workType: "article",
+    ids: {
+      doi: $doi,
+      pmid: (if .source == "MED" and (.id // "") != "" then (.id | tostring) else null end)
+    },
+    citedBy: $cites,
+    citedBySource: (if $cites != null then "europepmc" else null end),
+    retracted: false,
+    versions: [],
+    url: $rec_url,
+    sources: ["europepmc"]
+  }
+)'''

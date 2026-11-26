@@ -1,0 +1,162 @@
+<!-- MHonArc v2.6.19+ -->
+<!--X-Subject: Re: Unable to close a file descriptor using exec command -->
+<!--X-From-R13: Uert Ibbyrqtr &#60;tertNjbbyrqtr.bet> -->
+<!--X-Date: Sun, 03 Mar 2024 19:06:05 &#45;0500 -->
+<!--X-Message-Id: ZeUQXVtRYzTi6HAH@wooledge.org -->
+<!--X-Content-Type: text/plain -->
+<!--X-Reference: SA2PR08MB6828E8780779BC2FD90B8A96E25C2@SA2PR08MB6828.namprd08.prod.outlook.com -->
+<!--X-Head-End-->
+<!doctype html public "-//W3C//DTD HTML//EN">
+<html>
+<head>
+<title>Re: Unable to close a file descriptor using exec command</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+<center>
+<table border=0 cellspacing=2 cellpadding=0 bgcolor="#000000">
+<tr><td><table border=0 bgcolor="#FFFFCC">
+<tr><td><big><b>bug-bash</b></big></td></tr></table></tr></table>
+<div class="nowrap">
+<small>[<a href="../"
+>Top</a>][<a href="/archive/html">All Lists</a>]</small>
+</div>
+<form method="get" action="/archive/cgi-bin/namazu.cgi">
+<input type="text" name="query" size="30">
+<input type="submit" name="submit" value="Search">
+<input type="hidden" name="idxname" value="bug-bash">
+<a href="/archive/cgi-bin/namazu.cgi?idxname=bug-bash">Advanced</a>
+</form>
+
+</center>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00000.html">Date Prev</a>][<a href="msg00002.html">Date Next</a>][<a href="msg00000.html">Thread Prev</a>][<a href="msg00002.html">Thread Next</a>][<a
+href="index.html#00001">Date Index</a>][<a
+href="threads.html#00001">Thread Index</a>]
+
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h2>Re: Unable to close a file descriptor using exec command</h2>
+<hr>
+<table border=0>
+<tbody>
+<tr>
+<td align="right" valign="top">
+<b>From</b>: </td>
+<td align="left">
+Greg Wooledge</td>
+</tr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+
+<tr>
+<td align="right" valign="top">
+<b>Subject</b>: </td>
+<td align="left">
+Re: Unable to close a file descriptor using exec command</td>
+</tr>
+
+<tr>
+<td align="right" valign="top">
+<b>Date</b>: </td>
+<td align="left">
+Sun, 3 Mar 2024 19:05:49 -0500</td>
+</tr>
+
+</tbody>
+</table>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>On Sun, Mar 03, 2024 at 10:29:17PM +0000, Venkat Raman via Bug reports for the 
+GNU Bourne Again SHell wrote:
+&gt;<i> Repeat-By:</i>
+&gt;<i>         exec 2&gt;&amp;test1 commands freezes the terminal and unable to close the </i>
+&gt;<i> fd.</i>
+&gt;<i> </i>
+&gt;<i> Fix:</i>
+&gt;<i>         [Is there a sane  way to close the fd?]</i>
+
+You're using the wrong syntax.
+
+To open a file (for writing + truncation):  exec 2&gt;file
+
+To open a file (for appending):  exec 2&gt;&gt;file
+
+To close a file descriptor:  exec 2&gt;&amp;-
+
+
+The command that you ran (exec 2&gt;&amp;test1) redirects stderr which is
+normally opened to the terminal.  In order to get it back, you would
+need to do something like  exec 2&gt;&amp;1   assuming stdout has not been
+altered yet.
+
+The shell prompt is normally written to stderr, so you won't see the
+prompt until stderr is restored.
+
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<form method="post" action="/mp/yyz.py" enctype="multipart/form-data">
+<input type="hidden" name="a" value="greg">
+<input type="hidden" name="b" value="Re: Unable to close a file descriptor using exec command">
+<input type="hidden" name="d" value="ZeUQXVtRYzTi6HAH@wooledge.org">
+<input type="hidden" name="c" value="wooledge.org">
+<center>reply via email to<br><input type="submit" value=" Greg Wooledge "></center>
+</form>
+<hr>
+<table width="100%">
+<tr><td align="left">[<a href="msg00000.html">Prev in Thread</a>]</td>
+<td align="center"><b>Current Thread</b></td>
+<td align="right">[Next in Thread]</td></tr></table>
+<ul>
+<li><b><a name="00000" href="msg00000.html">Unable to close a file descriptor using exec command</a></b>, <i>Venkat Raman</i>, <tt>2024/03/03</tt>
+<ul>
+<li><font color="#666666"><strong>Re: Unable to close a file descriptor using exec command</strong>,
+<em>Greg Wooledge</em></font>&nbsp;<b>&lt;=</b>
+</li>
+</ul>
+</li>
+</ul>
+
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00000.html">Unable to close a file descriptor using exec command</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00002.html">Re: malloc: ../bash-5.2.21/dispose_cmd.c:249: assertion botched</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00000.html">Unable to close a file descriptor using exec command</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00002.html">Re: malloc: ../bash-5.2.21/dispose_cmd.c:249: assertion botched</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="index.html#00001"><strong>Date</strong></a></li>
+<li><a href="threads.html#00001"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

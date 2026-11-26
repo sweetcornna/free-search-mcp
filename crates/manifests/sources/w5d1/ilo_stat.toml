@@ -1,0 +1,139 @@
+id = "ilo_stat"
+name = "ILOSTAT Labour Statistics"
+summary = "International Labour Organization employment, unemployment, wages, and working-time indicators via SDMX and RPlumber."
+aliases = ["ilostat", "ilo", "oit", "labour statistics", "labor statistics", "unemployment global"]
+home_url = "https://ilostat.ilo.org"
+tier = 1
+scopes = ["finance", "dataset"]
+caps = ["lookup", "dataset"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 10000, cache_ttl_s = 43200 }
+
+[op.dataflows]
+summary = "List or filter ILOSTAT SDMX dataflows by keyword (client-side filter over official allstubs catalog)."
+method = "GET"
+url = "https://sdmx.ilo.org/rest/dataflow/ILO"
+headers = { Accept = "application/vnd.sdmx.structure+json;version=1.0" }
+response = "json"
+returns = "records"
+const_query = { detail = "allstubs" }
+probe = { params = { query = "unemployment" }, min_results = 5, fixture = "fixtures/w5d1/ilo_stat/dataflows/default.json" }
+
+[op.dataflows.params]
+query = { type = "string", in = "none", doc = "Optional case-insensitive substring filter over dataflow ID or name e.g. unemployment, wage" }
+
+[op.dataflows.map]
+items = '''
+(($p.query // "") | ascii_downcase) as $q
+| (.data.dataflows // [])[]
+| select($q == "" or (((.id // "") + " " + (.name // .names.en // "")) | ascii_downcase | contains($q)))
+'''
+error = "@ref:op.data.map.error"
+record = '''{
+  id: .id,
+  name: (.name // .names.en // .id),
+  version: (.version // null),
+  agency: (.agencyID // "ILO"),
+  url: ("https://data.ilo.org/vis?df[ds]=data-provider-ilo&df[id]=" + (.id | sub("^DF_"; "")))
+}'''
+
+[op.data]
+summary = "Fetch SDMX-JSON labour observations from an ILOSTAT dataflow (e.g. flow=DF_UNE_DEAP_SEX_AGE_RT, key=USA.A..SEX_T.AGE_YTHADULT_YGE15)."
+method = "GET"
+url = "https://sdmx.ilo.org/rest/data/ILO,{flow}/{key}"
+headers = { Accept = "application/vnd.sdmx.data+json;version=1.0" }
+response = "json"
+returns = "records"
+probe = { params = { flow = "DF_UNE_DEAP_SEX_AGE_RT", key = "USA.A..SEX_T.AGE_YTHADULT_YGE15", limit = 3 }, min_results = 2, fixture = "fixtures/w5d1/ilo_stat/data/default.json" }
+
+[op.data.params]
+flow = { type = "string", required = true, in = "path", doc = "ILOSTAT SDMX dataflow ID e.g. DF_UNE_DEAP_SEX_AGE_RT" }
+key = { type = "string", required = true, in = "path", encode = "raw", doc = "SDMX dimension filter key e.g. USA.A..SEX_T.AGE_YTHADULT_YGE15" }
+limit = { type = "int", default = 10, min = 1, max = 100, to = "lastNObservations", doc = "Most recent observations per series" }
+start = { type = "string", to = "startPeriod", doc = "Start year e.g. 2020" }
+end = { type = "string", to = "endPeriod", doc = "End year" }
+
+[op.data.map]
+items = '''
+.data as $d
+| ($d.structure // $d.structures[0]) as $st
+| ($st.dimensions.series // []) as $sdims
+| ($st.attributes.series // []) as $sattrs
+| ($st.dimensions.observation[0].values // []) as $periods
+| ($d.dataSets[0].series // {}) | to_entries[]
+| (.key | split(":") | map(tonumber)) as $idx
+| (.value.attributes // []) as $aidx
+| (reduce range(0; ($sdims | length)) as $i ({}; . + { ($sdims[$i].id): ($sdims[$i].values[$idx[$i]].id // null) })) as $dims
+| (reduce range(0; ($sattrs | length)) as $i ({};
+    if ($aidx[$i] != null) then
+      ($sattrs[$i].values[$aidx[$i]]? | (.id // .name // null)) as $v
+      | if ($v != null) then (. + { ($sattrs[$i].id): $v }) else . end
+    else . end
+  )) as $attrs
+| .value.observations | to_entries[]
+| {
+    seriesName: ($st.name // null),
+    dimensions: $dims,
+    attributes: $attrs,
+    period: ($periods[.key | tonumber].id // .key),
+    value: ((.value[0] | to_num) // .value[0])
+  }
+'''
+error = 'if (.errors? | type == "array" and length > 0) then (.errors[0].message // (.errors[0] | tostring)) else null end'
+record = "."
+
+[op.dataflow]
+summary = "Fetch ILOSTAT dataflow title and description by ID."
+method = "GET"
+url = "https://sdmx.ilo.org/rest/dataflow/ILO/{flow}"
+headers = { Accept = "application/vnd.sdmx.structure+json;version=1.0" }
+response = "json"
+returns = "records"
+probe = { params = { flow = "DF_UNE_DEAP_SEX_AGE_RT" }, min_results = 1, fixture = "fixtures/w5d1/ilo_stat/dataflow/default.json" }
+
+[op.dataflow.params]
+flow = { type = "string", required = true, in = "path", doc = "ILOSTAT dataflow ID e.g. DF_UNE_DEAP_SEX_AGE_RT" }
+
+[op.dataflow.map]
+items = "(.data.dataflows // [])[]"
+error = "@ref:op.data.map.error"
+record = '''{
+  id: .id,
+  name: (.name // .names.en // .id),
+  version: (.version // null),
+  description: (.description | strip_tags),
+  url: ("https://data.ilo.org/vis?df[ds]=data-provider-ilo&df[id]=" + (.id | sub("^DF_"; "")))
+}'''
+
+[op.indicator]
+summary = "Fetch flat JSON observations for an ILOSTAT table ID via RPlumber (filter ref_area/timefrom/timeto to stay within the 200-row stream cap)."
+method = "GET"
+url = "https://rplumber.ilo.org/data/indicator/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = ".json" }
+probe = { params = { id = "UNE_TUNE_SEX_AGE_NB_A", ref_area = "USA", sex = "SEX_T", timefrom = 2024, timeto = 2025 }, min_results = 2, fixture = "fixtures/w5d1/ilo_stat/indicator/default.json" }
+
+[op.indicator.params]
+id = { type = "string", required = true, to = "id", doc = "ILOSTAT table ID e.g. UNE_TUNE_SEX_AGE_NB_A" }
+ref_area = { type = "string", to = "ref_area", doc = "ISO-3 country code e.g. USA, DEU (recommended to bound rows)" }
+sex = { type = "string", enum = ["SEX_T", "SEX_M", "SEX_F"], to = "sex", doc = "Sex breakdown" }
+timefrom = { type = "int", to = "timefrom", doc = "Start year e.g. 2024 (recommended to bound rows)" }
+timeto = { type = "int", to = "timeto", doc = "End year e.g. 2025" }
+
+[op.indicator.map]
+items = ".[]"
+error = 'if (type == "object" and (.error // "") != "") then .error else null end'
+record = '''{
+  refArea: .ref_area,
+  indicator: .indicator,
+  source: (.source // null),
+  sex: (.sex // null),
+  classif1: (.classif1 // null),
+  classif2: (.classif2 // null),
+  period: .time,
+  value: .obs_value,
+  status: (.obs_status // null)
+}'''

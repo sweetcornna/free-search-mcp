@@ -1,0 +1,88 @@
+id = "winget_run"
+name = "winget.run Windows Package Index"
+summary = "Keyless REST JSON index of official Microsoft Windows Package Manager (winget) manifests and versions."
+aliases = ["winget", "windows packages", "winget.run"]
+home_url = "https://winget.run"
+tier = 1
+scopes = ["code"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 4, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 21600 }
+
+[op.search]
+summary = "Search Windows winget packages by name, publisher, or tag via winget.run v2 API."
+method = "GET"
+url = "https://api.winget.run/v2/packages"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 0, max_pages = 3 }
+probe = { params = { query = "ripgrep", limit = 3 }, min_results = 2, fixture = "fixtures/w5l/winget_run/search/default.json" }
+examples = [
+  'source.call("winget_run.search", { query: "ripgrep", limit: 5 })',
+]
+
+[op.search.params]
+query = { type = "string", required = true, to = "query", doc = "Package name, publisher, or keyword" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "take", doc = "Packages per page" }
+page = { type = "int", min = 0, to = "page", doc = "0-based page index" }
+
+[op.search.map]
+items = "(.Packages // [])[]"
+total = ".Total"
+error = "if .error then (.error | tostring) else null end"
+record = '''(
+  ("https://winget.run/pkg/" + ((.Id // "") | sub("\\."; "/"))) as $url |
+  {
+    id: (.Id // ""),
+    name: (.Latest.Name // .Id // ""),
+    publisher: (.Latest.Publisher // ""),
+    description: ((.Latest.Description // "") | collapse_ws // ""),
+    homepage: (.Latest.Homepage // null),
+    license: (.Latest.License // null),
+    licenseUrl: (.Latest.LicenseUrl // null),
+    tags: (.Latest.Tags // []),
+    latestVersion: ((.Versions // [])[0] // null),
+    versions: (.Versions // []),
+    updatedAt: (.updatedAt // .UpdatedAt // .createdAt // null),
+    url: $url
+  }
+)'''
+hit = '''(
+  ("https://winget.run/pkg/" + ((.Id // "") | sub("\\."; "/"))) as $url |
+  {
+    title: ((.Latest.Name // .Id // "") + " (" + (.Id // "") + ")"),
+    url: $url,
+    snippet: (
+      [
+        (if (.Latest.Description // "") != "" then (.Latest.Description | collapse_ws // "") else null end),
+        (if (.Versions // [])[0] then ("v" + (.Versions[0])) else null end),
+        (if (.Latest.Publisher // "") != "" then ("by " + .Latest.Publisher) else null end)
+      ] | map(select(. != null)) | join(" · ")
+    )[0:280],
+    date: ((.updatedAt // .UpdatedAt // .createdAt // null) | parse_date),
+    dateSource: "api"
+  }
+)'''
+
+[op.package]
+summary = "Look up full winget manifest metadata for a package by publisher and package name."
+method = "GET"
+url = "https://api.winget.run/v2/packages/{publisher}/{name}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { publisher = "BurntSushi", name = "ripgrep.GNU" }, min_results = 1, fixture = "fixtures/w5l/winget_run/package/default.json" }
+examples = [
+  'source.call("winget_run.package", { publisher: "BurntSushi", name: "ripgrep.GNU" })',
+]
+
+[op.package.params]
+publisher = { type = "string", required = true, in = "path", doc = "winget publisher segment (before first dot, e.g. BurntSushi)" }
+name = { type = "string", required = true, in = "path", doc = "winget package name segment (after first dot, e.g. ripgrep.GNU)" }
+
+[op.package.map]
+items = "if .Package then .Package else empty end"
+error = "@ref:op.search.map.error"
+record = "@ref:op.search.map.record"

@@ -1,0 +1,91 @@
+id = "steam_store"
+name = "Steam Store PC Games Search API"
+summary = "Keyless official Steam Store catalog search and detailed PC game pricing, discounts, platforms, and Metacritic scores."
+aliases = ["steam", "steampowered", "pc games"]
+home_url = "https://store.steampowered.com"
+tier = 1
+scopes = ["media"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.5, burst = 4, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 21600 }
+
+[op.search]
+summary = "Search Steam Store PC games, DLCs, and apps by title."
+method = "GET"
+url = "https://store.steampowered.com/api/storesearch/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+examples = ['source.call("steam_store.search", { query: "portal", cc: "US" })']
+probe = { params = { query = "portal", lang = "english", cc = "US" }, min_results = 2, fixture = "fixtures/w5n/steam_store/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "term", doc = "Game or app title" }
+lang = { type = "string", default = "english", to = "l", doc = "Steam language (e.g. english, schinese, japanese)" }
+cc = { type = "string", default = "US", doc = "ISO-2 country code for store currency and pricing" }
+
+[op.search.map]
+items = "(.items // [])[]"
+total = ".total"
+record = '''{
+  appid: .id,
+  type: (.type // "app"),
+  name: (.name // ""),
+  currency: (.price.currency // null),
+  initialPriceCents: (.price.initial // null),
+  finalPriceCents: (.price.final // null),
+  metascore: (.metascore | to_int),
+  platforms: (.platforms // {}),
+  controllerSupport: (.controller_support // null),
+  url: ("https://store.steampowered.com/app/" + (.id | tostring))
+}'''
+hit = '''{
+  title: (.name // "Steam App"),
+  url: ("https://store.steampowered.com/app/" + (.id | tostring)),
+  snippet: ([
+    (if .price then ((.price.currency // "") + " " + (((.price.final // 0) / 100) | tostring)) else "Free / Unpriced" end),
+    (if (.metascore | to_int) != null then ("Metascore " + (.metascore | tostring)) else empty end),
+    (if .platforms.windows then "Windows" else empty end),
+    (if .platforms.mac then "macOS" else empty end),
+    (if .platforms.linux then "Linux" else empty end)
+  ] | join(" · "))
+}'''
+
+[op.app]
+summary = "Fetch full Steam app details, description, developers, publishers, genres, and price by Steam AppID."
+method = "GET"
+url = "https://store.steampowered.com/api/appdetails"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+examples = ['source.call("steam_store.app", { appid: 620, cc: "US" })']
+probe = { params = { appid = 620, lang = "english", cc = "US" }, min_results = 1, fixture = "fixtures/w5n/steam_store/app/default.json" }
+
+[op.app.params]
+appid = { type = "int", required = true, to = "appids", doc = "Numeric Steam AppID (e.g. 620 for Portal 2)" }
+lang = { type = "string", default = "english", to = "l", doc = "Steam language" }
+cc = { type = "string", default = "US", doc = "ISO-2 country code for pricing" }
+
+[op.app.map]
+items = "[.[] | select(.success == true) | .data][]"
+error = "if ([.[] | select(.success == true)] | length) == 0 then \"Steam app not found\" else null end"
+record = '''{
+  appid: .steam_appid,
+  name: (.name // ""),
+  type: (.type // null),
+  isFree: (.is_free // false),
+  developers: (.developers // []),
+  publishers: (.publishers // []),
+  releaseDate: (.release_date.date // null),
+  releaseDateIso: (.release_date.date | parse_date),
+  comingSoon: (.release_date.coming_soon // false),
+  priceFormatted: (.price_overview.final_formatted // null),
+  discountPercent: (.price_overview.discount_percent // 0),
+  metacriticScore: (.metacritic.score // null),
+  genres: [(.genres // [])[] | .description],
+  platforms: (.platforms // {}),
+  shortDescription: ((.short_description | strip_tags) // ""),
+  website: (.website // null),
+  url: ("https://store.steampowered.com/app/" + (.steam_appid | tostring))
+}'''

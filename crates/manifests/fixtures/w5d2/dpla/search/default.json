@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "dpla",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:14:49Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.dp.la/v2/items?page_size=3&q=railroad",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"count\": 142839, \"start\": 0, \"limit\": 3, \"docs\": [{\"id\": \"58923a1a8c20579e01331c265bf86961\", \"isShownAt\": \"https://digitalcollections.nypl.org/items/510d47de-3543-a3d9-e040-e00a18064a99\", \"dataProvider\": \"New York Public Library\", \"provider\": {\"name\": \"New York Public Library\"}, \"sourceResource\": {\"title\": [\"Map of the Union Pacific Railroad and connections\"], \"creator\": [\"Colton, G. W.\"], \"date\": [{\"displayDate\": \"1869\", \"begin\": \"1869\", \"end\": \"1869\"}], \"description\": [\"Railroad route map across the western United States.\"], \"type\": [\"image\"]}}, {\"id\": \"9a1c4b2d8e0f11223344556677889900\", \"isShownAt\": \"https://www.loc.gov/item/2004672601/\", \"dataProvider\": \"Library of Congress\", \"provider\": {\"name\": \"Library of Congress\"}, \"sourceResource\": {\"title\": [\"Joining the rails at Promontory Point, Utah\"], \"creator\": [\"Russell, Andrew J.\"], \"date\": [{\"displayDate\": \"1869-05-10\", \"begin\": \"1869-05-10\", \"end\": \"1869-05-10\"}], \"description\": [\"East and West shaking hands at laying of last rail of the First Transcontinental Railroad.\"], \"type\": [\"image\"]}}, {\"id\": \"3c7e9f012a4b6c8d0e1f2a3b4c5d6e7f\", \"isShownAt\": \"https://calisphere.org/item/ark:/13030/tf12345678/\", \"dataProvider\": \"California Historical Society\", \"provider\": {\"name\": \"California Digital Library\"}, \"sourceResource\": {\"title\": [\"Central Pacific Railroad construction in the Sierra Nevada\"], \"creator\": [\"Hart, Alfred A.\"], \"date\": [{\"displayDate\": \"1867\", \"begin\": \"1867\", \"end\": \"1867\"}], \"description\": [\"Stereograph view of trestle construction along the Central Pacific line.\"], \"type\": [\"image\"]}}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

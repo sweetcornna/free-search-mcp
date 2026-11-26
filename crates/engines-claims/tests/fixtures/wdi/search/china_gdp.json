@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "source": "wdi",
+  "op": "search",
+  "recordedAt": "2026-11-25T10:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.worldbank.org/v2/country/CHN/indicator/NY.GDP.MKTP.CD?format=json&mrv=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          ["content-type", "application/json"]
+        ],
+        "bodyText": "[{\"page\":1,\"pages\":1,\"per_page\":50,\"total\":3,\"sourceid\":\"2\",\"lastupdated\":\"2026-07-13\"},[{\"indicator\":{\"id\":\"NY.GDP.MKTP.CD\",\"value\":\"GDP (current US$)\"},\"country\":{\"id\":\"CN\",\"value\":\"China\"},\"countryiso3code\":\"CHN\",\"date\":\"2025\",\"value\":19498039388042.6},{\"indicator\":{\"id\":\"NY.GDP.MKTP.CD\",\"value\":\"GDP (current US$)\"},\"country\":{\"id\":\"CN\",\"value\":\"China\"},\"countryiso3code\":\"CHN\",\"date\":\"2024\",\"value\":18729668435848},{\"indicator\":{\"id\":\"NY.GDP.MKTP.CD\",\"value\":\"GDP (current US$)\"},\"country\":{\"id\":\"CN\",\"value\":\"China\"},\"countryiso3code\":\"CHN\",\"date\":\"2023\",\"value\":null}]]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

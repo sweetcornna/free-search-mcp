@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "fr_entreprises",
+  "op": "siren",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://recherche-entreprises.api.gouv.fr/search?per_page=1&q=982770919",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"results\":[{\"siren\":\"982770919\",\"siren_conserve\":null,\"nom_complet\":\"RENAULT\",\"nom_raison_sociale\":\"RENAULT\",\"sigle\":null,\"nombre_etablissements\":2,\"nombre_etablissements_ouverts\":2,\"siege\":{\"a_opco\":false,\"activite_principale\":\"70.10Z\",\"activite_principale_naf25\":\"70.10Y\",\"activite_principale_registre_metier\":null,\"annee_tranche_effectif_salarie\":null,\"adresse\":\"4 RUE DU BAS DE LA VILLE 76450 VITTEFLEUR\",\"caractere_employeur\":\"N\",\"cedex\":null,\"code_pays_etranger\":null,\"code_postal\":\"76450\",\"commune\":\"76748\",\"complement_adresse\":null,\"coordonnees\":\"49.819770643,0.6328443843\",\"date_creation\":\"2023-12-21\",\"date_debut_activite\":\"2023-12-21\",\"date_fermeture\":null,\"date_mise_a_jour\":null,\"date_mise_a_jour_insee\":\"2025-12-06T00:17:07\",\"departement\":\"76\",\"distribution_speciale\":null,\"epci\":\"200069839\",\"est_siege\":true,\"etat_administratif\":\"A\",\"geo_adresse\":null,\"geo_id\":null,\"indice_repetition\":null,\"latitude\":\"49.819770643\",\"libelle_cedex\":null,\"libelle_commune\":\"VITTEFLEUR\",\"libelle_commune_etranger\":null,\"libelle_pays_etranger\":null,\"libelle_voie\":\"DU BAS DE LA VILLE\",\"liste_enseignes\":null,\"liste_finess\":null,\"liste_id_bio\":[59635],\"liste_idcc\":null,\"liste_id_organisme_formation\":null,\"liste_rge\":null,\"liste_uai\":null,\"longitude\":\"0.6328443843\",\"nom_commercial\":null,\"numero_voie\":\"4\",\"dernier_numero_voie\":null,\"region\":\"28\",\"siret\":\"98277091900016\",\"statut_diffusion_etablissement\":\"O\",\"tranche_effectif_salarie\":\"NN\",\"type_voie\":\"RUE\"},\"activite_principale\":\"01.13Z\",\"activite_principale_naf25\":\"01.13Y\",\"categorie_entreprise\":null,\"caractere_employeur\":null,\"annee_categorie_entreprise\":null,\"date_creation\":\"2023-12-21\",\"date_fermeture\":null,\"date_mise_a_jour\":\"2026-11-25T10:50:46\",\"date_mise_a_jour_insee\":\"2025-12-06T11:15:31\",\"date_mise_a_jour_rne\":\"2026-10-09T17:00:00\",\"dirigeants\":[{\"nom\":\"RENAULT (LECOSSOIS)\",\"prenoms\":\"FANNY NATHALIE CHRISTINE\",\"annee_de_naissance\":\"1991\",\"date_de_naissance\":\"1991-09\",\"qualite\":\"Gérant\",\"nationalite\":null,\"type_dirigeant\":\"personne physique\"},{\"nom\":\"RENAULT\",\"prenoms\":\"WILLIAM JOHN RÉMI\",\"annee_de_naissance\":\"1991\",\"date_de_naissance\":\"1991-01\",\"qualite\":\"Gérant\",\"nationalite\":null,\"type_dirigeant\":\"personne physique\"}],\"etat_administratif\":\"A\",\"nature_juridique\":\"5499\",\"section_activite_principale\":\"A\",\"tranche_effectif_salarie\":\"03\",\"annee_tranche_effectif_salarie\":\"2024\",\"statut_diffusion\":\"O\",\"opposition_diffusion_commerciale\":true,\"matching_etablissements\":[],\"finances\":null,\"complements\":{\"collectivite_territoriale\":null,\"convention_collective_renseignee\":true,\"liste_idcc\":[\"7024\"],\"liste_finess_juridique\":null,\"numero_rnf\":null,\"egapro_renseignee\":false,\"est_achats_responsables\":false,\"est_alim_confiance\":false,\"est_association\":false,\"est_avocat\":false,\"est_bio\":true,\"est_entrepreneur_individuel\":false,\"est_entrepreneur_spectacle\":false,\"est_ess\":false,\"est_finess\":false,\"est_organisme_formation\":false,\"est_qualiopi\":false,\"liste_id_organisme_formation\":null,\"est_rge\":false,\"est_siae\":false,\"est_societe_mission\":false,\"est_uai\":false,\"est_patrimoine_vivant\":false,\"bilan_ges_renseigne\":false,\"identifiant_association\":null,\"statut_entrepreneur_spectacle\":null,\"type_siae\":null,\"a_aide_minimis\":false,\"a_aide_ademe\":false,\"est_administration\":false,\"est_service_public\":null,\"est_l100_3\":null},\"tva\":[\"FR00982770919\"]}],\"total_results\":1,\"page\":1,\"per_page\":1,\"total_pages\":1}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

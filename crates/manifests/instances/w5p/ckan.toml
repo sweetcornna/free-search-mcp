@@ -1,0 +1,89 @@
+protocol = "ckan"
+
+[[instance]]
+id = "data_nsw_au"
+name = "Data.NSW (New South Wales Open Data)"
+summary = "Australian state of New South Wales open government data catalog covering transport, environment, planning, and public services."
+aliases = ["nsw open data", "data.nsw.gov.au", "new south wales data"]
+base_url = "https://data.nsw.gov.au/data"
+scopes = ["dataset", "gov"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "transport", limit = 3 }, min_results = 1 }
+
+[[instance]]
+id = "depositar_tw"
+name = "depositar (Academia Sinica Research Data)"
+summary = "Taiwan Academia Sinica multidisciplinary open research and geospatial data repository built on CKAN."
+aliases = ["depositar", "academia sinica data", "data.depositar.io"]
+base_url = "https://data.depositar.io"
+scopes = ["dataset", "academic", "reference.geo"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "climate", limit = 3 }, min_results = 1 }
+
+[[instance]]
+id = "datos_gob_cl"
+name = "Datos.gob.cl (Chile National Open Data)"
+summary = "Chilean national open government data portal indexing public statistics, health, environment, education, and finance datasets."
+aliases = ["chile open data", "datos.gob.cl"]
+base_url = "https://datos.gob.cl"
+scopes = ["dataset", "gov"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "salud", limit = 3 }, min_results = 1 }
+
+[[instance]]
+id = "uruguay_datos"
+name = "Catálogo Nacional de Datos Abiertos (Uruguay)"
+summary = "Uruguayan national open government data catalog covering public health, economy, transport, energy, and territorial statistics."
+aliases = ["uruguay open data", "catalogodatos.gub.uy", "datos abiertos uruguay"]
+base_url = "https://catalogodatos.gub.uy"
+scopes = ["dataset", "gov"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "salud", limit = 3 }, min_results = 1 }
+
+[[instance]]
+id = "toronto_open_data"
+name = "City of Toronto Open Data"
+summary = "City of Toronto municipal open data catalog covering transit, housing, public health, civic budgets, and urban infrastructure."
+aliases = ["toronto data", "open.toronto.ca"]
+base_url = "https://ckan0.cf.opendata.inter.prod-toronto.ca"
+scopes = ["dataset", "gov"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "transit", limit = 3 }, min_results = 1 }
+
+[[instance]]
+id = "boston_open_data"
+name = "Analyze Boston (City of Boston Open Data)"
+summary = "City of Boston municipal open data portal covering housing, planning, public safety, budgets, and neighborhood indicators."
+aliases = ["analyze boston", "boston data", "data.boston.gov"]
+base_url = "https://data.boston.gov"
+scopes = ["dataset", "gov"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "housing", limit = 3 }, min_results = 1 }
+
+[[instance]]
+id = "munich_open_data"
+name = "Open Data München (City of Munich)"
+summary = "City of Munich municipal open data portal covering urban mobility, demographics, environment, elections, and public services."
+aliases = ["munich open data", "muenchen open data", "opendata.muenchen.de"]
+base_url = "https://opendata.muenchen.de"
+scopes = ["dataset", "gov"]
+caps = ["search", "lookup", "dataset"]
+tier = 2
+probe = { op = "search", params = { query = "verkehr", limit = 3 }, min_results = 1 }
+
+[[instance]]
+id = "open_africa_ckan"
+name = "openAFRICA"
+summary = "Pan-African open data repository indexing economic, public health, election, climate, and demographic datasets across African nations."
+aliases = ["openafrica", "open.africa", "africa open data"]
+base_url = "https://open.africa"
+scopes = ["dataset", "gov"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "health", limit = 3 }, min_results = 1 }

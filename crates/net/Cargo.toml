@@ -1,0 +1,52 @@
+[package]
+name = "fsm-net"
+description = "Dual HTTP stack (reqwest+rustls/ring, wreq Chrome emulation), SSRF guard, rate limits, ReplayNet."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+fsm-core.workspace = true
+reqwest.workspace = true
+rustls.workspace = true
+rustls-platform-verifier.workspace = true
+webpki-roots.workspace = true
+wreq.workspace = true
+wreq-util.workspace = true
+async-compression.workspace = true
+governor.workspace = true
+moka.workspace = true
+http-cache-semantics.workspace = true
+hickory-resolver.workspace = true
+ipnet.workspace = true
+idna.workspace = true
+url.workspace = true
+http.workspace = true
+bytes.workspace = true
+tokio.workspace = true
+tokio-util.workspace = true
+futures.workspace = true
+async-trait.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+base64.workspace = true
+sha2.workspace = true
+hex.workspace = true
+percent-encoding.workspace = true
+tracing.workspace = true
+rand.workspace = true
+regex.workspace = true
+glob.workspace = true
+jiff.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }
+tempfile.workspace = true
+wiremock.workspace = true
+insta.workspace = true

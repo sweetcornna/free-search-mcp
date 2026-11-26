@@ -1,0 +1,70 @@
+id = "bls_public"
+name = "US Bureau of Labor Statistics API"
+summary = "Official US BLS macroeconomic time series for CPI inflation, unemployment rate, nonfarm payrolls, and wages (keyless 25 req/day; optional free key lifts to 500 req/day)."
+aliases = ["bls", "bureau of labor statistics", "us cpi", "nonfarm payrolls"]
+home_url = "https://www.bls.gov/developers/"
+tier = 1
+scopes = ["finance"]
+caps = ["lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 21600 }
+
+[auth]
+mode = "optional"
+env = "SEARCH_MCP_BLS_API_KEY"
+in = "query"
+name = "registrationkey"
+format = "{key}"
+route_requires_key = false
+
+[op.series]
+summary = "Fetch observations for a BLS series ID (e.g. CUUR0000SA0 CPI-U, LNS14000000 unemployment, CES0000000001 nonfarm payrolls)."
+method = "GET"
+url = "https://api.bls.gov/publicAPI/v2/timeseries/data/{series_id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { series_id = "CUUR0000SA0", start_year = "2024", end_year = "2025" }, min_results = 5, fixture = "fixtures/w5m/bls_public/series/default.json" }
+examples = ["source.call('bls_public.series', { series_id: 'CUUR0000SA0', start_year: '2024', end_year: '2025' })"]
+
+[op.series.params]
+series_id = { type = "string", required = true, in = "path", doc = "BLS series ID e.g. CUUR0000SA0 (CPI-U), LNS14000000 (Unemployment Rate)" }
+start_year = { type = "string", to = "startyear", doc = "Optional 4-digit start year e.g. 2024" }
+end_year = { type = "string", to = "endyear", doc = "Optional 4-digit end year e.g. 2025" }
+
+[op.series.map]
+items = '''
+(.Results.series // [])[]
+| .seriesID as $sid
+| (.data // [])[]
+| {
+    seriesId: $sid,
+    year: (.year | to_int),
+    period: .period,
+    periodName: (.periodName // null),
+    value: (.value | (to_num // .)),
+    latest: (.latest == "true"),
+    footnotes: [(.footnotes // [])[] | select(.text != null) | .text]
+  }
+'''
+error = 'if (.status // "") != "REQUEST_SUCCEEDED" then ((.message // []) | if length > 0 then join("; ") else (.status // "BLS error") end) else null end'
+record = "."
+
+[op.popular]
+summary = "List the most popular official BLS macroeconomic series IDs (CPI, unemployment, payrolls, PPI)."
+method = "GET"
+url = "https://api.bls.gov/publicAPI/v2/timeseries/popular"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = {}, min_results = 5, fixture = "fixtures/w5m/bls_public/popular/default.json" }
+examples = ["source.call('bls_public.popular', {})"]
+
+[op.popular.map]
+items = "(.Results.series // [])[]"
+error = "@ref:op.series.map.error"
+record = '''{
+  seriesId: .seriesID,
+  url: ("https://data.bls.gov/timeseries/" + .seriesID)
+}'''

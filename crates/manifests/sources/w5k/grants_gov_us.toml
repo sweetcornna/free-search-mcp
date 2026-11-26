@@ -1,0 +1,105 @@
+id = "grants_gov_us"
+name = "Grants.gov US Federal Funding Opportunities"
+summary = "Official US federal government Grants.gov keyless POST JSON API for open and forecasted research funding opportunities (NOFOs/RFPs) across NIH, NSF, DOE, DOD, NOAA, and NASA."
+aliases = ["grants.gov", "us federal grants", "nofo"]
+home_url = "https://www.grants.gov"
+tier = 1
+scopes = ["academic", "academic.grants", "gov"]
+caps = ["search", "lookup", "grant"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.5, burst = 4, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 21600, host_bucket = "api.grants.gov" }
+
+[op.search]
+summary = "Search US federal funding opportunity announcements (NOFOs) via Grants.gov search2 POST API."
+method = "POST"
+url = "https://api.grants.gov/v1/api/search2"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+body = { kind = "json", jaq = "{ keyword: $p.query, oppStatuses: ($p.status // \"forecasted|posted\"), rows: ($p.limit // 10), startRecordNum: ($p.offset // 0) }" }
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "climate", status = "forecasted|posted", limit = 3, offset = 0 }, min_results = 2, fixture = "fixtures/w5k/grants_gov_us/search/default.json" }
+examples = ['source.call("grants_gov_us.search", { query: "climate", limit: 5 })']
+
+[op.search.params]
+query = { type = "string", required = true, in = "body", doc = "Funding opportunity search keywords" }
+status = { type = "string", default = "forecasted|posted", in = "body", doc = "Pipe-delimited statuses: forecasted, posted, closed, archived" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "body", doc = "Maximum opportunities returned" }
+offset = { type = "int", default = 0, min = 0, in = "body", doc = "0-based startRecordNum offset" }
+
+[op.search.map]
+items = "(.data.oppHits // [])[]"
+total = ".data.hitCount"
+error = "if (.errorcode // 0) != 0 then (.msg // \"Grants.gov API error\") else null end"
+record = '''(
+  def us_date:
+    if type == "string" and test("^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$") then
+      (split("/") | "\(.[2])-\(if (.[0]|length)==1 then "0"+.[0] else .[0] end)-\(if (.[1]|length)==1 then "0"+.[1] else .[1] end)")
+    else parse_date end;
+  {
+    id: ((.id // .number // "") | tostring),
+    title: ((.title // "") | collapse_ws),
+    funder: ((.agency // .agencyCode // "US Federal") | collapse_ws),
+    pi: null,
+    org: (.agency | collapse_ws),
+    amount: null,
+    currency: "USD",
+    startDate: (.openDate | us_date),
+    endDate: (.closeDate | us_date),
+    url: ("https://www.grants.gov/search-results-detail/" + ((.id // "") | tostring)),
+    source: "grants_gov_us"
+  }
+)'''
+hit = '''(
+  def us_date:
+    if type == "string" and test("^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$") then
+      (split("/") | "\(.[2])-\(if (.[0]|length)==1 then "0"+.[0] else .[0] end)-\(if (.[1]|length)==1 then "0"+.[1] else .[1] end)")
+    else parse_date end;
+  (.openDate | us_date) as $d |
+  (.closeDate | us_date) as $close |
+  {
+    title: ((.title // "") | collapse_ws),
+    url: ("https://www.grants.gov/search-results-detail/" + ((.id // "") | tostring)),
+    snippet: ([(.number // ""), ((.agency // .agencyCode // "") | collapse_ws), (.oppStatus // ""), (if $close != null then ("closes " + $close) else "" end)] | map(select(. != null and length > 0)) | join(" · ")),
+    date: $d,
+    dateSource: (if $d != null then "api" else null end)
+  }
+)'''
+
+[op.opportunity]
+summary = "Fetch full synopsis, eligibility, agency contact, and award ceiling/floor details for a Grants.gov opportunityId."
+method = "POST"
+url = "https://api.grants.gov/v1/api/fetchOpportunity"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+body = { kind = "json", jaq = "{ opportunityId: $p.opportunity_id }" }
+probe = { params = { opportunity_id = 357713 }, min_results = 1, fixture = "fixtures/w5k/grants_gov_us/opportunity/default.json" }
+examples = ['source.call("grants_gov_us.opportunity", { opportunity_id: 357713 })']
+
+[op.opportunity.params]
+opportunity_id = { type = "int", required = true, in = "body", doc = "Numeric Grants.gov opportunityId e.g. 357713" }
+
+[op.opportunity.map]
+items = ".data"
+error = "@ref:op.search.map.error"
+record = '''(
+  def mon_date:
+    if type == "string" then ((split(" ")[:3] | join(" ") | parse_date) // parse_date)
+    else null end;
+  {
+    id: ((.id // .opportunityNumber // "") | tostring),
+    title: ((.opportunityTitle // "") | collapse_ws),
+    funder: ((.synopsis.agencyName // .owningAgencyCode // "US Federal") | collapse_ws),
+    pi: null,
+    org: (.synopsis.agencyName | collapse_ws),
+    amount: ((.synopsis.awardCeiling | to_num) // (.synopsis.estimatedFunding | to_num)),
+    currency: "USD",
+    startDate: (.synopsis.postingDate | mon_date),
+    endDate: (.synopsis.responseDate | mon_date),
+    description: ((.synopsis.synopsisDesc // "") | strip_tags | if . != null and length > 0 then . else null end),
+    url: ("https://www.grants.gov/search-results-detail/" + ((.id // "") | tostring)),
+    source: "grants_gov_us"
+  }
+)'''

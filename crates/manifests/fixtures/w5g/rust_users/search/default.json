@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "rust_users",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:13:07Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://users.rust-lang.org/search.json?q=tokio-console+deadlock",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ],
+          [
+            "cache-control",
+            "no-cache, no-store"
+          ]
+        ],
+        "bodyText": "{\"posts\":[{\"id\":286972,\"name\":\"Florian\",\"username\":\"fschuetz\",\"avatar_template\":\"https://avatars.discourse-cdn.com/v4/letter/f/67e7ee/{size}.png\",\"created_at\":\"2022-01-10T09:18:04.294Z\",\"like_count\":0,\"blurb\":\"Sometimes staring long at the code makes you oversee the obvious ;-). Thanks for the hint with the type definition. I changed the data() function to use the BoxFuture. This made sense to me as I suspected the culprit to be block_on(). The suspicion was driven by the fact that the main busy waitin...\",\"post_number\":8,\"topic_id\":70029},{\"id\":536317,\"name\":\"CoderLegion.com\",\"username\":\"coderlegion\",\"avatar_template\":\"/user_avatar/users.rust-lang.org/coderlegion/{size}/48318_2.png\",\"created_at\":\"2025-07-13T05:28:33.803Z\",\"like_count\":0,\"blurb\":\"We're porting our Python WebSocket service (10k msg/s) to Rust/Tokio and hit a recurring wall: juniors writing async fn process( &amp; self) that fights the borrow checker when spawning tasks. Classic case: struct Processor { cache: RefCell &lt; HashMap &lt; u64, Data &gt; &gt; , // 🤦 } impl Processor { async fn...\",\"post_number\":1,\"topic_id\":131782},{\"id\":341919,\"name\":\"Jack Wrenn\",\"username\":\"jswrenn\",\"avatar_template\":\"/user_avatar/users.rust-lang.org/jswrenn/{size}/20061_2.png\",\"created_at\":\"2022-10-31T16:14:15.407Z\",\"like_count\":1,\"blurb\":\"https://tokio.rs/blog/2022-10-announcing-async-backtrace tokio.rs https://tokio.rs/blog/2022-10-announcing-async-backtrace Announcing async-backtrace | Tokio - An asynchronous Rust runtime Tokio is a runtime for writing reliable asynchronous applications with Rust. It provides async I/O, networki...\",\"post_number\":1,\"topic_id\":83510},{\"id\":554963,\"name\":\"Vladislav Sukhmel\",\"username\":\"sukhmel\",\"avatar_template\":\"/user_avatar/users.rust-lang.org/sukhmel/{size}/48484_2.png\",\"created_at\":\"2025-12-18T14:53:42.538Z\",\"like_count\":2,\"blurb\":\"Yeah, I also wanted it to become a learning experience, but now I have mixed feelings about it XD While trying to separate parts onto different executors (it turned out to require more effort than I thought, because lifetime requirements somehow changed and a lot of things broke at once) I spotte...\",\"post_number\":12,\"topic_id\":136911}],\"topics\":[{\"fancy_title\":\"Deadlock using Thrussh to build server\",\"id\":70029,\"title\":\"Deadlock using Thrussh to build server\",\"slug\":\"deadlock-using-thrussh-to-build-server\",\"posts_count\":9,\"reply_count\":6,\"highest_post_number\":9,\"created_at\":\"2022-01-09T00:10:24.778Z\",\"last_posted_at\":\"2022-01-11T12:40:39.627Z\",\"bumped\":true,\"bumped_at\":\"2022-01-11T12:40:39.627Z\",\"archetype\":\"regular\",\"unseen\":false,\"pinned\":false,\"unpinned\":null,\"visible\":true,\"closed\":true,\"archived\":false,\"bookmarked\":null,\"liked\":null,\"category_id\":5,\"has_accepted_answer\":true},{\"fancy_title\":\"Borrowing vs. Boxing in Async-heavy Code: How do you mentor juniors through lifetime hell?\",\"id\":131782,\"title\":\"Borrowing vs. Boxing in Async-heavy Code: How do you mentor juniors through lifetime hell?\",\"slug\":\"borrowing-vs-boxing-in-async-heavy-code-how-do-you-mentor-juniors-through-lifetime-hell\",\"posts_count\":2,\"reply_count\":0,\"highest_post_number\":2,\"created_at\":\"2025-07-13T05:28:33.745Z\",\"last_posted_at\":\"2025-07-13T14:43:12.908Z\",\"bumped\":true,\"bumped_at\":\"2025-07-13T14:43:12.908Z\",\"archetype\":\"regular\",\"unseen\":false,\"pinned\":false,\"unpinned\":null,\"visible\":true,\"closed\":true,\"archived\":false,\"bookmarked\":null,\"liked\":null,\"category_id\":8,\"has_accepted_answer\":false},{\"fancy_title\":\"Announcing async-backtrace\",\"id\":83510,\"title\":\"Announcing async-backtrace\",\"slug\":\"announcing-async-backtrace\",\"posts_count\":1,\"reply_count\":0,\"highest_post_number\":1,\"created_at\":\"2022-10-31T16:14:15.316Z\",\"last_posted_at\":\"2022-10-31T16:14:15.407Z\",\"bumped\":true,\"bumped_at\":\"2022-10-31T16:14:15.407Z\",\"archetype\":\"regular\",\"unseen\":false,\"pinned\":false,\"unpinned\":null,\"visible\":true,\"closed\":true,\"archived\":false,\"bookmarked\":null,\"liked\":null,\"category_id\":6,\"has_accepted_answer\":false},{\"fancy_title\":\"Need help finding thread starvation source\",\"id\":136911,\"title\":\"Need help finding thread starvation source\",\"slug\":\"need-help-finding-thread-starvation-source\",\"posts_count\":16,\"reply_count\":11,\"highest_post_number\":16,\"created_at\":\"2025-12-13T11:14:25.411Z\",\"last_posted_at\":\"2025-12-19T15:03:36.929Z\",\"bumped\":true,\"bumped_at\":\"2025-12-19T15:03:36.929Z\",\"archetype\":\"regular\",\"unseen\":false,\"pinned\":false,\"unpinned\":null,\"visible\":true,\"closed\":true,\"archived\":false,\"bookmarked\":null,\"liked\":null,\"category_id\":5,\"has_accepted_answer\":true}],\"users\":[],\"categories\":[],\"groups\":[],\"grouped_search_result\":{\"more_posts\":null,\"more_users\":null,\"more_categories\":null,\"term\":\"tokio-console deadlock\",\"search_log_id\":1426881,\"more_full_page_results\":null,\"can_create_topic\":false,\"error\":null,\"extra\":{},\"post_ids\":[286972,536317,341919,554963],\"user_ids\":[],\"category_ids\":[],\"group_ids\":[]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

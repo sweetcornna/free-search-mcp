@@ -1,0 +1,152 @@
+id = "gbif"
+name = "GBIF Biodiversity API"
+summary = "Global Biodiversity Information Facility taxonomic backbone and 3B+ species occurrence records."
+aliases = ["biodiversity", "species", "taxonomy"]
+home_url = "https://www.gbif.org"
+tier = 1
+scopes = ["dataset", "academic.biomed", "reference"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 5.0, burst = 10, concurrency = 4, timeout_ms = 6000, cache_ttl_s = 43200 }
+
+[op.search]
+summary = "Search species names and taxonomic records in GBIF."
+method = "GET"
+url = "https://api.gbif.org/v1/species/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "Quercus", limit = 3 }, min_results = 2, fixture = "fixtures/w5b/gbif/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Scientific or vernacular species name" }
+rank = { type = "string", enum = ["KINGDOM", "PHYLUM", "CLASS", "ORDER", "FAMILY", "GENUS", "SPECIES", "SUBSPECIES"], to = "rank", doc = "Optional taxonomic rank filter" }
+dataset_key = { type = "string", to = "datasetKey", doc = "Optional GBIF checklist dataset UUID (use d7dddbf4-2cf0-4f39-9b2a-bb099caae36c for GBIF Backbone)" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Results per page" }
+offset = { type = "int", min = 0, to = "offset", doc = "Pagination offset" }
+
+[op.search.map]
+items = ".results[]"
+total = ".count"
+record = '''{
+  key: (.key | to_int),
+  nubKey: (.nubKey | to_int),
+  scientificName: ((.scientificName // "") | collapse_ws),
+  canonicalName: ((.canonicalName // null) | collapse_ws),
+  rank: (.rank // null),
+  status: (.taxonomicStatus // null),
+  kingdom: (.kingdom // null),
+  phylum: (.phylum // null),
+  family: (.family // null),
+  genus: (.genus // null),
+  species: (.species // null),
+  url: ("https://www.gbif.org/species/" + (.key | tostring))
+}'''
+hit = '''{
+  title: ((.scientificName // .canonicalName // "") | collapse_ws),
+  url: ("https://www.gbif.org/species/" + (.key | tostring)),
+  snippet: ((((.rank // "") + " · " + (.taxonomicStatus // "") + " · " + ([(.kingdom // empty), (.family // empty), (.genus // empty)] | join(" > "))) | gsub("^ · | · $"; "")) | collapse_ws),
+  date: null,
+  dateSource: null
+}'''
+
+[op.match]
+summary = "Fuzzy-match a scientific name against the GBIF Backbone Taxonomy."
+method = "GET"
+url = "https://api.gbif.org/v1/species/match"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { name = "Quercus robur" }, min_results = 1, fixture = "fixtures/w5b/gbif/match/default.json" }
+
+[op.match.params]
+name = { type = "string", required = true, to = "name", doc = "Scientific name to match against the backbone taxonomy" }
+
+[op.match.map]
+items = 'select((.matchType // "NONE") != "NONE")'
+record = '''{
+  usageKey: (.usageKey | to_int),
+  scientificName: ((.scientificName // "") | collapse_ws),
+  canonicalName: ((.canonicalName // null) | collapse_ws),
+  rank: (.rank // null),
+  status: (.status // null),
+  matchType: (.matchType // null),
+  confidence: (.confidence | to_int),
+  kingdom: (.kingdom // null),
+  phylum: (.phylum // null),
+  order: (.order // null),
+  family: (.family // null),
+  genus: (.genus // null),
+  species: (.species // null),
+  url: (if .usageKey != null then ("https://www.gbif.org/species/" + (.usageKey | tostring)) else null end)
+}'''
+
+[op.species]
+summary = "Fetch a GBIF species/taxon record by numeric usage key."
+method = "GET"
+url = "https://api.gbif.org/v1/species/{key}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { key = "2878688" }, min_results = 1, fixture = "fixtures/w5b/gbif/species/default.json" }
+
+[op.species.params]
+key = { type = "string", required = true, in = "path", doc = "Numeric GBIF species usage key (e.g. 2878688)" }
+
+[op.species.map]
+items = "."
+record = '''{
+  key: (.key | to_int),
+  nubKey: (.nubKey | to_int),
+  scientificName: ((.scientificName // "") | collapse_ws),
+  canonicalName: ((.canonicalName // null) | collapse_ws),
+  vernacularName: ((.vernacularName // null) | collapse_ws),
+  authorship: (.authorship // null),
+  rank: (.rank // null),
+  status: (.taxonomicStatus // null),
+  kingdom: (.kingdom // null),
+  phylum: (.phylum // null),
+  class: (.class // null),
+  order: (.order // null),
+  family: (.family // null),
+  genus: (.genus // null),
+  species: (.species // null),
+  publishedIn: (.publishedIn // null),
+  datasetKey: (.datasetKey // null),
+  url: ("https://www.gbif.org/species/" + (.key | tostring))
+}'''
+
+[op.occurrences]
+summary = "Search georeferenced species occurrence observations in GBIF."
+method = "GET"
+url = "https://api.gbif.org/v1/occurrence/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { scientific_name = "Quercus robur", limit = 3 }, min_results = 2, fixture = "fixtures/w5b/gbif/occurrences/default.json" }
+
+[op.occurrences.params]
+scientific_name = { type = "string", required = true, to = "scientificName", doc = "Scientific name (e.g. Quercus robur)" }
+country = { type = "string", to = "country", doc = "Optional ISO 3166-1 alpha-2 country code" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Occurrences per page" }
+offset = { type = "int", min = 0, to = "offset", doc = "Pagination offset" }
+
+[op.occurrences.map]
+items = ".results[]"
+total = ".count"
+record = '''{
+  key: (.key | to_int),
+  scientificName: ((.scientificName // "") | collapse_ws),
+  species: (.species // null),
+  lat: (.decimalLatitude | to_num),
+  lon: (.decimalLongitude | to_num),
+  country: (.country // null),
+  countryCode: (.countryCode // null),
+  eventDate: ((.eventDate // null) | parse_date),
+  basisOfRecord: (.basisOfRecord // null),
+  datasetKey: (.datasetKey // null),
+  url: ("https://www.gbif.org/occurrence/" + (.key | tostring))
+}'''

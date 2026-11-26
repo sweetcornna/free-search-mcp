@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "census_us",
+  "op": "query",
+  "recordedAt": "2026-11-25T12:14:49Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.census.gov/data/2023/acs/acs5?for=state%3A06%2C36%2C48&get=NAME%2CB01001_001E",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "[[\"NAME\", \"B01001_001E\", \"state\"], [\"California\", \"39242785\", \"06\"], [\"New York\", \"19872319\", \"36\"], [\"Texas\", \"29640343\", \"48\"]]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

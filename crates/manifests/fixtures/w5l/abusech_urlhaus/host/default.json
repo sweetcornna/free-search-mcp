@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "abusech_urlhaus",
+  "op": "host",
+  "recordedAt": "2026-11-25T12:56:38Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://urlhaus-api.abuse.ch/v1/host/",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": "d65541ca8b45a9dd93f853ff5f27c2cc4cced20ae63d02859c5104287c363b65"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"query_status\": \"ok\", \"host\": \"vektorex.com\", \"urlhaus_reference\": \"https://urlhaus.abuse.ch/host/vektorex.com/\", \"firstseen\": \"2023-05-12 14:22:10 UTC\", \"url_count\": 2, \"urls\": [{\"id\": \"2654321\", \"urlhaus_reference\": \"https://urlhaus.abuse.ch/url/2654321/\", \"url\": \"http://vektorex.com/evil/payload.exe\", \"url_status\": \"offline\", \"date_added\": \"2023-05-12 14:22:10 UTC\", \"threat\": \"malware_download\", \"blacklists\": {\"spamhaus_dbl\": \"not listed\", \"surbl\": \"listed\"}, \"reporter\": \"abuse_user\", \"tags\": [\"exe\", \"trojan\"]}, {\"id\": \"2654399\", \"urlhaus_reference\": \"https://urlhaus.abuse.ch/url/2654399/\", \"url\": \"http://vektorex.com/bin/dropper.sh\", \"url_status\": \"offline\", \"date_added\": \"2023-05-13 09:11:04 UTC\", \"threat\": \"malware_download\", \"blacklists\": {\"spamhaus_dbl\": \"not listed\", \"surbl\": \"listed\"}, \"reporter\": \"abuse_user\", \"tags\": [\"sh\", \"mirai\"]}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

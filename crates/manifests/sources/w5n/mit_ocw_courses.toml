@@ -1,0 +1,103 @@
+id = "mit_ocw_courses"
+name = "MIT Open Learning / OCW Course Catalog"
+summary = "Keyless MIT Learn API v1 catalog covering MIT OpenCourseWare courses, lecture videos, syllabi, and open educational resources."
+aliases = ["mit ocw", "mit learn", "opencourseware", "mit courses"]
+home_url = "https://learn.mit.edu"
+tier = 1
+scopes = ["docs"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 43200 }
+
+[op.search]
+summary = "Search MIT Open Learning & OpenCourseWare courses, videos, and learning materials."
+method = "GET"
+url = "https://api.learn.mit.edu/api/v1/learning_resources_search/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+examples = ['source.call("mit_ocw_courses.search", { query: "algorithms", limit: 3 })']
+probe = { params = { query = "algorithms", limit = 3 }, min_results = 2, fixture = "fixtures/w5n/mit_ocw_courses/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Course, topic, or lecture search query" }
+platform = { type = "string", doc = "Optional platform code (e.g. ocw, mitxonline, xpro, oll)" }
+resource_type = { type = "string", doc = "Optional resource type (e.g. course, program, video, podcast)" }
+free = { type = "bool", doc = "Restrict to free open resources" }
+limit = { type = "int", default = 10, min = 1, max = 50, doc = "Maximum learning resources" }
+offset = { type = "int", min = 0, doc = "Pagination offset" }
+
+[op.search.map]
+items = "(.results // [])[]"
+total = ".count"
+error = "if .detail then .detail else null end"
+record = '''{
+  id: .id,
+  readableId: (.readable_id // null),
+  title: ((.title | collapse_ws) // ""),
+  resourceType: (.resource_type // null),
+  resourceCategory: (.resource_category // null),
+  platform: (.platform.name // .platform.code // null),
+  offeredBy: (.offered_by.name // null),
+  free: (.free // false),
+  licenseCc: (.license_cc // false),
+  topics: [(.topics // [])[] | .name],
+  departments: [(.departments // [])[] | .name],
+  lastModified: (.last_modified // null),
+  description: (((.description // .full_description) | strip_tags) // "" | if length > 400 then .[0:400] + "..." else . end),
+  url: (.url // .learn_url // "https://learn.mit.edu/")
+}'''
+hit = '''{
+  title: ((.title | collapse_ws) // "MIT Learning Resource"),
+  url: (.url // .learn_url // "https://learn.mit.edu/"),
+  snippet: ([
+    (.platform.name // empty),
+    (.resource_category // .resource_type // empty),
+    (if ((.topics // []) | length) > 0 then ([(.topics // [])[0:3][] | .name] | join(", ")) else empty end),
+    (((.description // .full_description) | strip_tags) // "" | if length > 180 then .[0:180] + "..." else . end | select(length > 0))
+  ] | join(" · ")),
+  date: (.last_modified | parse_date),
+  dateSource: (if (.last_modified | parse_date) != null then "api" else null end)
+}'''
+
+[op.courses]
+summary = "Browse MIT Open Learning resources filtered by platform (default MIT OpenCourseWare)."
+method = "GET"
+url = "https://api.learn.mit.edu/api/v1/learning_resources/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+examples = ['source.call("mit_ocw_courses.courses", { platform: "ocw", limit: 3 })']
+probe = { params = { platform = "ocw", limit = 3 }, min_results = 2, fixture = "fixtures/w5n/mit_ocw_courses/courses/default.json" }
+
+[op.courses.params]
+platform = { type = "string", default = "ocw", doc = "Platform code (e.g. ocw, oll, mitxonline)" }
+limit = { type = "int", default = 10, min = 1, max = 50, doc = "Maximum resources" }
+offset = { type = "int", min = 0, doc = "Pagination offset" }
+
+[op.courses.map]
+items = "(.results // [])[]"
+total = ".count"
+error = "if .detail then .detail else null end"
+record = "@ref:op.search.map.record"
+
+[op.resource]
+summary = "Fetch complete metadata for a single MIT Learn resource by numeric ID."
+method = "GET"
+url = "https://api.learn.mit.edu/api/v1/learning_resources/{id}/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+examples = ['source.call("mit_ocw_courses.resource", { id: 7072 })']
+probe = { params = { id = 7072 }, min_results = 1, fixture = "fixtures/w5n/mit_ocw_courses/resource/default.json" }
+
+[op.resource.params]
+id = { type = "int", required = true, in = "path", doc = "Numeric MIT Learn resource ID" }
+
+[op.resource.map]
+items = "."
+error = "if .detail then .detail else null end"
+record = "@ref:op.search.map.record"

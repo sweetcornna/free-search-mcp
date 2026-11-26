@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "source": "opentargets_graphql",
+  "op": "search",
+  "recordedAt": "2026-11-25T13:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://api.platform.opentargets.org/api/v4/graphql",
+        "headersSubset": {
+          "accept": "application/json",
+          "content-type": "application/json"
+        },
+        "bodySha256": "fcb5aa8c8435f907613ba5bb5299032b966831c747f2a7067f733bec5706b786"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"data\":{\"search\":{\"total\":1280,\"hits\":[{\"id\":\"ENSG00000012048\",\"entity\":\"target\",\"name\":\"BRCA1\",\"description\":\"BRCA1 DNA repair associated\",\"score\":5913.2734},{\"id\":\"MONDO_0003582\",\"entity\":\"disease\",\"name\":\"hereditary breast ovarian cancer syndrome\",\"description\":\"An autosomal dominant inherited syndrome caused by mutations in the BRCA1 or BRCA2 genes. Patients are at high risk of developing breast cancer, particularly before the age of fifty, high risk of developing a second primary breast cancer, and high risk of developing both breast and ovarian cancer.\",\"score\":3753.6445},{\"id\":\"MONDO_0700268\",\"entity\":\"disease\",\"name\":\"BRCA1-related cancer predisposition\",\"description\":\"Hereditary cancer predisposition due to variation(s) in the BRCA1 gene. Germline pathogenic or likely pathogenic variants in the BRCA1 gene confer an autosomal dominant predisposition to hereditary breast and ovarian cancer. Tumor formation at other sites, including pancreatic cancer have been described.\",\"score\":883.5943}]}}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,111 @@
+id = "crossref"
+name = "Crossref"
+summary = "DOI registration agency metadata for 160M+ published scholarly articles, proceedings, and preprints."
+aliases = ["crossref.org", "doi registry"]
+home_url = "https://www.crossref.org"
+tier = 1
+scopes = ["academic", "academic.index"]
+caps = ["search", "lookup", "graph"]
+transport = "plain"
+pool_role = "default"
+limits = { rps = 5.0, burst = 10, concurrency = 4, timeout_ms = 6000, cache_ttl_s = 21600, host_bucket = "api.crossref.org" }
+
+[op.search]
+summary = "Search Crossref scholarly articles (filtered to article, proceedings, preprint, and chapter types)."
+method = "GET"
+url = "https://api.crossref.org/works"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+const_query = { filter = "type:journal-article,type:proceedings-article,type:posted-content,type:book-chapter" }
+query_jaq = '''[
+  (if ($cfg.contact_email // "") != "" then ["mailto", $cfg.contact_email] else empty end),
+  (if ($p.sort // null) == null and $cfg.freshness != null then ["sort", "published"], ["order", "desc"] else empty end)
+]'''
+probe = { params = { query = "attention is all you need", limit = 3 }, min_results = 2, fixture = "fixtures/seed/crossref/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "query", doc = "Bibliographic search query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "rows", doc = "Maximum works to return" }
+sort = { type = "string", enum = ["relevance", "published", "is-referenced-by-count", "issued"], to = "sort", doc = "Sort field" }
+order = { type = "string", enum = ["desc", "asc"], to = "order", doc = "Sort direction" }
+
+[op.search.map]
+items = '''(.message.items // [])[] | select((.title | first_str) != null)'''
+total = ".message.\"total-results\" // null"
+work = '''(
+  (.issued."date-parts"[0] // .published."date-parts"[0] // ."published-print"."date-parts"[0] // ."published-online"."date-parts"[0] // []) as $dp |
+  (if ($dp | length) >= 1 and ($dp[0] | type) == "number" and ($dp[0] | to_int) >= 1 and ($dp[0] | to_int) <= 9999 then ($dp[0] | to_int) else null end) as $yr |
+  (if $yr != null and ($dp | length) >= 2 and ($dp[1] | type) == "number" and ($dp[1] | to_int) >= 1 and ($dp[1] | to_int) <= 12 then ($dp[1] | to_int) else null end) as $mo |
+  (if $mo != null and ($dp | length) >= 3 and ($dp[2] | type) == "number" and ($dp[2] | to_int) >= 1 and ($dp[2] | to_int) <= 31 then ($dp[2] | to_int) else null end) as $dy |
+  (
+    if $yr == null then null
+    elif $dy != null then
+      (($yr | tostring) + "-" + (if $mo < 10 then ("0" + ($mo | tostring)) else ($mo | tostring) end) + "-" + (if $dy < 10 then ("0" + ($dy | tostring)) else ($dy | tostring) end))
+    elif $mo != null then
+      (($yr | tostring) + "-" + (if $mo < 10 then ("0" + ($mo | tostring)) else ($mo | tostring) end))
+    else ($yr | tostring)
+    end
+  ) as $pub_date |
+  (.DOI | doi_norm) as $doi |
+  (."is-referenced-by-count" | to_int) as $cites |
+  ([(."updated-by" // [])[] | select(((.type // "") | ascii_downcase) as $t | $t == "retraction" or $t == "withdrawal" or $t == "removal")]) as $upd_ret |
+  (.relation."is-retracted-by" // []) as $rel_ret |
+  ((($upd_ret | length) > 0) or (($rel_ret | length) > 0)) as $retracted |
+  (
+    if ($upd_ret | length) > 0 then
+      ("Crossref " + (($upd_ret[0].type // "retraction") | ascii_downcase) + " notice " + ($upd_ret[0].DOI // ""))
+    elif ($rel_ret | length) > 0 then
+      ("Crossref retraction notice " + ($rel_ret[0].id // ""))
+    else null
+    end
+  ) as $retraction_reason |
+  {
+    title: (((.title | first_str) // "") | strip_tags | collapse_ws),
+    authors: [(.author // [])[] | {
+      name: ((if (.name // "") != "" then .name else ([.given, .family] | map(select(type == "string" and length > 0)) | join(" ")) end) | collapse_ws),
+      orcid: (if (.ORCID // "") != "" then (.ORCID | sub("^https?://orcid\\.org/"; "")) else null end),
+      affiliation: ((.affiliation[0]?.name // null) | if type == "string" then collapse_ws else null end)
+    } | select(.name != "")],
+    year: $yr,
+    publishedDate: $pub_date,
+    venue: ((."container-title" | first_str) // .publisher // null),
+    workType: (
+      if .type == "posted-content" then "preprint"
+      elif .type == "proceedings-article" then "conference"
+      elif .type == "book-chapter" then "chapter"
+      elif .type == "book" or .type == "monograph" then "book"
+      elif .type == "dataset" then "dataset"
+      else "article"
+      end
+    ),
+    ids: {
+      doi: $doi
+    },
+    abstractText: (if (.abstract // "") != "" then (.abstract | strip_tags | unescape_html | collapse_ws) else null end),
+    citedBy: $cites,
+    citedBySource: (if $cites != null then "crossref" else null end),
+    retracted: $retracted,
+    retractionReason: $retraction_reason,
+    versions: [],
+    url: (.URL // (if $doi != null then ("https://doi.org/" + $doi) else "" end)),
+    sources: ["crossref"]
+  }
+)'''
+
+[op.work]
+summary = "Look up full Crossref metadata for a work by DOI."
+method = "GET"
+url = "https://api.crossref.org/works/{doi}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+query_jaq = '''[if ($cfg.contact_email // "") != "" then ["mailto", $cfg.contact_email] else empty end]'''
+probe = { params = { doi = "10.1038/nature12373" }, min_results = 1, fixture = "fixtures/seed/crossref/work/default.json" }
+
+[op.work.params]
+doi = { type = "string", required = true, in = "path", encode = "raw", doc = "DOI e.g. 10.1038/nature12373" }
+
+[op.work.map]
+items = ".message"
+work = "@ref:op.search.map.work"

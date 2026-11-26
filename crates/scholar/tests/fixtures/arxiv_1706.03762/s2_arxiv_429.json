@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "source": "semanticscholar",
+  "op": "paper (real HTTP 429, anonymous)",
+  "recordedAt": "2026-11-25T14:06:31Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.semanticscholar.org/graph/v1/paper/ARXIV:1706.03762?fields=paperId%2Ctitle%2Cabstract%2Cyear%2CpublicationDate%2Cvenue%2CcitationCount%2CinfluentialCitationCount%2CisOpenAccess%2CopenAccessPdf%2CexternalIds%2Cauthors"
+      },
+      "response": {
+        "status": 429,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"message\": \"Too Many Requests. Please wait and try again or apply for a key for higher rate limits. https://www.semanticscholar.org/product/api#api-key-form\", \"code\": \"429\"}"
+      }
+    }
+  ]
+}

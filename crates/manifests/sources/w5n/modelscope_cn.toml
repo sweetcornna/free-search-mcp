@@ -1,0 +1,100 @@
+id = "modelscope_cn"
+name = "ModelScope (魔搭社区) Open Model Hub"
+summary = "Keyless Chinese open-weights model hub (Qwen, DeepSeek, FunAudio) metadata, repository file trees, and revisions."
+aliases = ["modelscope", "魔搭", "qwen hub", "china models"]
+home_url = "https://www.modelscope.cn"
+tier = 2
+scopes = ["code"]
+caps = ["lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 1.5, burst = 4, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 21600 }
+
+[op.model]
+summary = "Fetch full ModelScope model card metadata, license, downloads, tasks, and architectures by org/name."
+method = "GET"
+url = "https://www.modelscope.cn/api/v1/models/{org}/{name}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+examples = ['source.call("modelscope_cn.model", { org: "Qwen", name: "Qwen2.5-7B-Instruct" })']
+probe = { params = { org = "Qwen", name = "Qwen2.5-7B-Instruct" }, min_results = 1, fixture = "fixtures/w5n/modelscope_cn/model/default.json" }
+
+[op.model.params]
+org = { type = "string", required = true, in = "path", doc = "ModelScope organization or user namespace (e.g. Qwen)" }
+name = { type = "string", required = true, in = "path", doc = "Model repository name (e.g. Qwen2.5-7B-Instruct)" }
+
+[op.model.map]
+items = "[.Data | select(. != null)][]"
+error = "if .Success == false then (.Message // \"ModelScope API error\") else null end"
+record = '''{
+  id: .Id,
+  modelId: ((.Path // "") + "/" + (.Name // "")),
+  name: (.Name // ""),
+  chineseName: (.ChineseName // null),
+  org: (.Path // null),
+  description: (.Description // null),
+  license: (.License // null),
+  downloads: (.Downloads // 0),
+  stars: (.Stars // 0),
+  architectures: (.Architectures // []),
+  tasks: [(.Tasks // [])[] | .Name],
+  baseModel: (.BaseModel // []),
+  revision: (.Revision // null),
+  createdAt: (.CreatedTime | epoch_to_iso),
+  updatedAt: (.LastUpdatedTime | epoch_to_iso),
+  url: ("https://www.modelscope.cn/models/" + (.Path // "") + "/" + (.Name // ""))
+}'''
+
+[op.files]
+summary = "List files, sizes, and SHA-256 digests in a ModelScope model repository."
+method = "GET"
+url = "https://www.modelscope.cn/api/v1/models/{org}/{name}/repo/files"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+examples = ['source.call("modelscope_cn.files", { org: "Qwen", name: "Qwen2.5-7B-Instruct" })']
+probe = { params = { org = "Qwen", name = "Qwen2.5-7B-Instruct", revision = "master", recursive = "False" }, min_results = 2, fixture = "fixtures/w5n/modelscope_cn/files/default.json" }
+
+[op.files.params]
+org = { type = "string", required = true, in = "path", doc = "ModelScope namespace" }
+name = { type = "string", required = true, in = "path", doc = "Model repository name" }
+revision = { type = "string", default = "master", to = "Revision", doc = "Git branch or tag revision" }
+recursive = { type = "string", default = "False", enum = ["True", "False"], to = "Recursive", doc = "List nested subdirectories recursively" }
+
+[op.files.map]
+items = "(.Data.Files // [])[]"
+error = "if .Success == false then (.Message // \"ModelScope API error\") else null end"
+record = '''{
+  name: .Name,
+  path: .Path,
+  type: (.Type // null),
+  sizeBytes: (.Size // 0),
+  isLfs: (.IsLFS // false),
+  sha256: (.Sha256 // null),
+  commitMessage: (.CommitMessage // null)
+}'''
+
+[op.revisions]
+summary = "List branches and tags for a ModelScope model repository."
+method = "GET"
+url = "https://www.modelscope.cn/api/v1/models/{org}/{name}/revisions"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+examples = ['source.call("modelscope_cn.revisions", { org: "Qwen", name: "Qwen2.5-7B-Instruct" })']
+probe = { params = { org = "Qwen", name = "Qwen2.5-7B-Instruct" }, min_results = 1, fixture = "fixtures/w5n/modelscope_cn/revisions/default.json" }
+
+[op.revisions.params]
+org = { type = "string", required = true, in = "path", doc = "ModelScope namespace" }
+name = { type = "string", required = true, in = "path", doc = "Model repository name" }
+
+[op.revisions.map]
+items = "((.Data.RevisionMap.Branches // []) + (.Data.RevisionMap.Tags // []))[]"
+error = "if .Success == false then (.Message // \"ModelScope API error\") else null end"
+record = '''{
+  revision: .Revision,
+  createdAt: (.CreatedAt // null),
+  createdAtIso: (.CreatedAt | epoch_to_iso),
+  chineseName: (.ChineseName | first_str)
+}'''

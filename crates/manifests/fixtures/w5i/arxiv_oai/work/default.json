@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "arxiv_oai",
+  "op": "work",
+  "recordedAt": "2026-11-25T12:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://oaipmh.arxiv.org/oai?metadataPrefix=arXivRaw&verb=GetRecord&identifier=oai%3AarXiv.org%3A1706.03762",
+        "headersSubset": {
+          "accept": "application/xml"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/xml"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\" \n         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n         xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd\">\n    <responseDate>2026-11-25T09:34:42Z</responseDate>\n                <request verb=\"GetRecord\" identifier=\"oai:arXiv.org:1706.03762\" metadataPrefix=\"arXivRaw\">http://oaipmh.arxiv.org/oai</request>\n\n\n    <GetRecord>\n                <record>\n                <header>\n        <identifier>oai:arXiv.org:1706.03762</identifier>\n        <datestamp>2023-08-03</datestamp>\n            <setSpec>cs:cs:CL</setSpec>\n            <setSpec>cs:cs:LG</setSpec>\n    </header>\n\n            <metadata>\n                        <arXivRaw xmlns=\"http://arxiv.org/OAI/arXivRaw/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://arxiv.org/OAI/arXivRaw/ https://oaipmh.arxiv.org/OAI/arXivRaw.xsd\">\n        <id>1706.03762</id>\n        <submitter>Llion Jones</submitter>\n            <version version=\"v1\">\n                <date>Mon, 12 Jun 2017 17:57:34 GMT</date>\n                <size>1102kb</size>\n                    <source_type>D</source_type>\n            </version>\n            <version version=\"v2\">\n                <date>Mon, 19 Jun 2017 16:49:45 GMT</date>\n                <size>1124kb</size>\n                    <source_type>D</source_type>\n            </version>\n            <version version=\"v3\">\n                <date>Tue, 20 Jun 2017 05:20:02 GMT</date>\n                <size>1124kb</size>\n                    <source_type>D</source_type>\n            </version>\n            <version version=\"v4\">\n                <date>Fri, 30 Jun 2017 17:29:30 GMT</date>\n                <size>1124kb</size>\n                    <source_type>D</source_type>\n            </version>\n            <version version=\"v5\">\n                <date>Wed, 06 Dec 2017 03:30:32 GMT</date>\n                <size>1123kb</size>\n                    <source_type>D</source_type>\n            </version>\n            <version version=\"v6\">\n                <date>Mon, 24 Jul 2023 00:48:54 GMT</date>\n                <size>1124kb</size>\n                    <source_type>D</source_type>\n            </version>\n            <version version=\"v7\">\n                <date>Wed, 02 Aug 2023 00:41:18 GMT</date>\n                <size>1124kb</size>\n                    <source_type>D</source_type>\n            </version>\n        <title>Attention Is All You Need</title>\n        <authors>Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N. Gomez, Lukasz Kaiser, Illia Polosukhin</authors>\n        <categories>cs.CL cs.LG</categories>\n            <comments>15 pages, 5 figures</comments>\n            <license>http://arxiv.org/licenses/nonexclusive-distrib/1.0/</license>\n            <abstract>The dominant sequence transduction models are based on complex recurrent or convolutional neural networks in an encoder-decoder configuration. The best performing models also connect the encoder and decoder through an attention mechanism. We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely. Experiments on two machine translation tasks show these models to be superior in quality while being more parallelizable and requiring significantly less time to train. Our model achieves 28.4 BLEU on the WMT 2014 English-to-German translation task, improving over the existing best results, including ensembles by over 2 BLEU. On the WMT 2014 English-to-French translation task, our model establishes a new single-model state-of-the-art BLEU score of 41.8 after training for 3.5 days on eight GPUs, a small fraction of the training costs of the best models from the literature. We show that the Transformer generalizes well to other tasks by applying it successfully to English constituency parsing both with large and limited training data.</abstract>\n    </arXivRaw>\n\n            </metadata>\n        </record>\n\n    </GetRecord>\n</OAI-PMH>",
+        "bodyB64": null
+      }
+    }
+  ]
+}

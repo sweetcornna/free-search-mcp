@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "federalregister",
+  "op": "document",
+  "recordedAt": "2026-11-25T12:12:46Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.federalregister.gov/api/v1/documents/2023-24283.json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ],
+          [
+            "cache-control",
+            "no-store, no-cache, must-revalidate, private"
+          ]
+        ],
+        "bodyText": "{\"abstract\":null,\"action\":null,\"agencies\":[{\"raw_name\":\"EXECUTIVE OFFICE OF THE PRESIDENT\",\"name\":\"Executive Office of the President\",\"id\":538,\"url\":\"https://www.federalregister.gov/agencies/executive-office-of-the-president\",\"json_url\":\"https://www.federalregister.gov/api/v1/agencies/538\",\"parent_id\":null,\"slug\":\"executive-office-of-the-president\"}],\"body_html_url\":\"https://www.federalregister.gov/documents/full_text/html/2023/11/01/2023-24283.html\",\"cfr_references\":[],\"citation\":\"88 FR 75191\",\"comment_url\":null,\"comments_close_on\":null,\"correction_of\":null,\"corrections\":[],\"dates\":null,\"disposition_notes\":\"See: EO 12250, November 2, 1980; EO 12333, December 4, 1981; EO 13694, April 1, 2015; EO 13757, December 28, 2016; EO 13960, December 3, 2020; EO 13984, January 19, 2021; EO 14074, May 25, 2022; EO 14091, February 16, 2023; EO 14120, March 18, 2024; EO 14141, January 14, 2025; Notice of March 24, 2026 (91 FR 15511)\\r\\nRevoked by: EO 14148, January 20, 2025\",\"docket_ids\":[],\"dockets\":[],\"document_number\":\"2023-24283\",\"effective_on\":null,\"end_page\":75226,\"executive_order_notes\":\"See: EO 12250, November 2, 1980; EO 12333, December 4, 1981; EO 13694, April 1, 2015; EO 13757, December 28, 2016; EO 13960, December 3, 2020; EO 13984, January 19, 2021; EO 14074, May 25, 2022; EO 14091, February 16, 2023; EO 14120, March 18, 2024; EO 14141, January 14, 2025; Notice of March 24, 2026 (91 FR 15511)\\r\\nRevoked by: EO 14148, January 20, 2025\",\"executive_order_number\":\"14110\",\"full_text_xml_url\":\"https://www.federalregister.gov/documents/full_text/xml/2023/11/01/2023-24283.xml\",\"html_url\":\"https://www.federalregister.gov/documents/2023/11/01/2023-24283/safe-secure-and-trustworthy-development-and-use-of-artificial-intelligence\",\"images\":{\"BIDEN\":{\"large\":\"https://img.federalregister.gov/BIDEN/BIDEN_large.png\",\"medium\":\"https://img.federalregister.gov/BIDEN/BIDEN_medium.png\",\"original_size\":\"https://img.federalregister.gov/BIDEN/BIDEN_original_size.png\"}},\"images_metadata\":{\"BIDEN\":{\"large\":{\"identifier\":\"BIDEN\",\"content_type\":\"image/png\",\"size\":7343,\"width\":767,\"sha\":\"662a1d122010fff35fca77e1e21891e0\",\"url\":\"https://img.federalregister.gov/BIDEN/BIDEN_large.png\",\"height\":451},\"medium\":{\"identifier\":\"BIDEN\",\"content_type\":\"image/png\",\"size\":2786,\"width\":361,\"sha\":\"3028179de271a16ed182e7b699893046\",\"url\":\"https://img.federalregister.gov/BIDEN/BIDEN_medium.png\",\"height\":212},\"original_size\":{\"identifier\":\"BIDEN\",\"content_type\":\"image/png\",\"size\":6491,\"width\":2729,\"sha\":\"d48beba9ba6ae1ee5d1bd0c9603da9d2\",\"url\":\"https://img.federalregister.gov/BIDEN/BIDEN_original_size.png\",\"height\":1606}}},\"json_url\":\"https://www.federalregister.gov/api/v1/documents/2023-24283?publication_date=2023-11-01\",\"mods_url\":\"https://www.govinfo.gov/metadata/granule/FR-2023-11-01/2023-24283/mods.xml\",\"not_received_for_publication\":null,\"page_length\":36,\"page_views\":{\"count\":138115,\"last_updated\":\"2026-11-25 06:15:04 -0500\"},\"pdf_url\":\"https://www.govinfo.gov/content/pkg/FR-2023-11-01/pdf/2023-24283.pdf\",\"presidential_document_number\":\"14110\",\"proclamation_number\":null,\"public_inspection_pdf_url\":\"https://public-inspection.federalregister.gov/2023-24283.pdf?1698765442\",\"publication_date\":\"2023-11-01\",\"raw_text_url\":\"https://www.federalregister.gov/documents/full_text/text/2023/11/01/2023-24283.txt\",\"regulation_id_number_info\":{},\"regulation_id_numbers\":[],\"regulations_dot_gov_info\":{\"checked_regulationsdotgov_at\":\"2023-11-01T08:27:09Z\"},\"regulations_dot_gov_url\":null,\"significant\":null,\"signing_date\":\"2023-10-30\",\"start_page\":75191,\"subtype\":\"Executive Order\",\"title\":\"Safe, Secure, and Trustworthy Development and Use of Artificial Intelligence\",\"toc_doc\":\"Artificial Intelligence; Effort to Ensure Safe, Secure, and Trustworthy Development and Use (EO 14110)\",\"toc_subject\":null,\"topics\":[],\"type\":\"Presidential Document\",\"volume\":88}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

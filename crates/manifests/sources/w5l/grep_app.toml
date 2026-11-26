@@ -1,0 +1,62 @@
+id = "grep_app"
+name = "grep.app Code Search"
+summary = "Millisecond literal and regex code search across public GitHub repositories via grep.app (uses Chrome TLS profile)."
+aliases = ["grep.app", "grepapp", "github code grep"]
+home_url = "https://grep.app"
+tier = 1
+scopes = ["code"]
+caps = ["search"]
+transport = "chrome"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 2, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 3600 }
+
+[op.search]
+summary = "Search literal or regex code snippets across public GitHub repositories."
+method = "GET"
+url = "https://grep.app/api/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "tokio::sync::RwLock", lang = "Rust" }, min_results = 3, fixture = "fixtures/w5l/grep_app/search/default.json" }
+examples = [
+  'source.call("grep_app.search", { query: "tokio::sync::RwLock", lang: "Rust" })',
+  'source.call("grep_app.search", { query: "async fn.*Result<", regexp: true, lang: "Rust" })',
+]
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Literal or regex code search string" }
+lang = { type = "string", to = "f.lang", doc = "Optional programming language filter (e.g. Rust, Python, TypeScript)" }
+repo = { type = "string", to = "f.repo", doc = "Optional GitHub repository filter (owner/repo)" }
+path = { type = "string", to = "f.path", doc = "Optional file path prefix filter (e.g. src/)" }
+case = { type = "bool", to = "case", doc = "Enable case-sensitive matching" }
+regexp = { type = "bool", to = "regexp", doc = "Treat query as a regular expression" }
+words = { type = "bool", to = "words", doc = "Match whole words only" }
+page = { type = "int", min = 1, max = 100, to = "page", doc = "1-based results page" }
+
+[op.search.map]
+items = "(.hits.hits // [])[]"
+total = ".hits.total"
+error = "if .error then (.error.message // (.error | tostring)) else null end"
+record = '''(
+  ((.content.snippet // "") | gsub("<[^>]+>"; " ") | unescape_html | collapse_ws // "") as $snip |
+  ("https://github.com/" + (.repo // "") + "/blob/" + (.branch // "main") + "/" + (.path // "")) as $url |
+  {
+    repo: (.repo // ""),
+    branch: (.branch // "main"),
+    path: (.path // ""),
+    snippet: $snip,
+    url: $url
+  }
+)'''
+hit = '''(
+  ((.content.snippet // "") | gsub("<[^>]+>"; " ") | unescape_html | collapse_ws // "") as $snip |
+  ("https://github.com/" + (.repo // "") + "/blob/" + (.branch // "main") + "/" + (.path // "")) as $url |
+  {
+    title: ((.repo // "") + ": " + (.path // "")),
+    url: $url,
+    snippet: $snip[0:280],
+    date: null,
+    dateSource: "api"
+  }
+)'''

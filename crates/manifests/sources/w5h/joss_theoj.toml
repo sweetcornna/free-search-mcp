@@ -1,0 +1,118 @@
+id = "joss_theoj"
+name = "Journal of Open Source Software (JOSS)"
+summary = "Peer-reviewed diamond open-access journal for research software linking published software papers directly to GitHub/GitLab repositories, DOIs, and review issues."
+aliases = ["joss", "theoj", "openjournals"]
+home_url = "https://joss.theoj.org"
+tier = 1
+scopes = ["academic", "academic.cs", "academic.openaccess", "code"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.5, burst = 4, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 43200, host_bucket = "joss.theoj.org" }
+
+[op.search]
+summary = "Search published Journal of Open Source Software (JOSS) papers via JSON API."
+method = "GET"
+url = "https://joss.theoj.org/papers/search.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "quantum" }, min_results = 2, fixture = "fixtures/w5h/joss_theoj/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Software or research keyword" }
+page = { type = "int", default = 1, min = 1, to = "page", doc = "1-based page number" }
+
+[op.search.map]
+items = ".[]"
+error = '''if (type == "object" and .error != null) then (.error | tostring) else null end'''
+work = '''(
+  (if (.doi // "") != "" then ("https://joss.theoj.org/papers/" + .doi) else "https://joss.theoj.org" end) as $url |
+  {
+    title: (.title // "" | collapse_ws),
+    authors: [(.authors // [])[] | {
+      name: ([(.given_name // ""), (.middle_name // ""), (.last_name // "")] | map(select(type == "string" and length > 0)) | join(" ") | collapse_ws),
+      orcid: (.orcid // null),
+      affiliation: (.affiliation // null | collapse_ws)
+    } | select(.name != "")],
+    year: ((.year // ((.published_at // "")[0:4])) | to_int),
+    publishedDate: ((.published_at // null) | parse_date),
+    venue: "Journal of Open Source Software",
+    workType: "software",
+    ids: { doi: (.doi // null | doi_norm) },
+    abstractText: null,
+    oa: {
+      status: "diamond",
+      url: $url,
+      pdfUrl: (.pdf_url // (if (.doi // "") != "" then ("https://joss.theoj.org/papers/" + .doi + ".pdf") else null end)),
+      license: "CC-BY-4.0"
+    },
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["joss_theoj"]
+  }
+)'''
+
+[op.work]
+summary = "Fetch a single JOSS paper JSON record by JOSS paper ID suffix (e.g. joss.03082)."
+method = "GET"
+url = "https://joss.theoj.org/papers/10.21105/{paper_id}.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+probe = { params = { paper_id = "joss.03082" }, min_results = 1, fixture = "fixtures/w5h/joss_theoj/work/default.json" }
+
+[op.work.params]
+paper_id = { type = "string", required = true, in = "path", doc = "JOSS DOI suffix without 10.21105/ prefix e.g. joss.03082" }
+
+[op.work.map]
+items = "."
+error = "@ref:op.search.map.error"
+work = "@ref:op.search.map.work"
+
+[op.published]
+summary = "Fetch the latest published JOSS papers Atom XML feed."
+method = "GET"
+url = "https://joss.theoj.org/papers/published.atom"
+response = "xml"
+returns = "works"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = {}, min_results = 2, fixture = "fixtures/w5h/joss_theoj/published/default.json" }
+
+[op.published.params]
+page = { type = "int", min = 1, to = "page", doc = "Optional 1-based page number" }
+
+[op.published.map]
+items = ".feed.entry | arr | .[]"
+error = '''if .error != null then (.error | first_str // (.error | tostring)) else null end'''
+work = '''(
+  (.link."@href" // "https://joss.theoj.org") as $url |
+  (.content // {}) as $c |
+  (($c.doi | first_str) // (if ($url | test("10\\.21105/joss\\.[0-9]+")) then ($url | capture("(?<d>10\\.21105/joss\\.[0-9]+)").d) else null end)) as $doi |
+  {
+    title: ((.title | first_str // "") | collapse_ws),
+    authors: [($c.authors.author | arr)[] | {
+      name: ([(.given_name | first_str), (.middle_name | first_str), (.last_name | first_str)] | map(select(type == "string" and length > 0)) | join(" ") | collapse_ws),
+      orcid: (.orcid | first_str // null),
+      affiliation: ((.affiliation | first_str // null) | collapse_ws)
+    } | select(.name != "")],
+    year: ((($c.year | first_str) // ((.published // "")[0:4])) | to_int),
+    publishedDate: ((.published // ($c.published_at | first_str) // null) | parse_date),
+    venue: "Journal of Open Source Software",
+    workType: "software",
+    ids: { doi: ($doi | doi_norm) },
+    abstractText: null,
+    oa: {
+      status: "diamond",
+      url: $url,
+      pdfUrl: (($c.pdf_url | first_str) // (if $doi != null then ("https://joss.theoj.org/papers/" + $doi + ".pdf") else null end)),
+      license: "CC-BY-4.0"
+    },
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["joss_theoj"]
+  }
+)'''

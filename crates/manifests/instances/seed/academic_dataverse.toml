@@ -1,0 +1,15 @@
+protocol = "dataverse"
+
+[[instance]]
+id = "dataverse"
+name = "Harvard Dataverse"
+summary = "Harvard Dataverse public research dataset repository with DOI links, descriptions, and publication timestamps."
+aliases = ["harvard dataverse", "dataverse.harvard.edu"]
+base_url = "https://dataverse.harvard.edu"
+scopes = ["dataset", "academic"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 4, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 21600, host_bucket = "dataverse.harvard.edu" }
+dialect = { default_type = "dataset" }
+probe = { op = "search", params = { query = "climate", limit = 3 }, min_results = 1 }

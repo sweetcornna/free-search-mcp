@@ -1,0 +1,111 @@
+id = "openalex"
+name = "OpenAlex"
+summary = "Open catalog of 250M+ scholarly works, abstracts, citation counts, venues, and open-access locations."
+aliases = ["openalex.org"]
+home_url = "https://openalex.org"
+tier = 1
+scopes = ["academic", "academic.index"]
+caps = ["search", "lookup", "graph", "fulltext"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 5.0, burst = 10, concurrency = 4, timeout_ms = 6000, cache_ttl_s = 21600, host_bucket = "api.openalex.org" }
+
+[auth]
+mode = "optional"
+env = "SEARCH_MCP_OPENALEX_API_KEY"
+in = "query"
+name = "api_key"
+route_requires_key = true
+
+[op.search]
+summary = "Search OpenAlex scholarly works with reconstructed abstracts, citation counts, and OA links."
+method = "GET"
+url = "https://api.openalex.org/works"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+paginate = { style = "cursor", param = "cursor", max_pages = 3 }
+query_jaq = '''[
+  (if ($cfg.contact_email // "") != "" then ["mailto", $cfg.contact_email] else empty end),
+  (if ($p.sort // null) == null and $cfg.freshness != null then ["sort", "publication_date:desc"] else empty end)
+]'''
+probe = { params = { query = "attention is all you need", limit = 3 }, min_results = 2, fixture = "fixtures/seed/openalex/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "search", doc = "Full-text search query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "per-page", doc = "Maximum works per page" }
+filter = { type = "string", to = "filter", doc = "Optional OpenAlex filter expression, e.g. is_oa:true" }
+sort = { type = "string", to = "sort", doc = "Optional sort expression, e.g. cited_by_count:desc or publication_date:desc" }
+cursor = { type = "string", to = "cursor", doc = "Pagination cursor token" }
+
+[op.search.map]
+items = '''if type == "object" and (.results | type) == "array" then .results[] | select(type == "object" and ((.display_name // .title // "") | type) == "string" and ((.display_name // .title // "") != "")) else empty end'''
+total = "if type == \"object\" then (.meta.count // null) else null end"
+next_cursor = "if type == \"object\" then (.meta.next_cursor // null) else null end"
+error = "if type == \"object\" and .error then (.message // .error) else null end"
+work = '''(
+  ((.id // "") | split("/") | last) as $oa_id |
+  (.doi | doi_norm) as $doi |
+  ((.ids.pmid // "") | sub("^https?://pubmed\\.ncbi\\.nlm\\.nih\\.gov/"; "") | sub("/$"; "")) as $pmid |
+  ((.ids.pmcid // "") | sub("^https?://www\\.ncbi\\.nlm\\.nih\\.gov/pmc/articles/"; "") | sub("/$"; "")) as $pmcid |
+  (.cited_by_count | to_int) as $cites |
+  (.best_oa_location // .primary_location) as $oa_loc |
+  (if (.primary_location.landing_page_url // "") != "" then .primary_location.landing_page_url elif (.doi // "") != "" then .doi elif (.id // "") != "" then .id else "" end) as $best_url |
+  {
+    title: ((.display_name // .title // "") | strip_tags | collapse_ws),
+    authors: [(.authorships // [])[] | {
+      name: (.author.display_name // .raw_author_name // ""),
+      orcid: (if (.author.orcid // "") != "" then (.author.orcid | sub("^https?://orcid\\.org/"; "")) else null end),
+      affiliation: (.institutions[0]?.display_name // null)
+    } | select(.name != "")],
+    year: (.publication_year | to_int),
+    publishedDate: (.publication_date | parse_date),
+    venue: (.primary_location.source.display_name // null),
+    workType: (
+      if .type == "preprint" then "preprint"
+      elif .type == "book" then "book"
+      elif .type == "book-chapter" then "chapter"
+      elif .type == "dataset" then "dataset"
+      elif .type == "dissertation" then "thesis"
+      else "article"
+      end
+    ),
+    ids: {
+      doi: $doi,
+      openalex: (if $oa_id != "" then $oa_id else null end),
+      pmid: (if $pmid != "" then $pmid else null end),
+      pmcid: (if $pmcid != "" then $pmcid else null end)
+    },
+    abstractText: (.abstract_inverted_index | openalex_abstract),
+    citedBy: $cites,
+    citedBySource: (if $cites != null then "openalex" else null end),
+    oa: (if (.open_access.is_oa // false) or (.open_access.oa_status // "closed") != "closed" then {
+      status: (.open_access.oa_status // "green"),
+      url: (if ($oa_loc.landing_page_url // "") != "" then $oa_loc.landing_page_url elif (.open_access.oa_url // "") != "" then .open_access.oa_url else null end),
+      pdfUrl: (if ($oa_loc.pdf_url // "") != "" then $oa_loc.pdf_url else null end),
+      license: ($oa_loc.license // null)
+    } else null end),
+    retracted: (.is_retracted // false),
+    versions: [],
+    url: $best_url,
+    sources: ["openalex"]
+  }
+)'''
+
+[op.work]
+summary = "Look up a single OpenAlex work by OpenAlex W-ID or DOI URL."
+method = "GET"
+url = "https://api.openalex.org/works/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+query_jaq = '''[if ($cfg.contact_email // "") != "" then ["mailto", $cfg.contact_email] else empty end]'''
+probe = { params = { id = "W2626778328" }, min_results = 1, fixture = "fixtures/seed/openalex/work/default.json" }
+
+[op.work.params]
+id = { type = "string", required = true, in = "path", encode = "raw", doc = "OpenAlex Work ID (e.g. W2626778328) or doi:10.1038/..." }
+
+[op.work.map]
+items = "."
+error = "@ref:op.search.map.error"
+work = "@ref:op.search.map.work"

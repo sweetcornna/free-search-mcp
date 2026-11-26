@@ -1,0 +1,87 @@
+id = "kaggle_datasets"
+name = "Kaggle Public Datasets & Models API"
+summary = "Keyless search over 400k+ public Kaggle machine learning datasets and open models (file downloads require a Kaggle key)."
+aliases = ["kaggle", "kaggle datasets", "kaggle models"]
+home_url = "https://www.kaggle.com/datasets"
+tier = 1
+scopes = ["dataset"]
+caps = ["search", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 21600, host_bucket = "www.kaggle.com" }
+
+[op.search]
+summary = "Search public Kaggle datasets by keyword, sort order, or file type."
+method = "GET"
+url = "https://www.kaggle.com/api/v1/datasets/list"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "palmer archipelago antarctica penguin", page = 1 }, min_results = 2, fixture = "fixtures/w5k/kaggle_datasets/search/default.json" }
+examples = ['source.call("kaggle_datasets.search", { query: "traffic accidents" })']
+
+[op.search.params]
+query = { type = "string", required = true, to = "search", doc = "Dataset search keywords" }
+sort_by = { type = "string", enum = ["hottest", "votes", "updated", "active", "published"], to = "sortBy", doc = "Result sort order" }
+filetype = { type = "string", enum = ["all", "csv", "sqlite", "json", "bigQuery"], to = "filetype", doc = "Filter by primary file format" }
+page = { type = "int", default = 1, min = 1, to = "page", doc = "1-based page number (20 items per page)" }
+
+[op.search.map]
+items = ".[]"
+error = "if type == \"object\" and .message then .message else null end"
+record = '''{
+  id: .id,
+  ref: (.ref // ""),
+  title: ((.title // .titleNullable // "") | collapse_ws),
+  subtitle: ((.subtitle // .subtitleNullable) | collapse_ws | if . != null and length > 0 then . else null end),
+  creator: ((.creatorName // .creatorNameNullable) | collapse_ws),
+  license: ((.licenseName // .licenseNameNullable) | collapse_ws),
+  totalBytes: (.totalBytes // .totalBytesNullable // null),
+  downloadCount: (.downloadCount // null),
+  voteCount: (.voteCount // null),
+  usabilityRating: (.usabilityRating // .usabilityRatingNullable // null),
+  lastUpdated: (.lastUpdated | parse_date),
+  url: (.url // .urlNullable // ("https://www.kaggle.com/datasets/" + (.ref // "")))
+}'''
+hit = '''(
+  (.lastUpdated | parse_date) as $d |
+  {
+    title: ((.title // .titleNullable // .ref // "") | collapse_ws),
+    url: (.url // .urlNullable // ("https://www.kaggle.com/datasets/" + (.ref // ""))),
+    snippet: ([((.subtitle // .subtitleNullable // "") | collapse_ws), ((.licenseName // .licenseNameNullable // "") | collapse_ws), (if .downloadCount != null then ((.downloadCount | tostring) + " downloads") else "" end)] | map(select(. != null and length > 0)) | join(" · ")),
+    date: $d,
+    dateSource: (if $d != null then "api" else null end)
+  }
+)'''
+
+[op.models]
+summary = "Search public Kaggle Models catalog by keyword."
+method = "GET"
+url = "https://www.kaggle.com/api/v1/models/list"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "token", param = "pageToken", max_pages = 3 }
+probe = { params = { query = "albert base v2" }, min_results = 2, fixture = "fixtures/w5k/kaggle_datasets/models/default.json" }
+examples = ['source.call("kaggle_datasets.models", { query: "llama" })']
+
+[op.models.params]
+query = { type = "string", required = true, to = "search", doc = "Model search keywords" }
+sort_by = { type = "string", enum = ["hotness", "downloadCount", "voteCount", "notebookCount", "createTime"], to = "sortBy", doc = "Model sort order" }
+cursor = { type = "string", to = "pageToken", doc = "Next page token" }
+
+[op.models.map]
+items = "(.models // [])[]"
+next_cursor = "if (.nextPageToken // \"\") != \"\" then .nextPageToken else null end"
+total = ".totalResults"
+error = "if .message then .message else null end"
+record = '''{
+  id: .id,
+  ref: (.ref // ""),
+  title: ((.title // "") | collapse_ws),
+  subtitle: (.subtitle | collapse_ws | if . != null and length > 0 then . else null end),
+  author: (.author | collapse_ws),
+  voteCount: (.voteCountNullable // null),
+  url: ("https://www.kaggle.com/models/" + (.ref // ""))
+}'''

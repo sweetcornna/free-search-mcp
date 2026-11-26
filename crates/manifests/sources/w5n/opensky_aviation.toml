@@ -1,0 +1,50 @@
+id = "opensky_aviation"
+name = "OpenSky Network Live ADS-B API"
+summary = "Global live aircraft ADS-B state vectors (position, altitude, velocity, callsign) by bounding box or ICAO24."
+aliases = ["opensky", "ads-b", "flights", "aviation"]
+home_url = "https://openskynetwork.github.io/opensky-api/"
+tier = 2
+scopes = ["reference.geo"]
+caps = ["lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 0.2, burst = 2, concurrency = 1, timeout_ms = 10000, cache_ttl_s = 60 }
+
+[op.states]
+summary = "Fetch live ADS-B aircraft state vectors within a geographic bounding box or for a specific ICAO24 hex address."
+method = "GET"
+url = "https://opensky-network.org/api/states/all"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+examples = ['source.call("opensky_aviation.states", { lamin: 46.5, lomin: 6.5, lamax: 48.2, lomax: 9.5 })']
+probe = { params = { lamin = 46.5, lomin = 6.5, lamax = 48.2, lomax = 9.5 }, min_results = 1, fixture = "fixtures/w5n/opensky_aviation/states/default.json" }
+
+[op.states.params]
+lamin = { type = "float", doc = "Lower bound latitude in decimal degrees" }
+lomin = { type = "float", doc = "Lower bound longitude in decimal degrees" }
+lamax = { type = "float", doc = "Upper bound latitude in decimal degrees" }
+lomax = { type = "float", doc = "Upper bound longitude in decimal degrees" }
+icao24 = { type = "string", doc = "Lowercase 6-hex ICAO24 transponder address" }
+time = { type = "int", doc = "Optional Unix timestamp in seconds" }
+
+[op.states.map]
+items = "(.states // [])[0:50][]"
+record = '''{
+  icao24: .[0],
+  callsign: ((.[1] | collapse_ws) // ""),
+  originCountry: .[2],
+  timePosition: .[3],
+  timePositionIso: (.[3] | epoch_to_iso),
+  lastContact: .[4],
+  lastContactIso: (.[4] | epoch_to_iso),
+  lon: .[5],
+  lat: .[6],
+  baroAltitudeM: .[7],
+  onGround: .[8],
+  velocityMs: .[9],
+  trueTrackDeg: .[10],
+  verticalRateMs: .[11],
+  geoAltitudeM: .[13],
+  squawk: .[14]
+}'''

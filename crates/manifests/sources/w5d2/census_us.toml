@@ -1,0 +1,89 @@
+id = "census_us"
+name = "US Census Bureau Data API"
+summary = "Official US Census Bureau demographic and economic tables (ACS, Decennial, Economic Census) plus dataset and geography discovery (requires free Census API key for data queries)."
+aliases = ["us census", "acs", "census bureau"]
+home_url = "https://www.census.gov/data/developers.html"
+tier = 3
+scopes = ["gov", "dataset", "reference"]
+caps = ["lookup", "dataset"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 10000, cache_ttl_s = 86400 }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_CENSUS_API_KEY"
+in = "query"
+name = "key"
+format = "{key}"
+route_requires_key = true
+
+[op.query]
+summary = "Query variables from a US Census dataset for specified geographies (e.g. 2023 acs/acs5 state population)."
+method = "GET"
+url = "https://api.census.gov/data/{year}/{dataset}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { year = "2023", dataset = "acs/acs5", get = "NAME,B01001_001E", geo = "state:06,36,48" }, min_results = 2, fixture = "fixtures/w5d2/census_us/query/default.json" }
+
+[op.query.params]
+year = { type = "string", required = true, in = "path", doc = "Dataset vintage year, e.g. 2023" }
+dataset = { type = "string", required = true, in = "path", encode = "raw", doc = "Dataset path, e.g. acs/acs5 or dec/pl" }
+get = { type = "string", required = true, to = "get", doc = "Comma-separated variable codes, e.g. NAME,B01001_001E" }
+geo = { type = "string", required = true, to = "for", doc = "Target geography clause, e.g. state:* or state:06,36,48" }
+in_geo = { type = "string", to = "in", doc = "Optional parent geography constraint, e.g. state:06" }
+
+[op.query.map]
+items = '''.[0] as $h | .[1:][] | . as $r | [range(0; $h | length) | {key: $h[.], value: $r[.]}] | from_entries'''
+record = "."
+
+[op.datasets]
+summary = "List sub-datasets and variable/geography links under a Census year and dataset family (keyless)."
+method = "GET"
+url = "https://api.census.gov/data/{year}/{dataset}.json"
+headers = { Accept = "application/json" }
+auth = "none"
+response = "json"
+returns = "records"
+probe = { params = { year = "2023", dataset = "acs/acs5" }, min_results = 1, fixture = "fixtures/w5d2/census_us/datasets/default.json" }
+
+[op.datasets.params]
+year = { type = "string", required = true, in = "path", doc = "Dataset vintage year, e.g. 2023" }
+dataset = { type = "string", required = true, in = "path", encode = "raw", doc = "Dataset family path, e.g. acs/acs5" }
+
+[op.datasets.map]
+items = "(.dataset // [])[]"
+record = '''{
+  vintage: (.c_vintage // null),
+  dataset: ((.c_dataset // []) | join("/")),
+  title: ((.title // "") | collapse_ws // ""),
+  description: (((.description // "") | strip_tags // "") | .[0:400]),
+  variablesLink: (.c_variablesLink // null),
+  geographyLink: (.c_geographyLink // null),
+  examplesLink: (.c_examplesLink // null)
+}'''
+
+[op.geography]
+summary = "List valid geography hierarchy levels supported by a Census dataset (keyless)."
+method = "GET"
+url = "https://api.census.gov/data/{year}/{dataset}/geography.json"
+headers = { Accept = "application/json" }
+auth = "none"
+response = "json"
+returns = "records"
+probe = { params = { year = "2023", dataset = "acs/acs5" }, min_results = 3, fixture = "fixtures/w5d2/census_us/geography/default.json" }
+
+[op.geography.params]
+year = { type = "string", required = true, in = "path", doc = "Dataset vintage year, e.g. 2023" }
+dataset = { type = "string", required = true, in = "path", encode = "raw", doc = "Dataset path, e.g. acs/acs5" }
+
+[op.geography.map]
+items = "(.fips // [])[]"
+record = '''{
+  name: (.name // ""),
+  geoLevelDisplay: (.geoLevelDisplay // null),
+  referenceDate: (.referenceDate // null),
+  requires: (.requires // []),
+  wildcard: (.wildcard // [])
+}'''

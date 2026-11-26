@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "smithsonian_oa",
+  "op": "content",
+  "recordedAt": "2026-11-25T13:05:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.si.edu/openaccess/api/v1.0/content/edanmdm-npg_S_NPG.68.11",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"status\": 200, \"responseCode\": 1, \"response\": {\"id\": \"edanmdm-npg_S_NPG.68.11\", \"title\": \"Christina VII\", \"unitCode\": \"NPG\", \"type\": \"edanmdm\", \"url\": \"edanmdm:npg_S_NPG.68.11\", \"content\": {\"descriptiveNonRepeating\": {\"record_ID\": \"npg_S_NPG.68.11\", \"unit_code\": \"NPG\", \"data_source\": \"National Portrait Gallery\", \"title\": {\"label\": \"Title\", \"content\": \"Christina VII\"}, \"record_link\": \"https://npg.si.edu/object/npg_S_NPG.68.11\", \"guid\": \"http://n2t.net/ark:/65665/sm44779c49e-6ec7-4a97-a76d-5b5ca6ef5d13\", \"metadata_usage\": {\"access\": \"CC0\", \"text\": \"CC0\"}, \"online_media\": {\"mediaCount\": 1, \"media\": [{\"idsId\": \"NPG-S-NPG_68_11\", \"thumbnail\": \"https://ids.si.edu/ids/deliveryService?id=NPG-S-NPG_68_11&max=90\", \"content\": \"https://ids.si.edu/ids/deliveryService?id=NPG-S-NPG_68_11\", \"type\": \"Images\"}]}}, \"indexedStructured\": {\"date\": [\"1660s\"], \"name\": [\"Lombart, Pierre\", \"Queen Christina VII of Sweden\"], \"topic\": [\"Portraits\"]}, \"freetext\": {\"object_type\": [{\"label\": \"Type\", \"content\": \"Print\"}], \"physical_description\": [{\"label\": \"Medium\", \"content\": \"Engraving on paper\"}]}}}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

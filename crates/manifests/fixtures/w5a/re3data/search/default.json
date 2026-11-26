@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "source": "re3data",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:30:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.re3data.org/api/beta/repositories?query=paleoclimate",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/xml; charset=UTF-8"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<list>\n  <repository>\n    <id>r3d100013383</id>\n    <doi>https://doi.org/10.17616/R31NJMTJ</doi>\n    <name>IsoArcH</name>\n    <link href=\"https://www.re3data.org/api/beta/repository/r3d100013383\" rel=\"self\" />\n  </repository>\n  <repository>\n    <id>r3d100012501</id>\n    <doi>https://doi.org/10.17616/R31NJMC1</doi>\n    <name>NOAA National Centers for Environmental Information Paleoclimatology</name>\n    <link href=\"https://www.re3data.org/api/beta/repository/r3d100012501\" rel=\"self\" />\n  </repository>\n</list>\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

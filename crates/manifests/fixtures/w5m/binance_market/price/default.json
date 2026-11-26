@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "binance_market",
+  "op": "price",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json;charset=UTF-8"
+          ],
+          [
+            "cache-control",
+            "no-cache, no-store, must-revalidate"
+          ]
+        ],
+        "bodyText": "{\"symbol\":\"BTCUSDT\",\"price\":\"58674.00000000\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

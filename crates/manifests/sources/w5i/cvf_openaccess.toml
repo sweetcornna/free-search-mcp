@@ -1,0 +1,146 @@
+id = "cvf_openaccess"
+name = "CVF Open Access Proceedings"
+summary = "Open-access CVPR, ICCV, and WACV computer vision proceedings with conference search, abstracts, direct PDFs, and BibTeX."
+aliases = ["cvf", "openaccess.thecvf.com", "cvpr", "iccv", "wacv"]
+home_url = "https://openaccess.thecvf.com/menu"
+tier = 2
+scopes = ["academic", "academic.cs", "academic.openaccess"]
+caps = ["search", "lookup", "fulltext"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 86400, host_bucket = "openaccess.thecvf.com" }
+
+[op.search]
+summary = "Search papers within a specific CVF conference (CVPR2024, CVPR2025, ICCV2025, WACV2026, etc.) via POST form."
+method = "POST"
+url = "https://openaccess.thecvf.com/{conference}"
+headers = { Accept = "text/html" }
+response = "html"
+returns = "works"
+body = { kind = "form", jaq = '''{ query: $p.query }''' }
+probe = { params = { conference = "CVPR2024", query = "DPMesh" }, min_results = 1, fixture = "fixtures/w5i/cvf_openaccess/search/default.json" }
+examples = ['source.call("cvf_openaccess.search", {conference: "CVPR2024", query: "DPMesh"})']
+
+[op.search.params]
+query = { type = "string", required = true, in = "body", doc = "Paper title or keyword query" }
+conference = { type = "string", default = "CVPR2024", in = "path", doc = "CVF conference slug (e.g. CVPR2024, CVPR2025, ICCV2025, WACV2026)" }
+limit = { type = "int", default = 20, min = 1, max = 100, in = "none", doc = "Maximum matching papers to return" }
+
+[op.search.html]
+items_css = "dt.ptitle"
+fields = { title = "a | text", path = "a | attr(href)" }
+wall_markers = ["Access Denied"]
+
+[op.search.map]
+items = '''[.[] | select((.title // "") != "")][0:($p.limit // 20)][]'''
+work = '''(
+  ((.path | resolve_url("https://openaccess.thecvf.com/")) // "https://openaccess.thecvf.com/") as $url |
+  ($url | sub("/html/"; "/papers/") | sub("\\.html$"; ".pdf")) as $pdfUrl |
+  (($p.conference // "") | [try capture("(?<y>20[0-9]{2})").y catch empty][0]) as $yr |
+  {
+    title: ((.title // "") | unescape_html | collapse_ws // ""),
+    authors: [],
+    year: ($yr | to_int),
+    publishedDate: null,
+    venue: ($p.conference // "CVF Open Access"),
+    workType: "proceedings-article",
+    ids: {},
+    oa: {
+      status: "diamond",
+      url: $url,
+      pdfUrl: $pdfUrl
+    },
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["cvf_openaccess"]
+  }
+)'''
+hit = '''(
+  ((.path | resolve_url("https://openaccess.thecvf.com/")) // "https://openaccess.thecvf.com/") as $url |
+  (($p.conference // "") | [try capture("(?<y>20[0-9]{2})").y catch empty][0]) as $yr |
+  {
+    title: ((.title // "") | unescape_html | collapse_ws // ""),
+    url: $url,
+    snippet: ("CVF Open Access · " + ($p.conference // "CVF")),
+    date: $yr,
+    dateSource: (if $yr != null then "html" else null end)
+  }
+)'''
+
+[op.conferences]
+summary = "List CVF-sponsored conferences and workshops available in the Open Access repository."
+method = "GET"
+url = "https://openaccess.thecvf.com/menu"
+headers = { Accept = "text/html" }
+response = "html"
+returns = "records"
+probe = { params = {}, min_results = 5, fixture = "fixtures/w5i/cvf_openaccess/conferences/default.json" }
+examples = ['source.call("cvf_openaccess.conferences", {})']
+
+[op.conferences.html]
+items_css = "#content dl dd"
+fields = { conference = "a:nth-of-type(1) | attr(href)", track = "a:nth-of-type(1) | text", details = "| text" }
+wall_markers = ["Access Denied"]
+
+[op.conferences.map]
+items = '''[.[] | select((.conference // "") != "")] | .[]'''
+record = '''(
+  ((.conference // "") | collapse_ws // "" | sub("\\.py$"; "")) as $conf |
+  {
+    conference: $conf,
+    track: ((.track // "") | collapse_ws // ""),
+    details: ((.details // "") | collapse_ws // ""),
+    url: (($conf | resolve_url("https://openaccess.thecvf.com/")) // "https://openaccess.thecvf.com/")
+  }
+)'''
+
+[op.paper]
+summary = "Fetch full metadata, authors, abstract, arXiv ID, PDF link, and BibTeX venue/date for a CVF Open Access paper."
+method = "GET"
+url = "https://openaccess.thecvf.com/content/{conference}/html/{slug}.html"
+headers = { Accept = "text/html" }
+response = "html"
+returns = "works"
+probe = { params = { conference = "CVPR2024", slug = "Zhu_DPMesh_Exploiting_Diffusion_Prior_for_Occluded_Human_Mesh_Recovery_CVPR_2024_paper" }, min_results = 1, fixture = "fixtures/w5i/cvf_openaccess/paper/default.json" }
+examples = ['source.call("cvf_openaccess.paper", {conference: "CVPR2024", slug: "Zhu_DPMesh_Exploiting_Diffusion_Prior_for_Occluded_Human_Mesh_Recovery_CVPR_2024_paper"})']
+
+[op.paper.params]
+conference = { type = "string", required = true, in = "path", doc = "CVF conference slug (e.g. CVPR2024)" }
+slug = { type = "string", required = true, in = "path", doc = "Paper HTML slug without .html" }
+
+[op.paper.html]
+items_css = "#content"
+fields = { title = "#papertitle | text", authors = "#authors b i | text", abstract = "#abstract | text", pdf_path = 'a[href$=".pdf"] | attr(href)', arxiv = 'a[href*="arxiv.org/abs/"] | attr(href)', bibtex = ".bibref | text" }
+wall_markers = ["Access Denied"]
+
+[op.paper.map]
+items = ".[]"
+work = '''(
+  ("https://openaccess.thecvf.com/content/" + ($p.conference // "") + "/html/" + ($p.slug // "") + ".html") as $url |
+  (.pdf_path | resolve_url("https://openaccess.thecvf.com/")) as $pdfUrl |
+  ((.bibtex // "") | [try capture("year\\s*=\\s*\\{(?<y>[0-9]{4})\\}").y catch empty][0] // (($p.conference // "") | [try capture("(?<y>20[0-9]{2})").y catch empty][0])) as $yr |
+  ((.bibtex // "") | [try capture("month\\s*=\\s*\\{(?<m>[A-Za-z]+)\\}").m catch empty][0]) as $mon |
+  (if $yr != null and $mon != null then (($yr + " " + $mon) | parse_date) elif $yr != null then ($yr | parse_date) else null end) as $pd |
+  ((.bibtex // "") | [try capture("booktitle\\s*=\\s*\\{(?<v>[^}]+)\\}").v catch empty][0] | if . != null then (collapse_ws) else null end) as $venue |
+  ((.arxiv // "") | [try capture("abs/(?<x>[^/?#]+)").x catch empty][0] | if . != null then sub("v[0-9]+$"; "") else null end) as $arxiv_id |
+  {
+    title: ((.title // "") | unescape_html | collapse_ws // ""),
+    authors: [(.authors // "") | split(",")[] | collapse_ws | select(. != null and . != "") | {name: .}],
+    year: ($yr | to_int),
+    publishedDate: $pd,
+    venue: ($venue // $p.conference // "CVF Open Access"),
+    workType: "proceedings-article",
+    ids: { arxiv: $arxiv_id },
+    abstractText: ((.abstract | unescape_html | collapse_ws) | if . == "" then null else . end),
+    oa: {
+      status: "diamond",
+      url: $url,
+      pdfUrl: $pdfUrl
+    },
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["cvf_openaccess"]
+  }
+)'''

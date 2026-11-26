@@ -1,0 +1,104 @@
+id = "bis_stats"
+name = "BIS Statistics SDMX v2"
+summary = "Bank for International Settlements central bank policy rates, credit-to-GDP, effective exchange rates, and global liquidity."
+aliases = ["bis", "bank for international settlements", "central bank policy rates"]
+home_url = "https://data.bis.org"
+tier = 1
+scopes = ["finance", "dataset"]
+caps = ["lookup", "dataset"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 10000, cache_ttl_s = 43200 }
+
+[op.dataflows]
+summary = "List all BIS statistical dataflows (IDs, versions, and titles)."
+method = "GET"
+url = "https://stats.bis.org/api/v2/structure/dataflow/BIS/all/latest"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { detail = "allstubs", format = "sdmx-json" }
+probe = { params = {}, min_results = 5, fixture = "fixtures/w5d1/bis_stats/dataflows/default.json" }
+
+[op.dataflows.map]
+items = "(.data.dataflows // [])[]"
+error = 'if (.errors? | type == "array" and length > 0) then (.errors[0].message // (.errors[0] | tostring)) else null end'
+record = '''{
+  id: .id,
+  name: (.name // .names.en // .id),
+  version: .version,
+  agency: (.agencyID // "BIS"),
+  url: (.links[0].href // ("https://data.bis.org/topics/" + (.id | sub("^WS_"; ""))))
+}'''
+
+[op.dataflow]
+summary = "Fetch metadata and description for a single BIS dataflow by ID (e.g. WS_CBPOL)."
+method = "GET"
+url = "https://stats.bis.org/api/v2/structure/dataflow/BIS/{flow}/latest"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "sdmx-json" }
+probe = { params = { flow = "WS_CBPOL" }, min_results = 1, fixture = "fixtures/w5d1/bis_stats/dataflow/default.json" }
+
+[op.dataflow.params]
+flow = { type = "string", required = true, in = "path", doc = "BIS dataflow ID e.g. WS_CBPOL, WS_EER, WS_TC" }
+
+[op.dataflow.map]
+items = "(.data.dataflows // [])[]"
+error = "@ref:op.dataflows.map.error"
+record = '''{
+  id: .id,
+  name: (.name // .names.en // .id),
+  description: (.description // .descriptions.en // null),
+  version: .version,
+  agency: (.agencyID // "BIS"),
+  url: (.links[0].href // ("https://data.bis.org/topics/" + (.id | sub("^WS_"; ""))))
+}'''
+
+[op.data]
+summary = "Fetch SDMX-JSON time-series observations from a BIS dataflow (e.g. flow=WS_CBPOL, key=M.US)."
+method = "GET"
+url = "https://stats.bis.org/api/v2/data/dataflow/BIS/{flow}/{version}/{key}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "sdmx-json" }
+probe = { params = { flow = "WS_CBPOL", version = "1.0", key = "M.US", limit = 3 }, min_results = 2, fixture = "fixtures/w5d1/bis_stats/data/default.json" }
+
+[op.data.params]
+flow = { type = "string", required = true, in = "path", doc = "BIS dataflow ID e.g. WS_CBPOL" }
+version = { type = "string", default = "+", in = "path", encode = "raw", doc = "Dataflow version e.g. + (latest), 1.0, 2.0" }
+key = { type = "string", required = true, in = "path", encode = "raw", doc = "SDMX dimension key e.g. M.US or D.XM" }
+limit = { type = "int", default = 10, min = 1, max = 100, to = "lastNObservations", doc = "Most recent observations per series" }
+start = { type = "string", to = "startPeriod", doc = "Start period e.g. 2024-01" }
+end = { type = "string", to = "endPeriod", doc = "End period" }
+
+[op.data.map]
+items = '''
+.data as $d
+| ($d.structures[0] // $d.structure) as $st
+| ($st.dimensions.series // []) as $sdims
+| ($st.attributes.series // []) as $sattrs
+| ($st.dimensions.observation[0].values // []) as $periods
+| ($d.dataSets[0].series // {}) | to_entries[]
+| (.key | split(":") | map(tonumber)) as $idx
+| (.value.attributes // []) as $aidx
+| (reduce range(0; ($sdims | length)) as $i ({}; . + { ($sdims[$i].id): ($sdims[$i].values[$idx[$i]].id // null) })) as $dims
+| (reduce range(0; ($sattrs | length)) as $i ({};
+    if ($aidx[$i] != null) then
+      ($sattrs[$i].values[$aidx[$i]]? | (.id // .name // null) | if type == "string" then collapse_ws else . end) as $v
+      | if ($v != null) then (. + { ($sattrs[$i].id): $v }) else . end
+    else . end
+  )) as $attrs
+| .value.observations | to_entries[]
+| {
+    seriesName: ($st.name // null),
+    dimensions: $dims,
+    attributes: $attrs,
+    period: ($periods[.key | tonumber].id // .key),
+    value: ((.value[0] | to_num) // .value[0])
+  }
+'''
+error = "@ref:op.dataflows.map.error"
+record = "."

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "nobel_prize_api",
+  "op": "laureate",
+  "recordedAt": "2026-11-25T13:05:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.nobelprize.org/2.1/laureate/26",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "[{\"id\":\"26\",\"knownName\":{\"en\":\"Albert Einstein\",\"se\":\"Albert Einstein\"},\"givenName\":{\"en\":\"Albert\",\"se\":\"Albert\"},\"familyName\":{\"en\":\"Einstein\",\"se\":\"Einstein\"},\"fullName\":{\"en\":\"Albert Einstein\",\"se\":\"Albert Einstein\"},\"fileName\":\"einstein\",\"gender\":\"male\",\"birth\":{\"date\":\"1879-03-14\",\"year\":\"1879\",\"place\":{\"city\":{\"en\":\"Ulm\",\"no\":\"Ulm\",\"se\":\"Ulm\"},\"country\":{\"en\":\"Germany\",\"no\":\"Tyskland\",\"se\":\"Tyskland\"},\"cityNow\":{\"en\":\"Ulm\",\"no\":\"Ulm\",\"se\":\"Ulm\",\"sameAs\":[\"https://www.wikidata.org/wiki/Q3012\",\"https://www.wikipedia.org/wiki/Ulm\"],\"latitude\":\"48.401072\",\"longitude\":\"9.987585\"},\"countryNow\":{\"en\":\"Germany\",\"no\":\"Tyskland\",\"se\":\"Tyskland\",\"sameAs\":[\"https://www.wikidata.org/wiki/Q183\"],\"latitude\":\"51.000000\",\"longitude\":\"10.000000\"},\"continent\":{\"en\":\"Europe\",\"no\":\"Europa\",\"se\":\"Europa\"},\"locationString\":{\"en\":\"Ulm, Germany\",\"no\":\"Ulm, Tyskland\",\"se\":\"Ulm, Tyskland\"}}},\"death\":{\"date\":\"1955-04-18\",\"place\":{\"city\":{\"en\":\"Princeton, NJ\",\"no\":\"Princeton, NJ\",\"se\":\"Princeton, NJ\"},\"country\":{\"en\":\"USA\",\"no\":\"USA\",\"se\":\"USA\",\"sameAs\":\"https://www.wikidata.org/wiki/Q30\"},\"cityNow\":{\"en\":\"Princeton, NJ\",\"no\":\"Princeton, NJ\",\"se\":\"Princeton, NJ\",\"sameAs\":[\"https://www.wikidata.org/wiki/Q138518\",\"https://www.wikipedia.org/wiki/Princeton,_New_Jersey\"],\"latitude\":\"40.359783\",\"longitude\":\"-74.668268\"},\"countryNow\":{\"en\":\"USA\",\"no\":\"USA\",\"se\":\"USA\",\"sameAs\":[\"https://www.wikidata.org/wiki/Q30\"],\"latitude\":\"39.828175\",\"longitude\":\"-98.579500\"},\"continent\":{\"en\":\"North America\",\"no\":\"Nord-Amerika\",\"se\":\"Nordamerika\"},\"locationString\":{\"en\":\"Princeton, NJ, USA\",\"no\":\"Princeton, NJ, USA\",\"se\":\"Princeton, NJ, USA\"}}},\"wikipedia\":{\"slug\":\"Albert_Einstein\",\"english\":\"https://en.wikipedia.org/wiki/Albert_Einstein\"},\"wikidata\":{\"id\":\"Q937\",\"url\":\"https://www.wikidata.org/wiki/Q937\"},\"sameAs\":[\"https://www.wikidata.org/wiki/Q937\",\"https://en.wikipedia.org/wiki/Albert_Einstein\"],\"links\":[{\"rel\":\"laureate\",\"href\":\"https://api.nobelprize.org/2/laureate/26\",\"action\":\"GET\",\"types\":\"application/json\"},{\"rel\":\"external\",\"href\":\"https://www.nobelprize.org/laureate/26\",\"title\":\"Albert Einstein - Facts\",\"action\":\"GET\",\"types\":\"text/html\",\"class\":[\"laureate facts\"]}],\"nobelPrizes\":[{\"awardYear\":\"1921\",\"category\":{\"en\":\"Physics\",\"no\":\"Fysikk\",\"se\":\"Fysik\"},\"categoryFullName\":{\"en\":\"The Nobel Prize in Physics\",\"no\":\"Nobelprisen i fysikk\",\"se\":\"Nobelpriset i fysik\"},\"sortOrder\":\"1\",\"portion\":\"1\",\"dateAwarded\":\"1922-11-09\",\"prizeStatus\":\"received\",\"motivation\":{\"en\":\"for his services to Theoretical Physics, and especially for his discovery of the law of the photoelectric effect\",\"se\":\"för hans förtjänster om den teoretiska fysiken, särskilt hans upptäckt av lagen för den fotoelektriska effekten\"},\"prizeAmount\":121573,\"prizeAmountAdjusted\":3220334,\"affiliations\":[{\"name\":{\"en\":\"Kaiser-Wilhelm-Institut (now Max-Planck-Institut) für Physik\",\"no\":\"Kaiser-Wilhelm-Institut (now Max-Planck-Institut) für Physik\",\"se\":\"Kaiser-Wilhelm-Institut (now Max-Planck-Institut) für Physik\"},\"nameNow\":{\"en\":\"Kaiser-Wilhelm-Institut (now Max-Planck-Institut) für Physik\"},\"city\":{\"en\":\"Berlin\",\"no\":\"Berlin\",\"se\":\"Berlin\"},\"country\":{\"en\":\"Germany\",\"no\":\"Tyskland\",\"se\":\"Tyskland\"},\"cityNow\":{\"en\":\"Berlin\",\"no\":\"Berlin\",\"se\":\"Berlin\",\"sameAs\":[\"https://www.wikidata.org/wiki/Q64\",\"https://www.wikipedia.org/wiki/Berlin\"],\"latitude\":\"52.522265\",\"longitude\":\"13.406852\"},\"countryNow\":{\"en\":\"Germany\",\"no\":\"Tyskland\",\"se\":\"Tyskland\",\"sameAs\":[\"https://www.wikidata.org/wiki/Q183\"],\"latitude\":\"51.000000\",\"longitude\":\"10.000000\"},\"continent\":{\"en\":\"Europe\"},\"locationString\":{\"en\":\"Berlin, Germany\",\"no\":\"Berlin, Tyskland\",\"se\":\"Berlin, Tyskland\"}}],\"links\":[{\"rel\":\"nobelPrize\",\"href\":\"https://api.nobelprize.org/2/nobelPrize/phy/1921\",\"action\":\"GET\",\"types\":\"application/json\"},{\"rel\":\"external\",\"href\":\"https://www.nobelprize.org/prizes/physics/1921/einstein/facts/\",\"title\":\"Albert Einstein - Facts\",\"action\":\"GET\",\"types\":\"text/html\",\"class\":[\"laureate facts\"]},{\"rel\":\"external\",\"href\":\"https://www.nobelprize.org/prizes/physics/1921/summary/\",\"title\":\"The Nobel Prize in Physics 1921\",\"action\":\"GET\",\"types\":\"text/html\",\"class\":[\"prize summary\"]}]}],\"meta\":{\"terms\":\"https://www.nobelprize.org/about/terms-of-use-for-api-nobelprize-org-and-data-nobelprize-org/\",\"license\":\"https://www.nobelprize.org/about/terms-of-use-for-api-nobelprize-org-and-data-nobelprize-org/#licence\",\"disclaimer\":\"https://www.nobelprize.org/about/terms-of-use-for-api-nobelprize-org-and-data-nobelprize-org/#disclaimer\"}}]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "wiktionary",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:12:49Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://en.wiktionary.org/w/api.php?action=query&list=search&srsearch=algorithm&srlimit=3&format=json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "cache-control",
+            "private, must-revalidate, max-age=0"
+          ],
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"batchcomplete\":\"\",\"continue\":{\"sroffset\":3,\"continue\":\"-||\"},\"query\":{\"searchinfo\":{\"totalhits\":1600},\"search\":[{\"ns\":0,\"title\":\"algorithm\",\"pageid\":64258,\"size\":15816,\"wordcount\":1450,\"snippet\":\"English Wikipedia has an article on: <span class=\\\"searchmatch\\\">algorithm</span> Wikipedia algorism (obsolete), augrim (obsolete) Etymology tree Arabic \\u0627\\u0644 (al-) Old Persian *\\ud800\\udfa2\\ud800\\udfba\\ud800\\udfa0\\ud800\\udfbc-\",\"timestamp\":\"2026-11-15T21:44:32Z\"},{\"ns\":0,\"title\":\"memetic algorithm\",\"pageid\":1045094,\"size\":400,\"wordcount\":34,\"snippet\":\"memetic <span class=\\\"searchmatch\\\">algorithm</span> (plural memetic <span class=\\\"searchmatch\\\">algorithms</span>) An <span class=\\\"searchmatch\\\">algorithm</span> for the evolution of genotypes, which includes a selected, non-genetic component. genetic algorithm\",\"timestamp\":\"2024-09-27T11:38:31Z\"},{\"ns\":0,\"title\":\"Cyrus\\u2013Beck algorithm\",\"pageid\":9099345,\"size\":281,\"wordcount\":17,\"snippet\":\"Cyrus\\u2013Beck <span class=\\\"searchmatch\\\">algorithm</span> (computer science) A generalized <span class=\\\"searchmatch\\\">algorithm</span> for line clipping. Cyrus\\u2013Beck <span class=\\\"searchmatch\\\">algorithm</span> on Wikipedia.Wikipedia\",\"timestamp\":\"2026-09-20T01:58:54Z\"}]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "artifacthub_k8s",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:56:39Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://artifacthub.io/api/v1/packages/search?ts_query_web=nginx&limit=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "cache-control",
+            "max-age=300"
+          ],
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"packages\":[{\"package_id\":\"bec45f52-fe90-46a1-b6eb-a3dcd9bb203f\",\"name\":\"nginx\",\"normalized_name\":\"nginx\",\"category\":5,\"category_display_name\":\"Networking\",\"logo_image_id\":\"df8b0c56-3686-47ad-b3cf-44ab4c2ef096\",\"stars\":107,\"description\":\"NGINX Open Source is a web server that can be also used as a reverse proxy, load balancer, and HTTP cache. Recommended for high-demanding sites due to its ability to provide faster content.\",\"version\":\"25.2.19\",\"app_version\":\"1.31.10\",\"deprecated\":false,\"has_values_schema\":false,\"signed\":true,\"signatures\":[\"cosign\"],\"security_report_summary\":{\"low\":0,\"high\":0,\"medium\":0,\"unknown\":0,\"critical\":0},\"all_containers_images_whitelisted\":false,\"production_organizations_count\":2,\"ts\":1795473324,\"repository\":{\"url\":\"https://charts.bitnami.com/bitnami\",\"kind\":0,\"name\":\"bitnami\",\"official\":false,\"display_name\":\"Bitnami\",\"repository_id\":\"64117528-d525-41d6-862c-41a43207c431\",\"scanner_disabled\":false,\"organization_name\":\"bitnami\",\"verified_publisher\":true,\"organization_display_name\":\"Bitnami\"}},{\"package_id\":\"ba70c546-4f86-4d82-b414-0bd0f47fc731\",\"name\":\"nginx\",\"normalized_name\":\"nginx\",\"category\":5,\"category_display_name\":\"Networking\",\"logo_image_id\":\"2e078225-f162-4fe7-bd80-bb6ccf0d8376\",\"stars\":7,\"description\":\"Nginx is a high-performance HTTP server and reverse proxy.\",\"version\":\"0.16.19\",\"app_version\":\"1.31.9\",\"license\":\"Apache-2.0\",\"deprecated\":false,\"has_values_schema\":true,\"signed\":true,\"signatures\":[\"cosign\"],\"security_report_summary\":{\"low\":4,\"high\":1,\"medium\":7,\"unknown\":0,\"critical\":0},\"all_containers_images_whitelisted\":false,\"production_organizations_count\":0,\"ts\":1795600905,\"repository\":{\"url\":\"oci://registry-1.docker.io/cloudpirates/nginx\",\"kind\":0,\"name\":\"cloudpirates-nginx\",\"official\":false,\"display_name\":\"nginx\",\"repository_id\":\"7e7ab434-cbc6-4e1b-aa32-5ad4145a9fa2\",\"scanner_disabled\":false,\"organization_name\":\"cloudpirates\",\"verified_publisher\":true,\"organization_display_name\":\"CloudPirates\"}},{\"package_id\":\"78bb67fd-db9b-431c-ba79-b3039a712b0f\",\"name\":\"Nginx\",\"normalized_name\":\"nginx\",\"logo_image_id\":\"6115c69e-179c-4f53-afc3-abbb3f4ea97c\",\"stars\":2,\"description\":\"Falco rules for securing Nginx\",\"version\":\"1.0.0\",\"deprecated\":false,\"has_values_schema\":false,\"signed\":false,\"production_organizations_count\":0,\"ts\":1621946966,\"repository\":{\"url\":\"https://github.com/falcosecurity/cloud-native-security-hub/resources/falco\",\"kind\":1,\"name\":\"security-hub\",\"official\":false,\"display_name\":\"Security Hub\",\"repository_id\":\"92cc7462-27d6-4d9f-95e6-a53bd37174ae\",\"scanner_disabled\":false,\"organization_name\":\"falco\",\"verified_publisher\":false,\"organization_display_name\":\"Falco\"}}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

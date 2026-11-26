@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "source": "semanticscholar",
+  "op": "paper",
+  "recordedAt": "2026-11-25T14:06:31Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.semanticscholar.org/graph/v1/paper/DOI:10.1145/1571941.1572114?fields=paperId%2Ctitle%2Cabstract%2Cyear%2CpublicationDate%2Cvenue%2CcitationCount%2CinfluentialCitationCount%2CisOpenAccess%2CopenAccessPdf%2CexternalIds%2Cauthors"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"paperId\": \"9e698010f9d8fa374e7f49f776af301dd200c548\", \"externalIds\": {\"MAG\": \"2148972377\", \"DBLP\": \"conf/sigir/CormackCB09\", \"DOI\": \"10.1145/1571941.1572114\", \"CorpusId\": 12408211}, \"title\": \"Reciprocal rank fusion outperforms condorcet and individual rank learning methods\", \"venue\": \"Annual International ACM SIGIR Conference on Research and Development in Information Retrieval\", \"year\": 2009, \"citationCount\": 1732, \"influentialCitationCount\": 245, \"isOpenAccess\": false, \"openAccessPdf\": {\"url\": \"\", \"status\": \"CLOSED\", \"license\": null, \"disclaimer\": \"Notice: The following paper fields have been elided by the publisher: {'abstract'}. Paper or abstract available at https://api.unpaywall.org/v2/10.1145/1571941.1572114?email=<INSERT_YOUR_EMAIL> or https://doi.org/10.1145/1571941.1572114, which is subject to the license by the author or copyright owner provided with this content. Please go to the source to verify the license and copyright information for your use.\"}, \"publicationDate\": \"2009-07-19\", \"authors\": [{\"authorId\": \"3114123\", \"name\": \"G. Cormack\"}, {\"authorId\": \"1751287\", \"name\": \"C. Clarke\"}, {\"authorId\": \"2178188\", \"name\": \"Stefan B\\u00fcttcher\"}], \"abstract\": null}\n"
+      }
+    }
+  ]
+}

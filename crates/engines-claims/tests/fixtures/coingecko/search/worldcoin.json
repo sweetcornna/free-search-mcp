@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "source": "coingecko",
+  "op": "search",
+  "recordedAt": "2026-11-25T10:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.coingecko.com/api/v3/search?query=worldcoin",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          ["content-type", "application/json"]
+        ],
+        "bodyText": "{\"coins\":[{\"id\":\"worldcoin-wld\",\"name\":\"Worldcoin\",\"symbol\":\"WLD\"}]}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.coingecko.com/api/v3/simple/price?ids=worldcoin-wld&vs_currencies=usd,cny&include_24hr_change=true&include_market_cap=true&include_last_updated_at=true",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          ["content-type", "application/json"]
+        ],
+        "bodyText": "{\"worldcoin-wld\":{\"usd\":0.92,\"cny\":6.16,\"usd_24h_change\":-0.47,\"usd_market_cap\":1600000000,\"last_updated_at\":1790048000}}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,cny&include_24hr_change=true&include_market_cap=true&include_last_updated_at=true",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          ["content-type", "application/json"]
+        ],
+        "bodyText": "{\"bitcoin\":{\"usd\":85485,\"cny\":572421,\"usd_24h_change\":1.25,\"usd_market_cap\":1700000000000,\"last_updated_at\":1790048000}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

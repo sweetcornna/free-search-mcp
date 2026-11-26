@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "drops_dagstuhl",
+  "op": "work",
+  "recordedAt": "2026-11-25T12:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://drops.dagstuhl.de/oai?metadataPrefix=oai_dc&verb=GetRecord&identifier=oai%3Adrops-oai.dagstuhl.de%3A28348",
+        "headersSubset": {
+          "accept": "application/xml"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "cache-control",
+            "no-cache, private"
+          ],
+          [
+            "content-type",
+            "text/xml; charset=UTF-8"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd\">\n  <responseDate>2026-11-25T12:46:57Z</responseDate>\n  <request verb=\"GetRecord\" metadataPrefix=\"oai_dc\" identifier=\"oai:drops-oai.dagstuhl.de:28348\">https://drops.dagstuhl.de/oai</request>\n  <GetRecord>\n    <record>\n      <header>\n        <identifier>oai:drops-oai.dagstuhl.de:28348</identifier>\n        <datestamp>2026-11-20T10:52:29Z</datestamp>\n        <setSpec>ddc:004</setSpec>\n        <setSpec>open_access</setSpec>\n      </header>\n      <metadata>\n        <oai_dc:dc xmlns:oai_dc=\"http://www.openarchives.org/OAI/2.0/oai_dc/\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd\">\n          <dc:title>LIPIcs, Volume 398, IPEC 2026, Complete Volume</dc:title>\n          <dc:creator>Korhonen, Tuukka</dc:creator>\n          <dc:creator>Lampis, Michael</dc:creator>\n          <dc:subject>LIPIcs, Volume 398, IPEC 2026, Complete Volume</dc:subject>\n          <dc:description>LIPIcs, Volume 398, IPEC 2026, Complete Volume</dc:description>\n          <dc:publisher>Schloss Dagstuhl – Leibniz-Zentrum für Informatik</dc:publisher>\n          <dc:contributor>Tuukka Korhonen and Michael Lampis</dc:contributor>\n          <dc:date>2026</dc:date>\n          <dc:relation>Is Part Of LIPIcs, Volume 398, 21st International Symposium on Parameterized and Exact Computation (IPEC 2026)</dc:relation>\n          <dc:type>Proceedings</dc:type>\n          <dc:type>Text</dc:type>\n          <dc:type>doc-type:ResearchArticle</dc:type>\n          <dc:type>publishedVersion</dc:type>\n          <dc:format>application/pdf</dc:format>\n          <dc:identifier>doi:10.4230/LIPIcs.IPEC.2026</dc:identifier>\n          <dc:identifier>urn:nbn:de:0030-drops-283485</dc:identifier>\n          <dc:identifier>https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.IPEC.2026</dc:identifier>\n          <dc:language>eng</dc:language>\n          <dc:rights>https://creativecommons.org/licenses/by/4.0/legalcode</dc:rights>\n        </oai_dc:dc>\n      </metadata>\n    </record>\n  </GetRecord>\n</OAI-PMH>\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

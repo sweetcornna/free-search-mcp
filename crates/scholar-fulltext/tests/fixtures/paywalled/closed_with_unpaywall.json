@@ -1,0 +1,208 @@
+{
+  "version": 1,
+  "source": "synthetic_closed_with_unpaywall",
+  "op": "closed_unpaywall",
+  "recordedAt": "",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://pmc.ncbi.nlm.nih.gov/tools/idconv/api/v1/articles/?format=json&ids=10.1126%2Fscience.aaa8415&tool=free-search-mcp",
+        "headersSubset": {
+          "accept": "application/json"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"status\":\"ok\",\"response-date\":\"2026-11-25 09:26:48\",\"request\":{\"warnings\":[\"query param `email` is missing.\"],\"format\":\"json\",\"ids\":[\"10.1126/science.aaa8415\"],\"tool\":\"oa-client\",\"echo\":\"ids=10.1126%2Fscience.aaa8415&format=json&tool=oa-client\",\"versions\":\"no\",\"showaiid\":\"no\",\"idtype\":\"doi\"},\"records\":[{\"doi\":\"10.1126/science.aaa8415\",\"requested-id\":\"10.1126/science.aaa8415\",\"status\":\"error\",\"errmsg\":\"Identifier not found in PMC\"}]}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.unpaywall.org/v2/10.1126/science.aaa8415",
+        "headersSubset": {
+          "accept": "application/json"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"doi\": \"10.1126/science.aaa8415\", \"doi_url\": \"https://doi.org/10.1126/science.aaa8415\", \"is_oa\": false, \"oa_status\": \"closed\", \"best_oa_location\": null, \"oa_locations\": []}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.openalex.org/works/https://doi.org/10.1126/science.aaa8415?select=id%2Cids%2Cdoi%2Copen_access%2Cbest_oa_location%2Clocations%2Cprimary_location",
+        "headersSubset": {
+          "accept": "application/json"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"id\":\"https://openalex.org/W1901616594\",\"ids\":{\"openalex\":\"https://openalex.org/W1901616594\",\"doi\":\"https://doi.org/10.1126/science.aaa8415\",\"mag\":\"1901616594\",\"pmid\":\"https://pubmed.ncbi.nlm.nih.gov/26185243\"},\"doi\":\"https://doi.org/10.1126/science.aaa8415\",\"open_access\":{\"is_oa\":false,\"oa_status\":\"closed\",\"oa_url\":null,\"any_repository_has_fulltext\":false},\"best_oa_location\":null,\"locations\":[{\"id\":\"doi:10.1126/science.aaa8415\",\"doi\":\"https://doi.org/10.1126/science.aaa8415\",\"is_oa\":false,\"landing_page_url\":\"https://doi.org/10.1126/science.aaa8415\",\"pdf_url\":null,\"source\":{\"id\":\"https://openalex.org/S3880285\",\"display_name\":\"Science\",\"issn_l\":\"0036-8075\",\"issn\":[\"0036-8075\",\"0193-4511\",\"1095-9203\"],\"is_oa\":false,\"is_in_doaj\":false,\"is_core\":true,\"listed_in\":[\"anvur-class-a\",\"anvur-scientific\",\"cwts-core\",\"dongbi-a\",\"doyens\",\"erih-plus\",\"jufo-3\",\"ki-jl-3\",\"medline\",\"norway-2\",\"poland-200\",\"russia-white-list-1\",\"vabb-shw\"],\"host_organization\":\"https://openalex.org/P4310315823\",\"host_organization_name\":\"American Association for the Advancement of Science\",\"host_organization_lineage\":[\"https://openalex.org/P4310315823\"],\"host_organization_lineage_names\":[\"American Association for the Advancement of Science\"],\"type\":\"journal\"},\"license\":null,\"license_id\":null,\"version\":\"publishedVersion\",\"is_accepted\":true,\"is_published\":true,\"raw_source_name\":\"Science\",\"raw_type\":\"journal-article\"},{\"id\":\"pmid:26185243\",\"doi\":null,\"is_oa\":false,\"landing_page_url\":\"https://pubmed.ncbi.nlm.nih.gov/26185243\",\"pdf_url\":null,\"source\":{\"id\":\"https://openalex.org/S4306525036\",\"display_name\":\"PubMed\",\"issn_l\":null,\"issn\":null,\"is_oa\":false,\"is_in_doaj\":false,\"is_core\":false,\"listed_in\":[],\"host_organization\":\"https://openalex.org/I1299303238\",\"host_organization_name\":\"National Institutes of Health\",\"host_organization_lineage\":[\"https://openalex.org/I1299303238\"],\"host_organization_lineage_names\":[],\"type\":\"repository\"},\"license\":null,\"license_id\":null,\"version\":\"publishedVersion\",\"is_accepted\":true,\"is_published\":true,\"raw_source_name\":\"Science (New York, N.Y.)\",\"raw_type\":\"Journal Article\"}],\"primary_location\":{\"id\":\"doi:10.1126/science.aaa8415\",\"doi\":\"https://doi.org/10.1126/science.aaa8415\",\"is_oa\":false,\"landing_page_url\":\"https://doi.org/10.1126/science.aaa8415\",\"pdf_url\":null,\"source\":{\"id\":\"https://openalex.org/S3880285\",\"display_name\":\"Science\",\"issn_l\":\"0036-8075\",\"issn\":[\"0036-8075\",\"0193-4511\",\"1095-9203\"],\"is_oa\":false,\"is_in_doaj\":false,\"is_core\":true,\"listed_in\":[\"anvur-class-a\",\"anvur-scientific\",\"cwts-core\",\"dongbi-a\",\"doyens\",\"erih-plus\",\"jufo-3\",\"ki-jl-3\",\"medline\",\"norway-2\",\"poland-200\",\"russia-white-list-1\",\"vabb-shw\"],\"host_organization\":\"https://openalex.org/P4310315823\",\"host_organization_name\":\"American Association for the Advancement of Science\",\"host_organization_lineage\":[\"https://openalex.org/P4310315823\"],\"host_organization_lineage_names\":[\"American Association for the Advancement of Science\"],\"type\":\"journal\"},\"license\":null,\"license_id\":null,\"version\":\"publishedVersion\",\"is_accepted\":true,\"is_published\":true,\"raw_source_name\":\"Science\",\"raw_type\":\"journal-article\"}}\n",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.semanticscholar.org/graph/v1/paper/DOI:10.1126/science.aaa8415?fields=openAccessPdf%2CexternalIds%2Curl%2CisOpenAccess",
+        "headersSubset": {
+          "accept": "application/json"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"paperId\": \"d422df8bff4e677a3077635db116679d25142bfc\", \"externalIds\": {\"MAG\": \"1901616594\", \"DOI\": \"10.1126/science.aaa8415\", \"CorpusId\": 677218, \"PubMed\": \"26185243\"}, \"url\": \"https://www.semanticscholar.org/paper/d422df8bff4e677a3077635db116679d25142bfc\", \"isOpenAccess\": false, \"openAccessPdf\": {\"url\": \"\", \"status\": \"CLOSED\", \"license\": null}}\n",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.core.ac.uk/v3/search/works?limit=3&q=doi%3A%2210.1126%2Fscience.aaa8415%22",
+        "headersSubset": {
+          "accept": "application/json"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"totalHits\":0,\"limit\":3,\"offset\":0,\"results\":[],\"searchId\":\"70c0cb2d1f0cc99213cd7493fb6a3533\"}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://doaj.org/api/search/articles/doi:10.1126%2Fscience.aaa8415",
+        "headersSubset": {
+          "accept": "application/json"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"total\": 0, \"page\": 1, \"pageSize\": 10, \"timestamp\": \"2026-11-25T14:26:56.179455Z\", \"query\": \"doi:10.1126/science.aaa8415\", \"results\": [], \"last\": \"https://doaj.org/api/v4/search/articles/doi:10.1126/science.aaa8415?page=1&pageSize=10\"}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.crossref.org/works/10.1126/science.aaa8415",
+        "headersSubset": {
+          "accept": "application/json"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"status\":\"ok\",\"message-type\":\"work\",\"message-version\":\"1.0.0\",\"message\":{\"indexed\":{\"date-parts\":[[2026,11,24]],\"date-time\":\"2026-11-24T23:24:47Z\",\"timestamp\":1795562687518,\"version\":\"4.11.0\"},\"reference-count\":31,\"publisher\":\"American Association for the Advancement of Science (AAAS)\",\"issue\":\"6245\",\"content-domain\":{\"domain\":[],\"crossmark-restriction\":false},\"short-container-title\":[\"Science\"],\"published-print\":{\"date-parts\":[[2015,7,17]]},\"abstract\":\"<jats:p>Machine learning addresses the question of how to build computers that improve automatically through experience. It is one of today\\u2019s most rapidly growing technical fields, lying at the intersection of computer science and statistics, and at the core of artificial intelligence and data science. Recent progress in machine learning has been driven both by the development of new learning algorithms and theory and by the ongoing explosion in the availability of online data and low-cost computation. The adoption of data-intensive machine-learning methods can be found throughout science, technology and commerce, leading to more evidence-based decision-making across many walks of life, including health care, manufacturing, education, financial modeling, policing, and marketing.<\\/jats:p>\",\"DOI\":\"10.1126\\/science.aaa8415\",\"type\":\"journal-article\",\"created\":{\"date-parts\":[[2015,7,16]],\"date-time\":\"2015-07-16T14:14:38Z\",\"timestamp\":1437056078000},\"page\":\"255-260\",\"source\":\"Crossref\",\"is-referenced-by-count\":9086,\"title\":[\"Machine learning: Trends, perspectives, and prospects\"],\"prefix\":\"10.1126\",\"volume\":\"349\",\"author\":[{\"given\":\"M. I.\",\"family\":\"Jordan\",\"sequence\":\"first\",\"affiliation\":[{\"name\":\"Department of Electrical Engineering and Computer Sciences, Department of Statistics, University of California, Berkeley, CA, USA.\"}],\"role\":[{\"vocabulary\":\"crossref\",\"role\":\"author\"}]},{\"given\":\"T. M.\",\"family\":\"Mitchell\",\"sequence\":\"additional\",\"affiliation\":[{\"name\":\"Machine Learning Department, Carnegie Mellon University, Pittsburgh, PA, USA.\"}],\"role\":[{\"vocabulary\":\"crossref\",\"role\":\"author\"}]}],\"member\":\"221\",\"reference\":[{\"key\":\"e_1_3_1_2_2\",\"unstructured\":\"T. Hastie R. Tibshirani J. Friedman The Elements of Statistical Learning: Data Mining Inference and Prediction (Springer New York 2011).\"},{\"key\":\"e_1_3_1_3_2\",\"unstructured\":\"K. Murphy Machine Learning: A Probabilistic Perspective (MIT Press Cambridge MA 2012).\"},{\"key\":\"e_1_3_1_4_2\",\"doi-asserted-by\":\"publisher\",\"DOI\":\"10.1145\\/1968.1972\"},{\"key\":\"e_1_3_1_5_2\",\"doi-asserted-by\":\"publisher\",\"DOI\":\"10.1073\\/pnas.1302293110\"},{\"key\":\"e_1_3_1_6_2\",\"doi-asserted-by\":\"publisher\",\"DOI\":\"10.1137\\/S0097539797325648\"},{\"key\":\"e_1_3_1_7_2\",\"unstructured\":\"S. Shalev-Shwartz O. Shamir E. Tromer Using more data to speed up training time Proceedings of the Fifteenth Conference on Artificial Intelligence and Statistics Canary Islands Spain 21 to 23 April 2012.\"},{\"key\":\"e_1_3_1_8_2\",\"doi-asserted-by\":\"crossref\",\"unstructured\":\"S. Boyd N. Parikh E. Chu B. Peleato J. Eckstein in Foundations and Trends in Machine Learning 3 (Now Publishers Boston 2011) pp. 1\\u2013122.\",\"DOI\":\"10.1561\\/2200000016\"},{\"key\":\"e_1_3_1_9_2\",\"doi-asserted-by\":\"crossref\",\"unstructured\":\"S. Sra S. Nowozin S. Wright Optimization for Machine Learning (MIT Press Cambridge MA 2011).\",\"DOI\":\"10.7551\\/mitpress\\/8996.001.0001\"},{\"key\":\"e_1_3_1_10_2\",\"doi-asserted-by\":\"publisher\",\"DOI\":\"10.1016\\/j.neunet.2014.09.003\"},{\"key\":\"e_1_3_1_11_2\",\"doi-asserted-by\":\"crossref\",\"unstructured\":\"Y. Bengio in Foundations and Trends in Machine Learning 2 (Now Publishers Boston 2009) pp. 1\\u2013127.\",\"DOI\":\"10.1561\\/2200000006\"},{\"key\":\"e_1_3_1_12_2\",\"first-page\":\"1097\",\"article-title\":\"Imagenet classification with deep convolutional neural networks\",\"volume\":\"25\",\"author\":\"Krizhevsky A.\",\"year\":\"2015\",\"unstructured\":\"Krizhevsky A., Sutskever I., Hinton G., Imagenet classification with deep convolutional neural networks. Adv. Neural Inf. Process. Syst. 25, 1097\\u20131105 (2015).\",\"journal-title\":\"Adv. Neural Inf. Process. Syst.\"},{\"key\":\"e_1_3_1_13_2\",\"doi-asserted-by\":\"publisher\",\"DOI\":\"10.1109\\/MSP.2012.2205597\"},{\"key\":\"e_1_3_1_14_2\",\"doi-asserted-by\":\"publisher\",\"DOI\":\"10.1126\\/science.1127647\"},{\"key\":\"e_1_3_1_15_2\",\"doi-asserted-by\":\"publisher\",\"DOI\":\"10.1038\\/nature14236\"},{\"key\":\"e_1_3_1_16_2\",\"doi-asserted-by\":\"crossref\",\"unstructured\":\"R. S. Sutton A. G. Barto Reinforcement Learning: An Introduction (MIT Press Cambridge MA 1998).\",\"DOI\":\"10.1109\\/TNN.1998.712192\"},{\"key\":\"e_1_3_1_17_2\",\"doi-asserted-by\":\"crossref\",\"unstructured\":\"E. Yaylali J. S. Ivy Partially observable MDPs (POMDPs): Introduction and examples. Encyclopedia of Operations Research and Management Science (John Wiley New York 2011).\",\"DOI\":\"10.1002\\/9780470400531.eorms0646\"},{\"key\":\"e_1_3_1_18_2\",\"doi-asserted-by\":\"publisher\",\"DOI\":\"10.1126\\/science.275.5306.1593\"},{\"key\":\"e_1_3_1_19_2\",\"doi-asserted-by\":\"crossref\",\"unstructured\":\"C. Dwork F. McSherry K. Nissim A. Smith Calibrating noise to sensitivity in private data analysis in Proceedings of the Third Theory of Cryptography Conference New York 4 to 7 March 2006 pp. 265\\u2013284.\",\"DOI\":\"10.1007\\/11681878_14\"},{\"key\":\"e_1_3_1_20_2\",\"doi-asserted-by\":\"publisher\",\"DOI\":\"10.1145\\/2450142.2450148\"},{\"key\":\"e_1_3_1_21_2\",\"doi-asserted-by\":\"publisher\",\"DOI\":\"10.1145\\/2666468\"},{\"key\":\"e_1_3_1_22_2\",\"unstructured\":\"M.-F. Balcan A. Blum S. Fine Y. Mansour Distributed learning communication complexity and privacy. Proceedings of the 29th Conference on Computational Learning Theory Edinburgh UK 26 June to 1 July 2012.\"},{\"key\":\"e_1_3_1_23_2\",\"unstructured\":\"Y. Zhang J. Duchi M. Jordan M. Wainwright in Advances in Neural Information Processing Systems 26 L. Bottou C. Burges Z. Ghahramani M. Welling Eds. (Curran Associates Red Hook NY 2014) pp. 1\\u201323.\"},{\"key\":\"e_1_3_1_24_2\",\"doi-asserted-by\":\"publisher\",\"DOI\":\"10.1214\\/13-AOS1127\"},{\"key\":\"e_1_3_1_25_2\",\"doi-asserted-by\":\"publisher\",\"DOI\":\"10.1111\\/rssb.12050\"},{\"key\":\"e_1_3_1_26_2\",\"doi-asserted-by\":\"publisher\",\"DOI\":\"10.1561\\/2200000035\"},{\"key\":\"e_1_3_1_27_2\",\"unstructured\":\"T. Mitchell W. Cohen E. Hruschka P. Talukdar J. Betteridge A. Carlson B. Dalvi M. Gardner B. Kisiel J. Krishnamurthy N. Lao K. Mazaitis T. Mohamed N. Nakashole E. Platanios A. Ritter M. Samadi B. Settles R. Wang D. Wijaya A. Gupta X. Chen A. Saparov M. Greaves J. Welling Proceedings of the Twenty-Ninth Conference on Artificial Intelligence (AAAI-15) 25 to 30 January 2015 Austin TX.\"},{\"key\":\"e_1_3_1_28_2\",\"first-page\":\"1633\",\"article-title\":\"Transfer learning for reinforcement learning domains: A survey\",\"volume\":\"10\",\"author\":\"Taylor M.\",\"year\":\"2009\",\"unstructured\":\"Taylor M., Stone P., Transfer learning for reinforcement learning domains: A survey. J. Mach. Learn. Res. 10, 1633\\u20131685 (2009).\",\"journal-title\":\"J. Mach. Learn. Res.\"},{\"key\":\"e_1_3_1_29_2\",\"doi-asserted-by\":\"crossref\",\"unstructured\":\"S. Thrun L. Pratt Learning To Learn (Kluwer Academic Press Boston 1998).\",\"DOI\":\"10.1007\\/978-1-4615-5529-2\"},{\"key\":\"e_1_3_1_30_2\",\"doi-asserted-by\":\"publisher\",\"DOI\":\"10.1371\\/journal.pone.0112575\"},{\"key\":\"e_1_3_1_31_2\",\"unstructured\":\"K. Xu J. L. Ba R. Kiros K. Cho A. Courville R. Salakhutdinov R. S. Zemel Y. Bengio Proceedings of the 32nd International Conference on Machine Learning vol. 37 Lille France 6 to 11 July 2015 pp. 2048\\u20132057.\"},{\"key\":\"e_1_3_1_32_2\",\"doi-asserted-by\":\"publisher\",\"DOI\":\"10.1145\\/2133806.2133826\"}],\"container-title\":[\"Science\"],\"original-title\":[],\"language\":\"en\",\"link\":[{\"URL\":\"https:\\/\\/www.science.org\\/doi\\/pdf\\/10.1126\\/science.aaa8415\",\"content-type\":\"unspecified\",\"content-version\":\"vor\",\"intended-application\":\"similarity-checking\"}],\"deposited\":{\"date-parts\":[[2024,6,9]],\"date-time\":\"2024-06-09T21:07:05Z\",\"timestamp\":1717967225000},\"score\":1,\"resource\":{\"primary\":{\"URL\":\"https:\\/\\/www.science.org\\/doi\\/10.1126\\/science.aaa8415\"}},\"subtitle\":[],\"short-title\":[],\"issued\":{\"date-parts\":[[2015,7,17]]},\"references-count\":31,\"journal-issue\":{\"issue\":\"6245\",\"published-print\":{\"date-parts\":[[2015,7,17]]}},\"alternative-id\":[\"10.1126\\/science.aaa8415\"],\"URL\":\"https:\\/\\/doi.org\\/10.1126\\/science.aaa8415\",\"relation\":{},\"ISSN\":[\"0036-8075\",\"1095-9203\"],\"issn-type\":[{\"value\":\"0036-8075\",\"type\":\"print\"},{\"value\":\"1095-9203\",\"type\":\"electronic\"}],\"subject\":[],\"published\":{\"date-parts\":[[2015,7,17]]}}}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.datacite.org/dois/10.1126/science.aaa8415",
+        "headersSubset": {
+          "accept": "application/vnd.api+json"
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": [
+          [
+            "content-type",
+            "application/vnd.api+json"
+          ]
+        ],
+        "bodyText": "{\"errors\":[{\"status\":\"404\",\"title\":\"The resource you are looking for doesn't exist.\"}]}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.archives-ouvertes.fr/search/?fl=halId_s%2Curi_s%2CfileMain_s%2CopenAccess_bool%2CdoiId_s&q=doiId_s%3A%2210.1126%2Fscience.aaa8415%22&rows=1&wt=json",
+        "headersSubset": {
+          "accept": "application/json"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\n  \"response\":{\n    \"numFound\":0,\n    \"start\":0,\n    \"maxScore\":0.0,\n    \"numFoundExact\":true,\n    \"docs\":[ ]\n  }\n}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://zenodo.org/api/records?q=doi%3A%2210.1126%2Fscience.aaa8415%22&size=1",
+        "headersSubset": {
+          "accept": "application/json"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"hits\": {\"hits\": [], \"total\": 0}, \"aggregations\": {\"publication_date\": {\"buckets\": [], \"label\": \"Publication date\"}, \"access_status\": {\"buckets\": [], \"label\": \"Access status\"}, \"resource_type\": {\"buckets\": [], \"label\": \"Resource types\"}, \"subject\": {\"buckets\": [], \"label\": \"Subjects\"}, \"file_type\": {\"buckets\": [], \"label\": \"File type\"}}, \"links\": {\"self\": \"https://zenodo.org/api/records?page=1&q=doi:%2210.1126/science.aaa8415%22&size=1&sort=bestmatch\"}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

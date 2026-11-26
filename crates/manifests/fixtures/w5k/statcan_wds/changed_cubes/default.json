@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "statcan_wds",
+  "op": "changed_cubes",
+  "recordedAt": "2026-11-25T13:05:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www150.statcan.gc.ca/t1/wds/rest/getChangedCubeList/2025-01-15",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"status\":\"SUCCESS\",\"object\":[{\"responseStatusCode\":0,\"productId\":33100036,\"releaseTime\":\"2025-01-15T08:30\"},{\"responseStatusCode\":0,\"productId\":10100139,\"releaseTime\":\"2025-01-15T08:30\"},{\"responseStatusCode\":0,\"productId\":10100158,\"releaseTime\":\"2025-01-15T08:30\"},{\"responseStatusCode\":0,\"productId\":10100111,\"releaseTime\":\"2025-01-15T08:30\"},{\"responseStatusCode\":0,\"productId\":18100258,\"releaseTime\":\"2025-01-15T08:30\"},{\"responseStatusCode\":0,\"productId\":23100287,\"releaseTime\":\"2025-01-15T08:30\"},{\"responseStatusCode\":0,\"productId\":20100074,\"releaseTime\":\"2025-01-15T08:30\"},{\"responseStatusCode\":0,\"productId\":20100076,\"releaseTime\":\"2025-01-15T08:30\"},{\"responseStatusCode\":0,\"productId\":20100003,\"releaseTime\":\"2025-01-15T08:30\"},{\"responseStatusCode\":0,\"productId\":16100011,\"releaseTime\":\"2025-01-15T08:30\"},{\"responseStatusCode\":0,\"productId\":16100013,\"releaseTime\":\"2025-01-15T08:30\"},{\"responseStatusCode\":0,\"productId\":16100048,\"releaseTime\":\"2025-01-15T08:30\"},{\"responseStatusCode\":0,\"productId\":16100012,\"releaseTime\":\"2025-01-15T08:30\"},{\"responseStatusCode\":0,\"productId\":16100047,\"releaseTime\":\"2025-01-15T08:30\"},{\"responseStatusCode\":0,\"productId\":20100001,\"releaseTime\":\"2025-01-15T08:30\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

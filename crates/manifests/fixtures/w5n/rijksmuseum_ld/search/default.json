@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "rijksmuseum_ld",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://data.rijksmuseum.nl/search/collection?title=Night+Watch",
+        "headersSubset": {
+          "accept": "application/ld+json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/ld+json"
+          ]
+        ],
+        "bodyText": "{\"@context\":\"https://linked.art/ns/v1/search.json\",\"id\":\"https://data.rijksmuseum.nl/search/collection?title=Night+Watch\",\"type\":\"OrderedCollectionPage\",\"partOf\":{\"id\":\"https://data.rijksmuseum.nl/search/collection?title=Night+Watch\",\"type\":\"OrderedCollection\",\"totalItems\":4,\"first\":{\"id\":\"https://data.rijksmuseum.nl/search/collection?title=Night+Watch\",\"type\":\"OrderedCollectionPage\"},\"last\":{\"id\":\"https://data.rijksmuseum.nl/search/collection?title=Night+Watch\",\"type\":\"OrderedCollectionPage\"}},\"orderedItems\":[{\"id\":\"https://id.rijksmuseum.nl/200107928\",\"type\":\"HumanMadeObject\"},{\"id\":\"https://id.rijksmuseum.nl/200107938\",\"type\":\"HumanMadeObject\"},{\"id\":\"https://id.rijksmuseum.nl/20015673\",\"type\":\"HumanMadeObject\"},{\"id\":\"https://id.rijksmuseum.nl/20015679\",\"type\":\"HumanMadeObject\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

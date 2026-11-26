@@ -1,0 +1,82 @@
+id = "ietf"
+name = "IETF Datatracker"
+summary = "Official IETF Datatracker API for RFC specifications by title or RFC number, with standards status and abstracts."
+aliases = ["rfc", "rfcs", "datatracker", "rfc-editor"]
+home_url = "https://datatracker.ietf.org"
+tier = 1
+scopes = ["docs"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 3.0, burst = 6, concurrency = 2, timeout_ms = 6000, cache_ttl_s = 86400 }
+
+[op.search]
+summary = "Search IETF RFCs by title substring."
+method = "GET"
+url = "https://datatracker.ietf.org/api/v1/doc/document/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "json", type = "rfc" }
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "HTTP", limit = 3 }, min_results = 2, fixture = "fixtures/w5c/ietf/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "title__icontains", doc = "Title substring to match in RFC titles" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Max RFCs to return" }
+offset = { type = "int", min = 0, to = "offset", doc = "Result offset" }
+
+[op.search.map]
+items = ".objects[]"
+total = ".meta.total_count"
+error = "if (.error | type) == \"string\" and (.error | length) > 0 then .error else null end"
+record = '''
+(.rfc // .rfc_number // (if (.name // "" | startswith("rfc")) then (.name[3:]) else "" end) | tostring) as $num |
+(if .std_level == null then null else ((.std_level | split("/") | map(select(length > 0)) | last) // "") as $k | ({ std: "Internet Standard", ps: "Proposed Standard", ds: "Draft Standard", bcp: "Best Current Practice", inf: "Informational", exp: "Experimental", hist: "Historic", unkn: "Unknown" }[$k] // $k) end) as $lvl |
+([(.tags // [])[] | split("/") | map(select(length > 0)) | last] | if any(. == "verified-errata") then "verified-errata" elif any(. == "errata") then "errata" else null end) as $errata |
+{
+  name: .name,
+  rfcNumber: $num,
+  title: (.title // ""),
+  standardsLevel: $lvl,
+  errata: $errata,
+  pages: .pages,
+  abstract: (.abstract // ""),
+  url: (if ($num | length) > 0 then ("https://www.rfc-editor.org/rfc/rfc" + $num + ".html") else ("https://datatracker.ietf.org/doc/" + (.name // "") + "/") end),
+  datatrackerUrl: ("https://datatracker.ietf.org/doc/" + (.name // "") + "/")
+}'''
+hit = '''
+(.rfc // .rfc_number // (if (.name // "" | startswith("rfc")) then (.name[3:]) else "" end) | tostring) as $num |
+(if .std_level == null then "" else ((.std_level | split("/") | map(select(length > 0)) | last) // "") as $k | ({ std: "Internet Standard", ps: "Proposed Standard", ds: "Draft Standard", bcp: "Best Current Practice", inf: "Informational", exp: "Experimental", hist: "Historic", unkn: "Unknown" }[$k] // $k) end) as $lvl |
+([(.tags // [])[] | split("/") | map(select(length > 0)) | last] | if any(. == "verified-errata") then "has verified errata" elif any(. == "errata") then "has reported errata" else null end) as $errata |
+{
+  title: (if ($num | length) > 0 then "RFC \($num): \(.title // "")" else (.title // .name // "") end),
+  url: (if ($num | length) > 0 then ("https://www.rfc-editor.org/rfc/rfc" + $num + ".html") else ("https://datatracker.ietf.org/doc/" + (.name // "") + "/") end),
+  snippet: ([
+    (if ($num | length) > 0 then "RFC \($num)" else empty end),
+    (if ($lvl | length) > 0 then $lvl else empty end),
+    (if $errata != null then $errata else empty end),
+    ((.abstract // "") | collapse_ws | if length > 260 then .[0:260] + "..." else . end | select(length > 0))
+  ] | join(" · ")),
+  date: null,
+  dateSource: null
+}'''
+
+[op.rfc]
+summary = "Look up an exact RFC by lowercase document name (e.g. rfc9110)."
+method = "GET"
+url = "https://datatracker.ietf.org/api/v1/doc/document/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "json" }
+probe = { params = { name = "rfc9110" }, min_results = 1, fixture = "fixtures/w5c/ietf/rfc/default.json" }
+
+[op.rfc.params]
+name = { type = "string", required = true, to = "name", doc = "Lowercase RFC document name strictly matching rfc<N> e.g. rfc9110" }
+
+[op.rfc.map]
+items = ".objects[]"
+error = "@ref:op.search.map.error"
+record = "@ref:op.search.map.record"
+hit = "@ref:op.search.map.hit"

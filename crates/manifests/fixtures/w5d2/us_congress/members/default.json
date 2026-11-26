@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "us_congress",
+  "op": "members",
+  "recordedAt": "2026-11-25T12:14:49Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.congress.gov/v3/member?format=json&limit=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"members\": [{\"bioguideId\": \"Y000064\", \"district\": null, \"name\": \"Young, Todd\", \"partyName\": \"Republican\", \"state\": \"Indiana\", \"terms\": {\"item\": [{\"chamber\": \"House of Representatives\", \"endYear\": 2017, \"startYear\": 2011}, {\"chamber\": \"Senate\", \"startYear\": 2017}]}, \"updateDate\": \"2025-09-20T10:30:32Z\", \"url\": \"https://api.congress.gov/v3/member/Y000064?format=json\"}, {\"bioguideId\": \"S001176\", \"district\": 1, \"name\": \"Scalise, Steve\", \"partyName\": \"Republican\", \"state\": \"Louisiana\", \"terms\": {\"item\": [{\"chamber\": \"House of Representatives\", \"startYear\": 2008}]}, \"updateDate\": \"2025-09-18T08:00:00Z\", \"url\": \"https://api.congress.gov/v3/member/S001176?format=json\"}, {\"bioguideId\": \"W000779\", \"district\": null, \"name\": \"Wyden, Ron\", \"partyName\": \"Democratic\", \"state\": \"Oregon\", \"terms\": {\"item\": [{\"chamber\": \"Senate\", \"startYear\": 1996}]}, \"updateDate\": \"2025-09-15T11:20:00Z\", \"url\": \"https://api.congress.gov/v3/member/W000779?format=json\"}], \"pagination\": {\"count\": 2598, \"next\": \"https://api.congress.gov/v3/member?offset=3&limit=3&format=json\"}, \"request\": {\"contentType\": \"application/json\", \"format\": \"json\"}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

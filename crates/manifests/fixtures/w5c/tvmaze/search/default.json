@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "tvmaze",
+  "op": "search",
+  "recordedAt": "2026-11-25T11:54:39Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.tvmaze.com/search/shows?q=severance",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ]
+        ],
+        "bodyText": "[{\"score\":0.8978323,\"show\":{\"id\":44933,\"url\":\"https://www.tvmaze.com/shows/44933/severance\",\"name\":\"Severance\",\"type\":\"Scripted\",\"language\":\"English\",\"genres\":[\"Drama\",\"Science-Fiction\",\"Mystery\"],\"status\":\"Running\",\"runtime\":null,\"averageRuntime\":49,\"premiered\":\"2022-02-18\",\"ended\":null,\"officialSite\":\"https://tv.apple.com/show/severance/umc.cmc.1srk2goyh2q2zdxcx605w8vtx\",\"schedule\":{\"time\":\"\",\"days\":[\"Friday\"]},\"rating\":{\"average\":7.7},\"weight\":100,\"network\":null,\"webChannel\":{\"id\":310,\"name\":\"Apple TV\",\"country\":null,\"officialSite\":\"https://tv.apple.com/\"},\"dvdCountry\":null,\"externals\":{\"tvrage\":null,\"thetvdb\":371980,\"imdb\":\"tt11280740\"},\"image\":{\"medium\":\"https://static.tvmaze.com/uploads/images/medium_portrait/548/1371406.jpg\",\"original\":\"https://static.tvmaze.com/uploads/images/original_untouched/548/1371406.jpg\"},\"summary\":\"<p>Mark Scout leads a team at Lumon Industries, whose employees have undergone a severance procedure, which surgically divides their memories between their work and personal lives. This daring experiment in \\\"work-life balance\\\" is called into question as Mark finds himself at the center of an unraveling mystery that will force him to confront the true nature of his work… and of himself.</p>\",\"updated\":1790712623,\"_links\":{\"self\":{\"href\":\"https://api.tvmaze.com/shows/44933\"},\"previousepisode\":{\"href\":\"https://api.tvmaze.com/episodes/2939710\",\"name\":\"Cold Harbor\"}}}},{\"score\":0.2246195,\"show\":{\"id\":85532,\"url\":\"https://www.tvmaze.com/shows/85532/aligned-reverence\",\"name\":\"Aligned Reverence\",\"type\":\"Scripted\",\"language\":\"Chinese\",\"genres\":[\"Drama\",\"Romance\"],\"status\":\"Ended\",\"runtime\":null,\"averageRuntime\":17,\"premiered\":\"2025-12-05\",\"ended\":\"2025-12-12\",\"officialSite\":\"https://v.qq.com/x/cover/mzc002001qhoz7l.html\",\"schedule\":{\"time\":\"12:00\",\"days\":[\"Monday\",\"Tuesday\",\"Wednesday\",\"Thursday\",\"Friday\",\"Saturday\",\"Sunday\"]},\"rating\":{\"average\":null},\"weight\":12,\"network\":null,\"webChannel\":{\"id\":104,\"name\":\"Tencent QQ\",\"country\":{\"name\":\"China\",\"code\":\"CN\",\"timezone\":\"Asia/Shanghai\"},\"officialSite\":\"https://v.qq.com/\"},\"dvdCountry\":null,\"externals\":{\"tvrage\":null,\"thetvdb\":467232,\"imdb\":null},\"image\":{\"medium\":\"https://static.tvmaze.com/uploads/images/medium_portrait/603/1509559.jpg\",\"original\":\"https://static.tvmaze.com/uploads/images/original_untouched/603/1509559.jpg\"},\"summary\":\"<p>Orphaned girl Su Jinyuan trusted the wrong person and fled her marriage, only to bring disaster upon herself. When she returned, she was horrified to find the entire Xiao family, her benefactors wiped out. To atone for her sins, her fate becomes entwined with Xie Yunyan, the Xiao family's adopted son who had taken his brother's place at the wedding. Together, they struggle to survive in desperate circumstances, break free from the shackles of the world, tear their enemies apart, and carve out a blazing, blood-stained love that defies destiny itself.</p>\",\"updated\":1765897752,\"_links\":{\"self\":{\"href\":\"https://api.tvmaze.com/shows/85532\"},\"previousepisode\":{\"href\":\"https://api.tvmaze.com/episodes/3461855\",\"name\":\"Episode 24\"}}}},{\"score\":0.18786977,\"show\":{\"id\":70294,\"url\":\"https://www.tvmaze.com/shows/70294/la-riviere-esperance\",\"name\":\"La Rivière Espérance\",\"type\":\"Scripted\",\"language\":\"French\",\"genres\":[],\"status\":\"Ended\",\"runtime\":90,\"averageRuntime\":90,\"premiered\":\"1995-09-04\",\"ended\":\"1995-10-23\",\"officialSite\":null,\"schedule\":{\"time\":\"\",\"days\":[\"Monday\"]},\"rating\":{\"average\":null},\"weight\":10,\"network\":{\"id\":106,\"name\":\"France 2\",\"country\":{\"name\":\"France\",\"code\":\"FR\",\"timezone\":\"Europe/Paris\"},\"officialSite\":\"https://www.france2.fr/\"},\"webChannel\":null,\"dvdCountry\":null,\"externals\":{\"tvrage\":null,\"thetvdb\":261526,\"imdb\":\"tt0170511\"},\"image\":{\"medium\":\"https://static.tvmaze.com/uploads/images/medium_portrait/471/1177870.jpg\",\"original\":\"https://static.tvmaze.com/uploads/images/original_untouched/471/1177870.jpg\"},\"summary\":null,\"updated\":1704795484,\"_links\":{\"self\":{\"href\":\"https://api.tvmaze.com/shows/70294\"},\"previousepisode\":{\"href\":\"https://api.tvmaze.com/episodes/2610824\",\"name\":\"L'Ame de la vallée\"}}}}]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

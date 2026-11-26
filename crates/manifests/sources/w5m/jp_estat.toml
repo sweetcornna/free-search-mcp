@@ -1,0 +1,90 @@
+id = "jp_estat"
+name = "Japan e-Stat Official Statistics API"
+summary = "Official Portal Site of Official Statistics of Japan (総務省統計局 e-Stat v3.0) for discovering government statistical tables and fetching observation cells (requires free appId)."
+aliases = ["e-stat", "estat", "japan stats", "政府統計"]
+home_url = "https://www.e-stat.go.jp/api/"
+tier = 3
+scopes = ["gov", "dataset"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 4, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 43200 }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_JP_ESTAT_API_KEY"
+in = "query"
+name = "appId"
+format = "{key}"
+route_requires_key = true
+
+[op.search]
+summary = "Search Japanese government statistical tables by English or Japanese keyword."
+method = "GET"
+url = "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsList"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "startPosition", start = 1, max_pages = 3 }
+probe = { params = { query = "population", lang = "E", limit = 3 }, min_results = 2, fixture = "fixtures/w5m/jp_estat/search/default.json" }
+examples = ["source.call('jp_estat.search', { query: 'population', lang: 'E', limit: 5 })"]
+
+[op.search.params]
+query = { type = "string", required = true, to = "searchWord", doc = "Keyword in English (with lang=E) or Japanese (with lang=J)" }
+lang = { type = "string", default = "E", enum = ["E", "J"], to = "lang", doc = "Response language: E (English) or J (Japanese)" }
+stats_code = { type = "string", to = "statsCode", doc = "Optional 5- or 8-digit government statistics code" }
+limit = { type = "int", default = 10, min = 1, max = 100, to = "limit", doc = "Tables per page" }
+offset = { type = "int", default = 1, min = 1, to = "startPosition", doc = "1-based start position" }
+
+[op.search.map]
+items = '(.GET_STATS_LIST.DATALIST_INF.TABLE_INF // []) | if type == "array" then .[] else . end'
+total = "(.GET_STATS_LIST.DATALIST_INF.NUMBER | to_int)"
+error = 'if (.GET_STATS_LIST.RESULT.STATUS // 0) >= 100 then (.GET_STATS_LIST.RESULT.ERROR_MSG // "e-Stat API error") else null end'
+record = '''{
+  statsDataId: (."@id" // ""),
+  statName: (if (.STAT_NAME | type) == "object" then .STAT_NAME."$" else (.STAT_NAME // "") end),
+  govOrg: (if (.GOV_ORG | type) == "object" then .GOV_ORG."$" else (.GOV_ORG // null) end),
+  statisticsName: (.STATISTICS_NAME // null),
+  title: (if (.TITLE | type) == "object" then .TITLE."$" else (.TITLE // "") end),
+  cycle: (.CYCLE // null),
+  surveyDate: (.SURVEY_DATE // null),
+  openDate: (.OPEN_DATE | parse_date),
+  updatedDate: (.UPDATED_DATE | parse_date),
+  totalCells: (.OVERALL_TOTAL_NUMBER | to_int),
+  url: ("https://www.e-stat.go.jp/dbview?sid=" + (."@id" // ""))
+}'''
+hit = '''{
+  title: (if (.TITLE | type) == "object" then .TITLE."$" else (.TITLE // .STATISTICS_NAME // "") end),
+  url: ("https://www.e-stat.go.jp/dbview?sid=" + (."@id" // "")),
+  snippet: ((if (.GOV_ORG | type) == "object" then .GOV_ORG."$" else (.GOV_ORG // "") end) + " · " + (if (.STAT_NAME | type) == "object" then .STAT_NAME."$" else (.STAT_NAME // "") end) + " · Table " + (."@id" // "")),
+  date: ((.UPDATED_DATE // .OPEN_DATE) | parse_date),
+  dateSource: "api"
+}'''
+
+[op.stats_data]
+summary = "Fetch observation data cells from a specific e-Stat statistical table by statsDataId."
+method = "GET"
+url = "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsData"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { stats_data_id = "0003448233", lang = "E", limit = 3 }, min_results = 2, fixture = "fixtures/w5m/jp_estat/stats_data/default.json" }
+examples = ["source.call('jp_estat.stats_data', { stats_data_id: '0003448233', lang: 'E', limit: 20 })"]
+
+[op.stats_data.params]
+stats_data_id = { type = "string", required = true, to = "statsDataId", doc = "e-Stat table ID (@id) from search results" }
+lang = { type = "string", default = "E", enum = ["E", "J"], to = "lang", doc = "Language: E or J" }
+limit = { type = "int", default = 20, min = 1, max = 100, to = "limit", doc = "Maximum observation rows" }
+
+[op.stats_data.map]
+items = '(.GET_STATS_DATA.STATISTICAL_DATA.DATA_INF.VALUE // []) | if type == "array" then .[] else . end'
+error = 'if (.GET_STATS_DATA.RESULT.STATUS // 0) >= 100 then (.GET_STATS_DATA.RESULT.ERROR_MSG // "e-Stat API error") else null end'
+record = '''{
+  value: (."$" | (to_num // .)),
+  unit: (."@unit" // null),
+  tab: (."@tab" // null),
+  cat01: (."@cat01" // null),
+  cat02: (."@cat02" // null),
+  area: (."@area" // null),
+  time: (."@time" // null)
+}'''

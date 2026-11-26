@@ -1,0 +1,84 @@
+id = "opentargets_graphql"
+name = "Open Targets Platform GraphQL"
+summary = "Open biomedical knowledge graph linking drug targets, diseases, genetic associations, and clinical drugs via GraphQL."
+aliases = ["open targets", "opentargets", "target disease", "drug targets"]
+home_url = "https://platform.opentargets.org"
+tier = 1
+scopes = ["academic.biomed", "dataset"]
+caps = ["search", "lookup", "graph"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 5.0, burst = 10, concurrency = 4, timeout_ms = 8000, cache_ttl_s = 43200, host_bucket = "api.platform.opentargets.org" }
+
+[op.search]
+summary = "Search Open Targets targets, diseases, and drugs via GraphQL."
+method = "POST"
+url = "https://api.platform.opentargets.org/api/v4/graphql"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+body = { kind = "graphql", query = "query($page: Int!, $q: String!, $size: Int!) { search(queryString: $q, page: { index: $page, size: $size }) { total hits { id entity name description score } } }", variables_jaq = '''{
+  page: ($p.page // 0),
+  q: $p.query,
+  size: ($p.limit // 10)
+}''' }
+paginate = { style = "page", param = "page", start = 0, max_pages = 3 }
+probe = { params = { query = "BRCA1", limit = 3 }, min_results = 2, fixture = "fixtures/w5j/opentargets_graphql/search/default.json" }
+examples = ["source.call('opentargets_graphql.search', { query: 'BRCA1', limit: 5 })"]
+
+[op.search.params]
+query = { type = "string", required = true, in = "body", doc = "Target symbol, disease name, or drug query" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "body", doc = "Results per page" }
+page = { type = "int", default = 0, min = 0, in = "body", doc = "0-based page index" }
+
+[op.search.map]
+items = "(.data.search.hits // [])[]"
+total = ".data.search.total"
+error = "if (.errors | type) == \"array\" and (.errors | length) > 0 then .errors[0].message else null end"
+record = '''{
+  id: (.id // ""),
+  entity: (.entity // ""),
+  name: (.name // ""),
+  description: (.description // ""),
+  score: (.score // null),
+  url: ("https://platform.opentargets.org/" + (.entity // "target") + "/" + (.id // ""))
+}'''
+hit = '''{
+  title: ((.name // "") + " [" + (.entity // "") + ": " + (.id // "") + "]"),
+  url: ("https://platform.opentargets.org/" + (.entity // "target") + "/" + (.id // "")),
+  snippet: ((.description // "") | if length > 280 then .[0:277] + "..." else . end),
+  date: null,
+  dateSource: "api"
+}'''
+
+[op.target]
+summary = "Fetch an Open Targets target profile and top associated diseases by Ensembl gene ID."
+method = "POST"
+url = "https://api.platform.opentargets.org/api/v4/graphql"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+body = { kind = "graphql", query = "query($id: String!, $size: Int!) { target(ensemblId: $id) { id approvedSymbol approvedName biotype functionDescriptions associatedDiseases(page: { index: 0, size: $size }) { count rows { score disease { id name } } } } }", variables_jaq = '''{
+  id: $p.ensembl_id,
+  size: ($p.limit // 5)
+}''' }
+probe = { params = { ensembl_id = "ENSG00000012048", limit = 3 }, min_results = 1, fixture = "fixtures/w5j/opentargets_graphql/target/default.json" }
+examples = ["source.call('opentargets_graphql.target', { ensembl_id: 'ENSG00000012048', limit: 5 })"]
+
+[op.target.params]
+ensembl_id = { type = "string", required = true, in = "body", doc = "Ensembl gene ID (e.g. ENSG00000012048)" }
+limit = { type = "int", default = 5, min = 1, max = 25, in = "body", doc = "Maximum associated diseases to include" }
+
+[op.target.map]
+items = ".data.target"
+error = "@ref:op.search.map.error"
+record = '''{
+  id: (.id // ""),
+  symbol: (.approvedSymbol // ""),
+  name: (.approvedName // ""),
+  biotype: (.biotype // null),
+  functionSummary: ((.functionDescriptions // [])[0] // null),
+  associatedDiseaseCount: (.associatedDiseases.count // 0),
+  topDiseases: [(.associatedDiseases.rows // [])[] | { id: .disease.id, name: .disease.name, score: .score }],
+  url: ("https://platform.opentargets.org/target/" + (.id // ""))
+}'''

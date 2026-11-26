@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "source": "so360",
+  "op": "search",
+  "recordedAt": "2026-11-25T13:48:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.so.com/s?q=python+asyncio&rn=10&secure=1",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/html; charset=utf-8"
+          ]
+        ],
+        "bodyText": "<!doctype html><html><head><meta charset=\"utf-8\"><title>python asyncio_360搜索</title></head><body>\n<ul class=\"result\">\n  <li class=\"res-list\">\n    <h3 class=\"res-title\"><a href=\"https://www.so.com/link?m=a1\" data-mdurl=\"https://docs.python.org/zh-cn/3/library/asyncio.html\">asyncio — 异步 I/O — Python 3 文档</a></h3>\n    <p class=\"res-desc\">2026-10-15 asyncio 是用来编写并发代码的库，使用 async/await 语法。</p>\n  </li>\n  <li class=\"res-list\">\n    <h3 class=\"res-title\"><a href=\"https://www.so.com/link?m=a2\" data-mdurl=\"https://peps.python.org/pep-0492/\">PEP 492 – Coroutines with async and await syntax</a></h3>\n    <div class=\"res-comm-con\">Coroutines with async and await syntax for Python asyncio.</div>\n  </li>\n  <li class=\"res-list\">\n    <h3 class=\"res-title\"><a href=\"https://realpython.com/async-io-python/\">Async IO in Python: A Complete Walkthrough</a></h3>\n    <p class=\"res-desc\">Hands-on guide to Python asyncio event loops and TaskGroup.</p>\n  </li>\n</ul>\n</body></html>",
+        "bodyB64": null
+      }
+    }
+  ]
+}

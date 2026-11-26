@@ -1,0 +1,26 @@
+# A1 §G.5.2 instance vector: activitypub_fediverse with dialect.flavor (A1 §E #16, §F.9).
+protocol = "activitypub_fediverse"
+
+[[instance]]
+id = "lemmy_world"
+name = "Lemmy.world"
+summary = "Large general-interest Lemmy instance (posts search)."
+base_url = "https://lemmy.world"
+scopes = ["forum"]
+caps = ["search"]
+tier = 3
+pool_role = "explicit"
+dialect = { flavor = "lemmy", lemmy_type = "Posts" }
+probe = { op = "search", params = { query = "rust", limit = 3 }, min_results = 1, fixture = "fixtures/w5g/lemmy_world/search/default.json" }
+
+[[instance]]
+id = "mastodon_social"
+name = "mastodon.social"
+summary = "Flagship Mastodon server (hashtag timelines)."
+base_url = "https://mastodon.social"
+scopes = ["forum"]
+caps = ["search"]
+tier = 3
+pool_role = "explicit"
+dialect = { flavor = "mastodon" }
+probe = { op = "search", params = { query = "#rustlang", limit = 3 }, min_results = 1 }

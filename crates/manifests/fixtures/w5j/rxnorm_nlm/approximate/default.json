@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "source": "rxnorm_nlm",
+  "op": "approximate",
+  "recordedAt": "2026-11-25T13:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://rxnav.nlm.nih.gov/REST/approximateTerm.json?term=metformin&maxEntries=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json;charset=utf-8"
+          ],
+          [
+            "cache-control",
+            "no-store, no-cache"
+          ],
+          [
+            "etag",
+            "W/\"20AA_261102F;1793130400;3.1.358\""
+          ]
+        ],
+        "bodyText": "{\"approximateGroup\":{\"inputTerm\":null,\"candidate\":[{\"rxcui\":\"6809\",\"rxaui\":\"10328664\",\"score\":\"11.205785751342773\",\"rank\":\"1\",\"source\":\"GS\"},{\"rxcui\":\"6809\",\"rxaui\":\"12251601\",\"score\":\"11.205785751342773\",\"rank\":\"1\",\"name\":\"metformin\",\"source\":\"RXNORM\"},{\"rxcui\":\"6809\",\"rxaui\":\"2628685\",\"score\":\"11.205785751342773\",\"rank\":\"1\",\"name\":\"METFORMIN\",\"source\":\"VANDF\"},{\"rxcui\":\"6809\",\"rxaui\":\"3605328\",\"score\":\"11.205785751342773\",\"rank\":\"1\",\"source\":\"NDDF\"},{\"rxcui\":\"6809\",\"rxaui\":\"5481094\",\"score\":\"11.205785751342773\",\"rank\":\"1\",\"name\":\"metformin\",\"source\":\"ATC\"},{\"rxcui\":\"6809\",\"rxaui\":\"8381393\",\"score\":\"11.205785751342773\",\"rank\":\"1\",\"name\":\"Metformin\",\"source\":\"DRUGBANK\"}]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

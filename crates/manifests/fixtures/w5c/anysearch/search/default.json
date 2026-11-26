@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "anysearch",
+  "op": "search",
+  "recordedAt": "2026-11-25T11:55:47Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://api.anysearch.com/v1/search",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": "d8369f855c5009b6e2df03a2e7e68ea5e1bea5e4fea82b45cdb3bf86032aaa33"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"code\": 0, \"message\": \"success\", \"data\": {\"results\": [{\"title\": \"Rust Programming Language\", \"url\": \"https://www.rust-lang.org/\", \"snippet\": \"A language empowering everyone to build reliable and efficient software.\", \"description\": \"Official home of the Rust programming language.\", \"score\": 0.95, \"quality_score\": 0.92, \"published_at\": \"2026-01-15T00:00:00Z\"}, {\"title\": \"The Rust Programming Language Book\", \"url\": \"https://doc.rust-lang.org/book/\", \"description\": \"Official guide to learning Rust, covering ownership, borrowing, and concurrency.\", \"score\": 0.89, \"quality_score\": 0.9, \"published_at\": \"2025-11-20T12:00:00Z\"}, {\"title\": \"Rust - Wikipedia\", \"url\": \"https://en.wikipedia.org/wiki/Rust_(programming_language)\", \"content\": \"Rust is a general-purpose programming language emphasizing performance, type safety, and concurrency.\", \"score\": 0.82, \"published_at\": \"2026-10-01T08:30:00Z\"}]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

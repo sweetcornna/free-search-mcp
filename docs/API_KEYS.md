@@ -1,291 +1,112 @@
-# API keys: optional, manual
+# API Keys & Optional Credentials (Manual Only)
 
-You can skip this page. free-search-mcp is a no-API-key server: nothing in its
-default, reserve, rescue, fresh, locale or category engine pools uses a key,
-and `tests/test_no_key_positioning.py` enforces that.
+You can skip this page. `free-search-mcp` 1.0 is a **no-API-key** server: every
+default web pool, reserve pool, locale pool, academic search pool, and standard
+vertical route works keyless.
 
-This page is for the operator who already has an account with a search API and
-wants to point this server at it by hand. Two rules hold throughout:
+Two rules always hold:
 
-- Opt-in engines never run on their own. `brave_api`, `serper`, `serpbase`,
-  `tavily`, `google_cse` and `github_code` run only when a call names them
-  (`engines=["serper"]`) and you have set your own key. Named without one, the
-  engine returns an error that says the search itself is fine and what to use
-  instead.
-- An agent never asks a user for a key. Setting one is something the operator
-  of the machine does, outside any conversation.
+1. **Keyed sources never run automatically**: Opt-in search APIs (`brave_api`,
+   `serper`, `serpbase`, `tavily`, `anysearch`, `github_code`) and keyed
+   catalog manifests run only when explicitly requested (or when you choose to
+   supply a key for higher-rate scholarly search pools).
+2. **Agents never ask for a key**: Setting a key is an operator choice made
+   outside any conversation.
 
-`codex` is opt-in on the same terms but runs on the operator's ChatGPT
-sign-in instead of a key (`search-mcp-login codex`). It is covered in
-[CODEX_SEARCH.md](CODEX_SEARCH.md). `antigravity` does the same on a Google
-Antigravity sign-in, against Google's terms; read
-[ANTIGRAVITY_SEARCH.md](ANTIGRAVITY_SEARCH.md) first.
+> **1.0.0 changes**: The legacy `google_cse`, `brave` HTML, and `zhihu`
+> engines plus the `search-mcp-admin` web UI were removed in 1.0.0. Optional
+> sign-in engines (`codex` and opt-in `antigravity`) remain available via
+> `free-search-mcp login` (see [CODEX_SEARCH.md](CODEX_SEARCH.md) and
+> [ANTIGRAVITY_SEARCH.md](ANTIGRAVITY_SEARCH.md)). Configure optional keys via
+> environment variables, `~/.config/search-mcp/.env`, or
+> `~/.config/search-mcp/config.json` (`0600`), and verify with
+> `free-search-mcp config` and `free-search-mcp sources`.
 
-Three keyless engines (`anysearch`, `stackexchange`, `semanticscholar`) accept
-an optional credential that changes only their limits. A GitHub token does the
-same for `github` (from 10 to 30 requests/min) and also enables `github_code`,
-because GitHub rejects anonymous code search.
+---
 
-One setting with "key" in its name is outside this page.
-`SEARCH_MCP_AGENT_API_KEY` belongs to the optional answer agent and is the
-credential of a language-model endpoint you chose. It is never sent to a search
-engine, the agent is off unless you turn it on, and a local endpoint such as
-Ollama has no key to set. [DELEGATION.md](DELEGATION.md) covers it.
+## Where to Set Optional Credentials
 
-## Two ways to set a key
+All credential variables (`*_API_KEY`, `*_TOKEN`, `*_KEY`, `*_SECRET`,
+`*_USERNAME`, `*_CLIENT_ID`) are **security-sensitive (`[SEC]`)** and are
+**ignored** if placed in a working-directory `./.env`. Set them in one of:
 
-### (a) The local settings page
+1. **Process environment variables** (highest precedence)
+2. **`~/.config/search-mcp/.env`** (override directory with `SEARCH_MCP_CONFIG_DIR`)
+3. **`~/.config/search-mcp/config.json`** (`chmod 600`; supports either a flat
+   JSON object or `{"secrets": { ... }}`)
 
-```
-uv run search-mcp-admin
-```
+Example `~/.config/search-mcp/.env`:
 
-For a plugin or uvx install, run `uvx --from free-search-mcp search-mcp-admin`
-instead. Then open http://127.0.0.1:8765 in your browser, paste your keys into
-the relevant provider fields, and click **Save**. A running server picks up the
-new key on its next request, so no restart is needed.
+```dotenv
+# Optional polite-pool email (not a secret — enables Unpaywall OA full text
+# and faster Crossref/OpenAlex/NCBI pools)
+SEARCH_MCP_CONTACT_EMAIL=you@example.com
 
-The page is bilingual (中英双语): labels, badges, buttons, free-tier notes and
-the "How to get a key / 如何获取密钥" steps appear in English and Chinese. The
-first card is **Network / Proxy / 网络 / 代理**, the setting most people need,
-and the provider cards follow it.
-
-### (b) Environment variables / `.env`
-
-Set the `SEARCH_MCP_<FIELD>` environment variable for each field you want to
-configure. The variable names are:
-
-| Provider | Environment variable(s) |
-| --- | --- |
-| Brave Search API | `SEARCH_MCP_BRAVE_API_KEY` |
-| Serper (Google) | `SEARCH_MCP_SERPER_API_KEY` |
-| Tavily (AI search) | `SEARCH_MCP_TAVILY_API_KEY` |
-| Google Custom Search | `SEARCH_MCP_GOOGLE_CSE_API_KEY` and `SEARCH_MCP_GOOGLE_CSE_CX` |
-| AnySearch (optional key) | `SEARCH_MCP_ANYSEARCH_API_KEY` |
-| Semantic Scholar (optional key) | `SEARCH_MCP_SEMANTICSCHOLAR_API_KEY` |
-| GitHub (optional token) | `SEARCH_MCP_GITHUB_TOKEN` |
-| Stack Exchange (optional key) | `SEARCH_MCP_STACKEXCHANGE_KEY` |
-
-Environment variables always take precedence over values saved in the file, so
-existing 12-factor and container deployments keep working unchanged.
-
-### Where keys are stored
-
-Keys saved on the local settings page are written to:
-
-```
-~/.config/search-mcp/config.json
+# Optional scholarly rate/pool upgrades
+SEARCH_MCP_SEMANTICSCHOLAR_API_KEY=
+SEARCH_MCP_OPENALEX_API_KEY=
+SEARCH_MCP_CORE_API_KEY=
+SEARCH_MCP_NCBI_API_KEY=
 ```
 
-The file is written atomically with `0600` (owner read/write only) permissions,
-and the page binds to localhost only.
+Verify that your server sees the expected keys (values are always redacted):
 
-## Brave Search API
-
-A search API from Brave. Free tier: 2,000 queries/month.
-
-How to get a key:
-
-1. Open https://brave.com/search/api/ and click 'Get started'.
-2. Sign up or log in, and verify your email.
-3. Subscribe to the free 'Data for Search' plan (a card may be required, but the free tier isn't charged).
-4. In the dashboard, open API Keys and copy your subscription token.
-
-- Sign up: https://brave.com/search/api/
-- Docs: https://api-dashboard.search.brave.com/app/documentation
-- Environment variable: `SEARCH_MCP_BRAVE_API_KEY`
-
-Use it:
-
-```python
-search("...", engines=["brave_api"])
+```bash
+free-search-mcp config
+free-search-mcp sources
 ```
 
-## Serper (Google)
+---
 
-Google search results via the Serper API. Free tier: 2,500 free queries
-(one-time).
+## Polite-Pool Email (Recommended for Heavy Academic Use, Not an API Key)
 
-How to get a key:
+| Variable | Effect |
+|---|---|
+| `SEARCH_MCP_CONTACT_EMAIL` | Sends an honest polite-pool contact header to Crossref, OpenAlex, and NCBI, and enables **Unpaywall** (step 7 of the 11-step `scholar.fulltext` cascade; skipped cleanly when unset). |
 
-1. Open https://serper.dev and sign up (Google login works).
-2. You land on the dashboard with 2,500 free credits.
-3. Copy the API key shown under 'API Key'.
+---
 
-- Sign up: https://serper.dev
-- Docs: https://serper.dev/playground
-- Environment variable: `SEARCH_MCP_SERPER_API_KEY`
+## Optional Academic & Specialist Credentials
 
-Use it:
+| Source | Environment Variable(s) | Free Tier / Effect |
+|---|---|---|
+| **Semantic Scholar** (`semanticscholar`) | `SEARCH_MCP_SEMANTICSCHOLAR_API_KEY` | Single-ID `scholar.work` works keyless; a free key unlocks `scholar.search` pooling and avoids anonymous 429 benching. |
+| **OpenAlex** (`openalex`) | `SEARCH_MCP_OPENALEX_API_KEY` | Single-ID `$0` lookups work keyless; an API key enables OpenAlex search endpoints in `scholar.search`. |
+| **CORE v3** (`core_ac`) | `SEARCH_MCP_CORE_API_KEY` | Full-text step 9 works keyless; a key unlocks CORE search pooling. |
+| **NCBI / PubMed** (`pubmed`) | `SEARCH_MCP_NCBI_API_KEY` | Works keyless at 3 req/s; a free NCBI key raises the limit to 10 req/s. |
+| **NASA ADS** (`nasa_ads`) | `SEARCH_MCP_ADS_API_KEY` | Unlocks NASA Astrophysics Data System search (`academic.physics`). |
+| **OpenAQ v3** (`openaq`) | `SEARCH_MCP_OPENAQ_API_KEY` | Unlocks OpenAQ v3 air-quality station queries. |
+| **GitHub** (`github`, `github_code`) | `SEARCH_MCP_GITHUB_TOKEN` | Raises keyless `github` (repos/issues) from 10 to 30 req/min and unlocks `github_code`. |
+| **Stack Exchange** (`stackexchange`) | `SEARCH_MCP_STACKEXCHANGE_KEY` | Raises keyless 300 req/day quota. |
 
-```python
-search("...", engines=["serper"])
+Some cataloged declarative manifests support OAuth2 `client_credentials` pairs
+(e.g., `epo_ops` using `SEARCH_MCP_EPO_OPS_KEY` + `SEARCH_MCP_EPO_OPS_SECRET`,
+or `legifrance_open` using `SEARCH_MCP_LEGIFRANCE_CLIENT_ID` +
+`SEARCH_MCP_LEGIFRANCE_CLIENT_SECRET`). Tokens are cached strictly in process
+memory and never written to disk or logs. Run `search({ query: "...", scope: "catalog" })`
+or `catalog.describe(id)` to see the exact env var(s) for any cataloged source.
+
+---
+
+## Opt-In Web Search APIs
+
+These engines never run unless you explicitly pass them in `sources: [...]`
+(and set their key):
+
+| Engine | Provider | Environment Variable |
+|---|---|---|
+| `brave_api` | [Brave Search API](https://brave.com/search/api/) | `SEARCH_MCP_BRAVE_API_KEY` |
+| `serper` | [Serper](https://serper.dev) | `SEARCH_MCP_SERPER_API_KEY` |
+| `serpbase` | [SerpBase](https://serpbase.dev) | `SEARCH_MCP_SERPBASE_API_KEY` |
+| `tavily` | [Tavily](https://app.tavily.com) | `SEARCH_MCP_TAVILY_API_KEY` |
+| `anysearch` | [AnySearch](https://www.anysearch.com/) | `SEARCH_MCP_ANYSEARCH_API_KEY` |
+
+Example explicit call:
+
+```json
+{"query": "rust async trait ergonomics", "sources": ["serper", "duckduckgo"]}
 ```
 
-## SerpBase (Google results, via a search-and-data API)
-
-Google web results through the SerpBase API. Free tier: 100 credits on signup,
-no credit card. This engine calls the Google Web Search product, which costs
-1 credit per request. The same key covers SerpBase's other products (DuckDuckGo,
-Maps, Amazon/Walmart/eBay and other storefronts, Reddit/X/TikTok/YouTube,
-scrape/crawl), but this package does not use them.
-
-How to get a key:
-
-1. Open https://serpbase.dev and create an account — 100 free credits, no card.
-2. Create a key at https://serpbase.dev/api-keys and copy it.
-3. Paste it into the settings page, or set `SEARCH_MCP_SERPBASE_API_KEY`.
-
-- Sign up: https://serpbase.dev
-- Docs: https://serpbase.dev/docs
-- Environment variable: `SEARCH_MCP_SERPBASE_API_KEY`
-
-Use it:
-
-```python
-search("...", engines=["serpbase"])
-```
-
-Two things worth knowing, because they are unusual:
-
-- The API answers **HTTP 200 even when a request fails**. Success is the
-  envelope's `status == 0`; a rejected key is a 200 whose body says
-  `{"status": 1001}`. This engine maps those codes, so a bad key reports
-  "credential was rejected" rather than an empty result set.
-- Credited usage is prepaid and never expires; a request costs 1–3 credits
-  depending on the product (1 for Google Web Search). Failed requests are not
-  charged.
-
-## Tavily (AI search)
-
-An AI-oriented search API. Free tier: 1,000 credits/month.
-
-How to get a key:
-
-1. Open https://app.tavily.com and sign up.
-2. On the dashboard, find the 'API Keys' section.
-3. Copy your key (it starts with 'tvly-').
-
-- Sign up: https://app.tavily.com
-- Docs: https://docs.tavily.com
-- Environment variable: `SEARCH_MCP_TAVILY_API_KEY`
-
-Use it:
-
-```python
-search("...", engines=["tavily"])
-```
-
-## Google Custom Search
-
-Google's Programmable Search Engine (Custom Search JSON API). Free tier: 100
-queries/day.
-
-This provider needs two values, the API key and the Search engine ID (cx). Set
-both before using the engine.
-
-How to get a key:
-
-1. Create an API key at https://console.cloud.google.com/apis/credentials by choosing 'Create credentials', then 'API key'.
-2. Enable the 'Custom Search API' for that project: https://console.cloud.google.com/apis/library/customsearch.googleapis.com.
-3. Create a search engine at https://programmablesearchengine.google.com/ and set it to 'Search the entire web'.
-4. Copy the 'Search engine ID' (cx) from its control panel. Set both the API key and the cx.
-
-- Sign up: https://programmablesearchengine.google.com/
-- Docs: https://developers.google.com/custom-search/v1/overview
-- Environment variables: `SEARCH_MCP_GOOGLE_CSE_API_KEY` and `SEARCH_MCP_GOOGLE_CSE_CX`
-
-Use it:
-
-```python
-search("...", engines=["google_cse"])
-```
-
-## AnySearch (optional key)
-
-A JSON REST search aggregator. A key is optional. Free tier: works keyless; a
-key raises the rate limit/quota.
-
-How to get a key:
-
-1. AnySearch works anonymously with no key (lower limits).
-2. For higher limits, sign up at https://anysearch.com and open Console, then API Keys.
-3. Create a key and set it on the settings page or in the environment variable below.
-
-- Sign up: https://anysearch.com/console/api-keys
-- Docs: https://www.anysearch.com/docs
-- Environment variable: `SEARCH_MCP_ANYSEARCH_API_KEY`
-
-Use it (no key required):
-
-```python
-search("...", engines=["anysearch"])
-```
-
-## Semantic Scholar (optional key)
-
-Scholarly search with the most metadata of the keyless literature sources:
-abstracts, citation counts, influential-citation counts and direct open-access
-PDF links.
-
-Free tier: anonymous requests share one saturated pool and are answered with
-HTTP 429 in practice; a free key gives 1 request/second.
-
-Every unauthenticated request made while building this engine came back 429.
-Without a key the engine therefore stays out of automatic `category="paper"`
-routing, where it would spend a slot on a guaranteed empty result. Naming it in
-`engines=["semanticscholar"]` still runs it.
-
-How to get a key:
-
-1. Request one at https://www.semanticscholar.org/product/api#api-key-form
-2. Approval is by email and takes a few days.
-3. Set the key on the settings page or in the environment variable below; `category="paper"` will then include the engine.
-
-- Sign up: https://www.semanticscholar.org/product/api#api-key-form
-- Docs: https://api.semanticscholar.org/api-docs/graph
-- Environment variable: `SEARCH_MCP_SEMANTICSCHOLAR_API_KEY`
-
-## GitHub (optional token)
-
-Free tier: the `github` engine searches repositories and issues with no token,
-at 10 req/min. A token raises that to 30 req/min and unlocks the `github_code`
-engine, because GitHub's code-search API rejects anonymous requests.
-
-How to get a token:
-
-1. Create one at https://github.com/settings/tokens
-2. Searching public repositories needs no scopes.
-3. Set the token on the settings page or in the environment variable below.
-
-- Sign up: https://github.com/settings/tokens
-- Docs: https://docs.github.com/rest/search
-- Environment variable: `SEARCH_MCP_GITHUB_TOKEN`
-
-## Stack Exchange (optional key)
-
-Free tier: 300 requests/day per IP keyless; an app key raises the quota.
-
-How to get a key:
-
-1. Register an app at https://stackapps.com/apps/oauth/register
-2. Copy only the key value. The client secret is not needed.
-3. Set the key on the settings page or in the environment variable below.
-
-- Sign up: https://stackapps.com/apps/oauth/register
-- Docs: https://api.stackexchange.com/docs
-- Environment variable: `SEARCH_MCP_STACKEXCHANGE_KEY`
-
-## At a glance
-
-| Provider | Free tier | Engine it enables or lifts |
-| --- | --- | --- |
-| Brave Search API | 2,000 queries/month | `brave_api` (opt-in) |
-| Serper (Google) | 2,500 queries (one-time) | `serper` (opt-in) |
-| SerpBase (Google + 38 more products) | 100 credits on signup, no card | `serpbase` (opt-in) |
-| Tavily (AI search) | 1,000 credits/month | `tavily` (opt-in) |
-| Google Custom Search | 100 queries/day | `google_cse` (opt-in; needs API key + cx) |
-| GitHub | Keyless 10/min; token 30/min | lifts `github`; enables `github_code` (opt-in) |
-| AnySearch | Keyless; key raises limits | lifts `anysearch` (already in the default pool) |
-| Semantic Scholar | Anonymous pool is 429 in practice | makes `semanticscholar` usable and adds it to `category="paper"` routing |
-| Stack Exchange | 300/day keyless | lifts `stackexchange` |
+If an opt-in engine is named without its key configured, the server returns an
+actionable notice pointing back to keyless sources so an agent can continue
+without asking you for credentials.

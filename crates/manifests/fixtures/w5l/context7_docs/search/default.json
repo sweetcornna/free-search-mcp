@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "context7_docs",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:56:41Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://context7.com/api/v2/libs/search?libraryName=fastapi&query=routing",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "cache-control",
+            "public, max-age=0, must-revalidate"
+          ],
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"results\":[{\"id\":\"/websites/fastapi_tiangolo\",\"title\":\"FastAPI\",\"description\":\"FastAPI is a modern, high-performance web framework for building APIs with Python, known for its speed, ease of use, and automatic interactive documentation based on OpenAPI standards.\",\"branch\":\"_contextdev_\",\"lastUpdateDate\":\"2026-11-21T18:17:38.044Z\",\"state\":\"finalized\",\"totalTokens\":542789,\"totalSnippets\":4309,\"stars\":-1,\"trustScore\":9,\"benchmarkScore\":78.68,\"versions\":[]},{\"id\":\"/websites/fastapi_tiangolo_reference\",\"title\":\"FastAPI\",\"description\":\"FastAPI is a modern Python web framework for building fast APIs with automatic interactive documentation and built-in validation using Python type hints.\",\"branch\":\"_contextdev_\",\"lastUpdateDate\":\"2026-10-21T10:17:15.861Z\",\"state\":\"finalized\",\"totalTokens\":240227,\"totalSnippets\":1512,\"stars\":-1,\"trustScore\":9,\"benchmarkScore\":63.84,\"versions\":[]},{\"id\":\"/websites/deepwiki_fastapi_fastapi\",\"title\":\"FastAPI (Deepwiki)\",\"description\":\"FastAPI is a high-performance web framework for building APIs with Python based on standard Python type hints, Starlette, and Pydantic.\",\"branch\":\"_contextdev_\",\"lastUpdateDate\":\"2026-11-04T03:40:48.586Z\",\"state\":\"finalized\",\"totalTokens\":78610,\"totalSnippets\":760,\"stars\":-1,\"trustScore\":9.7,\"benchmarkScore\":54.07,\"versions\":[]}],\"searchFilterApplied\":false}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

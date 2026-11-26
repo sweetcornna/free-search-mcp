@@ -1,0 +1,43 @@
+id = "nih_reporter"
+name = "NIH RePORTER v2"
+summary = "US NIH funded biomedical research grants and projects."
+aliases = ["nih grants", "reporter"]
+home_url = "https://reporter.nih.gov"
+tier = 1
+scopes = ["academic.grants", "academic.biomed"]
+caps = ["search", "grant"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 86400 }
+
+[op.search]
+summary = "Search NIH-funded grant projects via POST JSON."
+method = "POST"
+url = "https://api.reporter.nih.gov/v2/projects/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+body = { kind = "json", jaq = '''{ criteria: { advanced_text_search: { operator: "and", search_field: "all", search_text: $p.query } }, offset: ($p.offset // 0), limit: ($p.limit // 10) }''' }
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "crispr", limit = 3 }, min_results = 2, fixture = "fixtures/academic_domain/nih_reporter/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, in = "body", doc = "Grant search query" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "body", doc = "Max rows" }
+offset = { type = "int", default = 0, min = 0, in = "body", doc = "Offset" }
+
+[op.search.map]
+items = ".results[]"
+total = ".meta.total"
+record = '''{
+  id: .project_num, title: .project_title, funder: "NIH",
+  pi: (.principal_investigators[0]?.full_name // null),
+  org: .organization.org_name, amount: .award_amount, currency: "USD",
+  startDate: (.project_start_date // "")[0:10], url: .project_detail_url, source: "nih_reporter"
+}'''
+hit = '''{
+  title: (.project_title // ""),
+  url: (.project_detail_url // "https://reporter.nih.gov"),
+  snippet: ((.project_num // "") + " · " + (.organization.org_name // "")),
+  date: (.project_start_date // null), dateSource: "api"
+}'''

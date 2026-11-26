@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "unpaywall",
+  "op": "work",
+  "recordedAt": "2026-11-25T14:05:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.unpaywall.org/v2/10.1038/nature12373",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"doi\":\"10.1038/nature12373\",\"doi_url\":\"https://doi.org/10.1038/nature12373\",\"title\":\"Nanometre-scale thermometry in a living cell\",\"genre\":\"journal-article\",\"is_oa\":true,\"oa_status\":\"green\",\"year\":2013,\"published_date\":\"2013-07-31\",\"journal_name\":\"Nature\",\"publisher\":\"Springer Science and Business Media LLC\",\"z_authors\":[{\"given\":\"G.\",\"family\":\"Kucsko\"},{\"given\":\"P. C.\",\"family\":\"Maurer\"},{\"given\":\"N. Y.\",\"family\":\"Yao\"},{\"given\":\"M.\",\"family\":\"Kubo\"},{\"given\":\"H. J.\",\"family\":\"Noh\"},{\"given\":\"P. K.\",\"family\":\"Lo\"},{\"given\":\"H.\",\"family\":\"Park\"},{\"given\":\"M. D.\",\"family\":\"Lukin\"}],\"best_oa_location\":{\"url\":\"https://europepmc.org/articles/pmc4221854\",\"url_for_landing_page\":\"https://europepmc.org/articles/pmc4221854\",\"url_for_pdf\":\"https://europepmc.org/articles/pmc4221854?pdf=render\",\"host_type\":\"repository\",\"license\":\"cc-by\",\"version\":\"acceptedVersion\"}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

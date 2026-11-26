@@ -1,0 +1,163 @@
+id = "un_population"
+name = "UN Population Data Portal API"
+summary = "UN DESA Population Division Data Portal API covering 86 demographic indicators, 300 locations, topics (keyless), and time-series observations (free Bearer token)."
+aliases = ["un pop", "unpd", "world population prospects"]
+home_url = "https://population.un.org/dataportal/"
+tier = 1
+scopes = ["dataset", "reference"]
+caps = ["lookup", "dataset"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 2.0, burst = 5, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 86400, host_bucket = "population.un.org" }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_UN_POPULATION_TOKEN"
+in = "header"
+name = "Authorization"
+format = "Bearer {key}"
+route_requires_key = false
+
+[op.indicators]
+summary = "List UN Population Division demographic indicators (fertility, mortality, life expectancy, population structure)."
+method = "GET"
+url = "https://population.un.org/dataportalapi/api/v1/indicators"
+auth = "none"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "json" }
+paginate = { style = "page", param = "pageNumber", start = 1, max_pages = 3 }
+probe = { params = { limit = 3, page = 1 }, min_results = 2, fixture = "fixtures/w5k/un_population/indicators/default.json" }
+examples = ['source.call("un_population.indicators", { limit: 10, page: 1 })']
+
+[op.indicators.params]
+limit = { type = "int", default = 10, min = 1, max = 100, to = "pageSize", doc = "Indicators per page" }
+page = { type = "int", default = 1, min = 1, to = "pageNumber", doc = "1-based page number" }
+
+[op.indicators.map]
+items = "(.data // [])[]"
+total = ".total"
+record = '''{
+  id: .id,
+  name: ((.name // "") | collapse_ws),
+  shortName: (.shortName // null),
+  displayName: (.displayName // null),
+  description: (.description | collapse_ws),
+  variableType: (.variableType // null),
+  valueType: (.valueType // null),
+  unit: (.unitLongLabel // .unitShortLabel // null),
+  sourceName: (.sourceName // null),
+  url: ("https://population.un.org/dataportalapi/api/v1/indicators/" + (.id | tostring) + "?format=json")
+}'''
+
+[op.indicator]
+summary = "Look up detailed metadata for a single UN Population indicator ID."
+method = "GET"
+url = "https://population.un.org/dataportalapi/api/v1/indicators/{id}"
+auth = "none"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "json" }
+probe = { params = { id = "49" }, min_results = 1, fixture = "fixtures/w5k/un_population/indicator/default.json" }
+examples = ['source.call("un_population.indicator", { id: "49" })']
+
+[op.indicator.params]
+id = { type = "string", required = true, in = "path", doc = "UN Population indicator numeric ID e.g. 49 (Total population by sex)" }
+
+[op.indicator.map]
+items = ".[]"
+record = "@ref:op.indicators.map.record"
+
+[op.locations]
+summary = "List UN Population Division countries, regions, and ISO codes with coordinates."
+method = "GET"
+url = "https://population.un.org/dataportalapi/api/v1/locations"
+auth = "none"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "json" }
+paginate = { style = "page", param = "pageNumber", start = 1, max_pages = 3 }
+probe = { params = { limit = 3, page = 1 }, min_results = 2, fixture = "fixtures/w5k/un_population/locations/default.json" }
+examples = ['source.call("un_population.locations", { limit: 10, page: 1 })']
+
+[op.locations.params]
+limit = { type = "int", default = 10, min = 1, max = 100, to = "pageSize", doc = "Locations per page" }
+page = { type = "int", default = 1, min = 1, to = "pageNumber", doc = "1-based page number" }
+
+[op.locations.map]
+items = "(.data // [])[]"
+total = ".total"
+record = '''{
+  id: .id,
+  name: ((.name // "") | collapse_ws),
+  iso3: (.iso3 // null),
+  iso2: (.iso2 // null),
+  latitude: (.latitude // null),
+  longitude: (.longitude // null),
+  url: ("https://population.un.org/dataportalapi/api/v1/locations/" + (.id | tostring) + "?format=json")
+}'''
+
+[op.topics]
+summary = "List UN Population Division thematic demographic topics."
+method = "GET"
+url = "https://population.un.org/dataportalapi/api/v1/topics"
+auth = "none"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "json" }
+probe = { params = {}, min_results = 5, fixture = "fixtures/w5k/un_population/topics/default.json" }
+examples = ['source.call("un_population.topics", {})']
+
+[op.topics.map]
+items = "(.data // [])[]"
+total = ".total"
+record = '''{
+  id: .id,
+  name: ((.name // "") | collapse_ws),
+  shortName: (.shortName // null),
+  sortOrder: (.sortOrder // null)
+}'''
+
+[op.data]
+summary = "Fetch UN Population time-series observations for an indicator, location, and year range (requires free UN Population Bearer token)."
+method = "GET"
+url = "https://population.un.org/dataportalapi/api/v1/data/indicators/{indicator}/locations/{location}/start/{start}/end/{end}"
+auth = "required"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "json" }
+paginate = { style = "page", param = "pageNumber", start = 1, max_pages = 3 }
+probe = { params = { indicator = "49", location = "900", start = "2020", end = "2022", limit = 3, page = 1 }, min_results = 2, fixture = "fixtures/w5k/un_population/data/default.json" }
+examples = ['source.call("un_population.data", { indicator: "49", location: "900", start: "2020", end: "2024", limit: 10 })']
+
+[op.data.params]
+indicator = { type = "string", required = true, in = "path", doc = "UN indicator ID e.g. 49 (Total population by sex), 19 (Total fertility rate)" }
+location = { type = "string", required = true, in = "path", doc = "UN location ID e.g. 900 (World), 840 (USA), 156 (China)" }
+start = { type = "string", required = true, in = "path", doc = "Start year YYYY e.g. 2020" }
+end = { type = "string", required = true, in = "path", doc = "End year YYYY e.g. 2024" }
+limit = { type = "int", default = 10, min = 1, max = 100, to = "pageSize", doc = "Observations per page" }
+page = { type = "int", default = 1, min = 1, to = "pageNumber", doc = "1-based page number" }
+
+[op.data.map]
+items = "(.data // [])[]"
+total = ".total"
+record = '''{
+  indicatorId: (.indicatorId // null),
+  indicator: ((.indicator // .indicatorDisplayName // "") | collapse_ws),
+  locationId: (.locationId // null),
+  location: ((.location // "") | collapse_ws),
+  iso3: (.iso3 // null),
+  iso2: (.iso2 // null),
+  sex: (.sex // null),
+  age: (.ageLabel // null),
+  variant: (.variant // null),
+  year: ((.timeLabel // .timeId) | if . != null then (tostring | parse_date) else null end),
+  value: (.value | to_num),
+  unit: (.unit // null),
+  url: ("https://population.un.org/dataportal/data/indicators/" + ((.indicatorId // "") | tostring) + "/locations/" + ((.locationId // "") | tostring) + "/start/" + ((.timeLabel // "") | tostring) + "/end/" + ((.timeLabel // "") | tostring))
+}'''

@@ -1,0 +1,106 @@
+id = "ghsa"
+name = "GitHub Security Advisories (GHSA)"
+summary = "GitHub Advisory Database REST API for reviewed package vulnerabilities, CVEs, affected versions, and patches."
+aliases = ["github advisories", "github security", "ghsa advisories"]
+home_url = "https://github.com/advisories"
+tier = 1
+scopes = ["security", "code"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 1.0, burst = 4, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 21600, host_bucket = "api.github.com" }
+
+[auth]
+mode = "optional"
+env = "SEARCH_MCP_GITHUB_TOKEN"
+in = "header"
+name = "Authorization"
+format = "Bearer {key}"
+route_requires_key = false
+
+[op.search]
+summary = "Query GitHub Security Advisories by affected package, ecosystem, CVE ID, or severity."
+method = "GET"
+url = "https://api.github.com/advisories"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "link_header", max_pages = 3 }
+probe = { params = { ecosystem = "pip", limit = 3 }, min_results = 2, fixture = "fixtures/w5c/ghsa/search/default.json" }
+
+[op.search.params]
+query = { type = "string", to = "affects", doc = "Affected package name (or package@version)" }
+ecosystem = { type = "string", enum = ["actions", "composer", "erlang", "go", "maven", "npm", "nuget", "other", "pip", "pub", "rubygems", "rust", "swift"], to = "ecosystem", doc = "Package ecosystem" }
+cve_id = { type = "string", to = "cve_id", doc = "Exact CVE identifier filter" }
+severity = { type = "string", enum = ["unknown", "low", "medium", "high", "critical"], to = "severity", doc = "Minimum severity" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "per_page", doc = "Advisories per page" }
+
+[op.search.map]
+items = ".[]"
+error = "if (type == \"object\") and .message then .message else null end"
+record = '''{
+  ghsaId: .ghsa_id,
+  cveId: .cve_id,
+  summary: (.summary // ""),
+  severity: .severity,
+  url: .html_url,
+  cvssScore: (.cvss.score // null),
+  epssPercentage: (.epss.percentage // null),
+  publishedAt: .published_at,
+  updatedAt: .updated_at,
+  vulnerabilities: [(.vulnerabilities // [])[] | {
+    ecosystem: .package.ecosystem,
+    package: .package.name,
+    vulnerableRange: .vulnerable_version_range,
+    patchedVersion: .first_patched_version
+  }]
+}'''
+hit = '''{
+  title: ("\(.ghsa_id)" + (if (.cve_id | type) == "string" then " / \(.cve_id)" else "" end) + ": \(.summary // "")"),
+  url: (.html_url // ("https://github.com/advisories/" + (.ghsa_id // ""))),
+  snippet: ([
+    (if (.severity | type) == "string" then "severity: \(.severity)" else empty end),
+    (if (.cvss.score | type) == "number" then "CVSS \(.cvss.score)" else empty end),
+    (if ((.vulnerabilities // []) | length) > 0 then ([(.vulnerabilities // [])[0:3][] | "\(.package.ecosystem // ""):\(.package.name // "") (\(.vulnerable_version_range // ""))"] | join(", ")) else empty end)
+  ] | join(" · ")),
+  date: (.published_at | parse_date),
+  dateSource: (if (.published_at | parse_date) != null then "api" else null end)
+}'''
+
+[op.advisory]
+summary = "Fetch a single GitHub Security Advisory by exact GHSA ID."
+method = "GET"
+url = "https://api.github.com/advisories/{ghsa_id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { ghsa_id = "GHSA-34jh-p97f-mpxf" }, min_results = 1, fixture = "fixtures/w5c/ghsa/advisory/default.json" }
+
+[op.advisory.params]
+ghsa_id = { type = "string", required = true, in = "path", doc = "GHSA ID e.g. GHSA-34jh-p97f-mpxf" }
+
+[op.advisory.map]
+items = "."
+error = "@ref:op.search.map.error"
+record = '''{
+  ghsaId: .ghsa_id,
+  cveId: .cve_id,
+  summary: (.summary // ""),
+  description: (.description // ""),
+  severity: .severity,
+  url: .html_url,
+  cvssScore: (.cvss.score // null),
+  cvssVector: (.cvss.vector_string // null),
+  epssPercentage: (.epss.percentage // null),
+  cwes: [(.cwes // [])[] | { id: .cwe_id, name }],
+  references: (.references // []),
+  publishedAt: .published_at,
+  updatedAt: .updated_at,
+  vulnerabilities: [(.vulnerabilities // [])[] | {
+    ecosystem: .package.ecosystem,
+    package: .package.name,
+    vulnerableRange: .vulnerable_version_range,
+    patchedVersion: .first_patched_version
+  }]
+}'''
+hit = "@ref:op.search.map.hit"

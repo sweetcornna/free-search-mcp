@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "source": "europepmc",
+  "op": "work",
+  "recordedAt": "2026-11-25T14:13:08Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?format=json&pageSize=1&resultType=core&query=EXT_ID%3A25315507",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "vary",
+            "origin,access-control-request-method,access-control-request-headers,accept-encoding"
+          ],
+          [
+            "content-type",
+            "application/json;charset=UTF-8"
+          ],
+          [
+            "strict-transport-security",
+            "max-age=31536000; includeSubDomains; preload"
+          ],
+          [
+            "date",
+            "Wed, 25 Nov 2026 14:13:08 GMT"
+          ]
+        ],
+        "bodyText": "{\"version\":\"6.9\",\"hitCount\":1,\"request\":{\"queryString\":\"EXT_ID:25315507\",\"resultType\":\"core\",\"cursorMark\":\"*\",\"pageSize\":1,\"sort\":\"\",\"synonym\":false},\"resultList\":{\"result\":[{\"id\":\"25315507\",\"source\":\"MED\",\"pmid\":\"25315507\",\"doi\":\"10.1111/febs.13110\",\"title\":\"Genome modification by CRISPR/Cas9.\",\"authorString\":\"Ma Y, Zhang L, Huang X.\",\"authorList\":{\"author\":[{\"fullName\":\"Ma Y\",\"lastName\":\"Ma\",\"firstName\":\"Yuanwu\",\"initials\":\"Y\",\"authorId\":{\"type\":\"ORCID\",\"value\":\"0000-0002-1882-1777\"},\"authorAffiliationDetailsList\":{\"authorAffiliation\":[{\"affiliation\":\"Key Laboratory of Human Disease Comparative Medicine, Ministry of Health, Institute of Laboratory Animal Science, Chinese Academy of Medical Sciences, Beijing, China.\"}]}},{\"fullName\":\"Zhang L\",\"lastName\":\"Zhang\",\"firstName\":\"Lianfeng\",\"initials\":\"L\"},{\"fullName\":\"Huang X\",\"lastName\":\"Huang\",\"firstName\":\"Xingxu\",\"initials\":\"X\",\"authorId\":{\"type\":\"ORCID\",\"value\":\"0000-0001-8934-1247\"}}]},\"authorIdList\":{\"authorId\":[{\"type\":\"ORCID\",\"value\":\"0000-0001-8934-1247\"},{\"type\":\"ORCID\",\"value\":\"0000-0002-1882-1777\"}]},\"dataLinksTagsList\":{\"dataLinkstag\":[\"altmetrics\",\"related_data\"]},\"journalInfo\":{\"issue\":\"23\",\"volume\":\"281\",\"journalIssueId\":2222459,\"dateOfPublication\":\"2014 Dec\",\"monthOfPublication\":12,\"yearOfPublication\":2014,\"journal\":{\"medlineAbbreviation\":\"FEBS J\",\"title\":\"The FEBS journal\",\"essn\":\"1742-4658\",\"issn\":\"1742-464X\",\"nlmid\":\"101229646\",\"isoabbreviation\":\"FEBS J\"},\"printPublicationDate\":\"2014-12-01\"},\"pubYear\":\"2014\",\"pageInfo\":\"5186-5193\",\"abstractText\":\"Clustered regularly interspaced short palindromic repeats (CRISPR)-CRISPR-associated protein (Cas)9-mediated genome modification enables us to edit the genomes of a variety of organisms rapidly and efficiently. The advantages of the CRISPR-Cas9 system have made it an increasingly popular genetic engineering tool for biological and therapeutic applications. Moreover, CRISPR-Cas9 has been employed to recruit functional domains that repress/activate gene expression or label specific genomic loci in living cells or organisms, in order to explore developmental mechanisms, gene expression regulation, and animal behavior. One major concern about this system is its specificity; although CRISPR-Cas9-mediated off-target mutation has been broadly studied, more efforts are required to further improve the specificity of CRISPR-Cas9. We will also discuss the potential applications of CRISPR-Cas9.\",\"affiliation\":\"Key Laboratory of Human Disease Comparative Medicine, Ministry of Health, Institute of Laboratory Animal Science, Chinese Academy of Medical Sciences, Beijing, China.\",\"publicationStatus\":\"ppublish\",\"language\":\"eng\",\"pubModel\":\"Print-Electronic\",\"pubTypeList\":{\"pubType\":[\"Research Support, Non-U.S. Gov't\",\"Review\",\"Journal Article\"]},\"grantsList\":{\"grant\":[{\"agency\":\"973 Program\",\"grantId\":\"2012BA139B02\",\"orderIn\":0},{\"agency\":\"973 Program\",\"grantId\":\"2011CB944301\",\"orderIn\":0}]},\"meshHeadingList\":{\"meshHeading\":[{\"majorTopic_YN\":\"N\",\"descriptorName\":\"Animals\"},{\"majorTopic_YN\":\"N\",\"descriptorName\":\"Humans\"},{\"majorTopic_YN\":\"N\",\"descriptorName\":\"Genetic Engineering\"},{\"majorTopic_YN\":\"N\",\"descriptorName\":\"RNA Editing\"},{\"majorTopic_YN\":\"N\",\"descriptorName\":\"Clustered Regularly Interspaced Short Palindromic Repeats\",\"meshQualifierList\":{\"meshQualifier\":[{\"majorTopic_YN\":\"Y\",\"abbreviation\":\"PH\",\"qualifierName\":\"physiology\"}]}},{\"majorTopic_YN\":\"N\",\"descriptorName\":\"CRISPR-Associated Proteins\",\"meshQualifierList\":{\"meshQualifier\":[{\"majorTopic_YN\":\"Y\",\"abbreviation\":\"PH\",\"qualifierName\":\"physiology\"}]}}]},\"keywordList\":{\"keyword\":[\"gene targeting\",\"Crispr\",\"Cas9\",\"Genome Editing\",\"Sgrna\"]},\"chemicalList\":{\"chemical\":[{\"name\":\"CRISPR-Associated Proteins\",\"registryNumber\":\"0\"}]},\"subsetList\":{\"subset\":[{\"code\":\"IM\",\"name\":\"Index Medicus\"}]},\"fullTextUrlList\":{\"fullTextUrl\":[{\"availability\":\"Subscription required\",\"availabilityCode\":\"S\",\"documentStyle\":\"doi\",\"site\":\"DOI\",\"url\":\"https://doi.org/10.1111/febs.13110\"}]},\"isOpenAccess\":\"N\",\"inEPMC\":\"N\",\"inPMC\":\"N\",\"citedByCount\":183,\"hasReferences\":\"Y\",\"hasTextMinedTerms\":\"Y\",\"hasDbCrossReferences\":\"N\",\"hasPDF\":\"N\",\"hasBook\":\"N\",\"hasSuppl\":\"N\",\"hasLabsLinks\":\"Y\",\"hasData\":\"Y\",\"authMan\":\"N\",\"epmcAuthMan\":\"N\",\"nihAuthMan\":\"N\",\"hasTMAccessionNumbers\":\"N\",\"dateOfCompletion\":\"2015-01-26\",\"dateOfCreation\":\"2014-10-16\",\"dateOfRevision\":\"2014-11-25\",\"electronicPublicationDate\":\"2014-11-07\",\"firstPublicationDate\":\"2014-11-07\",\"firstIndexDate\":\"2014-10-17\",\"hasEvaluations\":\"N\"}]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

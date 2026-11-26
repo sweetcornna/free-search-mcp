@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "source": "opencitations",
+  "op": "metadata",
+  "recordedAt": "2026-11-25T14:07:50Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.opencitations.net/meta/v1/metadata/doi:10.1002/adfm.201505328",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "accept-ranges",
+            "bytes"
+          ],
+          [
+            "access-control-allow-headers",
+            "Accept, Authorization, Content-Type, Origin, X-Requested-With"
+          ],
+          [
+            "access-control-allow-methods",
+            "GET, POST, HEAD, OPTIONS"
+          ],
+          [
+            "access-control-allow-origin",
+            "*"
+          ],
+          [
+            "access-control-expose-headers",
+            "Content-Length, Content-Range, X-Total-Count"
+          ],
+          [
+            "access-control-max-age",
+            "86400"
+          ],
+          [
+            "age",
+            "0"
+          ],
+          [
+            "content-type",
+            "application/json"
+          ],
+          [
+            "date",
+            "Wed, 25 Nov 2026 14:07:50 GMT"
+          ],
+          [
+            "server",
+            "Apache/2.4.10 (Win32)"
+          ],
+          [
+            "x-cache",
+            "MISS"
+          ],
+          [
+            "x-redis-cache",
+            "HIT"
+          ],
+          [
+            "x-varnish",
+            "1049773"
+          ]
+        ],
+        "bodyText": "[\n    {\n        \"id\": \"doi:10.1002/adfm.201505328 openalex:W2286862811 omid:br/062402835516\",\n        \"title\": \"Synthesis And Characterization Of 2D Molybdenum Carbide (MXene)\",\n        \"author\": \"Halim, Joseph [omid:ra/062408074471]; Kota, Sankalp [orcid:0000-0003-3775-3279 omid:ra/0617013399]; Lukatskaya, Maria R. [orcid:0000-0002-2794-4322 omid:ra/0612011173797]; Naguib, Michael [orcid:0000-0002-4952-9023 omid:ra/0611011968262]; Zhao, Meng-Qiang [omid:ra/062408074472]; Moon, Eun Ju [omid:ra/062408074473]; Pitock, Jeremy [omid:ra/062408074474]; Nanda, Jagjit [omid:ra/062408074475]; May, Steven J. [omid:ra/062408074476]; Gogotsi, Yury [omid:ra/062408074477]; Barsoum, Michel W. [omid:ra/062408074478]\",\n        \"pub_date\": \"2016-02-17\",\n        \"issue\": \"18\",\n        \"volume\": \"26\",\n        \"venue\": \"Advanced Materials [doi:10.1002/(issn)1521-4095 issn:0935-9648 issn:1521-4095 openalex:S99352657 omid:br/068056179]\",\n        \"page\": \"3118-3127\",\n        \"type\": \"journal article\",\n        \"publisher\": \"Wiley [crossref:311 omid:ra/0610116001]\",\n        \"editor\": \"\"\n    }\n]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

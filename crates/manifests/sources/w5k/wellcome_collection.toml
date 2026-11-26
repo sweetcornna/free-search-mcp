@@ -1,0 +1,78 @@
+id = "wellcome_collection"
+name = "Wellcome Collection Catalogue API v2"
+summary = "Wellcome Trust open catalogue API indexing ~1M+ history of medicine, life sciences archives, rare books, manuscripts, and digitized images."
+aliases = ["wellcome", "wellcome library", "medical history"]
+home_url = "https://wellcomecollection.org/works"
+tier = 1
+scopes = ["academic", "academic.humanities", "academic.biomed"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 10000, cache_ttl_s = 43200, host_bucket = "api.wellcomecollection.org" }
+
+[op.search]
+summary = "Search Wellcome Collection catalogue works (books, archives, manuscripts, pictures)."
+method = "GET"
+url = "https://api.wellcomecollection.org/catalogue/v2/works"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "vaccine", limit = 3, page = 1 }, min_results = 2, fixture = "fixtures/w5k/wellcome_collection/search/default.json" }
+examples = ['source.call("wellcome_collection.search", { query: "vaccine", limit: 5 })']
+
+[op.search.params]
+query = { type = "string", required = true, to = "query", doc = "Catalogue search query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "pageSize", doc = "Works per page" }
+page = { type = "int", default = 1, min = 1, to = "page", doc = "1-based page number" }
+
+[op.search.map]
+items = "(.results // [])[]"
+total = ".totalResults"
+error = "if .errorType then (.description // .label // .errorType) else null end"
+record = '''{
+  id: (.id // ""),
+  title: ((.title // "") | collapse_ws),
+  workType: (.workType.label // null),
+  description: ((.description // "") | strip_tags | if . != null and length > 0 then . else null end),
+  physicalDescription: (.physicalDescription | collapse_ws),
+  alternativeTitles: (.alternativeTitles // []),
+  availabilities: [(.availabilities // [])[] | .id | select(. != null)],
+  url: ("https://wellcomecollection.org/works/" + (.id // ""))
+}'''
+hit = '''{
+  title: ((.title // "") | collapse_ws),
+  url: ("https://wellcomecollection.org/works/" + (.id // "")),
+  snippet: ([(.workType.label // ""), ((.physicalDescription // "") | collapse_ws), (((.description // "") | strip_tags // "")[0:180] | collapse_ws)] | map(select(. != null and length > 0)) | join(" · ")),
+  date: null,
+  dateSource: null
+}'''
+
+[op.work]
+summary = "Fetch full Wellcome Collection catalogue work record including subjects, contributors, and identifiers."
+method = "GET"
+url = "https://api.wellcomecollection.org/catalogue/v2/works/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { include = "subjects,contributors,identifiers" }
+probe = { params = { id = "guv3vscg" }, min_results = 1, fixture = "fixtures/w5k/wellcome_collection/work/default.json" }
+examples = ['source.call("wellcome_collection.work", { id: "guv3vscg" })']
+
+[op.work.params]
+id = { type = "string", required = true, in = "path", doc = "Wellcome 8-character work ID e.g. guv3vscg" }
+
+[op.work.map]
+items = "."
+error = "@ref:op.search.map.error"
+record = '''{
+  id: (.id // ""),
+  title: ((.title // "") | collapse_ws),
+  workType: (.workType.label // null),
+  description: ((.description // "") | strip_tags | if . != null and length > 0 then . else null end),
+  physicalDescription: (.physicalDescription | collapse_ws),
+  contributors: [(.contributors // [])[] | .agent.label | collapse_ws | select(. != null and length > 0)],
+  subjects: [(.subjects // [])[] | .label | collapse_ws | select(. != null and length > 0)],
+  identifiers: [(.identifiers // [])[] | { type: .identifierType.id, value: .value }],
+  url: ("https://wellcomecollection.org/works/" + (.id // ""))
+}'''

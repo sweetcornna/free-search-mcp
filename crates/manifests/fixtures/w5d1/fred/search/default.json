@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "fred",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:13:33Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.stlouisfed.org/fred/series/search?file_type=json&search_text=unemployment+rate&limit=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"realtime_start\": \"2026-11-25\", \"realtime_end\": \"2026-11-25\", \"order_by\": \"search_rank\", \"sort_order\": \"desc\", \"count\": 53486, \"offset\": 0, \"limit\": 3, \"seriess\": [{\"id\": \"UNRATE\", \"realtime_start\": \"2026-11-25\", \"realtime_end\": \"2026-11-25\", \"title\": \"Unemployment Rate\", \"observation_start\": \"1948-01-01\", \"observation_end\": \"2026-10-01\", \"frequency\": \"Monthly\", \"frequency_short\": \"M\", \"units\": \"Percent\", \"units_short\": \"%\", \"seasonal_adjustment\": \"Seasonally Adjusted\", \"seasonal_adjustment_short\": \"SA\", \"last_updated\": \"2026-11-06 07:45:01-06\", \"popularity\": 96, \"group_popularity\": 96, \"notes\": \"The unemployment rate represents the number of unemployed as a percentage of the labor force.\"}, {\"id\": \"UNRATENSA\", \"realtime_start\": \"2026-11-25\", \"realtime_end\": \"2026-11-25\", \"title\": \"Unemployment Rate\", \"observation_start\": \"1948-01-01\", \"observation_end\": \"2026-10-01\", \"frequency\": \"Monthly\", \"frequency_short\": \"M\", \"units\": \"Percent\", \"units_short\": \"%\", \"seasonal_adjustment\": \"Not Seasonally Adjusted\", \"seasonal_adjustment_short\": \"NSA\", \"last_updated\": \"2026-11-06 07:45:02-06\", \"popularity\": 58, \"group_popularity\": 96, \"notes\": \"Not seasonally adjusted U.S. civilian unemployment rate.\"}, {\"id\": \"U6RATE\", \"realtime_start\": \"2026-11-25\", \"realtime_end\": \"2026-11-25\", \"title\": \"Total Unemployed, Plus All Persons Marginally Attached to the Labor Force, Plus Total Employed Part Time for Economic Reasons\", \"observation_start\": \"1994-01-01\", \"observation_end\": \"2026-10-01\", \"frequency\": \"Monthly\", \"frequency_short\": \"M\", \"units\": \"Percent\", \"units_short\": \"%\", \"seasonal_adjustment\": \"Seasonally Adjusted\", \"seasonal_adjustment_short\": \"SA\", \"last_updated\": \"2026-11-06 07:45:03-06\", \"popularity\": 72, \"group_popularity\": 72, \"notes\": \"Broad U-6 measure of labor underutilization.\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

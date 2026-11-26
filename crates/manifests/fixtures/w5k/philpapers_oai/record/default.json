@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "philpapers_oai",
+  "op": "record",
+  "recordedAt": "2026-11-25T13:05:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://philpapers.org/oai.pl?verb=GetRecord&metadataPrefix=oai_dc&identifier=oai%3Aphilpapers.org%2Frec%2FTUO-12",
+        "headersSubset": {
+          "accept": "application/xml"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/xml"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<OAI-PMH xmlns:oai_dc=\"http://www.openarchives.org/OAI/2.0/oai_dc/\"\n         xmlns:dc=\"http://purl.org/dc/elements/1.1/\"\n         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n         xmlns=\"http://www.openarchives.org/OAI/2.0/\"\n         xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd\">\n  <responseDate>2026-11-25T13:02:21Z</responseDate>\n  <request identifier=\"oai:philpapers.org/rec/TUO-12\"\n           verb=\"GetRecord\"\n           metadataPrefix=\"oai_dc\">https://philpapers.org/oai.pl</request>\n  <GetRecord>\n    <record>\n      <header>\n        <identifier>oai:philpapers.org/rec/TUO-12</identifier>\n        <datestamp>2026-11-25T09:39:22Z</datestamp>\n      </header>\n      <metadata>\n        <oai_dc:dc xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd\">\n          <dc:title>The Universality of Human Rights and the North Korean Government’s Viewpoint on Human Rights: Its Implication for Unification Education</dc:title>\n          <dc:type>info:eu-repo/semantics/article</dc:type>\n          <dc:creator>김창근</dc:creator>\n          <dc:subject>Philosophy</dc:subject>\n          <dc:date>2014</dc:date>\n          <dc:identifier>https://philpapers.org/rec/TUO-12</dc:identifier>\n          <dc:language>ko</dc:language>\n        </oai_dc:dc>\n      </metadata>\n      <about>\n        <rights xmlns=\"http://www.openarchives.org/OAI/2.0/rights/\"\n                xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n                xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/rights/ http://www.openarchives.org/OAI/2.0/rights.xsd\">\n          <rightsReference xmlns=\"\">https://philpapers.org/help/terms.html</rightsReference>\n        </rights>\n      </about>\n    </record>\n  </GetRecord>\n</OAI-PMH> \n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

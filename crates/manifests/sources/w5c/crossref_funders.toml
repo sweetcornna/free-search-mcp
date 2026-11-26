@@ -1,0 +1,145 @@
+id = "crossref_funders"
+name = "Crossref Funders Registry"
+summary = "Open Crossref Funder Registry (FundRef) of 35k+ research funding organizations and funded scholarly works."
+aliases = ["fundref", "crossref funder", "research funders"]
+home_url = "https://www.crossref.org/services/funder-registry/"
+tier = 1
+scopes = ["academic.grants", "academic"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 5.0, burst = 10, concurrency = 4, timeout_ms = 8000, cache_ttl_s = 86400, host_bucket = "api.crossref.org" }
+
+[op.search]
+summary = "Search global research funding organizations in the Crossref Funders Registry."
+method = "GET"
+url = "https://api.crossref.org/funders"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "national science", limit = 3 }, min_results = 2, fixture = "fixtures/w5c/crossref_funders/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "query", doc = "Funder name or acronym" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "rows", doc = "Rows per page" }
+offset = { type = "int", min = 0, to = "offset", doc = "Offset" }
+
+[op.search.map]
+items = ".message.items[]"
+total = ".message[\"total-results\"]"
+error = "if .status != \"ok\" then (.message // \"Crossref Funders API error\") else null end"
+record = '''{
+  id: .id,
+  name: (.name // ""),
+  location: .location,
+  uri: .uri,
+  altNames: (.["alt-names"] // []),
+  replaces: (.replaces // []),
+  replacedBy: (.["replaced-by"] // [])
+}'''
+hit = '''{
+  title: (.name // ""),
+  url: (.uri // ("https://doi.org/10.13039/" + (.id // ""))),
+  snippet: ([
+    "Funder ID \(.id // "")",
+    (if (.location | type) == "string" and (.location | length) > 0 then .location else empty end),
+    (if ((.["alt-names"] // []) | length) > 0 then ("aka: " + ((.["alt-names"] // [])[0:3] | join(", "))) else empty end)
+  ] | join(" · ")),
+  date: null,
+  dateSource: null
+}'''
+
+[op.funder]
+summary = "Look up a research funder by Crossref Funder ID (e.g. 100000001 for NSF)."
+method = "GET"
+url = "https://api.crossref.org/funders/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "100000001" }, min_results = 1, fixture = "fixtures/w5c/crossref_funders/funder/default.json" }
+
+[op.funder.params]
+id = { type = "string", required = true, in = "path", doc = "Crossref Funder ID e.g. 100000001" }
+
+[op.funder.map]
+items = ".message"
+error = "@ref:op.search.map.error"
+record = '''{
+  id: .id,
+  name: (.name // ""),
+  location: .location,
+  uri: .uri,
+  workCount: .["work-count"],
+  descendantWorkCount: .["descendant-work-count"],
+  altNames: (.["alt-names"] // []),
+  replaces: (.replaces // []),
+  replacedBy: (.["replaced-by"] // []),
+  descendants: (.descendants // [])
+}'''
+
+[op.works]
+summary = "List scholarly works funded by a given Crossref Funder ID."
+method = "GET"
+url = "https://api.crossref.org/funders/{id}/works"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { id = "100000001", limit = 2 }, min_results = 2, fixture = "fixtures/w5c/crossref_funders/works/default.json" }
+
+[op.works.params]
+id = { type = "string", required = true, in = "path", doc = "Crossref Funder ID e.g. 100000001" }
+query = { type = "string", to = "query", doc = "Optional bibliographic query filter" }
+sort = { type = "string", enum = ["relevance", "published", "is-referenced-by-count", "issued"], to = "sort", doc = "Sort field" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "rows", doc = "Rows per page" }
+offset = { type = "int", min = 0, to = "offset", doc = "Offset" }
+
+[op.works.map]
+items = '''(.message.items // [])[] | select(((.title // []) | arr | length) > 0)'''
+total = ".message[\"total-results\"]"
+error = "@ref:op.search.map.error"
+work = '''(
+  (.issued."date-parts"[0] // .published."date-parts"[0] // ."published-print"."date-parts"[0] // ."published-online"."date-parts"[0] // []) as $dp |
+  (if ($dp | length) >= 1 and ($dp[0] | type) == "number" then ($dp[0] | to_int) else null end) as $yr |
+  (
+    if $yr == null then null
+    elif ($dp | length) >= 3 and ($dp[1] | type) == "number" and ($dp[2] | type) == "number" then
+      (($yr | tostring) + "-" + (if $dp[1] < 10 then ("0" + ($dp[1] | tostring)) else ($dp[1] | tostring) end) + "-" + (if $dp[2] < 10 then ("0" + ($dp[2] | tostring)) else ($dp[2] | tostring) end))
+    elif ($dp | length) >= 2 and ($dp[1] | type) == "number" then
+      (($yr | tostring) + "-" + (if $dp[1] < 10 then ("0" + ($dp[1] | tostring)) else ($dp[1] | tostring) end))
+    else ($yr | tostring)
+    end
+  ) as $pub_date |
+  (.DOI | doi_norm) as $doi |
+  (."is-referenced-by-count" | to_int) as $cites |
+  ((."update-to" // []) | any((.type // "" | ascii_downcase) == "retraction")) as $retracted |
+  {
+    title: (((.title | first_str) // "") | strip_tags | collapse_ws),
+    authors: [(.author // [])[] | {
+      name: (if (.name // "") != "" then .name else ([.given, .family] | map(select(type == "string" and length > 0)) | join(" ")) end),
+      orcid: (if (.ORCID // "") != "" then (.ORCID | sub("^https?://orcid\\.org/"; "")) else null end),
+      affiliation: (.affiliation[0]?.name // null)
+    } | select(.name != "")],
+    year: $yr,
+    publishedDate: $pub_date,
+    venue: ((."container-title" | first_str) // .publisher // null),
+    workType: (
+      if .type == "posted-content" then "preprint"
+      elif .type == "proceedings-article" then "conference"
+      elif .type == "book-chapter" then "chapter"
+      elif .type == "book" or .type == "monograph" then "book"
+      elif .type == "dataset" then "dataset"
+      else "article"
+      end
+    ),
+    ids: { doi: $doi },
+    abstractText: (if (.abstract // "") != "" then (.abstract | strip_tags | collapse_ws) else null end),
+    citedBy: $cites,
+    citedBySource: (if $cites != null then "crossref" else null end),
+    retracted: $retracted,
+    versions: [],
+    url: (.URL // (if $doi != null then ("https://doi.org/" + $doi) else "" end)),
+    sources: ["crossref_funders"]
+  }
+)'''

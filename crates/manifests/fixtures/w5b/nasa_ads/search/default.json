@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "nasa_ads",
+  "op": "search",
+  "recordedAt": "2026-11-25T15:05:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.adsabs.harvard.edu/v1/search/query?fl=bibcode%2Ctitle%2Cauthor%2Cyear%2Cpubdate%2Cpub%2Cdoctype%2Cdoi%2Cidentifier%2Cproperty%2Cesources%2Ccitation_count%2Cabstract&sort=score+desc%2C+id+asc&cursorMark=*&rows=3&q=exoplanet+atmosphere",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"responseHeader\": {\"status\": 0, \"QTime\": 14, \"params\": {\"q\": \"exoplanet atmosphere\", \"fl\": \"bibcode,title,author,year,pubdate,pub,doctype,doi,identifier,property,esources,citation_count,abstract\", \"sort\": \"score desc, id asc\", \"rows\": \"3\", \"cursorMark\": \"*\", \"wt\": \"json\"}}, \"response\": {\"numFound\": 18420, \"start\": 0, \"numFoundExact\": true, \"docs\": [{\"bibcode\": \"2010ARA&A..48..631S\", \"title\": [\"Exoplanet Atmospheres\"], \"author\": [\"Seager, Sara\", \"Deming, Drake\"], \"year\": \"2010\", \"pubdate\": \"2010-09-00\", \"pub\": \"Annual Review of Astronomy and Astrophysics\", \"doctype\": \"article\", \"doi\": [\"10.1146/annurev-astro-081309-130837\"], \"identifier\": [\"2010ARA&A..48..631S\", \"10.1146/annurev-astro-081309-130837\", \"arXiv:1005.4037\"], \"property\": [\"REFEREED\", \"ARTICLE\", \"ESOURCE\", \"OPENACCESS\", \"EPRINT_OPENACCESS\"], \"esources\": [\"EPRINT_HTML\", \"EPRINT_PDF\", \"PUB_HTML\"], \"citation_count\": 412, \"abstract\": \"Review of the physical and chemical characterization of transiting and directly imaged exoplanet atmospheres.\"}, {\"bibcode\": \"2019ARA&A..57..617M\", \"title\": [\"Exoplanetary Atmospheres: Key Insights, Challenges, and Prospects\"], \"author\": [\"Madhusudhan, Nikku\"], \"year\": \"2019\", \"pubdate\": \"2019-08-00\", \"pub\": \"Annual Review of Astronomy and Astrophysics\", \"doctype\": \"article\", \"doi\": [\"10.1146/annurev-astro-081817-051846\"], \"identifier\": [\"2019ARA&A..57..617M\", \"10.1146/annurev-astro-081817-051846\", \"arXiv:1904.03190\"], \"property\": [\"REFEREED\", \"ARTICLE\", \"ESOURCE\", \"OPENACCESS\", \"EPRINT_OPENACCESS\"], \"esources\": [\"EPRINT_HTML\", \"EPRINT_PDF\", \"PUB_HTML\"], \"citation_count\": 325, \"abstract\": \"Comprehensive synthesis of spectroscopic observations, atmospheric retrievals, and chemical compositions of exoplanets.\"}, {\"bibcode\": \"2023Natur.614..649J\", \"title\": [\"Identification of carbon dioxide in an exoplanet atmosphere\"], \"author\": [\"JWST Transiting Exoplanet Community Early Release Science Team\"], \"year\": \"2023\", \"pubdate\": \"2023-02-23\", \"pub\": \"Nature\", \"doctype\": \"article\", \"doi\": [\"10.1038/s41586-022-05269-w\"], \"identifier\": [\"2023Natur.614..649J\", \"10.1038/s41586-022-05269-w\", \"arXiv:2208.11692\"], \"property\": [\"REFEREED\", \"ARTICLE\", \"ESOURCE\", \"OPENACCESS\", \"PUB_OPENACCESS\", \"EPRINT_OPENACCESS\"], \"esources\": [\"EPRINT_HTML\", \"EPRINT_PDF\", \"PUB_HTML\", \"PUB_PDF\"], \"citation_count\": 298, \"abstract\": \"Transmission spectroscopy of the hot gas-giant exoplanet WASP-39 b with JWST NIRSpec PRISM reveals a clear carbon dioxide absorption feature.\"}]}, \"nextCursorMark\": \"AoIIP4AAACkyMDEwQVJBJkEuLjQ4Li42MzFT\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

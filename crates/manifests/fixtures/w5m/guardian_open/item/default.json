@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "guardian_open",
+  "op": "item",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://content.guardianapis.com/environment/2026/oct/12/global-renewables-grid-investment?show-fields=headline%2CtrailText%2CbodyText%2Cbyline%2Cwordcount",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"response\":{\"status\":\"ok\",\"userTier\":\"developer\",\"total\":1,\"content\":{\"id\":\"environment/2026/oct/12/global-renewables-grid-investment\",\"type\":\"article\",\"sectionId\":\"environment\",\"sectionName\":\"Environment\",\"webPublicationDate\":\"2026-10-12T08:30:00Z\",\"webTitle\":\"Global renewables expansion accelerates grid investment across Europe and Asia\",\"webUrl\":\"https://www.theguardian.com/environment/2026/oct/12/global-renewables-grid-investment\",\"apiUrl\":\"https://content.guardianapis.com/environment/2026/oct/12/global-renewables-grid-investment\",\"isHosted\":false,\"pillarId\":\"pillar/news\",\"pillarName\":\"News\",\"fields\":{\"headline\":\"Global renewables expansion accelerates grid investment across Europe and Asia\",\"trailText\":\"New IEA data shows grid storage and transmission spending reached a record high in 2026.\",\"bodyText\":\"Global spending on high-voltage transmission and utility-scale battery storage rose sharply in 2026 as utilities worked to connect record solar and wind additions.\",\"byline\":\"Jillian Ambrose\",\"wordcount\":\"940\"}}}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

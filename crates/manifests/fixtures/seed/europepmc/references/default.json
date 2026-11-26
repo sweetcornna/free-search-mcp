@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "source": "europepmc",
+  "op": "references",
+  "recordedAt": "2026-11-25T14:15:26Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/MED/23903748/references?format=json&pageSize=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "vary",
+            "origin,access-control-request-method,access-control-request-headers,accept-encoding"
+          ],
+          [
+            "content-type",
+            "application/json;charset=UTF-8"
+          ],
+          [
+            "strict-transport-security",
+            "max-age=31536000; includeSubDomains; preload"
+          ],
+          [
+            "date",
+            "Wed, 25 Nov 2026 14:15:26 GMT"
+          ]
+        ],
+        "bodyText": "{\"version\":\"6.9\",\"hitCount\":22,\"request\":{\"id\":\"23903748\",\"source\":\"MED\",\"offSet\":1,\"pageSize\":3},\"referenceList\":{\"reference\":[{\"source\":\"MED\",\"id\":\"21574616\",\"citationType\":\"JOURNAL ARTICLE\",\"title\":\"Quantum dot nano thermometers reveal heterogeneous local thermogenesis in living cells.\",\"authorString\":\"Yang JM, Yang H, Lin L.\",\"journalAbbreviation\":\"ACS Nano\",\"issue\":\"6\",\"pubYear\":2011,\"volume\":\"5\",\"pageInfo\":\"5067-5071\",\"citedOrder\":1,\"match\":\"Y\",\"essn\":\"1936-086X\",\"issn\":\"1936-0851\"},{\"source\":\"MED\",\"id\":\"21967343\",\"citationType\":\"JOURNAL ARTICLE\",\"title\":\"Localized temperature and chemical reaction control in nanoscale space by nanowire array.\",\"authorString\":\"Jin CY, Li Z, Williams RS, Lee KC, Park I.\",\"journalAbbreviation\":\"Nano Lett\",\"issue\":\"11\",\"pubYear\":2011,\"volume\":\"11\",\"pageInfo\":\"4818-4825\",\"citedOrder\":2,\"match\":\"Y\",\"essn\":\"1530-6992\",\"issn\":\"1530-6984\"},{\"source\":\"MED\",\"id\":\"22394124\",\"citationType\":\"JOURNAL ARTICLE\",\"title\":\"Mapping intracellular temperature using green fluorescent protein.\",\"authorString\":\"Donner JS, Thompson SA, Kreuzer MP, Baffou G, Quidant R.\",\"journalAbbreviation\":\"Nano Lett\",\"issue\":\"4\",\"pubYear\":2012,\"volume\":\"12\",\"pageInfo\":\"2107-2111\",\"citedOrder\":3,\"match\":\"Y\",\"essn\":\"1530-6992\",\"issn\":\"1530-6984\"}]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+[package]
+name = "fsm-engines-serp"
+description = "Native SERP engines (13)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+fsm-core.workspace = true
+fsm-net.workspace = true
+dom_query.workspace = true
+url.workspace = true
+percent-encoding.workspace = true
+regex.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+async-trait.workspace = true
+tokio.workspace = true
+futures.workspace = true
+tracing.workspace = true
+base64.workspace = true
+jiff.workspace = true
+encoding_rs.workspace = true
+rand.workspace = true
+roxmltree.workspace = true
+bytes.workspace = true
+tokio-util.workspace = true
+chardetng.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }
+insta.workspace = true

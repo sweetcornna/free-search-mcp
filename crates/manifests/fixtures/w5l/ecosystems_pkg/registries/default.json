@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "source": "ecosystems_pkg",
+  "op": "registries",
+  "recordedAt": "2026-11-25T12:56:45Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://packages.ecosyste.ms/api/v1/registries?per_page=5",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "cache-control",
+            "public, max-age=86400, stale-while-revalidate=3600, stale-if-error=86400, s-maxage=3600"
+          ],
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ],
+          [
+            "link",
+            "<https://packages.ecosyste.ms/api/v1/registries?per_page=5&page=1>; rel=\"first\", <https://packages.ecosyste.ms/api/v1/registries?per_page=5&page=2>; rel=\"next\", <https://packages.ecosyste.ms/api/v1/registries?per_page=5&page=24>; rel=\"last\""
+          ]
+        ],
+        "bodyText": "[{\"name\":\"npmjs.org\",\"url\":\"https://registry.npmjs.org\",\"ecosystem\":\"npm\",\"default\":true,\"packages_count\":6141441,\"versions_count\":83631523,\"maintainers_count\":1312793,\"namespaces_count\":467572,\"keywords_count\":962765,\"downloads\":1249821841864,\"github\":\"npm\",\"metadata\":{\"funded_packages_count\":225110,\"rate_limit\":3},\"icon_url\":\"https://github.com/npm.png\",\"purl_type\":\"npm\",\"created_at\":\"2022-04-04T15:19:23.081042Z\",\"updated_at\":\"2026-11-22T05:09:27.640778Z\",\"packages_url\":\"https://packages.ecosyste.ms/api/v1/registries/npmjs.org/packages\",\"maintainers_url\":\"https://packages.ecosyste.ms/api/v1/registries/npmjs.org/maintainers\",\"namespaces_url\":\"https://packages.ecosyste.ms/api/v1/registries/npmjs.org/namespaces\"},{\"name\":\"proxy.golang.org\",\"url\":\"https://proxy.golang.org\",\"ecosystem\":\"go\",\"default\":true,\"packages_count\":2665602,\"versions_count\":29218688,\"maintainers_count\":0,\"namespaces_count\":889097,\"keywords_count\":155226,\"downloads\":0,\"github\":\"golang\",\"metadata\":{\"funded_packages_count\":135109,\"sync_missing_packages_cursor\":{\"timestamp\":\"2026-11-25T00:04:43.823838Z\",\"path\":\"github.com/nwverse/persona/sdk/go\",\"version\":\"v0.0.0-20261125000421-1473a8d6f37f\"},\"rate_limit\":5},\"icon_url\":\"https://github.com/golang.png\",\"purl_type\":\"golang\",\"created_at\":\"2022-04-04T15:19:22.939544Z\",\"updated_at\":\"2026-11-25T00:04:51.737436Z\",\"packages_url\":\"https://packages.ecosyste.ms/api/v1/registries/proxy.golang.org/packages\",\"maintainers_url\":\"https://packages.ecosyste.ms/api/v1/registries/proxy.golang.org/maintainers\",\"namespaces_url\":\"https://packages.ecosyste.ms/api/v1/registries/proxy.golang.org/namespaces\"},{\"name\":\"huggingface.co\",\"url\":\"https://huggingface.co\",\"ecosystem\":\"huggingface\",\"default\":true,\"packages_count\":2162081,\"versions_count\":2265437,\"maintainers_count\":0,\"namespaces_count\":455270,\"keywords_count\":297736,\"downloads\":2186584007,\"github\":\"huggingface\",\"metadata\":{\"rate_limit\":3,\"sync_missing_packages_cursor\":\"https://huggingface.co/api/models?cursor=eyJfaWQiOnsiJGd0IjoiNjk3MzNjNDU2MWE5ZTlkOTk3NDE1OTU5In19\\u0026direction=1\\u0026limit=1000\\u0026sort=createdAt\",\"funded_packages_count\":0},\"icon_url\":\"https://github.com/huggingface.png\",\"purl_type\":\"huggingface\",\"created_at\":\"2026-10-10T16:11:14.564612Z\",\"updated_at\":\"2026-11-25T01:01:50.140522Z\",\"packages_url\":\"https://packages.ecosyste.ms/api/v1/registries/huggingface.co/packages\",\"maintainers_url\":\"https://packages.ecosyste.ms/api/v1/registries/huggingface.co/maintainers\",\"namespaces_url\":\"https://packages.ecosyste.ms/api/v1/registries/huggingface.co/namespaces\"},{\"name\":\"hub.docker.com\",\"url\":\"https://hub.docker.com\",\"ecosystem\":\"docker\",\"default\":true,\"packages_count\":1006256,\"versions_count\":16413865,\"maintainers_count\":0,\"namespaces_count\":413271,\"keywords_count\":1646,\"downloads\":526791270876,\"github\":\"docker\",\"metadata\":{\"api_url\":\"https://registry-1.docker.io\",\"rate_limit\":2,\"funded_packages_count\":227},\"icon_url\":\"https://github.com/docker.png\",\"purl_type\":\"docker\",\"created_at\":\"2022-11-24T17:07:36.388371Z\",\"updated_at\":\"2026-11-22T05:05:08.870545Z\",\"packages_url\":\"https://packages.ecosyste.ms/api/v1/registries/hub.docker.com/packages\",\"maintainers_url\":\"https://packages.ecosyste.ms/api/v1/registries/hub.docker.com/maintainers\",\"namespaces_url\":\"https://packages.ecosyste.ms/api/v1/registries/hub.docker.com/namespaces\"},{\"name\":\"pypi.org\",\"url\":\"https://pypi.org\",\"ecosystem\":\"pypi\",\"default\":true,\"packages_count\":980429,\"versions_count\":10770803,\"maintainers_count\":420966,\"namespaces_count\":0,\"keywords_count\":347398,\"downloads\":159517364093,\"github\":\"pypi\",\"metadata\":{\"funded_packages_count\":67628,\"rate_limit\":2},\"icon_url\":\"https://github.com/pypi.png\",\"purl_type\":\"pypi\",\"created_at\":\"2022-04-04T15:19:23.364945Z\",\"updated_at\":\"2026-11-22T05:09:59.506411Z\",\"packages_url\":\"https://packages.ecosyste.ms/api/v1/registries/pypi.org/packages\",\"maintainers_url\":\"https://packages.ecosyste.ms/api/v1/registries/pypi.org/maintainers\",\"namespaces_url\":\"https://packages.ecosyste.ms/api/v1/registries/pypi.org/namespaces\"}]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

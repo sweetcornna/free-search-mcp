@@ -1,0 +1,46 @@
+id = "bing_news_rss"
+name = "Bing News Search RSS"
+summary = "Lightweight keyless Bing News RSS search returning headlines, publication timestamps, snippets, publisher names, and article links."
+aliases = ["bing news", "bing rss", "bingnews"]
+home_url = "https://www.bing.com/news"
+tier = 1
+scopes = ["news"]
+caps = ["search"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 6000, cache_ttl_s = 1800 }
+
+[op.search]
+summary = "Search recent news stories via Bing News RSS feed."
+method = "GET"
+url = "https://www.bing.com/news/search"
+headers = { Accept = "application/rss+xml, application/xml" }
+response = "xml"
+returns = "records"
+const_query = { format = "rss" }
+probe = { params = { query = "artificial intelligence", limit = 3 }, min_results = 2, fixture = "fixtures/w5m/bing_news_rss/search/default.json" }
+examples = ["source.call('bing_news_rss.search', { query: 'semiconductor earnings', limit: 5 })"]
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "News search keywords" }
+limit = { type = "int", default = 10, min = 1, max = 30, to = "count", doc = "Maximum news items" }
+mkt = { type = "string", to = "mkt", doc = "Market locale code e.g. en-US, zh-CN, ja-JP" }
+freshness = { type = "string", to = "qft", doc = "Optional Bing freshness filter e.g. interval=\"7\"" }
+
+[op.search.map]
+items = "(.rss.channel.item // []) | arr | .[]"
+record = '''{
+  title: ((.title // "") | strip_tags),
+  url: (.link // ""),
+  description: ((.description // "") | strip_tags),
+  source: ((.source // null) | first_str),
+  pubDate: (.pubdate | parse_date),
+  image: (.image // null)
+}'''
+hit = '''{
+  title: ((.title // "") | strip_tags),
+  url: (.link // ""),
+  snippet: ((if .source then ((.source | xml_text) + " — ") else "" end) + ((.description // "") | strip_tags)),
+  date: (.pubdate | parse_date),
+  dateSource: "rss"
+}'''

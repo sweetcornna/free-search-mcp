@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "jalc_doi",
+  "op": "doi",
+  "recordedAt": "2026-11-25T13:02:20Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.japanlinkcenter.org/v2/dois/10.11514/infopro.2008.0.138.0",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"status\":\"OK\",\"apiType\":\"doi\",\"apiVersion\":\"v2\",\"message\":{\"total\":1,\"rows\":1,\"totalPages\":1,\"page\":1},\"data\":{\"siteId\":\"SI/JST.JSTAGE\",\"content_type\":\"JA\",\"doi\":\"10.11514/infopro.2008.0.138.0\",\"url\":\"https://doi.org/10.11514/infopro.2008.0.138.0\",\"ra\":\"JaLC\",\"prefix\":\"10.11514\",\"site_name\":\"J-STAGE\",\"publisher_list\":[{\"publisher_name\":\"Information Science and Technology Association\",\"lang\":\"en\"},{\"publisher_name\":\"一般社団法人　情報科学技術協会\",\"lang\":\"ja\"}],\"title_list\":[{\"lang\":\"ja\",\"title\":\"文献データベースの新しい活用方法\"}],\"creator_list\":[{\"sequence\":\"1\",\"type\":\"person\",\"names\":[{\"lang\":\"ja\",\"last_name\":\"独立行政法人 科学技術振興機構\",\"first_name\":\"&nbsp;\"}]}],\"publication_date\":{\"publication_year\":\"2008\"},\"relation_list\":[{\"content\":\"https://www.jstage.jst.go.jp/article/infopro/2008/0/2008_0_138/_pdf\",\"type\":\"URL\",\"relation\":\"fullTextPdf\"}],\"content_language\":\"ja\",\"updated_date\":\"2014-12-09\",\"article_type\":\"pub\",\"journal_id_list\":[{\"journal_id\":\"infopro\",\"type\":\"JID\"}],\"journal_title_name_list\":[{\"journal_title_name\":\"Preprints of the Information Professional Symposium\",\"type\":\"full\",\"lang\":\"en\"},{\"journal_title_name\":\"INFOPRO\",\"type\":\"abbreviation\",\"lang\":\"en\"},{\"journal_title_name\":\"情報プロフェッショナルシンポジウム予稿集\",\"type\":\"full\",\"lang\":\"ja\"},{\"journal_title_name\":\"INFOPRO\",\"type\":\"abbreviation\",\"lang\":\"ja\"}],\"journal_classification\":\"03\",\"journal_txt_lang\":\"ja\",\"recorded_year\":\"2004-2017\",\"volume\":\"2008\",\"issue\":\"0\",\"first_page\":\"138\",\"last_page\":\"139\",\"date\":\"0001-01-01\"}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

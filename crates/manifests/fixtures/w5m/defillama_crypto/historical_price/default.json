@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "defillama_crypto",
+  "op": "historical_price",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://coins.llama.fi/prices/historical/1704067200/coingecko:bitcoin",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ],
+          [
+            "cache-control",
+            "max-age=3600"
+          ]
+        ],
+        "bodyText": "{\"coins\":{\"coingecko:bitcoin\":{\"symbol\":\"BTC\",\"price\":42261,\"timestamp\":1704067208,\"confidence\":0.99}}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

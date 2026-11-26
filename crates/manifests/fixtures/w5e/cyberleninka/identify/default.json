@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "source": "cyberleninka",
+  "op": "identify",
+  "recordedAt": "2026-11-25T12:13:54Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://cyberleninka.ru/oai?verb=Identify",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/xml; charset=utf-8"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd\">\n  <responseDate>2026-11-25T12:13:53.938876065Z</responseDate>\n  <request verb=\"Identify\" metadataPrefix=\"oai_dc\">/oai</request>\n  <Identify>\n    <repositoryName>CyberLeninka OAI repository</repositoryName>\n    <baseURL>/oai</baseURL>\n    <protocolVersion>2.0</protocolVersion>\n    <adminEmail>skynet@cyberleninka.ru</adminEmail>\n    <earliestDatestamp>2014-05-20T00:00:00Z</earliestDatestamp>\n    <deletedRecord>no</deletedRecord>\n    <granularity>YYYY-MM-DDThh:mm:ssZ</granularity>\n  </Identify>\n</OAI-PMH>",
+        "bodyB64": null
+      }
+    }
+  ]
+}

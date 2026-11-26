@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "source": "pmc_idconv",
+  "op": "idconv",
+  "recordedAt": "2026-11-25T14:07:12Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://pmc.ncbi.nlm.nih.gov/tools/idconv/api/v1/articles/?ids=32450107&format=json&tool=free-search-mcp"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"status\":\"ok\",\"response-date\":\"2026-11-25 09:06:56\",\"request\":{\"warnings\":[\"query param `email` is missing.\"],\"format\":\"json\",\"ids\":[\"32450107\"],\"tool\":\"free-search-mcp\",\"echo\":\"ids=32450107&format=json&tool=free-search-mcp\",\"versions\":\"no\",\"showaiid\":\"no\",\"idtype\":\"pmid\"},\"records\":[{\"doi\":\"10.1016/S0140-6736(20)31180-6\",\"pmcid\":\"PMC7255293\",\"pmid\":32450107,\"requested-id\":\"32450107\"}]}"
+      }
+    }
+  ]
+}

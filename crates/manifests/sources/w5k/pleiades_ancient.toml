@@ -1,0 +1,74 @@
+id = "pleiades_ancient"
+name = "Pleiades Ancient World Gazetteer"
+summary = "Community-built scholarly gazetteer of ancient Mediterranean, Near Eastern, and classical archaeological places with coordinates, attestations, and bibliographic citations."
+aliases = ["pleiades", "ancient gazetteer", "classical geography"]
+home_url = "https://pleiades.stoa.org"
+tier = 2
+scopes = ["academic", "academic.humanities", "reference.geo"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 12000, cache_ttl_s = 86400, host_bucket = "pleiades.stoa.org" }
+
+[op.search]
+summary = "Search Pleiades ancient world place entries via Plone RDF/RSS search feed."
+method = "GET"
+url = "https://pleiades.stoa.org/search_rss"
+headers = { Accept = "application/xml" }
+response = "xml"
+returns = "records"
+const_query = { portal_type = "Place" }
+probe = { params = { query = "Delphi", limit = 3 }, min_results = 2, fixture = "fixtures/w5k/pleiades_ancient/search/default.json" }
+examples = ['source.call("pleiades_ancient.search", { query: "Delphi", limit: 5 })']
+
+[op.search.params]
+query = { type = "string", required = true, to = "SearchableText", doc = "Ancient place name or geographic keyword" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "b_size", doc = "Batch size hint" }
+
+[op.search.map]
+items = ".rdf.item | arr | .[]"
+record = '''{
+  id: (((.link // ."@about" // "") | split("/") | last)),
+  title: (((.title | first_str) // "") | strip_tags),
+  description: ((.description | first_str) | strip_tags),
+  date: ((.date | first_str) | parse_date),
+  url: (.link // ."@about" // "")
+}'''
+hit = '''(
+  ((.date | first_str) | parse_date) as $d |
+  {
+    title: (((.title | first_str) // "") | strip_tags),
+    url: (.link // ."@about" // ""),
+    snippet: (((.description | first_str) // "") | strip_tags),
+    date: $d,
+    dateSource: (if $d != null then "xml" else null end)
+  }
+)'''
+
+[op.place]
+summary = "Fetch full Pleiades JSON record for a place ID including representative coordinates, ancient names, connections, and references."
+method = "GET"
+url = "https://pleiades.stoa.org/places/{id}/json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "164931929" }, min_results = 1, fixture = "fixtures/w5k/pleiades_ancient/place/default.json" }
+examples = ['source.call("pleiades_ancient.place", { id: "164931929" })']
+
+[op.place.params]
+id = { type = "string", required = true, in = "path", doc = "Numeric Pleiades place ID e.g. 164931929, 579885" }
+
+[op.place.map]
+items = "."
+record = '''{
+  id: (.id // ""),
+  title: ((.title // "") | collapse_ws),
+  description: (.description | collapse_ws),
+  placeTypes: (.placeTypes // []),
+  longitude: (.reprPoint[0]? // null),
+  latitude: (.reprPoint[1]? // null),
+  bbox: (.bbox // null),
+  names: [(.names // [])[] | { romanized: (if (.romanized | type) == "string" then (.romanized | gsub("\u2060"; "") | collapse_ws) else null end), attested: (if (.attested | type) == "string" then (.attested | gsub("\u2060"; "") | collapse_ws) else null end), language: (.language // null), start: (.start // null), end: (.end // null) }],
+  references: [(.references // [])[] | { shortTitle: (.shortTitle | collapse_ws), citationDetail: (.citationDetail | collapse_ws), uri: (.accessURI // .bibliographicURI // null) }],
+  url: (.uri // ("https://pleiades.stoa.org/places/" + (.id // "")))
+}'''

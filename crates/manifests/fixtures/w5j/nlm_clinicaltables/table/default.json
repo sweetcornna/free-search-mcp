@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "nlm_clinicaltables",
+  "op": "table",
+  "recordedAt": "2026-11-25T13:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://clinicaltables.nlm.nih.gov/api/hpo/v3/search?terms=ataxia&maxList=3&offset=0",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ],
+          [
+            "etag",
+            "W/\"86-45/9Zy8wuOzxFdxJ11l2kMVTHqE\""
+          ]
+        ],
+        "bodyText": "[14,[\"HP:0001251\",\"HP:0002066\",\"HP:0002070\"],null,[[\"HP:0001251\",\"Ataxia\"],[\"HP:0002066\",\"Gait ataxia\"],[\"HP:0002070\",\"Limb ataxia\"]]]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

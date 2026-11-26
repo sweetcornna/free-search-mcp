@@ -1,0 +1,94 @@
+id = "epo_ops"
+name = "EPO Open Patent Services (OPS v3.2)"
+summary = "European Patent Office global INPADOC patent bibliographic search and publication lookup across 100+ patent offices (requires free EPO OPS OAuth2 client credentials)."
+aliases = ["epo", "espacenet", "ops", "european patents"]
+home_url = "https://developers.epo.org"
+tier = 3
+scopes = ["gov", "gov.patents"]
+caps = ["search", "lookup", "patent"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 43200 }
+
+[auth]
+kind = "oauth2_client_credentials"
+mode = "required"
+token_url = "https://ops.epo.org/3.2/auth/accesstoken"
+env_id = "SEARCH_MCP_EPO_OPS_KEY"
+env_secret = "SEARCH_MCP_EPO_OPS_SECRET"
+style = "basic"
+route_requires_key = true
+
+[op.search]
+summary = "Search global patent publications using EPO OPS CQL syntax (e.g. ti=solar, pa=IBM) or plain keywords."
+method = "GET"
+url = "https://ops.epo.org/3.2/rest-services/published-data/search/biblio"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+query_jaq = '''[
+  ["q", (if ($p.query | test("[=<>()]|\\b(AND|OR|NOT)\\b")) then $p.query else ("ta=\"" + ($p.query | gsub("\""; " ")) + "\"") end)],
+  ["Range", ((($p.start // 1) | tostring) + "-" + (((($p.start // 1) + ($p.limit // 10) - 1)) | tostring))]
+]'''
+paginate = { style = "offset", param = "start", start = 1, max_pages = 3 }
+probe = { params = { query = "ti=solar", limit = 3 }, min_results = 2, fixture = "fixtures/w5d2/epo_ops/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, in = "none", doc = "EPO OPS CQL query (e.g. ti=solar) or plain keywords (auto-wrapped in ta=\"...\")" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "none", doc = "Number of results per page" }
+start = { type = "int", min = 1, in = "none", doc = "1-based start offset for pagination" }
+
+[op.search.map]
+items = '''(."ops:world-patent-data"."ops:biblio-search"."ops:search-result"."exchange-documents" | arr)[] | ((."exchange-document" // .) | arr)[]'''
+total = '''(."ops:world-patent-data"."ops:biblio-search"."@total-result-count" // ."ops:world-patent-data"."ops:biblio-search"."total-result-count" // null) | to_int'''
+error = '''if .fault then (.fault.faultstring // "EPO OPS fault") elif .error then (.error.message // (.error | tostring)) else null end'''
+record = '''{
+  country: (."@country" // .country // ""),
+  docNumber: (."@doc-number" // ."doc-number" // ""),
+  kind: (."@kind" // .kind // ""),
+  publicationId: ((."@country" // .country // "") + (."@doc-number" // ."doc-number" // "") + (."@kind" // .kind // "")),
+  familyId: (."@family-id" // ."family-id" // null),
+  publicationDate: ((."bibliographic-data"."publication-reference"."document-id" | arr | .[0] | .date."$" // .date // null) | parse_date),
+  title: ((."bibliographic-data"."invention-title" | arr | (map(select(."@lang" == "en" or .lang == "en"))[0] // .[0]) | (."$" // . // "")) | collapse_ws // ""),
+  applicants: ([(."bibliographic-data".parties.applicants.applicant | arr)[] | (."applicant-name".name."$" // ."applicant-name".name // .addressbook.name."$" // null) | select(. != null)] | unique),
+  url: ("https://worldwide.espacenet.com/patent/search?q=pn%3D" + (."@country" // .country // "") + (."@doc-number" // ."doc-number" // "") + (."@kind" // .kind // ""))
+}'''
+hit = '''{
+  title: ((."bibliographic-data"."invention-title" | arr | (map(select(."@lang" == "en" or .lang == "en"))[0] // .[0]) | (."$" // . // ((."@country" // "") + (."@doc-number" // "")))) | collapse_ws // ""),
+  url: ("https://worldwide.espacenet.com/patent/search?q=pn%3D" + (."@country" // .country // "") + (."@doc-number" // ."doc-number" // "") + (."@kind" // .kind // "")),
+  snippet: (
+    [
+      ((."@country" // .country // "") + (."@doc-number" // ."doc-number" // "") + (."@kind" // .kind // "")),
+      (if (."@family-id" // ."family-id") then ("family " + (."@family-id" // ."family-id")) else null end),
+      ([(."bibliographic-data".parties.applicants.applicant | arr)[] | (."applicant-name".name."$" // ."applicant-name".name // .addressbook.name."$" // null) | select(. != null)] | unique | .[0:2] | join(", ") | if length > 0 then . else null end)
+    ] | map(select(. != null)) | join(" · ")
+  ),
+  date: ((."bibliographic-data"."publication-reference"."document-id" | arr | .[0] | .date."$" // .date // null) | parse_date),
+  dateSource: "api"
+}'''
+
+[op.publication]
+summary = "Fetch bibliographic data and abstract for a patent publication by EPODOC number (e.g. EP1000000.A1)."
+method = "GET"
+url = "https://ops.epo.org/3.2/rest-services/published-data/publication/epodoc/{doc_number}/biblio"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { doc_number = "EP1000000.A1" }, min_results = 1, fixture = "fixtures/w5d2/epo_ops/publication/default.json" }
+
+[op.publication.params]
+doc_number = { type = "string", required = true, in = "path", doc = "EPODOC publication number, e.g. EP1000000.A1" }
+
+[op.publication.map]
+items = '''(."ops:world-patent-data"."exchange-documents"."exchange-document" | arr)[]'''
+error = '''if .fault then (.fault.faultstring // "EPO OPS fault") elif .error then (.error.message // (.error | tostring)) else null end'''
+record = '''{
+  publicationId: ((."@country" // "") + (."@doc-number" // "") + (."@kind" // "")),
+  familyId: (."@family-id" // null),
+  publicationDate: ((."bibliographic-data"."publication-reference"."document-id" | arr | .[0] | .date."$" // null) | parse_date),
+  title: ((."bibliographic-data"."invention-title" | arr | (map(select(."@lang" == "en"))[0] // .[0]) | (."$" // "")) | collapse_ws // ""),
+  abstract: ((.abstract | arr | (map(select(."@lang" == "en"))[0] // .[0]) | ((.p // []) | arr | map(if type == "object" then (."$" // null) elif type == "string" then . else null end) | map(select(. != null)) | join(" ")) | if length > 0 then . else null end) | strip_tags),
+  applicants: ([(."bibliographic-data".parties.applicants.applicant | arr)[] | (."applicant-name".name."$" // .addressbook.name."$" // null) | select(. != null)] | unique),
+  inventors: ([(."bibliographic-data".parties.inventors.inventor | arr)[] | (."inventor-name".name."$" // .addressbook.name."$" // null) | select(. != null)] | unique),
+  url: ("https://worldwide.espacenet.com/patent/search?q=pn%3D" + (."@country" // "") + (."@doc-number" // "") + (."@kind" // ""))
+}'''

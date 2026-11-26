@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "eastmoney_cn",
+  "op": "quote",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://push2.eastmoney.com/api/qt/stock/get?secid=1.600519&fields=f43,f44,f45,f46,f47,f48,f57,f58,f60,f116,f117,f162,f167,f170",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ]
+        ],
+        "bodyText": "{\"rc\":0,\"rt\":4,\"svr\":183124147,\"lt\":1,\"full\":1,\"dlmkts\":\"\",\"dsc\":\"0\",\"data\":{\"f43\":147484,\"f44\":148000,\"f45\":144700,\"f46\":145800,\"f47\":46674,\"f48\":6842335769.0,\"f57\":\"600519\",\"f58\":\"贵州茅台\",\"f60\":146000,\"f116\":1843670348418.8398,\"f117\":1843670348418.8398,\"f162\":2145,\"f167\":680,\"f170\":102}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

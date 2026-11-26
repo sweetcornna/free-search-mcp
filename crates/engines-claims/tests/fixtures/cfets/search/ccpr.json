@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "source": "cfets",
+  "op": "search",
+  "recordedAt": "2026-11-25T10:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.chinamoney.com.cn/r/cms/www/chinamoney/data/fx/ccpr.json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          ["content-type", "application/json"]
+        ],
+        "bodyText": "{\"data\":{\"lastDate\":\"2026-09-22 9:15\"},\"records\":[{\"vrtEName\":\"USD/CNY\",\"foreignCName\":\"USD\",\"price\":\"6.7459\"},{\"vrtEName\":\"100JPY/CNY\",\"foreignCName\":\"JPY\",\"price\":\"4.2794\"},{\"vrtEName\":\"CNY/MOP\",\"foreignCName\":\"MOP\",\"price\":\"1.1913\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

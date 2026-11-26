@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "source": "ajol_africa",
+  "op": "identify",
+  "recordedAt": "2026-11-25T12:13:56Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.ajol.info/index.php/index/oai?verb=Identify",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/xml;charset=UTF-8"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<?xml-stylesheet type=\"text/xsl\" href=\"https://www.ajol.info/lib/pkp/xml/oai2.xsl\" ?>\n<OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\"\n\txmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n\txsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/\n\t\thttp://www.openarchives.org/OAI/2.0/OAI-PMH.xsd\">\n\t<responseDate>2026-11-25T12:13:56Z</responseDate>\n\t<request verb=\"Identify\">https://www.ajol.info/index.php/index/oai</request>\n\t<Identify>\n\t\t<repositoryName>African Journals Online</repositoryName>\n\t\t<baseURL>https://www.ajol.info/index.php/index/oai</baseURL>\n\t\t<protocolVersion>2.0</protocolVersion>\n\t\t<adminEmail>support@ajol.info</adminEmail>\n\t\t<earliestDatestamp>2026-11-25T12:13:56Z</earliestDatestamp>\n\t\t<deletedRecord>persistent</deletedRecord>\n\t\t<granularity>YYYY-MM-DDThh:mm:ssZ</granularity>\n\t\t<compression>gzip</compression>\n\t\t<compression>deflate</compression>\n\t\t<description>\n\t\t\t<oai-identifier\n\t\t\t\txmlns=\"http://www.openarchives.org/OAI/2.0/oai-identifier\"\n\t\t\t\txmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n\t\t\t\txsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/oai-identifier\n\t\t\t\t\thttp://www.openarchives.org/OAI/2.0/oai-identifier.xsd\">\n\t\t\t\t<scheme>oai</scheme>\n\t\t\t\t<repositoryIdentifier>ajol.info</repositoryIdentifier>\n\t\t\t\t<delimiter>:</delimiter>\n\t\t\t\t<sampleIdentifier>oai:ajol.info:article/1</sampleIdentifier>\n\t\t\t</oai-identifier>\n\t\t</description>\n\t\t<description>\n\t\t\t<toolkit\n\t\t\t\txmlns=\"http://oai.dlib.vt.edu/OAI/metadata/toolkit\"\n\t\t\t\txsi:schemaLocation=\"http://oai.dlib.vt.edu/OAI/metadata/toolkit\n\t\t\t\t\thttp://oai.dlib.vt.edu/OAI/metadata/toolkit.xsd\">\n\t\t\t\t<title>Open Journal Systems</title>\n\t\t\t\t<author>\n\t\t\t\t\t<name>Public Knowledge Project</name>\n\t\t\t\t\t<email>pkp.contact@gmail.com</email>\n\t\t\t\t</author>\n\t\t\t\t<version>3.3.0.11</version>\n\t\t\t\t<URL>http://pkp.sfu.ca/ojs/</URL>\n\t\t\t</toolkit>\n\t\t</description>\n\t</Identify>\n</OAI-PMH>\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

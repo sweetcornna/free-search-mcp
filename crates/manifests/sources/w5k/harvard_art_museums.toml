@@ -1,0 +1,98 @@
+id = "harvard_art_museums"
+name = "Harvard Art Museums Research API"
+summary = "Harvard Art Museums collection API indexing 250k+ art history objects, provenance records, artists, and IIIF imagery (requires free API key)."
+aliases = ["harvard art", "fogg museum", "ham api"]
+home_url = "https://harvardartmuseums.org/collections/api"
+tier = 3
+scopes = ["academic", "academic.humanities"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 10000, cache_ttl_s = 43200, host_bucket = "api.harvardartmuseums.org" }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_HARVARD_ART_API_KEY"
+in = "query"
+name = "apikey"
+format = "{key}"
+route_requires_key = true
+
+[op.search]
+summary = "Search Harvard Art Museums collection objects by keyword or classification."
+method = "GET"
+url = "https://api.harvardartmuseums.org/object"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "monet", limit = 3, page = 1 }, min_results = 2, fixture = "fixtures/w5k/harvard_art_museums/search/default.json" }
+examples = ['source.call("harvard_art_museums.search", { query: "monet", limit: 5 })']
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Artwork title, artist, or subject query" }
+classification = { type = "string", to = "classification", doc = "Optional classification filter e.g. Paintings, Photographs" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "size", doc = "Records per page" }
+page = { type = "int", default = 1, min = 1, to = "page", doc = "1-based page number" }
+
+[op.search.map]
+items = "(.records // [])[]"
+total = ".info.totalrecords"
+error = "if .error then (.error | tostring) else null end"
+record = '''{
+  objectId: .objectid,
+  objectNumber: (.objectnumber // null),
+  title: (.title // ""),
+  classification: (.classification // null),
+  dated: (.dated // null),
+  century: (.century // null),
+  culture: (.culture // null),
+  medium: (.medium // null),
+  division: (.division // null),
+  people: [(.people // [])[] | { name: (.name // ""), role: (.role // null), culture: (.culture // null) }],
+  imageUrl: (.primaryimageurl // null),
+  url: (.url // ("https://www.harvardartmuseums.org/collections/object/" + (.objectid | tostring)))
+}'''
+hit = '''(
+  ((.dated | parse_date) // (if ((.dated // "") | test("^[0-9]{4}")) then .dated[0:4] else null end)) as $d |
+  {
+    title: ((.title // "") | collapse_ws),
+    url: (.url // ("https://www.harvardartmuseums.org/collections/object/" + (.objectid | tostring))),
+    snippet: ([(([(.people // [])[:2][] | .name] | join(", "))), (.classification // ""), (.dated // ""), (.medium // "")] | map(select(length > 0)) | join(" · ")),
+    date: $d,
+    dateSource: (if $d != null then "api" else null end)
+  }
+)'''
+
+[op.object]
+summary = "Fetch full collection record and provenance details for a Harvard Art Museums object ID."
+method = "GET"
+url = "https://api.harvardartmuseums.org/object/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "228649" }, min_results = 1, fixture = "fixtures/w5k/harvard_art_museums/object/default.json" }
+examples = ['source.call("harvard_art_museums.object", { id: "228649" })']
+
+[op.object.params]
+id = { type = "string", required = true, in = "path", doc = "Harvard Art Museums numeric object ID e.g. 228649" }
+
+[op.object.map]
+items = "."
+error = "@ref:op.search.map.error"
+record = '''{
+  objectId: .objectid,
+  objectNumber: (.objectnumber // null),
+  title: (.title // ""),
+  classification: (.classification // null),
+  dated: (.dated // null),
+  century: (.century // null),
+  culture: (.culture // null),
+  medium: (.medium // null),
+  dimensions: (.dimensions // null),
+  provenance: (.provenance // null),
+  creditline: (.creditline // null),
+  people: [(.people // [])[] | { name: (.name // ""), role: (.role // null), culture: (.culture // null) }],
+  imageUrl: (.primaryimageurl // null),
+  url: (.url // ("https://www.harvardartmuseums.org/collections/object/" + (.objectid | tostring)))
+}'''

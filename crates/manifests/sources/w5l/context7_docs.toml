@@ -1,0 +1,100 @@
+id = "context7_docs"
+name = "Context7 Library Docs"
+summary = "Up-to-date LLM-ready third-party library documentation search and curated code/info snippets via Context7 v2 API."
+aliases = ["context7", "upstash context7", "library docs"]
+home_url = "https://context7.com"
+tier = 1
+scopes = ["docs", "code"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 2, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 21600 }
+
+[auth]
+mode = "optional"
+env = "SEARCH_MCP_CONTEXT7_API_KEY"
+in = "header"
+name = "Authorization"
+format = "Bearer {key}"
+route_requires_key = false
+
+[op.search]
+summary = "Search Context7 indexed software libraries to discover library IDs, trust scores, and token counts."
+method = "GET"
+url = "https://context7.com/api/v2/libs/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { query = "fastapi", topic = "routing" }, min_results = 2, fixture = "fixtures/w5l/context7_docs/search/default.json" }
+examples = [
+  'source.call("context7_docs.search", { query: "fastapi", topic: "routing" })',
+  'source.call("context7_docs.search", { query: "tokio" })',
+]
+
+[op.search.params]
+query = { type = "string", required = true, to = "libraryName", doc = "Library name to search (e.g. fastapi, tokio, react)" }
+topic = { type = "string", to = "query", doc = "Optional question or topic used to rank matching libraries" }
+
+[op.search.map]
+items = "(.results // [])[]"
+error = "if .error then (.error | tostring) else null end"
+record = '''{
+  id: (.id // ""),
+  title: (.title // ""),
+  description: (.description // ""),
+  totalTokens: (.totalTokens // null),
+  totalSnippets: (.totalSnippets // null),
+  trustScore: (.trustScore // null),
+  benchmarkScore: (.benchmarkScore // null),
+  lastUpdateDate: (.lastUpdateDate // null),
+  url: ("https://context7.com" + (.id // ""))
+}'''
+hit = '''{
+  title: (.title // .id // ""),
+  url: ("https://context7.com" + (.id // "")),
+  snippet: (
+    [
+      (if (.description // "") != "" then .description else null end),
+      (if .id then ("id=" + .id) else null end),
+      (if .totalSnippets then ((.totalSnippets | tostring) + " snippets") else null end)
+    ] | map(select(. != null)) | join(" · ")
+  )[0:280],
+  date: (.lastUpdateDate | parse_date),
+  dateSource: "api"
+}'''
+
+[op.context]
+summary = "Fetch curated documentation and code snippets for a Context7 library ID and topic."
+method = "GET"
+url = "https://context7.com/api/v2/context"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { type = "json" }
+probe = { params = { library_id = "/websites/fastapi_tiangolo", query = "routing" }, min_results = 2, fixture = "fixtures/w5l/context7_docs/context/default.json" }
+examples = [
+  'source.call("context7_docs.context", { library_id: "/websites/fastapi_tiangolo", query: "routing" })',
+]
+
+[op.context.params]
+library_id = { type = "string", required = true, to = "libraryId", doc = "Context7 library ID from context7_docs.search (e.g. /websites/fastapi_tiangolo)" }
+query = { type = "string", required = true, to = "query", doc = "Topic or coding task query" }
+
+[op.context.map]
+items = "((.codeSnippets // []) | map(. + { _kind: \"code\" })) + ((.infoSnippets // []) | map(. + { _kind: \"info\" })) | .[]"
+error = "@ref:op.search.map.error"
+record = '''if ._kind == "code" then {
+  kind: "code",
+  title: (.codeTitle // ""),
+  description: (.codeDescription // ""),
+  language: (.codeLanguage // null),
+  url: (.codeId // ""),
+  code: ([(.codeList // [])[] | .code] | join("\n\n"))
+} else {
+  kind: "info",
+  title: (.breadcrumb // ""),
+  description: (.content // ""),
+  language: null,
+  url: (.pageId // ""),
+  code: null
+} end'''

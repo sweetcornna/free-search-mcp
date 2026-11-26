@@ -1,0 +1,70 @@
+id = "ia_book_fts"
+name = "Internet Archive Full-Text Book Search"
+summary = "Inside-book full-text Elasticsearch search across millions of digitized books and monographs on the Internet Archive."
+aliases = ["archive fts", "ia fts", "internet archive books fulltext"]
+home_url = "https://archive.org/details/texts"
+tier = 1
+scopes = ["academic", "academic.books"]
+caps = ["search", "book", "fulltext"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 12000, cache_ttl_s = 43200, host_bucket = "be-api.us.archive.org" }
+
+[op.search]
+summary = "Search inside the full text of digitized Internet Archive books with page-level match highlights."
+method = "GET"
+url = "https://be-api.us.archive.org/ia-pub-fts-api"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+paginate = { style = "offset", param = "from", start = 0, max_pages = 3 }
+probe = { params = { query = "quantum computing", limit = 3 }, min_results = 2, fixture = "fixtures/w5i/ia_book_fts/search/default.json" }
+examples = ['source.call("ia_book_fts.search", {query: "quantum computing", limit: 5})']
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", template = "!L {query}", doc = "Full-text phrase or keywords searched inside digitized books" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "size", doc = "Results per page" }
+offset = { type = "int", min = 0, to = "from", doc = "Result offset" }
+
+[op.search.map]
+items = "(.hits.hits // [])[]"
+total = "(.hits.total | if type == \"object\" then .value else . end)"
+work = '''(
+  (.fields // {}) as $f |
+  (($f.identifier | arr | .[0]) // ((._id // "") | split("|")[0])) as $ident |
+  ("https://archive.org/details/" + $ident) as $url |
+  ((($f.meta_date | arr | .[0]) // (($f.meta_year | arr | .[0]) | if . != null then tostring else null end)) | parse_date) as $dt |
+  ([(.highlight.text // [])[:2][] | gsub("\\{\\{\\{|\\}\\}\\}"; "") | unescape_html | collapse_ws | select(. != null and . != "")] | join(" ... ")) as $hl |
+  {
+    title: (((($f.meta_title | arr | .[0]) // $ident) | unescape_html | collapse_ws) // ""),
+    authors: [($f.meta_creator | arr)[] | select(type == "string") | split("|")[] | unescape_html | collapse_ws | select(. != null and . != "") | {name: .}],
+    year: ((($f.meta_year | arr | .[0]) | to_int) // (($dt // "")[0:4] | to_int)),
+    publishedDate: $dt,
+    venue: "Internet Archive",
+    workType: "book",
+    ids: {},
+    abstractText: (if $hl != "" then $hl else null end),
+    oa: {
+      status: "green",
+      url: $url
+    },
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["ia_book_fts"]
+  }
+)'''
+hit = '''(
+  (.fields // {}) as $f |
+  (($f.identifier | arr | .[0]) // ((._id // "") | split("|")[0])) as $ident |
+  ("https://archive.org/details/" + $ident) as $url |
+  ((($f.meta_date | arr | .[0]) // (($f.meta_year | arr | .[0]) | if . != null then tostring else null end)) | parse_date) as $dt |
+  ([(.highlight.text // [])[:2][] | gsub("\\{\\{\\{|\\}\\}\\}"; "") | unescape_html | collapse_ws | select(. != null and . != "")] | join(" ... ")) as $hl |
+  {
+    title: (((($f.meta_title | arr | .[0]) // $ident) | unescape_html | collapse_ws) // ""),
+    url: $url,
+    snippet: (if $hl != "" then $hl[0:260] else ([($f.meta_creator | arr)[] | select(type == "string") | split("|")[] | unescape_html | collapse_ws | select(. != null and . != "")] | join(", ")) end),
+    date: $dt,
+    dateSource: (if $dt != null then "api" else null end)
+  }
+)'''

@@ -1,0 +1,71 @@
+id = "la_referencia"
+name = "LA Referencia"
+summary = "Federated Latin American and Iberian open-access network (5M+ articles, theses, and reports across 12 national nodes)."
+aliases = ["lareferencia", "la referencia", "red federada", "repositorios latinoamérica", "repositórios américa latina", "latin america oa"]
+home_url = "https://www.lareferencia.info"
+tier = 1
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["search", "lookup", "thesis"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 43200, host_bucket = "buscador.lareferencia.info" }
+
+[op.search]
+summary = "Search federated Latin American and Iberian open-access papers and theses via VuFind API."
+method = "GET"
+url = "https://buscador.lareferencia.info/api/v1/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+const_query = { "field[]" = ["id", "title", "authors", "formats", "urls", "subjects", "publishers", "summary", "publicationDates"] }
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "neural", limit = 3 }, min_results = 2, fixture = "fixtures/w5a/la_referencia/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "lookfor", doc = "Search query (EN/ES/PT)" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Max results" }
+page = { type = "int", min = 1, to = "page", doc = "1-indexed page number" }
+
+[op.search.map]
+items = ".records[]"
+total = ".resultCount"
+error = '''if (.status // "OK") == "ERROR" then (.statusMessage // .status) else null end'''
+work = '''(
+  (.urls[0]?.url // ("https://buscador.lareferencia.info/vufind/Record/" + (.id // ""))) as $url |
+  ([((.authors.primary // {} | keys) + (.authors.secondary // {} | keys))[] | select(length > 0) | {name: (. | collapse_ws)}]) as $auths |
+  ((.publicationDates | first_str | parse_date) // null) as $dt |
+  (if $dt != null then ($dt[0:4] | to_int) else null end) as $yr |
+  {
+    title: ((.title // "") | unescape_html | collapse_ws),
+    authors: $auths,
+    year: $yr,
+    publishedDate: $dt,
+    venue: ((.publishers | first_str) | if type == "string" then (unescape_html | collapse_ws) else null end),
+    workType: (if ((.formats // []) | any(test("thesis|doctoral|master"; "i"))) then "thesis" else (.formats[0]? // "article") end),
+    ids: {},
+    abstractText: ((.summary | first_str) | if type == "string" then (unescape_html | collapse_ws) else null end),
+    oa: { status: "green", url: $url },
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["la_referencia"]
+  }
+)'''
+
+[op.work]
+summary = "Fetch a single LA Referencia record by repository record ID."
+method = "GET"
+url = "https://buscador.lareferencia.info/api/v1/record"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+const_query = { "field[]" = ["id", "title", "authors", "formats", "urls", "subjects", "publishers", "summary", "publicationDates"] }
+probe = { params = { id = "CL_27437ae9e2e56ca1d1c59ca7333fe7c1" }, min_results = 1, fixture = "fixtures/w5a/la_referencia/work/default.json" }
+
+[op.work.params]
+id = { type = "string", required = true, to = "id", doc = "LA Referencia record ID e.g. CL_27437ae9e2e56ca1d1c59ca7333fe7c1" }
+
+[op.work.map]
+items = ".records[]"
+error = "@ref:op.search.map.error"
+work = "@ref:op.search.map.work"

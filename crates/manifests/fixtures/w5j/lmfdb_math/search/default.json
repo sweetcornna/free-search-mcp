@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "lmfdb_math",
+  "op": "search",
+  "recordedAt": "2026-11-25T13:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.lmfdb.org/api/ec_curvedata/?conductor=11&_max_count=3&_offset=0&_fields=lmfdb_label%2CClabel%2Cconductor%2Cainvs%2Canalytic_rank%2Ctorsion%2Ccm%2Cjinv%2Cbad_primes&_format=json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\n  \"table\": \"ec_curvedata\",\n  \"timestamp\": \"2026-11-25T13:02:54.836896\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"lmfdb_label\": \"11.a1\",\n      \"Clabel\": \"11a2\",\n      \"conductor\": 11,\n      \"ainvs\": [\n        0,\n        -1,\n        1,\n        -7820,\n        -263580\n      ],\n      \"analytic_rank\": 0,\n      \"torsion\": 1,\n      \"cm\": 0,\n      \"jinv\": [\n        -52893159101157376,\n        11\n      ],\n      \"bad_primes\": [\n        11\n      ]\n    },\n    {\n      \"id\": 0,\n      \"lmfdb_label\": \"11.a2\",\n      \"Clabel\": \"11a1\",\n      \"conductor\": 11,\n      \"ainvs\": [\n        0,\n        -1,\n        1,\n        -10,\n        -20\n      ],\n      \"analytic_rank\": 0,\n      \"torsion\": 5,\n      \"cm\": 0,\n      \"jinv\": [\n        -122023936,\n        161051\n      ],\n      \"bad_primes\": [\n        11\n      ]\n    },\n    {\n      \"id\": 2,\n      \"lmfdb_label\": \"11.a3\",\n      \"Clabel\": \"11a3\",\n      \"conductor\": 11,\n      \"ainvs\": [\n        0,\n        -1,\n        1,\n        0,\n        0\n      ],\n      \"analytic_rank\": 0,\n      \"torsion\": 5,\n      \"cm\": 0,\n      \"jinv\": [\n        -4096,\n        11\n      ],\n      \"bad_primes\": [\n        11\n      ]\n    }\n  ],\n  \"start\": 0,\n  \"offset\": 3,\n  \"query\": \"/api/ec_curvedata/?conductor=11&_max_count=3&_offset=0&_fields=lmfdb_label,Clabel,conductor,ainvs,analytic_rank,torsion,cm,jinv,bad_primes&_format=json\",\n  \"next\": \"/api/ec_curvedata/?conductor=11&_max_count=3&_offset=3&_fields=lmfdb_label,Clabel,conductor,ainvs,analytic_rank,torsion,cm,jinv,bad_primes&_format=json\",\n  \"rec_id\": \"lmfdb_label\"\n}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+id = "nominatim"
+name = "OpenStreetMap Nominatim"
+summary = "Forward geocoding, reverse geocoding, and OSM object lookup backed by OpenStreetMap."
+aliases = ["osm nominatim", "geocode", "openstreetmap geocoder"]
+home_url = "https://nominatim.openstreetmap.org"
+tier = 1
+scopes = ["reference.geo"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 1, concurrency = 1, timeout_ms = 8000, cache_ttl_s = 86400 }
+
+[op.search]
+summary = "Forward geocode an address, city, or landmark name to coordinates and bounding box."
+method = "GET"
+url = "https://nominatim.openstreetmap.org/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "jsonv2", addressdetails = "1" }
+probe = { params = { query = "Berlin", limit = 3 }, min_results = 1, fixture = "fixtures/w5d1/nominatim/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Place name or address" }
+limit = { type = "int", default = 5, min = 1, max = 40, to = "limit", doc = "Max places" }
+countrycodes = { type = "string", to = "countrycodes", doc = "Comma-separated ISO-2 country codes e.g. de,fr" }
+
+[op.search.map]
+items = ".[]"
+error = 'if (type == "object" and (.error? | type == "object")) then (.error.message // (.error | tostring)) elif (type == "object" and (.error? | type == "string") and (.error | length > 0)) then .error else null end'
+record = '''{
+  placeId: .place_id,
+  osmType: (.osm_type // null),
+  osmId: (.osm_id // null),
+  name: (.name // .display_name),
+  displayName: .display_name,
+  category: (.category // null),
+  type: (.type // null),
+  lat: ((.lat | to_num) // .lat),
+  lon: ((.lon | to_num) // .lon),
+  boundingBox: (.boundingbox // null),
+  address: (.address // null),
+  url: (if (.osm_type and .osm_id) then ("https://www.openstreetmap.org/" + .osm_type + "/" + (.osm_id | tostring)) else ("https://nominatim.openstreetmap.org/ui/details.html?place_id=" + (.place_id | tostring)) end)
+}'''
+hit = '''{
+  title: (.display_name // .name // ""),
+  url: (if (.osm_type and .osm_id) then ("https://www.openstreetmap.org/" + .osm_type + "/" + (.osm_id | tostring)) else ("https://nominatim.openstreetmap.org/ui/details.html?place_id=" + (.place_id | tostring)) end),
+  snippet: (((.category // "") + "/" + (.type // "")) + " · lat " + (.lat | tostring) + ", lon " + (.lon | tostring))
+}'''
+
+[op.reverse]
+summary = "Reverse geocode WGS84 latitude and longitude to the nearest OpenStreetMap address or feature."
+method = "GET"
+url = "https://nominatim.openstreetmap.org/reverse"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "jsonv2", addressdetails = "1" }
+probe = { params = { lat = 52.517, lon = 13.395 }, min_results = 1, fixture = "fixtures/w5d1/nominatim/reverse/default.json" }
+
+[op.reverse.params]
+lat = { type = "float", required = true, min = -90.0, max = 90.0, to = "lat", doc = "WGS84 latitude" }
+lon = { type = "float", required = true, min = -180.0, max = 180.0, to = "lon", doc = "WGS84 longitude" }
+zoom = { type = "int", min = 0, max = 18, to = "zoom", doc = "Address detail level (3=country, 10=city, 18=building)" }
+
+[op.reverse.map]
+items = "."
+error = "@ref:op.search.map.error"
+record = "@ref:op.search.map.record"
+
+[op.lookup]
+summary = "Look up OpenStreetMap objects by prefixed OSM IDs (e.g. R62422, W15976892, N240109189)."
+method = "GET"
+url = "https://nominatim.openstreetmap.org/lookup"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "jsonv2", addressdetails = "1" }
+probe = { params = { osm_ids = "R62422" }, min_results = 1, fixture = "fixtures/w5d1/nominatim/lookup/default.json" }
+
+[op.lookup.params]
+osm_ids = { type = "string", required = true, to = "osm_ids", doc = "Comma-separated N/W/R prefixed OSM IDs e.g. R62422" }
+
+[op.lookup.map]
+items = ".[]"
+error = "@ref:op.search.map.error"
+record = "@ref:op.search.map.record"

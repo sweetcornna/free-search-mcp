@@ -1,0 +1,139 @@
+id = "theses_fr"
+name = "theses.fr French National Doctoral Theses (ABES)"
+summary = "500k+ French doctoral dissertations (defended since 1985 and ongoing) with advisors, juries, labs, and open-access PDFs."
+aliases = ["theses.fr", "abes theses", "french theses", "thèses", "thèses.fr", "thèse", "doctorat", "abes"]
+home_url = "https://theses.fr"
+tier = 1
+scopes = ["academic", "academic.theses"]
+caps = ["search", "lookup", "thesis"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 43200, host_bucket = "theses.fr" }
+
+[op.search]
+summary = "Search French doctoral theses and ongoing PhDs via theses.fr REST API v1."
+method = "GET"
+url = "https://theses.fr/api/v1/theses/recherche/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+paginate = { style = "offset", param = "debut", start = 0, max_pages = 3 }
+probe = { params = { query = "intelligence artificielle", limit = 3 }, min_results = 2, fixture = "fixtures/w5i/theses_fr/search/default.json" }
+examples = ['source.call("theses_fr.search", {query: "intelligence artificielle", limit: 5})']
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Thesis keywords, author, or NNT" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "nombre", doc = "Results per page" }
+offset = { type = "int", min = 0, to = "debut", doc = "Starting offset" }
+
+[op.search.map]
+items = ".theses[]"
+total = ".totalHits"
+error = '''if type == "object" and .message != null and .theses == null then .message else null end'''
+work = '''(
+  (.id // "") as $id |
+  ("https://theses.fr/" + $id) as $url |
+  ((.dateSoutenance // "") | if test("^[0-9]{2}/[0-9]{2}/[0-9]{4}$") then (split("/") | .[2] + "-" + .[1] + "-" + .[0]) else parse_date end) as $dt |
+  {
+    title: (((.titrePrincipal // .titreEN) // "") | collapse_ws // ""),
+    authors: [(.auteurs // [])[] | {
+      name: ([.prenom, .nom] | map(select(type == "string") | collapse_ws | select(. != null and . != "")) | join(" "))
+    } | select(.name != "")],
+    year: (($dt // "")[0:4] | to_int),
+    publishedDate: $dt,
+    venue: ((.etabSoutenanceN | collapse_ws) // "theses.fr"),
+    workType: "dissertation",
+    ids: { doi: (.doi | doi_norm) },
+    oa: {
+      status: (if .status == "soutenue" then "green" else "unknown" end),
+      url: $url,
+      pdfUrl: (if .status == "soutenue" and $id != "" then ("https://theses.fr/api/v1/document/" + $id) else null end)
+    },
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["theses_fr"]
+  }
+)'''
+hit = '''(
+  (.id // "") as $id |
+  ("https://theses.fr/" + $id) as $url |
+  ((.dateSoutenance // "") | if test("^[0-9]{2}/[0-9]{2}/[0-9]{4}$") then (split("/") | .[2] + "-" + .[1] + "-" + .[0]) else parse_date end) as $dt |
+  {
+    title: (((.titrePrincipal // .titreEN) // "") | collapse_ws // ""),
+    url: $url,
+    snippet: ([([(.auteurs // [])[] | ([.prenom, .nom] | map(select(type == "string") | collapse_ws | select(. != null and . != "")) | join(" "))] | join(", ")), ((.etabSoutenanceN | collapse_ws) // ""), ((.discipline | collapse_ws) // ""), (.status // "")] | map(select(length > 0)) | join(" · ")),
+    date: $dt,
+    dateSource: (if $dt != null then "api" else null end)
+  }
+)'''
+
+[op.thesis]
+summary = "Look up full French doctoral thesis graph (advisors, jury, doctoral school, labs, PDF link) by NNT or theses.fr ID."
+method = "GET"
+url = "https://theses.fr/api/v1/theses/recherche/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { nombre = "1" }
+probe = { params = { id = "2023STRAB011" }, min_results = 1, fixture = "fixtures/w5i/theses_fr/thesis/default.json" }
+examples = ['source.call("theses_fr.thesis", {id: "2023STRAB011"})']
+
+[op.thesis.params]
+id = { type = "string", required = true, to = "q", doc = "NNT or theses.fr identifier (e.g. 2023STRAB011)" }
+
+[op.thesis.map]
+items = '''.theses[] | select((.id // "") == $p.id or (.nnt // "") == $p.id)'''
+error = '''if type == "object" and .message != null and .theses == null then .message else null end'''
+record = '''{
+  id: (.id // ""),
+  nnt: (.nnt // null),
+  doi: (.doi | doi_norm),
+  title: ((.titrePrincipal // "") | collapse_ws // ""),
+  titleEn: (.titreEN | collapse_ws),
+  status: (.status // ""),
+  defenseDate: ((.dateSoutenance // "") | if test("^[0-9]{2}/[0-9]{2}/[0-9]{4}$") then (split("/") | .[2] + "-" + .[1] + "-" + .[0]) else parse_date end),
+  discipline: (.discipline | collapse_ws),
+  institution: (.etabSoutenanceN | collapse_ws),
+  authors: [(.auteurs // [])[] | ([.prenom, .nom] | map(select(type == "string") | collapse_ws | select(. != null and . != "")) | join(" "))],
+  advisors: [(.directeurs // [])[] | ([.prenom, .nom] | map(select(type == "string") | collapse_ws | select(. != null and . != "")) | join(" "))],
+  president: (if (.president | type) == "object" then ([.president.prenom, .president.nom] | map(select(type == "string") | collapse_ws | select(. != null and . != "")) | join(" ") | if . == "" then null else . end) else null end),
+  rapporteurs: [(.rapporteurs // [])[] | ([.prenom, .nom] | map(select(type == "string") | collapse_ws | select(. != null and . != "")) | join(" ")) | select(length > 0)],
+  examinateurs: [(.examinateurs // [])[] | ([.prenom, .nom] | map(select(type == "string") | collapse_ws | select(. != null and . != "")) | join(" ")) | select(length > 0)],
+  labs: [(.partenairesDeRecherche // [])[] | .nom | select(type == "string") | collapse_ws | select(. != null and . != "")],
+  doctoralSchools: [(.ecolesDoctorale // [])[] | .nom | select(type == "string") | collapse_ws | select(. != null and . != "")],
+  subjects: [(.sujets // [])[] | .libelle | select(type == "string") | collapse_ws | select(. != null and . != "")],
+  url: ("https://theses.fr/" + (.id // "")),
+  pdfUrl: (if .status == "soutenue" and (.id // "") != "" then ("https://theses.fr/api/v1/document/" + .id) else null end)
+}'''
+
+[op.person]
+summary = "Search doctoral thesis authors, advisors, and jury members in theses.fr."
+method = "GET"
+url = "https://theses.fr/api/v1/personnes/recherche/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "debut", start = 0, max_pages = 3 }
+probe = { params = { query = "Chapelle", limit = 3 }, min_results = 2, fixture = "fixtures/w5i/theses_fr/person/default.json" }
+examples = ['source.call("theses_fr.person", {query: "Chapelle", limit: 5})']
+
+[op.person.params]
+query = { type = "string", required = true, to = "q", doc = "Researcher name" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "nombre", doc = "Results per page" }
+offset = { type = "int", min = 0, to = "debut", doc = "Starting offset" }
+
+[op.person.map]
+items = ".personnes[]"
+total = ".totalHits"
+error = '''if type == "object" and .message != null and .personnes == null then .message else null end'''
+record = '''{
+  id: (.id // ""),
+  name: ([.prenom, .nom] | map(select(type == "string") | collapse_ws | select(. != null and . != "")) | join(" ")),
+  roles: (.roles // {}),
+  disciplines: (.disciplines // []),
+  institutions: (.etablissements // []),
+  theses: (.theses // []),
+  thesesCount: (if .nombreTheses != null then (.nombreTheses | to_int) else ((.theses // []) | length) end),
+  url: ("https://theses.fr/" + (.id // ""))
+}'''

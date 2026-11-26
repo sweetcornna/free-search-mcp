@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "source": "kci_openapi",
+  "op": "search",
+  "recordedAt": "2026-11-25T13:03:45Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://open.kci.go.kr/po/openapi/openApiSearch.kci?apiCode=articleSearch&title=neural&displayCount=3&page=1",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/xml; charset=UTF-8"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<MetaData><inputData><apiCode>articleSearch</apiCode><title>neural</title><page>1</page><displayCount>3</displayCount></inputData><outputData><result><total>4812</total><resultCode>SUCCESS</resultCode><resultMsg>SUCCESS</resultMsg></result><record><journalInfo><journal-name>정보과학회논문지</journal-name><publisher-name>한국정보과학회</publisher-name><pub-year>2023</pub-year><pub-mon>05</pub-mon></journalInfo><articleInfo article-id=\"ART002749031\"><title-group><article-title lang=\"original\">심층 신경망 기반 한국어 문서 요약 모델</article-title><article-title lang=\"english\">Korean Document Summarization Based on Deep Neural Networks</article-title></title-group><author-group><author english=\"Kim, Jisu\" orc-id=\"0000-0002-1111-2222\">김지수(Seoul National University)</author><author english=\"Lee, Minho\">이민호(KAIST)</author></author-group><abstract-group><abstract lang=\"english\">We evaluate transformer neural architectures for abstractive Korean scientific text summarization.</abstract></abstract-group><doi>10.5626/JOK.2023.50.5.412</doi><citation-count kci=\"11\" wos=\"3\">11</citation-count><url>https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId=ART002749031</url></articleInfo></record><record><journalInfo><journal-name>한국인공지능학회논문지</journal-name><publisher-name>한국인공지능학회</publisher-name><pub-year>2024</pub-year><pub-mon>02</pub-mon></journalInfo><articleInfo article-id=\"ART003012455\"><title-group><article-title lang=\"english\">Graph Neural Networks for Molecular Property Prediction</article-title></title-group><author-group><author english=\"Park, Seoyeon\">박서연(Yonsei University)</author></author-group><abstract-group><abstract lang=\"english\">Message-passing graph neural networks improve prediction accuracy on small-molecule benchmarks.</abstract></abstract-group><doi>10.22865/JAI.2024.12.2.88</doi><citation-count kci=\"4\" wos=\"0\">4</citation-count><url>https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId=ART003012455</url></articleInfo></record></outputData></MetaData>",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "mitre_cve_awg",
+  "op": "cve_id",
+  "recordedAt": "2026-11-25T12:56:50Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://cveawg.mitre.org/api/cve-id/CVE-2024-3094",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "cache-control",
+            "no-store"
+          ],
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"cve_id\":\"CVE-2024-3094\",\"cve_year\":\"2024\",\"state\":\"PUBLISHED\",\"owning_cna\":\"redhat\",\"dateUpdated\":\"2024-05-01T19:06:27.359Z\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

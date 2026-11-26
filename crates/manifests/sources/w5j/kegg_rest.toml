@@ -1,0 +1,62 @@
+id = "kegg_rest"
+name = "KEGG Genes, Pathways & Compounds"
+summary = "Kyoto Encyclopedia of Genes and Genomes keyless REST search across pathways, genes, enzymes, compounds, diseases, and drugs."
+aliases = ["kegg", "metabolic pathways", "kegg pathways", "kegg compound"]
+home_url = "https://www.kegg.jp"
+tier = 1
+scopes = ["academic.biomed", "dataset"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 4, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 86400, host_bucket = "rest.kegg.jp" }
+
+[op.search]
+summary = "Search a KEGG database (pathway, compound, drug, genes, enzyme, disease, ko, hsa) via tab-separated REST API."
+method = "GET"
+url = "https://rest.kegg.jp/find/{database}/{query}"
+headers = { Accept = "text/plain" }
+response = "csv"
+csv = { header = false, delimiter = "\t" }
+returns = "records"
+probe = { params = { database = "drug", query = "metformin" }, min_results = 3, fixture = "fixtures/w5j/kegg_rest/search/default.json" }
+examples = ["source.call('kegg_rest.search', { database: 'drug', query: 'metformin' })", "source.call('kegg_rest.search', { database: 'pathway', query: 'glycolysis' })"]
+
+[op.search.params]
+query = { type = "string", required = true, in = "path", doc = "KEGG keyword query (e.g. metformin, glycolysis, caffeine)" }
+database = { type = "string", default = "pathway", enum = ["pathway", "brite", "module", "ko", "genes", "compound", "glycan", "reaction", "enzyme", "disease", "drug", "hsa"], in = "path", doc = "Target KEGG database" }
+
+[op.search.map]
+items = ".[]"
+record = '''(
+  (if type == "array" then (.[0] // "") else (."0" // .col_0 // "") end) as $id |
+  (if type == "array" then (.[1] // "") else (."1" // .col_1 // "") end | collapse_ws // "") as $desc |
+  {
+    id: $id,
+    description: $desc,
+    url: ("https://www.kegg.jp/entry/" + $id)
+  }
+)'''
+hit = '''(
+  (if type == "array" then (.[0] // "") else (."0" // .col_0 // "") end) as $id |
+  (if type == "array" then (.[1] // "") else (."1" // .col_1 // "") end | collapse_ws // "") as $desc |
+  {
+    title: ($id + " — " + $desc),
+    url: ("https://www.kegg.jp/entry/" + $id),
+    snippet: $desc,
+    date: null,
+    dateSource: "csv"
+  }
+)'''
+
+[op.entry]
+summary = "Fetch a full KEGG flat-file entry (gene, compound, drug, or pathway) by KEGG identifier."
+method = "GET"
+url = "https://rest.kegg.jp/get/{id}"
+headers = { Accept = "text/plain" }
+response = "text"
+returns = "text"
+probe = { params = { id = "cpd:C07481" }, min_results = 1, fixture = "fixtures/w5j/kegg_rest/entry/default.json" }
+examples = ["source.call('kegg_rest.entry', { id: 'cpd:C07481' })", "source.call('kegg_rest.entry', { id: 'hsa:7157' })"]
+
+[op.entry.params]
+id = { type = "string", required = true, in = "path", encode = "raw", doc = "KEGG entry identifier (e.g. cpd:C07481, hsa:7157, dr:D00944)" }

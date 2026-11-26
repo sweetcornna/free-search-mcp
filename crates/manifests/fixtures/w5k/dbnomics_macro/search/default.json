@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "dbnomics_macro",
+  "op": "search",
+  "recordedAt": "2026-11-25T13:05:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.db.nomics.world/v22/search?q=china+gdp&limit=3&offset=0",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"_meta\":{\"args\":{\"limit\":3,\"offset\":0,\"q\":\"china gdp\"},\"version\":\"22.1.17\"},\"results\":{\"docs\":[{\"code\":\"CHELEM-TRADE-INDIC\",\"description\":\"CHELEM-TRADE-INDIC contains 7 indicators on goods and services based on the CEPII International Trade, Balance of Payments and Gross Domestic Product databases: coverage ratio between the values of exports and imports; the degree of openness (average of exports and imports related to current GDP); market position (balance related to average of world exports and imports); exports, imports and balances related to current GDP; and comparative advantages (contribution to the balance). Data are displayed in a multi-level classification spanning the entire world (95 CHELEM individual countries or statistical territories and zones and additional aggregates). Goods are displayed in the 3 classifications of CHELEM-TRADE (CHEL, GTAP and ISIC), detailed in respectively 71, 43 and 147 categories, non-ventilated products (NV) and total products (TT), as well as production chains, stages, sections, sectors or technological levels. Services are detailed in 16 elementary items, without processing (already integrated in goods). All data are expressed in %, except comparative advantages which are in thousandths of current GDP and market position in % of World trade of goods and services.\",\"dir_hash\":\"6f838e72996de22e9479b2eeb124435e55188db4\",\"indexed_at\":\"2023-06-08T14:45:21.851Z\",\"name\":\"CHELEM - International Trade indicators\",\"nb_matching_series\":4937,\"nb_series\":797349,\"provider_code\":\"CEPII\",\"provider_name\":\"Centre d'\\u00e9tudes prospectives et d'informations internationales\"},{\"code\":\"GFSIBS\",\"description\":\"This dataset provides a comprehensive view of the integrated balance sheet. In other words, changes between the opening and closing stock positions in assets and liabilities are explained through transactions, holding gains\\/losses, and other changes in the volume of assets and liabilities. Data on net investment in nonfinancial assets \\u2013 a component of total expenditure \\u2013 on its components and related stock positions are provided.\",\"dir_hash\":\"9aab9fb846216d3a30c75027d79a72408719ac56\",\"indexed_at\":\"2025-08-31T11:54:51.710Z\",\"name\":\"Government Finance Statistics (GFS), Integrated Balance Sheet (Stock Positions and Flows in Assets and Liabilities)\",\"nb_matching_series\":3552,\"nb_series\":689088,\"provider_code\":\"IMF\",\"provider_name\":\"International Monetary Fund\",\"updated_at\":\"2025-08-30T00:00:00Z\"},{\"code\":\"DSD_EAG_UOE_FIN@DF_UOE_FIN_INDIC_SOURCE_NATURE\",\"description\":\"The purpose of this dataset is for download in CSV format. A default selection shows government expenditure on educational institutions simply to accelerate the display and loading of the data.<\\/p><p> The dataset contains all indicators as well as the full raw data on the source, destination and nature of expenditure on education in local currency and in USD PPP, in constant and current prices. <\\/p><p>For more information, please consult the <a href=\\\"https:\\/\\/www.oecd.org\\/en\\/publications\\/education-at-a-glance_19991487.html\\\"><i>Education at a Glance<\\/i><\\/a> web page.\",\"dir_hash\":\"85ac8878a3bb0c319f457c02e36e1822da2482ab\",\"indexed_at\":\"2026-04-11T11:44:50Z\",\"name\":\"Full dataset - Indicators, source, destination and nature of expenditure on education\",\"nb_matching_series\":1829,\"nb_series\":1584009,\"provider_code\":\"OECD\",\"provider_name\":\"Organisation for Economic Co-operation and Development\",\"updated_at\":\"2026-04-07T00:00:00Z\"}],\"limit\":3,\"num_found\":279,\"offset\":0}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

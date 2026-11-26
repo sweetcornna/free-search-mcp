@@ -1,0 +1,86 @@
+id = "gnews_api"
+name = "GNews Multilingual News API v4"
+summary = "Global multilingual mainstream news keyword search and top headlines by category and country (requires free non-commercial GNews API key, 100 req/day)."
+aliases = ["gnews", "gnews.io"]
+home_url = "https://gnews.io/docs/v4"
+tier = 3
+scopes = ["news"]
+caps = ["search"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 2, concurrency = 1, timeout_ms = 8000, cache_ttl_s = 3600 }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_GNEWS_API_KEY"
+in = "header"
+name = "X-Api-Key"
+format = "{key}"
+route_requires_key = true
+
+[op.search]
+summary = "Search multilingual news articles by keyword, language, country, and date range."
+method = "GET"
+url = "https://gnews.io/api/v4/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { query = "renewable energy", lang = "en", limit = 3 }, min_results = 2, fixture = "fixtures/w5m/gnews_api/search/default.json" }
+examples = ["source.call('gnews_api.search', { query: 'renewable energy', lang: 'en', limit: 5 })"]
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Search keywords (supports quotes, AND, OR, NOT)" }
+lang = { type = "string", to = "lang", doc = "2-letter ISO 639-1 language code e.g. en, zh, fr, ja" }
+country = { type = "string", to = "country", doc = "2-letter ISO 3166 country code e.g. us, gb, jp" }
+from_date = { type = "string", to = "from", doc = "ISO-8601 UTC start timestamp e.g. 2026-11-01T00:00:00Z" }
+to_date = { type = "string", to = "to", doc = "ISO-8601 UTC end timestamp" }
+sortby = { type = "string", enum = ["publishedAt", "relevance"], to = "sortby", doc = "Sort order" }
+limit = { type = "int", default = 10, min = 1, max = 10, to = "max", doc = "Max articles (up to 10 on free tier)" }
+
+[op.search.map]
+items = "(.articles // [])[]"
+total = ".totalArticles"
+error = 'if .errors then (.errors | if type == "array" then join("; ") else tostring end) else null end'
+record = '''{
+  id: (.id // null),
+  title: ((.title // "") | strip_tags),
+  description: ((.description // "") | strip_tags),
+  content: (.content // null),
+  url: (.url // ""),
+  image: (.image // null),
+  publishedAt: (.publishedAt // null),
+  lang: (.lang // null),
+  sourceName: (.source.name // null),
+  sourceUrl: (.source.url // null),
+  sourceCountry: (.source.country // null)
+}'''
+hit = '''{
+  title: ((.title // "") | strip_tags),
+  url: (.url // ""),
+  snippet: ((if .source.name then (.source.name + " — ") else "" end) + ((.description // "") | strip_tags)),
+  date: (.publishedAt | parse_date),
+  dateSource: "api"
+}'''
+
+[op.top_headlines]
+summary = "Fetch current top news headlines filtered by category, language, and country."
+method = "GET"
+url = "https://gnews.io/api/v4/top-headlines"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { category = "technology", lang = "en", limit = 3 }, min_results = 2, fixture = "fixtures/w5m/gnews_api/top_headlines/default.json" }
+examples = ["source.call('gnews_api.top_headlines', { category: 'technology', lang: 'en', limit: 5 })"]
+
+[op.top_headlines.params]
+category = { type = "string", default = "general", enum = ["general", "world", "nation", "business", "technology", "entertainment", "sports", "science", "health"], to = "category", doc = "News category" }
+lang = { type = "string", to = "lang", doc = "2-letter ISO 639-1 language code" }
+country = { type = "string", to = "country", doc = "2-letter ISO 3166 country code" }
+query = { type = "string", to = "q", doc = "Optional keyword filter within headlines" }
+limit = { type = "int", default = 10, min = 1, max = 10, to = "max", doc = "Max articles (up to 10 on free tier)" }
+
+[op.top_headlines.map]
+items = "@ref:op.search.map.items"
+total = "@ref:op.search.map.total"
+error = "@ref:op.search.map.error"
+record = "@ref:op.search.map.record"

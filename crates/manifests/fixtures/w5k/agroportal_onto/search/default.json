@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "agroportal_onto",
+  "op": "search",
+  "recordedAt": "2026-11-25T13:05:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://data.agroportal.eu/search?q=wheat&pagesize=3&page=1",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"page\": 1, \"pageCount\": 142, \"pageSize\": 3, \"totalCount\": 425, \"nextPage\": 2, \"collection\": [{\"@id\": \"http://aims.fao.org/aos/agrovoc/c_8373\", \"prefLabel\": \"wheat\", \"synonym\": [\"Triticum\", \"common wheat\", \"bread wheat\"], \"definition\": [\"Cereal grain of the genus Triticum cultivated worldwide for food and feed.\"], \"obsolete\": false, \"links\": {\"ontology\": \"https://data.agroportal.eu/ontologies/AGROVOC\", \"ui\": \"https://agroportal.lirmm.fr/ontologies/AGROVOC?p=classes&conceptid=http%3A%2F%2Faims.fao.org%2Faos%2Fagrovoc%2Fc_8373\"}}, {\"@id\": \"http://purl.obolibrary.org/obo/NCBITaxon_4565\", \"prefLabel\": \"Triticum aestivum\", \"synonym\": [\"bread wheat\", \"wheat\"], \"definition\": [\"Hexaploid bread wheat species in Poaceae.\"], \"obsolete\": false, \"links\": {\"ontology\": \"https://data.agroportal.eu/ontologies/CO_321\", \"ui\": \"https://agroportal.lirmm.fr/ontologies/CO_321?p=classes&conceptid=http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FNCBITaxon_4565\"}}, {\"@id\": \"http://purl.obolibrary.org/obo/AGRO_00000321\", \"prefLabel\": \"wheat cultivation process\", \"synonym\": [\"wheat farming\"], \"definition\": [\"Agricultural process aimed at growing and harvesting Triticum crops.\"], \"obsolete\": false, \"links\": {\"ontology\": \"https://data.agroportal.eu/ontologies/AGRO\", \"ui\": \"https://agroportal.lirmm.fr/ontologies/AGRO?p=classes&conceptid=http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FAGRO_00000321\"}}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "source": "rdap",
+  "op": "search",
+  "recordedAt": "2026-11-25T10:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://data.iana.org/rdap/dns.json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [["content-type", "application/json"]],
+        "bodyText": "{\"services\":[[[\"com\",\"net\"],[\"https://rdap.verisign.com/com/v1/\"]],[[\"kg\"],[\"http://rdap.cctld.kg/\"]]]}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://rdap.verisign.com/com/v1/domain/github.com",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [["content-type", "application/rdap+json"]],
+        "bodyText": "{\"ldhName\":\"GITHUB.COM\",\"status\":[\"client delete prohibited\",\"client transfer prohibited\"],\"events\":[{\"eventAction\":\"registration\",\"eventDate\":\"2007-10-09T18:20:50Z\"},{\"eventAction\":\"expiration\",\"eventDate\":\"2028-10-09T18:20:50Z\"},{\"eventAction\":\"last changed\",\"eventDate\":\"2026-09-07T09:01:08Z\"}],\"entities\":[{\"roles\":[\"registrar\"],\"vcardArray\":[\"vcard\",[[\"version\",{},\"text\",\"4.0\"],[\"fn\",{},\"text\",\"MarkMonitor Inc.\"]]]}],\"nameservers\":[{\"ldhName\":\"DNS1.P08.NSONE.NET\"},{\"ldhName\":\"NS-1283.AWSDNS-32.ORG\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

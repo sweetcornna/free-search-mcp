@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "wikisource",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:12:51Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://en.wikisource.org/w/api.php?action=query&list=search&srsearch=constitution&srlimit=3&format=json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "cache-control",
+            "private, must-revalidate, max-age=0"
+          ],
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"batchcomplete\":\"\",\"continue\":{\"sroffset\":3,\"continue\":\"-||\"},\"query\":{\"searchinfo\":{\"totalhits\":41110},\"search\":[{\"ns\":0,\"title\":\"Constitution of the Republic of South Africa, 1996\",\"pageid\":567792,\"size\":3550,\"wordcount\":430,\"snippet\":\"<span class=\\\"searchmatch\\\">Constitution</span> of the Republic of South Africa, 1996 enacted by the Constitutional Assembly of South Africa and amended by the Parliament of South Africa\",\"timestamp\":\"2021-02-12T18:10:11Z\"},{\"ns\":0,\"title\":\"United States Constitution\",\"pageid\":25564,\"size\":2034,\"wordcount\":90,\"snippet\":\"States <span class=\\\"searchmatch\\\">Constitution</span> the Federal Convention of 1787 25564United States Constitutionthe Federal Convention of 1787 Versions of United States <span class=\\\"searchmatch\\\">Constitution</span> include:\",\"timestamp\":\"2026-04-07T15:14:12Z\"},{\"ns\":0,\"title\":\"Constitution of the United States of America\",\"pageid\":5,\"size\":4686,\"wordcount\":4488,\"snippet\":\"For other versions of this work, see United States <span class=\\\"searchmatch\\\">Constitution</span>. <span class=\\\"searchmatch\\\">Constitution</span> of the United States of America (1787) the Federal Convention of 1787 5Constitution\",\"timestamp\":\"2026-10-26T14:43:00Z\"}]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

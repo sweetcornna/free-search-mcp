@@ -1,0 +1,109 @@
+id = "open_textbook_library"
+name = "Open Textbook Library (UMN)"
+summary = "University of Minnesota peer-reviewed open college textbooks catalog with ISBNs, Creative Commons licenses, and direct free downloads."
+aliases = ["otl", "open.umn.edu", "umn textbooks"]
+home_url = "https://open.umn.edu/opentextbooks"
+tier = 2
+scopes = ["academic", "academic.books", "academic.openaccess"]
+caps = ["search", "lookup", "book"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 12000, cache_ttl_s = 86400, host_bucket = "open.umn.edu" }
+
+[op.search]
+summary = "Search peer-reviewed open textbooks by keyword via Open Textbook Library JSON API."
+method = "GET"
+url = "https://open.umn.edu/opentextbooks/textbooks.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "compiler" }, min_results = 2, fixture = "fixtures/w5i/open_textbook_library/search/default.json" }
+examples = ['source.call("open_textbook_library.search", {query: "compiler"})']
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Keyword or subject search term" }
+page = { type = "int", min = 1, to = "page", doc = "1-based page number" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "none", doc = "Maximum matching textbooks to return" }
+
+[op.search.map]
+items = "(.data // [])[0:($p.limit // 10)][]"
+total = ".links.total_count"
+work = '''(
+  ((.url | resolve_url("https://open.umn.edu/")) // ("https://open.umn.edu/opentextbooks/textbooks/" + ((.id // "") | tostring))) as $url |
+  ([(.formats // [])[] | select((.type // "" | ascii_downcase) == "pdf") | .url][0] | resolve_url("https://open.umn.edu/")) as $pdfUrl |
+  (([(.formats // [])[] | .url | select(type == "string" and length > 0)][0] | resolve_url("https://open.umn.edu/")) // $url) as $oaUrl |
+  ((.publishers | arr | .[0] | if type == "object" then .name else null end) | collapse_ws) as $pub |
+  {
+    title: ((.title // "") | collapse_ws // ""),
+    authors: [(.contributors // [])[] | {
+      name: ((([.first_name, .last_name] | map(select(type == "string") | collapse_ws | select(. != null and . != "")) | join(" ")) | if length > 0 then . else ((.name // "") | collapse_ws // "") end))
+    } | select(.name != "")],
+    year: (.copyright_year | to_int),
+    publishedDate: null,
+    venue: ($pub // "Open Textbook Library"),
+    workType: "book",
+    ids: {},
+    abstractText: ((.description | strip_tags) | if . == "" then null else . end),
+    oa: {
+      status: "diamond",
+      url: $oaUrl,
+      pdfUrl: $pdfUrl,
+      license: (.license // null)
+    },
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["open_textbook_library"]
+  }
+)'''
+hit = '''(
+  ((.url | resolve_url("https://open.umn.edu/")) // ("https://open.umn.edu/opentextbooks/textbooks/" + ((.id // "") | tostring))) as $url |
+  ((.publishers | arr | .[0] | if type == "object" then .name else null end) | collapse_ws) as $pub |
+  (.copyright_year | to_int) as $yr |
+  {
+    title: ((.title // "") | collapse_ws // ""),
+    url: $url,
+    snippet: ([($pub // ""), (.license // ""), ((.description | strip_tags) // "" | .[0:200])] | map(select(length > 0)) | join(" · ")),
+    date: (if $yr != null then ($yr | tostring) else null end),
+    dateSource: (if $yr != null then "api" else null end)
+  }
+)'''
+
+[op.textbook]
+summary = "Fetch complete metadata, formats, subjects, and reviews for a single textbook by ID."
+method = "GET"
+url = "https://open.umn.edu/opentextbooks/textbooks/{id}.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+probe = { params = { id = 4 }, min_results = 1, fixture = "fixtures/w5i/open_textbook_library/textbook/default.json" }
+examples = ['source.call("open_textbook_library.textbook", {id: 4})']
+
+[op.textbook.params]
+id = { type = "int", required = true, min = 1, in = "path", doc = "Open Textbook Library numeric textbook ID (e.g. 4)" }
+
+[op.textbook.map]
+items = ".data"
+work = "@ref:op.search.map.work"
+
+[op.subjects]
+summary = "List top-level and child subject categories in the Open Textbook Library."
+method = "GET"
+url = "https://open.umn.edu/opentextbooks/subjects.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = {}, min_results = 5, fixture = "fixtures/w5i/open_textbook_library/subjects/default.json" }
+examples = ['source.call("open_textbook_library.subjects", {})']
+
+[op.subjects.map]
+items = "(.data // [])[]"
+record = '''{
+  id: .id,
+  name: ((.name // "") | collapse_ws // ""),
+  callNumber: (.call_number // null),
+  textbooksCount: (.textbooks_count | to_int),
+  url: ((.url | resolve_url("https://open.umn.edu/")) // ""),
+  childSubjects: [(.child_subjects // [])[] | { id: .id, name: ((.name // "") | collapse_ws // ""), textbooksCount: (.textbooks_count | to_int) }]
+}'''

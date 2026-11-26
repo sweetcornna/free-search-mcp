@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "theses_fr",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://theses.fr/api/v1/theses/recherche/?q=intelligence+artificielle&nombre=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "cache-control",
+            "no-cache, no-store, max-age=0, must-revalidate"
+          ],
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"totalHits\":8982,\"took\":77,\"theses\":[{\"id\":\"s431762\",\"titrePrincipal\":\"Artificial Intelligence and Economic Dynamics\",\"titreEN\":\"Intelligence Artificielle et Dynamiques Economiques\",\"etabSoutenanceN\":\"CY Cergy Paris Université\",\"etabSoutenancePpn\":\"241871808\",\"dateSoutenance\":null,\"datePremiereInscriptionDoctorat\":\"08/10/2025\",\"auteurs\":[{\"ppn\":null,\"nom\":\"Berthelot\",\"prenom\":\"Thomas\"}],\"directeurs\":[{\"ppn\":\"202904261\",\"nom\":\"Chapelle\",\"prenom\":\"Guillaume\"}],\"rapporteurs\":[],\"examinateurs\":[],\"president\":{\"ppn\":null,\"nom\":null,\"prenom\":null},\"nnt\":null,\"doi\":null,\"discipline\":\"Sciences économiques - EM2PSI\",\"status\":\"enCours\",\"ecolesDoctorale\":[{\"ppn\":\"096141158\",\"nom\":\"Ecole doctorale Économie, Management,  Mathématiques , Physique et Sciences Informatiques (EM2PSI)\",\"type\":null}],\"partenairesDeRecherche\":[{\"ppn\":\"128500484\",\"nom\":\"THEMA -Théorie économique, modélisation et applications\",\"type\":\"Laboratoire\"}],\"sujets\":[{\"langue\":\"fr\",\"libelle\":\"Intelligence Artificielle\"},{\"langue\":\"fr\",\"libelle\":\"Economie\"},{\"langue\":\"fr\",\"libelle\":\"Urbaine\"},{\"langue\":\"fr\",\"libelle\":\"Macroéconomie\"},{\"langue\":\"fr\",\"libelle\":\"Immobilier\"},{\"langue\":\"fr\",\"libelle\":\"Terrains\"},{\"langue\":\"en\",\"libelle\":\"Artificial Intelligence\"},{\"langue\":\"en\",\"libelle\":\"Economics\"},{\"langue\":\"en\",\"libelle\":\"Urban\"},{\"langue\":\"en\",\"libelle\":\"Macroeconomics\"},{\"langue\":\"en\",\"libelle\":\"Real Estate\"},{\"langue\":\"en\",\"libelle\":\"Lands\"}],\"sujetsRameau\":[]},{\"id\":\"2023STRAB011\",\"titrePrincipal\":\"Artificial intelligence in science : diffusion and impact\",\"titreEN\":\"Intelligence artificielle en science : diffusion et impact\",\"etabSoutenanceN\":\"Strasbourg\",\"etabSoutenancePpn\":\"131056549\",\"dateSoutenance\":\"23/06/2023\",\"datePremiereInscriptionDoctorat\":null,\"auteurs\":[{\"ppn\":\"279203926\",\"nom\":\"Pelletier\",\"prenom\":\"Pierre\"}],\"directeurs\":[{\"ppn\":\"193125463\",\"nom\":\"Bianchini\",\"prenom\":\"Stefano\"}],\"rapporteurs\":[{\"ppn\":\"07600290X\",\"nom\":\"Geuna\",\"prenom\":\"Aldo\"},{\"ppn\":\"250410389\",\"nom\":\"Pezzoni\",\"prenom\":\"Michele\"}],\"examinateurs\":[{\"ppn\":\"229669980\",\"nom\":\"Veugelers\",\"prenom\":\"Reinhilde\"},{\"ppn\":\"132138123\",\"nom\":\"Wolff\",\"prenom\":\"Sandrine\"},{\"ppn\":\"033931607\",\"nom\":\"Mairesse\",\"prenom\":\"Jacques\"}],\"president\":{\"ppn\":\"07600290X\",\"nom\":\"Geuna\",\"prenom\":\"Aldo\"},\"nnt\":\"2023STRAB011\",\"doi\":\"10.70675/fc43f61bz2953z4917zbc1fz2174eac43ee8\",\"discipline\":\"Sciences économiques\",\"status\":\"soutenue\",\"ecolesDoctorale\":[{\"ppn\":\"156507013\",\"nom\":\"École doctorale Augustin Cournot (Strasbourg ; 1995-....)\",\"type\":null}],\"partenairesDeRecherche\":[{\"ppn\":\"026362767\",\"nom\":\"Bureau d'économie théorique et appliquée (Strasbourg ; 1972-....)\",\"type\":\"Laboratoire\"}],\"sujets\":[{\"langue\":\"fr\",\"libelle\":\"Intelligence artificielle\"},{\"langue\":\"fr\",\"libelle\":\"Equipes scientifiques\"},{\"langue\":\"fr\",\"libelle\":\"Adoption de l'IA\"},{\"langue\":\"fr\",\"libelle\":\"Nouveauté combinatoire\"},{\"langue\":\"fr\",\"libelle\":\"Impact Scientifique\"},{\"langue\":\"en\",\"libelle\":\"Artificial intelligence\"},{\"langue\":\"en\",\"libelle\":\"Scientific teams\"},{\"langue\":\"en\",\"libelle\":\"AI adoption\"},{\"langue\":\"en\",\"libelle\":\"Combinatorial novelty\"},{\"langue\":\"en\",\"libelle\":\"Scientific impact\"}],\"sujetsRameau\":[{\"ppn\":\"027234541\",\"libelle\":\"Intelligence artificielle\"},{\"ppn\":\"027315754\",\"libelle\":\"Recherche\"}]},{\"id\":\"s372280\",\"titrePrincipal\":\"L'intelligence artificielle dans les interactions patients/médecins à la croisée de trois disciplines : la médecine, les sciences de l'information et la communication, l'informatique\",\"titreEN\":\"Artificial intelligence in patient/doctor interactions at the crossroads of three disciplines: medicine, information and communication sciences and computer science\",\"etabSoutenanceN\":\"Université Gustave Eiffel\",\"etabSoutenancePpn\":\"244936234\",\"dateSoutenance\":null,\"datePremiereInscriptionDoctorat\":\"01/09/2023\",\"auteurs\":[{\"ppn\":null,\"nom\":\"Viry-babel\",\"prenom\":\"Jean\"}],\"directeurs\":[{\"ppn\":\"083917225\",\"nom\":\"David\",\"prenom\":\"Amos\"}],\"rapporteurs\":[],\"examinateurs\":[],\"president\":{\"ppn\":null,\"nom\":null,\"prenom\":null},\"nnt\":null,\"doi\":null,\"discipline\":\"Sciences de l'Information et de la Communication\",\"status\":\"enCours\",\"ecolesDoctorale\":[{\"ppn\":\"13539208X\",\"nom\":\"Ecole doctorale Cultures et Sociétés (Créteil ; 2010-....)\",\"type\":null}],\"partenairesDeRecherche\":[{\"ppn\":\"155500600\",\"nom\":\"Dispositifs d'information et de communication à l'ère numérique (Paris)\",\"type\":\"Laboratoire\"}],\"sujets\":[{\"langue\":\"fr\",\"libelle\":\"Interaction patient/médecin\"},{\"langue\":\"fr\",\"libelle\":\"Intelligence artificielle\"},{\"langue\":\"fr\",\"libelle\":\"Médecine\"},{\"langue\":\"fr\",\"libelle\":\"Sciences de l'information et la communication\"},{\"langue\":\"fr\",\"libelle\":\"Informatique\"},{\"langue\":\"en\",\"libelle\":\"Patient doctor interaction\"},{\"langue\":\"en\",\"libelle\":\"Artificial intelligence\"},{\"langue\":\"en\",\"libelle\":\"Medicine\"},{\"langue\":\"en\",\"libelle\":\"Information and communication sciences\"},{\"langue\":\"en\",\"libelle\":\"Computer science\"}],\"sujetsRameau\":[]}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

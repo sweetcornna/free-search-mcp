@@ -1,0 +1,134 @@
+id = "open_research_europe"
+name = "Open Research Europe (ORE)"
+summary = "European Commission Horizon-funded open-access and open peer-review publishing platform (post-migration PKP OJS OAI-PMH 2.0 XML API at ore.eu)."
+aliases = ["ore", "ore.eu", "horizon open research"]
+home_url = "https://ore.eu"
+tier = 2
+scopes = ["academic", "academic.openaccess"]
+caps = ["lookup", "harvest"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 12000, cache_ttl_s = 43200, host_bucket = "ore.eu" }
+
+[op.record]
+summary = "Fetch a single Open Research Europe article metadata record via OAI-PMH GetRecord."
+method = "GET"
+url = "https://ore.eu/oai"
+response = "xml"
+returns = "works"
+const_query = { verb = "GetRecord", metadataPrefix = "oai_dc" }
+probe = { params = { identifier = "oai:ore.eu:article/1/version/PMUR/1" }, min_results = 1, fixture = "fixtures/w5h/open_research_europe/record/default.json" }
+
+[op.record.params]
+identifier = { type = "string", required = true, to = "identifier", doc = "OAI-PMH identifier e.g. oai:ore.eu:article/1/version/PMUR/1" }
+
+[op.record.map]
+items = '''."oai-pmh".getrecord.record | arr | .[]'''
+error = '''(."oai-pmh".error // null) as $e | if $e != null and ((if ($e | type) == "object" then ($e."@code" // "") else "" end) != "noRecordsMatch") then ($e | first_str // "OAI-PMH error") else null end'''
+work = '''(
+  (.metadata.dc // {}) as $dc |
+  ([($dc.identifier | arr)[] | first_str | select(type == "string")]) as $ids |
+  ([$ids[] | select(startswith("10."))][0] // null) as $doi |
+  ([$ids[] | select(startswith("http"))][0] // (if $doi != null then ("https://doi.org/" + $doi) else "https://ore.eu" end)) as $url |
+  ([($dc.rights | arr)[] | first_str | select(type == "string" and test("creativecommons\\.org"; "i"))][0] // "CC-BY-4.0") as $lic |
+  ((($dc.date | arr)[0] | first_str) // null) as $raw_date |
+  ([($dc.type | arr)[] | first_str | select(type == "string" and startswith("info:eu-repo/semantics/") and (. != "info:eu-repo/semantics/publishedVersion")) | sub("^info:eu-repo/semantics/"; "")][0] // "article") as $wtype |
+  {
+    title: ((($dc.title | arr)[0] | first_str // "") | strip_tags),
+    authors: [($dc.creator | arr)[] | first_str | select(type == "string" and length > 0) | { name: (. | collapse_ws) }],
+    year: (((($raw_date // "") | tostring)[0:4]) | to_int),
+    publishedDate: ($raw_date | parse_date),
+    venue: "Open Research Europe",
+    workType: ($wtype | ascii_downcase),
+    ids: { doi: ($doi | doi_norm) },
+    abstractText: ((($dc.description | arr)[0] | first_str) | strip_tags),
+    oa: { status: "diamond", url: $url, license: $lic },
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["open_research_europe"]
+  }
+)'''
+
+[op.identifiers]
+summary = "List Open Research Europe OAI-PMH article identifiers by set (e.g. ore:BRI, ore:RES, ore:SOF) with OAI-PMH resumptionToken pagination."
+method = "GET"
+url = "https://ore.eu/oai"
+response = "xml"
+returns = "records"
+query_jaq = '''if ($p.cursor // "") != "" then [
+  ["verb", "ListIdentifiers"],
+  ["resumptionToken", $p.cursor]
+] else [
+  ["verb", "ListIdentifiers"],
+  ["metadataPrefix", "oai_dc"],
+  ["set", ($p.set // null)],
+  ["from", ($p.from // null)],
+  ["until", ($p.until // null)]
+] end'''
+paginate = { style = "cursor", param = "cursor", max_pages = 3 }
+probe = { params = { set = "ore:BRI" }, min_results = 2, fixture = "fixtures/w5h/open_research_europe/identifiers/default.json" }
+
+[op.identifiers.params]
+set = { type = "string", in = "none", doc = "Optional OAI setSpec e.g. ore:BRI, ore:RES, ore:MET, ore:SOF, ore:DAT" }
+from = { type = "string", in = "none", doc = "Optional OAI from datestamp YYYY-MM-DD" }
+until = { type = "string", in = "none", doc = "Optional OAI until datestamp YYYY-MM-DD" }
+cursor = { type = "string", in = "none", doc = "OAI-PMH resumptionToken (mutually exclusive with set/from/until per OAI-PMH 2.0)" }
+
+[op.identifiers.map]
+items = '''."oai-pmh".listidentifiers.header | arr | .[]'''
+next_cursor = '''."oai-pmh".listidentifiers.resumptiontoken | first_str // null'''
+error = "@ref:op.record.map.error"
+record = '''{
+  identifier: (.identifier | first_str // ""),
+  datestamp: (.datestamp | first_str // null),
+  sets: [(.setspec | arr)[] | first_str | select(type == "string")]
+}'''
+
+[op.list_records]
+summary = "Harvest Open Research Europe full metadata works via OAI-PMH ListRecords with resumptionToken pagination."
+method = "GET"
+url = "https://ore.eu/oai"
+response = "xml"
+returns = "works"
+query_jaq = '''if ($p.cursor // "") != "" then [
+  ["verb", "ListRecords"],
+  ["resumptionToken", $p.cursor]
+] else [
+  ["verb", "ListRecords"],
+  ["metadataPrefix", "oai_dc"],
+  ["set", ($p.set // null)],
+  ["from", ($p.from // null)],
+  ["until", ($p.until // null)]
+] end'''
+paginate = { style = "cursor", param = "cursor", max_pages = 3 }
+probe = { params = { set = "ore:CAR" }, min_results = 1, fixture = "fixtures/w5h/open_research_europe/list_records/default.json" }
+
+[op.list_records.params]
+set = { type = "string", in = "none", doc = "Optional OAI setSpec e.g. ore:CAR, ore:BRI, ore:RES, ore:SOF" }
+from = { type = "string", in = "none", doc = "Optional OAI from datestamp YYYY-MM-DD" }
+until = { type = "string", in = "none", doc = "Optional OAI until datestamp YYYY-MM-DD" }
+cursor = { type = "string", in = "none", doc = "OAI-PMH resumptionToken (mutually exclusive with set/from/until per OAI-PMH 2.0)" }
+
+[op.list_records.map]
+items = '''."oai-pmh".listrecords.record | arr | .[]'''
+next_cursor = '''."oai-pmh".listrecords.resumptiontoken | first_str // null'''
+error = "@ref:op.record.map.error"
+work = "@ref:op.record.map.work"
+
+[op.sets]
+summary = "List Open Research Europe OAI-PMH article-type sets."
+method = "GET"
+url = "https://ore.eu/oai"
+response = "xml"
+returns = "records"
+const_query = { verb = "ListSets" }
+probe = { params = {}, min_results = 2, fixture = "fixtures/w5h/open_research_europe/sets/default.json" }
+
+[op.sets.map]
+items = '''."oai-pmh".listsets.set | arr | .[]'''
+error = "@ref:op.record.map.error"
+record = '''{
+  setSpec: (.setspec | first_str // ""),
+  setName: (.setname | first_str // "")
+}'''

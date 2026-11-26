@@ -1,0 +1,77 @@
+id = "alphafold_db"
+name = "AlphaFold Protein Structure DB"
+summary = "EMBL-EBI & Google DeepMind database of 200M+ predicted 3D protein structures (v6), pLDDT confidence metrics, and mmCIF/PDB downloads."
+aliases = ["alphafold", "afdb", "protein 3d structure", "plddt"]
+home_url = "https://alphafold.ebi.ac.uk"
+tier = 2
+scopes = ["academic.biomed", "dataset"]
+caps = ["lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 86400, host_bucket = "alphafold.ebi.ac.uk" }
+
+[op.prediction]
+summary = "Fetch AlphaFold v6 predicted 3D structure metadata, pLDDT scores, and mmCIF/PDB/PAE URLs by UniProt accession."
+method = "GET"
+url = "https://alphafold.ebi.ac.uk/api/prediction/{uniprot_id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { uniprot_id = "P01308" }, min_results = 1, fixture = "fixtures/w5j/alphafold_db/prediction/default.json" }
+examples = ["source.call('alphafold_db.prediction', { uniprot_id: 'P01308' })"]
+
+[op.prediction.params]
+uniprot_id = { type = "string", required = true, in = "path", doc = "UniProtKB primary accession (e.g. P01308 for human insulin)" }
+
+[op.prediction.map]
+items = ".[]"
+record = '''{
+  modelId: (.modelEntityId // ""),
+  uniprotAccession: (.uniprotAccession // ""),
+  uniprotId: (.uniprotId // null),
+  gene: (.gene // null),
+  description: (.uniprotDescription // ""),
+  organism: (.organismScientificName // null),
+  taxonId: (.taxId // null),
+  reviewed: .isUniProtReviewed,
+  latestVersion: (.latestVersion // null),
+  meanPlddt: (.globalMetricValue // null),
+  plddtVeryHighFraction: (.fractionPlddtVeryHigh // null),
+  plddtConfidentFraction: (.fractionPlddtConfident // null),
+  sequenceLength: (.sequenceEnd // null),
+  cifUrl: (.cifUrl // null),
+  pdbUrl: (.pdbUrl // null),
+  paeDocUrl: (.paeDocUrl // null),
+  createdDate: (.modelCreatedDate | parse_date),
+  url: ("https://alphafold.ebi.ac.uk/entry/" + (.uniprotAccession // ""))
+}'''
+
+[op.summary]
+summary = "Fetch 3D-Beacons AlphaFold structural summary and coverage for a UniProt accession."
+method = "GET"
+url = "https://alphafold.ebi.ac.uk/api/uniprot/summary/{uniprot_id}.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { uniprot_id = "P01308" }, min_results = 1, fixture = "fixtures/w5j/alphafold_db/summary/default.json" }
+examples = ["source.call('alphafold_db.summary', { uniprot_id: 'P01308' })"]
+
+[op.summary.params]
+uniprot_id = { type = "string", required = true, in = "path", doc = "UniProtKB primary accession (e.g. P01308)" }
+
+[op.summary.map]
+items = "(.structures // [])[] | .summary"
+record = '''{
+  modelId: (.model_identifier // ""),
+  category: (.model_category // null),
+  format: (.model_format // null),
+  modelUrl: (.model_url // null),
+  pageUrl: (.model_page_url // null),
+  confidenceType: (.confidence_type // null),
+  avgConfidence: (.confidence_avg_local_score // null),
+  coverage: (.coverage // null),
+  uniprotStart: (.uniprot_start // null),
+  uniprotEnd: (.uniprot_end // null),
+  oligomericState: (.oligomeric_state // null),
+  created: (.created | parse_date)
+}'''

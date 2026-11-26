@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "regulations_gov",
+  "op": "document",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.regulations.gov/v4/documents/EPA-HQ-OAR-2023-0001-0002",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/vnd.api+json"
+          ]
+        ],
+        "bodyText": "{\"data\":{\"id\":\"EPA-HQ-OAR-2023-0001-0002\",\"type\":\"documents\",\"attributes\":{\"documentType\":\"Proposed Rule\",\"title\":\"Standards of Performance for New, Reconstructed, and Modified Sources and Emissions Guidelines for Existing Sources: Oil and Natural Gas Sector Methane Emissions\",\"docketId\":\"EPA-HQ-OAR-2023-0001\",\"agencyId\":\"EPA\",\"postedDate\":\"2026-03-14T04:00:00Z\",\"commentStartDate\":\"2026-03-14T04:00:00Z\",\"commentEndDate\":\"2026-05-15T03:59:59Z\",\"rin\":\"2060-AV16\",\"summary\":\"Proposed updates to methane leak detection and continuous monitoring standards.\",\"topics\":[\"Air Pollution Control\",\"Methane\",\"Oil and Gas\"]},\"links\":{\"self\":\"https://api.regulations.gov/v4/documents/EPA-HQ-OAR-2023-0001-0002\"}}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

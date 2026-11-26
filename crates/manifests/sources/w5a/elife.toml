@@ -1,0 +1,104 @@
+id = "elife"
+name = "eLife Sciences"
+summary = "Open-access peer-reviewed life sciences and biomedical journal with structured article versions and PDFs."
+aliases = ["elifesciences", "elife journal"]
+home_url = "https://elifesciences.org"
+tier = 1
+scopes = ["academic", "academic.biomed", "academic.openaccess"]
+caps = ["search", "lookup", "fulltext"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 43200, host_bucket = "api.elifesciences.org" }
+
+[op.search]
+summary = "Search eLife Sciences open-access articles and reviewed preprints."
+method = "GET"
+url = "https://api.elifesciences.org/search"
+headers = { Accept = "application/vnd.elife.search+json; version=2" }
+response = "json"
+returns = "works"
+const_query = { order = "desc", sort = "relevance" }
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "crispr", limit = 3 }, min_results = 2, fixture = "fixtures/w5a/elife/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "for", doc = "Search query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "per-page", doc = "Results per page" }
+page = { type = "int", min = 1, to = "page", doc = "1-indexed page number" }
+
+[op.search.map]
+items = ".items[]"
+total = ".total"
+error = '''if .title != null and .items == null and .versions == null then (.detail // .title) else null end'''
+work = '''(
+  ("https://elifesciences.org/articles/" + (.id // "")) as $url |
+  ((.published // .versionDate) | parse_date) as $dt |
+  (if (.abstract.content // null) != null then ([.abstract.content[] | .text | select(type == "string")] | join(" ") | strip_tags) elif (.impactStatement // null) != null then (.impactStatement | strip_tags) else null end) as $abs |
+  {
+    title: ((.title // "") | strip_tags),
+    authors: [(.authorLine // "") | gsub("\\s*\\.\\.\\.\\s*"; ", ") | split(",")[] | collapse_ws | select(length > 0) | {name: .}],
+    year: (if $dt != null then ($dt[0:4] | to_int) else null end),
+    publishedDate: $dt,
+    venue: "eLife",
+    workType: (if (.type // "") == "reviewed-preprint" then "preprint" else "article" end),
+    ids: { doi: (.doi // null | doi_norm) },
+    abstractText: $abs,
+    oa: {
+      status: "gold",
+      url: $url,
+      pdfUrl: (.pdf // null),
+      license: (.copyright.license // "CC-BY-4.0")
+    },
+    retracted: ((.type // "") == "retraction"),
+    versions: [],
+    url: $url,
+    sources: ["elife"]
+  }
+)'''
+
+[op.work]
+summary = "Fetch eLife article version history, PDF URL, and impact statement by numeric eLife article ID."
+method = "GET"
+url = "https://api.elifesciences.org/articles/{id}/versions"
+headers = { Accept = "application/vnd.elife.article-history+json; version=2" }
+response = "json"
+returns = "works"
+probe = { params = { id = "55632" }, min_results = 1, fixture = "fixtures/w5a/elife/work/default.json" }
+
+[op.work.params]
+id = { type = "string", required = true, in = "path", doc = "eLife article ID e.g. 55632" }
+
+[op.work.map]
+items = "select((.versions // []) | length > 0)"
+error = "@ref:op.search.map.error"
+work = '''(
+  .versions as $vs |
+  ($vs[-1]) as $v |
+  ("https://elifesciences.org/articles/" + ($v.id // "")) as $url |
+  (($v.published // $v.versionDate) | parse_date) as $dt |
+  (if ($v.abstract.content // null) != null then ([$v.abstract.content[] | .text | select(type == "string")] | join(" ") | strip_tags) elif ($v.impactStatement // null) != null then ($v.impactStatement | strip_tags) else null end) as $abs |
+  {
+    title: (($v.title // "") | strip_tags),
+    authors: [($v.authorLine // "") | gsub("\\s*\\.\\.\\.\\s*"; ", ") | split(",")[] | collapse_ws | select(length > 0) | {name: .}],
+    year: (if $dt != null then ($dt[0:4] | to_int) else null end),
+    publishedDate: $dt,
+    venue: "eLife",
+    workType: (if ($v.type // "") == "reviewed-preprint" then "preprint" else "article" end),
+    ids: { doi: ($v.doi // null | doi_norm) },
+    abstractText: $abs,
+    oa: {
+      status: "gold",
+      url: $url,
+      pdfUrl: ($v.pdf // null),
+      license: ($v.copyright.license // "CC-BY-4.0")
+    },
+    retracted: ([$vs[] | (.type // "") == "retraction"] | any),
+    versions: [$vs[] | {
+      kind: (if (.status // "") == "poa" then "preprint" else "published" end),
+      doi: (.doi // null | doi_norm),
+      url: ("https://elifesciences.org/articles/" + (.id // "") + "v" + ((.version // 1) | tostring))
+    }],
+    url: $url,
+    sources: ["elife"]
+  }
+)'''

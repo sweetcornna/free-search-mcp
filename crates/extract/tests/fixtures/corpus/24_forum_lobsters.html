@@ -1,0 +1,205 @@
+<!-- MHonArc v2.6.19+ -->
+<!--X-Subject: GNUnet 0.21.0 released -->
+<!--X-From-R13: "Epunamraonpu, [negva" &#60;zfpunamraonpuNcbfgrb.qr> -->
+<!--X-Date: Thu, 07 Mar 2024 09:47:13 &#45;0500 -->
+<!--X-Message-Id: 0e6d2a87&#45;1c62&#45;467f&#45;818f&#45;dc34d3c7ec2a@posteo.de -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!doctype html public "-//W3C//DTD HTML//EN">
+<html>
+<head>
+<title>GNUnet 0.21.0 released</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+<center>
+<table border=0 cellspacing=2 cellpadding=0 bgcolor="#000000">
+<tr><td><table border=0 bgcolor="#FFFFCC">
+<tr><td><big><b>info-gnu</b></big></td></tr></table></tr></table>
+<div class="nowrap">
+<small>[<a href="../"
+>Top</a>][<a href="/archive/html">All Lists</a>]</small>
+</div>
+<form method="get" action="/archive/cgi-bin/namazu.cgi">
+<input type="text" name="query" size="30">
+<input type="submit" name="submit" value="Search">
+<input type="hidden" name="idxname" value="info-gnu">
+<a href="/archive/cgi-bin/namazu.cgi?idxname=info-gnu">Advanced</a>
+</form>
+
+</center>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+[<a href="msg00000.html">Date Prev</a>][<a href="msg00002.html">Date Next</a>][<a href="msg00000.html">Thread Prev</a>][<a href="msg00002.html">Thread Next</a>][<a
+href="index.html#00001">Date Index</a>][<a
+href="threads.html#00001">Thread Index</a>]
+
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h2>GNUnet 0.21.0 released</h2>
+<hr>
+<table border=0>
+<tbody>
+<tr>
+<td align="right" valign="top">
+<b>From</b>: </td>
+<td align="left">
+Schanzenbach, Martin</td>
+</tr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+
+<tr>
+<td align="right" valign="top">
+<b>Subject</b>: </td>
+<td align="left">
+GNUnet 0.21.0 released</td>
+</tr>
+
+<tr>
+<td align="right" valign="top">
+<b>Date</b>: </td>
+<td align="left">
+Thu,  7 Mar 2024 14:15:02 +0000</td>
+</tr>
+
+</tbody>
+</table>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre style="margin: 0em;">
+We are pleased to announce the release of GNUnet 0.21.0.
+</pre><tt>GNUnet is an alternative network stack for building secure, 
+</tt><tt>decentralized and privacy-preserving distributed applications. Our goal 
+</tt><tt>is to replace the old insecure Internet protocol stack. Starting from an 
+</tt><tt>application for secure publication of files, it has grown to include all 
+</tt><tt>kinds of basic protocol components and applications towards the creation 
+</tt><tt>of a GNU internet.
+</tt><pre style="margin: 0em;">
+
+</pre><tt>This release marks a noteworthy milestone in that it includes a 
+</tt><tt>completely new transport layer. It lays the groundwork for fixing some 
+</tt><tt>major design issues and may also already alleviate a variety of issues 
+</tt><tt>seen in previous releases related to connectivity. This change also 
+</tt><tt>deprecates our testbed and ATS subsystem.
+</tt><pre style="margin: 0em;">
+
+</pre><tt>This is a new major release. It breaks protocol compatibility with the 
+</tt><tt>0.20.x versions. Please be aware that Git master is thus henceforth (and 
+</tt><tt>has been for a while) INCOMPATIBLE with the 0.20.x GNUnet network, and 
+</tt><tt>interactions between old and new peers will result in issues. In terms 
+</tt><tt>of usability, users should be aware that there are still a number of 
+</tt><tt>known open issues in particular with respect to ease of use, but also 
+</tt><tt>some critical privacy issues especially for mobile users. Also, the 
+</tt><tt>nascent network is tiny and thus unlikely to provide good anonymity or 
+</tt><tt>extensive amounts of interesting information. As a result, the 0.21.0 
+</tt><tt>release is still only suitable for early adopters with some reasonable 
+</tt><tt>pain tolerance.
+</tt><pre style="margin: 0em;">
+
+Download links:
+
+<a  rel="nofollow" href="http://ftpmirror.gnu.org/gnunet/gnunet-0.21.0.tar.gz">http://ftpmirror.gnu.org/gnunet/gnunet-0.21.0.tar.gz</a>
+<a  rel="nofollow" href="http://ftpmirror.gnu.org/gnunet/gnunet-gtk-0.21.0.tar.gz">http://ftpmirror.gnu.org/gnunet/gnunet-gtk-0.21.0.tar.gz</a>
+<a  rel="nofollow" href="http://ftpmirror.gnu.org/gnunet/gnunet-fuse-0.21.0.tar.gz">http://ftpmirror.gnu.org/gnunet/gnunet-fuse-0.21.0.tar.gz</a>
+
+The GPG key used to sign is: 3D11063C10F98D14BD24D1470B0998EF86F59B6A
+
+</pre><tt>Note that due to mirror synchronization, not all links might be 
+</tt><tt>functional early after the release. For direct access try 
+</tt><tt><a  rel="nofollow" href="http://ftp.gnu.org/gnu/gnunet/">http://ftp.gnu.org/gnu/gnunet/</a>
+</tt><pre style="margin: 0em;">
+
+Changes:
+
+</pre><tt>A detailed list of changes can be found in the git log, the NEWS and the 
+</tt><tt>bug tracker.
+</tt><pre style="margin: 0em;">
+
+Known Issues:
+
+</pre><tt>    - There are known major design issues in the CORE subsystems which 
+</tt><tt>will need to be addressed in the future to achieve acceptable usability, 
+</tt><tt>performance and security.
+</tt><tt>    - There are known moderate implementation limitations in CADET that 
+</tt><tt>negatively impact performance.
+</tt><tt>    - There are known moderate design issues in FS that also impact 
+</tt><tt>usability and performance.
+</tt><tt>    - There are minor implementation limitations in SET that create 
+</tt><tt>unnecessary attack surface for availability.
+</tt><pre style="margin: 0em;">
+    - The RPS subsystem remains experimental.
+
+</pre><tt>In addition to this list, you may also want to consult our bug tracker 
+</tt><tt>at <a  rel="nofollow" href="https://bugs.gnunet.org/">https://bugs.gnunet.org/</a> which lists about 190 more specific issues.
+</tt><pre style="margin: 0em;">
+
+Thanks:
+
+</pre><tt>This release was the work of many people. The following people 
+</tt><tt>contributed code and were thus easily identified: Christian Grothoff, 
+</tt><tt>t3sserakt, TheJackiMonster, Pedram Fardzadeh, dvn, Sebastian Nadler and 
+</tt><tt>Martin Schanzenbach.
+</tt><pre style="margin: 0em;">
+
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr>
+<form method="post" action="/mp/yyz.py" enctype="multipart/form-data">
+<input type="hidden" name="a" value="mschanzenbach">
+<input type="hidden" name="b" value="GNUnet 0.21.0 released">
+<input type="hidden" name="d" value="0e6d2a87-1c62-467f-818f-dc34d3c7ec2a@posteo.de">
+<input type="hidden" name="c" value="posteo.de">
+<center>reply via email to<br><input type="submit" value=" Schanzenbach, Martin "></center>
+</form>
+<hr>
+<table width="100%">
+<tr><td align="left">[Prev in Thread]</td>
+<td align="center"><b>Current Thread</b></td>
+<td align="right">[Next in Thread]</td></tr></table>
+<ul>
+<li><font color="#666666"><strong>GNUnet 0.21.0 released</strong>,
+<em>Schanzenbach, Martin</em></font>&nbsp;<b>&lt;=</b>
+</ul>
+
+<hr>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00000.html">GDB 14.2 released!</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00002.html">wget-1.24.5 released [stable]</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00000.html">GDB 14.2 released!</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00002.html">wget-1.24.5 released [stable]</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="index.html#00001"><strong>Date</strong></a></li>
+<li><a href="threads.html#00001"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>

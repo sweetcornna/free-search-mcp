@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "source": "doaj",
+  "op": "search",
+  "recordedAt": "2026-11-25T14:07:36Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://doaj.org/api/search/articles/machine%20learning?pageSize=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "date",
+            "Wed, 25 Nov 2026 14:07:36 GMT"
+          ],
+          [
+            "content-type",
+            "application/json"
+          ],
+          [
+            "server",
+            "cloudflare"
+          ],
+          [
+            "vary",
+            "Accept-Encoding"
+          ],
+          [
+            "vary",
+            "Cookie"
+          ],
+          [
+            "access-control-allow-origin",
+            "*"
+          ],
+          [
+            "link",
+            "<https://doaj.org/api/v4/search/articles/machine%20learning?page=2&pageSize=3>; rel=next, <https://doaj.org/api/v4/search/articles/machine%20learning?page=71129&pageSize=3>; rel=last"
+          ],
+          [
+            "x-total-count",
+            "213385"
+          ],
+          [
+            "nel",
+            "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}"
+          ],
+          [
+            "cf-cache-status",
+            "DYNAMIC"
+          ],
+          [
+            "report-to",
+            "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=5K8WXoSGDkH8C%2Fva8fA9LkBgIE5D3MWvP2ZWOlaCcXeHqfqkDtHK1WUIQl1aDFSmmXqk8%2Fif1AjjIX3aGZsZMjRPUKfK3kNJS7zpk%2B9F8I0ldXTtfIUeeCIo\"}]}"
+          ],
+          [
+            "cf-ray",
+            "a601387b19a207bf-SLC"
+          ]
+        ],
+        "bodyText": "{\"total\": 213385, \"page\": 1, \"pageSize\": 3, \"timestamp\": \"2026-11-25T14:07:36.352320Z\", \"query\": \"machine learning\", \"results\": [{\"last_updated\": \"2025-08-20T01:49:50Z\", \"bibjson\": {\"identifier\": [{\"id\": \"10.46481/jnsps.2025.2273\", \"type\": \"doi\"}, {\"id\": \"2714-2817\", \"type\": \"pissn\"}, {\"id\": \"2714-4704\", \"type\": \"eissn\"}], \"journal\": {\"volume\": \"7\", \"number\": \"1\", \"country\": \"NG\", \"issns\": [\"2714-2817\", \"2714-4704\"], \"publisher\": \"Nigerian Society of Physical Sciences\", \"language\": [\"EN\"], \"title\": \"Journal of Nigerian Society of Physical Sciences\"}, \"month\": \"February\", \"keywords\": [\"Algorithm\", \"Dataset\", \"Dimensionality reduction\", \"Feature selection\"], \"year\": \"2025\", \"subject\": [{\"code\": \"QC1-999\", \"scheme\": \"LCC\", \"term\": \"Physics\"}], \"author\": [{\"affiliation\": \"Department of Computer Science, Federal University Wukari, P.M.B 1020, \\tKatsina-Ala Road, Wukari, Taraba State, Nigeria\", \"name\": \"PHILEMON UTEN EMMOH\"}, {\"affiliation\": \"Department of Computer Science, Federal University of Lafia, P.M.B 146, Lafia, Nasarawa State, Nigeria\", \"name\": \"christopher  ifeanyi Eke\"}, {\"affiliation\": \"Department of Computer Science, Federal University of Lafia, P.M.B 146, Lafia, Nasarawa State, Nigeria\", \"name\": \"Timothy Moses\"}], \"link\": [{\"content_type\": \"HTML\", \"type\": \"fulltext\", \"url\": \"https://journal.nsps.org.ng/index.php/jnsps/article/view/2273\"}], \"abstract\": \"\\nSelection of important features is very vital in machine learning tasks involving high-dimensional dataset with large features. It helps in reducing the dimensionality of a dataset and improving model performance. Most of the feature selection techniques have restriction in the kind of dataset to be used. This study proposed a feature selection technique that is based on statistical lift measure to select important features from a dataset. The proposed technique is a generic approach that can be used in any binary classification dataset. The technique successfully determined the most important feature subset and outperformed the existing techniques. The proposed technique was tested on lungs cancer dataset and happiness classification dataset. The effectiveness of the proposed technique in selecting important features subset was evaluated and compared with other existing techniques, namely Chi-Square, Pearson Correlation and Information Gain. Both the proposed and the existing techniques were evaluated on five machine learning models using four standard evaluation metrics such as accuracy, precision, recall and F1-score. The experimental results of the proposed technique on lung cancer dataset shows that logistic regression, decision tree, adaboost, gradient boost and random forest produced a predictive accuracy of 0.919%, 0.935%, 0.919%, 0.935% and 0.935% respectively, and that of happiness classification dataset produced a predictive accuracy of 0.758%, 0.689%, 0.724%, 0.655% and 0.689% on random forest, k-nearest neighbor, decision tree, gradient boost and cat boost respectively, which outperformed the existing techniques.\\n\", \"title\": \"A feature selection and scoring scheme for dimensionality reduction in a machine learning task\"}, \"id\": \"000122f776cb4f27b0f575971a4bed38\", \"created_date\": \"2025-01-17T18:52:28Z\"}, {\"last_updated\": \"2025-08-20T00:40:35Z\", \"bibjson\": {\"identifier\": [{\"id\": \"10.1038/s41598-024-73898-4\", \"type\": \"doi\"}, {\"id\": \"2045-2322\", \"type\": \"eissn\"}], \"journal\": {\"volume\": \"14\", \"number\": \"1\", \"country\": \"GB\", \"issns\": [\"2045-2322\"], \"publisher\": \"Nature Portfolio\", \"language\": [\"EN\"], \"title\": \"Scientific Reports\"}, \"month\": \"10\", \"end_page\": \"10\", \"year\": \"2024\", \"start_page\": \"1\", \"subject\": [{\"code\": \"R\", \"scheme\": \"LCC\", \"term\": \"Medicine\"}, {\"code\": \"Q\", \"scheme\": \"LCC\", \"term\": \"Science\"}], \"author\": [{\"affiliation\": \"Division of Nephrology and Hypertension, Department of Internal Medicine, St. Marianna University School of Medicine\", \"name\": \"Ryunosuke Noda\"}, {\"affiliation\": \"Division of Nephrology and Hypertension, Department of Internal Medicine, St. Marianna University School of Medicine\", \"name\": \"Daisuke Ichikawa\"}, {\"affiliation\": \"Division of Nephrology and Hypertension, Department of Internal Medicine, St. Marianna University School of Medicine\", \"name\": \"Yugo Shibagaki\"}], \"link\": [{\"content_type\": \"HTML\", \"type\": \"fulltext\", \"url\": \"https://doi.org/10.1038/s41598-024-73898-4\"}], \"abstract\": \"Abstract Minimal change disease (MCD) is a common cause of nephrotic syndrome. Due to its rapid progression, early detection is essential; however, definitive diagnosis requires invasive kidney biopsy. This study aims to develop non-invasive predictive models for diagnosing MCD by machine learning. We retrospectively collected data on demographic characteristics, blood tests, and urine tests from patients with nephrotic syndrome who underwent kidney biopsy. We applied four machine learning algorithms\\u2014TabPFN, LightGBM, Random Forest, and Artificial Neural Network\\u2014and logistic regression. We compared their performance using stratified 5-repeated 5-fold cross-validation for the area under the receiver operating characteristic curve (AUROC) and the area under the precision-recall curve (AUPRC). Variable importance was evaluated using the SHapley Additive exPlanations (SHAP) method. A total of 248 patients were included, with 82 cases (33%) were diagnosed with MCD. TabPFN demonstrated the best performance with an AUROC of 0.915 (95% CI 0.896\\u20130.932) and an AUPRC of 0.840 (95% CI 0.807\\u20130.872). The SHAP methods identified C3, total cholesterol, and urine red blood cells as key predictors for TabPFN, consistent with previous reports. Machine learning models could be valuable non-invasive diagnostic tools for MCD.\", \"title\": \"Machine learning-based diagnostic prediction of minimal change disease: model development study\"}, \"id\": \"000134bd78f94c829350f855e4f681d0\", \"created_date\": \"2024-10-13T11:19:32Z\"}, {\"last_updated\": \"2025-08-20T00:15:21Z\", \"bibjson\": {\"identifier\": [{\"id\": \"10.3390/s20195497\", \"type\": \"doi\"}, {\"id\": \"1424-8220\", \"type\": \"eissn\"}], \"journal\": {\"volume\": \"20\", \"number\": \"19\", \"country\": \"CH\", \"issns\": [\"1424-8220\"], \"publisher\": \"MDPI AG\", \"language\": [\"EN\"], \"title\": \"Sensors\"}, \"month\": \"09\", \"keywords\": [\"heat sensors\", \"smart offices\", \"occupancy prediction\", \"machine learning\", \"computer vision\", \"feature engineering\"], \"year\": \"2020\", \"start_page\": \"5497\", \"subject\": [{\"code\": \"TP1-1185\", \"scheme\": \"LCC\", \"term\": \"Chemical technology\"}], \"author\": [{\"affiliation\": \"J\\u00f6nk\\u00f6ping AI Lab (JAIL), Department of Computer Science and Informatics, School of Engineering, J\\u00f6nk\\u00f6ping University, 553 18 J\\u00f6nk\\u00f6ping, Sweden\", \"name\": \"Beril Sirmacek\"}, {\"affiliation\": \"J\\u00f6nk\\u00f6ping AI Lab (JAIL), Department of Computer Science and Informatics, School of Engineering, J\\u00f6nk\\u00f6ping University, 553 18 J\\u00f6nk\\u00f6ping, Sweden\", \"name\": \"Maria Riveiro\"}], \"link\": [{\"content_type\": \"text/html\", \"type\": \"fulltext\", \"url\": \"https://www.mdpi.com/1424-8220/20/19/5497\"}], \"abstract\": \"Solving the challenge of occupancy prediction is crucial in order to design efficient and sustainable office spaces and automate lighting, heating, and air circulation in these facilities. In office spaces where large areas need to be observed, multiple sensors must be used for full coverage. In these cases, it is normally important to keep the costs low, but also to make sure that the privacy of the people who use such environments are preserved. Low-cost and low-resolution heat (thermal) sensors can be very useful to build solutions that address these concerns. However, they are extremely sensitive to noise artifacts which might be caused by heat prints of the people who left the space or by other objects, which are either using electricity or exposed to sunlight. There are some earlier solutions for occupancy prediction that employ low-resolution heat sensors; however, they have not addressed nor compensated for such heat artifacts. Therefore, in this paper, we presented a low-cost and low-energy consuming smart space implementation to predict the number of people in the environment based on whether their activity is static or dynamic in time. We used a low-resolution <inline-formula><math display=\\\"inline\\\"><semantics><mrow><mo>(</mo><mn>8</mn><mo>\\u00d7</mo><mn>8</mn><mo>)</mo></mrow></semantics></math></inline-formula> and non-intrusive heat sensor to collect data from an actual meeting room. We proposed two novel workflows to predict the occupancy; one that is based on computer vision and one based on machine learning. Besides comparing the advantages and disadvantages of these different workflows, we used several state-of-the-art explainability methods in order to provide a detailed analysis of the algorithm parameters and how the image properties influence the resulting performance. Furthermore, we analyzed noise resources that affect the heat sensor data. The experiments show that the feature classification based method gives high accuracy when the data are clean from noise artifacts. However, when there are noise artifacts, the computer vision based method can compensate for those artifacts providing robust results. Because the computer vision based method requires an empty room recording, the feature classification based method should be chosen either when there is no expectancy of seeing noise artifacts in the data or when there is no empty recording available. We hope that our analysis brings light into understanding how to handle very low-resolution heat images in these environments. The presented workflows could be used in various domains and applications other than smart offices, where occupancy prediction is essential, e.g., for elderly care.\", \"title\": \"Occupancy Prediction Using Low-Cost and Low-Resolution Heat Sensors for Smart Offices\"}, \"id\": \"00013831f2754d1eae195f60ab31f584\", \"created_date\": \"2020-09-26T00:01:12Z\"}], \"next\": \"https://doaj.org/api/v4/search/articles/machine%20learning?page=2&pageSize=3\", \"last\": \"https://doaj.org/api/v4/search/articles/machine%20learning?page=71129&pageSize=3\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

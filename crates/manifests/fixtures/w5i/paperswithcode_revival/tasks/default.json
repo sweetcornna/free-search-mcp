@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "paperswithcode_revival",
+  "op": "tasks",
+  "recordedAt": "2026-11-25T12:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://paperswithcode.co/api/v1/tasks/?page_size=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ],
+          [
+            "cache-control",
+            "public, max-age=60, stale-while-revalidate=300"
+          ]
+        ],
+        "bodyText": "{\"count\":308,\"next_page\":2,\"previous_page\":null,\"results\":[{\"id\":\"451\",\"name\":\"2D Point Tracking\",\"description\":\"2D point tracking, also called Tracking Any Point (TAP), estimates the image-plane trajectory and visibility of arbitrary query pixels across video frames, including through occlusion and reappearance. Methods may track sparse user-selected points or dense pixel grids. Unlike [Object Tracking](/tasks/object-tracking), the targets are points rather than bounding boxes, and unlike [3D Tracking](/tasks/3d-tracking), predictions remain in 2D image coordinates rather than metric camera or world space.\",\"research_trends\":[],\"slug\":\"point-tracking\",\"keywords\":\"2D point tracking, video point tracking, tracking any point, TAP-Vid, TAPVid, arbitrary point tracking, pixel tracking in video, pixel trajectory tracking, image-plane point tracking, sparse point tracking in video, dense point tracking in video, long-term 2D point tracking\",\"parent_id\":null,\"area_id\":\"1\",\"level\":0,\"paper_count\":66,\"benchmark_count\":15,\"evaluation_count\":89,\"image_url\":\"/api/v1/tasks/point-tracking/image?v=1786968764\",\"image_credit\":\"[CoTracker: It is Better to Track Together](/paper/2307.07635)\",\"created_at\":\"2026-08-17T09:17:45.398112Z\",\"updated_at\":\"2026-08-17T12:12:44.187535Z\"},{\"id\":\"13\",\"name\":\"3D generation\",\"description\":\"3D generation is the process of using artificial intelligence (AI) to automatically create three-dimensional (3D) models from various inputs like text descriptions or images, bypassing traditional manual modeling. These advanced AI models, often employing techniques like deep learning, can generate complex 3D structures in formats such as meshes or point clouds for use in fields like gaming, augmented reality (AR), and 3D printing.\",\"research_trends\":[],\"slug\":\"3d-generation\",\"keywords\":\"3d generation, 3d generative model, 3d asset generation, 3d scene generation, image-to-3d, image to 3d, text-to-3d, text to 3d, multi-view generation\",\"parent_id\":null,\"area_id\":\"1\",\"level\":0,\"paper_count\":1053,\"benchmark_count\":30,\"evaluation_count\":168,\"image_url\":\"https://github.com/microsoft/TRELLIS/raw/main/assets/teaser.png\",\"image_credit\":null,\"created_at\":\"2025-10-09T18:01:21.233324Z\",\"updated_at\":\"2026-07-30T14:06:40.090219Z\"},{\"id\":\"327\",\"name\":\"3D instance segmentation\",\"description\":\"Segment and classify individual object instances in 3D scene scans.\",\"research_trends\":[],\"slug\":\"3d-instance-segmentation\",\"keywords\":\"3d instance segmentation,point cloud instance segmentation\",\"parent_id\":null,\"area_id\":\"1\",\"level\":0,\"paper_count\":134,\"benchmark_count\":6,\"evaluation_count\":78,\"image_url\":\"/api/v1/tasks/3d-instance-segmentation/image?v=1785322354\",\"image_credit\":\"[ScanNet200](https://rozdavid.github.io/scannet200)\",\"created_at\":\"2026-06-01T17:32:11.327798Z\",\"updated_at\":\"2026-07-29T10:52:34.363475Z\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "oasisbr_br",
+  "op": "work",
+  "recordedAt": "2026-11-25T15:04:24Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://oasisbr.ibict.br/vufind/api/v1/record?id=UFSM-23_5e828dbf9d1ab8c4fef67698c0e225a0&field%5B%5D=id&field%5B%5D=title&field%5B%5D=authors&field%5B%5D=formats&field%5B%5D=languages&field%5B%5D=urls&field%5B%5D=publicationDates&field%5B%5D=summary&field%5B%5D=publishers&field%5B%5D=subjects&field%5B%5D=cleanDoi&field%5B%5D=dc.identifier.doi&field%5B%5D=containerTitle&field%5B%5D=issns",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"resultCount\":1,\"records\":[{\"id\":\"UFSM-23_5e828dbf9d1ab8c4fef67698c0e225a0\",\"title\":\"Neural networks\",\"authors\":{\"primary\":{\"Almeida, Rita M. C. de\":[]},\"secondary\":[],\"corporate\":[]},\"formats\":[\"article\"],\"languages\":[\"por\"],\"urls\":[{\"url\":\"https:\\/\\/periodicos.ufsm.br\\/cienciaenatura\\/article\\/view\\/26309\",\"desc\":\"https:\\/\\/periodicos.ufsm.br\\/cienciaenatura\\/article\\/view\\/26309\"}],\"publicationDates\":[\"1992\"],\"summary\":[\"In the last ten years many scientific advances regarding neurons and the way they are interconnected has mad o it possible to study the dynamics of storage and Processing of information in the brain. In particular, the physicist J. J. Hopfield proposed a formal minimalist model to these neural networks reducing the problem to a particular case of a well \\u2013 defined physical problem \\u2013 the spin glass. Although the problem \\u00ed s well defined, its solution is far from being trivial.Here we introduce the problem, describe Hopfield model, with its achievements and limitations, and present our contribution to the description of information storage in neural networks.\"],\"publishers\":[],\"subjects\":[],\"issns\":[]}],\"status\":\"OK\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

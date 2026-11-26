@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "nws_weather",
+  "op": "points",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.weather.gov/points/37.7749,-122.4194",
+        "headersSubset": {
+          "accept": "application/geo+json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/geo+json"
+          ]
+        ],
+        "bodyText": "{\n    \"@context\": [\n        \"https://geojson.org/geojson-ld/geojson-context.jsonld\",\n        {\n            \"@version\": \"1.1\",\n            \"wx\": \"https://api.weather.gov/ontology#\",\n            \"s\": \"https://schema.org/\",\n            \"geo\": \"http://www.opengis.net/ont/geosparql#\",\n            \"unit\": \"http://codes.wmo.int/common/unit/\",\n            \"@vocab\": \"https://api.weather.gov/ontology#\",\n            \"geometry\": {\n                \"@id\": \"s:GeoCoordinates\",\n                \"@type\": \"geo:wktLiteral\"\n            },\n            \"city\": \"s:addressLocality\",\n            \"state\": \"s:addressRegion\",\n            \"distance\": {\n                \"@id\": \"s:Distance\",\n                \"@type\": \"s:QuantitativeValue\"\n            },\n            \"bearing\": {\n                \"@type\": \"s:QuantitativeValue\"\n            },\n            \"value\": {\n                \"@id\": \"s:value\"\n            },\n            \"unitCode\": {\n                \"@id\": \"s:unitCode\",\n                \"@type\": \"@id\"\n            },\n            \"forecastOffice\": {\n                \"@type\": \"@id\"\n            },\n            \"forecastGridData\": {\n                \"@type\": \"@id\"\n            },\n            \"publicZone\": {\n                \"@type\": \"@id\"\n            },\n            \"county\": {\n                \"@type\": \"@id\"\n            }\n        }\n    ],\n    \"id\": \"https://api.weather.gov/points/37.7749,-122.4194\",\n    \"type\": \"Feature\",\n    \"geometry\": {\n        \"type\": \"Point\",\n        \"coordinates\": [\n            -122.4194,\n            37.7749\n        ]\n    },\n    \"properties\": {\n        \"@id\": \"https://api.weather.gov/points/37.7749,-122.4194\",\n        \"@type\": \"wx:Point\",\n        \"cwa\": \"MTR\",\n        \"type\": \"land\",\n        \"forecastOffice\": \"https://api.weather.gov/offices/MTR\",\n        \"gridId\": \"MTR\",\n        \"gridX\": 85,\n        \"gridY\": 105,\n        \"forecast\": \"https://api.weather.gov/gridpoints/MTR/85,105/forecast\",\n        \"forecastHourly\": \"https://api.weather.gov/gridpoints/MTR/85,105/forecast/hourly\",\n        \"forecastGridData\": \"https://api.weather.gov/gridpoints/MTR/85,105\",\n        \"observationStations\": \"https://api.weather.gov/gridpoints/MTR/85,105/stations\",\n        \"relativeLocation\": {\n            \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\": \"Point\",\n                \"coordinates\": [\n                    -123.0322294,\n                    37.7272391\n                ]\n            },\n            \"properties\": {\n                \"city\": \"San Francisco\",\n                \"state\": \"CA\",\n                \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n                    \"value\": 0\n                },\n                \"bearing\": {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\": 0\n                }\n            }\n        },\n        \"forecastZone\": \"https://api.weather.gov/zones/forecast/CAZ006\",\n        \"county\": \"https://api.weather.gov/zones/county/CAC075\",\n        \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/CAZ006\",\n        \"timeZone\": \"America/Los_Angeles\",\n        \"radarStation\": \"KMUX\",\n        \"astronomicalData\": {\n            \"sunrise\": \"2026-11-25T07:00:39-08:00\",\n            \"sunset\": \"2026-11-25T16:52:51-08:00\",\n            \"transit\": \"2026-11-25T11:56:45-08:00\",\n            \"civilTwilightBegin\": \"2026-11-25T06:32:09-08:00\",\n            \"civilTwilightEnd\": \"2026-11-25T17:21:21-08:00\",\n            \"nauticalTwilightBegin\": \"2026-11-25T05:59:56-08:00\",\n            \"nauticalTwilightEnd\": \"2026-11-25T17:53:34-08:00\",\n            \"astronomicalTwilightBegin\": \"2026-11-25T05:28:29-08:00\",\n            \"astronomicalTwilightEnd\": \"2026-11-25T18:25:01-08:00\"\n        },\n        \"nwr\": {\n            \"transmitter\": \"KDX54\",\n            \"sameCode\": \"006075\",\n            \"areaBroadcast\": \"https://api.weather.gov/radio/KDX54/broadcast\",\n            \"pointBroadcast\": \"https://api.weather.gov/points/37.7749,-122.4194/radio\"\n        }\n    }\n}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "nasa_ads",
+  "op": "work",
+  "recordedAt": "2026-11-25T15:05:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.adsabs.harvard.edu/v1/search/query?fl=bibcode%2Ctitle%2Cauthor%2Cyear%2Cpubdate%2Cpub%2Cdoctype%2Cdoi%2Cidentifier%2Cproperty%2Cesources%2Ccitation_count%2Cabstract&rows=1&q=bibcode%3A2010ARA%26A..48..631S",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"responseHeader\": {\"status\": 0, \"QTime\": 6, \"params\": {\"q\": \"bibcode:2010ARA&A..48..631S\", \"fl\": \"bibcode,title,author,year,pubdate,pub,doctype,doi,identifier,property,esources,citation_count,abstract\", \"rows\": \"1\", \"wt\": \"json\"}}, \"response\": {\"numFound\": 1, \"start\": 0, \"numFoundExact\": true, \"docs\": [{\"bibcode\": \"2010ARA&A..48..631S\", \"title\": [\"Exoplanet Atmospheres\"], \"author\": [\"Seager, Sara\", \"Deming, Drake\"], \"year\": \"2010\", \"pubdate\": \"2010-09-00\", \"pub\": \"Annual Review of Astronomy and Astrophysics\", \"doctype\": \"article\", \"doi\": [\"10.1146/annurev-astro-081309-130837\"], \"identifier\": [\"2010ARA&A..48..631S\", \"10.1146/annurev-astro-081309-130837\", \"arXiv:1005.4037\"], \"property\": [\"REFEREED\", \"ARTICLE\", \"ESOURCE\", \"OPENACCESS\", \"EPRINT_OPENACCESS\"], \"esources\": [\"EPRINT_HTML\", \"EPRINT_PDF\", \"PUB_HTML\"], \"citation_count\": 412, \"abstract\": \"Review of the physical and chemical characterization of transiting and directly imaged exoplanet atmospheres.\"}]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

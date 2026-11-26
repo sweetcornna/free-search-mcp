@@ -1,0 +1,122 @@
+id = "medrxiv"
+name = "medRxiv Preprints"
+summary = "Cold Spring Harbor Laboratory clinical and health-sciences preprint server with DOI lookup, JATS XML URLs, and published-journal links."
+aliases = ["medrxiv.org", "clinical preprints"]
+home_url = "https://www.medrxiv.org"
+tier = 1
+scopes = ["academic", "academic.preprint", "academic.biomed"]
+caps = ["lookup", "fulltext"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 43200, host_bucket = "api.biorxiv.org" }
+
+[op.recent]
+summary = "Fetch the most recent N medRxiv preprints."
+method = "GET"
+url = "https://api.biorxiv.org/details/medrxiv/{count}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+probe = { params = { count = 3 }, min_results = 2, fixture = "fixtures/w5a/medrxiv/recent/default.json" }
+
+[op.recent.params]
+count = { type = "int", default = 10, min = 1, max = 50, in = "path", doc = "Number of most recent preprints to return" }
+
+[op.recent.map]
+items = ".collection[]"
+error = '''if (.messages[0]?.status // null) == null then null elif ((.messages[0].status | ascii_downcase) | (. == "ok" or startswith("no posts"))) then null else .messages[0].status end'''
+work = '''(
+  ("https://www.medrxiv.org/content/" + .doi + "v" + (.version // "1")) as $page |
+  ((.date // "") | split("-") | if length == 3 then (.[0] + "-" + (if (.[1] | length) == 1 then "0" + .[1] else .[1] end) + "-" + (if (.[2] | length) == 1 then "0" + .[2] else .[2] end)) else (.date // "") end | parse_date) as $dt |
+  ((.abstract // "") | unescape_html | collapse_ws) as $abs |
+  {
+    title: ((.title // "") | unescape_html | collapse_ws),
+    authors: [(.authors // "") | split(";")[] | collapse_ws | select(length > 0) | {name: .}],
+    year: (if $dt != null then ($dt[0:4] | to_int) else ((.date // "")[0:4] | to_int) end),
+    publishedDate: $dt,
+    venue: "medRxiv",
+    workType: "preprint",
+    ids: { doi: (.doi | doi_norm) },
+    abstractText: (if ($abs // "") != "" then $abs else null end),
+    oa: {
+      status: "green",
+      url: $page,
+      pdfUrl: ($page + ".full.pdf"),
+      structuredFormat: (if (.jatsxml // "") != "" then "jats" else null end),
+      license: (.license // null)
+    },
+    retracted: (((.type // "") | ascii_downcase) == "withdrawn"),
+    versions: (if (.published // "NA") != "NA" and (.published // "") != "" then [{ kind: "published", doi: (.published | doi_norm), url: ("https://doi.org/" + .published) }] else [] end),
+    url: $page,
+    sources: ["medrxiv"]
+  }
+)'''
+
+[op.work]
+summary = "Fetch medRxiv preprint metadata, versions, and JATS XML URL by DOI."
+method = "GET"
+url = "https://api.biorxiv.org/details/medrxiv/{doi}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+probe = { params = { doi = "10.64898/2026.11.22.26368599" }, min_results = 1, fixture = "fixtures/w5a/medrxiv/work/default.json" }
+
+[op.work.params]
+doi = { type = "string", required = true, in = "path", encode = "raw", doc = "medRxiv DOI" }
+
+[op.work.map]
+items = "select((.collection // []) | length > 0)"
+error = "@ref:op.recent.map.error"
+work = '''(
+  .collection as $cols |
+  ($cols[-1]) as $latest |
+  ("https://www.medrxiv.org/content/" + $latest.doi + "v" + ($latest.version // "1")) as $page |
+  (($latest.date // "") | split("-") | if length == 3 then (.[0] + "-" + (if (.[1] | length) == 1 then "0" + .[1] else .[1] end) + "-" + (if (.[2] | length) == 1 then "0" + .[2] else .[2] end)) else ($latest.date // "") end | parse_date) as $dt |
+  (($latest.abstract // "") | unescape_html | collapse_ws) as $abs |
+  ([$cols[] | { kind: "preprint", doi: (.doi | doi_norm), url: ("https://www.medrxiv.org/content/" + .doi + "v" + (.version // "1")) }] + (if ($latest.published // "NA") != "NA" and ($latest.published // "") != "" then [{ kind: "published", doi: ($latest.published | doi_norm), url: ("https://doi.org/" + $latest.published) }] else [] end)) as $vers |
+  {
+    title: (($latest.title // "") | unescape_html | collapse_ws),
+    authors: [($latest.authors // "") | split(";")[] | collapse_ws | select(length > 0) | {name: .}],
+    year: (if $dt != null then ($dt[0:4] | to_int) else (($latest.date // "")[0:4] | to_int) end),
+    publishedDate: $dt,
+    venue: "medRxiv",
+    workType: "preprint",
+    ids: { doi: ($latest.doi | doi_norm) },
+    abstractText: (if ($abs // "") != "" then $abs else null end),
+    oa: {
+      status: "green",
+      url: $page,
+      pdfUrl: ($page + ".full.pdf"),
+      structuredFormat: (if ($latest.jatsxml // "") != "" then "jats" else null end),
+      license: ($latest.license // null)
+    },
+    retracted: ([$cols[] | ((.type // "") | ascii_downcase) == "withdrawn"] | any),
+    versions: $vers,
+    url: $page,
+    sources: ["medrxiv"]
+  }
+)'''
+
+[op.published]
+summary = "Fetch the most recent N medRxiv preprint-to-published journal links."
+method = "GET"
+url = "https://api.biorxiv.org/pubs/medrxiv/{count}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { count = 3 }, min_results = 2, fixture = "fixtures/w5a/medrxiv/published/default.json" }
+
+[op.published.params]
+count = { type = "int", default = 10, min = 1, max = 50, in = "path", doc = "Number of recent published links" }
+
+[op.published.map]
+items = ".collection[]"
+error = "@ref:op.recent.map.error"
+record = '''{
+  preprintDoi: (.preprint_doi | doi_norm),
+  publishedDoi: (.published_doi | doi_norm),
+  publishedJournal: ((.published_journal // null) | if type == "string" then collapse_ws else null end),
+  publishedDate: ((.published_date // "") | split("-") | if length == 3 then (.[0] + "-" + (if (.[1] | length) == 1 then "0" + .[1] else .[1] end) + "-" + (if (.[2] | length) == 1 then "0" + .[2] else .[2] end)) else (.published_date // "") end | parse_date),
+  preprintUrl: ("https://doi.org/" + (.preprint_doi // "")),
+  publishedUrl: ("https://doi.org/" + (.published_doi // ""))
+}'''

@@ -1,0 +1,68 @@
+id = "rijksmuseum_ld"
+name = "Rijksmuseum Linked Art Collection"
+summary = "Keyless Linked Art JSON-LD search and object metadata for the Rijksmuseum Amsterdam collection."
+aliases = ["rijksmuseum", "linked art", "rijks"]
+home_url = "https://data.rijksmuseum.nl/docs/"
+tier = 1
+scopes = ["media"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 86400 }
+
+[op.search]
+summary = "Search Rijksmuseum artworks via the keyless Linked Art collection search API."
+method = "GET"
+url = "https://data.rijksmuseum.nl/search/collection"
+headers = { Accept = "application/ld+json" }
+response = "json"
+returns = "records"
+examples = ['source.call("rijksmuseum_ld.search", { query: "Night Watch" })']
+probe = { params = { query = "Night Watch" }, min_results = 2, fixture = "fixtures/w5n/rijksmuseum_ld/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "title", doc = "Artwork title search string" }
+creator = { type = "string", doc = "Optional artist or maker name" }
+type = { type = "string", doc = "Optional object type filter" }
+material = { type = "string", doc = "Optional material filter" }
+
+[op.search.map]
+items = "(.orderedItems // [])[0:20][]"
+total = ".partOf.totalItems"
+record = '''{
+  id: (.id | split("/") | last),
+  uri: .id,
+  type: (.type // "HumanMadeObject"),
+  url: .id
+}'''
+hit = '''{
+  title: ("Rijksmuseum Object " + (.id | split("/") | last)),
+  url: .id,
+  snippet: ((.type // "HumanMadeObject") + " · Linked Art JSON-LD URI " + .id + " — call rijksmuseum_ld.object for full details.")
+}'''
+
+[op.object]
+summary = "Resolve a Rijksmuseum Linked Art object ID into full JSON-LD titles, identifiers, creators, and dimensions."
+method = "GET"
+url = "https://id.rijksmuseum.nl/{id}"
+headers = { Accept = "application/ld+json" }
+response = "json"
+returns = "records"
+examples = ['source.call("rijksmuseum_ld.object", { id: "20015673" })']
+probe = { params = { id = "20015673" }, min_results = 1, fixture = "fixtures/w5n/rijksmuseum_ld/object/default.json" }
+
+[op.object.params]
+id = { type = "string", required = true, in = "path", doc = "Numeric Rijksmuseum Linked Art object ID (e.g. 20015673)" }
+
+[op.object.map]
+items = "."
+record = '''{
+  id: (.id | split("/") | last),
+  uri: .id,
+  type: (.type // null),
+  objectNumber: (([(.identified_by // [])[] | select(.type == "Identifier" and (.content | type) == "string") | .content] | first) // null),
+  titles: ([(.identified_by // [])[] | select(.type == "Name" and (.content | type) == "string") | .content] | unique),
+  creators: [(.produced_by.part // [])[] | (.carried_out_by // [])[] | ([(.notation // [])[] | .["@value"]] | first) | select(. != null)],
+  dimensions: [(.dimension // [])[] | select(.value != null) | {value: .value, unit: (([(.unit.notation // [])[] | .["@value"]] | first) // .unit.id // null)}],
+  url: .id
+}'''

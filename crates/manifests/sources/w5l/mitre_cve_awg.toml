@@ -1,0 +1,79 @@
+id = "mitre_cve_awg"
+name = "MITRE CVE Services API"
+summary = "Authoritative MITRE CVE Record 5.2 JSON vulnerability advisories, CNA metadata, CVSS metrics, and CVE ID state lookups."
+aliases = ["mitre cve", "cveawg", "cve.org", "cve record"]
+home_url = "https://www.cve.org"
+tier = 1
+scopes = ["security"]
+caps = ["lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 5.0, burst = 10, concurrency = 4, timeout_ms = 6000, cache_ttl_s = 43200 }
+
+[op.cve]
+summary = "Fetch authoritative MITRE CVE Record 5.2 JSON by CVE identifier (e.g. CVE-2024-3094)."
+method = "GET"
+url = "https://cveawg.mitre.org/api/cve/{cve_id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { cve_id = "CVE-2024-3094" }, min_results = 1, fixture = "fixtures/w5l/mitre_cve_awg/cve/default.json" }
+examples = [
+  'source.call("mitre_cve_awg.cve", { cve_id: "CVE-2024-3094" })',
+]
+
+[op.cve.params]
+cve_id = { type = "string", required = true, in = "path", doc = "Canonical CVE identifier (e.g. CVE-2024-3094)" }
+
+[op.cve.map]
+items = "if .cveMetadata then . else empty end"
+error = "if .error then (.message // .error | tostring) else null end"
+record = '''(
+  (.containers.cna // {}) as $cna |
+  ([($cna.descriptions // [])[] | select((.lang // "") | ascii_downcase | startswith("en")) | .value][0] // ($cna.descriptions // [])[0].value // "") as $desc |
+  ([($cna.metrics // [])[] | (.cvssV4_0 // .cvssV3_1 // .cvssV3_0 // empty)][0] // null) as $cvss |
+  {
+    cveId: (.cveMetadata.cveId // ""),
+    state: (.cveMetadata.state // null),
+    assigner: (.cveMetadata.assignerShortName // null),
+    dateReserved: (.cveMetadata.dateReserved // null),
+    datePublished: (.cveMetadata.datePublished // null),
+    dateUpdated: (.cveMetadata.dateUpdated // null),
+    dataVersion: (.dataVersion // null),
+    title: ($cna.title // ""),
+    description: $desc,
+    cvssScore: ($cvss.baseScore // null),
+    cvssSeverity: ($cvss.baseSeverity // null),
+    cvssVector: ($cvss.vectorString // null),
+    affected: [($cna.affected // [])[:10][] | { vendor: (.vendor // null), product: (.product // null), packageName: (.packageName // null) }],
+    references: [($cna.references // [])[:10][] | .url],
+    url: ("https://www.cve.org/CVERecord?id=" + (.cveMetadata.cveId // ""))
+  }
+)'''
+
+[op.cve_id]
+summary = "Check CVE ID registration state and owning CNA via MITRE CVE Services."
+method = "GET"
+url = "https://cveawg.mitre.org/api/cve-id/{cve_id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { cve_id = "CVE-2024-3094" }, min_results = 1, fixture = "fixtures/w5l/mitre_cve_awg/cve_id/default.json" }
+examples = [
+  'source.call("mitre_cve_awg.cve_id", { cve_id: "CVE-2024-3094" })',
+]
+
+[op.cve_id.params]
+cve_id = { type = "string", required = true, in = "path", doc = "Canonical CVE identifier (e.g. CVE-2024-3094)" }
+
+[op.cve_id.map]
+items = "if .cve_id then . else empty end"
+error = "@ref:op.cve.map.error"
+record = '''{
+  cveId: (.cve_id // ""),
+  year: (.cve_year // null),
+  state: (.state // null),
+  owningCna: (.owning_cna // null),
+  dateUpdated: (.dateUpdated // null),
+  url: ("https://www.cve.org/CVERecord?id=" + (.cve_id // ""))
+}'''

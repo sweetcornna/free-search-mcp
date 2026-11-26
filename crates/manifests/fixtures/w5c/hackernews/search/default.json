@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "hackernews",
+  "op": "search",
+  "recordedAt": "2026-11-25T11:53:52Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://hn.algolia.com/api/v1/search?tags=story&query=rust&hitsPerPage=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"exhaustive\":{\"nbHits\":false,\"typo\":false},\"exhaustiveNbHits\":false,\"exhaustiveTypo\":false,\"hits\":[{\"_highlightResult\":{\"author\":{\"matchLevel\":\"none\",\"matchedWords\":[],\"value\":\"Sikul\"},\"title\":{\"fullyHighlighted\":false,\"matchLevel\":\"full\",\"matchedWords\":[\"rust\"],\"value\":\"Why Discord is switching from Go to <em>Rust</em>\"},\"url\":{\"fullyHighlighted\":false,\"matchLevel\":\"full\",\"matchedWords\":[\"rust\"],\"value\":\"https://blog.discordapp.com/why-discord-is-switching-from-go-to-<em>rust</em>-a190bbca2b1f\"}},\"_tags\":[\"story\",\"author_Sikul\",\"story_22238335\"],\"author\":\"Sikul\",\"children\":[22238816,22239186,22239248,22239249,22239337,22239362,22239376,22239393,22239414,22239449,22239459,22239482,22239523,22239537,22239552,22239556,22239587,22239595,22239605,22239716,22239719,22239734,22239767,22239820,22239845,22239898,22239925,22239965,22239997,22240009,22240024,22240054,22240099,22240156,22240167,22240178,22240372,22240446,22240710,22240975,22241053,22241100,22241261,22241266,22241362,22241454,22241467,22241498,22241559,22241788,22241910,22241921,22242092,22242166,22242196,22242333,22242703,22242776,22242815,22242823,22242844,22242936,22243053,22243427,22244021,22244069,22244118,22244336,22244356,22244631,22244753,22244839,22245417,22246297,22246760,22246827,22247494,22253310],\"created_at\":\"2020-02-04T17:30:40Z\",\"created_at_i\":1580837440,\"num_comments\":642,\"objectID\":\"22238335\",\"points\":1582,\"story_id\":22238335,\"title\":\"Why Discord is switching from Go to Rust\",\"updated_at\":\"2026-09-27T16:55:47Z\",\"url\":\"https://blog.discordapp.com/why-discord-is-switching-from-go-to-rust-a190bbca2b1f\"},{\"_highlightResult\":{\"author\":{\"matchLevel\":\"none\",\"matchedWords\":[],\"value\":\"darthdeus\"},\"title\":{\"fullyHighlighted\":false,\"matchLevel\":\"full\",\"matchedWords\":[\"rust\"],\"value\":\"Leaving <em>Rust</em> gamedev after 3 years\"},\"url\":{\"fullyHighlighted\":false,\"matchLevel\":\"full\",\"matchedWords\":[\"rust\"],\"value\":\"https://loglog.games/blog/leaving-<em>rust</em>-gamedev/\"}},\"_tags\":[\"story\",\"author_darthdeus\",\"story_40172033\"],\"author\":\"darthdeus\",\"children\":[40172273,40172284,40172314,40172316,40172321,40172338,40172348,40172414,40172435,40172436,40172449,40172457,40172473,40172490,40172491,40172522,40172523,40172526,40172577,40172590,40172593,40172604,40172613,40172636,40172682,40172704,40172706,40172711,40172738,40172745,40172747,40172794,40172832,40172848,40172864,40172874,40172896,40172901,40172947,40172952,40173005,40173006,40173038,40173050,40173252,40173279,40173356,40173393,40173454,40173475,40173553,40173555,40173567,40173585,40173670,40173744,40173783,40173805,40173825,40173837,40173892,40173895,40173917,40173921,40173937,40174136,40174289,40174355,40174550,40174554,40174637,40174657,40174903,40175032,40175067,40175116,40175159,40175182,40175327,40175427,40175518,40175625,40175744,40175881,40175902,40175919,40176186,40176287,40176713,40176719,40176964,40177101,40177342,40177534,40177542,40177563,40177643,40177656,40177838,40177848,40177867,40177877,40178042,40178081,40178180,40178854,40179052,40179085,40179091,40179117,40179369,40180035,40180847,40181935,40183505,40183649,40184407,40193844,40195186,40211736,40252561,40297557],\"created_at\":\"2024-04-26T17:33:56Z\",\"created_at_i\":1714152836,\"num_comments\":972,\"objectID\":\"40172033\",\"points\":1484,\"story_id\":40172033,\"title\":\"Leaving Rust gamedev after 3 years\",\"updated_at\":\"2026-11-03T20:40:22Z\",\"url\":\"https://loglog.games/blog/leaving-rust-gamedev/\"},{\"_highlightResult\":{\"author\":{\"matchLevel\":\"none\",\"matchedWords\":[],\"value\":\"selvan\"},\"title\":{\"fullyHighlighted\":false,\"matchLevel\":\"full\",\"matchedWords\":[\"rust\"],\"value\":\"A half-hour to learn <em>Rust</em>\"},\"url\":{\"fullyHighlighted\":false,\"matchLevel\":\"full\",\"matchedWords\":[\"rust\"],\"value\":\"https://fasterthanli.me/articles/a-half-hour-to-learn-<em>rust</em>\"}},\"_tags\":[\"story\",\"author_selvan\",\"story_25610741\"],\"author\":\"selvan\",\"children\":[25610889,25611055,25611064,25611090,25611091,25611106,25611107,25611170,25611173,25611179,25611192,25611253,25611376,25611527,25611556,25611597,25611676,25611766,25611822,25611837,25611901,25611925,25611952,25612018,25612155,25612270,25612283,25612390,25612495,25612498,25612565,25612706,25612803,25612822,25612892,25613024,25613106,25613117,25613211,25613295,25613317,25613546,25613656,25613674,25613919,25614058,25614394,25614587,25614606,25615020,25615512,25616569,25616614,25617651,25619068,25619948,25620087,25624266,25635868],\"created_at\":\"2021-01-02T05:50:39Z\",\"created_at_i\":1609566639,\"num_comments\":330,\"objectID\":\"25610741\",\"points\":1444,\"story_id\":25610741,\"title\":\"A half-hour to learn Rust\",\"updated_at\":\"2026-08-12T15:23:15Z\",\"url\":\"https://fasterthanli.me/articles/a-half-hour-to-learn-rust\"}],\"hitsPerPage\":3,\"nbHits\":61798,\"nbPages\":334,\"page\":0,\"params\":\"query=rust&tags=story&hitsPerPage=3&advancedSyntax=true&analyticsTags=backend\",\"processingTimeMS\":30,\"processingTimingsMS\":{\"_request\":{\"queue\":6,\"roundTrip\":14},\"fetch\":{\"query\":4,\"scanning\":24,\"total\":29},\"total\":30},\"query\":\"rust\",\"serverTimeMS\":36}\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

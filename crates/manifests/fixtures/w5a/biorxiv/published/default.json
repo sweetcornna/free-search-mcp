@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "biorxiv",
+  "op": "published",
+  "recordedAt": "2026-11-25T12:14:38Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.biorxiv.org/pubs/biorxiv/3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"messages\":[{\"status\":\"ok\"}], \"collection\":[{\"preprint_doi\":\"10.1101\\/2023.06.30.547217\",\"published_doi\":\"10.1021\\/acs.jctc.3c00856\",\"published_journal\":\"Journal of Chemical Theory and Computation\",\"preprint_platform\":\"bioRxiv\",\"preprint_title\":null,\"preprint_authors\":null,\"preprint_category\":null,\"preprint_date\":null,\"published_date\":\"2023-11-10\"},{\"preprint_doi\":\"10.1101\\/2024.01.16.575953\",\"published_doi\":\"10.1016\\/j.neuron.2025.05.003\",\"published_journal\":\"Neuron\",\"preprint_platform\":\"bioRxiv\",\"preprint_title\":null,\"preprint_authors\":null,\"preprint_category\":null,\"preprint_date\":null,\"published_date\":\"2025-06-02\"},{\"preprint_doi\":\"10.1101\\/2025.02.06.636932\",\"published_doi\":\"10.1371\\/journal.pbio.3003775\",\"published_journal\":\"PLOS Biology\",\"preprint_platform\":\"bioRxiv\",\"preprint_title\":null,\"preprint_authors\":null,\"preprint_category\":null,\"preprint_date\":null,\"published_date\":\"2026-04-27\"}]}\r\n\r\n\r\n\r\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

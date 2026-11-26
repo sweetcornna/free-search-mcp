@@ -1,0 +1,759 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>What is Ownership? - The Rust Programming Language</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-e96d0476.css">
+        <link rel="stylesheet" href="css/chrome-d279d366.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="ferris-d33b75bf.css">
+        <link rel="stylesheet" href="theme/2018-edition-4e126c62.css">
+        <link rel="stylesheet" href="theme/semantic-notes-9b5766c0.css">
+        <link rel="stylesheet" href="theme/listing-cab26221.css">
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "searchindex-52b0e2b4.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-0e4ce700.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">The Rust Programming Language</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/rust-lang/book" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h2 id="what-is-ownership"><a class="header" href="#what-is-ownership">What Is Ownership?</a></h2>
+<p><em>Ownership</em> is a set of rules that govern how a Rust program manages memory.
+All programs have to manage the way they use a computer’s memory while running.
+Some languages have garbage collection that regularly looks for no-longer-used
+memory as the program runs; in other languages, the programmer must explicitly
+allocate and free the memory. Rust uses a third approach: Memory is managed
+through a system of ownership with a set of rules that the compiler checks. If
+any of the rules are violated, the program won’t compile. None of the features
+of ownership will slow down your program while it’s running.</p>
+<p>Because ownership is a new concept for many programmers, it does take some time
+to get used to. The good news is that the more experienced you become with Rust
+and the rules of the ownership system, the easier you’ll find it to naturally
+develop code that is safe and efficient. Keep at it!</p>
+<p>When you understand ownership, you’ll have a solid foundation for understanding
+the features that make Rust unique. In this chapter, you’ll learn ownership by
+working through some examples that focus on a very common data structure:
+strings.</p>
+<section class="note" aria-role="note">
+<h3 id="the-stack-and-the-heap"><a class="header" href="#the-stack-and-the-heap">The Stack and the Heap</a></h3>
+<p>Many programming languages don’t require you to think about the stack and the
+heap very often. But in a systems programming language like Rust, whether a
+value is on the stack or the heap affects how the language behaves and why
+you have to make certain decisions. Parts of ownership will be described in
+relation to the stack and the heap later in this chapter, so here is a brief
+explanation in preparation.</p>
+<p>Both the stack and the heap are parts of memory available to your code to use
+at runtime, but they are structured in different ways. The stack stores
+values in the order it gets them and removes the values in the opposite
+order. This is referred to as <em>last in, first out (LIFO)</em>. Think of a stack of
+plates: When you add more plates, you put them on top of the pile, and when
+you need a plate, you take one off the top. Adding or removing plates from
+the middle or bottom wouldn’t work as well! Adding data is called <em>pushing
+onto the stack</em>, and removing data is called <em>popping off the stack</em>. All
+data stored on the stack must have a known, fixed size. Data with an unknown
+size at compile time or a size that might change must be stored on the heap
+instead.</p>
+<p>The heap is less organized: When you put data on the heap, you request a
+certain amount of space. The memory allocator finds an empty spot in the heap
+that is big enough, marks it as being in use, and returns a <em>pointer</em>, which
+is the address of that location. This process is called <em>allocating on the
+heap</em> and is sometimes abbreviated as just <em>allocating</em> (pushing values onto
+the stack is not considered allocating). Because the pointer to the heap is a
+known, fixed size, you can store the pointer on the stack, but when you want
+the actual data, you must follow the pointer. Think of being seated at a
+restaurant. When you enter, you state the number of people in your group, and
+the host finds an empty table that fits everyone and leads you there. If
+someone in your group comes late, they can ask where you’ve been seated to
+find you.</p>
+<p>Pushing to the stack is faster than allocating on the heap because the
+allocator never has to search for a place to store new data; that location is
+always at the top of the stack. Comparatively, allocating space on the heap
+requires more work because the allocator must first find a big enough space
+to hold the data and then perform bookkeeping to prepare for the next
+allocation.</p>
+<p>Accessing data in the heap is generally slower than accessing data on the
+stack because you have to follow a pointer to get there. Contemporary
+processors are faster if they jump around less in memory. Continuing the
+analogy, consider a server at a restaurant taking orders from many tables.
+It’s most efficient to get all the orders at one table before moving on to
+the next table. Taking an order from table A, then an order from table B,
+then one from A again, and then one from B again would be a much slower
+process. By the same token, a processor can usually do its job better if it
+works on data that’s close to other data (as it is on the stack) rather than
+farther away (as it can be on the heap).</p>
+<p>When your code calls a function, the values passed into the function
+(including, potentially, pointers to data on the heap) and the function’s
+local variables get pushed onto the stack. When the function is over, those
+values get popped off the stack.</p>
+<p>Keeping track of what parts of code are using what data on the heap,
+minimizing the amount of duplicate data on the heap, and cleaning up unused
+data on the heap so that you don’t run out of space are all problems that
+ownership addresses. Once you understand ownership, you won’t need to think
+about the stack and the heap very often. But knowing that the main purpose of
+ownership is to manage heap data can help explain why it works the way it
+does.</p>
+</section>
+<h3 id="ownership-rules"><a class="header" href="#ownership-rules">Ownership Rules</a></h3>
+<p>First, let’s take a look at the ownership rules. Keep these rules in mind as we
+work through the examples that illustrate them:</p>
+<ul>
+<li>Each value in Rust has an <em>owner</em>.</li>
+<li>There can only be one owner at a time.</li>
+<li>When the owner goes out of scope, the value will be dropped.</li>
+</ul>
+<h3 id="variable-scope"><a class="header" href="#variable-scope">Variable Scope</a></h3>
+<p>Now that we’re past basic Rust syntax, we won’t include all the <code>fn main() {</code>
+code in the examples, so if you’re following along, make sure to put the
+following examples inside a <code>main</code> function manually. As a result, our examples
+will be a bit more concise, letting us focus on the actual details rather than
+boilerplate code.</p>
+<p>As a first example of ownership, we’ll look at the scope of some variables. A
+<em>scope</em> is the range within a program for which an item is valid. Take the
+following variable:</p>
+<pre class="playground"><code class="language-rust edition2024"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let s = "hello";
+<span class="boring">}</span></code></pre>
+<p>The variable <code>s</code> refers to a string literal, where the value of the string is
+hardcoded into the text of our program. The variable is valid from the point at
+which it’s declared until the end of the current scope. Listing 4-1 shows a
+program with comments annotating where the variable <code>s</code> would be valid.</p>
+<figure class="listing" id="listing-4-1">
+<pre class="playground"><code class="language-rust edition2024"><span class="boring">fn main() {
+</span>    {                      // s is not valid here, since it's not yet declared
+        let s = "hello";   // s is valid from this point forward
+
+        // do stuff with s
+    }                      // this scope is now over, and s is no longer valid
+<span class="boring">}</span></code></pre>
+<figcaption><a href="#listing-4-1">Listing 4-1</a>: A variable and the scope in which it is valid</figcaption>
+</figure>
+<p>In other words, there are two important points in time here:</p>
+<ul>
+<li>When <code>s</code> comes <em>into</em> scope, it is valid.</li>
+<li>It remains valid until it goes <em>out of</em> scope.</li>
+</ul>
+<p>At this point, the relationship between scopes and when variables are valid is
+similar to that in other programming languages. Now we’ll build on top of this
+understanding by introducing the <code>String</code> type.</p>
+<h3 id="the-string-type"><a class="header" href="#the-string-type">The <code>String</code> Type</a></h3>
+<p>To illustrate the rules of ownership, we need a data type that is more complex
+than those we covered in the <a href="ch03-02-data-types.html#data-types">“Data Types”</a><!-- ignore --> section
+of Chapter 3. The types covered previously are of a known size, can be stored
+on the stack and popped off the stack when their scope is over, and can be
+quickly and trivially copied to make a new, independent instance if another
+part of code needs to use the same value in a different scope. But we want to
+look at data that is stored on the heap and explore how Rust knows when to
+clean up that data, and the <code>String</code> type is a great example.</p>
+<p>We’ll concentrate on the parts of <code>String</code> that relate to ownership. These
+aspects also apply to other complex data types, whether they are provided by
+the standard library or created by you. We’ll discuss non-ownership aspects of
+<code>String</code> in <a href="ch08-02-strings.html">Chapter 8</a><!-- ignore -->.</p>
+<p>We’ve already seen string literals, where a string value is hardcoded into our
+program. String literals are convenient, but they aren’t suitable for every
+situation in which we may want to use text. One reason is that they’re
+immutable. Another is that not every string value can be known when we write
+our code: For example, what if we want to take user input and store it? It is
+for these situations that Rust has the <code>String</code> type. This type manages
+data allocated on the heap and as such is able to store an amount of text that
+is unknown to us at compile time. You can create a <code>String</code> from a string
+literal using the <code>from</code> function, like so:</p>
+<pre class="playground"><code class="language-rust edition2024"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let s = String::from("hello");
+<span class="boring">}</span></code></pre>
+<p>The double colon <code>::</code> operator allows us to namespace this particular <code>from</code>
+function under the <code>String</code> type rather than using some sort of name like
+<code>string_from</code>. We’ll discuss this syntax more in the <a href="ch05-03-method-syntax.html#methods">“Methods”</a><!--
+ignore --> section of Chapter 5, and when we talk about namespacing with
+modules in <a href="ch07-03-paths-for-referring-to-an-item-in-the-module-tree.html">“Paths for Referring to an Item in the Module
+Tree”</a><!-- ignore --> in Chapter 7.</p>
+<p>This kind of string <em>can</em> be mutated:</p>
+<pre class="playground"><code class="language-rust edition2024"><span class="boring">fn main() {
+</span>    let mut s = String::from("hello");
+
+    s.push_str(", world!"); // push_str() appends a literal to a String
+
+    println!("{s}"); // this will print `hello, world!`
+<span class="boring">}</span></code></pre>
+<p>So, what’s the difference here? Why can <code>String</code> be mutated but literals
+cannot? The difference is in how these two types deal with memory.</p>
+<h3 id="memory-and-allocation"><a class="header" href="#memory-and-allocation">Memory and Allocation</a></h3>
+<p>In the case of a string literal, we know the contents at compile time, so the
+text is hardcoded directly into the final executable. This is why string
+literals are fast and efficient. But these properties only come from the string
+literal’s immutability. Unfortunately, we can’t put a blob of memory into the
+binary for each piece of text whose size is unknown at compile time and whose
+size might change while running the program.</p>
+<p>With the <code>String</code> type, in order to support a mutable, growable piece of text,
+we need to allocate an amount of memory on the heap, unknown at compile time,
+to hold the contents. This means:</p>
+<ul>
+<li>The memory must be requested from the memory allocator at runtime.</li>
+<li>We need a way of returning this memory to the allocator when we’re done with
+our <code>String</code>.</li>
+</ul>
+<p>That first part is done by us: When we call <code>String::from</code>, its implementation
+requests the memory it needs. This is pretty much universal in programming
+languages.</p>
+<p>However, the second part is different. In languages with a <em>garbage collector
+(GC)</em>, the GC keeps track of and cleans up memory that isn’t being used
+anymore, and we don’t need to think about it. In most languages without a GC,
+it’s our responsibility to identify when memory is no longer being used and to
+call code to explicitly free it, just as we did to request it. Doing this
+correctly has historically been a difficult programming problem. If we forget,
+we’ll waste memory. If we do it too early, we’ll have an invalid variable. If
+we do it twice, that’s a bug too. We need to pair exactly one <code>allocate</code> with
+exactly one <code>free</code>.</p>
+<p>Rust takes a different path: The memory is automatically returned once the
+variable that owns it goes out of scope. Here’s a version of our scope example
+from Listing 4-1 using a <code>String</code> instead of a string literal:</p>
+<pre class="playground"><code class="language-rust edition2024"><span class="boring">fn main() {
+</span>    {
+        let s = String::from("hello"); // s is valid from this point forward
+
+        // do stuff with s
+    }                                  // this scope is now over, and s is no
+                                       // longer valid
+<span class="boring">}</span></code></pre>
+<p>There is a natural point at which we can return the memory our <code>String</code> needs
+to the allocator: when <code>s</code> goes out of scope. When a variable goes out of
+scope, Rust calls a special function for us. This function is called
+<code>drop</code>, and it’s where the author of <code>String</code> can put
+the code to return the memory. Rust calls <code>drop</code> automatically at the closing
+curly bracket.</p>
+<section class="note" aria-role="note">
+<p>Note: In C++, this pattern of deallocating resources at the end of an item’s
+lifetime is sometimes called <em>Resource Acquisition Is Initialization (RAII)</em>.
+The <code>drop</code> function in Rust will be familiar to you if you’ve used RAII
+patterns.</p>
+</section>
+<p>This pattern has a profound impact on the way Rust code is written. It may seem
+simple right now, but the behavior of code can be unexpected in more
+complicated situations when we want to have multiple variables use the data
+we’ve allocated on the heap. Let’s explore some of those situations now.</p>
+<!-- Old headings. Do not remove or links may break. -->
+<p><a id="ways-variables-and-data-interact-move"></a></p>
+<h4 id="variables-and-data-interacting-with-move"><a class="header" href="#variables-and-data-interacting-with-move">Variables and Data Interacting with Move</a></h4>
+<p>Multiple variables can interact with the same data in different ways in Rust.
+Listing 4-2 shows an example using an integer.</p>
+<figure class="listing" id="listing-4-2">
+<pre class="playground"><code class="language-rust edition2024"><span class="boring">fn main() {
+</span>    let x = 5;
+    let y = x;
+<span class="boring">}</span></code></pre>
+<figcaption><a href="#listing-4-2">Listing 4-2</a>: Assigning the integer value of variable <code>x</code> to <code>y</code></figcaption>
+</figure>
+<p>We can probably guess what this is doing: “Bind the value <code>5</code> to <code>x</code>; then, make
+a copy of the value in <code>x</code> and bind it to <code>y</code>.” We now have two variables, <code>x</code>
+and <code>y</code>, and both equal <code>5</code>. This is indeed what is happening, because integers
+are simple values with a known, fixed size, and these two <code>5</code> values are pushed
+onto the stack.</p>
+<p>Now let’s look at the <code>String</code> version:</p>
+<pre class="playground"><code class="language-rust edition2024"><span class="boring">fn main() {
+</span>    let s1 = String::from("hello");
+    let s2 = s1;
+<span class="boring">}</span></code></pre>
+<p>This looks very similar, so we might assume that the way it works would be the
+same: That is, the second line would make a copy of the value in <code>s1</code> and bind
+it to <code>s2</code>. But this isn’t quite what happens.</p>
+<p>Take a look at Figure 4-1 to see what is happening to <code>String</code> under the
+covers. A <code>String</code> is made up of three parts, shown on the left: a pointer to
+the memory that holds the contents of the string, a length, and a capacity.
+This group of data is stored on the stack. On the right is the memory on the
+heap that holds the contents.</p>
+<p><img alt="Two tables: the first table contains the representation of s1 on the
+stack, consisting of its length (5), capacity (5), and a pointer to the first
+value in the second table. The second table contains the representation of the
+string data on the heap, byte by byte." src="img/trpl04-01.svg" class="center" style="width: 50%;" /></p>
+<p><span class="caption">Figure 4-1: The representation in memory of a <code>String</code>
+holding the value <code>"hello"</code> bound to <code>s1</code></span></p>
+<p>The length is how much memory, in bytes, the contents of the <code>String</code> are
+currently using. The capacity is the total amount of memory, in bytes, that the
+<code>String</code> has received from the allocator. The difference between length and
+capacity matters, but not in this context, so for now, it’s fine to ignore the
+capacity.</p>
+<p>When we assign <code>s1</code> to <code>s2</code>, the <code>String</code> data is copied, meaning we copy the
+pointer, the length, and the capacity that are on the stack. We do not copy the
+data on the heap that the pointer refers to. In other words, the data
+representation in memory looks like Figure 4-2.</p>
+<p><img alt="Three tables: tables s1 and s2 representing those strings on the
+stack, respectively, and both pointing to the same string data on the heap." src="img/trpl04-02.svg" class="center" style="width: 50%;" /></p>
+<p><span class="caption">Figure 4-2: The representation in memory of the variable
+<code>s2</code> that has a copy of the pointer, length, and capacity of <code>s1</code></span></p>
+<p>The representation does <em>not</em> look like Figure 4-3, which is what memory would
+look like if Rust instead copied the heap data as well. If Rust did this, the
+operation <code>s2 = s1</code> could be very expensive in terms of runtime performance if
+the data on the heap were large.</p>
+<p><img alt="Four tables: two tables representing the stack data for s1 and s2,
+and each points to its own copy of string data on the heap." src="img/trpl04-03.svg" class="center" style="width: 50%;" /></p>
+<p><span class="caption">Figure 4-3: Another possibility for what <code>s2 = s1</code> might
+do if Rust copied the heap data as well</span></p>
+<p>Earlier, we said that when a variable goes out of scope, Rust automatically
+calls the <code>drop</code> function and cleans up the heap memory for that variable. But
+Figure 4-2 shows both data pointers pointing to the same location. This is a
+problem: When <code>s2</code> and <code>s1</code> go out of scope, they will both try to free the
+same memory. This is known as a <em>double free</em> error and is one of the memory
+safety bugs we mentioned previously. Freeing memory twice can lead to memory
+corruption, which can potentially lead to security vulnerabilities.</p>
+<p>To ensure memory safety, after the line <code>let s2 = s1;</code>, Rust considers <code>s1</code> as
+no longer valid. Therefore, Rust doesn’t need to free anything when <code>s1</code> goes
+out of scope. Check out what happens when you try to use <code>s1</code> after <code>s2</code> is
+created; it won’t work:</p>
+<pre><code class="language-rust ignore does_not_compile"><span class="boring">fn main() {
+</span>    let s1 = String::from("hello");
+    let s2 = s1;
+
+    println!("{s1}, world!");
+<span class="boring">}</span></code></pre>
+<p>You’ll get an error like this because Rust prevents you from using the
+invalidated reference:</p>
+<pre><code class="language-console">$ cargo run
+   Compiling ownership v0.1.0 (file:///projects/ownership)
+error[E0382]: borrow of moved value: `s1`
+ --&gt; src/main.rs:5:16
+  |
+2 |     let s1 = String::from("hello");
+  |         -- move occurs because `s1` has type `String`, which does not implement the `Copy` trait
+3 |     let s2 = s1;
+  |              -- value moved here
+4 |
+5 |     println!("{s1}, world!");
+  |                ^^ value borrowed here after move
+  |
+help: consider cloning the value if the performance cost is acceptable
+  |
+3 |     let s2 = s1.clone();
+  |                ++++++++
+
+For more information about this error, try `rustc --explain E0382`.
+error: could not compile `ownership` (bin "ownership") due to 1 previous error
+</code></pre>
+<p>If you’ve heard the terms <em>shallow copy</em> and <em>deep copy</em> while working with
+other languages, the concept of copying the pointer, length, and capacity
+without copying the data probably sounds like making a shallow copy. But
+because Rust also invalidates the first variable, instead of being called a
+shallow copy, it’s known as a <em>move</em>. In this example, we would say that <code>s1</code>
+was <em>moved</em> into <code>s2</code>. So, what actually happens is shown in Figure 4-4.</p>
+<p><img alt="Three tables: tables s1 and s2 representing those strings on the
+stack, respectively, and both pointing to the same string data on the heap.
+Table s1 is grayed out because s1 is no longer valid; only s2 can be used to
+access the heap data." src="img/trpl04-04.svg" class="center" style="width:
+50%;" /></p>
+<p><span class="caption">Figure 4-4: The representation in memory after <code>s1</code> has
+been invalidated</span></p>
+<p>That solves our problem! With only <code>s2</code> valid, when it goes out of scope it
+alone will free the memory, and we’re done.</p>
+<p>In addition, there’s a design choice that’s implied by this: Rust will never
+automatically create “deep” copies of your data. Therefore, any <em>automatic</em>
+copying can be assumed to be inexpensive in terms of runtime performance.</p>
+<h4 id="scope-and-assignment"><a class="header" href="#scope-and-assignment">Scope and Assignment</a></h4>
+<p>The inverse of this is true for the relationship between scoping, ownership, and
+memory being freed via the <code>drop</code> function as well. When you assign a completely
+new value to an existing variable, Rust will call <code>drop</code> and free the original
+value’s memory immediately. Consider this code, for example:</p>
+<pre class="playground"><code class="language-rust edition2024"><span class="boring">fn main() {
+</span>    let mut s = String::from("hello");
+    s = String::from("ahoy");
+
+    println!("{s}, world!");
+<span class="boring">}</span></code></pre>
+<p>We initially declare a variable <code>s</code> and bind it to a <code>String</code> with the value
+<code>"hello"</code>. Then, we immediately create a new <code>String</code> with the value <code>"ahoy"</code>
+and assign it to <code>s</code>. At this point, nothing is referring to the original value
+on the heap at all. Figure 4-5 illustrates the stack and heap data now:</p>
+<p><img alt="One table representing the string value on the stack, pointing to
+the second piece of string data (ahoy) on the heap, with the original string
+data (hello) grayed out because it cannot be accessed anymore." src="img/trpl04-05.svg" class="center" style="width: 50%;" /></p>
+<p><span class="caption">Figure 4-5: The representation in memory after the initial
+value has been replaced in its entirety</span></p>
+<p>The original string thus immediately goes out of scope. Rust will run the <code>drop</code>
+function on it and its memory will be freed right away. When we print the value
+at the end, it will be <code>"ahoy, world!"</code>.</p>
+<!-- Old headings. Do not remove or links may break. -->
+<p><a id="ways-variables-and-data-interact-clone"></a></p>
+<h4 id="variables-and-data-interacting-with-clone"><a class="header" href="#variables-and-data-interacting-with-clone">Variables and Data Interacting with Clone</a></h4>
+<p>If we <em>do</em> want to deeply copy the heap data of the <code>String</code>, not just the
+stack data, we can use a common method called <code>clone</code>. We’ll discuss method
+syntax in Chapter 5, but because methods are a common feature in many
+programming languages, you’ve probably seen them before.</p>
+<p>Here’s an example of the <code>clone</code> method in action:</p>
+<pre class="playground"><code class="language-rust edition2024"><span class="boring">fn main() {
+</span>    let s1 = String::from("hello");
+    let s2 = s1.clone();
+
+    println!("s1 = {s1}, s2 = {s2}");
+<span class="boring">}</span></code></pre>
+<p>This works just fine and explicitly produces the behavior shown in Figure 4-3,
+where the heap data <em>does</em> get copied.</p>
+<p>When you see a call to <code>clone</code>, you know that some arbitrary code is being
+executed and that code may be expensive. It’s a visual indicator that something
+different is going on.</p>
+<h4 id="stack-only-data-copy"><a class="header" href="#stack-only-data-copy">Stack-Only Data: Copy</a></h4>
+<p>There’s another wrinkle we haven’t talked about yet. This code using
+integers—part of which was shown in Listing 4-2—works and is valid:</p>
+<pre class="playground"><code class="language-rust edition2024"><span class="boring">fn main() {
+</span>    let x = 5;
+    let y = x;
+
+    println!("x = {x}, y = {y}");
+<span class="boring">}</span></code></pre>
+<p>But this code seems to contradict what we just learned: We don’t have a call to
+<code>clone</code>, but <code>x</code> is still valid and wasn’t moved into <code>y</code>.</p>
+<p>The reason is that types such as integers that have a known size at compile
+time are stored entirely on the stack, so copies of the actual values are quick
+to make. That means there’s no reason we would want to prevent <code>x</code> from being
+valid after we create the variable <code>y</code>. In other words, there’s no difference
+between deep and shallow copying here, so calling <code>clone</code> wouldn’t do anything
+different from the usual shallow copying, and we can leave it out.</p>
+<p>Rust has a special annotation called the <code>Copy</code> trait that we can place on
+types that are stored on the stack, as integers are (we’ll talk more about
+traits in <a href="ch10-02-traits.html">Chapter 10</a><!-- ignore -->). If a type implements the <code>Copy</code>
+trait, variables that use it do not move, but rather are trivially copied,
+making them still valid after assignment to another variable.</p>
+<p>Rust won’t let us annotate a type with <code>Copy</code> if the type, or any of its parts,
+has implemented the <code>Drop</code> trait. If the type needs something special to happen
+when the value goes out of scope and we add the <code>Copy</code> annotation to that type,
+we’ll get a compile-time error. To learn about how to add the <code>Copy</code> annotation
+to your type to implement the trait, see <a href="appendix-03-derivable-traits.html">“Derivable
+Traits”</a><!-- ignore --> in Appendix C.</p>
+<p>So, what types implement the <code>Copy</code> trait? You can check the documentation for
+the given type to be sure, but as a general rule, any group of simple scalar
+values can implement <code>Copy</code>, and nothing that requires allocation or is some
+form of resource can implement <code>Copy</code>. Here are some of the types that
+implement <code>Copy</code>:</p>
+<ul>
+<li>All the integer types, such as <code>u32</code>.</li>
+<li>The Boolean type, <code>bool</code>, with values <code>true</code> and <code>false</code>.</li>
+<li>All the floating-point types, such as <code>f64</code>.</li>
+<li>The character type, <code>char</code>.</li>
+<li>Tuples, if they only contain types that also implement <code>Copy</code>. For example,
+<code>(i32, i32)</code> implements <code>Copy</code>, but <code>(i32, String)</code> does not.</li>
+</ul>
+<h3 id="ownership-and-functions"><a class="header" href="#ownership-and-functions">Ownership and Functions</a></h3>
+<p>The mechanics of passing a value to a function are similar to those when
+assigning a value to a variable. Passing a variable to a function will move or
+copy, just as assignment does. Listing 4-3 has an example with some annotations
+showing where variables go into and out of scope.</p>
+<figure class="listing" id="listing-4-3">
+<span class="file-name">Filename: src/main.rs</span>
+<pre class="playground"><code class="language-rust edition2024">fn main() {
+    let s = String::from("hello");  // s comes into scope
+
+    takes_ownership(s);             // s's value moves into the function...
+                                    // ... and so is no longer valid here
+
+    let x = 5;                      // x comes into scope
+
+    makes_copy(x);                  // Because i32 implements the Copy trait,
+                                    // x does NOT move into the function,
+                                    // so it's okay to use x afterward.
+
+} // Here, x goes out of scope, then s. However, because s's value was moved,
+  // nothing special happens.
+
+fn takes_ownership(some_string: String) { // some_string comes into scope
+    println!("{some_string}");
+} // Here, some_string goes out of scope and `drop` is called. The backing
+  // memory is freed.
+
+fn makes_copy(some_integer: i32) { // some_integer comes into scope
+    println!("{some_integer}");
+} // Here, some_integer goes out of scope. Nothing special happens.</code></pre>
+<figcaption><a href="#listing-4-3">Listing 4-3</a>: Functions with ownership and scope annotated</figcaption>
+</figure>
+<p>If we tried to use <code>s</code> after the call to <code>takes_ownership</code>, Rust would throw a
+compile-time error. These static checks protect us from mistakes. Try adding
+code to <code>main</code> that uses <code>s</code> and <code>x</code> to see where you can use them and where
+the ownership rules prevent you from doing so.</p>
+<h3 id="return-values-and-scope"><a class="header" href="#return-values-and-scope">Return Values and Scope</a></h3>
+<p>Returning values can also transfer ownership. Listing 4-4 shows an example of a
+function that returns some value, with similar annotations as those in Listing
+4-3.</p>
+<figure class="listing" id="listing-4-4">
+<span class="file-name">Filename: src/main.rs</span>
+<pre class="playground"><code class="language-rust edition2024">fn main() {
+    let s1 = gives_ownership();        // gives_ownership moves its return
+                                       // value into s1
+
+    let s2 = String::from("hello");    // s2 comes into scope
+
+    let s3 = takes_and_gives_back(s2); // s2 is moved into
+                                       // takes_and_gives_back, which also
+                                       // moves its return value into s3
+} // Here, s3 goes out of scope and is dropped. s2 was moved, so nothing
+  // happens. s1 goes out of scope and is dropped.
+
+fn gives_ownership() -&gt; String {       // gives_ownership will move its
+                                       // return value into the function
+                                       // that calls it
+
+    let some_string = String::from("yours"); // some_string comes into scope
+
+    some_string                        // some_string is returned and
+                                       // moves out to the calling
+                                       // function
+}
+
+// This function takes a String and returns a String.
+fn takes_and_gives_back(a_string: String) -&gt; String {
+    // a_string comes into
+    // scope
+
+    a_string  // a_string is returned and moves out to the calling function
+}</code></pre>
+<figcaption><a href="#listing-4-4">Listing 4-4</a>: Transferring ownership of return values</figcaption>
+</figure>
+<p>The ownership of a variable follows the same pattern every time: Assigning a
+value to another variable moves it. When a variable that includes data on the
+heap goes out of scope, the value will be cleaned up by <code>drop</code> unless ownership
+of the data has been moved to another variable.</p>
+<p>While this works, taking ownership and then returning ownership with every
+function is a bit tedious. What if we want to let a function use a value but
+not take ownership? It’s quite annoying that anything we pass in also needs to
+be passed back if we want to use it again, in addition to any data resulting
+from the body of the function that we might want to return as well.</p>
+<p>Rust does let us return multiple values using a tuple, as shown in Listing 4-5.</p>
+<figure class="listing" id="listing-4-5">
+<span class="file-name">Filename: src/main.rs</span>
+<pre class="playground"><code class="language-rust edition2024">fn main() {
+    let s1 = String::from("hello");
+
+    let (s2, len) = calculate_length(s1);
+
+    println!("The length of '{s2}' is {len}.");
+}
+
+fn calculate_length(s: String) -&gt; (String, usize) {
+    let length = s.len(); // len() returns the length of a String
+
+    (s, length)
+}</code></pre>
+<figcaption><a href="#listing-4-5">Listing 4-5</a>: Returning ownership of parameters</figcaption>
+</figure>
+<p>But this is too much ceremony and a lot of work for a concept that should be
+common. Luckily for us, Rust has a feature for using a value without
+transferring ownership: references.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch04-00-understanding-ownership.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="ch04-02-references-and-borrowing.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch04-00-understanding-ownership.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="ch04-02-references-and-borrowing.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-09f2665d.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="ferris-2317480c.js"></script>
+
+
+
+    </div>
+    </body>
+</html>

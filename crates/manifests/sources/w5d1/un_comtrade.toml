@@ -1,0 +1,117 @@
+id = "un_comtrade"
+name = "UN Comtrade International Trade API"
+summary = "United Nations bilateral international merchandise and services trade statistics (keyless public preview + keyed full data API)."
+aliases = ["comtrade", "un trade", "international trade"]
+home_url = "https://comtradeplus.un.org"
+tier = 1
+scopes = ["finance", "dataset"]
+caps = ["lookup", "dataset"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 1.0, burst = 2, concurrency = 2, timeout_ms = 12000, cache_ttl_s = 43200 }
+
+[auth]
+mode = "optional"
+env = "SEARCH_MCP_UN_COMTRADE_API_KEY"
+in = "header"
+name = "Ocp-Apim-Subscription-Key"
+route_requires_key = false
+
+[op.preview]
+summary = "Fetch bilateral international trade flows via UN Comtrade keyless public preview (1 period per call, max 200 rows)."
+method = "GET"
+url = "https://comtradeapi.un.org/public/v1/preview/{type_code}/{freq}/{classification}"
+auth = "none"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { type_code = "C", freq = "A", classification = "HS", reporter = "842", partner = "156,276,392", period = "2023", cmd = "TOTAL", flow = "X", limit = 5 }, min_results = 2, fixture = "fixtures/w5d1/un_comtrade/preview/default.json" }
+
+[op.preview.params]
+type_code = { type = "string", default = "C", enum = ["C", "S"], in = "path", doc = "C=Commodities, S=Services" }
+freq = { type = "string", default = "A", enum = ["A", "M"], in = "path", doc = "A=Annual, M=Monthly" }
+classification = { type = "string", default = "HS", enum = ["HS", "SITC", "BEC", "EB"], in = "path", doc = "Commodity classification" }
+reporter = { type = "string", to = "reporterCode", doc = "UN M49 reporter code e.g. 842=USA, 156=China, 276=Germany" }
+partner = { type = "string", to = "partnerCode", doc = "Partner M49 code(s), 0=World, comma-separated" }
+partner2 = { type = "string", to = "partner2Code", doc = "Second partner M49 code e.g. 0=World (set 0 to avoid breakdown duplicates)" }
+customs = { type = "string", to = "customsCode", doc = "Customs procedure code e.g. C00=All customs procedures" }
+mot = { type = "string", to = "motCode", doc = "Mode of transport code e.g. 0=All modes" }
+period = { type = "string", required = true, to = "period", doc = "Year (YYYY) or month (YYYYMM)" }
+cmd = { type = "string", default = "TOTAL", to = "cmdCode", doc = "HS commodity code or TOTAL" }
+flow = { type = "string", to = "flowCode", doc = "M=Import, X=Export" }
+limit = { type = "int", default = 20, min = 1, max = 200, to = "maxRecords", doc = "Max rows (capped at 200)" }
+
+[op.preview.map]
+items = "(.data // [])[]"
+total = ".count"
+error = 'if (.error // "") != "" then .error elif (.message // "") != "" then .message else null end'
+record = '''{
+  period: .period,
+  refYear: .refYear,
+  reporterCode: .reporterCode,
+  reporterIso: (.reporterISO // null),
+  reporterDesc: (.reporterDesc // null),
+  partnerCode: .partnerCode,
+  partnerIso: (.partnerISO // null),
+  partnerDesc: (.partnerDesc // null),
+  partner2Code: (.partner2Code // null),
+  customsCode: (.customsCode // null),
+  motCode: (.motCode // null),
+  flowCode: .flowCode,
+  flowDesc: (.flowDesc // null),
+  classification: .classificationCode,
+  cmdCode: .cmdCode,
+  cmdDesc: (.cmdDesc // null),
+  primaryValueUsd: .primaryValue,
+  fobValueUsd: .fobvalue,
+  cifValueUsd: .cifvalue,
+  netWeightKg: .netWgt,
+  qty: .qty
+}'''
+
+[op.data]
+summary = "Fetch full multi-period UN Comtrade v1 trade flows (requires free subscription key via SEARCH_MCP_UN_COMTRADE_API_KEY)."
+method = "GET"
+url = "https://comtradeapi.un.org/data/v1/get/{type_code}/{freq}/{classification}"
+auth = "required"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { type_code = "C", freq = "A", classification = "HS", reporter = "842", partner = "0", period = "2022,2023", cmd = "TOTAL", flow = "X", limit = 5 }, min_results = 2, fixture = "fixtures/w5d1/un_comtrade/data/default.json" }
+
+[op.data.params]
+type_code = { type = "string", default = "C", enum = ["C", "S"], in = "path", doc = "C=Commodities, S=Services" }
+freq = { type = "string", default = "A", enum = ["A", "M"], in = "path", doc = "A=Annual, M=Monthly" }
+classification = { type = "string", default = "HS", enum = ["HS", "SITC", "BEC", "EB"], in = "path", doc = "Commodity classification" }
+reporter = { type = "string", to = "reporterCode", doc = "UN M49 reporter code(s), comma-separated" }
+partner = { type = "string", to = "partnerCode", doc = "Partner M49 code(s), 0=World, comma-separated" }
+partner2 = { type = "string", to = "partner2Code", doc = "Second partner M49 code e.g. 0=World (set 0 to avoid breakdown duplicates)" }
+customs = { type = "string", to = "customsCode", doc = "Customs procedure code e.g. C00=All customs procedures" }
+mot = { type = "string", to = "motCode", doc = "Mode of transport code e.g. 0=All modes" }
+period = { type = "string", required = true, to = "period", doc = "Year(s) YYYY or month(s) YYYYMM, comma-separated" }
+cmd = { type = "string", default = "TOTAL", to = "cmdCode", doc = "HS commodity code(s) or TOTAL" }
+flow = { type = "string", to = "flowCode", doc = "M=Import, X=Export" }
+limit = { type = "int", default = 50, min = 1, max = 200, to = "maxRecords", doc = "Max rows (capped at 200)" }
+
+[op.data.map]
+items = "(.data // [])[]"
+total = ".count"
+error = "@ref:op.preview.map.error"
+record = "@ref:op.preview.map.record"
+
+[op.flows]
+summary = "List UN Comtrade trade flow / regime codes (M=Import, X=Export, RX=Re-export, etc., keyless)."
+method = "GET"
+url = "https://comtradeapi.un.org/files/v1/app/reference/tradeRegimes.json"
+auth = "none"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = {}, min_results = 2, fixture = "fixtures/w5d1/un_comtrade/flows/default.json" }
+
+[op.flows.map]
+items = "(.results // [])[]"
+record = '''{
+  code: .id,
+  description: .text
+}'''

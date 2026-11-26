@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "europeana",
+  "op": "record",
+  "recordedAt": "2026-11-25T15:05:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.europeana.eu/record/v2/90402/SK_C_5.json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"success\": true, \"object\": {\"about\": \"/90402/SK_C_5\", \"type\": \"IMAGE\", \"edmDatasetName\": [\"90402_M_NL_Rijksmuseum\"], \"europeanaAggregation\": {\"edmLandingPage\": \"https://www.europeana.eu/item/90402/SK_C_5\", \"edmRights\": {\"def\": [\"http://creativecommons.org/publicdomain/mark/1.0/\"]}}, \"aggregations\": [{\"edmRights\": \"http://creativecommons.org/publicdomain/mark/1.0/\"}], \"proxies\": [{\"about\": \"/proxy/provider/90402/SK_C_5\", \"dcTitle\": {\"en\": [\"The Night Watch\"], \"nl\": [\"De Nachtwacht\"]}, \"dcCreator\": {\"def\": [\"Rembrandt van Rijn\"]}, \"dcDescription\": {\"en\": [\"Officers and other civic guardsmen of District II of Amsterdam, under the command of Captain Frans Banninck Cocq.\"]}, \"dcDate\": {\"def\": [\"1642\"]}, \"dcRights\": {\"def\": [\"Public Domain Mark 1.0\"]}}]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

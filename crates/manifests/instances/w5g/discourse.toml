@@ -1,0 +1,56 @@
+protocol = "discourse"
+
+[[instance]]
+id = "rust_users"
+name = "Rust Users Forum"
+summary = "Official Rust community forum for language ergonomics, async runtimes, ownership, and crate debugging."
+aliases = ["users.rust-lang.org", "rust forum", "urlo"]
+base_url = "https://users.rust-lang.org"
+scopes = ["forum", "code"]
+caps = ["search"]
+tier = 1
+probe = { op = "search", params = { query = "tokio-console deadlock", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "python_discuss"
+name = "Python Discourse"
+summary = "Official Python community and core development forum covering PEPs, typing, packaging, and CPython internals."
+aliases = ["discuss.python.org", "python forum"]
+base_url = "https://discuss.python.org"
+scopes = ["forum", "code"]
+caps = ["search"]
+tier = 1
+probe = { op = "search", params = { query = "PEP 703 nogil", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "julia_discourse"
+name = "JuliaLang Discourse"
+summary = "Official Julia scientific computing forum covering differential equations, automatic differentiation, and performance."
+aliases = ["discourse.julialang.org", "julia forum"]
+base_url = "https://discourse.julialang.org"
+scopes = ["forum", "code"]
+caps = ["search"]
+tier = 1
+probe = { op = "search", params = { query = "Enzyme.jl reverse mode shadow", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "pytorch_discuss"
+name = "PyTorch Forums"
+summary = "Official PyTorch engineering and research forum for autograd, torch.compile, distributed training, and CUDA kernels."
+aliases = ["discuss.pytorch.org", "pytorch forum"]
+base_url = "https://discuss.pytorch.org"
+scopes = ["forum", "code"]
+caps = ["search"]
+tier = 1
+probe = { op = "search", params = { query = "flex_attention compile", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "llvm_discourse"
+name = "LLVM Discussion Forums"
+summary = "Official LLVM, Clang, MLIR, and compiler infrastructure RFCs, backend engineering, and design discussions."
+aliases = ["discourse.llvm.org", "llvm forum", "mlir forum"]
+base_url = "https://discourse.llvm.org"
+scopes = ["forum", "code"]
+caps = ["search"]
+tier = 1
+probe = { op = "search", params = { query = "TableGen OpInterface verify", limit = 3 }, min_results = 2 }

@@ -1,0 +1,141 @@
+id = "tvmaze"
+name = "TVmaze"
+summary = "Keyless TV show, episode, and cast/crew search API (CC BY-SA)."
+aliases = ["tv maze", "tv shows"]
+home_url = "https://www.tvmaze.com"
+tier = 1
+scopes = ["media"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 6000, cache_ttl_s = 43200 }
+
+[op.search]
+summary = "Search TV shows by title on TVmaze."
+method = "GET"
+url = "https://api.tvmaze.com/search/shows"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { query = "severance" }, min_results = 2, fixture = "fixtures/w5c/tvmaze/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "TV show title" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "none", doc = "Max shows to return" }
+
+[op.search.map]
+items = ".[0:($p.limit // 10)][]"
+error = "if (type == \"object\") and (.status | type) == \"number\" and .status >= 400 then (.message // .name // \"TVmaze API error\") else null end"
+record = '''{
+  id: .show.id,
+  name: (.show.name // ""),
+  url: .show.url,
+  type: .show.type,
+  language: .show.language,
+  genres: (.show.genres // []),
+  status: .show.status,
+  premiered: (.show.premiered | parse_date),
+  ended: (.show.ended | parse_date),
+  rating: (.show.rating.average // null),
+  network: (.show.network.name // .show.webChannel.name // null),
+  summary: ((.show.summary // "") | strip_tags)
+}'''
+hit = '''
+(.show.premiered | parse_date) as $dt |
+{
+  title: (.show.name // ""),
+  url: (.show.url // ("https://www.tvmaze.com/shows/" + (.show.id | tostring))),
+  snippet: ([
+    (if (.show.status | type) == "string" then .show.status else empty end),
+    (if (.show.rating.average | type) == "number" then "rating \(.show.rating.average)/10" else empty end),
+    (if ((.show.genres // []) | length) > 0 then ((.show.genres // []) | join(", ")) else empty end),
+    ((.show.summary // "") | strip_tags | if length > 200 then .[0:200] + "..." else . end | select(length > 0))
+  ] | join(" · ")),
+  date: $dt,
+  dateSource: (if $dt != null then "api" else null end)
+}'''
+
+[op.show]
+summary = "Look up full metadata for a TV show by numeric TVmaze show ID."
+method = "GET"
+url = "https://api.tvmaze.com/shows/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "44933" }, min_results = 1, fixture = "fixtures/w5c/tvmaze/show/default.json" }
+
+[op.show.params]
+id = { type = "string", required = true, in = "path", doc = "Numeric TVmaze show ID" }
+
+[op.show.map]
+items = "."
+error = "@ref:op.search.map.error"
+record = '''{
+  id: .id,
+  name: (.name // ""),
+  url: .url,
+  officialSite: .officialSite,
+  type: .type,
+  language: .language,
+  genres: (.genres // []),
+  status: .status,
+  premiered: (.premiered | parse_date),
+  ended: (.ended | parse_date),
+  rating: (.rating.average // null),
+  network: (.network.name // .webChannel.name // null),
+  externals: .externals,
+  summary: ((.summary // "") | strip_tags)
+}'''
+
+[op.episodes]
+summary = "List episodes for a TV show by numeric TVmaze show ID."
+method = "GET"
+url = "https://api.tvmaze.com/shows/{id}/episodes"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "44933" }, min_results = 2, fixture = "fixtures/w5c/tvmaze/episodes/default.json" }
+
+[op.episodes.params]
+id = { type = "string", required = true, in = "path", doc = "Numeric TVmaze show ID" }
+limit = { type = "int", default = 50, min = 1, max = 200, in = "none", doc = "Max episodes to return" }
+
+[op.episodes.map]
+items = ".[0:($p.limit // 50)][]"
+error = "@ref:op.search.map.error"
+record = '''{
+  id: .id,
+  name: (.name // ""),
+  season: .season,
+  number: .number,
+  airdate: (.airdate | parse_date),
+  runtime: .runtime,
+  rating: (.rating.average // null),
+  url: .url,
+  summary: ((.summary // "") | strip_tags)
+}'''
+
+[op.people]
+summary = "Search actors and crew members on TVmaze."
+method = "GET"
+url = "https://api.tvmaze.com/search/people"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { query = "adam scott" }, min_results = 2, fixture = "fixtures/w5c/tvmaze/people/default.json" }
+
+[op.people.params]
+query = { type = "string", required = true, to = "q", doc = "Person name" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "none", doc = "Max people to return" }
+
+[op.people.map]
+items = ".[0:($p.limit // 10)][]"
+error = "@ref:op.search.map.error"
+record = '''{
+  id: .person.id,
+  name: (.person.name // ""),
+  url: .person.url,
+  country: (.person.country.name // null),
+  birthday: .person.birthday,
+  gender: .person.gender
+}'''

@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "source": "gene_ontology",
+  "op": "search",
+  "recordedAt": "2026-11-25T13:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.geneontology.org/api/search/entity/autocomplete/apoptosis?category=gene&rows=3&start=0",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ],
+          [
+            "cache-control",
+            "public, max-age=3600"
+          ],
+          [
+            "last-modified",
+            "Wed, 25 Nov 2026 13:02:35 GMT"
+          ]
+        ],
+        "bodyText": "{\"docs\":[{\"id\":\"UniProtKB:Q6CFN9\",\"label\":\"YALI0_B05280g\",\"category\":null,\"taxon\":\"NCBITaxon:284591\",\"taxon_label\":\"Yarrowia lipolytica CLIB122\",\"name\":\"Inhibitor of apoptosis-promoting Bax1-domain-containing protein\",\"highlight\":{\"bioentity_name_searchable\":[\"Inhibitor of <em>apoptosis</em>-promoting Bax1-domain-containing protein\"]},\"match\":{\"bioentity_name_searchable\":[\"Inhibitor of <em>apoptosis</em>-promoting Bax1-domain-containing protein\"]},\"has_highlight\":true},{\"id\":\"UniProtKB:F7C7I3\",\"label\":\"AIFM1\",\"category\":null,\"taxon\":\"NCBITaxon:9544\",\"taxon_label\":\"Macaca mulatta\",\"name\":\"Apoptosis-inducing factor 1, mitochondrial\",\"highlight\":{\"bioentity_name_searchable\":[\"<em>Apoptosis</em>-inducing factor 1, mitochondrial\"]},\"match\":{\"bioentity_name_searchable\":[\"<em>Apoptosis</em>-inducing factor 1, mitochondrial\"]},\"has_highlight\":true},{\"id\":\"UniProtKB:G3RB25\",\"label\":\"SIVA1\",\"category\":null,\"taxon\":\"NCBITaxon:9595\",\"taxon_label\":\"Gorilla gorilla gorilla\",\"name\":\"Apoptosis regulatory protein Siva\",\"highlight\":{\"bioentity_name_searchable\":[\"<em>Apoptosis</em> regulatory protein Siva\"]},\"match\":{\"bioentity_name_searchable\":[\"<em>Apoptosis</em> regulatory protein Siva\"]},\"has_highlight\":true}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

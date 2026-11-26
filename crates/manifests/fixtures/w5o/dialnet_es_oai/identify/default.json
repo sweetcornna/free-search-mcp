@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "source": "dialnet_es_oai",
+  "op": "identify",
+  "recordedAt": "2026-11-25T12:41:23Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://dialnet.unirioja.es/oai/OAIHandler?verb=Identify",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/xml;charset=UTF-8"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd\"><responseDate>2026-11-25T12:41:22Z</responseDate><request verb=\"Identify\">https://dialnet.unirioja.es/oai/OAIHandler</request><Identify><repositoryName>DIALNET OAI Articles</repositoryName><baseURL>https://dialnet.unirioja.es/oai/OAIHandler</baseURL><protocolVersion>2.0</protocolVersion><adminEmail>dialnet.oai@bib.unirioja.es</adminEmail><earliestDatestamp>2004-11-01</earliestDatestamp><deletedRecord>no</deletedRecord><granularity>YYYY-MM-DD</granularity><compression>gzip</compression><compression>deflate</compression><description><oai-identifier xmlns=\"http://www.openarchives.org/OAI/2.0/oai-identifier\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/oai-identifier http://www.openarchives.org/OAI/2.0/oai-identifier.xsd\"><scheme>oai</scheme><repositoryIdentifier>dialnet.unirioja.es</repositoryIdentifier><delimiter>:</delimiter><sampleIdentifier>oai:dialnet.unirioja.es:ART0000000001</sampleIdentifier></oai-identifier></description>\n<description><toolkit xsi:schemaLocation=\"http://oai.dlib.vt.edu/OAI/metadata/toolkit http://oai.dlib.vt.edu/OAI/metadata/toolkit.xsd\" xmlns=\"http://oai.dlib.vt.edu/OAI/metadata/toolkit\"><title>OCLC's OAICat Repository Framework</title><author><name>Jeffrey A. Young</name><email>jyoung@oclc.org</email><institution>OCLC</institution></author><version>1.5.30</version><toolkitIcon>http://alcme.oclc.org/oaicat/oaicat_icon.gif</toolkitIcon><URL>http://www.oclc.org/research/software/oai/cat.shtm</URL></toolkit></description></Identify></OAI-PMH>",
+        "bodyB64": null
+      }
+    }
+  ]
+}

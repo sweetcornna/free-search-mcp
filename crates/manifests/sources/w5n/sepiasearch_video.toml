@@ -1,0 +1,90 @@
+id = "sepiasearch_video"
+name = "SepiaSearch Federated PeerTube Video"
+summary = "Keyless federated search across 1,700+ open-source PeerTube video instances and channels."
+aliases = ["sepiasearch", "peertube", "federated video"]
+home_url = "https://sepiasearch.org"
+tier = 1
+scopes = ["media"]
+caps = ["search"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 21600 }
+
+[op.search]
+summary = "Search public videos across federated PeerTube instances via SepiaSearch."
+method = "GET"
+url = "https://sepiasearch.org/api/v1/search/videos"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "start", start = 0, max_pages = 3 }
+examples = ['source.call("sepiasearch_video.search", { query: "linux", limit: 3 })']
+probe = { params = { query = "linux", limit = 3 }, min_results = 2, fixture = "fixtures/w5n/sepiasearch_video/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "search", doc = "Video search keywords" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "count", doc = "Maximum videos" }
+start = { type = "int", min = 0, doc = "Pagination offset" }
+sort = { type = "string", enum = ["-match", "-publishedAt", "-views", "-likes", "name"], doc = "Sort order" }
+
+[op.search.map]
+items = "(.data // [])[]"
+total = ".total"
+record = '''{
+  uuid: .uuid,
+  name: (.name // ""),
+  url: .url,
+  embedUrl: (.embedUrl // null),
+  durationSec: (.duration // null),
+  views: (.views // 0),
+  likes: (.likes // 0),
+  language: (.language.label // .language.id // null),
+  category: (.category.label // null),
+  licence: (.licence.label // null),
+  channel: (.channel.displayName // .channel.name // null),
+  host: (.channel.host // .account.host // null),
+  publishedAt: (.publishedAt // null),
+  description: ((.description | collapse_ws) // "" | if length > 300 then .[0:300] + "..." else . end)
+}'''
+hit = '''{
+  title: (.name // "PeerTube Video"),
+  url: (.url // "https://sepiasearch.org"),
+  snippet: ([
+    (.channel.displayName // .channel.name // empty),
+    (.channel.host // empty),
+    (if (.duration | type) == "number" then ((.duration | tostring) + "s") else empty end),
+    (if (.views | type) == "number" then ((.views | tostring) + " views") else empty end),
+    ((.description | collapse_ws) // "" | if length > 160 then .[0:160] + "..." else . end | select(length > 0))
+  ] | join(" · ")),
+  date: (.publishedAt | parse_date),
+  dateSource: (if (.publishedAt | parse_date) != null then "api" else null end)
+}'''
+
+[op.channels]
+summary = "Search federated PeerTube video channels via SepiaSearch."
+method = "GET"
+url = "https://sepiasearch.org/api/v1/search/video-channels"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "start", start = 0, max_pages = 3 }
+examples = ['source.call("sepiasearch_video.channels", { query: "linux", limit: 3 })']
+probe = { params = { query = "linux", limit = 3 }, min_results = 2, fixture = "fixtures/w5n/sepiasearch_video/channels/default.json" }
+
+[op.channels.params]
+query = { type = "string", required = true, to = "search", doc = "Channel search query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "count", doc = "Maximum channels" }
+start = { type = "int", min = 0, doc = "Pagination offset" }
+
+[op.channels.map]
+items = "(.data // [])[]"
+total = ".total"
+record = '''{
+  id: .id,
+  name: (.name // ""),
+  displayName: (.displayName // .name // ""),
+  host: (.host // null),
+  followersCount: (.followersCount // 0),
+  createdAt: (.createdAt // null),
+  url: .url
+}'''

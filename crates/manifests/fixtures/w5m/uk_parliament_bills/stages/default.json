@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "uk_parliament_bills",
+  "op": "stages",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://bills-api.parliament.uk/api/v1/Bills/4053/Stages",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ],
+          [
+            "cache-control",
+            "public, max-age=300"
+          ]
+        ],
+        "bodyText": "{\"items\":[{\"id\":20393,\"stageId\":6,\"sessionId\":39,\"description\":\"1st reading\",\"abbreviation\":\"1R\",\"house\":\"Commons\",\"stageSittings\":[{\"id\":17655,\"stageId\":6,\"billStageId\":20393,\"billId\":4053,\"date\":\"2025-12-17T00:00:00\"}],\"sortOrder\":1},{\"id\":20394,\"stageId\":7,\"sessionId\":39,\"description\":\"2nd reading\",\"abbreviation\":\"2R\",\"house\":\"Commons\",\"stageSittings\":[],\"sortOrder\":2}],\"totalResults\":2,\"itemsPerPage\":20}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

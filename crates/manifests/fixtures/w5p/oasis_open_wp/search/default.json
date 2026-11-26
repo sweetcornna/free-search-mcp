@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "oasis_open_wp",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:44:39Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.oasis-open.org/wp-json/wp/v2/search?search=standard&per_page=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ],
+          [
+            "cache-control",
+            "max-age=600, stale-if-error=86400"
+          ]
+        ],
+        "bodyText": "[{\"id\":15170,\"title\":\"Invitation to Comment on Data Provenance Metadata v1.0 CSD02 &#8211; ends 5 December 2026\",\"url\":\"https:\\/\\/www.oasis-open.org\\/2026\\/11\\/20\\/invitation-to-comment-on-data-provenance-metadata-v1-0-csd02-ends-5-december-2026\\/\",\"type\":\"post\",\"subtype\":\"post\",\"_links\":{\"self\":[{\"embeddable\":true,\"href\":\"https:\\/\\/www.oasis-open.org\\/wp-json\\/wp\\/v2\\/posts\\/15170\",\"targetHints\":{\"allow\":[\"GET\"]}}],\"about\":[{\"href\":\"https:\\/\\/www.oasis-open.org\\/wp-json\\/wp\\/v2\\/types\\/post\"}],\"collection\":[{\"href\":\"https:\\/\\/www.oasis-open.org\\/wp-json\\/wp\\/v2\\/search\"}]}},{\"id\":14985,\"title\":\"Messaging Security Subcommittee Kickoff Call\",\"url\":\"https:\\/\\/www.oasis-open.org\\/messaging-security-subcommittee-kickoff\\/\",\"type\":\"post\",\"subtype\":\"page\",\"_links\":{\"self\":[{\"embeddable\":true,\"href\":\"https:\\/\\/www.oasis-open.org\\/wp-json\\/wp\\/v2\\/pages\\/14985\",\"targetHints\":{\"allow\":[\"GET\"]}}],\"about\":[{\"href\":\"https:\\/\\/www.oasis-open.org\\/wp-json\\/wp\\/v2\\/types\\/page\"}],\"collection\":[{\"href\":\"https:\\/\\/www.oasis-open.org\\/wp-json\\/wp\\/v2\\/search\"}]}},{\"id\":15167,\"title\":\"CSAF Version 2.1 approved as a Committee Specification\",\"url\":\"https:\\/\\/www.oasis-open.org\\/2026\\/11\\/19\\/csaf-v2-1-approved-as-committee-specification\\/\",\"type\":\"post\",\"subtype\":\"post\",\"_links\":{\"self\":[{\"embeddable\":true,\"href\":\"https:\\/\\/www.oasis-open.org\\/wp-json\\/wp\\/v2\\/posts\\/15167\",\"targetHints\":{\"allow\":[\"GET\"]}}],\"about\":[{\"href\":\"https:\\/\\/www.oasis-open.org\\/wp-json\\/wp\\/v2\\/types\\/post\"}],\"collection\":[{\"href\":\"https:\\/\\/www.oasis-open.org\\/wp-json\\/wp\\/v2\\/search\"}]}}]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

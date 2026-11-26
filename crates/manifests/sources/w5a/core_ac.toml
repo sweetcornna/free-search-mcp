@@ -1,0 +1,86 @@
+id = "core_ac"
+name = "CORE v3 (Open Access Aggregator)"
+summary = "Global aggregator of 200M+ open-access repository outputs, theses, and direct PDF full-text links."
+aliases = ["core", "core.ac.uk"]
+home_url = "https://core.ac.uk"
+tier = 1
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["search", "lookup", "fulltext"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 0.5, burst = 2, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 43200, host_bucket = "api.core.ac.uk" }
+
+[auth]
+mode = "optional"
+env = "SEARCH_MCP_CORE_API_KEY"
+in = "header"
+name = "Authorization"
+format = "Bearer {key}"
+route_requires_key = true
+
+[op.search]
+summary = "Search CORE v3 open-access works (auto-routed only when SEARCH_MCP_CORE_API_KEY is set)."
+method = "GET"
+url = "https://api.core.ac.uk/v3/search/works"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "graph neural network", limit = 3 }, min_results = 2, fixture = "fixtures/w5a/core_ac/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "CORE Lucene query (e.g. graph neural network or doi:\"10.1038/...\")" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Max works" }
+offset = { type = "int", min = 0, to = "offset", doc = "Result offset" }
+
+[op.search.map]
+items = ".results[]"
+total = ".totalHits"
+error = '''if .message != null and .results == null and .id == null then (.message | tostring) else null end'''
+work = '''(
+  (([(.links // [])[] | select(.type == "display") | .url][0]) // ("https://core.ac.uk/works/" + (.id | tostring))) as $url |
+  (if (.downloadUrl // "") != "" then .downloadUrl else ([(.links // [])[] | select(.type == "download") | .url][0] // null) end) as $pdf |
+  ((.publishedDate | parse_date) // (if .yearPublished != null then (.yearPublished | tostring | parse_date) else null end)) as $dt |
+  ((.abstract // "") | unescape_html | collapse_ws) as $abs |
+  ((.doi // ([(.identifiers // [])[] | select(.type == "doi") | .identifier][0]) // null) | doi_norm) as $doi |
+  ((.arxivId // ([(.identifiers // [])[] | select(.type == "arxiv") | .identifier][0]) // null)) as $ax |
+  ($pdf != null or ((.sourceFulltextUrls // []) | length > 0) or ([(.links // [])[] | select(.type == "download" or .type == "reader")] | length > 0)) as $has_oa |
+  {
+    title: ((.title // "") | unescape_html | collapse_ws),
+    authors: [(.authors // [])[] | select(.name != null) | {name: (.name | collapse_ws)}],
+    year: ((.yearPublished | to_int) // (if $dt != null then ($dt[0:4] | to_int) else null end)),
+    publishedDate: $dt,
+    venue: (((.journals[0]?.title // null) // (if (.publisher // "") != "" then .publisher else (.dataProviders[0]?.name // null) end)) | if type == "string" then collapse_ws else null end),
+    workType: (.documentType // "article"),
+    ids: {
+      doi: $doi,
+      arxiv: $ax,
+      pmid: (if .pubmedId != null then (.pubmedId | tostring) else null end)
+    },
+    abstractText: (if ($abs // "") != "" then $abs else null end),
+    citedBy: (.citationCount | to_int),
+    citedBySource: (if .citationCount != null then "core_ac" else null end),
+    oa: (if $has_oa then { status: "green", url: $url, pdfUrl: ($pdf // (.sourceFulltextUrls[0]? // null)) } else null end),
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["core_ac"]
+  }
+)'''
+
+[op.work]
+summary = "Fetch a single CORE v3 work record by CORE work ID."
+method = "GET"
+url = "https://api.core.ac.uk/v3/works/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+probe = { params = { id = "168955695" }, min_results = 1, fixture = "fixtures/w5a/core_ac/work/default.json" }
+
+[op.work.params]
+id = { type = "string", required = true, in = "path", doc = "CORE work ID e.g. 168955695" }
+
+[op.work.map]
+items = "."
+error = "@ref:op.search.map.error"
+work = "@ref:op.search.map.work"

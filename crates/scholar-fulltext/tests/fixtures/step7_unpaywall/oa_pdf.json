@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "source": "synthetic_step7_unpaywall",
+  "op": "oa_pdf",
+  "recordedAt": "",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://pmc.ncbi.nlm.nih.gov/tools/idconv/api/v1/articles/?format=json&ids=10.1093%2Fnar%2Fgkad999&tool=free-search-mcp",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"status\":\"ok\",\"records\":[{\"requested-id\":\"10.1093/nar/gkad999\",\"status\":\"error\",\"errmsg\":\"not found\"}]}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.unpaywall.org/v2/10.1093/nar/gkad999",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"doi\":\"10.1093/nar/gkad999\",\"doi_url\":\"https://doi.org/10.1093/nar/gkad999\",\"is_oa\":true,\"oa_status\":\"gold\",\"best_oa_location\":{\"host_type\":\"publisher\",\"is_best\":true,\"license\":\"cc-by\",\"url\":\"https://academic.oup.com/nar/article-pdf/52/1/100/gkad999.pdf\",\"url_for_landing_page\":\"https://academic.oup.com/nar/article/52/1/100\",\"url_for_pdf\":\"https://academic.oup.com/nar/article-pdf/52/1/100/gkad999.pdf\",\"version\":\"publishedVersion\"},\"oa_locations\":[]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

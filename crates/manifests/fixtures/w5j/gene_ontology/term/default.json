@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "source": "gene_ontology",
+  "op": "term",
+  "recordedAt": "2026-11-25T13:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.geneontology.org/api/ontology/term/GO:0006915",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ],
+          [
+            "cache-control",
+            "public, max-age=3600"
+          ],
+          [
+            "last-modified",
+            "Wed, 25 Nov 2026 12:42:16 GMT"
+          ]
+        ],
+        "bodyText": "{\"goid\":\"GO:0006915\",\"label\":\"apoptotic process\",\"definition\":\"A programmed cell death process which begins when a cell receives an internal (e.g. DNA damage) or external signal (e.g. an extracellular death ligand), and proceeds through a series of biochemical events (signaling pathway phase) which trigger an execution phase. The execution phase is the last step of an apoptotic process, and is typically characterized by rounding-up of the cell, retraction of pseudopodes, reduction of cellular volume (pyknosis), chromatin condensation, nuclear fragmentation (karyorrhexis), plasma membrane blebbing and fragmentation of the cell into apoptotic bodies. When the execution phase is completed, the cell has died.\",\"synonyms\":[\"apoptotic cell death\",\"apoptotic programmed cell death\",\"programmed cell death by apoptosis\",\"apoptosis activator activity\",\"caspase-dependent programmed cell death\",\"commitment to apoptosis\",\"induction of apoptosis\",\"induction of apoptosis by p53\",\"signaling (initiator) caspase activity\",\"activation of apoptosis\",\"apoptosis\",\"apoptosis signaling\",\"apoptotic program\",\"type I programmed cell death\",\"cell suicide\",\"cellular suicide\"],\"relatedSynonyms\":[],\"alternativeIds\":[\"GO:0006917\",\"GO:0008632\"],\"xrefs\":[\"GOC:tb\",\"GOC:curators\",\"ISBN:0198506732\",\"PMID:21494263\",\"GOC:mtg_apoptosis\",\"GOC:cjm\",\"GOC:ecd\",\"PMID:18846107\",\"GOC:dhl\"],\"subsets\":[],\"comment\":\"\",\"creation_date\":\"\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

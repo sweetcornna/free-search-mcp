@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "un_comtrade",
+  "op": "flows",
+  "recordedAt": "2026-11-25T12:12:19Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://comtradeapi.un.org/files/v1/app/reference/tradeRegimes.json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\r\n  \"more\": false,\r\n  \"results\": [\r\n    {\r\n      \"id\": \"M\",\r\n      \"text\": \"Import\"\r\n    },\r\n    {\r\n      \"id\": \"X\",\r\n      \"text\": \"Export\"\r\n    },\r\n    {\r\n      \"id\": \"DX\",\r\n      \"text\": \"Domestic Export\"\r\n    },\r\n    {\r\n      \"id\": \"FM\",\r\n      \"text\": \"Foreign Import\"\r\n    },\r\n    {\r\n      \"id\": \"MIP\",\r\n      \"text\": \"Import of goods for inward processing\"\r\n    },\r\n    {\r\n      \"id\": \"MOP\",\r\n      \"text\": \"Import of goods after outward processing\"\r\n    },\r\n    {\r\n      \"id\": \"RM\",\r\n      \"text\": \"Re-import\"\r\n    },\r\n    {\r\n      \"id\": \"RX\",\r\n      \"text\": \"Re-export\"\r\n    },\r\n    {\r\n      \"id\": \"XIP\",\r\n      \"text\": \"Export of goods after inward processing\"\r\n    },\r\n    {\r\n      \"id\": \"XOP\",\r\n      \"text\": \"Export of goods for outward processing\"\r\n    }\r\n  ]\r\n}\r\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

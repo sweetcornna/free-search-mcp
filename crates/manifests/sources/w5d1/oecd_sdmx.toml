@@ -1,0 +1,108 @@
+id = "oecd_sdmx"
+name = "OECD SDMX Data API"
+summary = "OECD macroeconomic, short-term economic, leading indicator, and national accounts SDMX time series."
+aliases = ["oecd", "ocde", "oecd stats", "oecd data"]
+home_url = "https://data-explorer.oecd.org"
+tier = 2
+scopes = ["finance", "dataset"]
+caps = ["lookup", "dataset"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 12000, cache_ttl_s = 43200 }
+
+[op.data]
+summary = "Fetch SDMX-JSON observations from an OECD dataflow (e.g. agency=OECD.SDD.STES, flow=DSD_STES@DF_CLI, key=USA.M.LI...AA...H)."
+method = "GET"
+url = "https://sdmx.oecd.org/public/rest/data/{agency},{flow}/{key}"
+headers = { Accept = "application/vnd.sdmx.data+json;version=1.0" }
+response = "json"
+returns = "records"
+const_query = { format = "jsondata" }
+probe = { params = { agency = "OECD.SDD.STES", flow = "DSD_STES@DF_CLI", key = "USA.M.LI...AA...H", limit = 3 }, min_results = 2, fixture = "fixtures/w5d1/oecd_sdmx/data/default.json" }
+
+[op.data.params]
+agency = { type = "string", required = true, in = "path", doc = "OECD SDMX agency e.g. OECD.SDD.STES, OECD.SDD.NAD" }
+flow = { type = "string", required = true, in = "path", encode = "raw", doc = "Dataflow ID e.g. DSD_STES@DF_CLI" }
+key = { type = "string", required = true, in = "path", encode = "raw", doc = "SDMX dimension filter key e.g. USA.M.LI...AA...H" }
+limit = { type = "int", default = 10, min = 1, max = 100, to = "lastNObservations", doc = "Most recent observations per series" }
+start = { type = "string", to = "startPeriod", doc = "Start period e.g. 2024-01" }
+end = { type = "string", to = "endPeriod", doc = "End period" }
+
+[op.data.map]
+items = '''
+.data as $d
+| ($d.structure // $d.structures[0]) as $st
+| ($st.dimensions.series // []) as $sdims
+| ($st.attributes.series // []) as $sattrs
+| ($st.dimensions.observation[0].values // []) as $periods
+| ($d.dataSets[0].series // {}) | to_entries[]
+| (.key | split(":") | map(tonumber)) as $idx
+| (.value.attributes // []) as $aidx
+| (reduce range(0; ($sdims | length)) as $i ({}; . + { ($sdims[$i].id): ($sdims[$i].values[$idx[$i]].id // null) })) as $dims
+| (reduce range(0; ($sattrs | length)) as $i ({};
+    if ($aidx[$i] != null) then
+      ($sattrs[$i].values[$aidx[$i]]? | (.id // .name // null)) as $v
+      | if ($v != null) then (. + { ($sattrs[$i].id): $v }) else . end
+    else . end
+  )) as $attrs
+| .value.observations | to_entries[]
+| {
+    seriesName: ($st.name // null),
+    dimensions: $dims,
+    attributes: $attrs,
+    period: ($periods[.key | tonumber].id // .key),
+    value: ((.value[0] | to_num) // .value[0])
+  }
+'''
+error = 'if (.errors? | type == "array" and length > 0) then (.errors[0].message // (.errors[0] | tostring)) else null end'
+record = "."
+
+[op.dataflows]
+summary = "List OECD dataflows for a given SDMX agency (e.g. OECD.SDD.STES)."
+method = "GET"
+url = "https://sdmx.oecd.org/public/rest/dataflow/{agency}"
+headers = { Accept = "application/vnd.sdmx.structure+json;version=1.0" }
+response = "json"
+returns = "records"
+const_query = { detail = "allstubs" }
+probe = { params = { agency = "OECD.SDD.STES" }, min_results = 2, fixture = "fixtures/w5d1/oecd_sdmx/dataflows/default.json" }
+
+[op.dataflows.params]
+agency = { type = "string", default = "OECD.SDD.STES", in = "path", doc = "OECD SDMX agency ID e.g. OECD.SDD.STES" }
+
+[op.dataflows.map]
+items = "(.data.dataflows // [])[]"
+error = "@ref:op.data.map.error"
+record = '''{
+  id: .id,
+  agency: (.agencyID // null),
+  version: (.version // null),
+  name: (.name // .names.en // .id),
+  url: ("https://data-explorer.oecd.org/vis?df[ds]=dsDisseminateFinalDMZ&df[id]=" + .id + "&df[ag]=" + (.agencyID // "OECD"))
+}'''
+
+[op.dataflow]
+summary = "Fetch full metadata and description for a single OECD SDMX dataflow."
+method = "GET"
+url = "https://sdmx.oecd.org/public/rest/dataflow/{agency}/{flow}"
+headers = { Accept = "application/vnd.sdmx.structure+json;version=1.0" }
+response = "json"
+returns = "records"
+probe = { params = { agency = "OECD.SDD.STES", flow = "DSD_STES@DF_CLI" }, min_results = 1, fixture = "fixtures/w5d1/oecd_sdmx/dataflow/default.json" }
+
+[op.dataflow.params]
+agency = { type = "string", required = true, in = "path", doc = "OECD SDMX agency ID e.g. OECD.SDD.STES" }
+flow = { type = "string", required = true, in = "path", encode = "raw", doc = "Dataflow ID e.g. DSD_STES@DF_CLI" }
+
+[op.dataflow.map]
+items = "(.data.dataflows // [])[]"
+error = "@ref:op.data.map.error"
+record = '''{
+  id: .id,
+  agency: (.agencyID // null),
+  version: (.version // null),
+  name: (.name // .names.en // .id),
+  description: ((.description // .descriptions.en) | strip_tags),
+  structure: (.structure // null),
+  url: ("https://data-explorer.oecd.org/vis?df[ds]=dsDisseminateFinalDMZ&df[id]=" + .id + "&df[ag]=" + (.agencyID // "OECD"))
+}'''

@@ -1,0 +1,74 @@
+id = "moedict_zh"
+name = "Moedict (萌典) Chinese Dictionary API"
+summary = "Open CC-BY Traditional & Cross-Strait Chinese dictionary with pinyin, bopomofo, radicals, idioms, and classical citations."
+aliases = ["moedict", "萌典", "chinese dictionary", "成语"]
+home_url = "https://www.moedict.tw"
+tier = 1
+scopes = ["reference"]
+caps = ["lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 604800 }
+
+[op.lookup]
+summary = "Look up a Chinese character, word, or idiom in the MOE Revised Mandarin Dictionary (重編國語辭典)."
+method = "GET"
+url = "https://www.moedict.tw/uni/{word}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+examples = ['source.call("moedict_zh.lookup", { word: "萌" })']
+probe = { params = { word = "萌" }, min_results = 1, fixture = "fixtures/w5n/moedict_zh/lookup/default.json" }
+
+[op.lookup.params]
+word = { type = "string", required = true, in = "path", doc = "Traditional Chinese character, compound word, or idiom (e.g. 萌, 一帆風順)" }
+
+[op.lookup.map]
+items = "."
+record = '''{
+  title: (.title // ""),
+  radical: (.radical // null),
+  strokeCount: (.stroke_count // null),
+  nonRadicalStrokes: (.non_radical_stroke_count // null),
+  heteronyms: [(.heteronyms // [])[] | {
+    pinyin: (.pinyin // null),
+    bopomofo: (.bopomofo // null),
+    definitions: [(.definitions // [])[] | {
+      pos: (.type // null),
+      def: (.def // ""),
+      examples: (.example // []),
+      quotes: (.quote // [])
+    }]
+  }],
+  url: ("https://www.moedict.tw/" + (.title // ""))
+}'''
+
+[op.cross_strait]
+summary = "Look up a Chinese entry in the Cross-Strait Dictionary (兩岸詞典) with cleaned cross-reference text."
+method = "GET"
+url = "https://www.moedict.tw/c/{word}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+examples = ['source.call("moedict_zh.cross_strait", { word: "萌" })']
+probe = { params = { word = "萌" }, min_results = 1, fixture = "fixtures/w5n/moedict_zh/cross_strait/default.json" }
+
+[op.cross_strait.params]
+word = { type = "string", required = true, in = "path", doc = "Chinese character or word" }
+
+[op.cross_strait.map]
+items = "."
+record = '''{
+  title: ((.t // "") | gsub("[`~]"; "")),
+  radical: (if (.r | type) == "string" then (.r | gsub("[`~]"; "")) else null end),
+  strokeCount: (.c // null),
+  heteronyms: [(.h // [])[] | {
+    pinyin: (.p // null),
+    bopomofo: (.b // null),
+    definitions: [(.d // [])[] | {
+      def: ((.f // "") | gsub("[`~]"; "")),
+      examples: [(.e // [])[] | gsub("[`~]"; "")]
+    }]
+  }],
+  url: ("https://www.moedict.tw/~" + ((.t // "") | gsub("[`~]"; "")))
+}'''

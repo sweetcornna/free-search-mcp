@@ -1,0 +1,110 @@
+id = "nomad_materials"
+name = "NOMAD Computational Materials Science"
+summary = "FAIR open repository of 19.4M+ computational materials science DFT/VASP/AFLOW calculations and OPTIMADE properties."
+aliases = ["nomad", "nomad-lab", "dft materials", "computational materials"]
+home_url = "https://nomad-lab.eu"
+tier = 1
+scopes = ["academic.physics", "dataset"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 10000, cache_ttl_s = 43200, host_bucket = "nomad-lab.eu" }
+
+[op.search]
+summary = "Query NOMAD computational materials science entries by reduced chemical formula via POST JSON."
+method = "POST"
+url = "https://nomad-lab.eu/prod/v1/api/v1/entries/query"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+body = { kind = "json", jaq = '''{
+  pagination: (if ($p.cursor // null) != null then { order: "asc", order_by: "entry_id", page_after_value: $p.cursor, page_size: ($p.limit // 10) } else { order: "asc", order_by: "entry_id", page_size: ($p.limit // 10) } end),
+  query: {
+    "results.material.chemical_formula_reduced": $p.query
+  },
+  required: {
+    include: [
+      "entry_id",
+      "mainfile",
+      "results.material.chemical_formula_descriptive",
+      "results.material.chemical_formula_reduced",
+      "results.material.elements",
+      "results.material.structural_type",
+      "results.material.symmetry.space_group_symbol",
+      "results.method.simulation.program_name",
+      "upload_create_time",
+      "upload_id"
+    ]
+  }
+}''' }
+paginate = { style = "cursor", param = "cursor", max_pages = 3 }
+probe = { params = { query = "O2Si", limit = 3 }, min_results = 2, fixture = "fixtures/w5j/nomad_materials/search/default.json" }
+examples = ["source.call('nomad_materials.search', { query: 'O2Si', limit: 5 })"]
+
+[op.search.params]
+query = { type = "string", required = true, in = "body", doc = "Reduced chemical formula in alphabetical element order (e.g. O2Si, GaAs, Fe2O3)" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "body", doc = "Entries per page" }
+cursor = { type = "string", in = "body", doc = "Pagination cursor from next_page_after_value" }
+
+[op.search.map]
+items = "(.data // [])[]"
+next_cursor = ".pagination.next_page_after_value"
+total = ".pagination.total"
+record = '''{
+  entryId: (.entry_id // ""),
+  uploadId: (.upload_id // null),
+  formulaReduced: (.results.material.chemical_formula_reduced // ""),
+  formulaDescriptive: (.results.material.chemical_formula_descriptive // null),
+  elements: (.results.material.elements // []),
+  structuralType: (.results.material.structural_type // null),
+  spaceGroup: (.results.material.symmetry.space_group_symbol // null),
+  program: (.results.method.simulation.program_name // null),
+  mainfile: (.mainfile // null),
+  uploadDate: (.upload_create_time | parse_date),
+  url: ("https://nomad-lab.eu/prod/v1/gui/entry/id/" + (.entry_id // ""))
+}'''
+hit = '''{
+  title: ((.results.material.chemical_formula_descriptive // .results.material.chemical_formula_reduced // .entry_id // "") + (if (.results.material.symmetry.space_group_symbol // "") != "" then (" (" + .results.material.symmetry.space_group_symbol + ")") else "" end)),
+  url: ("https://nomad-lab.eu/prod/v1/gui/entry/id/" + (.entry_id // "")),
+  snippet: ([
+    (if (.results.method.simulation.program_name // "") != "" then .results.method.simulation.program_name else empty end),
+    (if (.results.material.structural_type // "") != "" then .results.material.structural_type else empty end),
+    (if (.entry_id // "") != "" then "entry: \(.entry_id)" else empty end)
+  ] | join(" · ")),
+  date: (.upload_create_time | parse_date),
+  dateSource: "api"
+}'''
+
+[op.entry]
+summary = "Fetch full NOMAD calculation metadata, DFT method, symmetry, and OPTIMADE summary by entry ID."
+method = "GET"
+url = "https://nomad-lab.eu/prod/v1/api/v1/entries/{entry_id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { entry_id = "-2nsqKeGm9AP7ql3dm8vVyPRt_3K" }, min_results = 1, fixture = "fixtures/w5j/nomad_materials/entry/default.json" }
+examples = ["source.call('nomad_materials.entry', { entry_id: '-2nsqKeGm9AP7ql3dm8vVyPRt_3K' })"]
+
+[op.entry.params]
+entry_id = { type = "string", required = true, in = "path", doc = "NOMAD entry identifier" }
+
+[op.entry.map]
+items = ".data"
+record = '''{
+  entryId: (.entry_id // ""),
+  uploadId: (.upload_id // null),
+  formulaReduced: (.results.material.chemical_formula_reduced // .optimade.chemical_formula_reduced // ""),
+  formulaDescriptive: (.results.material.chemical_formula_descriptive // .optimade.chemical_formula_descriptive // null),
+  elements: (.results.material.elements // .optimade.elements // []),
+  structuralType: (.results.material.structural_type // null),
+  dimensionality: (.results.material.dimensionality // null),
+  spaceGroup: (.results.material.symmetry.space_group_symbol // null),
+  method: (.results.method.method_name // null),
+  workflow: (.results.method.workflow_name // null),
+  program: (.results.method.simulation.program_name // null),
+  programVersion: (.results.method.simulation.program_version // null),
+  xcFunctional: (.results.method.simulation.dft.xc_functional_type // null),
+  references: (.references // []),
+  mainfile: (.mainfile // null),
+  url: ("https://nomad-lab.eu/prod/v1/gui/entry/id/" + (.entry_id // ""))
+}'''

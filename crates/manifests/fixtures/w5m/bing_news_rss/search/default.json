@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "bing_news_rss",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.bing.com/news/search?format=rss&q=artificial+intelligence&count=3",
+        "headersSubset": {
+          "accept": "application/rss+xml, application/xml"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/xml; charset=utf-8"
+          ],
+          [
+            "cache-control",
+            "private"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"utf-8\" ?><rss version=\"2.0\" xmlns:News=\"https://www.bing.com/news/search?q=artificial+intelligence&amp;format=rss&amp;count=3\"><channel><title>artificial intelligence - BingNews</title><link>https://www.bing.com/news/search?q=artificial+intelligence&amp;format=rss&amp;count=3</link><description>Search results</description><image><url>http://www.bing.com/rsslogo.gif</url><title>artificial intelligence</title><link>https://www.bing.com/news/search?q=artificial+intelligence&amp;format=rss&amp;count=3</link></image><copyright>Copyright \\xc2\\xa9 2026 Microsoft. All rights reserved. These XML results may not be used, reproduced or transmitted in any manner or for any purpose other than rendering Bing results within an RSS aggregator for your personal, non-commercial use. Any other use of these results requires express written permission from Microsoft Corporation. By accessing this web page or using these results in any manner whatsoever, you agree to be bound by the foregoing restrictions.</copyright><item><title>How Artificial Intelligence Is Transforming The Future Of Investing</title><link>http://www.bing.com/news/apiclick.aspx?ref=FexRss&amp;aid=&amp;tid=6b06d781abb94765b6bc2f6c468f7362&amp;url=https%3a%2f%2fwww.forbes.com%2fsites%2fchuckbrooks%2f2026%2f11%2f23%2fhow-artificial-intelligence-is-transforming-the-future-of-investing%2f&amp;c=3299002923025601966&amp;mkt=en-us</link><description>Artificial intelligence is rapidly transforming the global investing sector by enhancing market analysis, risk management, and decision-making.</description><pubDate>Mon, 23 Nov 2026 06:42:00 GMT</pubDate><News:Source>Forbes</News:Source><News:Image>http://www.bing.com/th?id=ONUT.NhLMcP6k-HbN4g3HgrHlOg&amp;pid=News</News:Image><News:ImageSize>w={0}&amp;h={1}&amp;c=14</News:ImageSize><News:ImageMaxWidth>1351</News:ImageMaxWidth><News:ImageMaxHeight>900</News:ImageMaxHeight></item><item><title>41.6% of Berkshire Hathaway's $358 Billion Portfolio Is Parked in 3 Artificial Intelligence (AI) Stocks</title><link>http://www.bing.com/news/apiclick.aspx?ref=FexRss&amp;aid=&amp;tid=6b06d781abb94765b6bc2f6c468f7362&amp;url=https%3a%2f%2fwww.fool.com%2finvesting%2f2026%2f11%2f22%2f41-6-berkshire-hathaways-358-billion-portfolio-parked-3-artificial-intelligence-ai-stocks%2f&amp;c=11491818197366605584&amp;mkt=en-us</link><description>Berkshire initially bought Alphabet stock in the third quarter of 2025, while Buffett was still at the helm, but Abel has increased the position sixfold this year. Berkshire now owns 78.8 million ...</description><pubDate>Sun, 22 Nov 2026 02:51:00 GMT</pubDate><News:Source>The Motley Fool</News:Source><News:Image>http://www.bing.com/th?id=ONUT.-B1-5r2alUHIXsxBMyr0Cg&amp;pid=News</News:Image><News:ImageSize>w={0}&amp;h={1}&amp;c=14</News:ImageSize><News:ImageMaxWidth>1200</News:ImageMaxWidth><News:ImageMaxHeight>799</News:ImageMaxHeight></item><item><title>YUVA AI for all: Free artificial intelligence course for CSC operators, learn AI through Digital Seva portal</title><link>http://www.bing.com/news/apiclick.aspx?ref=FexRss&amp;aid=&amp;tid=6b06d781abb94765b6bc2f6c468f7362&amp;url=https%3a%2f%2fwww.msn.com%2fen-in%2fnews%2fother%2fyuva-ai-for-all-free-artificial-intelligence-course-for-csc-operators-learn-ai-through-digital-seva-portal%2far-AA2i8fI7&amp;c=13328864283347050361&amp;mkt=en-us</link><description>Artificial Intelligence (AI) is rapidly transforming education, business, governance and digital services across India. To make AI knowledge more accessible at the grassroots level, IndiaAI has ...</description><pubDate>Tue, 24 Nov 2026 07:34:23 GMT</pubDate><News:Source>Newspoint on MSN</News:Source></item></channel></rss>",
+        "bodyB64": null
+      }
+    }
+  ]
+}

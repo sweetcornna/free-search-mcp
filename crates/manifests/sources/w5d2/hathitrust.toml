@@ -1,0 +1,77 @@
+id = "hathitrust"
+name = "HathiTrust Bibliographic API"
+summary = "Identifier lookup across 18M+ digitized research-library books and serials with US public-domain rights status and Babel volume links."
+aliases = ["hathi", "hathitrust catalog", "htid"]
+home_url = "https://www.hathitrust.org"
+tier = 2
+scopes = ["academic.books", "reference"]
+caps = ["lookup", "book"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 2.0, burst = 4, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 86400 }
+
+[op.lookup]
+summary = "Look up HathiTrust digitized volumes and rights codes by ISBN, ISSN, OCLC, LCCN, HTID, or record number."
+method = "GET"
+url = "https://catalog.hathitrust.org/api/volumes/brief/{id_type}/{id}.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id_type = "isbn", id = "0521865719" }, min_results = 1, fixture = "fixtures/w5d2/hathitrust/lookup/default.json" }
+
+[op.lookup.params]
+id_type = { type = "string", required = true, in = "path", enum = ["isbn", "issn", "oclc", "lccn", "htid", "recordnumber"], doc = "Bibliographic identifier type" }
+id = { type = "string", required = true, in = "path", doc = "Identifier value, e.g. 0521865719" }
+
+[op.lookup.map]
+items = '''. as $root | (.records // {} | to_entries[]) | .key as $rid | {
+  recordId: $rid,
+  record: .value,
+  items: [($root.items // [])[] | select(.fromRecord == $rid)]
+}'''
+record = '''{
+  recordId: .recordId,
+  title: ((.record.titles[0] // "") | collapse_ws // ""),
+  titles: ((.record.titles // []) | unique),
+  isbns: ((.record.isbns // []) | unique),
+  issns: ((.record.issns // []) | unique),
+  oclcs: ((.record.oclcs // []) | unique),
+  lccns: ((.record.lccns // []) | unique),
+  publishDates: ((.record.publishDates // []) | unique),
+  recordUrl: (.record.recordURL // ""),
+  volumes: [.items[] | {htid, itemUrl: .itemURL, rightsCode, usRightsString, orig, enumcron: (if (.enumcron | type) == "string" and (.enumcron != "") then .enumcron else null end), lastUpdate: (.lastUpdate | parse_date)}]
+}'''
+
+[op.full]
+summary = "Fetch full HathiTrust bibliographic record (including MARC-XML) and volume holdings by identifier."
+method = "GET"
+url = "https://catalog.hathitrust.org/api/volumes/full/{id_type}/{id}.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id_type = "isbn", id = "0521865719" }, min_results = 1, fixture = "fixtures/w5d2/hathitrust/full/default.json" }
+
+[op.full.params]
+id_type = { type = "string", required = true, in = "path", enum = ["isbn", "issn", "oclc", "lccn", "htid", "recordnumber"], doc = "Bibliographic identifier type" }
+id = { type = "string", required = true, in = "path", doc = "Identifier value, e.g. 0521865719" }
+
+[op.full.map]
+items = '''. as $root | (.records // {} | to_entries[]) | .key as $rid | {
+  recordId: $rid,
+  record: .value,
+  items: [($root.items // [])[] | select(.fromRecord == $rid)]
+}'''
+record = '''{
+  recordId: .recordId,
+  title: ((.record.titles[0] // "") | collapse_ws // ""),
+  titles: ((.record.titles // []) | unique),
+  isbns: ((.record.isbns // []) | unique),
+  issns: ((.record.issns // []) | unique),
+  oclcs: ((.record.oclcs // []) | unique),
+  lccns: ((.record.lccns // []) | unique),
+  publishDates: ((.record.publishDates // []) | unique),
+  recordUrl: (.record.recordURL // ""),
+  hasMarcXml: ((.record."marc-xml" // "") | length > 0),
+  marcXml: (.record."marc-xml" // null),
+  volumes: [.items[] | {htid, itemUrl: .itemURL, rightsCode, usRightsString, orig, enumcron: (if (.enumcron | type) == "string" and (.enumcron != "") then .enumcron else null end), lastUpdate: (.lastUpdate | parse_date)}]
+}'''

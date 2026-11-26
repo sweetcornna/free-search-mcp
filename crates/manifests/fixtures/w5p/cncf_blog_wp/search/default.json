@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "cncf_blog_wp",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:41:31Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.cncf.io/wp-json/wp/v2/search?search=kubernetes&per_page=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "cache-control",
+            "public, max-age=3600"
+          ],
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ]
+        ],
+        "bodyText": "[{\"id\":92326,\"title\":\"Visual Studio Code Kubernetes Tools\",\"url\":\"https:\\/\\/www.cncf.io\\/projects\\/visual-studio-code-kubernetes-tools\\/\",\"type\":\"post\",\"subtype\":\"lf_project\",\"_links\":{\"self\":[{\"embeddable\":true,\"href\":\"https:\\/\\/www.cncf.io\\/wp-json\\/wp\\/v2\\/lf_project\\/92326\",\"targetHints\":{\"allow\":[\"GET\"]}}],\"about\":[{\"href\":\"https:\\/\\/www.cncf.io\\/wp-json\\/wp\\/v2\\/types\\/lf_project\"}],\"collection\":[{\"href\":\"https:\\/\\/www.cncf.io\\/wp-json\\/wp\\/v2\\/search\"}]}},{\"id\":124128,\"title\":\"OVN-Kubernetes\",\"url\":\"https:\\/\\/www.cncf.io\\/projects\\/ovn-kubernetes\\/\",\"type\":\"post\",\"subtype\":\"lf_project\",\"_links\":{\"self\":[{\"embeddable\":true,\"href\":\"https:\\/\\/www.cncf.io\\/wp-json\\/wp\\/v2\\/lf_project\\/124128\",\"targetHints\":{\"allow\":[\"GET\"]}}],\"about\":[{\"href\":\"https:\\/\\/www.cncf.io\\/wp-json\\/wp\\/v2\\/types\\/lf_project\"}],\"collection\":[{\"href\":\"https:\\/\\/www.cncf.io\\/wp-json\\/wp\\/v2\\/search\"}]}},{\"id\":35931,\"title\":\"Kubernetes\",\"url\":\"https:\\/\\/www.cncf.io\\/projects\\/kubernetes\\/\",\"type\":\"post\",\"subtype\":\"lf_project\",\"_links\":{\"self\":[{\"embeddable\":true,\"href\":\"https:\\/\\/www.cncf.io\\/wp-json\\/wp\\/v2\\/lf_project\\/35931\",\"targetHints\":{\"allow\":[\"GET\"]}}],\"about\":[{\"href\":\"https:\\/\\/www.cncf.io\\/wp-json\\/wp\\/v2\\/types\\/lf_project\"}],\"collection\":[{\"href\":\"https:\\/\\/www.cncf.io\\/wp-json\\/wp\\/v2\\/search\"}]}}]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

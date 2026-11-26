@@ -1,0 +1,46 @@
+# cargo-deny configuration (SPEC-contracts.md §6.3). Checked offline:
+#   cargo deny check --disable-fetch bans licenses sources
+# Advisories are checked separately by the orchestrator (needs the advisory DB).
+
+[graph]
+all-features = false
+
+[licenses]
+confidence-threshold = 0.9
+allow = [
+  "MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC",
+  "Unlicense", "Zlib", "Unicode-3.0", "CDLA-Permissive-2.0", "MPL-2.0", "CC0-1.0",
+]
+# OpenSSL license tag allowed ONLY for BoringSSL/btls-sys BSD-like/ISC/OpenSSL dual notices
+# (the openssl-sys crate itself is banned below).
+# GPL-2.0, GPL-3.0, AGPL-3.0 are not in the allow list and therefore rejected
+# (epub, html2md, mupdf, poppler).
+
+[licenses.private]
+ignore = true
+
+# Narrow, per-crate exceptions for permissive licenses outside the allow list
+# (W0a deviation: smaller than widening the global list).
+[[licenses.exceptions]]
+crate = "dragonbox_ecma" # via swc_ts_fast_strip; "Apache-2.0 WITH LLVM-exception OR BSL-1.0"
+allow = ["BSL-1.0"]
+
+[[licenses.exceptions]]
+crate = "libbz2-rs-sys" # via bzip2 0.6 (pure-Rust libbzip2 port)
+allow = ["bzip2-1.0.6"]
+
+[bans]
+multiple-versions = "allow"
+wildcards = "allow"
+deny = [
+  { crate = "openssl-sys" },
+  { crate = "aws-lc-sys" },
+  { crate = "aws-lc-rs" },
+  { crate = "epub" },
+  { crate = "html2md" },
+]
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "medrxiv",
+  "op": "work",
+  "recordedAt": "2026-11-25T12:13:32Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.biorxiv.org/details/medrxiv/10.64898/2026.11.22.26368599",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"messages\":[{\"status\":\"ok\",\"category\":\"all\"}], \"collection\":[{\"title\":\"Anatomical and spectral foundation of skin pigmentation bias in optical oximetry\",\"authors\":\"Wachter, F.; Schillinger, M.; Buehler, A.; Stoecklein, B.; Vogt-Wolz, H.; Nabo, J.; Reichl, C.; Burton, N.; Grieshaber-Bouyer Mandelbaum, H.; Woelfle, J.; Reutter, H.; Regensburger, A. P.; Karlas, A.; Rother, U.; Breininger, K.; Knieling, F.\",\"author_corresponding\":\"Ferdinand Knieling\",\"author_corresponding_institution\":\"Department of Pediatrics and Adolescent Medicine, University Hospital Erlangen, Erlangen, Germany\",\"doi\":\"10.64898\\/2026.11.22.26368599\",\"date\":\"2026-11-24\",\"version\":\"1\",\"type\":\"PUBLISHAHEADOFPRINT\",\"license\":\"cc_no\",\"category\":\"intensive care and critical care medicine\",\"jatsxml\":\"https:\\/\\/www.medrxiv.org\\/content\\/early\\/2026\\/11\\/24\\/2026.11.22.26368599.source.xml\",\"abstract\":\"IMPORTANCE Monitoring hemoglobin oxygen saturation is a cornerstone of patient care across a wide range of clinical settings, with pulse oximetry remaining one of the most widely used technologies. Recent studies have identified skin pigmentation-related inaccuracies in these measurements; however, the biological and optical mechanisms underlying these limitations remain incompletely understood. OBJECTIVE To investigate the tissue compartments and wavelengths that drive skin pigmentation-related bias in oximetry using depth-resolved optoacoustic (OA) imaging. DESIGN, SETTING, AND PARTICIPANTS Prospective observational imaging study of n=46 healthy volunteers representing all 6 Fitzpatrick skin types (FST). EXPOSURES OA imaging of the tibialis anterior region during physiological oxygenation challenges induced by vascular occlusion, reperfusion, and exercise. MAIN OUTCOMES AND MEASURES A total of 3016 spatially resolved scans were obtained. Tissue compartments were segmented using a pretrained neural network. OA spectra, oxygen saturation estimates, responses to physiological interventions, and associations with skin pigmentation were evaluated across 41 wavelengths from 700 to 1100 nm. RESULTS Skin OA spectra closely mirrored the optical absorption characteristics of melanin, and OA signal intensities were strongly associated with FST, demonstrating a substantial influence of pigmentation on superficial oximetry measurements. Epidermal oxygen saturation estimates exhibited minimal changes during physiological interventions, especially in darkly pigmented skin. Skin signals showed pronounced associations with melanin-sensitive wavelengths, enabling FST classification based on optoacoustic skin signals. Pigmentation-related bias was greatest at shorter wavelengths and progressively decreased at longer wavelengths. In contrast, oxygenation measurements obtained from skeletal muscle were less affected by skin type and showed the strongest responses to vascular occlusion, reperfusion, and exercise. Depth-resolved OA imaging demonstrated that physiologically meaningful oxygenation information emerged only after propagation beyond the avascular epidermis into deeper vascularized tissue compartments. CONCLUSIONS AND RELEVANCE The combination of appropriate anatomical targeting, optimized wavelength selection, and correction for optical attenuation may represent a promising strategy for mitigating skin-pigmentation-related bias in oximetry.\",\"published\":\"NA\",\"server\":\"medRxiv\"}]}\r\n\r\n\r\n\r\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

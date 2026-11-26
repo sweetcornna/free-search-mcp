@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "source": "dblp",
+  "op": "author",
+  "recordedAt": "2026-11-25T12:13:29Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://sparql.dblp.org/sparql",
+        "headersSubset": {
+          "content-type": "application/sparql-query",
+          "accept": "application/sparql-results+json"
+        },
+        "bodySha256": "96a8101db42f6519d424badafc0806ec66cbd299315450281d9f6f8c2400faf2"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/sparql-results+json"
+          ]
+        ],
+        "bodyText": "{\"head\":{\"vars\":[\"creator\",\"name\",\"orcid\",\"affiliations\",\"worksCount\"]},\"results\":{\"bindings\":[{\"creator\":{\"type\":\"uri\",\"value\":\"https://dblp.org/pid/10/3248\"},\"name\":{\"type\":\"literal\",\"value\":\"Geoffrey E. Hinton\"},\"affiliations\":{\"type\":\"literal\",\"value\":\"Google DeepMind, London, UK\"},\"worksCount\":{\"datatype\":\"http://www.w3.org/2001/XMLSchema#int\",\"type\":\"literal\",\"value\":\"302\"}}]},\"meta\":{\"query-time-ms\":4078,\"result-size-total\":1}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

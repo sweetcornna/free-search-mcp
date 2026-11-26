@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "guardian_open",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://content.guardianapis.com/search?show-fields=headline%2CtrailText%2Cbyline%2Cwordcount&q=climate+policy&page-size=3&page=1",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"response\":{\"status\":\"ok\",\"userTier\":\"developer\",\"total\":4218,\"startIndex\":1,\"pageSize\":3,\"currentPage\":1,\"pages\":1406,\"orderBy\":\"relevance\",\"results\":[{\"id\":\"environment/2026/oct/12/global-renewables-grid-investment\",\"type\":\"article\",\"sectionId\":\"environment\",\"sectionName\":\"Environment\",\"webPublicationDate\":\"2026-10-12T08:30:00Z\",\"webTitle\":\"Global renewables expansion accelerates grid investment across Europe and Asia\",\"webUrl\":\"https://www.theguardian.com/environment/2026/oct/12/global-renewables-grid-investment\",\"apiUrl\":\"https://content.guardianapis.com/environment/2026/oct/12/global-renewables-grid-investment\",\"isHosted\":false,\"pillarId\":\"pillar/news\",\"pillarName\":\"News\",\"fields\":{\"headline\":\"Global renewables expansion accelerates grid investment across Europe and Asia\",\"trailText\":\"New IEA data shows grid storage and transmission spending reached a record high in 2026.\",\"byline\":\"Jillian Ambrose\",\"wordcount\":\"940\"}},{\"id\":\"world/2026/sep/28/carbon-border-policy-trade-review\",\"type\":\"article\",\"sectionId\":\"world\",\"sectionName\":\"World news\",\"webPublicationDate\":\"2026-09-28T14:15:00Z\",\"webTitle\":\"Carbon border rules reshape heavy industry trade negotiations\",\"webUrl\":\"https://www.theguardian.com/world/2026/sep/28/carbon-border-policy-trade-review\",\"apiUrl\":\"https://content.guardianapis.com/world/2026/sep/28/carbon-border-policy-trade-review\",\"isHosted\":false,\"pillarId\":\"pillar/news\",\"pillarName\":\"News\",\"fields\":{\"headline\":\"Carbon border rules reshape heavy industry trade negotiations\",\"trailText\":\"Steel and cement exporters adopt verified emissions accounting ahead of new tariff phases.\",\"byline\":\"Fiona Harvey\",\"wordcount\":\"1120\"}},{\"id\":\"business/2026/sep/15/battery-recycling-mandates-europe\",\"type\":\"article\",\"sectionId\":\"business\",\"sectionName\":\"Business\",\"webPublicationDate\":\"2026-09-15T11:00:00Z\",\"webTitle\":\"Battery recycling mandates drive new European mineral recovery plants\",\"webUrl\":\"https://www.theguardian.com/business/2026/sep/15/battery-recycling-mandates-europe\",\"apiUrl\":\"https://content.guardianapis.com/business/2026/sep/15/battery-recycling-mandates-europe\",\"isHosted\":false,\"pillarId\":\"pillar/news\",\"pillarName\":\"News\",\"fields\":{\"headline\":\"Battery recycling mandates drive new European mineral recovery plants\",\"trailText\":\"Automakers sign long-term lithium and cobalt recovery deals to comply with 2027 rules.\",\"byline\":\"Jasper Jolly\",\"wordcount\":\"785\"}}]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

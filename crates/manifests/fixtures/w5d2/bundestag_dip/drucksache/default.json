@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "bundestag_dip",
+  "op": "drucksache",
+  "recordedAt": "2026-11-25T12:14:49Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://search.dip.bundestag.de/api/v1/drucksache/68852?format=json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"id\": \"68852\", \"typ\": \"Dokument\", \"dokumentart\": \"Drucksache\", \"drucksachetyp\": \"Antrag\", \"dokumentnummer\": \"19/1\", \"wahlperiode\": 19, \"herausgeber\": \"BT\", \"datum\": \"2017-10-24\", \"aktualisiert\": \"2022-08-01T15:30:16+02:00\", \"titel\": \"Weitergeltung von Geschäftsordnungsrecht\", \"autoren_anzeige\": [{\"id\": \"546\", \"title\": \"Fraktion der CDU/CSU\", \"autor_titel\": \"CDU/CSU\"}], \"fundstelle\": {\"id\": \"68852\", \"dokumentart\": \"Drucksache\", \"pdf_url\": \"https://dserver.bundestag.de/btd/19/000/1900001.pdf\", \"dokumentnummer\": \"19/1\", \"datum\": \"2017-10-24\", \"herausgeber\": \"BT\"}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

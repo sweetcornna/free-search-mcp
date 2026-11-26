@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "uk_parliament_bills",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://bills-api.parliament.uk/api/v1/Bills?SearchTerm=data&Take=3&Skip=0",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ],
+          [
+            "cache-control",
+            "public, max-age=300"
+          ]
+        ],
+        "bodyText": "{\"items\":[{\"billId\":4053,\"shortTitle\":\"Afghanistan Schemes Data Breaches (Independent Public Inquiry) Bill\",\"formerShortTitle\":null,\"currentHouse\":\"Commons\",\"originatingHouse\":\"Commons\",\"lastUpdate\":\"2026-04-30T12:13:23.9284823\",\"billWithdrawn\":null,\"isDefeated\":false,\"billTypeId\":8,\"introducedSessionId\":39,\"includedSessionIds\":[39],\"isAct\":false,\"currentStage\":{\"id\":20394,\"stageId\":7,\"sessionId\":39,\"description\":\"2nd reading\",\"abbreviation\":\"2R\",\"house\":\"Commons\",\"stageSittings\":[],\"sortOrder\":2}},{\"billId\":1255,\"shortTitle\":\"Collection of Nationality Data Bill\",\"formerShortTitle\":null,\"currentHouse\":\"Commons\",\"originatingHouse\":\"Commons\",\"lastUpdate\":\"2014-05-15T12:31:19\",\"billWithdrawn\":null,\"isDefeated\":false,\"billTypeId\":8,\"introducedSessionId\":26,\"includedSessionIds\":[26],\"isAct\":false,\"currentStage\":{\"id\":14049,\"stageId\":7,\"sessionId\":26,\"description\":\"2nd reading\",\"abbreviation\":\"2R\",\"house\":\"Commons\",\"stageSittings\":[],\"sortOrder\":2}},{\"billId\":3825,\"shortTitle\":\"Data (Use and Access) Act 2025\",\"formerShortTitle\":null,\"currentHouse\":\"Unassigned\",\"originatingHouse\":\"Lords\",\"lastUpdate\":\"2025-08-08T12:22:18.87226\",\"billWithdrawn\":null,\"isDefeated\":false,\"billTypeId\":1,\"introducedSessionId\":39,\"includedSessionIds\":[39],\"isAct\":true,\"currentStage\":{\"id\":19996,\"stageId\":11,\"sessionId\":39,\"description\":\"Royal Assent\",\"abbreviation\":\"RA\",\"house\":\"Unassigned\",\"stageSittings\":[{\"id\":17150,\"stageId\":11,\"billStageId\":19996,\"billId\":3825,\"date\":\"2025-06-19T00:00:00\"}],\"sortOrder\":24}}],\"totalResults\":23,\"itemsPerPage\":3}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

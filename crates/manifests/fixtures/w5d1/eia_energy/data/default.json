@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "eia_energy",
+  "op": "data",
+  "recordedAt": "2026-11-25T12:13:33Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.eia.gov/v2/electricity/retail-sales/data/?frequency=monthly&length=3&data%5B%5D=price&data%5B%5D=sales",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"response\": {\"total\": \"251\", \"dateFormat\": \"YYYY-MM\", \"frequency\": \"monthly\", \"data\": [{\"period\": \"2026-08\", \"stateid\": \"CO\", \"stateDescription\": \"Colorado\", \"sectorid\": \"RES\", \"sectorDescription\": \"Residential\", \"price\": \"14.21\", \"price-units\": \"cents per kilowatthour\", \"sales\": \"1820.4\", \"sales-units\": \"million kilowatthours\"}, {\"period\": \"2026-07\", \"stateid\": \"CO\", \"stateDescription\": \"Colorado\", \"sectorid\": \"RES\", \"sectorDescription\": \"Residential\", \"price\": \"14.08\", \"price-units\": \"cents per kilowatthour\", \"sales\": \"1955.1\", \"sales-units\": \"million kilowatthours\"}, {\"period\": \"2026-06\", \"stateid\": \"CO\", \"stateDescription\": \"Colorado\", \"sectorid\": \"RES\", \"sectorDescription\": \"Residential\", \"price\": \"13.85\", \"price-units\": \"cents per kilowatthour\", \"sales\": \"1644.8\", \"sales-units\": \"million kilowatthours\"}]}, \"request\": {\"command\": \"/v2/electricity/retail-sales/data/\", \"params\": {\"frequency\": \"monthly\", \"length\": \"3\"}}, \"apiVersion\": \"2.1.7\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

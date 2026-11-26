@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "uk_parliament_bills",
+  "op": "bill",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://bills-api.parliament.uk/api/v1/Bills/4053",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ],
+          [
+            "cache-control",
+            "public, max-age=300"
+          ]
+        ],
+        "bodyText": "{\"longTitle\":\"A Bill to make provision for establishing an independent public inquiry into data breaches by the Ministry of Defence and other public bodies relating to applicants to the Afghan Relocations and Assistance Policy Scheme and Afghanistan Locally Employed Staff Ex-Gratia Scheme; to provide the inquiry with the power to question Ministers, former Ministers, officials and other relevant persons about the circumstances surrounding such breaches, including action taken in response to the breaches and decisions taken by the Government in relation to legal proceedings in respect of the breaches; to require the inquiry to report within one year of its establishment; and for connected purposes.\",\"summary\":null,\"sponsors\":[{\"member\":{\"memberId\":5265,\"name\":\"James MacCleary\",\"party\":\"Liberal Democrat\",\"partyColour\":\"fc7d0b\",\"house\":\"Commons\",\"memberPhoto\":\"https://members-api.parliament.uk/api/Members/5265/Thumbnail\",\"memberPage\":\"https://members.parliament.uk/member/5265/contact\",\"memberFrom\":\"Lewes\"},\"organisation\":null,\"sortOrder\":1}],\"promoters\":[],\"petitioningPeriod\":null,\"petitionInformation\":null,\"agent\":null,\"billId\":4053,\"shortTitle\":\"Afghanistan Schemes Data Breaches (Independent Public Inquiry) Bill\",\"formerShortTitle\":null,\"currentHouse\":\"Commons\",\"originatingHouse\":\"Commons\",\"lastUpdate\":\"2026-04-30T12:13:23.9284823\",\"billWithdrawn\":null,\"isDefeated\":false,\"billTypeId\":8,\"introducedSessionId\":39,\"includedSessionIds\":[39],\"isAct\":false,\"currentStage\":{\"id\":20394,\"stageId\":7,\"sessionId\":39,\"description\":\"2nd reading\",\"abbreviation\":\"2R\",\"house\":\"Commons\",\"stageSittings\":[],\"sortOrder\":2}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

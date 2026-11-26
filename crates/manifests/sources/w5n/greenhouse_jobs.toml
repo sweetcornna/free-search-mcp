@@ -1,0 +1,93 @@
+id = "greenhouse_jobs"
+name = "Greenhouse Public Job Boards API"
+summary = "Live keyless official company job openings, job descriptions, and departments by Greenhouse board slug."
+aliases = ["greenhouse", "ats jobs", "tech jobs"]
+home_url = "https://developers.greenhouse.io/job-board.html"
+tier = 1
+scopes = ["web"]
+caps = ["lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 3600 }
+
+[op.jobs]
+summary = "List open jobs published on a company's public Greenhouse job board."
+method = "GET"
+url = "https://boards-api.greenhouse.io/v1/boards/{company}/jobs"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+examples = ['source.call("greenhouse_jobs.jobs", { company: "planetscale", content: false })']
+probe = { params = { company = "planetscale", content = false }, min_results = 2, fixture = "fixtures/w5n/greenhouse_jobs/jobs/default.json" }
+
+[op.jobs.params]
+company = { type = "string", required = true, in = "path", doc = "Greenhouse board token/slug (e.g. planetscale, anthropic, stripe, cloudflare)" }
+content = { type = "bool", default = false, doc = "Include full HTML job description content in listing" }
+
+[op.jobs.map]
+items = "(.jobs // [])[]"
+total = ".meta.total"
+error = "if .error then .error else null end"
+record = '''{
+  id: .id,
+  internalJobId: (.internal_job_id // null),
+  title: ((.title | collapse_ws) // ""),
+  company: (.company_name | collapse_ws),
+  location: (.location.name | collapse_ws),
+  firstPublished: (.first_published // null),
+  updatedAt: (.updated_at // null),
+  requisitionId: (.requisition_id // null),
+  url: .absolute_url
+}'''
+
+[op.job]
+summary = "Fetch full job details and HTML description for a specific Greenhouse job ID."
+method = "GET"
+url = "https://boards-api.greenhouse.io/v1/boards/{company}/jobs/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+examples = ['source.call("greenhouse_jobs.job", { company: "planetscale", id: "4463390009" })']
+probe = { params = { company = "planetscale", id = "4463390009" }, min_results = 1, fixture = "fixtures/w5n/greenhouse_jobs/job/default.json" }
+
+[op.job.params]
+company = { type = "string", required = true, in = "path", doc = "Greenhouse board slug" }
+id = { type = "string", required = true, in = "path", doc = "Numeric Greenhouse job ID" }
+
+[op.job.map]
+items = "."
+error = "if .error then .error else null end"
+record = '''{
+  id: .id,
+  title: ((.title | collapse_ws) // ""),
+  company: (.company_name | collapse_ws),
+  location: (.location.name | collapse_ws),
+  firstPublished: (.first_published // null),
+  updatedAt: (.updated_at // null),
+  contentText: ((.content | unescape_html | strip_tags) // "" | if length > 800 then .[0:800] + "..." else . end),
+  url: .absolute_url
+}'''
+
+[op.departments]
+summary = "List departments and open job counts for a company's Greenhouse board."
+method = "GET"
+url = "https://boards-api.greenhouse.io/v1/boards/{company}/departments"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+examples = ['source.call("greenhouse_jobs.departments", { company: "planetscale" })']
+probe = { params = { company = "planetscale" }, min_results = 1, fixture = "fixtures/w5n/greenhouse_jobs/departments/default.json" }
+
+[op.departments.params]
+company = { type = "string", required = true, in = "path", doc = "Greenhouse board slug" }
+
+[op.departments.map]
+items = "(.departments // [])[]"
+error = "if .error then .error else null end"
+record = '''{
+  id: .id,
+  name: ((.name | collapse_ws) // ""),
+  parentId: (.parent_id // null),
+  jobCount: ((.jobs // []) | length),
+  jobs: [(.jobs // [])[] | {id: .id, title: ((.title | collapse_ws) // ""), location: (.location.name | collapse_ws), url: .absolute_url}]
+}'''

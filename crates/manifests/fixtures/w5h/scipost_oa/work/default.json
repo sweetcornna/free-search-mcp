@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "scipost_oa",
+  "op": "work",
+  "recordedAt": "2026-11-25T13:02:20Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://scipost.org/api/publications/?limit=1&search=SciPostPhys.21.5.131",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"count\":1,\"next\":null,\"previous\":null,\"results\":[{\"url\":\"/SciPostPhys.21.5.131\",\"title\":\"Groenewold-Moyal twists, integrable spin-chains and AdS/CFT\",\"author_list\":\"Riccardo Borsato, Miguel García Fernández\",\"abstract\":\"We take the first steps to address via integrability the spectral problem of AdS/CFT dual pairs deformed by Groenewold-Moyal twists. In particular, we start by considering a twisted spin-chain that couples, through a Groenewold-Moyal twist deformation, two $\\\\mathfrak{sl}(2)$-invariant spin-chains. We interpret this deformed spin-chain as a deformation of a subsector of the AdS$_3$/CFT$_2$ spin-chain, but the construction shares qualitative features also with the corresponding deformation of the AdS$_5$/CFT$_4$ spin-chain, for example. As in similar types of deformations, we show that there exists a certain basis in which the spin-chain Hamiltonian takes a Jordan-block form. At the same time, by working in the basis of eigenstates of the generators used to construct the Groenewold-Moyal twist, the Hamiltonian appears to be diagonalisable and with a deformed spectrum. Employing the method of the Baxter equation, we write down the energy of the ground state and of excited states in a perturbation of the deformation parameter. We then consider the string-theory side of the duality, where the twist is realised as a deformation of AdS of the type of Maldacena-Russo-Hashimoto-Itzhaki. We construct a deformation of the usual BMN classical solution, and in the large-$J$ limit we match the leading $\\\\mathcal O(J^{-3})$ term of the energy of the spin-chain ground state with a conserved charge of the classical string solution. Differently from the undeformed setup as well as similar kinds of deformations, we find that the general expression of this charge of the string sigma-model is non-local, and that it does not correspond to a standard isometry. Nevertheless, it can be computed from the monodromy matrix and it is part of the tower of conserved charges provided by integrability.\",\"doi_label\":\"SciPostPhys.21.5.131\",\"doi\":\"10.21468/SciPostPhys.21.5.131\",\"citation\":\"SciPost Phys. 21, 131 (2026)\",\"in_issue\":\"SciPost Physics Vol. 21 issue 5 (November 2026)\",\"in_volume\":\"SciPost Physics Vol. 21\",\"paper_nr\":\"131\",\"submission_date\":\"2026-04-20\",\"acceptance_date\":\"2026-10-29\",\"publication_date\":\"2026-11-25\",\"cc_license\":\"CC BY 4.0\",\"accepted_submission\":{\"url\":\"/submissions/2604.07291v3/\",\"thread_hash\":\"e9e7fda3-df4e-46cc-8e81-24bdcd5589a1\"},\"acad_field\":\"Physics\",\"specialties\":[\"High-Energy Physics - Theory\"],\"topics\":[\"AdS/CFT correspondence\",\"Heisenberg spin chains\",\"Integrability/integrable models\",\"Sigma models\"],\"approaches\":\"['theoretical']\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

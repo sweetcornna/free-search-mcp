@@ -1,0 +1,102 @@
+id = "usaspending_gov"
+name = "USAspending.gov Federal Awards API"
+summary = "Keyless US federal government contracts, grants, loans, and direct payment awards search and full award detail lookup."
+aliases = ["usaspending", "federal awards", "federal contracts", "us spending"]
+home_url = "https://api.usaspending.gov"
+tier = 1
+scopes = ["gov", "finance"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 12000, cache_ttl_s = 21600 }
+
+[op.search]
+summary = "Search US federal contracts, grants, loans, or direct payments by keyword via POST JSON."
+method = "POST"
+url = "https://api.usaspending.gov/api/v2/search/spending_by_award/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+body = { kind = "json", jaq = '''{
+  fields: ["Award ID", "Recipient Name", "Award Amount", "Awarding Agency", "Start Date", "End Date", "Description", "generated_internal_id"],
+  filters: {
+    keywords: [$p.query],
+    award_type_codes: (
+      if ($p.award_group // "contracts") == "grants" then ["02", "03", "04", "05"]
+      elif ($p.award_group // "contracts") == "loans" then ["07", "08"]
+      elif ($p.award_group // "contracts") == "direct_payments" then ["06", "10"]
+      else ["A", "B", "C", "D"]
+      end
+    )
+  },
+  limit: ($p.limit // 10),
+  page: ($p.page // 1)
+}''' }
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "quantum", limit = 3 }, min_results = 2, fixture = "fixtures/w5m/usaspending_gov/search/default.json" }
+examples = ["source.call('usaspending_gov.search', { query: 'quantum', award_group: 'contracts', limit: 5 })"]
+
+[op.search.params]
+query = { type = "string", required = true, in = "body", doc = "Award keyword query" }
+award_group = { type = "string", default = "contracts", enum = ["contracts", "grants", "loans", "direct_payments"], in = "body", doc = "Federal award category" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "body", doc = "Awards per page" }
+page = { type = "int", default = 1, min = 1, in = "body", doc = "1-based page number" }
+
+[op.search.map]
+items = "(.results // [])[]"
+error = 'if .detail then (.detail | tostring) else null end'
+record = '''{
+  awardId: .["Award ID"],
+  generatedInternalId: (.generated_internal_id // null),
+  recipientName: ((.["Recipient Name"] // "") | collapse_ws),
+  awardAmountUsd: (.["Award Amount"] // null),
+  awardingAgency: (.["Awarding Agency"] // null),
+  startDate: (.["Start Date"] | parse_date),
+  endDate: (.["End Date"] | parse_date),
+  description: ((.["Description"] // "") | collapse_ws),
+  url: ("https://www.usaspending.gov/award/" + (.generated_internal_id // ""))
+}'''
+hit = '''{
+  title: (((.["Recipient Name"] // "") + " — " + (.["Award ID"] // "")) | collapse_ws),
+  url: ("https://www.usaspending.gov/award/" + (.generated_internal_id // "")),
+  snippet: (((.["Awarding Agency"] // "") + " · $" + ((.["Award Amount"] // 0) | tostring) + (if .["Description"] then (" — " + (.["Description"] | collapse_ws)) else "" end)) | collapse_ws),
+  date: (.["Start Date"] | parse_date),
+  dateSource: "api"
+}'''
+
+[op.award]
+summary = "Fetch full details for a single US federal award by generated_unique_award_id."
+method = "GET"
+url = "https://api.usaspending.gov/api/v2/awards/{award_id}/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { award_id = "CONT_AWD_ZX14_9700_W912JB06D4017_9700" }, min_results = 1, fixture = "fixtures/w5m/usaspending_gov/award/default.json" }
+examples = ["source.call('usaspending_gov.award', { award_id: 'CONT_AWD_ZX14_9700_W912JB06D4017_9700' })"]
+
+[op.award.params]
+award_id = { type = "string", required = true, in = "path", doc = "USAspending generated_unique_award_id from search results" }
+
+[op.award.map]
+items = "."
+error = "@ref:op.search.map.error"
+record = '''{
+  generatedUniqueAwardId: .generated_unique_award_id,
+  piid: (.piid // null),
+  category: (.category // null),
+  typeDescription: (.type_description // null),
+  description: ((.description // "") | collapse_ws),
+  totalObligationUsd: (.total_obligation // null),
+  totalOutlayUsd: (.total_outlay // null),
+  dateSigned: (.date_signed | parse_date),
+  startDate: (.period_of_performance.start_date | parse_date),
+  endDate: (.period_of_performance.end_date | parse_date),
+  recipientName: (.recipient.recipient_name // null),
+  recipientUei: (.recipient.recipient_uei // null),
+  awardingAgency: (.awarding_agency.toptier_agency.name // null),
+  awardingSubAgency: (.awarding_agency.subtier_agency.name // null),
+  fundingAgency: (.funding_agency.toptier_agency.name // null),
+  naicsCode: (.naics_hierarchy.base_code.code // null),
+  naicsDescription: (.naics_hierarchy.base_code.description // null),
+  url: ("https://www.usaspending.gov/award/" + .generated_unique_award_id)
+}'''

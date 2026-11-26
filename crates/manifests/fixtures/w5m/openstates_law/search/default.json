@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "openstates_law",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://v3.openstates.org/bills?q=data+privacy&per_page=3&page=1",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"pagination\":{\"per_page\":3,\"page\":1,\"max_page\":38,\"total_items\":112},\"results\":[{\"id\":\"ocd-bill/11111111-2222-3333-4444-555555555551\",\"identifier\":\"AB 1042\",\"title\":\"Consumer Data Privacy and Automated Decision Transparency Act\",\"jurisdiction\":{\"id\":\"ocd-jurisdiction/country:us/state:ca/government\",\"name\":\"California\",\"classification\":\"state\"},\"session\":\"20252026\",\"classification\":[\"bill\"],\"subject\":[\"Privacy\",\"Technology\"],\"latest_action_date\":\"2026-08-21\",\"latest_action_description\":\"Passed Senate Committee on Judiciary.\",\"updated_at\":\"2026-08-22T02:14:00+00:00\",\"openstates_url\":\"https://openstates.org/ca/bills/20252026/AB1042/\"},{\"id\":\"ocd-bill/11111111-2222-3333-4444-555555555552\",\"identifier\":\"HB 2108\",\"title\":\"Relating to biometric and geolocation consumer data privacy protections.\",\"jurisdiction\":{\"id\":\"ocd-jurisdiction/country:us/state:tx/government\",\"name\":\"Texas\",\"classification\":\"state\"},\"session\":\"89R\",\"classification\":[\"bill\"],\"subject\":[\"Consumer Protection\",\"Privacy\"],\"latest_action_date\":\"2026-05-12\",\"latest_action_description\":\"Referred to Business & Industry Committee.\",\"updated_at\":\"2026-05-13T04:00:00+00:00\",\"openstates_url\":\"https://openstates.org/tx/bills/89R/HB2108/\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

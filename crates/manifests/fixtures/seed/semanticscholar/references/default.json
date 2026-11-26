@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "semanticscholar",
+  "op": "references",
+  "recordedAt": "2026-11-25T14:08:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.semanticscholar.org/graph/v1/paper/ARXIV:1706.03762/references?fields=paperId%2Ctitle%2Cyear%2CpublicationDate%2Cvenue%2CcitationCount%2CinfluentialCitationCount%2CisOpenAccess%2CopenAccessPdf%2CexternalIds%2Cauthors&limit=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"offset\":0,\"data\":[{\"citedPaper\":{\"paperId\":\"fa72afa9b2cbc8f0d7b05d52548906610ffbb9c5\",\"title\":\"Neural Machine Translation by Jointly Learning to Align and Translate\",\"year\":2014,\"publicationDate\":\"2014-09-01\",\"venue\":\"ICLR\",\"citationCount\":38000,\"influentialCitationCount\":4200,\"isOpenAccess\":true,\"openAccessPdf\":{\"url\":\"https://arxiv.org/pdf/1409.0473.pdf\",\"status\":\"GREEN\"},\"externalIds\":{\"ArXiv\":\"1409.0473\"},\"authors\":[{\"name\":\"Dzmitry Bahdanau\"},{\"name\":\"Kyunghyun Cho\"},{\"name\":\"Yoshua Bengio\"}]}}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

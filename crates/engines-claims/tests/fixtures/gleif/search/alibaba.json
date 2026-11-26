@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "source": "gleif",
+  "op": "search",
+  "recordedAt": "2026-11-25T10:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.gleif.org/api/v1/lei-records?filter%5Bfulltext%5D=alibaba+group&page%5Bsize%5D=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          ["content-type", "application/vnd.api+json"]
+        ],
+        "bodyText": "{\"meta\":{\"goldenCopy\":{\"publishDate\":\"2026-09-21T16:00:00Z\"}},\"data\":[{\"attributes\":{\"lei\":\"254900KD4P900ITKSU65\",\"entity\":{\"legalName\":{\"name\":\"Alibaba Group Services Limited\"},\"otherNames\":[{\"name\":\"Alibaba.com Group Services Limited\"}],\"legalAddress\":{\"city\":\"Hong Kong\",\"country\":\"HK\"},\"jurisdiction\":\"HK\",\"status\":\"ACTIVE\",\"registeredAs\":\"37473977\",\"creationDate\":\"2006-12-19T00:00:00Z\"}}}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "alphafold_db",
+  "op": "summary",
+  "recordedAt": "2026-11-25T13:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://alphafold.ebi.ac.uk/api/uniprot/summary/P01308.json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ],
+          [
+            "cache-control",
+            "public, max-age=2592000"
+          ]
+        ],
+        "bodyText": "{\"uniprot_entry\":{\"ac\":\"P01308\",\"id\":\"INS_HUMAN\",\"uniprot_checksum\":\"12e9c9e4e2835c302e8ba615115edda3\",\"sequence_length\":110,\"segment_start\":1,\"segment_end\":110},\"structures\":[{\"summary\":{\"model_identifier\":\"AF-P01308-F1\",\"model_category\":\"AB-INITIO\",\"model_url\":\"https://alphafold.ebi.ac.uk/files/AF-P01308-F1-model_v6.cif\",\"model_format\":\"MMCIF\",\"model_type\":null,\"model_page_url\":\"https://alphafold.ebi.ac.uk/entry/AF-P01308-F1\",\"provider\":\"AlphaFold DB\",\"number_of_conformers\":null,\"ensemble_sample_url\":null,\"ensemble_sample_format\":null,\"created\":\"2025-08-01T00:00:00Z\",\"sequence_identity\":1.0,\"uniprot_start\":1,\"uniprot_end\":110,\"coverage\":1.0,\"experimental_method\":null,\"resolution\":null,\"confidence_type\":\"pLDDT\",\"confidence_version\":null,\"confidence_avg_local_score\":52.91,\"oligomeric_state\":\"MONOMER\",\"preferred_assembly_id\":null,\"entities\":[{\"entity_type\":\"POLYMER\",\"entity_poly_type\":\"POLYPEPTIDE(L)\",\"identifier\":\"P01308\",\"identifier_category\":\"UNIPROT\",\"description\":\"Insulin\",\"chain_ids\":[\"A\"]}]}},{\"summary\":{\"model_identifier\":\"AF-0000000210541571\",\"model_category\":\"AB-INITIO\",\"model_url\":\"https://alphafold.ebi.ac.uk/files/AF-0000000210541571-model_v1.cif\",\"model_format\":\"MMCIF\",\"model_type\":null,\"model_page_url\":\"https://alphafold.ebi.ac.uk/entry/AF-0000000210541571\",\"provider\":\"AlphaFold DB\",\"number_of_conformers\":null,\"ensemble_sample_url\":null,\"ensemble_sample_format\":null,\"created\":\"2026-02-20T08:23:36Z\",\"sequence_identity\":1.0,\"uniprot_start\":1,\"uniprot_end\":110,\"coverage\":1.0,\"experimental_method\":null,\"resolution\":null,\"confidence_type\":\"pLDDT\",\"confidence_version\":null,\"confidence_avg_local_score\":69.11,\"oligomeric_state\":\"HETERODIMER\",\"preferred_assembly_id\":null,\"entities\":[{\"entity_type\":\"POLYMER\",\"entity_poly_type\":\"POLYPEPTIDE(L)\",\"identifier\":\"P22692\",\"identifier_category\":\"UNIPROT\",\"description\":\"Insulin-like growth factor-binding protein 4\",\"chain_ids\":[\"A\"]},{\"entity_type\":\"POLYMER\",\"entity_poly_type\":\"POLYPEPTIDE(L)\",\"identifier\":\"P01308\",\"identifier_category\":\"UNIPROT\",\"description\":\"Insulin\",\"chain_ids\":[\"B\"]}]}},{\"summary\":{\"model_identifier\":\"AF-0000000210541566\",\"model_category\":\"AB-INITIO\",\"model_url\":\"https://alphafold.ebi.ac.uk/files/AF-0000000210541566-model_v1.cif\",\"model_format\":\"MMCIF\",\"model_type\":null,\"model_page_url\":\"https://alphafold.ebi.ac.uk/entry/AF-0000000210541566\",\"provider\":\"AlphaFold DB\",\"number_of_conformers\":null,\"ensemble_sample_url\":null,\"ensemble_sample_format\":null,\"created\":\"2026-02-20T08:24:14Z\",\"sequence_identity\":1.0,\"uniprot_start\":1,\"uniprot_end\":110,\"coverage\":1.0,\"experimental_method\":null,\"resolution\":null,\"confidence_type\":\"pLDDT\",\"confidence_version\":null,\"confidence_avg_local_score\":59.75,\"oligomeric_state\":\"HETERODIMER\",\"preferred_assembly_id\":null,\"entities\":[{\"entity_type\":\"POLYMER\",\"entity_poly_type\":\"POLYPEPTIDE(L)\",\"identifier\":\"P17936\",\"identifier_category\":\"UNIPROT\",\"description\":\"Insulin-like growth factor-binding protein 3\",\"chain_ids\":[\"A\"]},{\"entity_type\":\"POLYMER\",\"entity_poly_type\":\"POLYPEPTIDE(L)\",\"identifier\":\"P01308\",\"identifier_category\":\"UNIPROT\",\"description\":\"Insulin\",\"chain_ids\":[\"B\"]}]}}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

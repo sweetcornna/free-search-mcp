@@ -1,0 +1,94 @@
+id = "uk_legislation"
+name = "UK legislation.gov.uk Statutes & SIs"
+summary = "Official UK National Archives statute and statutory instrument database (1267–present) via keyless Atom search feeds and CLML/Akoma Ntoso XML."
+aliases = ["legislation.gov.uk", "uk law", "uk statutes"]
+home_url = "https://www.legislation.gov.uk"
+tier = 1
+scopes = ["gov", "gov.law"]
+caps = ["search", "lookup", "fulltext"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.5, burst = 4, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 43200, host_bucket = "www.legislation.gov.uk" }
+
+[op.search]
+summary = "Search UK primary and secondary legislation titles via legislation.gov.uk Atom XML feed."
+method = "GET"
+url = "https://www.legislation.gov.uk/primary+secondary/data.feed"
+headers = { Accept = "application/atom+xml" }
+response = "xml"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "privacy", limit = 3, page = 1 }, min_results = 2, fixture = "fixtures/w5k/uk_legislation/search/default.json" }
+examples = ['source.call("uk_legislation.search", { query: "data protection", limit: 5 })']
+
+[op.search.params]
+query = { type = "string", required = true, to = "title", doc = "Keywords in statute or statutory instrument title" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "results-count", doc = "Entries per page" }
+page = { type = "int", default = 1, min = 1, to = "page", doc = "1-based page number" }
+
+[op.search.map]
+items = ".feed.entry | arr | .[]"
+total = "(.feed.totalresults | to_int)"
+record = '''{
+  id: (.id // ""),
+  title: (((.title | first_str) // "") | strip_tags),
+  documentType: (.documentmaintype."@value" // null),
+  year: (.year."@value" | to_int),
+  number: (.number."@value" | to_int),
+  published: (.published | parse_date),
+  updated: (.updated | parse_date),
+  summary: ((.summary | first_str) | strip_tags),
+  url: (((.link | arr)[] | select(."@rel" == null) | ."@href") // .id // ""),
+  xmlUrl: (((.link | arr)[] | select(."@type" == "application/xml" and ."@rel" == "alternate") | ."@href") // null)
+}'''
+hit = '''(
+  ((.published | parse_date) // (.updated | parse_date)) as $d |
+  {
+    title: (((.title | first_str) // "") | strip_tags),
+    url: (((.link | arr)[] | select(."@rel" == null) | ."@href") // .id // ""),
+    snippet: ([(.documentmaintype."@value" // ""), ((.year."@value" // "") | tostring), (((.summary | first_str) // "") | strip_tags)] | map(select(. != null and length > 0)) | join(" · ")),
+    date: $d,
+    dateSource: (if $d != null then "xml" else null end)
+  }
+)'''
+
+[op.section]
+summary = "Fetch structured CLML XML metadata and statutory text provisions for a specific UK legislation section."
+method = "GET"
+url = "https://www.legislation.gov.uk/{leg_type}/{year}/{number}/section/{section}/data.xml"
+headers = { Accept = "application/xml" }
+response = "xml"
+returns = "records"
+probe = { params = { leg_type = "ukpga", year = "2018", number = "12", section = "1" }, min_results = 1, fixture = "fixtures/w5k/uk_legislation/section/default.json" }
+examples = ['source.call("uk_legislation.section", { leg_type: "ukpga", year: "2018", number: "12", section: "1" })']
+
+[op.section.params]
+leg_type = { type = "string", required = true, default = "ukpga", in = "path", doc = "Legislation type code e.g. ukpga, uksi, asp, anaw" }
+year = { type = "string", required = true, in = "path", doc = "Enactment year YYYY e.g. 2018" }
+number = { type = "string", required = true, in = "path", doc = "Chapter or SI number e.g. 12" }
+section = { type = "string", required = true, in = "path", doc = "Section number e.g. 1" }
+
+[op.section.map]
+items = ".legislation"
+record = '''(
+  def xml_flat:
+    if type == "string" then .
+    elif type == "array" then (map(xml_flat) | join(" "))
+    elif type == "object" then ([to_entries[] | select(.key | startswith("@") | not) | .value | xml_flat] | join(" "))
+    else "" end;
+  ((.primary.body.part.p1group.p1.p1para // .primary.body.p1group.p1.p1para // .secondary.body.p1group.p1.p1para // null)) as $p1para |
+  ([($p1para.p2 | arr)[] | { number: (.pnumber | xml_text | collapse_ws), text: (.p2para | xml_flat | collapse_ws) } | select(.text != null and (.text | length) > 0)]) as $subs |
+  {
+    identifier: (.metadata.identifier // ."@documenturi" // ""),
+    title: (((.metadata.title | first_str) // "") | strip_tags),
+    description: ((.metadata.description | first_str) | strip_tags),
+    extent: (."@restrictextent" // null),
+    modified: (.metadata.modified | parse_date),
+    validDate: (.metadata.valid | parse_date),
+    partTitle: ((.primary.body.part.title | first_str) | strip_tags),
+    sectionHeading: (((.primary.body.part.p1group.title | first_str) // (.primary.body.p1group.title | first_str)) | strip_tags),
+    subsections: $subs,
+    text: (if ($subs | length) > 0 then ([$subs[] | "(" + (.number // "") + ") " + .text] | join("\n")) elif $p1para != null then ($p1para | xml_flat | collapse_ws) else null end),
+    url: (.metadata.identifier // ."@documenturi" // "")
+  }
+)'''

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "openaq",
+  "op": "latest",
+  "recordedAt": "2026-11-25T12:13:33Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.openaq.org/v3/locations/2178/latest?limit=5",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"meta\": {\"name\": \"openaq-api\", \"website\": \"/\", \"page\": 1, \"limit\": 5, \"found\": 2}, \"results\": [{\"datetime\": {\"utc\": \"2026-11-25T10:00:00Z\", \"local\": \"2026-11-25T05:00:00-05:00\"}, \"value\": 9.8, \"coordinates\": {\"latitude\": 38.921847, \"longitude\": -77.013178}, \"sensorsId\": 1042, \"locationsId\": 2178}, {\"datetime\": {\"utc\": \"2026-11-25T10:00:00Z\", \"local\": \"2026-11-25T05:00:00-05:00\"}, \"value\": 0.031, \"coordinates\": {\"latitude\": 38.921847, \"longitude\": -77.013178}, \"sensorsId\": 1043, \"locationsId\": 2178}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

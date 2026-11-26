@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "europeana",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:14:49Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.europeana.eu/record/v2/search.json?query=rembrandt&rows=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"success\": true, \"totalResults\": 18420, \"itemsCount\": 3, \"items\": [{\"id\": \"/90402/SK_C_5\", \"guid\": \"https://www.europeana.eu/item/90402/SK_C_5\", \"type\": \"IMAGE\", \"title\": [\"The Night Watch\"], \"dcCreator\": [\"Rembrandt van Rijn\"], \"dataProvider\": [\"Rijksmuseum\"], \"country\": [\"Netherlands\"], \"year\": [\"1642\"], \"rights\": [\"http://creativecommons.org/publicdomain/mark/1.0/\"], \"edmPreview\": [\"https://api.europeana.eu/thumbnail/v2/url.json?uri=SK_C_5\"]}, {\"id\": \"/90402/SK_A_4691\", \"guid\": \"https://www.europeana.eu/item/90402/SK_A_4691\", \"type\": \"IMAGE\", \"title\": [\"Self-portrait as the Apostle Paul\"], \"dcCreator\": [\"Rembrandt van Rijn\"], \"dataProvider\": [\"Rijksmuseum\"], \"country\": [\"Netherlands\"], \"year\": [\"1661\"], \"rights\": [\"http://creativecommons.org/publicdomain/mark/1.0/\"], \"edmPreview\": [\"https://api.europeana.eu/thumbnail/v2/url.json?uri=SK_A_4691\"]}, {\"id\": \"/2021672/resource_document_mauritshuis_146\", \"guid\": \"https://www.europeana.eu/item/2021672/resource_document_mauritshuis_146\", \"type\": \"IMAGE\", \"title\": [\"The Anatomy Lesson of Dr Nicolaes Tulp\"], \"dcCreator\": [\"Rembrandt van Rijn\"], \"dataProvider\": [\"Mauritshuis\"], \"country\": [\"Netherlands\"], \"year\": [\"1632\"], \"rights\": [\"http://creativecommons.org/publicdomain/mark/1.0/\"], \"edmPreview\": [\"https://api.europeana.eu/thumbnail/v2/url.json?uri=146\"]}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

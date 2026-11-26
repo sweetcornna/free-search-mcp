@@ -1,0 +1,144 @@
+id = "paperswithcode_revival"
+name = "Papers with Code Revival API"
+summary = "Community revival API (paperswithcode.co) indexing ML papers, GitHub code repositories, tasks, and SOTA benchmarks."
+aliases = ["pwc", "paperswithcode", "paperswithcode.co"]
+home_url = "https://paperswithcode.co"
+tier = 2
+scopes = ["academic", "academic.cs"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 21600, host_bucket = "paperswithcode.co" }
+
+[op.search]
+summary = "Search ML papers linked to code repositories, HF artifacts, and tasks on paperswithcode.co."
+method = "GET"
+url = "https://paperswithcode.co/api/v1/papers/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "diffusion", limit = 3 }, min_results = 2, fixture = "fixtures/w5i/paperswithcode_revival/search/default.json" }
+examples = ['source.call("paperswithcode_revival.search", {query: "diffusion", limit: 5})']
+
+[op.search.params]
+query = { type = "string", required = true, to = "search", doc = "Paper keyword query (upstream parameter is search=)" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "page_size", doc = "Results per page" }
+page = { type = "int", min = 1, to = "page", doc = "1-based page number" }
+
+[op.search.map]
+items = ".results[]"
+total = ".count"
+work = '''(
+  (.url_abs // ("https://paperswithcode.co/paper/" + ((.arxiv_id // .id // "") | tostring))) as $url |
+  (.published | parse_date) as $dt |
+  ((.conference_name // .conference) | collapse_ws) as $conf |
+  {
+    title: ((.title // "") | collapse_ws // ""),
+    authors: [(.authors // [])[] | if type == "string" then {name: (. | collapse_ws // "")} elif type == "object" then {name: ((.name // "") | collapse_ws // "")} else empty end | select(.name != "")],
+    year: (($dt // "")[0:4] | to_int),
+    publishedDate: $dt,
+    venue: ($conf // (if (.primary_category // "") != "" then ("arXiv (" + .primary_category + ")") else "Papers with Code" end)),
+    workType: (if (.conference // null) != null then "proceedings-article" else "preprint" end),
+    ids: {
+      doi: (.doi | doi_norm),
+      arxiv: (if (.arxiv_id // "") != "" then (.arxiv_id | sub("v[0-9]+$"; "")) else null end),
+      s2: (.semantic_scholar_id // null)
+    },
+    abstractText: (((.abstract // .tldr) | strip_tags) | if . == "" then null else . end),
+    citedBy: (.citation_count | to_int),
+    citedBySource: (if .citation_count != null then "paperswithcode_revival" else null end),
+    oa: {
+      status: (if (.url_pdf // null) != null then "green" else "unknown" end),
+      url: $url,
+      pdfUrl: (.url_pdf // null)
+    },
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["paperswithcode_revival"]
+  }
+)'''
+hit = '''(
+  (.url_abs // ("https://paperswithcode.co/paper/" + ((.arxiv_id // .id // "") | tostring))) as $url |
+  (.published | parse_date) as $dt |
+  {
+    title: ((.title // "") | collapse_ws // ""),
+    url: $url,
+    snippet: ([(.conference_name // .primary_category // ""), (((.tldr // .abstract) | strip_tags) // "" | .[0:220])] | map(select(length > 0)) | join(" · ")),
+    date: $dt,
+    dateSource: (if $dt != null then "api" else null end)
+  }
+)'''
+
+[op.paper]
+summary = "Fetch a single paper record with repositories, tasks, methods, benchmarks, and Hugging Face artifacts by Papers with Code ID."
+method = "GET"
+url = "https://paperswithcode.co/api/v1/papers/{id}/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "132231" }, min_results = 1, fixture = "fixtures/w5i/paperswithcode_revival/paper/default.json" }
+examples = ['source.call("paperswithcode_revival.paper", {id: "132231"})']
+
+[op.paper.params]
+id = { type = "string", required = true, in = "path", doc = "Papers with Code paper ID (e.g. 132231)" }
+
+[op.paper.map]
+items = "."
+record = '''(
+  (.url_abs // ("https://paperswithcode.co/paper/" + ((.arxiv_id // .id // $p.id // "") | tostring))) as $url |
+  (.published | parse_date) as $dt |
+  {
+    id: ((.id // $p.id // "") | tostring),
+    title: ((.title // "") | collapse_ws // ""),
+    authors: [(.authors // [])[] | if type == "string" then (. | collapse_ws // "") elif type == "object" then ((.name // "") | collapse_ws // "") else empty end | select(length > 0)],
+    publishedDate: $dt,
+    doi: (.doi | doi_norm),
+    arxivId: (if (.arxiv_id // "") != "" then (.arxiv_id | sub("v[0-9]+$"; "")) else null end),
+    s2Id: (.semantic_scholar_id // null),
+    primaryCategory: (.primary_category // null),
+    conference: (.conference_name // .conference // null),
+    tldr: ((.tldr | strip_tags) | if . == "" then null else . end),
+    abstractText: ((.abstract | strip_tags) | if . == "" then null else . end),
+    citationCount: (.citation_count | to_int),
+    codeRepositoryCount: (.code_repository_count | to_int),
+    hasOfficialImplementation: (if .has_official_implementation == null then null else .has_official_implementation end),
+    repositories: (.repositories // []),
+    tasks: [(.tasks // [])[] | { id: ((.id // "") | tostring), name: (.name // ""), slug: (.slug // "") }],
+    methods: [(.methods // [])[] | { id: ((.id // "") | tostring), name: (.name // ""), slug: (.slug // "") }],
+    evaluatedBenchmarks: (.evaluated_benchmarks // []),
+    hfModels: (.hf_models // []),
+    hfDatasets: (.hf_datasets // []),
+    url: $url,
+    pdfUrl: (.url_pdf // null)
+  }
+)'''
+
+[op.tasks]
+summary = "Browse machine learning tasks and SOTA benchmark counts on paperswithcode.co."
+method = "GET"
+url = "https://paperswithcode.co/api/v1/tasks/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { limit = 3 }, min_results = 2, fixture = "fixtures/w5i/paperswithcode_revival/tasks/default.json" }
+examples = ['source.call("paperswithcode_revival.tasks", {limit: 5})']
+
+[op.tasks.params]
+limit = { type = "int", default = 10, min = 1, max = 50, to = "page_size", doc = "Tasks per page" }
+page = { type = "int", min = 1, to = "page", doc = "1-based page number" }
+
+[op.tasks.map]
+items = ".results[]"
+total = ".count"
+record = '''{
+  id: (.id // ""),
+  slug: (.slug // ""),
+  name: ((.name // "") | collapse_ws // ""),
+  description: ((.description | strip_tags) | if . == "" then null else . end),
+  paperCount: (.paper_count | to_int),
+  benchmarkCount: (.benchmark_count | to_int),
+  url: ("https://paperswithcode.co/tasks/" + (.slug // ""))
+}'''

@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "source": "doaj",
+  "op": "journals",
+  "recordedAt": "2026-11-25T14:07:38Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://doaj.org/api/search/journals/issn%3A1932-6203?pageSize=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "date",
+            "Wed, 25 Nov 2026 14:07:38 GMT"
+          ],
+          [
+            "content-type",
+            "application/json"
+          ],
+          [
+            "server",
+            "cloudflare"
+          ],
+          [
+            "vary",
+            "Accept-Encoding"
+          ],
+          [
+            "vary",
+            "Cookie"
+          ],
+          [
+            "access-control-allow-origin",
+            "*"
+          ],
+          [
+            "link",
+            "<https://doaj.org/api/v4/search/journals/issn:1932-6203?page=1&pageSize=3>; rel=last"
+          ],
+          [
+            "x-total-count",
+            "1"
+          ],
+          [
+            "nel",
+            "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}"
+          ],
+          [
+            "cf-cache-status",
+            "DYNAMIC"
+          ],
+          [
+            "report-to",
+            "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=8M4rLrOG6Lbp783c8sPkpmyK%2Fqlfy9EXqwTSbd4%2Bkxn4TdHR30efUloMee0Olb0NqqDn%2FjRs80csL4kYkyGYN7z%2BC%2BGgzF%2FQkvcx%2FZXCssfBnxjoXxJtGPSb\"}]}"
+          ],
+          [
+            "cf-ray",
+            "a6013885bf2b0337-SLC"
+          ]
+        ],
+        "bodyText": "{\"total\": 1, \"page\": 1, \"pageSize\": 3, \"timestamp\": \"2026-11-25T14:07:37.965435Z\", \"query\": \"issn:1932-6203\", \"results\": [{\"last_updated\": \"2026-09-17T10:51:00Z\", \"bibjson\": {\"editorial\": {\"review_process\": [\"Single anonymous peer review\"], \"review_url\": \"https://journals.plos.org/plosone/s/editorial-and-peer-review-process\", \"board_url\": \"https://journals.plos.org/plosone/static/editorial-board\"}, \"pid_scheme\": {\"scheme\": [\"DOI\"], \"has_pid_scheme\": true}, \"copyright\": {\"author_retains\": true, \"url\": \"https://journals.plos.org/plosone/s/licenses-and-copyright\"}, \"keywords\": [\"science\", \"medicine\", \"engineering\", \"social sciences\", \"multidisciplinary sciences\", \"humanities\"], \"plagiarism\": {\"detection\": true, \"url\": \"https://journals.plos.org/plosone/s/ethical-publishing-practice#loc-plagiarism\"}, \"subject\": [{\"code\": \"R\", \"scheme\": \"LCC\", \"term\": \"Medicine\"}, {\"code\": \"Q\", \"scheme\": \"LCC\", \"term\": \"Science\"}], \"eissn\": \"1932-6203\", \"language\": [\"EN\"], \"title\": \"PLoS ONE\", \"article\": {\"license_display_example_url\": \"https://journals.plos.org/plosone/article?id=10.1371%2Fjournal.pone.0146294\", \"license_display\": [\"Embed\"]}, \"preservation\": {\"has_preservation\": true, \"service\": [\"CLOCKSS\", \"PMC\"], \"url\": \"https://portal.issn.org/resource/ISSN/1932-6203\"}, \"license\": [{\"NC\": false, \"ND\": false, \"BY\": true, \"type\": \"CC BY\", \"SA\": false, \"url\": \"https://creativecommons.org/licenses/by/4.0/\"}], \"ref\": {\"aims_scope\": \"https://journals.plos.org/plosone/s/journal-information\", \"journal\": \"https://journals.plos.org/plosone/\", \"oa_statement\": \"https://journals.plos.org/plosone/s/journal-information#loc-open-access\", \"author_instructions\": \"https://journals.plos.org/plosone/s/submission-guidelines\", \"license_terms\": \"https://journals.plos.org/plosone/s/licenses-and-copyright\"}, \"oa_start\": 2006, \"alternative_title\": \"PLOS ONE\", \"apc\": {\"has_apc\": true, \"max\": [{\"price\": 2477, \"currency\": \"USD\"}], \"url\": \"https://plos.org/publish/fees/\"}, \"other_charges\": {\"has_other_charges\": false}, \"publication_time_weeks\": 29, \"deposit_policy\": {\"service\": [\"Open Policy Finder\"], \"url\": \"https://openpolicyfinder.jisc.ac.uk/id/publication/17599\", \"has_policy\": true}, \"publisher\": {\"country\": \"US\", \"name\": \"Public Library of Science (PLoS)\"}, \"boai\": true, \"waiver\": {\"has_waiver\": true, \"url\": \"https://www.plos.org/fee-assistance\"}}, \"admin\": {\"ticked\": true}, \"id\": \"2fdf1470373343b7bd4f825179c685f5\", \"created_date\": \"2007-03-30T10:53:19Z\"}], \"last\": \"https://doaj.org/api/v4/search/journals/issn:1932-6203?page=1&pageSize=3\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

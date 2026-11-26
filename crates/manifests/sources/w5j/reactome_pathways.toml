@@ -1,0 +1,93 @@
+id = "reactome_pathways"
+name = "Reactome Biological Pathways"
+summary = "Peer-reviewed open-source human biological pathway, biochemical reaction, and molecular complex knowledgebase."
+aliases = ["reactome", "signaling pathways", "biochemical pathways"]
+home_url = "https://reactome.org"
+tier = 1
+scopes = ["academic.biomed", "dataset"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 5.0, burst = 10, concurrency = 4, timeout_ms = 8000, cache_ttl_s = 43200, host_bucket = "reactome.org" }
+
+[op.search]
+summary = "Search Reactome pathways, reactions, complexes, or proteins by keyword."
+method = "GET"
+url = "https://reactome.org/ContentService/search/query"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { cluster = "true" }
+probe = { params = { query = "insulin", limit = 3 }, min_results = 2, fixture = "fixtures/w5j/reactome_pathways/search/default.json" }
+examples = ["source.call('reactome_pathways.search', { query: 'insulin', types: 'Pathway', limit: 5 })"]
+
+[op.search.params]
+query = { type = "string", required = true, to = "query", doc = "Pathway, gene, protein, or process keyword" }
+species = { type = "string", default = "Homo sapiens", to = "species", doc = "Species filter (default: Homo sapiens)" }
+types = { type = "string", default = "Pathway", enum = ["Pathway", "Reaction", "Complex", "Protein", "Small Molecule"], to = "types", doc = "Reactome entity type filter" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "rows", doc = "Maximum results per group" }
+
+[op.search.map]
+items = "(.results // [])[] | (.entries // [])[]"
+record = '''(
+  ((.summation // "") | gsub("</?(a|span|em|strong|b|i)[^>]*>"; "") | gsub("<br\\s*/?>"; " ") | strip_tags // "") as $sum |
+  {
+    stId: (.stId // .id // ""),
+    dbId: (.dbId // null),
+    name: ((.name // "") | gsub("</?span[^>]*>"; "") | strip_tags // ""),
+    type: (.exactType // .type // null),
+    species: (.species // []),
+    compartments: (.compartmentNames // []),
+    isDisease: (.isDisease // false),
+    summation: (if ($sum | length) > 800 then ($sum[0:800] + "...") else $sum end),
+    url: ("https://reactome.org/content/detail/" + (.stId // .id // ""))
+  }
+)'''
+hit = '''(
+  ((.summation // "") | gsub("</?(a|span|em|strong|b|i)[^>]*>"; "") | gsub("<br\\s*/?>"; " ") | strip_tags // "") as $sum |
+  {
+    title: ((.name // "") | gsub("</?span[^>]*>"; "") | strip_tags // ""),
+    url: ("https://reactome.org/content/detail/" + (.stId // .id // "")),
+    snippet: ([
+      (if (.stId // "") != "" then .stId else empty end),
+      (if ((.species // []) | length) > 0 then (.species | join(", ")) else empty end),
+      (if ($sum | length) > 200 then ($sum[0:200] + "...") elif ($sum | length) > 0 then $sum else empty end)
+    ] | join(" · ")),
+    date: null,
+    dateSource: "api"
+  }
+)'''
+
+[op.entry]
+summary = "Fetch detailed Reactome pathway or reaction metadata, summation, compartments, and literature references by stable ID."
+method = "GET"
+url = "https://reactome.org/ContentService/data/query/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "R-HSA-264876" }, min_results = 1, fixture = "fixtures/w5j/reactome_pathways/entry/default.json" }
+examples = ["source.call('reactome_pathways.entry', { id: 'R-HSA-264876' })"]
+
+[op.entry.params]
+id = { type = "string", required = true, in = "path", doc = "Reactome stable identifier (e.g. R-HSA-264876)" }
+
+[op.entry.map]
+items = "."
+record = '''(
+  ([(.summation // [])[] | .text // empty] | join(" ") | gsub("<br\\s*/?>"; " ") | strip_tags // "") as $sum |
+  {
+    stId: (.stId // ""),
+    dbId: (.dbId // null),
+    name: (.displayName | collapse_ws // ""),
+    schemaClass: (.schemaClass // null),
+    species: (.speciesName // null),
+    isDisease: (.isInDisease // false),
+    doi: (.doi | doi_norm),
+    releaseDate: (.releaseDate | parse_date),
+    lastUpdatedDate: (.lastUpdatedDate | parse_date),
+    compartments: [(.compartment // [])[] | .displayName // empty],
+    summation: (if ($sum | length) > 1000 then ($sum[0:1000] + "...") else $sum end),
+    references: [(.literatureReference // [])[0:5][] | { title: (.title // null), journal: (.journal // null), year: (.year // null), pmid: (.pubMedIdentifier // null) }],
+    url: ("https://reactome.org/content/detail/" + (.stId // ""))
+  }
+)'''

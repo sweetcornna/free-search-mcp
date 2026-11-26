@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "exa_search",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:56:38Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://api.exa.ai/search",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": "0e500773cafd588ecd3fdf865648426bc706c0644340b015362b2a09f00be7b2"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"requestId\": \"c3174df2b9cd5afbc64cdf79f3719b19\", \"resolvedSearchType\": \"neural\", \"results\": [{\"id\": \"https://arxiv.org/abs/2312.10997\", \"url\": \"https://arxiv.org/abs/2312.10997\", \"title\": \"Retrieval-Augmented Generation for Large Language Models: A Survey\", \"publishedDate\": \"2023-12-18T00:00:00.000Z\", \"author\": \"Yunfan Gao et al.\", \"score\": 0.4215, \"highlights\": [\"This paper provides a comprehensive survey of retrieval-augmented generation (RAG) techniques across naive, advanced, and modular paradigms.\"], \"summary\": null, \"text\": null}, {\"id\": \"https://arxiv.org/abs/2005.11401\", \"url\": \"https://arxiv.org/abs/2005.11401\", \"title\": \"Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks\", \"publishedDate\": \"2020-05-22T00:00:00.000Z\", \"author\": \"Patrick Lewis et al.\", \"score\": 0.3982, \"highlights\": [\"We explore a general-purpose fine-tuning recipe for retrieval-augmented generation models combining pre-trained parametric and non-parametric memory.\"], \"summary\": null, \"text\": null}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

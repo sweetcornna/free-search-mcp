@@ -1,0 +1,98 @@
+id = "ollama_library"
+name = "Ollama Local Open-Weight Models"
+summary = "Local open-weight LLM catalog and quantization tags scraped from Ollama's clean SSR HTML pages."
+aliases = ["ollama", "ollama models", "local llm"]
+home_url = "https://ollama.com/library"
+tier = 1
+scopes = ["code"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 21600 }
+
+[op.search]
+summary = "Search open-weight local models in the Ollama library via SSR HTML search."
+method = "GET"
+url = "https://ollama.com/search"
+headers = { Accept = "text/html" }
+response = "html"
+returns = "records"
+probe = { params = { query = "mxbai-embed-large" }, min_results = 2, fixture = "fixtures/w5l/ollama_library/search/default.json" }
+examples = [
+  'source.call("ollama_library.search", { query: "qwen", capability: "tools" })',
+]
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Model name or keyword query" }
+capability = { type = "string", enum = ["embedding", "vision", "tools", "thinking"], to = "c", doc = "Optional capability filter" }
+sort = { type = "string", enum = ["popular", "newest"], to = "o", doc = "Sort order" }
+
+[op.search.html]
+items_css = "ul[role=\"list\"] > li"
+fields = { name = "h2 | text", path = "a | attr(href)", description = "p | text", updated = "h2 + span | attr(title)", downloads = "span[title*=\"downloads\"] | attr(title)" }
+wall_markers = ["Access Denied", "Just a moment"]
+
+[op.search.map]
+items = ".[]"
+record = '''(
+  (if (.updated | type) == "string" then (.updated | sub("^Updated\\s+"; "") | parse_date) else null end) as $dt |
+  {
+    name: ((.name // "") | collapse_ws // ""),
+    description: ((.description // "") | collapse_ws // ""),
+    updated: $dt,
+    updatedDate: $dt,
+    updatedLabel: (.updated // null),
+    downloads: (.downloads // null),
+    url: ((.path // "") | resolve_url("https://ollama.com") // "")
+  }
+)'''
+hit = '''(
+  ((.name // "") | collapse_ws // "") as $name |
+  ((.description // "") | collapse_ws // "") as $desc |
+  ((.path // "") | resolve_url("https://ollama.com") // "") as $url |
+  (if (.updated | type) == "string" then (.updated | sub("^Updated\\s+"; "") | parse_date) else null end) as $dt |
+  {
+    title: $name,
+    url: $url,
+    snippet: (
+      [
+        (if $desc != "" then $desc else null end),
+        (if (.downloads // "") != "" then .downloads else null end),
+        (if (.updated // "") != "" then .updated else null end)
+      ] | map(select(. != null)) | join(" · ")
+    )[0:280],
+    date: $dt,
+    dateSource: (if $dt != null then "html" else null end)
+  }
+)'''
+
+[op.tags]
+summary = "List available quantization tags, parameter sizes, context lengths, and digests for an Ollama model."
+method = "GET"
+url = "https://ollama.com/library/{name}/tags"
+headers = { Accept = "text/html" }
+response = "html"
+returns = "records"
+probe = { params = { name = "nomic-embed-text" }, min_results = 2, fixture = "fixtures/w5l/ollama_library/tags/default.json" }
+examples = [
+  'source.call("ollama_library.tags", { name: "nomic-embed-text" })',
+]
+
+[op.tags.params]
+name = { type = "string", required = true, in = "path", doc = "Ollama model slug (e.g. nomic-embed-text, llama3.3, qwen2.5)" }
+
+[op.tags.html]
+items_css = "div.group.px-4.py-3"
+fields = { tag = "div.grid > span a | text", path = "div.grid > span a | attr(href)", size = "div.grid > p:nth-of-type(1) | text", context = "div.grid > p:nth-of-type(2) | text", input = "div.grid > div | text", digest = "span.font-mono | text" }
+wall_markers = ["Access Denied", "Just a moment"]
+
+[op.tags.map]
+items = ".[]"
+record = '''{
+  tag: ((.tag // "") | collapse_ws // ""),
+  size: ((.size // "") | collapse_ws // ""),
+  context: ((.context // "") | collapse_ws // ""),
+  input: ((.input // "") | collapse_ws // ""),
+  digest: ((.digest // "") | collapse_ws // ""),
+  url: ((.path // "") | resolve_url("https://ollama.com") // "")
+}'''

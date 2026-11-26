@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "source": "musicbrainz",
+  "op": "search",
+  "recordedAt": "2026-11-25T11:54:33Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://musicbrainz.org/ws/2/artist/?fmt=json&query=radiohead&limit=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ],
+          [
+            "last-modified",
+            "Wed, 25 Nov 2026 11:54:33 GMT"
+          ],
+          [
+            "etag",
+            "\"Y2M0ZDljMDAwMDAwMDAwMFNvbHI=--gzip\""
+          ]
+        ],
+        "bodyText": "{\"created\":\"2026-11-25T11:54:33.638Z\",\"count\":29,\"offset\":0,\"artists\":[{\"id\":\"a74b1b7f-71a5-4011-9441-d0b5e4122711\",\"type\":\"Group\",\"type-id\":\"e431f5f6-b5d2-343d-8b36-72607fffb74b\",\"score\":100,\"name\":\"Radiohead\",\"sort-name\":\"Radiohead\",\"country\":\"GB\",\"area\":{\"id\":\"8a754a16-0027-3a29-b6d7-2b40ea0481ed\",\"type\":\"Country\",\"type-id\":\"06dd0ae4-8c74-30bb-b43d-95dcedf961de\",\"name\":\"United Kingdom\",\"sort-name\":\"United Kingdom\",\"life-span\":{\"ended\":null}},\"begin-area\":{\"id\":\"d840d4b3-8987-4626-928b-398de760cc24\",\"type\":\"City\",\"type-id\":\"6fd8f29a-3d0a-32fc-980d-ea697b69da78\",\"name\":\"Abingdon-on-Thames\",\"sort-name\":\"Abingdon-on-Thames\",\"life-span\":{\"ended\":null}},\"isnis\":[\"0000000115475162\"],\"life-span\":{\"begin\":\"1991\",\"ended\":null},\"aliases\":[{\"sort-name\":\"Radiohead\",\"type-id\":\"894afba6-2816-3c24-8072-eadb66bd04bc\",\"name\":\"Radiohead\",\"locale\":\"en\",\"type\":\"Artist name\",\"primary\":true,\"begin-date\":null,\"end-date\":null},{\"sort-name\":\"r/head\",\"type-id\":\"1937e404-b981-3cb7-8151-4c86ebfc8d8e\",\"name\":\"r/head\",\"locale\":null,\"type\":\"Search hint\",\"primary\":null,\"begin-date\":null,\"end-date\":null},{\"sort-name\":\"电台司令\",\"type-id\":\"894afba6-2816-3c24-8072-eadb66bd04bc\",\"name\":\"电台司令\",\"locale\":\"zh\",\"type\":\"Artist name\",\"primary\":true,\"begin-date\":null,\"end-date\":null},{\"sort-name\":\"れでぃおへっど\",\"type-id\":\"894afba6-2816-3c24-8072-eadb66bd04bc\",\"name\":\"レディオヘッド\",\"locale\":\"ja\",\"type\":\"Artist name\",\"primary\":true,\"begin-date\":null,\"end-date\":null},{\"sort-name\":\"Radiohead & Thom Yorke\",\"type-id\":\"1937e404-b981-3cb7-8151-4c86ebfc8d8e\",\"name\":\"Radiohead & Thom Yorke\",\"locale\":null,\"type\":\"Search hint\",\"primary\":null,\"begin-date\":null,\"end-date\":null},{\"sort-name\":\"Radio Head\",\"type-id\":\"1937e404-b981-3cb7-8151-4c86ebfc8d8e\",\"name\":\"Radio Head\",\"locale\":null,\"type\":\"Search hint\",\"primary\":null,\"begin-date\":null,\"end-date\":null}],\"tags\":[{\"count\":19,\"name\":\"rock\"},{\"count\":14,\"name\":\"electronic\"},{\"count\":0,\"name\":\"post-rock\"},{\"count\":43,\"name\":\"alternative rock\"},{\"count\":3,\"name\":\"experimental\"},{\"count\":14,\"name\":\"british\"},{\"count\":0,\"name\":\"grunge\"},{\"count\":1,\"name\":\"idm\"},{\"count\":1,\"name\":\"uk\"},{\"count\":0,\"name\":\"britannique\"},{\"count\":5,\"name\":\"indie rock\"},{\"count\":2,\"name\":\"electronica\"},{\"count\":2,\"name\":\"alternative\"},{\"count\":2,\"name\":\"britpop\"},{\"count\":30,\"name\":\"art rock\"},{\"count\":1,\"name\":\"post-grunge\"},{\"count\":14,\"name\":\"experimental rock\"},{\"count\":1,\"name\":\"english\"},{\"count\":1,\"name\":\"chamber pop\"},{\"count\":0,\"name\":\"parlophone\"},{\"count\":-1,\"name\":\"england\"},{\"count\":1,\"name\":\"indietronica\"},{\"count\":0,\"name\":\"melancholic\"},{\"count\":1,\"name\":\"oxford\"},{\"count\":1,\"name\":\"crossover prog\"},{\"count\":0,\"name\":\"bootleg\"},{\"count\":0,\"name\":\"rock and indie\"},{\"count\":1,\"name\":\"britrock\"},{\"count\":1,\"name\":\"electronic rock\"},{\"count\":1,\"name\":\"ambient pop\"},{\"count\":-1,\"name\":\"c’était mieux avant\"},{\"count\":3,\"name\":\"art pop\"},{\"count\":0,\"name\":\"nude\"},{\"count\":0,\"name\":\"trap edm\"},{\"count\":-1,\"name\":\"sacred cows\"},{\"count\":2,\"name\":\"alternative rock music\"},{\"count\":0,\"name\":\"lolicore\"},{\"count\":2,\"name\":\"post-britpop\"},{\"count\":2,\"name\":\"progressive rock music\"},{\"count\":-1,\"name\":\"1992-1998\"},{\"count\":0,\"name\":\"new grave\"},{\"count\":1,\"name\":\"vyrzukhisuc-artiest\"}]},{\"id\":\"c74f4726-2671-4011-81b6-f70da905c05a\",\"type\":\"Group\",\"type-id\":\"e431f5f6-b5d2-343d-8b36-72607fffb74b\",\"score\":64,\"name\":\"On a Friday\",\"sort-name\":\"On a Friday\",\"area\":{\"id\":\"d840d4b3-8987-4626-928b-398de760cc24\",\"type\":\"City\",\"type-id\":\"6fd8f29a-3d0a-32fc-980d-ea697b69da78\",\"name\":\"Abingdon-on-Thames\",\"sort-name\":\"Abingdon-on-Thames\",\"life-span\":{\"ended\":null}},\"begin-area\":{\"id\":\"d840d4b3-8987-4626-928b-398de760cc24\",\"type\":\"City\",\"type-id\":\"6fd8f29a-3d0a-32fc-980d-ea697b69da78\",\"name\":\"Abingdon-on-Thames\",\"sort-name\":\"Abingdon-on-Thames\",\"life-span\":{\"ended\":null}},\"disambiguation\":\"pre‐Radiohead group, until 1991\",\"life-span\":{\"begin\":\"1985\",\"end\":\"1991\",\"ended\":true},\"aliases\":[{\"sort-name\":\"Radiohead\",\"type-id\":\"1937e404-b981-3cb7-8151-4c86ebfc8d8e\",\"name\":\"Radiohead\",\"locale\":null,\"type\":\"Search hint\",\"primary\":null,\"begin-date\":null,\"end-date\":null},{\"sort-name\":\"Shindig\",\"name\":\"Shindig\",\"locale\":null,\"type\":null,\"primary\":null,\"begin-date\":null,\"end-date\":null}],\"tags\":[{\"count\":1,\"name\":\"indie pop\"},{\"count\":1,\"name\":\"uk\"},{\"count\":1,\"name\":\"oxford\"},{\"count\":1,\"name\":\"united kingdom\"},{\"count\":0,\"name\":\"successor\"}]},{\"id\":\"3ecaa799-94ae-45cd-9ad1-bcabae4073e1\",\"score\":63,\"name\":\"radiohead 3\",\"sort-name\":\"radiohead 3\",\"disambiguation\":\"Capsmusic LTD. artist\",\"life-span\":{\"ended\":null}}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

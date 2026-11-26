@@ -1,0 +1,5 @@
+---
+source: crates/surface/tests/snapshots.rs
+expression: out
+---
+Image: <https://upload.wikimedia.org/wikipedia/commons/example.png> (image/png · 48120 bytes · 1024×768 · sha256:e3b0c44298fc)

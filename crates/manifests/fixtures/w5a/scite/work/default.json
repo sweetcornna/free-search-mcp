@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "scite",
+  "op": "work",
+  "recordedAt": "2026-11-25T12:14:21Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.scite.ai/papers/10.1038/nature12373",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"id\":81329739,\"doi\":\"10.1038/nature12373\",\"slug\":\"nanometre-scale-thermometry-in-a-living-al0Qbb\",\"type\":\"journal-article\",\"title\":\"Nanometre-scale thermometry in a living cell\",\"abstract\":\"Sensitive probing of temperature variations on nanometer scales represents an outstanding challenge in many areas of modern science and technology1. In particular, a thermometer capable of sub-degree temperature resolution over a large range of temperatures as well as integration within a living system could provide a powerful new tool for many areas of biological, physical and chemical research; possibilities range from the temperature-induced control of gene expression2–5 and tumor metabolism6 to the cell-selective treatment of disease7,8 and the study of heat dissipation in integrated circuits1. By combining local light-induced heat sources with sensitive nanoscale thermometry, it may also be possible to engineer biological processes at the sub-cellular level2–5. Here, we demonstrate a new approach to nanoscale thermometry that utilizes coherent manipulation of the electronic spin associated with nitrogen-vacancy (NV) color centers in diamond. We show the ability to detect temperature variations down to 1.8 mK (sensitivity of \\n90.16667emmK/Hz) in an ultra-pure bulk diamond sample. Using NV centers in diamond nanocrystals (nanodiamonds, NDs), we directly measure the local thermal environment at length scales down to 200 nm. Finally, by introducing both nanodiamonds and gold nanoparticles into a single human embryonic fibroblast, we demonstrate temperature-gradient control and mapping at the sub-cellular level, enabling unique potential applications in life sciences.\",\"authors\":[{\"family\":\"Kucsko\",\"given\":\"G.\",\"affiliation\":\"Harvard University\",\"authorSlug\":\"georg-kucsko-MVLOvd\",\"authorName\":\"Georg Kucsko\",\"authorID\":\"5928996\",\"authorSequenceNumber\":1,\"affiliationSlug\":\"harvard-university-NmzP\",\"affiliationID\":\"14927\"},{\"family\":\"Maurer\",\"given\":\"P. C.\",\"affiliation\":\"Harvard University\",\"authorSlug\":\"peter-c-maurer-6POQbk\",\"authorName\":\"Peter C. Maurer\",\"authorID\":\"135906298\",\"authorSequenceNumber\":2,\"affiliationSlug\":\"harvard-university-NmzP\",\"affiliationID\":\"14927\"},{\"family\":\"Yao\",\"given\":\"N. Y.\",\"affiliation\":\"Harvard University\",\"authorSlug\":\"norman-y-yao-MVLW6d\",\"authorName\":\"Norman Y. Yao\",\"authorID\":\"5917996\",\"authorSequenceNumber\":3,\"affiliationSlug\":\"harvard-university-NmzP\",\"affiliationID\":\"14927\"},{\"family\":\"Kubo\",\"given\":\"M.\"},{\"family\":\"Noh\",\"given\":\"H. J.\"},{\"family\":\"Lo\",\"given\":\"P. K.\",\"affiliation\":\"City University of Hong Kong\",\"authorSlug\":\"pik-kwan-lo-V01n0W\",\"authorName\":\"Pik Kwan Lo\",\"authorID\":\"6288182\",\"authorSequenceNumber\":6,\"affiliationSlug\":\"city-university-of-hong-kong-5PzG\",\"affiliationID\":\"20769\"},{\"family\":\"Park\",\"given\":\"H.\",\"affiliation\":\"Broad Institute\",\"authorSlug\":\"hongkun-park-ZGLdKn\",\"authorName\":\"Hongkun Park\",\"authorID\":\"4832175\",\"authorSequenceNumber\":7,\"affiliationSlug\":\"broad-institute-zZpY\",\"affiliationID\":\"17806\"},{\"family\":\"Lukin\",\"given\":\"M. D.\",\"affiliation\":\"Harvard University\",\"authorSlug\":\"mikhail-d-lukin-V0evbW\",\"authorName\":\"Mikhail D. Lukin\",\"authorID\":\"4792182\",\"authorSequenceNumber\":8,\"affiliationSlug\":\"harvard-university-NmzP\",\"affiliationID\":\"14927\"}],\"keywords\":[\"Article\"],\"year\":2013,\"shortJournal\":\"Nature\",\"publisher\":\"Springer Science and Business Media LLC\",\"issue\":\"7460\",\"volume\":\"500\",\"page\":\"54-58\",\"retracted\":false,\"memberId\":297,\"issns\":[\"0028-0836\",\"1476-4687\"],\"editorialNotices\":[],\"journalSlug\":\"nature-wmGvz\",\"journal\":\"Nature\",\"preprintLinks\":[{\"preprintDoi\":\"10.48550/arxiv.1304.1068\"}],\"publicationLinks\":[],\"normalizedTypes\":[\"article\"]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

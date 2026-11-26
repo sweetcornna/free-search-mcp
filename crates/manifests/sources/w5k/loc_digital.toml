@@ -1,0 +1,78 @@
+id = "loc_digital"
+name = "Library of Congress Digital Collections"
+summary = "US Library of Congress open JSON search and item API covering digitized manuscripts, historic maps, photographs, newspapers, and oral histories."
+aliases = ["loc", "library of congress", "loc.gov"]
+home_url = "https://www.loc.gov/collections/"
+tier = 2
+scopes = ["academic", "academic.humanities"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 0.5, burst = 2, concurrency = 1, timeout_ms = 35000, cache_ttl_s = 43200, host_bucket = "www.loc.gov" }
+
+[op.search]
+summary = "Search Library of Congress digital collections and holdings via loc.gov JSON API."
+method = "GET"
+url = "https://www.loc.gov/search/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { fo = "json" }
+paginate = { style = "page", param = "sp", start = 1, max_pages = 3 }
+probe = { params = { query = "gettysburg address", limit = 2, page = 1 }, min_results = 2, fixture = "fixtures/w5k/loc_digital/search/default.json" }
+examples = ['source.call("loc_digital.search", { query: "gettysburg address", limit: 5 })']
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Search keywords" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "c", doc = "Results per page" }
+page = { type = "int", default = 1, min = 1, to = "sp", doc = "1-based page number" }
+
+[op.search.map]
+items = "(.results // [])[]"
+total = ".pagination.of"
+record = '''{
+  id: (.id // ""),
+  title: ((.title // "") | strip_tags),
+  date: (.date | parse_date),
+  originalFormat: (.original_format // []),
+  subjects: (.subject // []),
+  description: (((.description // []) | if type == "array" then (map(tostring) | join(" ")) else tostring end) | strip_tags | if . != null and length > 0 then . else null end),
+  url: (.url // .id // "")
+}'''
+hit = '''(
+  (.date | parse_date) as $d |
+  {
+    title: ((.title // "") | strip_tags),
+    url: (.url // .id // ""),
+    snippet: ([((.original_format // []) | join(", ")), ((((.description // []) | if type == "array" then (.[0] // "") else tostring end) | strip_tags // "")[0:200] | collapse_ws)] | map(select(. != null and length > 0)) | join(" · ")),
+    date: $d,
+    dateSource: (if $d != null then "api" else null end)
+  }
+)'''
+
+[op.item]
+summary = "Fetch detailed Library of Congress digital item metadata by numeric/LCCN item ID."
+method = "GET"
+url = "https://www.loc.gov/item/{id}/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { at = "item", fo = "json" }
+probe = { params = { id = "2018663109" }, min_results = 1, fixture = "fixtures/w5k/loc_digital/item/default.json" }
+examples = ['source.call("loc_digital.item", { id: "2018663109" })']
+
+[op.item.params]
+id = { type = "string", required = true, in = "path", doc = "Library of Congress item ID e.g. 2018663109" }
+
+[op.item.map]
+items = ".item"
+record = '''{
+  id: (.id // ""),
+  title: ((.title // "") | strip_tags),
+  date: (.date | parse_date),
+  createdPublished: (.created_published // []),
+  contributors: (.contributor_names // []),
+  description: [(.description // [])[] | tostring | strip_tags | select(. != null and length > 0)],
+  subjects: [(.subjects // [])[] | if type == "object" then (keys[0] // "") else tostring end | select(length > 0)],
+  url: (.url // .id // "")
+}'''

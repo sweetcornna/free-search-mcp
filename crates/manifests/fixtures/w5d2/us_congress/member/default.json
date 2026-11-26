@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "us_congress",
+  "op": "member",
+  "recordedAt": "2026-11-25T15:05:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.congress.gov/v3/member/S001176?format=json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"member\": {\"bioguideId\": \"S001176\", \"birthYear\": \"1965\", \"currentMember\": true, \"directOrderName\": \"Steve Scalise\", \"invertedOrderName\": \"Scalise, Steve\", \"firstName\": \"Steve\", \"lastName\": \"Scalise\", \"district\": 1, \"state\": \"Louisiana\", \"officialWebsiteUrl\": \"https://scalise.house.gov\", \"partyHistory\": [{\"partyAbbreviation\": \"R\", \"partyName\": \"Republican\", \"startYear\": 2008}], \"terms\": [{\"chamber\": \"House of Representatives\", \"congress\": 118, \"district\": 1, \"memberType\": \"Representative\", \"startYear\": 2023, \"endYear\": 2025, \"stateCode\": \"LA\", \"stateName\": \"Louisiana\"}], \"sponsoredLegislation\": {\"count\": 112, \"url\": \"https://api.congress.gov/v3/member/S001176/sponsored-legislation\"}, \"cosponsoredLegislation\": {\"count\": 1485, \"url\": \"https://api.congress.gov/v3/member/S001176/cosponsored-legislation\"}, \"updateDate\": \"2025-09-18T08:00:00Z\"}, \"request\": {\"bioguideId\": \"s001176\", \"contentType\": \"application/json\", \"format\": \"json\"}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

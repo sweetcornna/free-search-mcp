@@ -1,0 +1,102 @@
+id = "openaire"
+name = "OpenAIRE Graph v3"
+summary = "European and global scholarly knowledge graph linking 170M+ publications, datasets, software, and grants."
+aliases = ["openaire graph", "openaire.eu"]
+home_url = "https://graph.openaire.eu"
+tier = 1
+scopes = ["academic", "academic.index", "academic.openaccess"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "default"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 21600, host_bucket = "api.openaire.eu" }
+
+[op.search]
+summary = "Search OpenAIRE Graph v3 research products (publications, datasets, software)."
+method = "GET"
+url = "https://api.openaire.eu/graph/v3/research-products"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "graph neural network", limit = 3 }, min_results = 2, fixture = "fixtures/seed/openaire/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "search", doc = "OpenAIRE Graph search query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "pageSize", doc = "Maximum research products to return" }
+page = { type = "int", min = 1, to = "page", doc = "1-based page number" }
+type = { type = "string", enum = ["publication", "dataset", "software", "other"], to = "type", doc = "Optional research product type filter" }
+
+[op.search.map]
+items = "(.results // [])[] | select((.mainTitle // \"\") != \"\")"
+total = ".header.numFound // null"
+work = '''(
+  (.pids // []) as $pids |
+  (([$pids[] | select((.scheme // "" | ascii_downcase) == "doi") | .value][0] // null) | doi_norm) as $doi |
+  ([$pids[] | select((.scheme // "" | ascii_downcase) == "pmid") | .value][0] // null) as $pmid |
+  ([$pids[] | select((.scheme // "" | ascii_downcase) == "pmc") | .value][0] // null) as $pmcid |
+  ([$pids[] | select((.scheme // "" | ascii_downcase) == "arxiv") | .value][0] // null) as $arxiv |
+  (.indicators.citationImpact.citationCount | to_int) as $cites |
+  ((.instances // []) | map(select(((.accessRight.label // "") | ascii_downcase) == "open"))) as $oa_insts |
+  ([$oa_insts[] | (.urls // [])[] | select(type == "string" and startswith("http"))]) as $oa_urls |
+  ([$oa_urls[] | select(test("\\.pdf($|\\?)"; "i"))][0] // null) as $oa_pdf |
+  ($oa_urls[0] // null) as $oa_url |
+  ([$oa_insts[] | .license | select(type == "string" and length > 0)][0] // null) as $oa_lic |
+  ([(.instances // [])[] | (.urls // [])[] | select(type == "string" and startswith("http"))][0] // null) as $any_url |
+  ((.bestAccessRight.label // "") | ascii_downcase) as $ar |
+  ((.openAccessColor // "") | ascii_downcase) as $oac |
+  ($ar == "open" or ($oa_insts | length) > 0 or ($oac != "" and $oac != "closed")) as $is_oa |
+  {
+    title: ((.mainTitle // "") | strip_tags | collapse_ws),
+    authors: [(.authors // [])[] | {
+      name: (.fullName // ([.name, .surname] | map(select(type == "string" and length > 0)) | join(" "))),
+      orcid: (if (.pid.id.scheme // "" | ascii_downcase) == "orcid" then (.pid.id.value // null) else null end)
+    } | select(.name != "")],
+    year: (((.publicationDate // "")[0:4]) | to_int),
+    publishedDate: (.publicationDate | parse_date),
+    venue: (.container.name // .publisher // null),
+    workType: (
+      if .type == "dataset" then "dataset"
+      elif .type == "software" then "software"
+      elif .type == "publication" then "article"
+      else "other"
+      end
+    ),
+    ids: {
+      doi: $doi,
+      arxiv: $arxiv,
+      pmid: $pmid,
+      pmcid: $pmcid,
+      openaire: (.id // null)
+    },
+    abstractText: (if (.descriptions // [] | length) > 0 then ((.descriptions[0] // "") | strip_tags | collapse_ws) else null end),
+    citedBy: $cites,
+    citedBySource: (if $cites != null then "openaire" else null end),
+    oa: (if $is_oa then {
+      status: (if $oac != "" and $oac != "closed" then $oac elif (.isGreen // .green // false) then "green" else "open" end),
+      url: ($oa_url // $oa_pdf // (if $doi != null then ("https://doi.org/" + $doi) else null end)),
+      pdfUrl: $oa_pdf,
+      license: $oa_lic
+    } else null end),
+    retracted: false,
+    versions: [],
+    url: ($oa_pdf // $oa_url // $any_url // (if $doi != null then ("https://doi.org/" + $doi) elif (.id // "") != "" then ("https://explore.openaire.eu/search/result?id=" + .id) else "" end)),
+    sources: ["openaire"]
+  }
+)'''
+
+[op.work]
+summary = "Look up an OpenAIRE Graph v3 research product by persistent identifier (DOI, PMID, arXiv)."
+method = "GET"
+url = "https://api.openaire.eu/graph/v3/research-products"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+const_query = { pageSize = "1" }
+probe = { params = { pid = "10.1038/nature12373" }, min_results = 1, fixture = "fixtures/seed/openaire/work/default.json" }
+
+[op.work.params]
+pid = { type = "string", required = true, to = "pid", doc = "Persistent identifier such as a DOI (e.g. 10.1038/nature12373)" }
+
+[op.work.map]
+items = "@ref:op.search.map.items"
+work = "@ref:op.search.map.work"

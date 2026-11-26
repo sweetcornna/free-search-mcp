@@ -1,217 +1,255 @@
-# Searching on your ChatGPT plan: the `codex` engine
+# Codex: Installing the `free-search` Plugin & Searching on Your ChatGPT Plan (`codex` Engine)
 
-You can skip this page. Nothing in free-search-mcp needs an account, and no
-pool, reserve or `category=` route ever reaches this engine
-(`tests/test_no_key_positioning.py` enforces that). Without a sign-in it runs
-nowhere.
+This page covers two separate Codex integrations in `free-search-mcp` 1.0:
 
-Once you have signed in, it joins every automatic search as the agent lane: it
-is asked at the same moment as the keyless engines, and what it finds is fused
-into the same ranking. See [The agent lane](#the-agent-lane) below.
+1. **Part 1 — Using the `free-search` plugin inside Codex CLI**: Gives Codex
+   keyless web search, 500+ specialist sources, academic & retraction
+   verification, local document parsing, and sandboxed JS `exec` via exactly
+   **three MCP tools** (`ask`, `search`, and `exec`).
+2. **Part 2 — Searching on your ChatGPT plan (`codex` engine & agent lane)**:
+   Optional OAuth sign-in letting `free-search-mcp` call OpenAI's own web
+   search (the same backend Codex uses) against your ChatGPT plan's Codex
+   usage, with no API key and no API bill.
 
-It is for an operator who already has a ChatGPT plan that includes Codex and
-wants the server to use OpenAI's own web search, the one Codex itself uses.
-There is no API key and no API bill: every search counts against the plan's
-Codex usage, the same way a search inside Codex does. OpenAI supports signing
-in with ChatGPT from third-party tools.
+You can skip Part 2 completely. Nothing in `free-search-mcp` needs an account,
+and no default, reserve, or `scope=` route ever reaches `codex` without a
+sign-in.
 
 ## 中文速览
 
-- 用途：用你自己的 ChatGPT 账号（含 Codex 的套餐，如 Plus、Pro、Business）调用 OpenAI
-  官方网页搜索，也就是 Codex 自己用的那个搜索。不需要 API key，也不产生 API 费用，
-  消耗的是套餐里的 Codex 额度。
-- 登录：最简单的方式是直接用。第一次调用 `engines=["codex"]` 而还没登录时，服务器会
-  自动在本机浏览器里打开 ChatGPT 授权页，你点同意后这次搜索会接着完成（最多等 45 秒；
-  更久的话授权页仍保留 10 分钟，批准后重新搜索即可）。也可以手动运行
-  `uvx --from free-search-mcp search-mcp-login codex`（同样会自动打开浏览器），
-  或者在 `search-mcp-admin` 设置页点击「登录」。不想自动弹出时设置
-  `SEARCH_MCP_CODEX_AUTO_SIGNIN=false`。
-- 已经登录过 Codex CLI：运行 `search-mcp-login codex --use-codex-cli`，只读复用
-  `~/.codex/auth.json`，本服务不会改写那份文件。
-- 在远程机器（SSH）上：浏览器最后跳转到 `http://127.0.0.1:1455/auth/callback?code=...`
-  时页面会打不开，这是正常的。复制地址栏里的完整地址，粘贴回终端并回车即可。
-- 使用：登录后，每次不写 `engines` 的搜索都会让它与无 key 引擎同时出发（agent 并行通道），
-  结果合并进同一个排名；最多等它 `SEARCH_MCP_AGENT_LANE_WAIT_SECONDS`（默认 6 秒），
-  来不及的结果在后台写进这次搜索的缓存，稍后重复同一搜索即可拿到。设
-  `SEARCH_MCP_AGENT_ENGINES=off` 则只在写明 `engines=["codex"]` 时运行。
-- 模型：默认 `latest`，跟随套餐的模型目录，用最新一代里最轻的、能搜索且未退役的模型
-  （2026-09-26 为 gpt-6-luna；同一代三个模型的搜索结果相同，最轻的最快、最省额度）。
-  新一代模型上线后自动跟上。写具体模型名则固定使用该模型。
-- 网络受限地区：登录和搜索都会走 `SEARCH_MCP_PROXY` 设置的代理。
-- Google 的对应功能：另有一个 `antigravity` 引擎，用 Antigravity IDE 的登录调用
-  Google 搜索。它违反 Google 的 Antigravity 条款，有封号风险（连带 Gemini CLI），
-  使用前务必先读 [ANTIGRAVITY_SEARCH.md](ANTIGRAVITY_SEARCH.md)。
+- **在 Codex CLI 中安装 `free-search` 插件**：
+  ```bash
+  codex plugin marketplace add sweetcornna/free-search-mcp
+  codex plugin add free-search@free-search-mcp
+  ```
+  - **避坑（重名遮蔽）**：若 `~/.codex/config.toml` 里曾用 `codex mcp add` 写过
+    `[mcp_servers.search]`，它会静默遮蔽插件自带的 `search` 服务器，请先执行
+    `codex mcp remove search`。
+  - **超时建议**：`exec` 最长支持 120 秒脚本；手动注册时请加上
+    `tool_timeout_sec = 150`。
+  - **包含内容**：3 个工具（`ask`、`search`、`exec`）、2 个技能（`verified-research`、
+    `scholar-research`），以及可选的 Codex 只读子代理文件
+    `plugins/free-search/codex/agents/quick_search.toml`。
+- **可选：`codex` 搜索引擎（用你自己的 ChatGPT 套餐搜索）**：
+  - **用途**：用含 Codex 的 ChatGPT 套餐（Plus / Pro / Business）调用 OpenAI 官方网页搜索，
+    不需要 API key，也不产生 API 费用，消耗套餐里的 Codex 额度。
+  - **登录**：首次调用 `sources=["codex"]` 而未登录时，桌面 stdio 模式下会自动打开本机浏览器授权页
+    （最多等 45 秒；批准后接着完成；不想自动弹出设 `SEARCH_MCP_CODEX_AUTO_SIGNIN=false`）。
+    也可以提前运行 `free-search-mcp login codex`（或 `uvx free-search-mcp login codex`）。
+  - **复用 Codex CLI 登录**：运行 `free-search-mcp login codex --use-codex-cli`，只读复用
+    `$CODEX_HOME/auth.json`（默认 `~/.codex/auth.json`），绝不改写原文件。
+  - **SSH 远程机器**：运行 `free-search-mcp login codex --no-browser`；浏览器最终跳转到
+    `http://127.0.0.1:1455/auth/callback?code=...` 打不开是正常的，复制地址栏完整 URL 粘回终端回车即可。
+  - **Agent 并行通道**：登录后，每次不写 `sources` 的自动搜索都会让 `codex` 与无 key 引擎同时出发，
+    结果合并进同一排名；最多等 `SEARCH_MCP_AGENT_LANE_WAIT_SECONDS`（默认 6 秒）且在无 key 引擎出结果后
+    最多多等 `SEARCH_MCP_AGENT_LANE_GRACE_SECONDS`（默认 2 秒），来不及的会在后台写入缓存。
+    设 `SEARCH_MCP_AGENT_ENGINES=off` 则仅在显式写 `sources=["codex"]` 时运行。
+  - **模型与代理**：默认 `SEARCH_MCP_CODEX_MODEL=latest` 跟随套餐模型目录；登录与搜索均走
+    `SEARCH_MCP_PROXY`。
+  - **Google 对应引擎**：另有一个 `antigravity` 引擎，违反 Google Antigravity 条款，有封号风险
+    （连带 Gemini CLI），使用前务必先读 [ANTIGRAVITY_SEARCH.md](ANTIGRAVITY_SEARCH.md)。
 
-## Sign in
+---
 
-The easiest way is to use it. The first time a call names `engines=["codex"]`
-with no sign-in stored, the server opens the ChatGPT sign-in page in this
-machine's browser, and the search carries on as soon as you approve it. One
-search waits up to 45 seconds (`SEARCH_MCP_CODEX_SIGNIN_WAIT_SECONDS`). If you
-take longer, it returns a message saying the page is open, the page stays
-answerable for ten minutes, and the next search picks the sign-in up.
+## Part 1: Installing & Using the `free-search` Plugin in Codex
 
-This only happens where someone can see the page: with the default stdio
-transport (the server runs on your desktop) and where a desktop browser can be
-started (macOS, Windows, or Linux with a display and `xdg-open`). At most one
-unanswered page is opened per server run; after one is closed or refused, the
-error points at `search-mcp-login codex` instead of opening another. The
-browser is started with its output detached, because over stdio the server's
-stdout is the MCP connection. Set `SEARCH_MCP_CODEX_AUTO_SIGNIN=false` to turn
-it off.
+### 1.1 Install via Codex Plugin Marketplace (Recommended)
+
+```bash
+codex plugin marketplace add sweetcornna/free-search-mcp
+codex plugin add free-search@free-search-mcp
+codex plugin list
+```
+
+If you previously registered `search` manually via `codex mcp add search`, that
+entry in `~/.codex/config.toml` **silently shadows** the plugin's bundled
+`search` server. Remove it first:
+
+```bash
+codex mcp remove search
+```
+
+What the plugin installs in Codex:
+- **MCP server `search`** (`plugins/free-search/.mcp.json` / `mcp.json`): runs
+  pinned `uvx free-search-mcp==1.0.0` over stdio, exposing `ask`, `search`, and
+  `exec`.
+- **Two skills**: `free-search:verified-research` and
+  `free-search:scholar-research`.
+
+### 1.2 Manual Registration & `tool_timeout_sec = 150`
+
+If you prefer registering a compiled binary (`~/.local/bin/free-search-mcp`) or
+setting `tool_timeout_sec` explicitly in `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.search]
+command = "/Users/<user>/.local/bin/free-search-mcp"
+args = []
+tool_timeout_sec = 150
+```
+
+*(On Linux, use `/home/<user>/.local/bin/free-search-mcp`. Or run
+`codex mcp add search -- uvx free-search-mcp` and add `tool_timeout_sec = 150`.)*
+
+`exec` supports `timeout_s` up to `120` s (emitting `notifications/progress`
+every 10 s), so `tool_timeout_sec = 150` gives Codex headroom above the ceiling.
+
+### 1.3 Optional: Install the `quick_search` Custom Agent
+
+```bash
+mkdir -p ~/.codex/agents
+cp plugins/free-search/codex/agents/quick_search.toml ~/.codex/agents/quick_search.toml
+```
+
+`quick_search.toml` sets `sandbox_mode = "read-only"` and
+`model_reasoning_effort = "low"`. It starts with one `ask` call, falls back to
+`exec` / `search` if needed, never writes files via `web.download`, and returns
+a 1–3 sentence sourced answer with dates.
+
+### 1.4 Quick Tool Examples in Codex
+
+- **Quick lookup (no code)**: `ask({ question: "latest stable tokio crate version" })`
+- **Discovery / catalog / cache**:
+  - `search({ query: "rust 1.98 release notes", freshness: "month" })`
+  - `search({ query: "attention is all you need", scope: "academic" })`
+  - `search({ query: "patents europe", scope: "catalog" })` *(0 network)*
+- **Multi-step reading, scholar, docs & 500+ APIs (`exec`)**:
+  ```js
+  async () => {
+    const [work, integrity] = await Promise.all([
+      scholar.work("arXiv:1706.03762"),
+      scholar.integrity("10.48550/arXiv.1706.03762"),
+    ]);
+    return { work, integrity };
+  }
+  ```
+
+---
+
+## Part 2: Searching on Your ChatGPT Plan (The `codex` Engine)
+
+Once you sign in, `codex` can be called explicitly via `sources: ["codex"]` and
+also joins every automatic search as the **agent lane**, fusing OpenAI's web
+search into the same ranking as the keyless pool. There is no API key and no
+API bill: every search counts against your ChatGPT plan's Codex usage. OpenAI
+supports signing in with ChatGPT from third-party tools.
+
+### 2.1 Sign In
+
+The easiest way on a desktop over stdio is to call `search` with
+`sources: ["codex"]`: when no sign-in is stored, the server opens the ChatGPT
+consent page in your browser and finishes the search as soon as you approve it
+(waits up to 45 s, `SEARCH_MCP_CODEX_SIGNIN_WAIT_SECONDS`; consent tab stays
+live 10 min; at most one unanswered page per server run; browser output
+detached so stdio framing stays clean; disable via
+`SEARCH_MCP_CODEX_AUTO_SIGNIN=false`).
 
 To sign in ahead of time:
 
 ```bash
-uvx --from free-search-mcp search-mcp-login codex    # plugin / uvx installs
-uv run search-mcp-login codex                         # a source checkout
+free-search-mcp login codex            # local binary install (or `search-mcp login codex`)
+uvx free-search-mcp login codex        # plugin / uvx installs
 ```
 
-A browser opens the same consent page `codex login` shows. Approve it and the
-page says "Signed in". The tokens are stored at
-`~/.config/search-mcp/oauth/codex.json`, owner-only (`0600`), and refreshed
-automatically before they expire. OpenAI rotates the refresh token on every
-refresh, so the refresh runs under a lock: two servers sharing the file never
-spend the same refresh token twice.
-
-The settings page does the same from a button. Run `search-mcp-admin`, open
-http://127.0.0.1:8765, and click **Sign in / 登录** on the Codex card. The card
-also has **Test / 测试** and **Sign out / 退出登录**.
+Tokens are stored at `~/.config/search-mcp/oauth/codex.json` (`0600`) and
+refreshed automatically under a file lock (OpenAI rotates refresh tokens on
+every refresh, so locking prevents concurrent servers from invalidating each
+other).
 
 ```bash
-search-mcp-login status          # who is signed in, which plan, token expiry
-search-mcp-login logout codex    # forget the stored tokens on this machine
+free-search-mcp login status           # signed-in account, plan, token expiry
+free-search-mcp login logout codex     # forget stored tokens on this machine
 ```
 
-### Over SSH, or without a browser on this machine
+#### Over SSH or Headless Hosts
 
-The sign-in returns to `http://127.0.0.1:1455/auth/callback` (or port 1457 when
-1455 is taken). Those are the only addresses the Codex client allows, so the
-port cannot be changed. On a remote machine, run
-`search-mcp-login codex --no-browser`, open the printed address in any
-browser, and sign in. The browser then fails to load the `127.0.0.1` page it
-is sent to. That is expected: copy the whole address from the address bar and
-paste it into the terminal.
-
-### Reusing the Codex CLI's sign-in
+The OAuth callback binds `http://127.0.0.1:1455/auth/callback` (or `1457` if
+`1455` is taken). On a remote machine:
 
 ```bash
-search-mcp-login codex --use-codex-cli             # $CODEX_HOME/auth.json, else ~/.codex/auth.json
-search-mcp-login codex --use-codex-cli /path/to/auth.json
+free-search-mcp login codex --no-browser
 ```
 
-This stores a link, not a copy of the tokens, and the link is read-only. This
-server never refreshes or rewrites Codex's file, because a refresh here would
-rotate the CLI's refresh token and sign the CLI out. When the linked access
-token expires, the engine says so; running `codex` once refreshes it. For a
-sign-in that keeps itself fresh, use `search-mcp-login codex` instead. It has
-its own tokens and never touches the CLI's.
+Open the printed URL in any browser and approve it. When the browser fails to
+load the `127.0.0.1` callback URL, copy the full URL from the address bar and
+paste it back into the terminal.
 
-A Codex login that uses an API key, or keeps its credentials in the OS keyring
-rather than in `auth.json`, has nothing to link.
+#### Reusing the Codex CLI's Sign-In (Read-Only)
 
-## Search with it
-
-```python
-search("rust 2024 edition changes", engines=["codex"])
-research("what changed in python 3.14 asyncio", engines=["codex"])
+```bash
+free-search-mcp login codex --use-codex-cli                  # reads $CODEX_HOME/auth.json or ~/.codex/auth.json
+free-search-mcp login codex --use-codex-cli /path/to/auth.json
 ```
 
-Filters work as usual. `freshness=` and `include_domains=` are passed to
-OpenAI's search, and every filter is applied again to the results, as for any
-other engine. Results are cached like other searches, so a repeated query
-inside the cache lifetime does not spend usage again.
+This stores a read-only link rather than copying tokens. `free-search-mcp`
+never refreshes or rewrites Codex CLI's `auth.json` (which would rotate the
+CLI's refresh token and sign the CLI out). Running `codex` once refreshes an
+expired linked token. For an independent self-refreshing login, run
+`free-search-mcp login codex` without `--use-codex-cli`.
 
-Naming it before signing in returns an error that says the search itself is
-fine, what to use instead, and that the user should not be asked for a key or a
-sign-in. When the plan's usage window is used up, the error says so and when it
-resets. Neither counts as an engine failure in the circuit breaker.
+### 2.2 Search Explicitly & The Agent Lane
 
-## The agent lane
+Explicit search:
 
-A call does not have to name it. With a sign-in stored, every search that
-names no engines (and is not an `image` or `dataset` search) asks `codex` at the
-same moment as the keyless pool, and its results are fused into the same
-ranking: a page both OpenAI's search and DuckDuckGo found ranks above a page
-only one of them found. The keyless pool keeps its breaker, reserves, routing
-and rescue, which naming `engines=["codex", ...]` switches off.
+```json
+{"query": "rust 2024 edition changes", "sources": ["codex"], "freshness": "month"}
+```
 
-- The search waits for the lane at most `SEARCH_MCP_AGENT_LANE_WAIT_SECONDS`
-  (6 s), counted from when the engines were asked, and no more than
-  `SEARCH_MCP_AGENT_LANE_GRACE_SECONDS` (2 s) after the keyless engines have
-  answered with results. `codex` answered in about
-  3 s and the keyless pool in 2 to 4 s when measured, so the two usually land
-  together. When the keyless engines found nothing, the wait stretches to
-  `SEARCH_MCP_SEARCH_DEADLINE_SECONDS`, and the rescue pass starts beside it
-  instead of after it.
-- A lane engine still searching at that point is not cancelled. It finishes in
-  the background, and its results are merged into the cached result set for
-  that search, so the same call a little later (or `cache://search/...`)
-  returns them. The response says so under `agent_lane` and in an
-  "Agent lane" note.
-- The lane never waits for a rate-limit token: past 10 searches a minute,
-  `codex` sits a search out instead of holding it.
-- In the lane, a spent usage window or a refused sign-in benches it at once,
-  for 10 minutes doubling up to an hour, so a spent plan costs no request per
-  search; a timeout or a reset takes two in a row, as for any engine. It is
-  reported under `agent_lane.errors`, never under `errors`, and the keyless
-  results are unaffected.
-- A result set cached without `codex` for a passing reason (it had not
-  answered yet, was out of tokens, or hit a timeout) is replayed for an hour
-  at most, and says so in an "Agent lane" note when it is. A spent plan does
-  not shorten the cache.
-- `SEARCH_MCP_AGENT_ENGINES=off` turns the lane off; `codex` then runs only
-  when a call names it.
+Filters (`freshness`, `domains`) are forwarded to OpenAI's search and re-checked
+on the returned hits. Results are cached like any other engine. Naming `codex`
+before signing in returns a clear error explaining keyless alternatives without
+asking the user for a key or login.
 
-## Settings
+#### The Agent Lane
 
-| Var | Default | Meaning |
+With a sign-in stored, every automatic search (no `sources` specified, and not
+an exclusive `media`/`dataset`/`cache`/`catalog` scope) dispatches `codex` at
+the same moment as the keyless pool and fuses its hits into the same RRF
+ranking:
+
+- **Wait & grace timing**: Waits at most `SEARCH_MCP_AGENT_LANE_WAIT_SECONDS`
+  (`6` s from fan-out start) and at most `SEARCH_MCP_AGENT_LANE_GRACE_SECONDS`
+  (`2` s) after the keyless pool has returned hits. When keyless engines find
+  nothing, the wait stretches to `SEARCH_MCP_SEARCH_DEADLINE_SECONDS` (`8` s).
+- **Background cache merge**: A lane engine still running when the wait expires
+  is not cancelled; it finishes in the background and merges into the cached
+  result set so a repeat search returns its hits.
+- **Rate limit & benching**: The lane never stalls for a rate-limit token (past
+  10 searches/min, `codex` sits out that search). A spent usage window or
+  refused auth benches it immediately (10 min doubling to 60 min); errors are
+  reported under agent-lane diagnostics and never affect keyless results.
+- **Disable the lane**: Set `SEARCH_MCP_AGENT_ENGINES=off` so `codex` runs only
+  when explicitly named in `sources`.
+
+### 2.3 Settings
+
+| Variable | Default | Meaning |
 |---|---|---|
-| `SEARCH_MCP_CODEX_MODEL` | `latest` | the model the search runs under; `latest` follows the plan's catalogue (below), any model name the plan offers pins it |
-| `SEARCH_MCP_CODEX_REASONING_EFFORT` | `low` | only used by the fallback below |
-| `SEARCH_MCP_CODEX_TIMEOUT` | `60` | seconds for one search |
-| `SEARCH_MCP_CODEX_BASE_URL` | `https://chatgpt.com/backend-api/codex` | the Codex backend |
-| `SEARCH_MCP_CODEX_AUTO_SIGNIN` | `true` | open the sign-in page by itself on first use (stdio, desktop only) |
-| `SEARCH_MCP_CODEX_SIGNIN_WAIT_SECONDS` | `45` | how long one search waits for that approval |
-| `SEARCH_MCP_AGENT_ENGINES` | `auto` | the agent lane; `auto` seats a signed-in `codex`, `off` turns the lane off |
-| `SEARCH_MCP_AGENT_LANE_WAIT_SECONDS` | `6` | how long a search waits for the lane |
-| `SEARCH_MCP_AGENT_LANE_GRACE_SECONDS` | `2` | how much longer than the keyless engines it waits, once they have results |
+| `SEARCH_MCP_CODEX_MODEL` | `latest` | Model for `codex` search (`latest` follows plan catalogue; or pin a model name) |
+| `SEARCH_MCP_CODEX_TIMEOUT` | `60` | Timeout in seconds for one `codex` search |
+| `SEARCH_MCP_CODEX_REASONING_EFFORT` | `low` | `low` / `medium` / `high` (used only by `/responses` fallback) |
+| `SEARCH_MCP_CODEX_BASE_URL` | `https://chatgpt.com/backend-api/codex` | Codex backend URL |
+| `SEARCH_MCP_CODEX_AUTO_SIGNIN` | `true` | Auto-open browser sign-in on first explicit use (stdio desktop only) |
+| `SEARCH_MCP_CODEX_SIGNIN_WAIT_SECONDS` | `45` | Seconds one search waits for browser approval |
+| `CODEX_HOME` | `~/.codex` | Directory read by `--use-codex-cli` (`auth.json`, read-only) |
+| `SEARCH_MCP_AGENT_ENGINES` | `auto` | Agent lane: `auto` (signed-in `codex` only), `off`, or explicit list |
+| `SEARCH_MCP_AGENT_LANE_WAIT_SECONDS` | `6` | Max seconds `search` waits for the agent lane |
+| `SEARCH_MCP_AGENT_LANE_GRACE_SECONDS` | `2` | Extra grace seconds after keyless engines return results |
 
-The sign-in and the searches go through `SEARCH_MCP_PROXY` when it is set, which
-matters where `auth.openai.com` or `chatgpt.com` is blocked.
+Sign-in and searches use `SEARCH_MCP_PROXY` when set.
 
-## How it works
+### 2.4 How the `codex` Engine Works
 
-The engine calls the Codex backend the way the current Codex CLI does
-(`openai/codex`, read on 2026-09-26):
+1. Calls `POST /alpha/search` on the Codex backend for structured search hits
+   (title, URL, snippet directly from OpenAI's search).
+2. Falls back to `POST /responses` with the hosted `web_search` tool when a
+   deployment lacks `/alpha/search`, keeping only URLs attached as citations
+   (model-fabricated URLs are dropped).
+3. With `SEARCH_MCP_CODEX_MODEL=latest`, checks `GET /models` at most every 6 h
+   and selects the newest generation's lightest search-capable non-retired
+   model.
 
-1. `POST /alpha/search` with a search command. This is the search endpoint
-   current Codex models use, and it answers with structured results: each
-   result's title, URL and snippet come straight from OpenAI's search.
-2. When a deployment has no such endpoint, `POST /responses` with the hosted
-   `web_search` tool. A model runs the search and lists what it found, and
-   every result URL comes from a citation the search attached to its line. A
-   URL that appears only in the model's own words is dropped.
-
-With `SEARCH_MCP_CODEX_MODEL=latest`, the engine reads the plan's model
-catalogue (`GET /models`) at most every six hours and uses the newest
-generation's lightest model that can search and is not being retired
-(`gpt-6-luna` on 2026-09-26). The three GPT-6 models returned the same results
-for the same searches, so the lightest one, the fastest and the one that spends
-least of the plan, is the one used; a new generation is used as soon as the
-catalogue lists it. The backend lists a model only to clients new enough for
-it, so the catalogue is asked as the newer of the Codex CLI installed on the
-machine and 0.155.0. When the catalogue cannot be read, `gpt-6-luna` is used
-and the catalogue is asked again five minutes later. Each ChatGPT account has
-its own lookup, and a model the service refuses is not kept: that search
-returns the refusal and the next one reads the catalogue again.
-
-This is an undocumented backend that OpenAI can change at any time. When it
-changes, the engine returns an error and the keyless engines are unaffected.
-
-## Google's counterpart
-
-There is an `antigravity` engine that runs Google Search on the sign-in of
-Google's Antigravity IDE. Google's terms forbid that use of the sign-in and
-Google has suspended accounts for it, so it never opens a sign-in by itself.
-Read [ANTIGRAVITY_SEARCH.md](ANTIGRAVITY_SEARCH.md) before using it.
+This is an undocumented backend that OpenAI may change at any time; if it
+breaks, the engine reports an error and keyless engines continue unaffected.
+For Google's counterpart (`antigravity`), read the risk warning in
+[ANTIGRAVITY_SEARCH.md](ANTIGRAVITY_SEARCH.md) first.

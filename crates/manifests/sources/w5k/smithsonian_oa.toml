@@ -1,0 +1,80 @@
+id = "smithsonian_oa"
+name = "Smithsonian Open Access Research API"
+summary = "CC0 open-access collection records from Smithsonian museums, natural history specimens, anthropology, and historical archives (requires free api.data.gov key)."
+aliases = ["smithsonian", "si open access", "edan"]
+home_url = "https://www.si.edu/openaccess/devtools"
+tier = 3
+scopes = ["academic", "academic.humanities"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 10000, cache_ttl_s = 43200, host_bucket = "api.si.edu" }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_DATA_GOV_API_KEY"
+in = "header"
+name = "X-Api-Key"
+format = "{key}"
+route_requires_key = true
+
+[op.search]
+summary = "Search Smithsonian Institution CC0 Open Access collection records."
+method = "GET"
+url = "https://api.si.edu/openaccess/api/v1.0/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "start", start = 0, max_pages = 3 }
+probe = { params = { query = "dinosaur", limit = 3, start = 0 }, min_results = 2, fixture = "fixtures/w5k/smithsonian_oa/search/default.json" }
+examples = ['source.call("smithsonian_oa.search", { query: "dinosaur", limit: 5 })']
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Collection search query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "rows", doc = "Rows per page" }
+start = { type = "int", default = 0, min = 0, to = "start", doc = "Offset start index" }
+
+[op.search.map]
+items = "(.response.rows // [])[]"
+total = ".response.rowCount"
+error = "if .error then (.error.message // (.error | tostring)) else null end"
+record = '''{
+  id: (.id // ""),
+  title: (.title // .content.descriptiveNonRepeating.title.content // ""),
+  unitCode: (.unitCode // .content.descriptiveNonRepeating.unit_code // null),
+  dataSource: (.content.descriptiveNonRepeating.data_source // null),
+  license: (.content.descriptiveNonRepeating.metadata_usage.access // null),
+  dates: (.content.indexedStructured.date // []),
+  topics: (.content.indexedStructured.topic // []),
+  objectTypes: [(.content.freetext.object_type // [])[] | .content | select(. != null)],
+  imageUrl: (.content.descriptiveNonRepeating.online_media.media[0]?.content // null),
+  url: (.content.descriptiveNonRepeating.record_link // .content.descriptiveNonRepeating.guid // ("https://collections.si.edu/search/detail/" + (.id // "")))
+}'''
+hit = '''(
+  (.content.indexedStructured.date[0]? | parse_date) as $d |
+  {
+    title: ((.title // .content.descriptiveNonRepeating.title.content // "") | collapse_ws),
+    url: (.content.descriptiveNonRepeating.record_link // .content.descriptiveNonRepeating.guid // ("https://collections.si.edu/search/detail/" + (.id // ""))),
+    snippet: ([(.content.descriptiveNonRepeating.data_source // ""), ((.content.indexedStructured.topic // []) | join(", "))] | map(select(length > 0)) | join(" · ")),
+    date: $d,
+    dateSource: (if $d != null then "api" else null end)
+  }
+)'''
+
+[op.content]
+summary = "Fetch a single Smithsonian Open Access record by EDAN content ID."
+method = "GET"
+url = "https://api.si.edu/openaccess/api/v1.0/content/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "edanmdm-npg_S_NPG.68.11" }, min_results = 1, fixture = "fixtures/w5k/smithsonian_oa/content/default.json" }
+examples = ['source.call("smithsonian_oa.content", { id: "edanmdm-npg_S_NPG.68.11" })']
+
+[op.content.params]
+id = { type = "string", required = true, in = "path", doc = "Smithsonian EDAN record ID e.g. edanmdm-npg_S_NPG.68.11" }
+
+[op.content.map]
+items = ".response"
+error = "@ref:op.search.map.error"
+record = "@ref:op.search.map.record"

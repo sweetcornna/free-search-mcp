@@ -1,0 +1,122 @@
+id = "pubmed"
+name = "PubMed (NCBI E-utilities)"
+summary = "US NLM biomedical and life-sciences citation index (37M+ articles via E-utilities)."
+aliases = ["ncbi pubmed", "medline", "pmid"]
+home_url = "https://pubmed.ncbi.nlm.nih.gov"
+tier = 1
+scopes = ["academic", "academic.biomed"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 3.0, burst = 5, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 43200, host_bucket = "ncbi.nlm.nih.gov" }
+
+[auth]
+mode = "optional"
+env = "SEARCH_MCP_NCBI_API_KEY"
+in = "query"
+name = "api_key"
+route_requires_key = false
+
+[op.search]
+summary = "Search PubMed biomedical articles (two-step esearch + esummary)."
+method = "GET"
+url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?id={pre}"
+response = "json"
+returns = "works"
+const_query = { db = "pubmed", retmode = "json", tool = "free-search-mcp" }
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "crispr", limit = 3 }, min_results = 2, fixture = "fixtures/w5a/pubmed/search/default.json" }
+
+[[op.search.pre]]
+method = "GET"
+url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
+auth = "inherit"
+const_query = { db = "pubmed", retmode = "json", sort = "relevance", tool = "free-search-mcp" }
+params = { retmax = "{limit}", retstart = "{offset}", term = "{query}" }
+response = "json"
+bind = '''[.esearchresult.idlist[]? | select(test("^[0-9]+$"))] | join(",")'''
+on_empty = "empty"
+
+[op.search.params]
+query = { type = "string", required = true, in = "none", doc = "Entrez PubMed query (supports MeSH terms)" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "none", doc = "Max articles to return" }
+offset = { type = "int", default = 0, min = 0, in = "none", doc = "Result offset (retstart)" }
+
+[op.search.map]
+items = '''(.result.uids // []) as $uids | .result as $res | $uids[] | $res[.] | select(type == "object" and .error == null)'''
+error = '''if .error != null then (.error | tostring) elif (.esummaryresult | type) == "array" and (.esummaryresult | length) > 0 then (.esummaryresult | join("; ")) elif ((.result.uids // []) | length) > 0 and ([.result.uids[] as $u | .result[$u] | select(type == "object" and .error == null)] | length) == 0 then ([.result.uids[] as $u | .result[$u].error | select(type == "string")] | join("; ")) else null end'''
+work = '''(
+  (([(.articleids // [])[] | select(.idtype == "pmc") | .value][0]) // null) as $pmcid |
+  ((.epubdate | parse_date) // (.pubdate | parse_date)) as $dt |
+  {
+    title: ((.title // "") | strip_tags | sub("\\.$"; "")),
+    authors: [(.authors // [])[] | select(.name != null) | {name: (.name | collapse_ws)}],
+    year: (if $dt != null then ($dt[0:4] | to_int) else null end),
+    publishedDate: $dt,
+    venue: (if (.fulljournalname // "") != "" then (.fulljournalname | collapse_ws) elif (.source // "") != "" then (.source | collapse_ws) else null end),
+    workType: "article",
+    ids: {
+      pmid: (.uid // null),
+      pmcid: $pmcid,
+      doi: (([(.articleids // [])[] | select(.idtype == "doi") | .value][0]) // null | doi_norm)
+    },
+    oa: (if $pmcid != null then { status: "green", url: ("https://pmc.ncbi.nlm.nih.gov/articles/" + $pmcid + "/") } else null end),
+    retracted: ((.pubtype // []) | any(. == "Retracted Publication")),
+    versions: [],
+    url: ("https://pubmed.ncbi.nlm.nih.gov/" + (.uid // "") + "/"),
+    sources: ["pubmed"]
+  }
+)'''
+
+[op.work]
+summary = "Fetch full PubMed article record including abstract via efetch XML by PMID."
+method = "GET"
+url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
+response = "xml"
+returns = "works"
+const_query = { db = "pubmed", retmode = "xml", tool = "free-search-mcp" }
+probe = { params = { pmid = "25315507" }, min_results = 1, fixture = "fixtures/w5a/pubmed/work/default.json" }
+
+[op.work.params]
+pmid = { type = "string", required = true, to = "id", doc = "PubMed ID (numeric PMID)" }
+
+[op.work.map]
+items = ".pubmedarticleset.pubmedarticle | arr | .[]"
+error = '''if .efetchresult.error != null then (.efetchresult.error | xml_text) else null end'''
+work = '''(
+  .medlinecitation as $mc |
+  $mc.article as $art |
+  (.pubmeddata.articleidlist.articleid | arr) as $aids |
+  ($mc.pmid | xml_text) as $pmid |
+  ([$aids[] | select(."@idtype" == "pmc") | xml_text][0] // null) as $pmcid |
+  ([($art.abstract.abstracttext | arr)[] | xml_text | select(length > 0)] | join(" ") | collapse_ws) as $abs |
+  ($art.articledate | arr | .[0] // {}) as $ad |
+  (if $ad.year != null and $ad.month != null and $ad.day != null then ($ad.year + "-" + $ad.month + "-" + $ad.day) elif $art.journal.journalissue.pubdate.year != null then ([$art.journal.journalissue.pubdate.year, $art.journal.journalissue.pubdate.month, $art.journal.journalissue.pubdate.day] | map(select(type == "string" and length > 0)) | join(" ")) else null end | parse_date) as $dt |
+  {
+    title: (($art.articletitle | xml_text) | collapse_ws | sub("\\.$"; "")),
+    authors: [($art.authorlist.author | arr)[] | (
+      ([(.forename | xml_text), (.lastname | xml_text)] | map(select(length > 0)) | join(" ") | collapse_ws) as $person |
+      (if $person != "" then $person else (.collectivename | xml_text | collapse_ws) end) as $nm |
+      {
+        name: $nm,
+        orcid: ([(.identifier | arr)[] | select(((."@source" // "") | ascii_upcase) == "ORCID") | xml_text | sub("^https?://orcid\\.org/"; "") | select(length > 0)][0] // null),
+        affiliation: ([(.affiliationinfo | arr)[] | (.affiliation | xml_text | collapse_ws) | select(length > 0)][0] // null)
+      }
+    ) | select(.name != "")],
+    year: (($art.journal.journalissue.pubdate.year // $ad.year) | to_int),
+    publishedDate: $dt,
+    venue: (($art.journal.title // $art.journal.isoabbreviation // null) | if type == "string" then collapse_ws else null end),
+    workType: "article",
+    ids: {
+      pmid: (if $pmid != "" then $pmid else null end),
+      pmcid: $pmcid,
+      doi: (([$aids[] | select(."@idtype" == "doi") | xml_text][0] // null) | doi_norm)
+    },
+    abstractText: (if ($abs // "") != "" then $abs else null end),
+    oa: (if $pmcid != null then { status: "green", url: ("https://pmc.ncbi.nlm.nih.gov/articles/" + $pmcid + "/") } else null end),
+    retracted: ([($art.publicationtypelist.publicationtype | arr)[] | xml_text] | any(. == "Retracted Publication")),
+    versions: [],
+    url: ("https://pubmed.ncbi.nlm.nih.gov/" + $pmid + "/"),
+    sources: ["pubmed"]
+  }
+)'''

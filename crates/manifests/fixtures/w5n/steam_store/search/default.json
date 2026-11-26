@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "steam_store",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://store.steampowered.com/api/storesearch/?term=portal&l=english&cc=US",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"total\":10,\"items\":[{\"type\":\"app\",\"name\":\"Portal 2\",\"id\":620,\"price\":{\"currency\":\"USD\",\"initial\":999,\"final\":999},\"tiny_image\":\"https:\\/\\/shared.akamai.steamstatic.com\\/store_item_assets\\/steam\\/apps\\/620\\/bd23943dcd0280aa2cdc066e2f86d2185cfd4cce\\/capsule_231x87.jpg?t=1790187113\",\"metascore\":\"95\",\"platforms\":{\"windows\":true,\"mac\":false,\"linux\":true},\"streamingvideo\":false,\"controller_support\":\"full\"},{\"type\":\"app\",\"name\":\"Portal\",\"id\":400,\"price\":{\"currency\":\"USD\",\"initial\":999,\"final\":999},\"tiny_image\":\"https:\\/\\/shared.akamai.steamstatic.com\\/store_item_assets\\/steam\\/apps\\/400\\/capsule_231x87.jpg?t=1745368554\",\"metascore\":\"90\",\"platforms\":{\"windows\":true,\"mac\":false,\"linux\":true},\"streamingvideo\":false,\"controller_support\":\"full\"},{\"type\":\"app\",\"name\":\"Portal Knights\",\"id\":374040,\"price\":{\"currency\":\"USD\",\"initial\":1999,\"final\":299},\"tiny_image\":\"https:\\/\\/shared.akamai.steamstatic.com\\/store_item_assets\\/steam\\/apps\\/374040\\/capsule_231x87.jpg?t=1793371507\",\"metascore\":\"72\",\"platforms\":{\"windows\":true,\"mac\":false,\"linux\":false},\"streamingvideo\":false},{\"type\":\"app\",\"name\":\"Bridge Constructor Portal - Portal Proficiency\",\"id\":1113550,\"price\":{\"currency\":\"USD\",\"initial\":399,\"final\":399},\"tiny_image\":\"https:\\/\\/shared.akamai.steamstatic.com\\/store_item_assets\\/steam\\/apps\\/1113550\\/capsule_231x87.jpg?t=1717674841\",\"metascore\":\"\",\"platforms\":{\"windows\":true,\"mac\":true,\"linux\":true},\"streamingvideo\":false,\"controller_support\":\"full\"},{\"type\":\"app\",\"name\":\"Bridge Constructor Portal\",\"id\":684410,\"price\":{\"currency\":\"USD\",\"initial\":999,\"final\":999},\"tiny_image\":\"https:\\/\\/shared.akamai.steamstatic.com\\/store_item_assets\\/steam\\/apps\\/684410\\/capsule_231x87.jpg?t=1717674640\",\"metascore\":\"77\",\"platforms\":{\"windows\":true,\"mac\":true,\"linux\":true},\"streamingvideo\":false,\"controller_support\":\"full\"},{\"type\":\"app\",\"name\":\"Portal: Revolution\",\"id\":601360,\"tiny_image\":\"https:\\/\\/shared.akamai.steamstatic.com\\/store_item_assets\\/steam\\/apps\\/601360\\/072c9e764f4e3c1d7a9b832741e4eda033665860\\/capsule_231x87.jpg?t=1764365933\",\"metascore\":\"\",\"platforms\":{\"windows\":true,\"mac\":false,\"linux\":true},\"streamingvideo\":false,\"controller_support\":\"full\"},{\"type\":\"app\",\"name\":\"Portal Reloaded\",\"id\":1255980,\"tiny_image\":\"https:\\/\\/shared.akamai.steamstatic.com\\/store_item_assets\\/steam\\/apps\\/1255980\\/adfcc8b3d04456d391b99cb01372b321cdb987f4\\/capsule_231x87.jpg?t=1732736194\",\"metascore\":\"\",\"platforms\":{\"windows\":true,\"mac\":true,\"linux\":true},\"streamingvideo\":false},{\"type\":\"app\",\"name\":\"Portal Dungeon\",\"id\":1679220,\"price\":{\"currency\":\"USD\",\"initial\":1499,\"final\":1499},\"tiny_image\":\"https:\\/\\/shared.akamai.steamstatic.com\\/store_item_assets\\/steam\\/apps\\/1679220\\/capsule_231x87.jpg?t=1790244024\",\"metascore\":\"\",\"platforms\":{\"windows\":true,\"mac\":false,\"linux\":false},\"streamingvideo\":false,\"controller_support\":\"full\"},{\"type\":\"app\",\"name\":\"Portal Knights - Portal Pioneer Pack\",\"id\":617090,\"price\":{\"currency\":\"USD\",\"initial\":299,\"final\":149},\"tiny_image\":\"https:\\/\\/shared.akamai.steamstatic.com\\/store_item_assets\\/steam\\/apps\\/617090\\/capsule_231x87.jpg?t=1683299099\",\"metascore\":\"\",\"platforms\":{\"windows\":true,\"mac\":false,\"linux\":false},\"streamingvideo\":false},{\"type\":\"app\",\"name\":\"Desktop Portal\",\"id\":1178460,\"price\":{\"currency\":\"USD\",\"initial\":999,\"final\":999},\"tiny_image\":\"https:\\/\\/shared.akamai.steamstatic.com\\/store_item_assets\\/steam\\/apps\\/1178460\\/capsule_231x87.jpg?t=1723269661\",\"metascore\":\"\",\"platforms\":{\"windows\":true,\"mac\":false,\"linux\":false},\"streamingvideo\":false}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

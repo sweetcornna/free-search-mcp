@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "orkg_sparql",
+  "op": "query",
+  "recordedAt": "2026-11-25T12:18:42Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://orkg.org/triplestore?query=SELECT+%3Fs+%3Flabel+WHERE+%7B+%3Fs+%3Chttp%3A%2F%2Fwww.w3.org%2F2000%2F01%2Frdf-schema%23label%3E+%3Flabel+%7D+LIMIT+3",
+        "headersSubset": {
+          "accept": "application/sparql-results+json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/sparql-results+json"
+          ],
+          [
+            "cache-control",
+            "max-age=0, no-store"
+          ]
+        ],
+        "bodyText": "\n{ \"head\": { \"link\": [], \"vars\": [\"s\", \"label\"] },\n  \"results\": { \"distinct\": false, \"ordered\": true, \"bindings\": [\n    { \"s\": { \"type\": \"uri\", \"value\": \"http://www.w3.org/2002/07/owl#sameAs\" }\t, \"label\": { \"type\": \"literal\", \"value\": \"sameAs\" }},\n    { \"s\": { \"type\": \"uri\", \"value\": \"http://www.w3.org/2002/07/owl#Thing\" }\t, \"label\": { \"type\": \"literal\", \"value\": \"Thing\" }},\n    { \"s\": { \"type\": \"uri\", \"value\": \"http://www.w3.org/2002/07/owl#Ontology\" }\t, \"label\": { \"type\": \"literal\", \"value\": \"Ontology\" }} ] } }",
+        "bodyB64": null
+      }
+    }
+  ]
+}

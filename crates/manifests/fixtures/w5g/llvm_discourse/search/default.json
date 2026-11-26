@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "llvm_discourse",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:13:15Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://discourse.llvm.org/search.json?q=TableGen+OpInterface+verify",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ],
+          [
+            "cache-control",
+            "no-cache, no-store"
+          ]
+        ],
+        "bodyText": "{\"posts\":[{\"id\":19229,\"name\":\"Nicolas Vasilache\",\"username\":\"nicolasvasilache\",\"avatar_template\":\"/user_avatar/discourse.llvm.org/nicolasvasilache/{size}/131_2.png\",\"created_at\":\"2022-01-27T11:51:16.397Z\",\"like_count\":0,\"blurb\":\"andidr: Can you elaborate a bit on what you mean with exposed attributes? Basically the interface would have methods such as getAddOpName that query the proper attribute is part of the op. The verifier would ensure that these are present. The tablegen definition of the op would need to specify th...\",\"post_number\":13,\"topic_id\":5631},{\"id\":13584,\"name\":\"Jacques Pienaar\",\"username\":\"jpienaar\",\"avatar_template\":\"/user_avatar/discourse.llvm.org/jpienaar/{size}/225_2.png\",\"created_at\":\"2021-08-17T13:14:35.657Z\",\"like_count\":1,\"blurb\":\"cgyurgyik: While it works, it just doesn’t seem right, nor can I verify that the function portNames is defined in a similar way that operations can be checked for attributes How would you want to verify it? And just to be clear using TableGen’s https://llvm.org/docs/TableGen/ProgRef.html#bang-ope...\",\"post_number\":6,\"topic_id\":4098},{\"id\":7766,\"name\":\"Nicolas Vasilache\",\"username\":\"nicolasvasilache\",\"avatar_template\":\"/user_avatar/discourse.llvm.org/nicolasvasilache/{size}/131_2.png\",\"created_at\":\"2020-12-08T14:32:48.134Z\",\"like_count\":0,\"blurb\":\"ftynse: I cannot follow what you mean here. There seems to be a use case you are referring to, and I have no knowledge of. Where do the interfaces come in? Could you elaborate? I don’t have a concrete use case yet but I expect that vector ops exposed to the MLIR type system will grow interfaces t...\",\"post_number\":14,\"topic_id\":2290},{\"id\":283379,\"name\":\"Mehdi Amini\",\"username\":\"mehdi_amini\",\"avatar_template\":\"/user_avatar/discourse.llvm.org/mehdi_amini/{size}/25595_2.png\",\"created_at\":\"2023-01-20T22:05:56.019Z\",\"like_count\":6,\"blurb\":\"This is a proposal, not completely fleshed out on every aspect (PDL and DRR for example), but worth discussing since this is touching on a very core aspect of our modeling. I tentatively plan to present this in the Open Meeting next Thurday, but I may have to push it out one week. Background Oper...\",\"post_number\":1,\"topic_id\":67846}],\"topics\":[{\"fancy_title\":\"[RFC] Extend Linalg named operations for arbitrary element types\",\"id\":5631,\"title\":\"[RFC] Extend Linalg named operations for arbitrary element types\",\"slug\":\"rfc-extend-linalg-named-operations-for-arbitrary-element-types\",\"posts_count\":36,\"reply_count\":22,\"highest_post_number\":36,\"created_at\":\"2022-01-13T20:42:09.007Z\",\"last_posted_at\":\"2023-01-06T20:26:31.803Z\",\"bumped\":true,\"bumped_at\":\"2023-01-06T20:26:31.803Z\",\"archetype\":\"regular\",\"unseen\":false,\"pinned\":false,\"unpinned\":null,\"visible\":true,\"closed\":false,\"archived\":false,\"bookmarked\":null,\"liked\":null,\"tags\":[],\"tags_descriptions\":{},\"category_id\":31,\"has_accepted_answer\":false},{\"fancy_title\":\"Changing the default argument for child classes\",\"id\":4098,\"title\":\"Changing the default argument for child classes\",\"slug\":\"changing-the-default-argument-for-child-classes\",\"posts_count\":6,\"reply_count\":4,\"highest_post_number\":6,\"created_at\":\"2021-08-15T19:01:23.665Z\",\"last_posted_at\":\"2021-08-17T13:14:35.657Z\",\"bumped\":true,\"bumped_at\":\"2021-08-17T13:14:35.657Z\",\"archetype\":\"regular\",\"unseen\":false,\"pinned\":false,\"unpinned\":null,\"visible\":true,\"closed\":false,\"archived\":false,\"bookmarked\":null,\"liked\":null,\"tags\":[],\"tags_descriptions\":{},\"category_id\":31,\"has_accepted_answer\":false},{\"fancy_title\":\"Exposing LLVM ops to the MLIR type system\",\"id\":2290,\"title\":\"Exposing LLVM ops to the MLIR type system\",\"slug\":\"exposing-llvm-ops-to-the-mlir-type-system\",\"posts_count\":37,\"reply_count\":28,\"highest_post_number\":37,\"created_at\":\"2020-11-27T10:33:10.702Z\",\"last_posted_at\":\"2021-01-08T21:36:52.504Z\",\"bumped\":true,\"bumped_at\":\"2021-01-08T21:36:52.504Z\",\"archetype\":\"regular\",\"unseen\":false,\"pinned\":false,\"unpinned\":null,\"visible\":true,\"closed\":false,\"archived\":false,\"bookmarked\":null,\"liked\":null,\"tags\":[],\"tags_descriptions\":{},\"category_id\":31,\"has_accepted_answer\":false},{\"fancy_title\":\"[RFC] Introducing MLIR Operation Properties\",\"id\":67846,\"title\":\"[RFC] Introducing MLIR Operation Properties\",\"slug\":\"rfc-introducing-mlir-operation-properties\",\"posts_count\":24,\"reply_count\":16,\"highest_post_number\":24,\"created_at\":\"2023-01-20T22:05:55.830Z\",\"last_posted_at\":\"2023-12-15T06:19:13.971Z\",\"bumped\":true,\"bumped_at\":\"2023-12-15T06:19:13.971Z\",\"archetype\":\"regular\",\"unseen\":false,\"pinned\":false,\"unpinned\":null,\"visible\":true,\"closed\":false,\"archived\":false,\"bookmarked\":null,\"liked\":null,\"tags\":[],\"tags_descriptions\":{},\"category_id\":31,\"has_accepted_answer\":false}],\"users\":[],\"categories\":[],\"tags\":[],\"groups\":[],\"grouped_search_result\":{\"more_posts\":null,\"more_users\":null,\"more_categories\":null,\"term\":\"TableGen OpInterface verify\",\"search_log_id\":745580,\"more_full_page_results\":null,\"can_create_topic\":false,\"error\":null,\"extra\":{},\"post_ids\":[19229,13584,7766,283379],\"user_ids\":[],\"category_ids\":[],\"tag_ids\":[],\"group_ids\":[]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

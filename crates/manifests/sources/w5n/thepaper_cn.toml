@@ -1,0 +1,62 @@
+id = "thepaper_cn"
+name = "The Paper (澎湃新闻) Chinese News Search"
+summary = "Keyless official Chinese investigative and current-affairs news search via The Paper POST JSON API."
+aliases = ["thepaper", "澎湃新闻", "pengpai", "chinese news"]
+home_url = "https://www.thepaper.cn"
+tier = 1
+scopes = ["news"]
+caps = ["search"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.5, burst = 4, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 3600 }
+
+[op.search]
+summary = "Search Chinese news articles on The Paper (澎湃新闻) by keyword."
+method = "POST"
+url = "https://api.thepaper.cn/search/web/news"
+headers = { Accept = "application/json", "Content-Type" = "application/json" }
+response = "json"
+returns = "records"
+body = { kind = "json", jaq = '''{
+  pageNum: ($p.page // 1),
+  pageSize: ($p.limit // 10),
+  searchType: ($p.search_type // 1),
+  word: $p.query
+}''' }
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+examples = ['source.call("thepaper_cn.search", { query: "人工智能", limit: 3 })']
+probe = { params = { query = "人工智能", page = 1, limit = 3, search_type = 1 }, min_results = 2, fixture = "fixtures/w5n/thepaper_cn/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, in = "body", doc = "Chinese or English search keyword" }
+limit = { type = "int", default = 10, min = 1, max = 30, in = "body", doc = "Articles per page" }
+page = { type = "int", default = 1, min = 1, in = "body", doc = "Page number (1-based)" }
+search_type = { type = "int", default = 1, min = 1, max = 3, in = "body", doc = "Search mode (1 = relevance, 2 = latest)" }
+
+[op.search.map]
+items = "(.data.list // [])[]"
+total = ".data.total"
+error = "if (.code | type) == \"number\" and .code != 200 then (.desc // \"The Paper API error\") else null end"
+record = '''{
+  contId: (.contId | tostring),
+  title: ((.name // "" | gsub("<[^>]+>"; "") | unescape_html | collapse_ws) // ""),
+  summary: ((.summary // "" | gsub("<[^>]+>"; "") | unescape_html | collapse_ws) // ""),
+  channel: (.nodeInfo.name // null),
+  pubTime: (.pubTime // null),
+  publishedAt: (.pubTimeLong | epoch_to_iso),
+  pubTimeMs: (.pubTimeLong // null),
+  praiseTimes: (.praiseTimes | to_int),
+  interactionNum: (.interactionNum | to_int),
+  url: ("https://www.thepaper.cn/newsDetail_forward_" + (.contId | tostring))
+}'''
+hit = '''{
+  title: ((.name // "" | gsub("<[^>]+>"; "") | unescape_html | collapse_ws) // "澎湃新闻"),
+  url: ("https://www.thepaper.cn/newsDetail_forward_" + (.contId | tostring)),
+  snippet: ([
+    (.nodeInfo.name // empty),
+    (.pubTime // empty),
+    ((.summary // "" | gsub("<[^>]+>"; "") | unescape_html | collapse_ws) // "" | if length > 200 then .[0:200] + "..." else . end | select(length > 0))
+  ] | join(" · ")),
+  date: (.pubTimeLong | parse_date),
+  dateSource: (if (.pubTimeLong | parse_date) != null then "api" else null end)
+}'''

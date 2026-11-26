@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "hathitrust",
+  "op": "lookup",
+  "recordedAt": "2026-11-25T12:12:46Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://catalog.hathitrust.org/api/volumes/brief/isbn/0521865719.json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ]
+        ],
+        "bodyText": "{\"records\":{\"005913409\":{\"recordURL\":\"https:\\/\\/catalog.hathitrust.org\\/Record\\/005913409\",\"titles\":[\"Introduction to information retrieval\"],\"isbns\":[\"9780521865715\",\"9780521865715\"],\"issns\":[],\"oclcs\":[\"255511677\"],\"lccns\":[],\"publishDates\":[\"2008\"]}},\"items\":[{\"orig\":\"University of Michigan\",\"fromRecord\":\"005913409\",\"htid\":\"mdp.39015048102159\",\"itemURL\":\"https:\\/\\/babel.hathitrust.org\\/cgi\\/pt?id=mdp.39015048102159\",\"rightsCode\":\"ic\",\"lastUpdate\":\"20260317\",\"enumcron\":false,\"usRightsString\":\"Limited (search-only)\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

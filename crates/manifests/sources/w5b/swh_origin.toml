@@ -1,0 +1,85 @@
+id = "swh_origin"
+name = "Software Heritage Archive"
+summary = "Universal cryptographic source-code archive (460M+ origins, SWHIDs, and archival snapshots)."
+aliases = ["software heritage", "swh", "swhid"]
+home_url = "https://archive.softwareheritage.org"
+tier = 2
+scopes = ["code", "academic"]
+caps = ["lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 0.1, burst = 2, concurrency = 1, timeout_ms = 10000, cache_ttl_s = 86400 }
+
+[op.origin]
+summary = "Look up an archived repository origin in Software Heritage by exact origin URL."
+method = "GET"
+url = "https://archive.softwareheritage.org/api/1/origin/{url}/get/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { url = "https://github.com/rust-lang/rust" }, min_results = 1, fixture = "fixtures/w5b/swh_origin/origin/default.json" }
+
+[op.origin.params]
+url = { type = "string", required = true, in = "path", doc = "Exact repository origin URL (e.g. https://github.com/rust-lang/rust)" }
+
+[op.origin.map]
+items = "."
+error = 'if type == "object" and (.exception // null) != null then (.reason // .exception) else null end'
+record = '''{
+  originUrl: (.url // ""),
+  visitTypes: (.visit_types // []),
+  visitsApiUrl: (.origin_visits_url // null),
+  browseUrl: ("https://archive.softwareheritage.org/browse/origin/directory/?origin_url=" + ((.url // "") | @uri))
+}'''
+
+[op.visits]
+summary = "List archival crawl visits and snapshot hashes for a repository origin."
+method = "GET"
+url = "https://archive.softwareheritage.org/api/1/origin/{url}/visits/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "link_header", max_pages = 3 }
+probe = { params = { url = "https://github.com/rust-lang/rust", limit = 3 }, min_results = 1, fixture = "fixtures/w5b/swh_origin/visits/default.json" }
+
+[op.visits.params]
+url = { type = "string", required = true, in = "path", doc = "Exact repository origin URL" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "per_page", doc = "Number of archival visits to return" }
+last_visit = { type = "int", min = 1, to = "last_visit", doc = "Pagination cursor (visit ID from Link header)" }
+
+[op.visits.map]
+items = ".[]"
+error = 'if type == "object" and (.exception // null) != null then (.reason // .exception) else null end'
+record = '''{
+  origin: (.origin // ""),
+  visit: (.visit | to_int),
+  date: ((.date // null) | parse_date),
+  timestamp: (.date // null),
+  status: (.status // null),
+  type: (.type // null),
+  snapshot: (.snapshot // null),
+  snapshotUrl: (.snapshot_url // null)
+}'''
+
+[op.resolve]
+summary = "Resolve a persistent Software Heritage Identifier (SWHID) to its browse URL and metadata."
+method = "GET"
+url = "https://archive.softwareheritage.org/api/1/resolve/{swhid}/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { swhid = "swh:1:cnt:94a9ed024d3859793618152ea559a168bbcbb5e2" }, min_results = 1, fixture = "fixtures/w5b/swh_origin/resolve/default.json" }
+
+[op.resolve.params]
+swhid = { type = "string", required = true, in = "path", encode = "raw", doc = "SoftWare Hash IDentifier (e.g. swh:1:cnt:...)" }
+
+[op.resolve.map]
+items = "."
+error = 'if type == "object" and (.exception // null) != null then (.reason // .exception) else null end'
+record = '''{
+  namespace: (.namespace // "swh"),
+  schemeVersion: ((.scheme_version | to_int) // 1),
+  objectType: (.object_type // ""),
+  objectId: (.object_id // ""),
+  browseUrl: (.browse_url // "")
+}'''

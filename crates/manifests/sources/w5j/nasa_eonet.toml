@@ -1,0 +1,97 @@
+id = "nasa_eonet"
+name = "NASA EONET Natural Events Tracker"
+summary = "NASA Earth Observatory real-time open feed of global natural hazard events (wildfires, volcanoes, severe storms, floods, sea/lake ice)."
+aliases = ["eonet", "nasa natural events", "wildfires", "earth events"]
+home_url = "https://eonet.gsfc.nasa.gov"
+tier = 1
+scopes = ["dataset", "reference.geo"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 5, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 3600, host_bucket = "eonet.gsfc.nasa.gov" }
+
+[op.search]
+summary = "Query NASA EONET natural hazard events by hazard category, status, and recency window."
+method = "GET"
+url = "https://eonet.gsfc.nasa.gov/api/v3/events"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { query = "wildfires", limit = 3 }, min_results = 2, fixture = "fixtures/w5j/nasa_eonet/search/default.json" }
+examples = ["source.call('nasa_eonet.search', { query: 'wildfires', status: 'open', limit: 5 })", "source.call('nasa_eonet.search', { query: 'volcanoes', limit: 5 })"]
+
+[op.search.params]
+query = { type = "string", required = true, enum = ["drought", "dustHaze", "earthquakes", "floods", "landslides", "manmade", "seaLakeIce", "severeStorms", "snow", "tempExtremes", "volcanoes", "waterColor", "wildfires"], to = "category", doc = "EONET event category ID (e.g. wildfires, volcanoes, severeStorms, floods)" }
+status = { type = "string", default = "open", enum = ["open", "closed", "all"], to = "status", doc = "Event lifecycle status" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Maximum events to return" }
+days = { type = "int", min = 1, max = 3650, to = "days", doc = "Limit to events within the past N days" }
+
+[op.search.map]
+items = "(.events // [])[]"
+record = '''(
+  ((.geometry // []) | if length > 0 then .[length - 1] else {} end) as $g |
+  {
+    id: (.id // ""),
+    title: (.title // ""),
+    description: (.description // null),
+    closed: (.closed // null),
+    categories: [(.categories // [])[] | .id // empty],
+    categoryTitles: [(.categories // [])[] | .title // empty],
+    latestDate: ($g.date // null),
+    magnitudeValue: ($g.magnitudeValue // null),
+    magnitudeUnit: ($g.magnitudeUnit // null),
+    coordinates: ($g.coordinates // null),
+    sources: [(.sources // [])[] | { id: .id, url: .url }],
+    url: ((.sources[0].url) // .link // ("https://eonet.gsfc.nasa.gov/api/v3/events/" + (.id // "")))
+  }
+)'''
+hit = '''(
+  ((.geometry // []) | if length > 0 then .[length - 1] else {} end) as $g |
+  {
+    title: (.title // ""),
+    url: ((.sources[0].url) // .link // ("https://eonet.gsfc.nasa.gov/api/v3/events/" + (.id // ""))),
+    snippet: ([
+      (if ((.categories // []) | length) > 0 then ([.categories[] | .title] | join(", ")) else empty end),
+      (if (.description // "") != "" then .description else empty end),
+      (if ($g.magnitudeValue | type) == "number" then "\($g.magnitudeValue) \($g.magnitudeUnit // "")" else empty end)
+    ] | join(" · ")),
+    date: ($g.date | parse_date),
+    dateSource: "api"
+  }
+)'''
+
+[op.event]
+summary = "Fetch a single NASA EONET natural event with full geometry timeline by event ID."
+method = "GET"
+url = "https://eonet.gsfc.nasa.gov/api/v3/events/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "EONET_26661" }, min_results = 1, fixture = "fixtures/w5j/nasa_eonet/event/default.json" }
+examples = ["source.call('nasa_eonet.event', { id: 'EONET_26661' })"]
+
+[op.event.params]
+id = { type = "string", required = true, in = "path", doc = "EONET event ID (e.g. EONET_26661)" }
+
+[op.event.map]
+items = "."
+record = "@ref:op.search.map.record"
+
+[op.categories]
+summary = "List all supported NASA EONET hazard event categories."
+method = "GET"
+url = "https://eonet.gsfc.nasa.gov/api/v3/categories"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = {}, min_results = 5, fixture = "fixtures/w5j/nasa_eonet/categories/default.json" }
+examples = ["source.call('nasa_eonet.categories', {})"]
+
+[op.categories.map]
+items = "(.categories // [])[]"
+record = '''{
+  id: (.id // ""),
+  title: (.title // ""),
+  description: (.description // ""),
+  url: (.link // "")
+}'''

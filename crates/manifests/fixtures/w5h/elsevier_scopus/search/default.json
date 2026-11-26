@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "elsevier_scopus",
+  "op": "search",
+  "recordedAt": "2026-11-25T13:03:45Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.elsevier.com/content/search/scopus?query=TITLE%28transformer%29&count=3&start=0",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ]
+        ],
+        "bodyText": "{\"search-results\": {\"opensearch:totalResults\": \"128450\", \"opensearch:startIndex\": \"0\", \"opensearch:itemsPerPage\": \"3\", \"entry\": [{\"dc:identifier\": \"SCOPUS_ID:85091234567\", \"dc:title\": \"Attention-based transformer networks for time-series forecasting\", \"dc:creator\": \"Zhang L.\", \"prism:publicationName\": \"Expert Systems with Applications\", \"prism:coverDate\": \"2023-06-15\", \"prism:doi\": \"10.1016/j.eswa.2023.119501\", \"citedby-count\": \"84\", \"prism:aggregationType\": \"Journal\", \"subtypeDescription\": \"Article\", \"openaccessFlag\": true, \"link\": [{\"@ref\": \"scopus\", \"@href\": \"https://www.scopus.com/inward/record.uri?partnerID=HzOxMe3b&scp=85091234567\"}]}, {\"dc:identifier\": \"SCOPUS_ID:85102345678\", \"dc:title\": \"Scaling laws for sparse mixture-of-experts transformers\", \"dc:creator\": \"Kumar A.\", \"prism:publicationName\": \"Neural Networks\", \"prism:coverDate\": \"2024-03-01\", \"prism:doi\": \"10.1016/j.neunet.2024.106112\", \"citedby-count\": \"39\", \"prism:aggregationType\": \"Journal\", \"subtypeDescription\": \"Article\", \"openaccessFlag\": false, \"link\": [{\"@ref\": \"scopus\", \"@href\": \"https://www.scopus.com/inward/record.uri?partnerID=HzOxMe3b&scp=85102345678\"}]}, {\"dc:identifier\": \"SCOPUS_ID:85113456789\", \"dc:title\": \"Transformer models in clinical radiology reporting: A systematic review\", \"dc:creator\": \"Miller R.\", \"prism:publicationName\": \"Artificial Intelligence in Medicine\", \"prism:coverDate\": \"2024-09-10\", \"prism:doi\": \"10.1016/j.artmed.2024.102890\", \"pubmed-id\": \"39123456\", \"citedby-count\": \"17\", \"prism:aggregationType\": \"Journal\", \"subtypeDescription\": \"Review\", \"openaccessFlag\": true, \"link\": [{\"@ref\": \"scopus\", \"@href\": \"https://www.scopus.com/inward/record.uri?partnerID=HzOxMe3b&scp=85113456789\"}]}]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

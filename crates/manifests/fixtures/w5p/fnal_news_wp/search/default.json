@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "fnal_news_wp",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:44:40Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://news.fnal.gov/wp-json/wp/v2/search?search=neutrino&per_page=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "cache-control",
+            "private, max-age=0, must-revalidate"
+          ],
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ]
+        ],
+        "bodyText": "[{\"id\":343605,\"title\":\"CSU researchers celebrate construction milestone in Deep Underground Neutrino Experiment (DUNE) project\",\"url\":\"https:\\/\\/source.colostate.edu\\/csu-researchers-celebrate-construction-milestone-in-deep-underground-neutrino-experiment-dune-project\\/\",\"type\":\"post\",\"subtype\":\"post\",\"_links\":{\"self\":[{\"embeddable\":true,\"href\":\"https:\\/\\/news.fnal.gov\\/wp-json\\/wp\\/v2\\/posts\\/343605\",\"targetHints\":{\"allow\":[\"GET\"]}}],\"about\":[{\"href\":\"https:\\/\\/news.fnal.gov\\/wp-json\\/wp\\/v2\\/types\\/post\"}],\"collection\":[{\"href\":\"https:\\/\\/news.fnal.gov\\/wp-json\\/wp\\/v2\\/search\"}]}},{\"id\":343581,\"title\":\"Construction begins on massive underground neutrino detector in South Dakota\",\"url\":\"https:\\/\\/www.uta.edu\\/academics\\/schools-colleges\\/science\\/news\\/2026\\/11\\/17\\/neutrino-construction\",\"type\":\"post\",\"subtype\":\"post\",\"_links\":{\"self\":[{\"embeddable\":true,\"href\":\"https:\\/\\/news.fnal.gov\\/wp-json\\/wp\\/v2\\/posts\\/343581\",\"targetHints\":{\"allow\":[\"GET\"]}}],\"about\":[{\"href\":\"https:\\/\\/news.fnal.gov\\/wp-json\\/wp\\/v2\\/types\\/post\"}],\"collection\":[{\"href\":\"https:\\/\\/news.fnal.gov\\/wp-json\\/wp\\/v2\\/search\"}]}},{\"id\":343245,\"title\":\"World\\u2019s largest neutrino experiment begins construction a mile underground in US\",\"url\":\"https:\\/\\/interestingengineering.com\\/science\\/neutrino-detector-mile-underground\",\"type\":\"post\",\"subtype\":\"post\",\"_links\":{\"self\":[{\"embeddable\":true,\"href\":\"https:\\/\\/news.fnal.gov\\/wp-json\\/wp\\/v2\\/posts\\/343245\",\"targetHints\":{\"allow\":[\"GET\"]}}],\"about\":[{\"href\":\"https:\\/\\/news.fnal.gov\\/wp-json\\/wp\\/v2\\/types\\/post\"}],\"collection\":[{\"href\":\"https:\\/\\/news.fnal.gov\\/wp-json\\/wp\\/v2\\/search\"}]}}]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

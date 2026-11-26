@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "source": "cninfo",
+  "op": "search",
+  "recordedAt": "2026-11-25T10:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://www.cninfo.com.cn/new/hisAnnouncement/query",
+        "headersSubset": {
+          "accept": "application/json",
+          "content-type": "application/x-www-form-urlencoded"
+        },
+        "bodySha256": "d748f436f9cb1b670ebc3e1f31a1d1a886fd8943df7c5a60b0b98cf37bd51c20"
+      },
+      "response": {
+        "status": 200,
+        "headers": [["content-type", "application/json; charset=UTF-8"]],
+        "bodyText": "{\"totalAnnouncement\":238,\"announcements\":[{\"secCode\":\"688525\",\"secName\":\"佰维存储\",\"announcementTitle\":\"关于参加科创板<em>人工智能</em>行业集体业绩说明会的公告\",\"announcementTime\":1787932800000,\"adjunctUrl\":\"finalpage/2026-08-29/1225533987.PDF\",\"adjunctSize\":113,\"adjunctType\":\"PDF\",\"pageColumn\":\"SHKCB\"},{\"secCode\":\"000001\",\"secName\":\"X\",\"announcementTitle\":\"公告\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "source": "ukri",
+  "op": "fund",
+  "recordedAt": "2026-11-25T15:12:24Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://gtr.ukri.org/gtr/api/funds/60EDB785-ED04-48D3-A2E8-D4239EDA5683",
+        "headersSubset": {
+          "accept": "application/vnd.rcuk.gtr.json-v7"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/vnd.rcuk.gtr.json-v7;charset=UTF-8"
+          ],
+          [
+            "cache-control",
+            "max-age=31536000"
+          ],
+          [
+            "cache-control",
+            "public, no-transform"
+          ]
+        ],
+        "bodyText": "{\"links\":{\"link\":[{\"href\":\"http://gtr.ukri.org/gtr/api/organisations/798CB33D-C79E-4578-83F2-72606407192C\",\"rel\":\"FUNDER\",\"start\":1555369200000,\"end\":1632956400000,\"otherAttributes\":{}},{\"href\":\"http://gtr.ukri.org/gtr/api/projects/F71A563C-4DDC-4ED3-AAE2-A9D1D19618BE\",\"rel\":\"FUNDED\",\"start\":1555369200000,\"end\":1632956400000,\"otherAttributes\":{}}]},\"ext\":null,\"id\":\"60EDB785-ED04-48D3-A2E8-D4239EDA5683\",\"outcomeid\":null,\"href\":\"http://gtr.ukri.org/gtr/api/funds/60EDB785-ED04-48D3-A2E8-D4239EDA5683\",\"created\":1788431797000,\"updated\":null,\"start\":1555369200000,\"end\":1632956400000,\"valuePounds\":{\"currencyCode\":\"GBP\",\"amount\":254183},\"category\":\"INCOME_ACTUAL\",\"type\":null}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "musicbrainz",
+  "op": "artist",
+  "recordedAt": "2026-11-25T11:55:56Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://musicbrainz.org/ws/2/artist/a74b1b7f-71a5-4011-9441-d0b5e4122711?fmt=json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ],
+          [
+            "etag",
+            "W/\"1d33f78cb87f49f957c1463d82b102d2\""
+          ]
+        ],
+        "bodyText": "{\"gender-id\":null,\"end-area\":null,\"isnis\":[\"0000000115475162\"],\"type\":\"Group\",\"country\":\"GB\",\"area\":{\"type\":null,\"sort-name\":\"United Kingdom\",\"iso-3166-1-codes\":[\"GB\"],\"id\":\"8a754a16-0027-3a29-b6d7-2b40ea0481ed\",\"type-id\":null,\"disambiguation\":\"\",\"name\":\"United Kingdom\"},\"sort-name\":\"Radiohead\",\"gender\":null,\"name\":\"Radiohead\",\"begin-area\":{\"name\":\"Abingdon-on-Thames\",\"disambiguation\":\"\",\"type-id\":null,\"sort-name\":\"Abingdon-on-Thames\",\"id\":\"d840d4b3-8987-4626-928b-398de760cc24\",\"type\":null},\"ipis\":[],\"life-span\":{\"end\":null,\"begin\":\"1991\",\"ended\":false},\"id\":\"a74b1b7f-71a5-4011-9441-d0b5e4122711\",\"type-id\":\"e431f5f6-b5d2-343d-8b36-72607fffb74b\",\"disambiguation\":\"\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

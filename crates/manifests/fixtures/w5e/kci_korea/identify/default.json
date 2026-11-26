@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "source": "kci_korea",
+  "op": "identify",
+  "recordedAt": "2026-11-25T12:13:54Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.kci.go.kr/kciportal/oai/request?verb=Identify",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/xml; charset=utf-8"
+          ],
+          [
+            "content-language",
+            "ko-KR"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd\">\n<responseDate>2026-11-25T21:13:54Z</responseDate>\n<request verb=\"Identify\">https://www.kci.go.kr/kciportal/oai/request</request>\n<Identify>\n<repositoryName>KCI (Korea Citation Index) Open Acecess Repository</repositoryName>\n<baseURL>https://www.kci.go.kr/kciportal/oai/request</baseURL>\n<protocolVersion>2.0</protocolVersion>\n<adminEmail>kciadmin@nrf.re.kr</adminEmail>\n<earliestDatestamp>2013-03-21</earliestDatestamp>\n<deletedRecord>no</deletedRecord>\n<granularity>YYYY-MM-DD</granularity>\n<description>\n<oai_id:oai-identifier xmlns:oai_id=\"http://www.openarchives.org/OAI/2.0/oai-identifier\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/oai-identifier http://www.openarchives.org/OAI/2.0/oai-identifier.xsd\">\n<oai_id:scheme>oai_dc</oai_id:scheme>\n<oai_id:repositoryIdentifier>oai:kci.go.kr:ARTI/</oai_id:repositoryIdentifier>\n<oai_id:sampleIdentifier>oai:kci.go.kr:ARTI/8820</oai_id:sampleIdentifier>\n</oai_id:oai-identifier>\n</description>\n</Identify>\n</OAI-PMH>\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

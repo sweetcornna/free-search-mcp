@@ -1,0 +1,104 @@
+id = "gene_ontology"
+name = "Gene Ontology (GO) API"
+summary = "Gene Ontology standard biological process, molecular function, and cellular component terms and gene functional annotations."
+aliases = ["go api", "geneontology", "go terms", "amigo"]
+home_url = "https://geneontology.org"
+tier = 1
+scopes = ["academic.biomed", "dataset"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 3.0, burst = 6, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 86400, host_bucket = "api.geneontology.org" }
+
+[op.search]
+summary = "Search Gene Ontology annotated genes or ontology entries via autocomplete API."
+method = "GET"
+url = "https://api.geneontology.org/api/search/entity/autocomplete/{query}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "start", start = 0, max_pages = 3 }
+probe = { params = { query = "apoptosis", limit = 3 }, min_results = 2, fixture = "fixtures/w5j/gene_ontology/search/default.json" }
+examples = ["source.call('gene_ontology.search', { query: 'apoptosis', category: 'gene', limit: 5 })"]
+
+[op.search.params]
+query = { type = "string", required = true, in = "path", doc = "Gene name, protein function, or ontology keyword" }
+category = { type = "string", default = "gene", enum = ["gene", "term"], to = "category", doc = "Entity category ('gene' or 'term')" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "rows", doc = "Maximum results to return" }
+offset = { type = "int", default = 0, min = 0, to = "start", doc = "0-based result offset" }
+
+[op.search.map]
+items = "(.docs // [])[]"
+record = '''{
+  id: (.id // ""),
+  label: (.label // ""),
+  name: (.name // ""),
+  taxon: (.taxon // null),
+  taxonLabel: (.taxon_label // null),
+  url: ("https://amigo.geneontology.org/amigo/gene_product/" + (.id // ""))
+}'''
+hit = '''{
+  title: ((.label // .id // "") + (if (.name // "") != "" then (" — " + (.name // "")) else "" end)),
+  url: ("https://amigo.geneontology.org/amigo/gene_product/" + (.id // "")),
+  snippet: ([
+    (if (.id // "") != "" then .id else empty end),
+    (if (.taxon_label // "") != "" then .taxon_label else empty end)
+  ] | join(" · ")),
+  date: null,
+  dateSource: "api"
+}'''
+
+[op.term]
+summary = "Fetch GO term definition, synonyms, and metadata by GO CURIE (e.g. GO:0006915)."
+method = "GET"
+url = "https://api.geneontology.org/api/ontology/term/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "GO:0006915" }, min_results = 1, fixture = "fixtures/w5j/gene_ontology/term/default.json" }
+examples = ["source.call('gene_ontology.term', { id: 'GO:0006915' })"]
+
+[op.term.params]
+id = { type = "string", required = true, in = "path", encode = "raw", doc = "Gene Ontology term CURIE (e.g. GO:0006915)" }
+
+[op.term.map]
+items = "."
+record = '''{
+  id: (.goid // ""),
+  label: (.label // ""),
+  definition: (.definition // ""),
+  synonyms: (.synonyms // []),
+  subsets: (.subsets // []),
+  comment: (.comment // null),
+  url: ("https://amigo.geneontology.org/amigo/term/" + (.goid // ""))
+}'''
+
+[op.genes]
+summary = "List genes annotated to a given GO term CURIE with evidence codes and taxa."
+method = "GET"
+url = "https://api.geneontology.org/api/bioentity/function/{id}/genes"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "start", start = 0, max_pages = 3 }
+probe = { params = { id = "GO:0006915", limit = 3 }, min_results = 2, fixture = "fixtures/w5j/gene_ontology/genes/default.json" }
+examples = ["source.call('gene_ontology.genes', { id: 'GO:0006915', limit: 5 })"]
+
+[op.genes.params]
+id = { type = "string", required = true, in = "path", encode = "raw", doc = "Gene Ontology term CURIE (e.g. GO:0006915)" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "rows", doc = "Maximum associations to return" }
+offset = { type = "int", default = 0, min = 0, to = "start", doc = "0-based offset" }
+
+[op.genes.map]
+items = "(.associations // [])[]"
+record = '''{
+  geneId: (.subject.id // ""),
+  geneLabel: (.subject.label // ""),
+  taxonId: (.subject.taxon.id // null),
+  taxonLabel: (.subject.taxon.label // null),
+  goId: (.object.id // ""),
+  goLabel: (.object.label // ""),
+  evidence: (.evidence // null),
+  providedBy: (.provided_by // []),
+  url: (.subject.iri // ("https://amigo.geneontology.org/amigo/term/" + (.object.id // "")))
+}'''

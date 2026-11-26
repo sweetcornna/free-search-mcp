@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "worldbank",
+  "op": "indicator",
+  "recordedAt": "2026-11-25T12:12:19Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.worldbank.org/v2/country/USA/indicator/NY.GDP.MKTP.CD?format=json&per_page=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json;charset=utf-8"
+          ]
+        ],
+        "bodyText": "[{\"page\":1,\"pages\":22,\"per_page\":3,\"total\":66,\"sourceid\":\"2\",\"lastupdated\":\"2026-11-11\"},[{\"indicator\":{\"id\":\"NY.GDP.MKTP.CD\",\"value\":\"GDP (current US$)\"},\"country\":{\"id\":\"US\",\"value\":\"United States\"},\"countryiso3code\":\"USA\",\"date\":\"2025\",\"value\":30769700000000,\"unit\":\"\",\"obs_status\":\"\",\"decimal\":0},{\"indicator\":{\"id\":\"NY.GDP.MKTP.CD\",\"value\":\"GDP (current US$)\"},\"country\":{\"id\":\"US\",\"value\":\"United States\"},\"countryiso3code\":\"USA\",\"date\":\"2024\",\"value\":29298013000000,\"unit\":\"\",\"obs_status\":\"\",\"decimal\":0},{\"indicator\":{\"id\":\"NY.GDP.MKTP.CD\",\"value\":\"GDP (current US$)\"},\"country\":{\"id\":\"US\",\"value\":\"United States\"},\"countryiso3code\":\"USA\",\"date\":\"2023\",\"value\":27811517000000,\"unit\":\"\",\"obs_status\":\"\",\"decimal\":0}]]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

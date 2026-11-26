@@ -1,0 +1,98 @@
+id = "noaa_tides"
+name = "NOAA CO-OPS Tides & Currents API"
+summary = "US coastal tide predictions, real-time water levels, and NOAA CO-OPS station metadata."
+aliases = ["noaa", "co-ops", "tides", "water level"]
+home_url = "https://api.tidesandcurrents.noaa.gov/api/prod/"
+tier = 2
+scopes = ["reference.geo"]
+caps = ["lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 1800 }
+
+[op.predictions]
+summary = "Fetch NOAA CO-OPS tide predictions (high/low or interval) for a coastal station."
+method = "GET"
+url = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter"
+headers = { Accept = "application/json" }
+const_query = { product = "predictions", format = "json" }
+response = "json"
+returns = "records"
+examples = ['source.call("noaa_tides.predictions", { station: "9414290", range: 24 })']
+probe = { params = { station = "9414290", datum = "MLLW", time_zone = "gmt", units = "metric", interval = "hilo", range = 24 }, min_results = 2, fixture = "fixtures/w5n/noaa_tides/predictions/default.json" }
+
+[op.predictions.params]
+station = { type = "string", required = true, doc = "7-digit NOAA CO-OPS station ID (e.g. 9414290 for San Francisco)" }
+datum = { type = "string", default = "MLLW", enum = ["MLLW", "MSL", "MHHW", "MLW", "MHW", "NAVD", "STND"], doc = "Vertical datum" }
+time_zone = { type = "string", default = "gmt", enum = ["gmt", "lst", "lst_ldt"], doc = "Timestamp time zone" }
+units = { type = "string", default = "metric", enum = ["metric", "english"], doc = "Height units (meters or feet)" }
+interval = { type = "string", default = "hilo", enum = ["hilo", "h", "1", "5", "6", "10", "15", "30", "60"], doc = "Prediction interval" }
+range = { type = "int", default = 24, min = 1, max = 720, doc = "Number of hours to retrieve" }
+begin_date = { type = "string", doc = "Optional start date YYYYMMDD" }
+end_date = { type = "string", doc = "Optional end date YYYYMMDD" }
+
+[op.predictions.map]
+items = "(.predictions // [])[]"
+error = "if .error then (.error.message // \"NOAA CO-OPS error\") else null end"
+record = '''{
+  time: .t,
+  value: (.v | to_num),
+  tideType: (.type // null)
+}'''
+
+[op.water_level]
+summary = "Fetch latest real-time observed water level at a NOAA CO-OPS station."
+method = "GET"
+url = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter"
+headers = { Accept = "application/json" }
+const_query = { product = "water_level", format = "json" }
+response = "json"
+returns = "records"
+examples = ['source.call("noaa_tides.water_level", { station: "9414290" })']
+probe = { params = { station = "9414290", datum = "MLLW", time_zone = "gmt", units = "metric", date = "latest" }, min_results = 1, fixture = "fixtures/w5n/noaa_tides/water_level/default.json" }
+
+[op.water_level.params]
+station = { type = "string", required = true, doc = "7-digit NOAA CO-OPS station ID" }
+datum = { type = "string", default = "MLLW", enum = ["MLLW", "MSL", "MHHW", "MLW", "MHW", "NAVD", "STND"], doc = "Vertical datum" }
+time_zone = { type = "string", default = "gmt", enum = ["gmt", "lst", "lst_ldt"], doc = "Timestamp time zone" }
+units = { type = "string", default = "metric", enum = ["metric", "english"], doc = "Height units" }
+date = { type = "string", default = "latest", enum = ["latest", "today", "recent"], doc = "Observation window" }
+
+[op.water_level.map]
+items = "(.data // [])[]"
+error = "if .error then (.error.message // \"NOAA CO-OPS error\") else null end"
+record = '''{
+  time: .t,
+  value: (.v | to_num),
+  sigma: (.s | to_num),
+  flags: (.f // null),
+  quality: (.q // null)
+}'''
+
+[op.station]
+summary = "Look up metadata, coordinates, and tide type for a NOAA CO-OPS station."
+method = "GET"
+url = "https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/{station}.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+examples = ['source.call("noaa_tides.station", { station: "9414290" })']
+probe = { params = { station = "9414290" }, min_results = 1, fixture = "fixtures/w5n/noaa_tides/station/default.json" }
+
+[op.station.params]
+station = { type = "string", required = true, in = "path", doc = "7-digit NOAA CO-OPS station ID" }
+
+[op.station.map]
+items = "(.stations // [])[]"
+record = '''{
+  id: .id,
+  name: .name,
+  state: (.state // null),
+  lat: (.lat // null),
+  lon: (.lng // null),
+  timeZone: (.timezone // null),
+  tideType: (.tideType // null),
+  tidal: (.tidal // false),
+  greatLakes: (.greatlakes // false),
+  url: ("https://tidesandcurrents.noaa.gov/stationhome.html?id=" + (.id | tostring))
+}'''

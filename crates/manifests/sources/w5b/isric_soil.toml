@@ -1,0 +1,62 @@
+id = "isric_soil"
+name = "ISRIC SoilGrids v2.0"
+summary = "Global 250 m gridded soil properties (clay, sand, silt, pH, organic carbon, nitrogen) and WRB classes."
+aliases = ["soilgrids", "isric", "soil data"]
+home_url = "https://soilgrids.org"
+tier = 2
+scopes = ["dataset", "reference.geo"]
+caps = ["lookup", "dataset"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 0.08, burst = 1, concurrency = 1, timeout_ms = 15000, cache_ttl_s = 604800 }
+
+[op.properties]
+summary = "Query predicted soil property values at a WGS84 longitude/latitude point."
+method = "GET"
+url = "https://rest.isric.org/soilgrids/v2.0/properties/query"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { lon = -7.557, lat = 41.196, property = ["clay"], depth = ["0-5cm"], value = ["mean"] }, min_results = 1, fixture = "fixtures/w5b/isric_soil/properties/default.json" }
+
+[op.properties.params]
+lon = { type = "float", required = true, min = -180.0, max = 180.0, to = "lon", doc = "WGS84 longitude in decimal degrees" }
+lat = { type = "float", required = true, min = -90.0, max = 90.0, to = "lat", doc = "WGS84 latitude in decimal degrees" }
+property = { type = "string_array", default = ["clay"], to = "property", array = "repeat", doc = "SoilGrids property codes (bdod, cec, cfvo, clay, nitrogen, ocd, ocs, phh2o, sand, silt, soc, wv0010, wv0033, wv1500)" }
+depth = { type = "string_array", default = ["0-5cm"], to = "depth", array = "repeat", doc = "Soil depth intervals (0-5cm, 5-15cm, 15-30cm, 30-60cm, 60-100cm, 100-200cm)" }
+value = { type = "string_array", default = ["mean"], to = "value", array = "repeat", doc = "Summary statistics (mean, Q0.05, Q0.5, Q0.95, uncertainty)" }
+
+[op.properties.map]
+items = ".properties.layers[]"
+error = 'if type == "object" and (.detail // null) != null then (if (.detail | type) == "string" then .detail else (.detail | arr | map(.msg // tostring) | join("; ")) end) else null end'
+record = '''{
+  property: (.name // ""),
+  mappedUnits: (.unit_measure.mapped_units // null),
+  targetUnits: (.unit_measure.target_units // null),
+  dFactor: (.unit_measure.d_factor | to_num),
+  depths: [(.depths // [])[] | {label: .label, range: .range, values: .values}]
+}'''
+
+[op.classification]
+summary = "Query World Reference Base (WRB) soil classification probabilities at a longitude/latitude point."
+method = "GET"
+url = "https://rest.isric.org/soilgrids/v2.0/classification/query"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { lon = -7.557, lat = 41.196, number_classes = 3 }, min_results = 1, fixture = "fixtures/w5b/isric_soil/classification/default.json" }
+
+[op.classification.params]
+lon = { type = "float", required = true, min = -180.0, max = 180.0, to = "lon", doc = "WGS84 longitude in decimal degrees" }
+lat = { type = "float", required = true, min = -90.0, max = 90.0, to = "lat", doc = "WGS84 latitude in decimal degrees" }
+number_classes = { type = "int", default = 5, min = 1, max = 32, to = "number_classes", doc = "Number of top WRB soil classes to return" }
+
+[op.classification.map]
+items = "."
+error = 'if type == "object" and (.detail // null) != null then (if (.detail | type) == "string" then .detail else (.detail | arr | map(.msg // tostring) | join("; ")) end) else null end'
+record = '''{
+  coordinates: (.coordinates // []),
+  wrbClassName: (.wrb_class_name // null),
+  wrbClassValue: (.wrb_class_value | to_int),
+  probabilities: [(.wrb_class_probability // [])[] | {className: .[0], probability: .[1]}]
+}'''

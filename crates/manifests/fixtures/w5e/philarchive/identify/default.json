@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "source": "philarchive",
+  "op": "identify",
+  "recordedAt": "2026-11-25T12:13:54Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://philarchive.org/oai.pl?verb=Identify",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/xml"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<OAI-PMH xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd\"\n         xmlns=\"http://www.openarchives.org/OAI/2.0/\"\n         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n  <responseDate>2026-11-25T12:13:53Z</responseDate>\n  <request verb=\"Identify\">https://philarchive.org/oai.pl</request>\n  <Identify>\n    <repositoryName>PhilArchive</repositoryName>\n    <baseURL>https://philarchive.org/oai.pl</baseURL>\n    <protocolVersion>2.0</protocolVersion>\n    <adminEmail>somebody@philarchive.org</adminEmail>\n    <earliestDatestamp>2008-01-01T00:00:00Z</earliestDatestamp>\n    <deletedRecord>transient</deletedRecord>\n    <granularity>YYYY-MM-DDThh:mm:ssZ</granularity>\n    <compression>deflate</compression>\n    <description>\n      <eprints xmlns=\"http://www.openarchives.org/OAI/1.1/eprints\"\n               xsi:schemaLocation=\"http://www.openarchives.org/OAI/1.1/eprints http://www.openarchives.org/OAI/1.1/eprints.xsd\">\n        <content>\n          <text>\n          1. This is a subject repository for articles in Philosophy.\n          2. Papers may include:\n          (a) unpublished pre-prints (not peer-reviewed)\n          (b) final peer-reviewed drafts (post-prints)\n          (c) published versions\n          3. Papers are individually tagged with their peer-review and publication status.\n          4. Principal Languages: English\n          5. Some moderation may be applied\n          6. See attached URL for details.\n          </text>\n          <URL>https://philarchive.org/help/terms.html</URL>\n        </content>\n        <metadataPolicy>\n          <URL>https://philarchive.org/help/terms.html</URL>\n        </metadataPolicy>\n        <dataPolicy>\n          <URL>https://philarchive.org/help/terms.html</URL>\n        </dataPolicy>\n        <submissionPolicy>\n          <URL>https://philarchive.org/help/terms.html</URL>\n        </submissionPolicy>\n      </eprints>\n    </description>\n  </Identify>\n</OAI-PMH> \n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

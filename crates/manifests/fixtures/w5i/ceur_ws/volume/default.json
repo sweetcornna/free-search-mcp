@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "source": "ceur_ws",
+  "op": "volume",
+  "recordedAt": "2026-11-25T12:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://ceur-ws.org/Vol-3600/",
+        "headersSubset": {
+          "accept": "text/html"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/html; charset=utf-8"
+          ],
+          [
+            "last-modified",
+            "Thu, 28 Dec 2023 07:57:10 GMT"
+          ],
+          [
+            "etag",
+            "\"658d2a56-15f8\""
+          ]
+        ],
+        "bodyText": "<!DOCTYPE html>\n<!-- CEURVERSION=2020-07-09 -->\n<html lang=\"en\">\n<head>\n<meta http-equiv=\"Content-type\" content=\"text/html;charset=utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<link rel=\"stylesheet\" type=\"text/css\" href=\"../ceur-ws.css\">\n<title>CEUR-WS.org/Vol-3600 - 2nd International Conference on Visual Pattern Extraction and Recognition for Cultural Heritage Understanding 2023</title>\n</head>\n<!--CEURLANG=eng -->\n<body>\n\n\n<table style=\"border: 0; border-spacing: 0; border-collapse: collapse; width: 95%\">\n<tbody><tr>\n<td style=\"text-align: left; vertical-align: middle\">\n<a href=\"http://ceur-ws.org/\"><div id=\"CEURWSLOGO\"></div></a>\n</td>\n<td style=\"text-align: right; vertical-align: middle\">\n<div style=\"float:left\" id=\"CEURCCBY\"></div>\n<span class=\"CEURVOLNR\">Vol-3600</span> <br>\n<span class=\"CEURURN\">urn:nbn:de:0074-3600-6</span>\n<p class=\"unobtrusive copyright\" style=\"text-align: justify\">Copyright &copy; 2023 for \nthe individual papers by the papers' authors. \nCopyright &copy; <span class=\"CEURPUBYEAR\">2023</span> for the volume\nas a collection by its editors.\nThis volume and its papers are published under the\nCreative Commons License Attribution 4.0 International\n<A HREF=\"https://creativecommons.org/licenses/by/4.0/\">(<span class=\"CEURLIC\">CC BY 4.0</span>)</A>.</p>\n</td>\n</tr>\n</tbody></table>\n\n<hr>\n<img src=\"logo.jpeg\" alt=\"viperc\" style=\"width:300px;height:160px;\">\n\n\n<br><br><br>\n\n<h1><a href=\"https://sites.google.com/view/viperc2023/\"><span class=\"CEURVOLACRONYM\">VIPERC 2023</span></a><br>\n<span class=\"CEURVOLTITLE\">Visual Pattern Extraction and Recognition for Cultural Heritage Understanding 2023</span></h1>\n<br>\n\n<h3>\n<span class=\"CEURFULLTITLE\">Proceedings of the 2nd International Satellite Conference on Visual Pattern Extraction and Recognition for Cultural Heritage Understanding</span><br>\nco-located with 27th International Conference on Theory and Practice of Digital Libraries (<span class=\"CEURCOLOCATED\">TPDL 2023</span>)<br>\n</h3>\n<h3><span class=\"CEURLOCTIME\">Zadar, Croatia, September 25-26, 2023</span>.</h3> \n\n<br>\n<b> Edited by </b>\n<p>\n\n</p><h3>\n   <span class=\"CEURVOLEDITOR\">Alessia Amelio</span> *<br>\n   <span class=\"CEURVOLEDITOR\">Francesco Cauteruccio</span> **<br>\n   <span class=\"CEURVOLEDITOR\">Domenico Ursino</span> **<br>\n   <span class=\"CEURVOLEDITOR\">Luca Virgili</span> **<br>\n</h3>\n\n* <a href=\"https://www.ingeo.unich.it/\">University \"G. d'Annunzio\" Chieti-Pescara</a>,\n  InGeo, 65127 Pescara, Italy<br>\n** <a href=\"https://www.dii.univpm.it/\">Marche Polytechnic University</a>,\n   DII, 60131 Ancona, Italy <br>\n   <br>\n\n<hr>\n\n<br><br><br>\n\n\n<div class=\"CEURTOC\">\n<h2> Table of Contents </h2>\n\n\n<ul>\n<li id=\"xpreface\">\n<A href=\"xpreface.pdf\">Preface</A><BR>\nSummary: There were <span class=\"CEURSUBMITTEDPAPERS\">11</span> papers submitted for peer-review to this conference. Out of these, \n<span class=\"CEURACCEPTEDPAPERS\">5</span> papers were accepted for this volume, \n<span class=\"CEURACCEPTEDREGULARPAPERS\">5</span> as regular papers\n</li>\n</ul>\n<BR>\n\n\n<h3><span class=\"CEURSESSION\">Session 1: 25 September 2023 (Chair: Dr. Valentino Sangiorgio)</span></h3>\n\n\n<ul>\n\n<li id=\"paper4\"><a href=\"paper4.pdf\">\n<span class=\"CEURTITLE\">Steps in building a transcription technology: deciphering the content of historical romanian documents</span></a><br>\n<span class=\"CEURAUTHOR\">Petru Rebeja</span>, \n<span class=\"CEURAUTHOR\">Eduard Coman</span>,\n<span class=\"CEURAUTHOR\">Claudiu Marinescu</span>,\n<span class=\"CEURAUTHOR\">Dan Cristea</span>\n</li>\n\n\n<li id=\"paper5\"><a href=\"paper5.pdf\">\n<span class=\"CEURTITLE\">On the innovative forms of communication in forensic engineering: the italian contest</span></a><br>\n<span class=\"CEURAUTHOR\">Regina Finocchiaro</span>,\n<span class=\"CEURAUTHOR\">Samuele Biondi</span>, \n<span class=\"CEURAUTHOR\">Franco Bontempi</span>\n</li>\n\n\n<li id=\"paper3\"><a href=\"paper3.pdf\">\n<span class=\"CEURTITLE\">Deep learning empowered classification of augmented cultural heritage images</span></a><br>\n<span class=\"CEURAUTHOR\">Israr Ur Rehman</span>,\n<span class=\"CEURAUTHOR\">Zulfiqar Ali</span>,\n<span class=\"CEURAUTHOR\">Zahoor Jan</span>,\n<span class=\"CEURAUTHOR\">Muhammad Rashid</span>,\n<span class=\"CEURAUTHOR\">Ali Abbas</span>,\n<span class=\"CEURAUTHOR\">Nadeem Tariq</span>\n</li>\n\n\n\n</ul>\n\n\n<h3><span class=\"CEURSESSION\">Session 2: 26 September 2023 (Chair: Dr. Alessia Amelio) </span></h3>\n\n<ul>\n<li id=\"paper2\"><a href=\"paper2.pdf\">\n<span class=\"CEURTITLE\">AI-driven image generation for enhancing design in digital fabrication: urban furnishings in historic city centres</span></a><br>\n<span class=\"CEURAUTHOR\">Giuseppe Fallacara</span>,\n<span class=\"CEURAUTHOR\">Maria Pia Fanti</span>,\n<span class=\"CEURAUTHOR\">Fabio Parisi</span>,\n<span class=\"CEURAUTHOR\">Nicola Parisi</span>,\n<span class=\"CEURAUTHOR\">Valentino Sangiorgio</span>\n</li>\n\n\n<li id=\"paper1\"><a href=\"paper1.pdf\">\n<span class=\"CEURTITLE\">People-centred natural language processing for cultural tourism market: a research agenda</span></a><br>\n<span class=\"CEURAUTHOR\">Mohamed W. Fareed</span>,\n<span class=\"CEURAUTHOR\">Mohamed Amer</span>\n</li>\n\n\n</ul>\n\n\n</div>\n\n\n<hr>\n<span class=\"unobtrusive\">\n2023-12-05: submitted by Alessia Amelio, \n            metadata incl. bibliographic data published under <A HREF=\"https://creativecommons.org/publicdomain/zero/1.0/\">Creative Commons CC0</A><br>\n<span class=\"CEURPUBDATE\">2023-12-28</span>: published on CEUR Workshop Proceedings (CEUR-WS.org, ISSN 1613-0073)\n\t|<a href=\"https://validator.w3.org/nu/?doc=http%3A%2F%2Fceur-ws.org%2FVol-3600%2F\">valid HTML5</a>|\n</span>\n</body></html>\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "wikipedia",
+  "op": "search",
+  "recordedAt": "2026-11-25T14:25:06Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=Alan+Turing&srlimit=3&format=json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"batchcomplete\":\"\",\"continue\":{\"sroffset\":3,\"continue\":\"-||\"},\"query\":{\"searchinfo\":{\"totalhits\":2409,\"suggestion\":\"alan touring\",\"suggestionsnippet\":\"alan touring\"},\"search\":[{\"ns\":0,\"title\":\"Alan Turing\",\"pageid\":1208,\"size\":176555,\"wordcount\":16771,\"snippet\":\"apologised for the &quot;appalling way [<span class=\\\"searchmatch\\\">Turing</span>] was treated&quot;, and Queen Elizabeth II granted <span class=\\\"searchmatch\\\">Turing</span> a pardon in 2013. The <span class=\\\"searchmatch\\\">Alan</span> <span class=\\\"searchmatch\\\">Turing</span> law refers to part of a 2017\",\"timestamp\":\"2026-11-21T11:57:09Z\"},{\"ns\":0,\"title\":\"Alan Turing Institute\",\"pageid\":42264629,\"size\":25627,\"wordcount\":2317,\"snippet\":\"The <span class=\\\"searchmatch\\\">Alan</span> <span class=\\\"searchmatch\\\">Turing</span> Institute is the United Kingdom&#039;s national institute for data science and artificial intelligence, founded in 2015 and largely funded\",\"timestamp\":\"2026-11-02T17:04:27Z\"},{\"ns\":0,\"title\":\"Turing Award\",\"pageid\":31093,\"size\":80706,\"wordcount\":3734,\"snippet\":\"Staff (2014). &quot;ACM&#039;s <span class=\\\"searchmatch\\\">Turing</span> Award prize raised to $1 million&quot;. Communications of the ACM. 57 (12): 20. doi:10.1145/2685372. &quot;A. M. <span class=\\\"searchmatch\\\">Turing</span> Award&quot;. Association\",\"timestamp\":\"2026-11-17T04:23:01Z\"}]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

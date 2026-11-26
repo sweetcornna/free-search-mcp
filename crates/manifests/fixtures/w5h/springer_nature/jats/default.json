@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "springer_nature",
+  "op": "jats",
+  "recordedAt": "2026-11-25T13:03:45Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.springernature.com/openaccess/jats?p=1&q=doi%3A10.1038%2Fs41598-020-79929-0",
+        "headersSubset": {
+          "accept": "application/xml"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/xml; charset=utf-8"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<response><query>doi:10.1038/s41598-020-79929-0</query><result><total>1</total><start>1</start><pageLength>1</pageLength></result><records><article article-type=\"research-article\"><front><journal-meta><journal-title-group><journal-title>Scientific Reports</journal-title></journal-title-group></journal-meta><article-meta><article-id pub-id-type=\"doi\">10.1038/s41598-020-79929-0</article-id><title-group><article-title>Reliance on model-based and model-free control in obesity</article-title></title-group><abstract><p>Background: Obesity is frequently associated with altered reinforcement learning dynamics.</p></abstract></article-meta></front><body><sec><title>Introduction</title><p>Model-based and model-free decision making interact during sequential learning tasks.</p></sec></body></article></records></response>",
+        "bodyB64": null
+      }
+    }
+  ]
+}

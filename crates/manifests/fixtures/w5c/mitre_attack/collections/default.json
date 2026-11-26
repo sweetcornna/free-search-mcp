@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "mitre_attack",
+  "op": "collections",
+  "recordedAt": "2026-11-25T11:55:28Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://attack-taxii.mitre.org/api/v21/collections/",
+        "headersSubset": {
+          "accept": "application/taxii+json;version=2.1"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/taxii+json;version=2.1"
+          ]
+        ],
+        "bodyText": "{\"collections\":[{\"id\":\"x-mitre-collection--90c00720-636b-4485-b342-8751d232bf09\",\"title\":\"ICS ATT&CK\",\"description\":\"The ATT&CK for Industrial Control Systems (ICS) knowledge base categorizes the unique set of tactics, techniques, and procedures (TTPs) used by threat actors in the ICS technology domain. ATT&CK for ICS outlines the portions of an ICS attack that are out of scope of Enterprise and reflects the various phases of an adversary’s attack life cycle and the assets and systems they are known to target.\",\"can_read\":true,\"can_write\":false,\"media_types\":[\"application/taxii+json;version=2.1\",\"application/taxii+json\"]},{\"id\":\"x-mitre-collection--1f5f1533-f617-4ca8-9ab4-6a02367fa019\",\"title\":\"Enterprise ATT&CK\",\"description\":\"ATT&CK for Enterprise provides a knowledge base of real-world adversary behavior targeting traditional enterprise networks.\",\"can_read\":true,\"can_write\":false,\"media_types\":[\"application/taxii+json;version=2.1\",\"application/taxii+json\"]},{\"id\":\"x-mitre-collection--dac0d2d7-8653-445c-9bff-82f934c1e858\",\"title\":\"Mobile ATT&CK\",\"description\":\"ATT&CK for Mobile is a matrix of adversary behavior against mobile devices (smartphones and tablets running the Android or iOS/iPadOS operating systems). ATT&CK for Mobile builds upon NIST's Mobile Threat Catalogue and also contains a separate matrix of network-based effects, which are techniques that an adversary can employ without access to the mobile device itself.\",\"can_read\":true,\"can_write\":false,\"media_types\":[\"application/taxii+json;version=2.1\",\"application/taxii+json\"]}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

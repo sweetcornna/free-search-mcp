@@ -1,0 +1,122 @@
+id = "inaturalist_bio"
+name = "iNaturalist Biodiversity Observations"
+summary = "Global citizen-science biodiversity observations, species taxonomy, coordinates, and research-grade occurrence records."
+aliases = ["inaturalist", "inat", "biodiversity", "species observations"]
+home_url = "https://www.inaturalist.org"
+tier = 1
+scopes = ["dataset", "reference.geo"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 21600, host_bucket = "api.inaturalist.org" }
+
+[op.search]
+summary = "Search iNaturalist biodiversity observations by species or keyword via compact API v2."
+method = "GET"
+url = "https://api.inaturalist.org/v2/observations"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { fields = "(id:!t,uuid:!t,species_guess:!t,observed_on:!t,place_guess:!t,quality_grade:!t,uri:!t,taxon:(id:!t,name:!t,preferred_common_name:!t,rank:!t),geojson:!t)" }
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "vulpes", limit = 3 }, min_results = 2, fixture = "fixtures/w5j/inaturalist_bio/search/default.json" }
+examples = ["source.call('inaturalist_bio.search', { query: 'vulpes', quality_grade: 'research', limit: 5 })"]
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Species name, common name, or observation keyword" }
+quality_grade = { type = "string", enum = ["research", "needs_id", "casual"], to = "quality_grade", doc = "Observation quality grade filter" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "per_page", doc = "Observations per page" }
+page = { type = "int", default = 1, min = 1, to = "page", doc = "1-based page number" }
+
+[op.search.map]
+items = "(.results // [])[]"
+total = ".total_results"
+record = '''{
+  id: (.id // null),
+  uuid: (.uuid // ""),
+  speciesGuess: (.species_guess // null),
+  taxonId: (.taxon.id // null),
+  scientificName: (.taxon.name // null),
+  commonName: (.taxon.preferred_common_name // null),
+  rank: (.taxon.rank // null),
+  qualityGrade: (.quality_grade // null),
+  observedOn: (.observed_on // null),
+  placeGuess: (.place_guess // null),
+  coordinates: (.geojson.coordinates // null),
+  url: (.uri // ("https://www.inaturalist.org/observations/" + ((.id // "") | tostring)))
+}'''
+hit = '''{
+  title: ((.taxon.preferred_common_name // .species_guess // .taxon.name // "Observation") + (if (.taxon.name // "") != "" then (" (" + .taxon.name + ")") else "" end)),
+  url: (.uri // ("https://www.inaturalist.org/observations/" + ((.id // "") | tostring))),
+  snippet: ([
+    (if (.quality_grade // "") != "" then .quality_grade else empty end),
+    (if (.place_guess // "") != "" then .place_guess else empty end),
+    (if (.observed_on // "") != "" then .observed_on else empty end)
+  ] | join(" · ")),
+  date: (.observed_on | parse_date),
+  dateSource: "api"
+}'''
+
+[op.taxa]
+summary = "Search iNaturalist taxa by scientific or common name with global observation counts."
+method = "GET"
+url = "https://api.inaturalist.org/v2/taxa"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { fields = "(id:!t,name:!t,rank:!t,preferred_common_name:!t,observations_count:!t,wikipedia_url:!t,iconic_taxon_name:!t)" }
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "Vulpes vulpes", limit = 3 }, min_results = 2, fixture = "fixtures/w5j/inaturalist_bio/taxa/default.json" }
+examples = ["source.call('inaturalist_bio.taxa', { query: 'Vulpes vulpes', limit: 5 })"]
+
+[op.taxa.params]
+query = { type = "string", required = true, to = "q", doc = "Scientific or common taxon name" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "per_page", doc = "Taxa per page" }
+page = { type = "int", default = 1, min = 1, to = "page", doc = "1-based page number" }
+
+[op.taxa.map]
+items = "(.results // [])[]"
+total = ".total_results"
+record = '''{
+  id: (.id // null),
+  scientificName: (.name // ""),
+  commonName: (.preferred_common_name // null),
+  rank: (.rank // null),
+  iconicTaxon: (.iconic_taxon_name // null),
+  observationsCount: (.observations_count // null),
+  wikipediaUrl: (.wikipedia_url // null),
+  url: ("https://www.inaturalist.org/taxa/" + ((.id // "") | tostring))
+}'''
+
+[op.observation]
+summary = "Fetch a single iNaturalist observation record by UUID via API v2."
+method = "GET"
+url = "https://api.inaturalist.org/v2/observations/{uuid}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { fields = "(id:!t,uuid:!t,species_guess:!t,observed_on:!t,place_guess:!t,quality_grade:!t,uri:!t,description:!t,license_code:!t,taxon:(id:!t,name:!t,preferred_common_name:!t,rank:!t),geojson:!t)" }
+probe = { params = { uuid = "dceeba89-2a9d-4f29-b5ed-044e9c9ba124" }, min_results = 1, fixture = "fixtures/w5j/inaturalist_bio/observation/default.json" }
+examples = ["source.call('inaturalist_bio.observation', { uuid: 'dceeba89-2a9d-4f29-b5ed-044e9c9ba124' })"]
+
+[op.observation.params]
+uuid = { type = "string", required = true, in = "path", doc = "iNaturalist observation UUID" }
+
+[op.observation.map]
+items = "(.results // [])[]"
+record = '''{
+  id: (.id // null),
+  uuid: (.uuid // ""),
+  speciesGuess: (.species_guess // null),
+  taxonId: (.taxon.id // null),
+  scientificName: (.taxon.name // null),
+  commonName: (.taxon.preferred_common_name // null),
+  rank: (.taxon.rank // null),
+  qualityGrade: (.quality_grade // null),
+  observedOn: (.observed_on // null),
+  placeGuess: (.place_guess // null),
+  description: (.description // null),
+  licenseCode: (.license_code // null),
+  coordinates: (.geojson.coordinates // null),
+  url: (.uri // ("https://www.inaturalist.org/observations/" + ((.id // "") | tostring)))
+}'''

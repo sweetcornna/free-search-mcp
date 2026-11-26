@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "source": "python_peps",
+  "op": "recent",
+  "recordedAt": "2026-11-25T12:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://peps.python.org/peps.rss",
+        "headersSubset": {
+          "accept": "application/rss+xml"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/rss+xml; charset=utf-8"
+          ],
+          [
+            "last-modified",
+            "Mon, 23 Nov 2026 21:40:13 GMT"
+          ],
+          [
+            "etag",
+            "\"6b04b2bd-1b89\""
+          ],
+          [
+            "cache-control",
+            "max-age=600"
+          ]
+        ],
+        "bodyText": "<?xml version='1.0' encoding='UTF-8'?>\n<rss xmlns:atom=\"http://www.w3.org/2005/Atom\" xmlns:content=\"http://purl.org/rss/1.0/modules/content/\" version=\"2.0\">\n  <channel>\n    <title>Newest Python PEPs</title>\n    <link>https://peps.python.org/</link>\n    <description>Newest Python Enhancement Proposals (PEPs): Information on new language features and some meta-information like release procedure and schedules.</description>\n    <atom:link href=\"https://peps.python.org/peps.rss\" rel=\"self\"/>\n    <docs>https://cyber.harvard.edu/rss/rss.html</docs>\n    <language>en</language>\n    <lastBuildDate>Mon, 23 Nov 2026 21:39:21 GMT</lastBuildDate>\n    <item>\n      <title>PEP 8108: 2027 Term Steering Council election</title>\n      <link>https://peps.python.org/pep-8108/</link>\n      <description>This document describes the schedule and other details of the 2026 election for the Python steering council, as specified in PEP 13. This is the steering council election for the 2027 term (i.e. Python 3.16).</description>\n      <author>Seth Larson (seth@python.org)</author>\n      <guid isPermaLink=\"true\">https://peps.python.org/pep-8108/</guid>\n      <pubDate>Mon, 09 Nov 2026 00:00:00 GMT</pubDate>\n    </item>\n    <item>\n      <title>PEP 852: Asynchronous functions in the C API</title>\n      <link>https://peps.python.org/pep-0852/</link>\n      <description>This PEP describes a new suite of functions in the C API to interact with coroutines. For example:</description>\n      <author>Peter Bierma (peter@python.org)</author>\n      <guid isPermaLink=\"true\">https://peps.python.org/pep-0852/</guid>\n      <pubDate>Mon, 02 Nov 2026 00:00:00 GMT</pubDate>\n    </item>\n    <item>\n      <title>PEP 851: Add list.discard()</title>\n      <link>https://peps.python.org/pep-0851/</link>\n      <description>Add list.discard(x), which removes the first item equal to x if one is present and does nothing otherwise, returning whether an item was removed. It is the non-raising counterpart to list.remove(), which currently has none. The name is taken from set.discard(), which already means “remove if present” in Python.</description>\n      <author>Stan Ulbrych (stan@python.org)</author>\n      <guid isPermaLink=\"true\">https://peps.python.org/pep-0851/</guid>\n      <pubDate>Tue, 27 Oct 2026 00:00:00 GMT</pubDate>\n    </item>\n    <item>\n      <title>PEP 850: Wheel Variants: Providers</title>\n      <link>https://peps.python.org/pep-0850/</link>\n      <description>This PEP extends PEP 825 by defining how variant properties are governed and how their compatibility is determined. This is done either via static feature and feature value compatibility lists specified in the variant metadata, or by querying opt-in plugins that are Python packages but can also be vendored or reimplemented by the tools. A static list can also be provided in place of querying the plugins. Additionally, an ABI Dependency Variant Provider is defined to facilitate builds of the same package against different dependency versions.</description>\n      <author>Michał Górny (mgorny@quansight.com), Jonathan Dekhtiar (jonathan@dekhtiar.com), Konstantin Schütze (konstin@mailbox.org), Ralf Gommers (ralf.gommers@gmail.com)</author>\n      <guid isPermaLink=\"true\">https://peps.python.org/pep-0850/</guid>\n      <pubDate>Thu, 15 Oct 2026 00:00:00 GMT</pubDate>\n    </item>\n    <item>\n      <title>PEP 849: More Expressive Type Expressions</title>\n      <link>https://peps.python.org/pep-0849/</link>\n      <description>Currently, the Python interpreter allows any expression to be used as an annotation. But their most popular usage, type annotations, are restricted to only a small subset of possible expressions. This is because type annotations need to be introspectable at runtime and many valid expressions produce values where that is not possible. This greatly limits which expressions can be assigned a meaning within the typing spec and limits the expressiveness and ease of use of type annotations.</description>\n      <author>Imogen Hergeth (python at imogen.tech)</author>\n      <guid isPermaLink=\"true\">https://peps.python.org/pep-0849/</guid>\n      <pubDate>Sun, 20 Sep 2026 00:00:00 GMT</pubDate>\n    </item>\n    <item>\n      <title>PEP 824: None-coalescing operators</title>\n      <link>https://peps.python.org/pep-0824/</link>\n      <description>This PEP proposes adding two new operators.</description>\n      <author>Marc Mueller</author>\n      <guid isPermaLink=\"true\">https://peps.python.org/pep-0824/</guid>\n      <pubDate>Sun, 20 Sep 2026 00:00:00 GMT</pubDate>\n    </item>\n    <item>\n      <title>PEP 823: None-aware access operators</title>\n      <link>https://peps.python.org/pep-0823/</link>\n      <description>This PEP proposes adding two new operators.</description>\n      <author>Marc Mueller</author>\n      <guid isPermaLink=\"true\">https://peps.python.org/pep-0823/</guid>\n      <pubDate>Sun, 20 Sep 2026 00:00:00 GMT</pubDate>\n    </item>\n    <item>\n      <title>PEP 848: Generational Incremental Garbage Collection</title>\n      <link>https://peps.python.org/pep-0848/</link>\n      <description>This PEP proposes adding a new cyclic garbage collector to CPython. The new collector will be both generational and incremental. Collections will alternate: a young collection, then an (incremental) old collection, then a young collection, and so on.</description>\n      <author>Mark Shannon (Mark.Shannon@arm.com)</author>\n      <guid isPermaLink=\"true\">https://peps.python.org/pep-0848/</guid>\n      <pubDate>Wed, 16 Sep 2026 00:00:00 GMT</pubDate>\n    </item>\n    <item>\n      <title>PEP 846: Docstrings for Type Aliases</title>\n      <link>https://peps.python.org/pep-0846/</link>\n      <description>This PEP proposes preserving a string literal immediately following a type statement as the resulting type alias object’s __doc__ attribute, exposing that documentation through ast, and displaying it through pydoc and help(). It follows the placement already supported by source-based documentation tools. The parser stores the docstring in a new optional doc field on ast.TypeAlias instead of creating a separate ast.Expr node for it. ast.get_docstring() retrieves alias docstrings from this field.</description>\n      <author>Bartosz Sławecki (bartosz@ilikepython.com)</author>\n      <guid isPermaLink=\"true\">https://peps.python.org/pep-0846/</guid>\n      <pubDate>Sun, 06 Sep 2026 00:00:00 GMT</pubDate>\n    </item>\n    <item>\n      <title>PEP 845: Leading-Dot Value Patterns for match statements</title>\n      <link>https://peps.python.org/pep-0845/</link>\n      <description>This PEP enables the use of non-attribute names as value patterns in match statements. This makes it possible to match local variables and global variables defined in the same module without having to use a guard clause.</description>\n      <author>Thomas Kehrenberg (tmke8@posteo.net),  (Marc)</author>\n      <guid isPermaLink=\"true\">https://peps.python.org/pep-0845/</guid>\n      <pubDate>Tue, 25 Aug 2026 00:00:00 GMT</pubDate>\n    </item>\n  </channel>\n</rss>\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

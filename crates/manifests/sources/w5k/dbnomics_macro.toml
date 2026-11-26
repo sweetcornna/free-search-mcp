@@ -1,0 +1,109 @@
+id = "dbnomics_macro"
+name = "DBnomics Global Macro & Research Data"
+summary = "Cross-agency global macroeconomic and statistical time-series aggregator indexing NBS China, IMF, OECD, Eurostat, World Bank, and 80+ providers."
+aliases = ["dbnomics", "db.nomics.world", "macro time series"]
+home_url = "https://db.nomics.world"
+tier = 1
+scopes = ["dataset", "finance"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 10000, cache_ttl_s = 21600, host_bucket = "api.db.nomics.world" }
+
+[op.search]
+summary = "Full-text search across DBnomics datasets from 80+ national and international statistical providers."
+method = "GET"
+url = "https://api.db.nomics.world/v22/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "china gdp", limit = 3, offset = 0 }, min_results = 2, fixture = "fixtures/w5k/dbnomics_macro/search/default.json" }
+examples = ['source.call("dbnomics_macro.search", { query: "china gdp", limit: 5 })']
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Macroeconomic search keywords" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Results per page" }
+offset = { type = "int", default = 0, min = 0, to = "offset", doc = "Pagination offset" }
+
+[op.search.map]
+items = "(.results.docs // [])[]"
+total = ".results.num_found"
+error = "if .message then .message else null end"
+record = '''{
+  providerCode: (.provider_code // ""),
+  providerName: (.provider_name | collapse_ws),
+  code: (.code // ""),
+  name: ((.name // "") | collapse_ws),
+  description: ((.description // "") | strip_tags | if . != null and length > 0 then . else null end),
+  nbSeries: (.nb_series // null),
+  indexedAt: (.indexed_at | parse_date),
+  url: ("https://db.nomics.world/" + (.provider_code // "") + "/" + (.code // ""))
+}'''
+hit = '''(
+  (.indexed_at | parse_date) as $d |
+  {
+    title: (((.name // .code // "") | collapse_ws) + " (" + (.provider_code // "") + "/" + (.code // "") + ")"),
+    url: ("https://db.nomics.world/" + (.provider_code // "") + "/" + (.code // "")),
+    snippet: ([((.provider_name // "") | collapse_ws), (if .nb_series != null then ((.nb_series | tostring) + " series") else "" end), (((.description // "") | strip_tags // "")[0:180] | collapse_ws)] | map(select(. != null and length > 0)) | join(" · ")),
+    date: $d,
+    dateSource: (if $d != null then "api" else null end)
+  }
+)'''
+
+[op.series]
+summary = "Fetch a single DBnomics time series with period/value observation arrays."
+method = "GET"
+url = "https://api.db.nomics.world/v22/series/{provider}/{dataset}/{series_code}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { observations = 1 }
+probe = { params = { provider = "AMECO", dataset = "ZUTN", series_code = "EA19.1.0.0.0.ZUTN" }, min_results = 1, fixture = "fixtures/w5k/dbnomics_macro/series/default.json" }
+examples = ['source.call("dbnomics_macro.series", { provider: "AMECO", dataset: "ZUTN", series_code: "EA19.1.0.0.0.ZUTN" })']
+
+[op.series.params]
+provider = { type = "string", required = true, in = "path", doc = "Provider code e.g. IMF, OECD, NBS, AMECO" }
+dataset = { type = "string", required = true, in = "path", encode = "raw", doc = "Dataset code e.g. ZUTN, WEO:2024-10" }
+series_code = { type = "string", required = true, in = "path", encode = "raw", doc = "Series code e.g. EA19.1.0.0.0.ZUTN" }
+
+[op.series.map]
+items = "(.series.docs // [])[]"
+error = "if .errors and (.errors | length) > 0 then (.errors | tostring) elif .message then .message else null end"
+record = '''{
+  providerCode: (.provider_code // ""),
+  datasetCode: (.dataset_code // ""),
+  seriesCode: (.series_code // ""),
+  seriesName: ((.series_name // "") | collapse_ws),
+  frequency: (."@frequency" // null),
+  dimensions: (.dimensions // {}),
+  periods: (.period // []),
+  values: (.value // []),
+  indexedAt: (.indexed_at | parse_date),
+  url: ("https://db.nomics.world/" + (.provider_code // "") + "/" + (.dataset_code // "") + "/" + (.series_code // ""))
+}'''
+
+[op.dataset_series]
+summary = "List or filter time series with observations within a DBnomics provider/dataset."
+method = "GET"
+url = "https://api.db.nomics.world/v22/series/{provider}/{dataset}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { observations = 1 }
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { provider = "AMECO", dataset = "ZUTN", limit = 2, offset = 0 }, min_results = 2, fixture = "fixtures/w5k/dbnomics_macro/dataset_series/default.json" }
+examples = ['source.call("dbnomics_macro.dataset_series", { provider: "AMECO", dataset: "ZUTN", limit: 5 })']
+
+[op.dataset_series.params]
+provider = { type = "string", required = true, in = "path", doc = "Provider code e.g. AMECO, IMF" }
+dataset = { type = "string", required = true, in = "path", encode = "raw", doc = "Dataset code e.g. ZUTN, WEO:2024-10" }
+query = { type = "string", to = "q", doc = "Optional keyword filter within the dataset" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Series per page" }
+offset = { type = "int", default = 0, min = 0, to = "offset", doc = "Pagination offset" }
+
+[op.dataset_series.map]
+items = "@ref:op.series.map.items"
+total = ".series.num_found"
+error = "@ref:op.series.map.error"
+record = "@ref:op.series.map.record"

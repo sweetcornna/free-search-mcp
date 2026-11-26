@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "defillama_crypto",
+  "op": "price_change",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://coins.llama.fi/percentage/coingecko:bitcoin,coingecko:ethereum",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ],
+          [
+            "cache-control",
+            "max-age=3600"
+          ]
+        ],
+        "bodyText": "{\"coins\":{\"coingecko:bitcoin\":-2.8029163727025703,\"coingecko:ethereum\":-3.3297340233361434}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

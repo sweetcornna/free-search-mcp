@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "stackexchange",
+  "op": "answers",
+  "recordedAt": "2026-11-25T15:02:33Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.stackexchange.com/2.3/questions/45600579/answers?filter=withbody&order=desc&sort=votes&site=stackoverflow&pagesize=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"items\":[{\"owner\":{\"account_id\":8520925,\"reputation\":3257,\"user_id\":6387880,\"user_type\":\"registered\",\"profile_image\":\"https://www.gravatar.com/avatar/aba4328b6107fd3c272eb5fd342c0e2d?s=256&d=identicon&r=PG\",\"display_name\":\"j4hangir\",\"link\":\"https://stackoverflow.com/users/6387880/j4hangir\"},\"is_accepted\":false,\"score\":204,\"last_activity_date\":1616538769,\"creation_date\":1616538769,\"answer_id\":66772242,\"question_id\":45600579,\"content_license\":\"CC BY-SA 4.0\",\"body\":\"<p>On Windows seems to be a problem with EventLoopPolicy, use this snippet to work around it:</p>\\n<pre class=\\\"lang-py prettyprint-override\\\"><code>asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())\\nasyncio.run(main())\\n</code></pre>\\n\"},{\"owner\":{\"account_id\":35417,\"reputation\":1144257,\"user_id\":100297,\"user_type\":\"registered\",\"profile_image\":\"https://www.gravatar.com/avatar/24780fb6df85a943c7aea0402c843737?s=256&d=identicon&r=PG\",\"display_name\":\"Martijn Pieters\",\"link\":\"https://stackoverflow.com/users/100297/martijn-pieters\"},\"is_accepted\":true,\"score\":120,\"last_activity_date\":1602753931,\"last_edit_date\":1602753931,\"creation_date\":1502313882,\"answer_id\":45600858,\"question_id\":45600579,\"content_license\":\"CC BY-SA 4.0\",\"body\":\"<p>You have already called <code>loop.close()</code> before you ran that sample piece of code, on the global event loop:</p>\\n<pre><code>&gt;&gt;&gt; import asyncio\\n&gt;&gt;&gt; asyncio.get_event_loop().close()\\n&gt;&gt;&gt; asyncio.get_event_loop().is_closed()\\nTrue\\n&gt;&gt;&gt; asyncio.get_event_loop().run_until_complete(asyncio.sleep(1))\\nTraceback (most recent call last):\\n  File &quot;&lt;stdin&gt;&quot;, line 1, in &lt;module&gt;\\n  File &quot;/.../lib/python3.6/asyncio/base_events.py&quot;, line 443, in run_until_complete\\n    self._check_closed()\\n  File &quot;/.../lib/python3.6/asyncio/base_events.py&quot;, line 357, in _check_closed\\n    raise RuntimeError('Event loop is closed')\\nRuntimeError: Event loop is closed\\n</code></pre>\\n<p>You need to create a <em>new</em> loop:</p>\\n<pre><code>loop = asyncio.new_event_loop()\\n</code></pre>\\n<p>You can set that as the new global loop with:</p>\\n<pre><code>asyncio.set_event_loop(asyncio.new_event_loop())\\n</code></pre>\\n<p>and then just use <code>asyncio.get_event_loop()</code> again.</p>\\n<p>Alternatively, just restart your Python interpreter, the first time you try to get the global event loop you get a fresh new one, unclosed.</p>\\n<p>As of Python 3.7, the process of creating, managing, then closing the loop (as well as a few other resources) is handled for you when use <a href=\\\"https://docs.python.org/3/library/asyncio-task.html#asyncio.run\\\" rel=\\\"noreferrer\\\"><code>asyncio.run()</code></a>. It should be used instead of <code>loop.run_until_complete()</code>, and there is no need any more to first get or set the loop.</p>\\n\"},{\"owner\":{\"account_id\":23978561,\"reputation\":411,\"user_id\":17966338,\"user_type\":\"registered\",\"profile_image\":\"https://www.gravatar.com/avatar/7a874bec36e5d57ab9ba068afc1fa46a?s=256&d=identicon&r=PG\",\"display_name\":\"daviidarr\",\"link\":\"https://stackoverflow.com/users/17966338/daviidarr\"},\"is_accepted\":false,\"score\":41,\"last_activity_date\":1642529363,\"last_edit_date\":1642529363,\"creation_date\":1642522628,\"answer_id\":70758881,\"question_id\":45600579,\"content_license\":\"CC BY-SA 4.0\",\"body\":\"<p>...and just in case:</p>\\n<pre><code>import platform\\nif platform.system()=='Windows':\\n    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())\\n</code></pre>\\n<p>If you ever deploy your code in the cloud it might avoid painful debug.</p>\\n\"}],\"has_more\":false,\"quota_max\":300,\"quota_remaining\":292}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

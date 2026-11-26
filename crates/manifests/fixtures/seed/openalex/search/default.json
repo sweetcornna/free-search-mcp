@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "openalex",
+  "op": "search",
+  "recordedAt": "2026-11-25T14:08:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.openalex.org/works?per-page=3&search=attention+is+all+you+need",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"meta\":{\"count\":1240,\"db_response_time_ms\":42,\"page\":1,\"per_page\":3,\"next_cursor\":null},\"results\":[{\"id\":\"https://openalex.org/W2626778328\",\"doi\":\"https://doi.org/10.48550/arxiv.1706.03762\",\"title\":\"Attention Is All You Need\",\"display_name\":\"Attention Is All You Need\",\"publication_year\":2017,\"publication_date\":\"2017-06-12\",\"type\":\"preprint\",\"cited_by_count\":145000,\"is_retracted\":false,\"ids\":{\"openalex\":\"https://openalex.org/W2626778328\",\"doi\":\"https://doi.org/10.48550/arxiv.1706.03762\"},\"primary_location\":{\"landing_page_url\":\"https://arxiv.org/abs/1706.03762\",\"pdf_url\":\"https://arxiv.org/pdf/1706.03762\",\"license\":\"cc-by\",\"source\":{\"display_name\":\"arXiv (Cornell University)\"}},\"best_oa_location\":{\"landing_page_url\":\"https://arxiv.org/abs/1706.03762\",\"pdf_url\":\"https://arxiv.org/pdf/1706.03762\",\"license\":\"cc-by\"},\"open_access\":{\"is_oa\":true,\"oa_status\":\"green\",\"oa_url\":\"https://arxiv.org/abs/1706.03762\"},\"authorships\":[{\"author\":{\"display_name\":\"Ashish Vaswani\",\"orcid\":\"https://orcid.org/0000-0002-1234-5678\"},\"institutions\":[{\"display_name\":\"Google Brain\"}]},{\"author\":{\"display_name\":\"Noam Shazeer\"},\"institutions\":[{\"display_name\":\"Google Brain\"}]}],\"abstract_inverted_index\":{\"The\":[0],\"dominant\":[1],\"sequence\":[2],\"transduction\":[3],\"models\":[4],\"are\":[5],\"based\":[6],\"on\":[7],\"complex\":[8],\"recurrent\":[9],\"networks.\":[10]}},{\"id\":\"https://openalex.org/W2963403868\",\"doi\":\"https://doi.org/10.18653/v1/n19-1423\",\"title\":\"BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding\",\"display_name\":\"BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding\",\"publication_year\":2019,\"publication_date\":\"2019-06-01\",\"type\":\"article\",\"cited_by_count\":98000,\"is_retracted\":false,\"ids\":{\"openalex\":\"https://openalex.org/W2963403868\",\"doi\":\"https://doi.org/10.18653/v1/n19-1423\"},\"primary_location\":{\"landing_page_url\":\"https://aclanthology.org/N19-1423\",\"pdf_url\":\"https://aclanthology.org/N19-1423.pdf\",\"license\":\"cc-by\",\"source\":{\"display_name\":\"NAACL-HLT\"}},\"best_oa_location\":{\"landing_page_url\":\"https://aclanthology.org/N19-1423\",\"pdf_url\":\"https://aclanthology.org/N19-1423.pdf\",\"license\":\"cc-by\"},\"open_access\":{\"is_oa\":true,\"oa_status\":\"diamond\",\"oa_url\":\"https://aclanthology.org/N19-1423\"},\"authorships\":[{\"author\":{\"display_name\":\"Jacob Devlin\"},\"institutions\":[{\"display_name\":\"Google AI Language\"}]}],\"abstract_inverted_index\":{\"We\":[0],\"introduce\":[1],\"a\":[2],\"new\":[3],\"language\":[4],\"representation\":[5],\"model\":[6],\"called\":[7],\"BERT.\":[8]}},{\"id\":\"https://openalex.org/W2963341956\",\"doi\":\"https://doi.org/10.48550/arxiv.1801.06146\",\"title\":\"Universal Language Model Fine-tuning for Text Classification\",\"display_name\":\"Universal Language Model Fine-tuning for Text Classification\",\"publication_year\":2018,\"publication_date\":\"2018-01-18\",\"type\":\"preprint\",\"cited_by_count\":5400,\"is_retracted\":false,\"ids\":{\"openalex\":\"https://openalex.org/W2963341956\",\"doi\":\"https://doi.org/10.48550/arxiv.1801.06146\"},\"primary_location\":{\"landing_page_url\":\"https://arxiv.org/abs/1801.06146\",\"pdf_url\":\"https://arxiv.org/pdf/1801.06146\",\"source\":{\"display_name\":\"arXiv\"}},\"open_access\":{\"is_oa\":true,\"oa_status\":\"green\",\"oa_url\":\"https://arxiv.org/abs/1801.06146\"},\"authorships\":[{\"author\":{\"display_name\":\"Jeremy Howard\"},\"institutions\":[]}],\"abstract_inverted_index\":{\"Inductive\":[0],\"transfer\":[1],\"learning\":[2],\"for\":[3],\"NLP.\":[4]}}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

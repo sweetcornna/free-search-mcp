@@ -1,0 +1,73 @@
+id = "remotive_jobs"
+name = "Remotive Remote Tech Jobs API"
+summary = "Keyless remote software, product, design, and data job listings and categories from Remotive (24h delayed public feed)."
+aliases = ["remotive", "remote jobs", "tech jobs"]
+home_url = "https://remotive.com/api-documentation"
+tier = 2
+scopes = ["web"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 0.05, burst = 1, concurrency = 1, timeout_ms = 10000, cache_ttl_s = 21600 }
+
+[op.search]
+summary = "Search remote job listings on Remotive (public feed is cached and attribution to remotive.com is required)."
+method = "GET"
+url = "https://remotive.com/api/remote-jobs"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+examples = ['source.call("remotive_jobs.search", { query: "golang", limit: 3 })']
+probe = { params = { query = "golang", limit = 3 }, min_results = 2, fixture = "fixtures/w5n/remotive_jobs/search/default.json" }
+
+[op.search.params]
+query = { type = "string", to = "search", doc = "Keyword filter (title/description)" }
+category = { type = "string", doc = "Remotive category slug (e.g. software-dev, data, design)" }
+company_name = { type = "string", doc = "Partial company name filter" }
+limit = { type = "int", default = 10, min = 1, max = 50, doc = "Requested listing cap" }
+
+[op.search.map]
+items = "(.jobs // [])[0:($p.limit // 10)][]"
+total = ".\"total-job-count\" // .\"job-count\""
+record = '''{
+  id: .id,
+  title: ((.title | collapse_ws) // ""),
+  company: (.company_name | collapse_ws),
+  category: (.category | collapse_ws),
+  tags: [(.tags // [])[] | collapse_ws | select(. != null and length > 0)],
+  jobType: (.job_type // null),
+  location: (.candidate_required_location | collapse_ws),
+  salary: (.salary | first_str),
+  publicationDate: (.publication_date | parse_date),
+  url: .url
+}'''
+hit = '''{
+  title: (((.title | collapse_ws) // "Remote Job") + (if (.company_name | first_str) != null then (" — " + (.company_name | collapse_ws)) else "" end)),
+  url: (.url // "https://remotive.com"),
+  snippet: ([
+    (.category | first_str // empty),
+    (.candidate_required_location | first_str // empty),
+    (.salary | first_str // empty),
+    (if ((.tags // []) | length) > 0 then ([(.tags // [])[0:5][] | collapse_ws | select(. != null and length > 0)] | join(", ")) else empty end)
+  ] | join(" · ")),
+  date: (.publication_date | parse_date),
+  dateSource: (if (.publication_date | parse_date) != null then "api" else null end)
+}'''
+
+[op.categories]
+summary = "List Remotive remote job categories and slugs."
+method = "GET"
+url = "https://remotive.com/api/remote-jobs/categories"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+examples = ['source.call("remotive_jobs.categories", {})']
+probe = { params = {}, min_results = 5, fixture = "fixtures/w5n/remotive_jobs/categories/default.json" }
+
+[op.categories.map]
+items = "(.jobs // [])[]"
+record = '''{
+  id: .id,
+  name: (.name // ""),
+  slug: (.slug // "")
+}'''

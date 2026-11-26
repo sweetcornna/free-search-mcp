@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "swh_origin",
+  "op": "visits",
+  "recordedAt": "2026-11-25T11:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://archive.softwareheritage.org/api/1/origin/https%3A%2F%2Fgithub.com%2Frust-lang%2Frust/visits/?per_page=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "[{\"origin\":\"https://github.com/rust-lang/rust\",\"visit\":425,\"date\":\"2026-11-08T05:32:06.738000+00:00\",\"status\":\"full\",\"snapshot\":\"9b790266e652dcec8b827cb167edcfa526a8a11d\",\"type\":\"git\",\"metadata\":{},\"origin_visit_url\":\"https://archive.softwareheritage.org/api/1/origin/https://github.com/rust-lang/rust/visit/425/\",\"snapshot_url\":\"https://archive.softwareheritage.org/api/1/snapshot/9b790266e652dcec8b827cb167edcfa526a8a11d/\"},{\"origin\":\"https://github.com/rust-lang/rust\",\"visit\":424,\"date\":\"2026-11-03T11:10:19.935000+00:00\",\"status\":\"full\",\"snapshot\":\"037546ba2bb1e4da1e722cf67dec5c149b43c9c3\",\"type\":\"git\",\"metadata\":{},\"origin_visit_url\":\"https://archive.softwareheritage.org/api/1/origin/https://github.com/rust-lang/rust/visit/424/\",\"snapshot_url\":\"https://archive.softwareheritage.org/api/1/snapshot/037546ba2bb1e4da1e722cf67dec5c149b43c9c3/\"},{\"origin\":\"https://github.com/rust-lang/rust\",\"visit\":423,\"date\":\"2026-10-25T16:04:14.588000+00:00\",\"status\":\"full\",\"snapshot\":\"d75333b4e871e858d244cf1fe599857b1113f08b\",\"type\":\"git\",\"metadata\":{},\"origin_visit_url\":\"https://archive.softwareheritage.org/api/1/origin/https://github.com/rust-lang/rust/visit/423/\",\"snapshot_url\":\"https://archive.softwareheritage.org/api/1/snapshot/d75333b4e871e858d244cf1fe599857b1113f08b/\"}]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

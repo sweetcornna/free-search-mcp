@@ -1,0 +1,98 @@
+id = "restcountries"
+name = "REST Countries API v5"
+summary = "Country reference data including ISO codes, capitals, currencies, languages, regions, borders, and populations."
+aliases = ["rest countries", "country info", "iso countries"]
+home_url = "https://restcountries.com"
+tier = 3
+scopes = ["reference.geo"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 604800 }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_RESTCOUNTRIES_API_KEY"
+in = "header"
+name = "Authorization"
+format = "Bearer {key}"
+route_requires_key = true
+
+[op.search]
+summary = "Search countries by name, capital, currency, or code via REST Countries v5."
+method = "GET"
+url = "https://api.restcountries.com/countries/v5"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "canada", limit = 3 }, min_results = 1, fixture = "fixtures/w5d1/restcountries/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Country name, capital, or code query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Max countries" }
+offset = { type = "int", min = 0, to = "offset", doc = "Result offset" }
+
+[op.search.map]
+items = "(.data.objects // [])[]"
+total = ".data.meta.total"
+error = 'if (.errors? | type == "array" and length > 0) then (.errors[0].message // "REST Countries API error") else null end'
+record = '''{
+  id: (.uuid // .codes.alpha_2 // null),
+  commonName: (.names.common // ""),
+  officialName: (.names.official // ""),
+  alpha2: (.codes.alpha_2 // null),
+  alpha3: (.codes.alpha_3 // null),
+  numericCode: (.codes.ccn3 // null),
+  capitals: [(.capitals // [])[] | if type == "object" then .name else . end | select(. != null)],
+  region: (.region // null),
+  subregion: (.subregion // null),
+  population: (.population // null),
+  areaKm2: (if (.area | type == "object") then .area.kilometers else (.area // null) end),
+  currencies: (.currencies // []),
+  languages: (.languages // []),
+  borders: (.borders // []),
+  timezones: (.timezones // []),
+  url: (.links.wikipedia // .links.official // .links.open_street_maps // "https://restcountries.com")
+}'''
+hit = '''
+([(.capitals // [])[] | if type == "object" then .name else . end | select(. != null)] | join(", ")) as $caps
+| {
+  title: ((.names.common // "") + (if (.codes.alpha_2 // "") != "" then (" (" + .codes.alpha_2 + ")") else "" end)),
+  url: (.links.wikipedia // .links.official // .links.open_street_maps // "https://restcountries.com"),
+  snippet: ([(.region // empty), (.subregion // empty), (if $caps != "" then ("Capital: " + $caps) else empty end), (if .population then ("Pop: " + (.population | tostring)) else empty end)] | join(" · "))
+}'''
+
+[op.alpha2]
+summary = "Look up a country record by ISO 3166-1 alpha-2 code (e.g. CA, DE, JP)."
+method = "GET"
+url = "https://api.restcountries.com/countries/v5/codes.alpha_2/{code}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { code = "CA" }, min_results = 1, fixture = "fixtures/w5d1/restcountries/alpha2/default.json" }
+
+[op.alpha2.params]
+code = { type = "string", required = true, in = "path", doc = "ISO 3166-1 alpha-2 code e.g. CA, DE, US" }
+
+[op.alpha2.map]
+items = "(.data.objects // [])[]"
+error = "@ref:op.search.map.error"
+record = "@ref:op.search.map.record"
+
+[op.alpha3]
+summary = "Look up a country record by ISO 3166-1 alpha-3 code (e.g. CAN, DEU, JPN)."
+method = "GET"
+url = "https://api.restcountries.com/countries/v5/codes.alpha_3/{code}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { code = "CAN" }, min_results = 1, fixture = "fixtures/w5d1/restcountries/alpha3/default.json" }
+
+[op.alpha3.params]
+code = { type = "string", required = true, in = "path", doc = "ISO 3166-1 alpha-3 code e.g. CAN, DEU, USA" }
+
+[op.alpha3.map]
+items = "(.data.objects // [])[]"
+error = "@ref:op.search.map.error"
+record = "@ref:op.search.map.record"

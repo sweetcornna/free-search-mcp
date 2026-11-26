@@ -1,0 +1,82 @@
+id = "ieee_xplore"
+name = "IEEE Xplore Metadata API"
+summary = "IEEE journals, conferences, and technical standards metadata across electrical engineering and computer science (requires approved free IEEE API key)."
+aliases = ["ieee", "ieeexplore", "ieee standards"]
+home_url = "https://developer.ieee.org"
+tier = 3
+scopes = ["academic", "academic.cs", "academic.index"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 43200, host_bucket = "ieeexploreapi.ieee.org" }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_IEEE_XPLORE_API_KEY"
+in = "query"
+name = "apikey"
+format = "{key}"
+route_requires_key = true
+
+[op.search]
+summary = "Search IEEE Xplore journals, conference papers, and standards."
+method = "GET"
+url = "https://ieeexploreapi.ieee.org/api/v1/search/articles"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+paginate = { style = "offset", param = "start_record", start = 1, max_pages = 3 }
+probe = { params = { query = "transformer", limit = 3 }, min_results = 2, fixture = "fixtures/w5h/ieee_xplore/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "querytext", doc = "IEEE Xplore search query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "max_records", doc = "Max records to return" }
+start = { type = "int", default = 1, min = 1, to = "start_record", doc = "1-based start offset" }
+year_from = { type = "int", to = "start_year", doc = "Optional start publication year" }
+year_to = { type = "int", to = "end_year", doc = "Optional end publication year" }
+
+[op.search.map]
+items = "(.articles // [])[]"
+total = ".total_records"
+error = '''if (.error | type) == "object" then (.error.message // (.error | tostring)) elif .error != null then (.message // (.error | tostring)) else null end'''
+work = '''(
+  (.html_url // (if .article_number then ("https://ieeexplore.ieee.org/document/" + (.article_number | tostring)) elif .doi then ("https://doi.org/" + .doi) else "" end)) as $url |
+  {
+    title: (.title // "" | strip_tags),
+    authors: [(.authors.authors // [])[] | {
+      name: (.full_name // "" | collapse_ws),
+      affiliation: (.affiliation // null | collapse_ws)
+    } | select(.name != "")],
+    year: (.publication_year | to_int),
+    publishedDate: ((.publication_date // null) | parse_date),
+    venue: (.publication_title // null | collapse_ws),
+    workType: ((.content_type // "article") | ascii_downcase | if . == "journals" or . == "early access articles" or . == "magazines" then "article" elif . == "conferences" then "inproceedings" elif . == "standards" then "standard" elif . == "books" then "book" else . end),
+    ids: { doi: (.doi // null | doi_norm) },
+    abstractText: (.abstract // null | strip_tags),
+    citedBy: (.citing_paper_count | to_int),
+    citedBySource: (if .citing_paper_count != null then "ieee_xplore" else null end),
+    oa: (if (((.access_type // "") | ascii_downcase) | (. == "open_access" or . == "open access")) then { status: "gold", url: $url, pdfUrl: (.pdf_url // null) } else null end),
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["ieee_xplore"]
+  }
+)'''
+
+[op.work]
+summary = "Look up a single IEEE Xplore article by DOI."
+method = "GET"
+url = "https://ieeexploreapi.ieee.org/api/v1/search/articles"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+const_query = { max_records = 1 }
+probe = { params = { doi = "10.1109/ACCESS.2020.3010000" }, min_results = 1, fixture = "fixtures/w5h/ieee_xplore/work/default.json" }
+
+[op.work.params]
+doi = { type = "string", required = true, to = "doi", doc = "IEEE article DOI" }
+
+[op.work.map]
+items = "(.articles // [])[]"
+error = "@ref:op.search.map.error"
+work = "@ref:op.search.map.work"

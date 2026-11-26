@@ -1,0 +1,73 @@
+id = "usgs_earthquakes"
+name = "USGS Real-Time Earthquakes FDSN API"
+summary = "Global real-time and historical earthquake catalog with magnitude, depth, tsunami flags, and GeoJSON coordinates."
+aliases = ["usgs", "earthquakes", "seismic", "fdsn"]
+home_url = "https://earthquake.usgs.gov/fdsnws/event/1/"
+tier = 1
+scopes = ["reference.geo", "dataset"]
+caps = ["lookup", "dataset"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 3.0, burst = 6, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 300 }
+
+[op.events]
+summary = "Query USGS earthquake catalog by magnitude, time window, and geographic bounding box."
+method = "GET"
+url = "https://earthquake.usgs.gov/fdsnws/event/1/query"
+headers = { Accept = "application/json" }
+const_query = { format = "geojson" }
+response = "json"
+returns = "records"
+examples = ['source.call("usgs_earthquakes.events", { minmagnitude: 4.5, limit: 3 })']
+probe = { params = { limit = 3, minmagnitude = 4.5 }, min_results = 2, fixture = "fixtures/w5n/usgs_earthquakes/events/default.json" }
+
+[op.events.params]
+limit = { type = "int", default = 10, min = 1, max = 50, doc = "Maximum earthquake events" }
+minmagnitude = { type = "float", doc = "Minimum magnitude (e.g. 4.5)" }
+maxmagnitude = { type = "float", doc = "Maximum magnitude" }
+starttime = { type = "string", doc = "ISO-8601 start timestamp (UTC)" }
+endtime = { type = "string", doc = "ISO-8601 end timestamp (UTC)" }
+minlatitude = { type = "float", doc = "South bounding latitude" }
+maxlatitude = { type = "float", doc = "North bounding latitude" }
+minlongitude = { type = "float", doc = "West bounding longitude" }
+maxlongitude = { type = "float", doc = "East bounding longitude" }
+orderby = { type = "string", enum = ["time", "time-asc", "magnitude", "magnitude-asc"], doc = "Sort order" }
+
+[op.events.map]
+items = "(.features // [])[]"
+total = ".metadata.count"
+record = '''{
+  id: .id,
+  title: (.properties.title // .properties.place // ""),
+  place: (.properties.place // null),
+  magnitude: (.properties.mag // null),
+  magType: (.properties.magType // null),
+  time: (.properties.time | epoch_to_iso),
+  timeMs: (.properties.time // null),
+  status: (.properties.status // null),
+  tsunami: (.properties.tsunami // 0),
+  alert: (.properties.alert // null),
+  sig: (.properties.sig // null),
+  lon: (.geometry.coordinates[0] // null),
+  lat: (.geometry.coordinates[1] // null),
+  depthKm: (.geometry.coordinates[2] // null),
+  url: (.properties.url // null)
+}'''
+
+[op.event]
+summary = "Fetch full GeoJSON metadata for a single USGS earthquake by event ID."
+method = "GET"
+url = "https://earthquake.usgs.gov/fdsnws/event/1/query"
+headers = { Accept = "application/json" }
+const_query = { format = "geojson" }
+response = "json"
+returns = "records"
+examples = ['source.call("usgs_earthquakes.event", { eventid: "us6000udf2" })']
+probe = { params = { eventid = "us6000udf2" }, min_results = 1, fixture = "fixtures/w5n/usgs_earthquakes/event/default.json" }
+
+[op.event.params]
+eventid = { type = "string", required = true, doc = "USGS event ID (e.g. us6000udf2)" }
+
+[op.event.map]
+items = "."
+record = "@ref:op.events.map.record"

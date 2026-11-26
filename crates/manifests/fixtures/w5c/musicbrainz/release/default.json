@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "source": "musicbrainz",
+  "op": "release",
+  "recordedAt": "2026-11-25T15:02:38Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://musicbrainz.org/ws/2/release/?fmt=json&query=ok+computer&limit=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ],
+          [
+            "last-modified",
+            "Wed, 25 Nov 2026 15:02:18 GMT"
+          ],
+          [
+            "etag",
+            "\"ZTEwZjVlMDAwMDAwMDAwMFNvbHI=--gzip\""
+          ]
+        ],
+        "bodyText": "{\"created\":\"2026-11-25T15:02:38.218Z\",\"count\":6019,\"offset\":0,\"releases\":[{\"id\":\"de3726da-05b8-4c1a-a19d-1bf53b7889ea\",\"score\":100,\"status-id\":\"4e304316-386d-3409-af2e-78857eec5cfe\",\"packaging-id\":\"119eba76-b343-3e02-a292-f0f00644bb9b\",\"artist-credit-id\":\"cafc529d-3603-3705-956c-5926a8e2ad40\",\"count\":1,\"title\":\"Ok Computer\",\"status\":\"Official\",\"packaging\":\"None\",\"text-representation\":{\"language\":\"eng\",\"script\":\"Latn\"},\"artist-credit\":[{\"joinphrase\":\" & \",\"name\":\"Lemaitre\",\"artist\":{\"id\":\"7bc012a7-c5cc-4e7a-9ca6-15db02bbcde4\",\"name\":\"Lemaitre\",\"sort-name\":\"Lemaitre\",\"disambiguation\":\"Oslo‐based, Norwegian indie‐electronica duo\"}},{\"name\":\"RebMoe\",\"artist\":{\"id\":\"481ae6c0-d3cc-4ae7-9995-5850fbf15479\",\"name\":\"RebMoe\",\"sort-name\":\"RebMoe\"}}],\"release-group\":{\"id\":\"a5e4bd1a-63c9-4dfc-9e63-ed0c3dc049be\",\"type-id\":\"d6038452-8ee0-3f68-affc-2de9a1ede0b9\",\"primary-type-id\":\"d6038452-8ee0-3f68-affc-2de9a1ede0b9\",\"title\":\"Ok Computer\",\"primary-type\":\"Single\"},\"date\":\"2021-08-20\",\"country\":\"XW\",\"release-events\":[{\"date\":\"2021-08-20\",\"area\":{\"id\":\"525d4e18-3d00-31b9-a58b-a146a916de8f\",\"name\":\"[Worldwide]\",\"sort-name\":\"[Worldwide]\",\"iso-3166-1-codes\":[\"XW\"]}}],\"barcode\":\"192641788758\",\"label-info\":[{\"label\":{\"id\":\"3f4dfc42-a2d2-4fe9-8c56-e855f69f882e\",\"name\":\"Substellar\"}}],\"track-count\":1,\"media\":[{\"id\":\"ac7b2970-935e-3e2e-bd49-d678b0d8219f\",\"format\":\"Digital Media\",\"disc-count\":0,\"track-count\":1}]},{\"id\":\"6a09041b-0f79-3278-88d9-0552dd28d37f\",\"score\":100,\"status-id\":\"4e304316-386d-3409-af2e-78857eec5cfe\",\"packaging-id\":\"ec27701a-4a22-37f4-bfac-6616e0f9750a\",\"artist-credit-id\":\"021661c1-84c5-30d7-9bb2-f0766affb734\",\"count\":1,\"title\":\"OK Computer\",\"status\":\"Official\",\"packaging\":\"Jewel Case\",\"text-representation\":{\"language\":\"eng\",\"script\":\"Latn\"},\"artist-credit\":[{\"name\":\"Radiohead\",\"artist\":{\"id\":\"a74b1b7f-71a5-4011-9441-d0b5e4122711\",\"name\":\"Radiohead\",\"sort-name\":\"Radiohead\"}}],\"release-group\":{\"id\":\"b1392450-e666-3926-a536-22c65f834433\",\"type-id\":\"f529b476-6e62-324f-b0aa-1f3e33d313fc\",\"primary-type-id\":\"f529b476-6e62-324f-b0aa-1f3e33d313fc\",\"title\":\"OK Computer\",\"primary-type\":\"Album\"},\"date\":\"1997-07-01\",\"country\":\"US\",\"release-events\":[{\"date\":\"1997-07-01\",\"area\":{\"id\":\"489ce91b-6658-3307-9877-795b68554c98\",\"name\":\"United States\",\"sort-name\":\"United States\",\"iso-3166-1-codes\":[\"US\"]}}],\"barcode\":\"724385522925\",\"asin\":\"B000002UJQ\",\"label-info\":[{\"catalog-number\":\"CDP 7243 8 55229 2 5\",\"label\":{\"id\":\"abea2d3e-eabf-4480-ab24-9382dd642c73\",\"name\":\"Capitol Records\"}}],\"track-count\":12,\"media\":[{\"id\":\"f62bbec0-cb4a-3519-b584-923b7fd5ac75\",\"format\":\"CD\",\"disc-count\":16,\"track-count\":12}]},{\"id\":\"425d8db9-88a3-31e2-bd23-b1a967626dd5\",\"score\":100,\"status-id\":\"4e304316-386d-3409-af2e-78857eec5cfe\",\"packaging-id\":\"ec27701a-4a22-37f4-bfac-6616e0f9750a\",\"artist-credit-id\":\"021661c1-84c5-30d7-9bb2-f0766affb734\",\"count\":1,\"title\":\"OK Computer\",\"status\":\"Official\",\"disambiguation\":\"UDEN\",\"packaging\":\"Jewel Case\",\"text-representation\":{\"language\":\"eng\",\"script\":\"Latn\"},\"artist-credit\":[{\"name\":\"Radiohead\",\"artist\":{\"id\":\"a74b1b7f-71a5-4011-9441-d0b5e4122711\",\"name\":\"Radiohead\",\"sort-name\":\"Radiohead\"}}],\"release-group\":{\"id\":\"b1392450-e666-3926-a536-22c65f834433\",\"type-id\":\"f529b476-6e62-324f-b0aa-1f3e33d313fc\",\"primary-type-id\":\"f529b476-6e62-324f-b0aa-1f3e33d313fc\",\"title\":\"OK Computer\",\"primary-type\":\"Album\"},\"date\":\"1997-06-16\",\"country\":\"FR\",\"release-events\":[{\"date\":\"1997-06-16\",\"area\":{\"id\":\"08310658-51eb-3801-80de-5a0739207115\",\"name\":\"France\",\"sort-name\":\"France\",\"iso-3166-1-codes\":[\"FR\"]}},{\"date\":\"1997-06-16\",\"area\":{\"id\":\"85752fda-13c4-31a3-bee5-0e5cb1f51dad\",\"name\":\"Germany\",\"sort-name\":\"Germany\",\"iso-3166-1-codes\":[\"DE\"]}},{\"date\":\"1997-06-16\",\"area\":{\"id\":\"c6500277-9a3d-349b-bf30-41afdbf42add\",\"name\":\"Italy\",\"sort-name\":\"Italy\",\"iso-3166-1-codes\":[\"IT\"]}},{\"date\":\"1997-06-16\",\"area\":{\"id\":\"8a754a16-0027-3a29-b6d7-2b40ea0481ed\",\"name\":\"United Kingdom\",\"sort-name\":\"United Kingdom\",\"iso-3166-1-codes\":[\"GB\"]}},{\"date\":\"1997-06-16\",\"area\":{\"id\":\"89a675c2-3e37-3518-b83c-418bad59a85a\",\"name\":\"Europe\",\"sort-name\":\"Europe\",\"iso-3166-1-codes\":[\"XE\"]}}],\"barcode\":\"724385522925\",\"asin\":\"B000002UJQ\",\"label-info\":[{\"catalog-number\":\"7243 8 55229 2 5\",\"label\":{\"id\":\"df7d1c7f-ef95-425f-8eef-445b3d7bcbd9\",\"name\":\"Parlophone\"}},{\"catalog-number\":\"CDNODATA 02\",\"label\":{\"id\":\"df7d1c7f-ef95-425f-8eef-445b3d7bcbd9\",\"name\":\"Parlophone\"}}],\"track-count\":12,\"media\":[{\"id\":\"4a2a764a-fd63-3cdf-a2bb-f0e41c97a9e4\",\"format\":\"CD\",\"disc-count\":14,\"track-count\":12}],\"tags\":[{\"count\":0,\"name\":\"rock\"},{\"count\":0,\"name\":\"electronic\"},{\"count\":4,\"name\":\"alternative rock\"},{\"count\":0,\"name\":\"progressive rock\"},{\"count\":0,\"name\":\"experimental\"},{\"count\":0,\"name\":\"acoustic\"},{\"count\":0,\"name\":\"alternative\"},{\"count\":0,\"name\":\"britpop\"},{\"count\":1,\"name\":\"art rock\"},{\"count\":1,\"name\":\"1997\"},{\"count\":0,\"name\":\"no isrc\"},{\"count\":0,\"name\":\"90's\"}]}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

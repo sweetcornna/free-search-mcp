@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "huggingface",
+  "op": "models",
+  "recordedAt": "2026-11-25T11:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://huggingface.co/api/models?search=qwen&limit=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ],
+          [
+            "etag",
+            "W/\"6af-6tjqyJ15gq+Mth69lFB271o4hUA\""
+          ]
+        ],
+        "bodyText": "[{\"_id\":\"6afaa82f95e0fc80dec1838d\",\"id\":\"harness-hub/Qwen3.8-27B-pi-adapted\",\"likes\":1084,\"trendingScore\":245,\"private\":false,\"downloads\":3844,\"tags\":[\"peft\",\"safetensors\",\"trl\",\"grpo\",\"async-grpo\",\"lora\",\"agents\",\"harbor\",\"openenv\",\"pi\",\"image-text-to-text\",\"conversational\",\"dataset:harness-hub/scale800-harbor\",\"dataset:harness-hub/harness-adapters\",\"dataset:harness-hub/termgrade-train-harbor\",\"dataset:ai-and/termgrade-environments\",\"base_model:Qwen/Qwen3.8-27B\",\"base_model:adapter:Qwen/Qwen3.8-27B\",\"license:apache-2.0\",\"eval-results\",\"region:us\"],\"pipeline_tag\":\"image-text-to-text\",\"library_name\":\"peft\",\"createdAt\":\"2026-11-16T06:52:31.000Z\",\"modelId\":\"harness-hub/Qwen3.8-27B-pi-adapted\"},{\"_id\":\"6a72f2e302294c7d32dd278e\",\"id\":\"Qwen/Qwen3.8-27B\",\"likes\":21750,\"trendingScore\":141.5,\"private\":false,\"downloads\":6047011,\"tags\":[\"transformers\",\"safetensors\",\"qwen3_5\",\"image-text-to-text\",\"conversational\",\"license:apache-2.0\",\"eval-results\",\"endpoints_compatible\",\"deploy:azure\",\"deploy:sagemaker\",\"region:us\"],\"pipeline_tag\":\"image-text-to-text\",\"library_name\":\"transformers\",\"createdAt\":\"2026-08-05T08:22:59.000Z\",\"modelId\":\"Qwen/Qwen3.8-27B\"},{\"_id\":\"6affa1f3a20ff6e9d312a69b\",\"id\":\"nari-labs/Qwen3.8-27B-NariQ-GGUF\",\"likes\":129,\"trendingScore\":120,\"private\":false,\"downloads\":14337,\"tags\":[\"gguf\",\"nariq\",\"qwen\",\"quantized\",\"coding-agent\",\"llama.cpp\",\"image-text-to-text\",\"arxiv:2611.26157\",\"arxiv:2406.11235\",\"base_model:Qwen/Qwen3.8-27B\",\"base_model:quantized:Qwen/Qwen3.8-27B\",\"license:apache-2.0\",\"endpoints_compatible\",\"region:us\",\"conversational\"],\"pipeline_tag\":\"image-text-to-text\",\"library_name\":\"gguf\",\"createdAt\":\"2026-11-20T01:27:15.000Z\",\"modelId\":\"nari-labs/Qwen3.8-27B-NariQ-GGUF\"}]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

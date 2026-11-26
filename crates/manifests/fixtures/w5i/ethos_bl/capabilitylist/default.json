@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "source": "ethos_bl",
+  "op": "capabilitylist",
+  "recordedAt": "2026-11-25T12:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://ethos.bl.uk/capabilitylist?locale=en",
+        "headersSubset": {
+          "accept": "application/xml"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/xml; charset=utf-8"
+          ],
+          [
+            "etag",
+            "W/\"5a4c5f2e183d674458c7596559f1be64\""
+          ],
+          [
+            "cache-control",
+            "max-age=0, private, must-revalidate"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\" xmlns:rs=\"http://www.openarchives.org/rs/terms/\">\n  <rs:ln rel=\"up\" href=\"https://ethos.bl.uk/.well-known/resourcesync\"/>\n  <rs:md capability=\"capabilitylist\"/>\n  <url>\n    <loc>https://ethos.bl.uk/resourcelist</loc>\n    <rs:md capability=\"resourcelist\"/>\n  </url>\n  <url>\n    <loc>https://ethos.bl.uk/changelist</loc>\n    <rs:md capability=\"changelist\"/>\n  </url>\n</urlset>\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "source": "synthetic_step10f_signposting",
+  "op": "head_link",
+  "recordedAt": "",
+  "exchanges": [
+    {
+      "request": {
+        "method": "HEAD",
+        "url": "https://repo.example.edu/records/10900000",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/html; charset=utf-8"
+          ],
+          [
+            "link",
+            "<https://doi.org/10.5281/zenodo.10900000> ; rel=\"cite-as\" , <https://zenodo.org/api/records/10900000> ; rel=\"describedby\" ; type=\"application/dcat+xml\" , <https://zenodo.org/api/records/10900000> ; rel=\"describedby\" ; type=\"application/json\" , <https://zenodo.org/api/records/10900000> ; rel=\"describedby\" ; type=\"application/ld+json\" , <https://zenodo.org/api/records/10900000> ; rel=\"describedby\" ; type=\"application/ld+json\" ; profile=\"https://datapackage.org/profiles/2.0/datapackage.json\" , <https://zenodo.org/api/records/10900000> ; rel=\"describedby\" ; type=\"application/marcxml+xml\" , <https://zenodo.org/api/records/10900000> ; rel=\"describedby\" ; type=\"application/vnd.citationstyles.csl+json\" , <https://zenodo.org/api/records/10900000> ; rel=\"describedby\" ; type=\"application/vnd.datacite.datacite+json\" , <https://zenodo.org/api/records/10900000> ; rel=\"describedby\" ; type=\"application/vnd.datacite.datacite+xml\" , <https://zenodo.org/api/records/10900000> ; rel=\"describedby\" ; type=\"application/vnd.geo+json\" , <https://zenodo.org/api/records/10900000> ; rel=\"describedby\" ; type=\"application/vnd.inveniordm.v1+json\" , <https://zenodo.org/api/records/10900000> ; rel=\"describedby\" ; type=\"application/vnd.inveniordm.v1.full+csv\" , <https://zenodo.org/api/records/10900000> ; rel=\"describedby\" ; type=\"application/vnd.inveniordm.v1.simple+csv\" , <https://zenodo.org/api/records/10900000> ; rel=\"describedby\" ; type=\"application/x-bibtex\" , <https://zenodo.org/api/records/10900000> ; rel=\"describedby\" ; type=\"application/x-dc+xml\" , <https://zenodo.org/api/records/10900000> ; rel=\"describedby\" ; type=\"text/x-bibliography\" , <https://zenodo.org/records/10900000/files/40-47.pdf> ; rel=\"item\" ; type=\"application/pdf\" , <https://creativecommons.org/licenses/by/4.0/legalcode> ; rel=\"license\" , <https://schema.org/ScholarlyArticle> ; rel=\"type\" , <https://schema.org/AboutPage> ; rel=\"type\" , <https://zenodo.org/api/records/10900000> ; rel=\"linkset\" ; type=\"application/linkset+json\""
+          ]
+        ],
+        "bodyText": "",
+        "bodyB64": null
+      }
+    }
+  ]
+}

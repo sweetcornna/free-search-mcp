@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "treasury_fiscal",
+  "op": "debt_to_penny",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v2/accounting/od/debt_to_penny?sort=-record_date&page%5Bsize%5D=3&page%5Bnumber%5D=1",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"data\":[{\"record_date\":\"2026-11-23\",\"debt_held_public_amt\":\"32902453860814.01\",\"intragov_hold_amt\":\"7824900469105.52\",\"tot_pub_debt_out_amt\":\"40727354329919.53\",\"src_line_nbr\":\"1\",\"record_fiscal_year\":\"2027\",\"record_fiscal_quarter\":\"1\",\"record_calendar_year\":\"2026\",\"record_calendar_quarter\":\"4\",\"record_calendar_month\":\"11\",\"record_calendar_day\":\"23\"},{\"record_date\":\"2026-11-20\",\"debt_held_public_amt\":\"32901198701800.97\",\"intragov_hold_amt\":\"7809218456879.18\",\"tot_pub_debt_out_amt\":\"40710417158680.15\",\"src_line_nbr\":\"1\",\"record_fiscal_year\":\"2027\",\"record_fiscal_quarter\":\"1\",\"record_calendar_year\":\"2026\",\"record_calendar_quarter\":\"4\",\"record_calendar_month\":\"11\",\"record_calendar_day\":\"20\"},{\"record_date\":\"2026-11-19\",\"debt_held_public_amt\":\"32901459975089.26\",\"intragov_hold_amt\":\"7808320725227.76\",\"tot_pub_debt_out_amt\":\"40709780700317.02\",\"src_line_nbr\":\"1\",\"record_fiscal_year\":\"2027\",\"record_fiscal_quarter\":\"1\",\"record_calendar_year\":\"2026\",\"record_calendar_quarter\":\"4\",\"record_calendar_month\":\"11\",\"record_calendar_day\":\"19\"}],\"meta\":{\"count\":3,\"labels\":{\"record_date\":\"Record Date\",\"debt_held_public_amt\":\"Debt Held by the Public\",\"intragov_hold_amt\":\"Intragovernmental Holdings\",\"tot_pub_debt_out_amt\":\"Total Public Debt Outstanding\",\"src_line_nbr\":\"Source Line Number\",\"record_fiscal_year\":\"Fiscal Year\",\"record_fiscal_quarter\":\"Fiscal Quarter Number\",\"record_calendar_year\":\"Calendar Year\",\"record_calendar_quarter\":\"Calendar Quarter Number\",\"record_calendar_month\":\"Calendar Month Number\",\"record_calendar_day\":\"Calendar Day Number\"},\"dataTypes\":{\"record_date\":\"DATE\",\"debt_held_public_amt\":\"CURRENCY\",\"intragov_hold_amt\":\"CURRENCY\",\"tot_pub_debt_out_amt\":\"CURRENCY\",\"src_line_nbr\":\"INTEGER\",\"record_fiscal_year\":\"YEAR\",\"record_fiscal_quarter\":\"QUARTER\",\"record_calendar_year\":\"YEAR\",\"record_calendar_quarter\":\"QUARTER\",\"record_calendar_month\":\"MONTH\",\"record_calendar_day\":\"DAY\"},\"dataFormats\":{\"record_date\":\"YYYY-MM-DD\",\"debt_held_public_amt\":\"$10.20\",\"intragov_hold_amt\":\"$10.20\",\"tot_pub_debt_out_amt\":\"$10.20\",\"src_line_nbr\":\"10\",\"record_fiscal_year\":\"YYYY\",\"record_fiscal_quarter\":\"Q\",\"record_calendar_year\":\"YYYY\",\"record_calendar_quarter\":\"Q\",\"record_calendar_month\":\"MM\",\"record_calendar_day\":\"DD\"},\"total-count\":8440,\"total-pages\":2814},\"links\":{\"self\":\"&page%5Bnumber%5D=1&page%5Bsize%5D=3\",\"first\":\"&page%5Bnumber%5D=1&page%5Bsize%5D=3\",\"prev\":null,\"next\":\"&page%5Bnumber%5D=2&page%5Bsize%5D=3\",\"last\":\"&page%5Bnumber%5D=2814&page%5Bsize%5D=3\"}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

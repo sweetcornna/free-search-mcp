@@ -1,0 +1,27 @@
+[package]
+name = "fsm-catalog"
+description = "Zero-network catalog search (BM25 + fuzzy) over sources, protocols and exec APIs."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+fsm-core.workspace = true
+bm25.workspace = true
+rapidfuzz.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+unicode-normalization.workspace = true
+regex.workspace = true
+tokio.workspace = true
+async-trait.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }
+insta.workspace = true

@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "source": "w3c_specs",
+  "op": "spec",
+  "recordedAt": "2026-11-25T12:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.w3.org/specifications/html52",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/hal+json;version=1.0"
+          ],
+          [
+            "cache-control",
+            "public, s-maxage=900"
+          ],
+          [
+            "last-modified",
+            "Wed, 25 Nov 2026 12:42:27 GMT"
+          ]
+        ],
+        "bodyText": "{\n    \"shortlink\": \"https://www.w3.org/TR/html52/\",\n    \"description\": \"<p>This specification defines the 5th major version, second minor revision of the core language of the World Wide Web: the Hypertext Markup Language (HTML). In this version, new features continue to be introduced to help Web application authors, new elements continue to be introduced based on research into prevailing authoring practices, and special attention continues to be given to defining clear conformance criteria for user agents in an effort to improve interoperability.</p>\",\n    \"title\": \"HTML 5.2\",\n    \"shortname\": \"html52\",\n    \"editor-draft\": \"https://w3c.github.io/html/\",\n    \"series-version\": \"5.2\",\n    \"_links\": {\n        \"self\": {\n            \"href\": \"https://api.w3.org/specifications/html52\"\n        },\n        \"version-history\": {\n            \"href\": \"https://api.w3.org/specifications/html52/versions\"\n        },\n        \"first-version\": {\n            \"href\": \"https://api.w3.org/specifications/html52/versions/20160818\",\n            \"title\": \"First Public Working Draft\"\n        },\n        \"latest-version\": {\n            \"href\": \"https://api.w3.org/specifications/html52/versions/20210128\",\n            \"title\": \"Retired\"\n        },\n        \"series\": {\n            \"href\": \"https://api.w3.org/specification-series/html\"\n        }\n    }\n}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

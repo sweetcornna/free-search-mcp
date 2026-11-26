@@ -1,0 +1,129 @@
+id = "sec_xbrl_facts"
+name = "SEC EDGAR XBRL CompanyFacts & Frames"
+summary = "Keyless US SEC EDGAR structured US-GAAP and IFRS XBRL financial metrics by company CIK, concept time series, and cross-company period frames."
+aliases = ["sec xbrl", "edgar xbrl", "companyfacts", "sec financials"]
+home_url = "https://www.sec.gov/edgar/sec-api-documentation"
+tier = 1
+scopes = ["finance"]
+caps = ["lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 5.0, burst = 8, concurrency = 2, timeout_ms = 12000, cache_ttl_s = 43200, host_bucket = "sec_edgar" }
+
+[op.companyfacts]
+summary = "Fetch latest reported US-GAAP/IFRS/DEI XBRL concept values for a company by 10-digit zero-padded CIK."
+method = "GET"
+url = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { cik = "0002079546" }, min_results = 10, fixture = "fixtures/w5m/sec_xbrl_facts/companyfacts/default.json" }
+examples = ["source.call('sec_xbrl_facts.companyfacts', { cik: '0000320193' })"]
+
+[op.companyfacts.params]
+cik = { type = "string", required = true, in = "path", doc = "10-digit zero-padded SEC CIK e.g. 0000320193 for Apple Inc." }
+
+[op.companyfacts.map]
+items = '''
+.entityName as $entity
+| (.cik | tostring) as $cik
+| (.facts // {}) | to_entries[]
+| .key as $tax
+| .value | to_entries[]
+| .key as $tag
+| .value as $concept
+| ($concept.units | to_entries[0]?) as $unit
+| (($unit.value // []) | sort_by([.end // "", .filed // ""]) | .[-1]?) as $latest
+| {
+    cik: $cik,
+    entityName: $entity,
+    taxonomy: $tax,
+    tag: $tag,
+    label: ($concept.label // null),
+    unit: ($unit.key // null),
+    latestVal: ($latest.val // null),
+    latestEnd: ($latest.end // null),
+    latestForm: ($latest.form // null),
+    latestFiled: ($latest.filed // null),
+    fy: ($latest.fy // null),
+    fp: ($latest.fp // null),
+    obsCount: (($unit.value // []) | length),
+    url: ("https://www.sec.gov/edgar/browse/?CIK=" + $cik)
+  }
+'''
+record = "."
+
+[op.companyconcept]
+summary = "Fetch full historical XBRL filing observations for a single company CIK, taxonomy, and concept tag."
+method = "GET"
+url = "https://data.sec.gov/api/xbrl/companyconcept/CIK{cik}/{taxonomy}/{tag}.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { cik = "0000320193", taxonomy = "us-gaap", tag = "AccountsPayableCurrent" }, min_results = 5, fixture = "fixtures/w5m/sec_xbrl_facts/companyconcept/default.json" }
+examples = ["source.call('sec_xbrl_facts.companyconcept', { cik: '0000320193', taxonomy: 'us-gaap', tag: 'AccountsPayableCurrent' })"]
+
+[op.companyconcept.params]
+cik = { type = "string", required = true, in = "path", doc = "10-digit zero-padded SEC CIK e.g. 0000320193" }
+taxonomy = { type = "string", default = "us-gaap", in = "path", enum = ["us-gaap", "ifrs-full", "dei", "invest", "srt"], doc = "XBRL taxonomy namespace" }
+tag = { type = "string", required = true, in = "path", doc = "XBRL concept tag e.g. Revenues, Assets, AccountsPayableCurrent" }
+
+[op.companyconcept.map]
+items = '''
+.entityName as $entity
+| (.cik | tostring) as $cik
+| .taxonomy as $tax
+| .tag as $tag
+| .label as $label
+| (.units // {}) | to_entries[]
+| .key as $unit
+| .value[]
+| {
+    cik: $cik,
+    entityName: $entity,
+    taxonomy: $tax,
+    tag: $tag,
+    label: $label,
+    unit: $unit,
+    val: .val,
+    start: (.start // null),
+    end: (.end // null),
+    fy: (.fy // null),
+    fp: (.fp // null),
+    form: (.form // null),
+    filed: (.filed // null),
+    accn: (.accn // null),
+    frame: (.frame // null)
+  }
+'''
+record = "."
+
+[op.frames]
+summary = "Fetch a cross-company XBRL frame aggregating one financial concept across all SEC filers for a calendar period."
+method = "GET"
+url = "https://data.sec.gov/api/xbrl/frames/{taxonomy}/{tag}/{unit}/{period}.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { taxonomy = "us-gaap", tag = "ResearchAndDevelopmentExpense", unit = "USD", period = "CY2024Q4" }, min_results = 10, fixture = "fixtures/w5m/sec_xbrl_facts/frames/default.json" }
+examples = ["source.call('sec_xbrl_facts.frames', { taxonomy: 'us-gaap', tag: 'ResearchAndDevelopmentExpense', unit: 'USD', period: 'CY2024Q4' })"]
+
+[op.frames.params]
+taxonomy = { type = "string", default = "us-gaap", in = "path", enum = ["us-gaap", "ifrs-full", "dei"], doc = "XBRL taxonomy" }
+tag = { type = "string", required = true, in = "path", doc = "XBRL concept tag e.g. Revenues, ResearchAndDevelopmentExpense" }
+unit = { type = "string", default = "USD", in = "path", doc = "Unit of measure e.g. USD, shares, USD-per-shares" }
+period = { type = "string", required = true, in = "path", doc = "Period frame e.g. CY2024Q4, CY2024Q4I (instant), CY2024" }
+
+[op.frames.map]
+items = "(.data // [])[]"
+total = ".pts"
+record = '''{
+  cik: (.cik | tostring),
+  entityName: (.entityName // ""),
+  loc: (.loc // null),
+  accn: (.accn // null),
+  start: (.start // null),
+  end: (.end // null),
+  val: .val,
+  url: ("https://www.sec.gov/edgar/browse/?CIK=" + (.cik | tostring))
+}'''

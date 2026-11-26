@@ -1,0 +1,75 @@
+id = "oeis_sequences"
+name = "OEIS Encyclopedia of Integer Sequences"
+summary = "On-Line Encyclopedia of Integer Sequences (380k+ sequences) with exact term search, formulas, comments, code snippets, and references."
+aliases = ["oeis", "integer sequences", "sloane"]
+home_url = "https://oeis.org"
+tier = 1
+scopes = ["academic.math", "reference"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 86400, host_bucket = "oeis.org" }
+
+[op.search]
+summary = "Search OEIS integer sequences by exact comma-separated terms, keywords, or A-number."
+method = "GET"
+url = "https://oeis.org/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { fmt = "json" }
+paginate = { style = "offset", param = "start", start = 0, max_pages = 3 }
+probe = { params = { query = "Ishango bone" }, min_results = 2, fixture = "fixtures/w5j/oeis_sequences/search/default.json" }
+examples = ["source.call('oeis_sequences.search', { query: '1,1,2,3,5,8,13' })", "source.call('oeis_sequences.search', { query: 'Catalan numbers' })"]
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Comma-separated sequence terms (e.g. 1,1,2,3,5,8), keywords, or id:A000045" }
+offset = { type = "int", default = 0, min = 0, to = "start", doc = "0-based result offset (OEIS returns up to 10 results per page)" }
+
+[op.search.map]
+items = "(. // [])[]"
+record = '''(
+  ("A" + (("000000" + ((.number // 0) | tostring)) | .[(length - 6):])) as $anum |
+  {
+    aNumber: $anum,
+    number: (.number // null),
+    name: (.name // ""),
+    data: (.data // ""),
+    offset: (.offset // null),
+    keyword: (.keyword // null),
+    author: (.author // null),
+    formulas: ((.formula // [])[0:5]),
+    comments: ((.comment // [])[0:3]),
+    references: ((.reference // [])[0:5]),
+    created: (.created | parse_date),
+    url: ("https://oeis.org/" + $anum)
+  }
+)'''
+hit = '''(
+  ("A" + (("000000" + ((.number // 0) | tostring)) | .[(length - 6):])) as $anum |
+  {
+    title: ($anum + ": " + (.name // "")),
+    url: ("https://oeis.org/" + $anum),
+    snippet: (((.data // "") | if length > 160 then .[0:160] + "..." else . end) + (if (.author // "") != "" then (" — " + (.author // "")) else "" end)),
+    date: (.created | parse_date),
+    dateSource: "api"
+  }
+)'''
+
+[op.sequence]
+summary = "Fetch a specific OEIS integer sequence by A-number (e.g. A000045 or A100000)."
+method = "GET"
+url = "https://oeis.org/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { fmt = "json" }
+probe = { params = { id = "A100000" }, min_results = 1, fixture = "fixtures/w5j/oeis_sequences/sequence/default.json" }
+examples = ["source.call('oeis_sequences.sequence', { id: 'A100000' })"]
+
+[op.sequence.params]
+id = { type = "string", required = true, to = "q", template = "id:{id}", doc = "OEIS A-number (e.g. A100000, A000045)" }
+
+[op.sequence.map]
+items = "(. // [])[]"
+record = "@ref:op.search.map.record"

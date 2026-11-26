@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "source": "datacite",
+  "op": "search",
+  "recordedAt": "2026-11-25T14:07:40Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.datacite.org/dois?page%5Bsize%5D=3&query=graph+neural+network",
+        "headersSubset": {
+          "accept": "application/vnd.api+json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "date",
+            "Wed, 25 Nov 2026 14:07:40 GMT"
+          ],
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ],
+          [
+            "status",
+            "200 OK"
+          ],
+          [
+            "x-anonymous-consumer",
+            "true"
+          ],
+          [
+            "cache-control",
+            "no-cache"
+          ],
+          [
+            "vary",
+            "Accept,Accept-Encoding"
+          ],
+          [
+            "referrer-policy",
+            "strict-origin-when-cross-origin"
+          ],
+          [
+            "x-permitted-cross-domain-policies",
+            "none"
+          ],
+          [
+            "x-xss-protection",
+            "0"
+          ],
+          [
+            "x-request-id",
+            "723a2c8e-4a76-4c7e-8406-6bec55c36ab5"
+          ],
+          [
+            "x-runtime",
+            "0.128875"
+          ],
+          [
+            "x-frame-options",
+            "SAMEORIGIN"
+          ],
+          [
+            "x-content-type-options",
+            "nosniff"
+          ],
+          [
+            "x-powered-by",
+            "Phusion Passenger(R) 6.2.1"
+          ],
+          [
+            "server",
+            "nginx/1.28.3 + Phusion Passenger(R) 6.2.1"
+          ],
+          [
+            "access-control-allow-credentials",
+            "true"
+          ],
+          [
+            "access-control-allow-methods",
+            "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+          ],
+          [
+            "access-control-allow-headers",
+            "Accept,Access-Control-Allow-Origin,Access-Control-Expose-Headers,Access-Control-Allow-Methods,Access-Control-Allow-Headers,Authorization,Cache-Control,Content-Type,DNT,If-Modified-Since,Keep-Alive,Origin,User-Agent,X-Mx-ReqToken,X-Requested-With"
+          ],
+          [
+            "access-control-expose-headers",
+            "Authorization"
+          ],
+          [
+            "x-lupoversion",
+            "5.96.1"
+          ]
+        ],
+        "bodyText": "{\"data\":[{\"id\":\"10.15167/pastore-vito-paolo_phd2018-02-13\",\"type\":\"dois\",\"attributes\":{\"doi\":\"10.15167/pastore-vito-paolo_phd2018-02-13\",\"identifiers\":[],\"creators\":[{\"nameType\":\"Personal\",\"givenName\":\"VITO PAOLO\",\"familyName\":\"PASTORE\",\"name\":\"PASTORE, VITO PAOLO\",\"nameIdentifiers\":[{\"nameIdentifierScheme\":\"ORCID\",\"schemeUri\":\"https://orcid.org\",\"nameIdentifier\":\"https://orcid.org/0000-0002-5827-5571\"}],\"affiliation\":[]}],\"titles\":[{\"title\":\"Development of statistical and computational methods to estimate functional connectivity and topology in large-scale neuronal assemblies\"}],\"publisher\":\"Universit� degli studi di Genova\",\"container\":{},\"publicationYear\":2018,\"subjects\":[],\"contributors\":[],\"dates\":[{\"date\":\"2018-02-13\",\"dateType\":\"Issued\"}],\"language\":\"en\",\"types\":{\"schemaOrg\":\"ScholarlyArticle\",\"resourceTypeGeneral\":\"Text\",\"citeproc\":\"article-journal\",\"bibtex\":\"article\",\"ris\":\"RPRT\",\"resourceType\":\"\\n\\tText\\n\"},\"relatedIdentifiers\":[],\"relatedItems\":[],\"sizes\":[],\"formats\":[],\"version\":null,\"rightsList\":[],\"descriptions\":[{\"descriptionType\":\"Abstract\",\"description\":\"One of the most fundamental features of a neural circuit is its connectivity since the single neuron activity is not due only to its intrinsic properties but especially to the direct or indirect influence of other neurons1. It is fundamental to elaborate research strategies aimed at a comprehensive structural description of neuronal interconnections as well as the networks? elements forming the human connectome. The connectome will significantly increase our understanding of how functional brain states emerge from their underlying structural substrate, and will provide new mechanistic insights into how brain function is affected if this structural substrate is disrupted. The connectome is characterized by three different types of connectivity: structural, functional and effective connectivity. It is evident that the final goal of a connectivity analysis is the reconstruction of the human connectome, thus, the application of statistical measures to the in vivo model in both physiological and pathological states. Since the system under study (i.e. brain areas, cell assemblies) is highly complex, to achieve the purpose described above, it is useful to adopt a reductionist approach. During my PhD work, I focused on a reduced and simplified model, represented by neural networks chronically coupled to Micro Electrodes Arrays (MEAs). Large networks of cortical neurons developing in vitro and chronically coupled to MEAs2 represent a well-established experimental model for studying the neuronal dynamics at the network level3, and for understanding the basic principles of information coding4 learning and memory5. Thus, during my PhD work, I developed and optimized statistical methods to infer functional connectivity from spike train data. In particular, I worked on correlation-based methods: cross-correlation and partial correlation, and information-theory based methods: Transfer Entropy (TE) and Joint Entropy (JE). More in detail, my PhD?s aim has been applying functional connectivity methods to neural networks coupled to high density resolution system, like the 3Brain active pixel sensor array with 4096 electrodes6. To fulfill such an aim, I re-adapted the computational logic operations of the aforementioned connectivity methods. Moreover, I worked on a new method based on the cross-correlogram, able to detect both inhibitory and excitatory links. I called such an algorithm Filtered Normalized Cross-Correlation Histogram (FNCCH). The FNCCH shows a very high precision in detecting both inhibitory and excitatory functional links when applied to our developed in silico model. I worked also on a temporal and pattern extension of the TE algorithm. In this way, I developed a Delayed TE (DTE) and a Delayed High Order TE (DHOTE) version of the TE algorithm. These two extension of the TE algorithm are able to consider different temporal bins at different temporal delays for the pattern recognition with respect to the basic TE. I worked also on algorithm for the JE computation. Starting from the mathematical definition in7, I developed a customized version of JE capable to detect the delay associated to a functional link, together with a dedicated shuffling based thresholding approach. Finally, I embedded all of these connectivity methods into a user-friendly open source software named SPICODYN8. SPICODYN allows the user to perform a complete analysis on data acquired from any acquisition system. I used a standard format for the input data, providing the user with the possibility to perform a complete set of operations on the input data, including: raw data viewing, spike and burst detection and analysis, functional connectivity analysis, graph theory and topological analysis. SPICODYN inherits the backbone structure from TOOLCONNECT, a previously published software that allowed to perform a functional connectivity analysis on spike trains data\"}],\"geoLocations\":[],\"fundingReferences\":[],\"url\":\"https://iris.unige.it//handle/11567/931946\",\"contentUrl\":null,\"metadataVersion\":3248,\"schemaVersion\":\"http://datacite.org/schema/kernel-4\",\"source\":\"mds\",\"isActive\":true,\"state\":\"findable\",\"reason\":null,\"viewCount\":0,\"downloadCount\":0,\"referenceCount\":0,\"citationCount\":0,\"partCount\":0,\"partOfCount\":0,\"versionCount\":0,\"versionOfCount\":0,\"created\":\"2018-11-30T10:01:05Z\",\"registered\":\"2018-11-30T10:01:53Z\",\"published\":null,\"updated\":\"2026-11-25T13:38:29Z\"},\"relationships\":{\"client\":{\"data\":{\"id\":\"crui.unige\",\"type\":\"clients\"}}}},{\"id\":\"10.25434/tiezzi-matteo_phd2021\",\"type\":\"dois\",\"attributes\":{\"doi\":\"10.25434/tiezzi-matteo_phd2021\",\"identifiers\":[],\"creators\":[{\"nameType\":\"Personal\",\"givenName\":\"MATTEO\",\"familyName\":\"TIEZZI\",\"name\":\"Tiezzi, Matteo\",\"nameIdentifiers\":[{\"nameIdentifierScheme\":\"ORCID\",\"schemeUri\":\"https://orcid.org\",\"nameIdentifier\":\"https://orcid.org/0000-0002-9133-8669\"}],\"affiliation\":[]}],\"titles\":[{\"title\":\"Local Propagation in Neural Network Learning by Architectural Constraints\"}],\"publisher\":\"Universit� degli Studi di Siena\",\"container\":{},\"publicationYear\":2021,\"subjects\":[],\"contributors\":[],\"dates\":[{\"date\":\"2021\",\"dateType\":\"Issued\"}],\"language\":\"en\",\"types\":{\"schemaOrg\":\"ScholarlyArticle\",\"resourceTypeGeneral\":\"Text\",\"citeproc\":\"article-journal\",\"bibtex\":\"article\",\"ris\":\"RPRT\",\"resourceType\":\"\\n\\tText\\n\"},\"relatedIdentifiers\":[],\"relatedItems\":[],\"sizes\":[],\"formats\":[],\"version\":null,\"rightsList\":[],\"descriptions\":[{\"descriptionType\":\"Abstract\",\"description\":\"A crucial role for the success of the Artificial Neural Networks (ANN) processing scheme has been played by the feed-forward propagation of signals.\\nThe input patterns undergo a series of stacked parametrized transformations, which foster deep feature extraction and an increasing representational power. Each artificial neural network layer aggregates information from its incoming connections, projects it to another space, and immediately propagates it to the next layer.\\n \\nSince its introduction in the '80s, BackPropagation (BP) is considered to be the ``de facto'' algorithm for training neural nets. The weights associated to the connections between the network layers are updated due to the backward pass, that is a straightforward derivation of the chain rule for the computation of the derivatives in a composition of functions. This computation requires to store all the intermediate values of the process. Moreover, it implies the use of non-local information, since the activity of one neuron has the ability to affect all the subsequent units up to the last output layer.\\n \\nHowever, learning in the human brain can be considered a continuous, life-long and gradual process in which neuron activations fire, leveraging local information, both in space, e.g neighboring neurons, and time, e.g. previous states. \\n\\nFollowing this principle, this thesis is inspired by the ideas of decoupling the computational scheme, behind the standard processing of ANNs, in order to decompose its overall structure into local components. Such local parts are put into communication leveraging the unifying notion of ``constraint''. In particular, a set of additional variables are added to the learning problem, in order to store the information on the status of the constrained neural units. Therefore, it is possible to describe the computations performed by the network itself guiding the evolution of these auxiliary variables via constraints. This choice allows us to setup an optimization procedure that is ``local'', i.e., it does not require (1) to query the whole network, (2) to accomplish the diffusion of the information, or (3) to bufferize data streamed over time in order to be able to compute gradients. The thesis investigates three different learning settings that are instances of the aforementioned scheme: (1) constraints among layers in feed-forward neural networks, (2) constraints among the states of neighboring nodes in Graph Neural Networks, and (3) constraints among predictions over time.\"}],\"geoLocations\":[],\"fundingReferences\":[],\"url\":\"https://usiena-air.unisi.it//handle/11365/1133797\",\"contentUrl\":null,\"metadataVersion\":1266,\"schemaVersion\":\"http://datacite.org/schema/kernel-4\",\"source\":\"mds\",\"isActive\":true,\"state\":\"findable\",\"reason\":null,\"viewCount\":0,\"downloadCount\":0,\"referenceCount\":0,\"citationCount\":0,\"partCount\":0,\"partOfCount\":0,\"versionCount\":0,\"versionOfCount\":0,\"created\":\"2021-11-01T06:27:42Z\",\"registered\":\"2021-11-01T06:31:26Z\",\"published\":null,\"updated\":\"2026-11-25T13:38:17Z\"},\"relationships\":{\"client\":{\"data\":{\"id\":\"crui.unisi\",\"type\":\"clients\"}}}},{\"id\":\"10.5281/zenodo.24500003\",\"type\":\"dois\",\"attributes\":{\"doi\":\"10.5281/zenodo.24500003\",\"identifiers\":[{\"identifier\":\"oai:zenodo.org:24500003\",\"identifierType\":\"oai\"}],\"creators\":[{\"nameType\":\"Personal\",\"affiliation\":[\"Technical University of Munich; Munich Center for Machine Learning (MCML)\"],\"givenName\":\"Kamilia\",\"familyName\":\"Zaripova\",\"name\":\"Zaripova, Kamilia\",\"nameIdentifiers\":[]},{\"nameType\":\"Personal\",\"affiliation\":[\"Dr. von Hauner Children's Hospital, LMU Munich\"],\"givenName\":\"Felix Johannes\",\"familyName\":\"Gössl\",\"name\":\"Gössl, Felix Johannes\",\"nameIdentifiers\":[]},{\"nameType\":\"Personal\",\"affiliation\":[\"Dr. von Hauner Children's Hospital, LMU Munich\"],\"givenName\":\"Thomas\",\"familyName\":\"Bettecken\",\"name\":\"Bettecken, Thomas\",\"nameIdentifiers\":[]},{\"nameType\":\"Personal\",\"affiliation\":[\"Technical University of Munich; Munich Center for Machine Learning (MCML)\"],\"givenName\":\"Ege\",\"familyName\":\"Özsoy\",\"name\":\"Özsoy, Ege\",\"nameIdentifiers\":[]},{\"nameType\":\"Personal\",\"affiliation\":[\"Dr. von Hauner Children's Hospital, LMU Munich\"],\"givenName\":\"Christoph\",\"familyName\":\"Klein\",\"name\":\"Klein, Christoph\",\"nameIdentifiers\":[]},{\"nameType\":\"Personal\",\"affiliation\":[\"Technical University of Munich; Munich Center for Machine Learning (MCML)\"],\"givenName\":\"Nassir\",\"familyName\":\"Navab\",\"name\":\"Navab, Nassir\",\"nameIdentifiers\":[]},{\"nameType\":\"Personal\",\"affiliation\":[\"Technical University of Munich; MCML; ELLIS Institute Finland; Aalto University\"],\"givenName\":\"Azade\",\"familyName\":\"Farshad\",\"name\":\"Farshad, Azade\",\"nameIdentifiers\":[]}],\"titles\":[{\"title\":\"PhenoKG: code, trained model, knowledge graph and data for phenotype-only genome-wide gene prioritization in rare diseases\"}],\"publisher\":\"Zenodo\",\"container\":{},\"publicationYear\":2026,\"subjects\":[{\"subject\":\"rare diseases\"},{\"subject\":\"gene prioritization\"},{\"subject\":\"knowledge graph\"},{\"subject\":\"graph neural network\"},{\"subject\":\"Human Phenotype Ontology\"}],\"contributors\":[],\"dates\":[{\"date\":\"2026-11-24\",\"dateType\":\"Issued\"}],\"language\":null,\"types\":{\"schemaOrg\":\"Dataset\",\"resourceTypeGeneral\":\"Dataset\",\"citeproc\":\"dataset\",\"bibtex\":\"misc\",\"ris\":\"DATA\",\"resourceType\":\"\"},\"relatedIdentifiers\":[{\"relationType\":\"IsVersionOf\",\"relatedIdentifier\":\"10.5281/zenodo.24500002\",\"relatedIdentifierType\":\"DOI\"}],\"relatedItems\":[],\"sizes\":[],\"formats\":[],\"version\":null,\"rightsList\":[{\"rightsIdentifierScheme\":\"SPDX\",\"rightsUri\":\"https://creativecommons.org/licenses/by/4.0/legalcode\",\"schemeUri\":\"https://spdx.org/licenses/\",\"rights\":\"Creative Commons Attribution 4.0 International\",\"rightsIdentifier\":\"cc-by-4.0\"}],\"descriptions\":[{\"descriptionType\":\"Abstract\",\"description\":\"Code and data of the manuscript \\\"Knowledge-graph based neural network model for phenotype-only genome-wide gene prioritization in rare diseases\\\".\\nPhenoKG_code.zip: the PhenoKG code (MIT licence) with a README covering system requirements, installation, a demo with expected output, scoring new patients genome-wide or with a candidate gene list, and the reproduction of all main results (README.md is also attached separately). pipeline/download_data.sh downloads the files below, checks their SHA-256 sums and places them where the code expects them.\\nData (CC BY 4.0; third-party data remain under the terms of their sources): phenokg_kg_features_2026-10-07.tar: Monarch knowledge graph release 2026-10-07 as downloaded and as processed for PhenoKG, BioLORD-2023 node features, HPO annotations, HPO v2026-09-01; phenokg_simulated_and_phenopacket_patients.tar: simulated training and validation patients and the GA4GH Phenopacket Store 0.1.26 cases split by publication; phenokg_inputs_test_data_reference_results.tar: all test sets, the original cohort files, HGNC, and the reference outputs of the final model; phenokg_2026.ckpt: the trained final model; phenokg_test_subgraphs_2026-10-07.tar and phenokg_training_subgraphs_2026-10-07.tar: pre-built patient subgraphs (optional; they can be rebuilt with the code); SHA256SUMS: checksums.\"}],\"geoLocations\":[],\"fundingReferences\":[],\"url\":\"https://zenodo.org/doi/10.5281/zenodo.24500003\",\"contentUrl\":null,\"metadataVersion\":0,\"schemaVersion\":\"http://datacite.org/schema/kernel-4\",\"source\":\"api\",\"isActive\":true,\"state\":\"findable\",\"reason\":null,\"viewCount\":0,\"downloadCount\":0,\"referenceCount\":0,\"citationCount\":0,\"partCount\":0,\"partOfCount\":0,\"versionCount\":0,\"versionOfCount\":0,\"created\":\"2026-11-25T11:48:59Z\",\"registered\":\"2026-11-25T11:49:00Z\",\"published\":null,\"updated\":\"2026-11-25T11:49:00Z\"},\"relationships\":{\"client\":{\"data\":{\"id\":\"cern.zenodo\",\"type\":\"clients\"}}}}],\"meta\":{\"total\":21691,\"totalPages\":3333,\"page\":1},\"links\":{\"self\":\"https://api.datacite.org/dois?page%5Bsize%5D=3\\u0026query=graph+neural+network\",\"next\":\"https://api.datacite.org/dois?page%5Bnumber%5D=2\\u0026page%5Bsize%5D=3\\u0026query=graph+neural+network\"}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

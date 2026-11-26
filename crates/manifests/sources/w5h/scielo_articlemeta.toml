@@ -1,0 +1,135 @@
+id = "scielo_articlemeta"
+name = "SciELO ArticleMeta API"
+summary = "Keyless Latin American, Iberian, and South African diamond open-access journal article and journal metadata registry (560k+ SciELO articles across 16 collections)."
+aliases = ["scielo", "articlemeta", "scielo api", "Scientific Electronic Library Online", "SciELO Brasil"]
+home_url = "https://articlemeta.scielo.org"
+tier = 2
+scopes = ["academic", "academic.openaccess"]
+caps = ["lookup", "harvest", "venue"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 12000, cache_ttl_s = 86400, host_bucket = "articlemeta.scielo.org" }
+
+[op.article]
+summary = "Fetch full SciELO ArticleMeta JSON record by SciELO PID code and collection."
+method = "GET"
+url = "https://articlemeta.scielo.org/api/v1/article/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+probe = { params = { collection = "arg", code = "S0524-97672005000100011" }, min_results = 1, fixture = "fixtures/w5h/scielo_articlemeta/article/default.json" }
+
+[op.article.params]
+code = { type = "string", required = true, to = "code", doc = "SciELO article PID e.g. S0524-97672005000100011" }
+collection = { type = "string", default = "scl", to = "collection", doc = "SciELO collection code e.g. scl (Brazil), arg (Argentina), mex, col, esp" }
+
+[op.article.map]
+items = "select(.code != null)"
+error = '''if (type == "object" and (.error != null or .detail != null) and .code == null and .objects == null) then (.detail // .error | tostring) else null end'''
+work = '''(
+  (.article // {}) as $a |
+  (([($a.v12 // [])[] | select(.l == "en") | ._][0]) // ($a.v12[0]?._) // (.code // "")) as $title |
+  (.title.v690[0]?._ // null) as $host |
+  (if ($host | type) == "string" and ($host | length) > 0 then ("https://" + ($host | sub("^https?://"; "")) + "/scielo.php?script=sci_arttext&pid=" + (.code // "")) else ("https://search.scielo.org/?q=" + (.code // "")) end) as $url |
+  (.title.v541[0]?._ // null) as $cc |
+  ($a.v70 // []) as $affs |
+  {
+    title: ($title | strip_tags),
+    authors: [($a.v10 // [])[] | (.["1"] // null) as $aid | {
+      name: ([(.n // ""), (.s // "")] | map(select(length > 0)) | join(" ") | collapse_ws),
+      affiliation: (if $aid != null then (([$affs[] | select(.i == $aid) | (._ // ."1" // null) | select(type == "string" and length > 0)][0] // null) | collapse_ws) else null end)
+    } | select(.name != "")],
+    year: ((((.publication_year // "") | tostring)[0:4]) | to_int),
+    publishedDate: ((.publication_date // null) | parse_date),
+    venue: (.title.v100[0]?._ // $a.v30[0]?._ // null | strip_tags),
+    workType: (.document_type // "article"),
+    ids: { doi: (.doi // $a.v237[0]?._ // null | doi_norm) },
+    abstractText: ((([($a.v83 // [])[] | select(.l == "en") | ._][0]) // ($a.v83[0]?._) // null) | strip_tags),
+    oa: {
+      status: "diamond",
+      url: $url,
+      license: (if ($cc | type) == "string" and ($cc | length) > 0 then (if ($cc | startswith("CC")) then $cc else ("CC-" + $cc) end) else null end)
+    },
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["scielo_articlemeta"]
+  }
+)'''
+
+[op.identifiers]
+summary = "Enumerate SciELO article PID codes by collection and optional processing date range."
+method = "GET"
+url = "https://articlemeta.scielo.org/api/v1/article/identifiers/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { collection = "scl", limit = 3 }, min_results = 2, fixture = "fixtures/w5h/scielo_articlemeta/identifiers/default.json" }
+
+[op.identifiers.params]
+collection = { type = "string", default = "scl", to = "collection", doc = "SciELO collection code e.g. scl, arg, mex" }
+from = { type = "string", to = "from", doc = "Optional start processing date YYYY-MM-DD" }
+until = { type = "string", to = "until", doc = "Optional end processing date YYYY-MM-DD" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Results per page" }
+offset = { type = "int", default = 0, min = 0, to = "offset", doc = "0-based offset" }
+
+[op.identifiers.map]
+items = "(.objects // [])[]"
+total = ".meta.total"
+error = "@ref:op.article.map.error"
+record = '''{
+  code: (.code // ""),
+  collection: (.collection // ""),
+  processingDate: (.processing_date // null),
+  apiUrl: ("https://articlemeta.scielo.org/api/v1/article/?collection=" + (.collection // "scl") + "&code=" + (.code // ""))
+}'''
+
+[op.journals]
+summary = "Enumerate SciELO journal ISSNs in a collection."
+method = "GET"
+url = "https://articlemeta.scielo.org/api/v1/journal/identifiers/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { collection = "scl", limit = 3 }, min_results = 2, fixture = "fixtures/w5h/scielo_articlemeta/journals/default.json" }
+
+[op.journals.params]
+collection = { type = "string", default = "scl", to = "collection", doc = "SciELO collection code e.g. scl, arg, mex" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Results per page" }
+offset = { type = "int", default = 0, min = 0, to = "offset", doc = "0-based offset" }
+
+[op.journals.map]
+items = "(.objects // [])[]"
+total = ".meta.total"
+error = "@ref:op.article.map.error"
+record = '''{
+  issn: (.code // ""),
+  collection: (.collection // ""),
+  processingDate: (.processing_date // null),
+  apiUrl: ("https://articlemeta.scielo.org/api/v1/journal/?collection=" + (.collection // "scl") + "&issn=" + (.code // ""))
+}'''
+
+[op.journal]
+summary = "Fetch a single SciELO journal VenueProfile record by ISSN and collection."
+method = "GET"
+url = "https://articlemeta.scielo.org/api/v1/journal/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { collection = "scl", issn = "1676-5648" }, min_results = 1, fixture = "fixtures/w5h/scielo_articlemeta/journal/default.json" }
+
+[op.journal.params]
+issn = { type = "string", required = true, to = "issn", doc = "Journal ISSN e.g. 1676-5648" }
+collection = { type = "string", default = "scl", to = "collection", doc = "SciELO collection code e.g. scl, arg, mex" }
+
+[op.journal.map]
+items = "(if type == \"array\" then .[] else . end) | select(.code != null)"
+error = "@ref:op.article.map.error"
+record = '''{
+  name: (.v100[0]?._ // .v150[0]?._ // .code // "" | strip_tags),
+  issn: ([(.issns // [])[], (.v400[0]?._ // null), (.code // null)] | map(select(type == "string" and length > 0)) | unique),
+  publisher: (.v480[0]?._ // .v62[0]?._ // null | strip_tags),
+  sources: ["scielo_articlemeta"]
+}'''

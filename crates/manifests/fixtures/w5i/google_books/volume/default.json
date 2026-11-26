@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "google_books",
+  "op": "volume",
+  "recordedAt": "2026-11-25T12:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://books.googleapis.com/books/v1/volumes/SYNTH_GNN_001",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ]
+        ],
+        "bodyText": "{\"kind\":\"books#volume\",\"id\":\"SYNTH_GNN_001\",\"etag\":\"f0zKg75ig/0\",\"selfLink\":\"https://www.googleapis.com/books/v1/volumes/SYNTH_GNN_001\",\"volumeInfo\":{\"title\":\"Graph Representation Learning\",\"subtitle\":\"Synthesis Lectures on Artificial Intelligence and Machine Learning\",\"authors\":[\"William L. Hamilton\"],\"publisher\":\"Morgan & Claypool Publishers\",\"publishedDate\":\"2020-09-14\",\"description\":\"Graph-structured data is ubiquitous throughout the natural and social sciences, from telecommunication networks to quantum chemistry. Building relational inductive biases into deep learning architectures is crucial for creating systems that can learn, reason, and generalize from this kind of data.\",\"industryIdentifiers\":[{\"type\":\"ISBN_13\",\"identifier\":\"9781681739649\"},{\"type\":\"ISBN_10\",\"identifier\":\"168173964X\"}],\"pageCount\":159,\"printType\":\"BOOK\",\"categories\":[\"Computers\"],\"language\":\"en\",\"previewLink\":\"https://books.google.com/books?id=SYNTH_GNN_001\",\"infoLink\":\"https://books.google.com/books?id=SYNTH_GNN_001\",\"canonicalVolumeLink\":\"https://books.google.com/books/about/Graph_Representation_Learning.html?id=SYNTH_GNN_001\"},\"accessInfo\":{\"country\":\"US\",\"viewability\":\"PARTIAL\",\"embeddable\":true,\"publicDomain\":false,\"epub\":{\"isAvailable\":false},\"pdf\":{\"isAvailable\":false},\"webReaderLink\":\"https://play.google.com/books/reader?id=SYNTH_GNN_001\",\"accessViewStatus\":\"SAMPLE\"},\"searchInfo\":{\"textSnippet\":\"This book provides a brief introduction to graph representation learning, including node embeddings, graph neural networks, and deep generative models of graphs.\"}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

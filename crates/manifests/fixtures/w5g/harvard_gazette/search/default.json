@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "harvard_gazette",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:13:21Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://news.harvard.edu/gazette/wp-json/wp/v2/search?search=climate&per_page=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ],
+          [
+            "cache-control",
+            "max-age=60"
+          ]
+        ],
+        "bodyText": "[{\"id\":433340,\"title\":\"The White House Effect: How did climate change go from a scientific issue to a political crisis? Featuring live Q&#038;A with William K. Reilly, EPA Administrator under President George H.W. Bush\",\"url\":\"https:\\/\\/news.harvard.edu\\/gazette\\/harvard-events\\/the-white-house-effect-how-did-climate-change-go-from-a-scientific-issue-to-a-political-crisis-featuring-live-qa-with-william-k-reilly-epa-administrator-under-president-george-h-w-bush\\/\",\"type\":\"post\",\"subtype\":\"event\",\"_links\":{\"self\":[{\"embeddable\":true,\"href\":\"https:\\/\\/news.harvard.edu\\/gazette\\/wp-json\\/wp\\/v2\\/event\\/433340\",\"targetHints\":{\"allow\":[\"GET\"]}}],\"about\":[{\"href\":\"https:\\/\\/news.harvard.edu\\/gazette\\/wp-json\\/wp\\/v2\\/types\\/event\"}],\"collection\":[{\"href\":\"https:\\/\\/news.harvard.edu\\/gazette\\/wp-json\\/wp\\/v2\\/search\"}]}},{\"id\":426897,\"title\":\"Green Transportation: Co-benefits for Climate, Air Quality, and the Economy\",\"url\":\"https:\\/\\/news.harvard.edu\\/gazette\\/harvard-events\\/green-transportation-co-benefits-for-climate-air-quality-and-the-economy\\/\",\"type\":\"post\",\"subtype\":\"event\",\"_links\":{\"self\":[{\"embeddable\":true,\"href\":\"https:\\/\\/news.harvard.edu\\/gazette\\/wp-json\\/wp\\/v2\\/event\\/426897\",\"targetHints\":{\"allow\":[\"GET\"]}}],\"about\":[{\"href\":\"https:\\/\\/news.harvard.edu\\/gazette\\/wp-json\\/wp\\/v2\\/types\\/event\"}],\"collection\":[{\"href\":\"https:\\/\\/news.harvard.edu\\/gazette\\/wp-json\\/wp\\/v2\\/search\"}]}},{\"id\":418838,\"title\":\"Ethics and innovation meet at HDS climate panel\",\"url\":\"https:\\/\\/news.harvard.edu\\/gazette\\/story\\/newsplus\\/ethics-and-innovation-meet-at-hds-climate-panel\\/\",\"type\":\"post\",\"subtype\":\"submission\",\"_links\":{\"self\":[{\"embeddable\":true,\"href\":\"https:\\/\\/news.harvard.edu\\/gazette\\/wp-json\\/wp\\/v2\\/submission\\/418838\",\"targetHints\":{\"allow\":[\"GET\"]}}],\"about\":[{\"href\":\"https:\\/\\/news.harvard.edu\\/gazette\\/wp-json\\/wp\\/v2\\/types\\/submission\"}],\"collection\":[{\"href\":\"https:\\/\\/news.harvard.edu\\/gazette\\/wp-json\\/wp\\/v2\\/search\"}]}}]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

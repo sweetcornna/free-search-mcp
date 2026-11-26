@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+
+<html lang="ja" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="4. その他の制御フローツール" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://docs.python.org/3/tutorial/controlflow.html" />
+<meta property="og:site_name" content="Python documentation" />
+<meta property="og:description" content="前章で紹介した while 文の他にも、 Python にはいくつか制御フローツールがあり、本章で説明します。 if 文: おそらく最もおなじみの文型は if 文でしょう。例えば: ゼロ個以上の elif 部を使うことができ、 else 部を付けることもできます。キーワード &#x27; elif&#x27; は &#x27;else if&#x27; を短くしたもので、過剰なインデントを避..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="https://docs.python.org/3.15/ja/_images/social_previews/summary_tutorial_controlflow_253bae54.png" />
+<meta property="og:image:alt" content="前章で紹介した while 文の他にも、 Python にはいくつか制御フローツールがあり、本章で説明します。 if 文: おそらく最もおなじみの文型は if 文でしょう。例えば: ゼロ個以上の elif 部を使うことができ、 else 部を付けることもできます。キーワード &#x27; elif&#x27; は &#x27;else if&#x27; を短くしたもので、過剰なインデントを避..." />
+<meta name="description" content="前章で紹介した while 文の他にも、 Python にはいくつか制御フローツールがあり、本章で説明します。 if 文: おそらく最もおなじみの文型は if 文でしょう。例えば: ゼロ個以上の elif 部を使うことができ、 else 部を付けることもできます。キーワード &#x27; elif&#x27; は &#x27;else if&#x27; を短くしたもので、過剰なインデントを避..." />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="theme-color" content="#3776ab">
+
+    <title>4. その他の制御フローツール &#8212; Python 3.15.2 ドキュメント</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+    <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=0fc419ee" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=234b1a7c" />
+    <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=48df1187" />
+    
+    <script src="../_static/documentation_options.js?v=f78f1c6d"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/translations.js?v=4755f45a"></script>
+    
+    <script src="../_static/sidebar.js"></script>
+    
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="Python 3.15.2 ドキュメント 内を検索"
+          href="../_static/opensearch.xml"/>
+    <link rel="author" title="このドキュメントについて" href="../about.html" />
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="検索" href="../search.html" />
+    <link rel="copyright" title="Copyright" href="../copyright.html" />
+    <link rel="next" title="5. データ構造" href="datastructures.html" />
+    <link rel="prev" title="3. 形式ばらない Python の紹介" href="introduction.html" />
+    
+      
+      <script defer file-types="bz2,epub,zip" data-domain="docs.python.org" src="https://analytics.python.org/js/script.file-downloads.outbound-links.js"></script>
+      
+      <link rel="canonical" href="https://docs.python.org/3/tutorial/controlflow.html">
+      
+    
+
+    
+    <style>
+      @media only screen {
+        table.full-width-table {
+            width: 100%;
+        }
+      }
+    </style>
+<link rel="stylesheet" href="../_static/pydoctheme_dark.css" media="(prefers-color-scheme: dark)" id="pydoctheme_dark_css">
+    <link rel="shortcut icon" type="image/png" href="../_static/py.svg">
+            <script type="text/javascript" src="../_static/copybutton.js"></script>
+            <script type="text/javascript" src="../_static/menu.js"></script>
+            <script type="text/javascript" src="../_static/search-focus.js"></script>
+            <script type="text/javascript" src="../_static/themetoggle.js"></script> 
+            <script type="text/javascript" src="../_static/rtd_switcher.js"></script>
+            <meta name="readthedocs-addons-api-version" content="1">
+
+  </head>
+<body>
+<div class="mobile-nav">
+    <input type="checkbox" id="menuToggler" class="toggler__input" aria-controls="navigation"
+           aria-pressed="false" aria-expanded="false" role="button" aria-label="メニュー">
+    <nav class="nav-content" role="navigation">
+        <label for="menuToggler" class="toggler__label">
+            <span></span>
+        </label>
+        <span class="nav-items-wrapper">
+            <a href="https://www.python.org/" class="nav-logo">
+                <img src="../_static/py.svg" alt="Python logo">
+            </a>
+            <span class="version_switcher_placeholder"></span>
+            <form role="search" class="search" action="../search.html" method="get">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" class="search-icon">
+                    <path fill-rule="nonzero" fill="currentColor" d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 001.48-5.34c-.47-2.78-2.79-5-5.59-5.34a6.505 6.505 0 00-7.27 7.27c.34 2.8 2.56 5.12 5.34 5.59a6.5 6.5 0 005.34-1.48l.27.28v.79l4.25 4.25c.41.41 1.08.41 1.49 0 .41-.41.41-1.08 0-1.49L15.5 14zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path>
+                </svg>
+                <input placeholder="検索" aria-label="検索" type="search" name="q">
+                <input type="submit" value="検索">
+            </form>
+        </span>
+    </nav>
+    <div class="menu-wrapper">
+        <nav class="menu" role="navigation" aria-label="main navigation">
+            <div class="language_switcher_placeholder"></div>
+            
+<label class="theme-selector-label">
+    テーマ
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">ライト</option>
+        <option value="dark">ダーク</option>
+    </select>
+</label>
+  <div>
+    <h3><a href="../contents.html">目次</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">4. その他の制御フローツール</a><ul>
+<li><a class="reference internal" href="#if-statements">4.1. <code class="xref std std-keyword docutils literal notranslate"><span class="pre">if</span></code> 文</a></li>
+<li><a class="reference internal" href="#for-statements">4.2. <code class="xref std std-keyword docutils literal notranslate"><span class="pre">for</span></code> 文</a></li>
+<li><a class="reference internal" href="#the-range-function">4.3. <code class="xref py py-func docutils literal notranslate"><span class="pre">range()</span></code> 関数</a></li>
+<li><a class="reference internal" href="#break-and-continue-statements">4.4. <code class="xref std std-keyword docutils literal notranslate"><span class="pre">break</span></code> 文と <code class="xref std std-keyword docutils literal notranslate"><span class="pre">continue</span></code> 文</a></li>
+<li><a class="reference internal" href="#else-clauses-on-loops">4.5. ループの <code class="xref std std-keyword docutils literal notranslate"><span class="pre">else</span></code> 節</a></li>
+<li><a class="reference internal" href="#pass-statements">4.6. <code class="xref std std-keyword docutils literal notranslate"><span class="pre">pass</span></code> 文</a></li>
+<li><a class="reference internal" href="#match-statements">4.7. <code class="xref std std-keyword docutils literal notranslate"><span class="pre">match</span></code> 文</a></li>
+<li><a class="reference internal" href="#defining-functions">4.8. 関数を定義する</a></li>
+<li><a class="reference internal" href="#more-on-defining-functions">4.9. 関数定義についてもう少し</a><ul>
+<li><a class="reference internal" href="#default-argument-values">4.9.1. デフォルトの引数値</a></li>
+<li><a class="reference internal" href="#keyword-arguments">4.9.2. キーワード引数</a></li>
+<li><a class="reference internal" href="#special-parameters">4.9.3. 特殊なパラメータ</a><ul>
+<li><a class="reference internal" href="#positional-or-keyword-arguments">4.9.3.1. 位置またはキーワード引数</a></li>
+<li><a class="reference internal" href="#positional-only-parameters">4.9.3.2. 位置専用引数</a></li>
+<li><a class="reference internal" href="#keyword-only-arguments">4.9.3.3. キーワード専用引数</a></li>
+<li><a class="reference internal" href="#function-examples">4.9.3.4. 関数の例</a></li>
+<li><a class="reference internal" href="#recap">4.9.3.5. 要約</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#arbitrary-argument-lists">4.9.4. 任意引数リスト</a></li>
+<li><a class="reference internal" href="#unpacking-argument-lists">4.9.5. 引数リストのアンパック</a></li>
+<li><a class="reference internal" href="#lambda-expressions">4.9.6. ラムダ式</a></li>
+<li><a class="reference internal" href="#documentation-strings">4.9.7. ドキュメンテーション文字列</a></li>
+<li><a class="reference internal" href="#function-annotations">4.9.8. 関数のアノテーション</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#intermezzo-coding-style">4.10. 間奏曲: コーディングスタイル</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>前のトピックへ</h4>
+    <p class="topless"><a href="introduction.html"
+                          title="前の章へ"><span class="section-number">3. </span>形式ばらない Python の紹介</a></p>
+  </div>
+  <div>
+    <h4>次のトピックへ</h4>
+    <p class="topless"><a href="datastructures.html"
+                          title="次の章へ"><span class="section-number">5. </span>データ構造</a></p>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const title = document.querySelector('meta[property="og:title"]').content;
+        const elements = document.querySelectorAll('.improvepage');
+        const pageurl = window.location.href.split('?')[0];
+        elements.forEach(element => {
+            const url = new URL(element.href.split('?')[0].replace("-nojs", ""));
+            url.searchParams.set('pagetitle', title);
+            url.searchParams.set('pageurl', pageurl);
+            url.searchParams.set('pagesource', "tutorial/controlflow.rst");
+            element.href = url.toString();
+        });
+    });
+  </script>
+  <div role="note" aria-label="source link">
+    <h3>このページ</h3>
+    <ul class="this-page-menu">
+      <li><a href="../bugs.html">バグを報告する</a></li>
+      <li><a class="improvepage" href="../improve-page-nojs.html">このページを改善する</a></li>
+      <li>
+        <a href="https://github.com/python/cpython/blob/3.15/Doc/tutorial/controlflow.rst?plain=1"
+            rel="nofollow">ソースを表示する
+        </a>
+      </li>
+      
+      <li>
+        <a href="https://github.com/python/python-docs-ja/blob/3.15/tutorial/controlflow.po?plain=1"
+           rel="nofollow">翻訳のソースを表示する</a>
+      </li>
+      
+    </ul>
+  </div>
+        </nav>
+    </div>
+</div>
+
+  
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>ナビゲーション</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="総合索引"
+             accesskey="I">索引</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Pythonモジュール索引"
+             >モジュール</a> |</li>
+        <li class="right" >
+          <a href="datastructures.html" title="5. データ構造"
+             accesskey="N">次へ</a> |</li>
+        <li class="right" >
+          <a href="introduction.html" title="3. 形式ばらない Python の紹介"
+             accesskey="P">前へ</a> |</li>
+
+          <li class="root-icon"><img src="../_static/py.svg" alt="Python logo" style="vertical-align: middle; margin-top: -1px"></li>
+          <li><a href="https://www.python.org/">Python</a> &#187;</li>
+          <li class="switchers">
+            <div class="language_switcher_placeholder"></div>
+            <div class="version_switcher_placeholder"></div>
+          </li>
+          <li>
+              
+          </li>
+    <li id="cpython-language-and-version">
+      <a href="../index.html">3.15.2 documentation</a> &#187;
+    </li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Python チュートリアル</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><span class="section-number">4. </span>その他の制御フローツール</a></li>
+                <li class="right">
+                    
+
+    <div class="inline-search" role="search">
+        <form class="inline-search" action="../search.html" method="get">
+          <input placeholder="検索" aria-label="検索" type="search" name="q" id="search-box">
+          <input type="submit" value="検索">
+        </form>
+    </div>
+                     |
+                </li>
+            <li class="right">
+<label class="theme-selector-label">
+    テーマ
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">ライト</option>
+        <option value="dark">ダーク</option>
+    </select>
+</label> |</li>
+            
+      </ul>
+    </div>    
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="more-control-flow-tools">
+<span id="tut-morecontrol"></span><h1 class="translated"><span class="section-number">4. </span>その他の制御フローツール<a class="headerlink" href="#more-control-flow-tools" title="Link to this heading">¶</a></h1>
+<p class="translated">前章で紹介した <a class="reference internal" href="../reference/compound_stmts.html#while"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">while</span></code></a> 文の他にも、 Python にはいくつか制御フローツールがあり、本章で説明します。</p>
+<section id="if-statements">
+<span id="tut-if"></span><h2 class="translated"><span class="section-number">4.1. </span><code class="xref std std-keyword docutils literal notranslate"><span class="pre">if</span></code> 文<a class="headerlink" href="#if-statements" title="Link to this heading">¶</a></h2>
+<p class="translated">おそらく最もおなじみの文型は <a class="reference internal" href="../reference/compound_stmts.html#if"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">if</span></code></a> 文でしょう。例えば:</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">input</span><span class="p">(</span><span class="s2">"Please enter an integer: "</span><span class="p">))</span>
+<span class="go">Please enter an integer: 42</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">x</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="s1">'Negative changed to zero'</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">elif</span> <span class="n">x</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="s1">'Zero'</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">elif</span> <span class="n">x</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="s1">'Single'</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">else</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="s1">'More'</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="go">More</span>
+</pre></div>
+</div>
+<p class="translated">ゼロ個以上の <a class="reference internal" href="../reference/compound_stmts.html#elif"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">elif</span></code></a> 部を使うことができ、 <a class="reference internal" href="../reference/compound_stmts.html#else"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">else</span></code></a> 部を付けることもできます。キーワード '<code class="xref std std-keyword docutils literal notranslate"><span class="pre">elif</span></code>' は 'else if' を短くしたもので、過剰なインデントを避けるのに役立ちます。一連の <code class="xref std std-keyword docutils literal notranslate"><span class="pre">if</span></code> ... <code class="xref std std-keyword docutils literal notranslate"><span class="pre">elif</span></code> ... <code class="xref std std-keyword docutils literal notranslate"><span class="pre">elif</span></code> ...  は、他の言語における <code class="docutils literal notranslate"><span class="pre">switch</span></code> 文や <code class="docutils literal notranslate"><span class="pre">case</span></code> 文の代用となります。</p>
+<p class="translated">同じ値を複数の定数と比較する場合や、特定の型や属性を確認する場合には、<code class="xref std std-keyword docutils literal notranslate"><span class="pre">match</span></code> 文も便利です。詳細は <a class="reference internal" href="#tut-match"><span class="std std-ref">match 文</span></a> を参照してください。</p>
+</section>
+<section id="for-statements">
+<span id="tut-for"></span><h2 class="translated"><span class="section-number">4.2. </span><code class="xref std std-keyword docutils literal notranslate"><span class="pre">for</span></code> 文<a class="headerlink" href="#for-statements" title="Link to this heading">¶</a></h2>
+<p class="translated" id="index-0">Python の <a class="reference internal" href="../reference/compound_stmts.html#for"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">for</span></code></a> 文は、読者が C 言語や Pascal 言語で使いなれているかもしれない <code class="docutils literal notranslate"><span class="pre">for</span></code> 文とは少し違います。 (Pascal のように) 常に等差数列にわたる反復を行ったり、 (C のように) 繰返しステップと停止条件を両方ともユーザが定義できるようにするのとは違い、Python の <code class="xref std std-keyword docutils literal notranslate"><span class="pre">for</span></code> 文は、任意のシーケンス型 (リストまたは文字列) にわたって反復を行います。反復の順番はシーケンス中に要素が現れる順番です。例えば:</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># 文字列の長さを計測:</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">words</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'cat'</span><span class="p">,</span> <span class="s1">'window'</span><span class="p">,</span> <span class="s1">'defenestrate'</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">words</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">w</span><span class="p">))</span>
+<span class="gp">...</span>
+<span class="go">cat 3</span>
+<span class="go">window 6</span>
+<span class="go">defenestrate 12</span>
+</pre></div>
+</div>
+<p class="translated">コレクションを反復処理しながらそのコレクションを変更するコードを正しく書くのは難しいことがあります。通常は、コレクションのコピーを反復処理するか、新しいコレクションを作成する方が簡単です。</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># コレクション作成</span>
+<span class="n">users</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'Hans'</span><span class="p">:</span> <span class="s1">'active'</span><span class="p">,</span> <span class="s1">'Éléonore'</span><span class="p">:</span> <span class="s1">'inactive'</span><span class="p">,</span> <span class="s1">'景太郎'</span><span class="p">:</span> <span class="s1">'active'</span><span class="p">}</span>
+
+<span class="c1"># 方針:  コピーを反復</span>
+<span class="k">for</span> <span class="n">user</span><span class="p">,</span> <span class="n">status</span> <span class="ow">in</span> <span class="n">users</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s1">'inactive'</span><span class="p">:</span>
+        <span class="k">del</span> <span class="n">users</span><span class="p">[</span><span class="n">user</span><span class="p">]</span>
+
+<span class="c1"># 方針:  新コレクション作成</span>
+<span class="n">active_users</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">user</span><span class="p">,</span> <span class="n">status</span> <span class="ow">in</span> <span class="n">users</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s1">'active'</span><span class="p">:</span>
+        <span class="n">active_users</span><span class="p">[</span><span class="n">user</span><span class="p">]</span> <span class="o">=</span> <span class="n">status</span>
+</pre></div>
+</div>
+</section>
+<section id="the-range-function">
+<span id="tut-range"></span><h2 class="translated"><span class="section-number">4.3. </span><a class="reference internal" href="../builtins/stdtypes.html#range" title="range"><code class="xref py py-func docutils literal notranslate"><span class="pre">range()</span></code></a> 関数<a class="headerlink" href="#the-range-function" title="Link to this heading">¶</a></h2>
+<p class="translated">数列にわたって反復を行う必要がある場合、組み込み関数 <a class="reference internal" href="../builtins/stdtypes.html#range" title="range"><code class="xref py py-func docutils literal notranslate"><span class="pre">range()</span></code></a>  が便利です。この関数は等差数列を生成します。</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="go">0</span>
+<span class="go">1</span>
+<span class="go">2</span>
+<span class="go">3</span>
+<span class="go">4</span>
+</pre></div>
+</div>
+<p class="translated">指定した終端値は生成されるシーケンスには入りません。<code class="docutils literal notranslate"><span class="pre">range(10)</span></code> は 10 個の値を生成し、長さ 10 のシーケンスにおける各項目のインデクスとなります。range を別の数から開始したり、他の増加量 (負でも; 増加量は時に 'ステップ(step)' と呼ばれることもあります) を指定することもできます:</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="go">[5, 6, 7, 8, 9]</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="go">[0, 3, 6, 9]</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="o">-</span><span class="mi">30</span><span class="p">))</span>
+<span class="go">[-10, -40, -70]</span>
+</pre></div>
+</div>
+<p class="translated">あるシーケンスにわたってインデクスで反復を行うには、 <a class="reference internal" href="../builtins/stdtypes.html#range" title="range"><code class="xref py py-func docutils literal notranslate"><span class="pre">range()</span></code></a> と <a class="reference internal" href="../builtins/functions.html#len" title="len"><code class="xref py py-func docutils literal notranslate"><span class="pre">len()</span></code></a> を次のように組み合わせられます:</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'Mary'</span><span class="p">,</span> <span class="s1">'had'</span><span class="p">,</span> <span class="s1">'a'</span><span class="p">,</span> <span class="s1">'little'</span><span class="p">,</span> <span class="s1">'lamb'</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">)):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+<span class="gp">...</span>
+<span class="go">0 Mary</span>
+<span class="go">1 had</span>
+<span class="go">2 a</span>
+<span class="go">3 little</span>
+<span class="go">4 lamb</span>
+</pre></div>
+</div>
+<p class="translated">しかし、多くの場合は <a class="reference internal" href="../builtins/functions.html#enumerate" title="enumerate"><code class="xref py py-func docutils literal notranslate"><span class="pre">enumerate()</span></code></a> 関数を使う方が便利です。 <a class="reference internal" href="datastructures.html#tut-loopidioms"><span class="std std-ref">ループのテクニック</span></a> を参照してください。</p>
+<p class="translated">range を直接出力すると変なことになります:</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="go">range(0, 10)</span>
+</pre></div>
+</div>
+<p class="translated"><a class="reference internal" href="../builtins/stdtypes.html#range" title="range"><code class="xref py py-func docutils literal notranslate"><span class="pre">range()</span></code></a> が返すオブジェクトは、いろいろな点でリストであるかのように振る舞いますが、本当はリストではありません。これは、イテレートした時に望んだ数列の連続した要素を返すオブジェクトです。しかし実際にリストを作るわけではないので、スペースの節約になります。</p>
+<p class="translated">このようなオブジェクトを <a class="reference internal" href="../glossary.html#term-iterable"><span class="xref std std-term">イテラブル</span></a> と呼びます。つまり、要素が <a class="reference internal" href="../glossary.html#term-exhausted"><span class="xref std std-term">尽きる</span></a> まで順に取得できるものを必要とする関数や構文で使えます。これまでに見た <a class="reference internal" href="../reference/compound_stmts.html#for"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">for</span></code></a> 文がそのような構文の例で、イテラブルを受け取る関数の例には <a class="reference internal" href="../builtins/functions.html#sum" title="sum"><code class="xref py py-func docutils literal notranslate"><span class="pre">sum()</span></code></a> があります。</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">sum</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>  <span class="c1"># 0 + 1 + 2 + 3</span>
+<span class="go">6</span>
+</pre></div>
+</div>
+<p class="translated">イテラブルを返す関数や、イテラブルを引数に取る関数は後でさらに紹介します。 <a class="reference internal" href="datastructures.html#tut-structures"><span class="std std-ref">データ構造</span></a> の章では <a class="reference internal" href="../builtins/stdtypes.html#list" title="list"><code class="xref py py-func docutils literal notranslate"><span class="pre">list()</span></code></a> について詳しく説明します。</p>
+</section>
+<section id="break-and-continue-statements">
+<span id="tut-break"></span><h2 class="translated"><span class="section-number">4.4. </span><code class="xref std std-keyword docutils literal notranslate"><span class="pre">break</span></code> 文と <code class="xref std std-keyword docutils literal notranslate"><span class="pre">continue</span></code> 文<a class="headerlink" href="#break-and-continue-statements" title="Link to this heading">¶</a></h2>
+<p class="translated"><a class="reference internal" href="../reference/simple_stmts.html#break"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">break</span></code></a> 文は、その文を囲む最も内側の <a class="reference internal" href="../reference/compound_stmts.html#for"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">for</span></code></a> ループまたは <a class="reference internal" href="../reference/compound_stmts.html#while"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">while</span></code></a> ループを抜けます。</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">10</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="k">if</span> <span class="n">n</span> <span class="o">%</span> <span class="n">x</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+<span class="gp">... </span>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2"> は </span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s2"> * </span><span class="si">{</span><span class="n">n</span><span class="o">//</span><span class="n">x</span><span class="si">}</span><span class="s2"> と等しい"</span><span class="p">)</span>
+<span class="gp">... </span>            <span class="k">break</span>
+<span class="gp">...</span>
+<span class="go">4 は 2 * 2 と等しい</span>
+<span class="go">6 は 2 * 3 と等しい</span>
+<span class="go">8 は 2 * 4 と等しい</span>
+<span class="go">9 は 3 * 3 と等しい</span>
+</pre></div>
+</div>
+<p class="translated"><a class="reference internal" href="../reference/simple_stmts.html#continue"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">continue</span></code></a> 文はループの次のイテレーションを実行します:</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">10</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">if</span> <span class="n">num</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"偶数 </span><span class="si">{</span><span class="n">num</span><span class="si">}</span><span class="s2"> を見つけた"</span><span class="p">)</span>
+<span class="gp">... </span>        <span class="k">continue</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"奇数 </span><span class="si">{</span><span class="n">num</span><span class="si">}</span><span class="s2"> を見つけた"</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="go">偶数 2 を見つけた</span>
+<span class="go">奇数 3 を見つけた</span>
+<span class="go">偶数 4 を見つけた</span>
+<span class="go">奇数 5 を見つけた</span>
+<span class="go">偶数 6 を見つけた</span>
+<span class="go">奇数 7 を見つけた</span>
+<span class="go">偶数 8 を見つけた</span>
+<span class="go">奇数 9 を見つけた</span>
+</pre></div>
+</div>
+</section>
+<section id="else-clauses-on-loops">
+<span id="break-and-continue-statements-and-else-clauses-on-loops"></span><span id="tut-for-else"></span><h2 class="translated"><span class="section-number">4.5. </span>ループの <code class="xref std std-keyword docutils literal notranslate"><span class="pre">else</span></code> 節<a class="headerlink" href="#else-clauses-on-loops" title="Link to this heading">¶</a></h2>
+<p class="translated"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">for</span></code> または <code class="xref std std-keyword docutils literal notranslate"><span class="pre">while</span></code> ループ中の <code class="xref std std-keyword docutils literal notranslate"><span class="pre">break</span></code> 文は <code class="xref std std-keyword docutils literal notranslate"><span class="pre">else</span></code> 節と対になる場合があります。<code class="xref std std-keyword docutils literal notranslate"><span class="pre">break</span></code> を実行せずにループが終了すると、<code class="xref std std-keyword docutils literal notranslate"><span class="pre">else</span></code> 節が実行されます。</p>
+<p class="translated"><a class="reference internal" href="../reference/compound_stmts.html#for"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">for</span></code></a> 文の場合、 <code class="xref std std-keyword docutils literal notranslate"><span class="pre">else</span></code> 節はループ処理の最後のイテレーションが実行されたあと、つまりbreakが発生しなかった場合に実行されます。</p>
+<p class="translated"><a class="reference internal" href="../reference/compound_stmts.html#while"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">while</span></code></a> 文の場合は、ループ条件が偽となったあとに実行されます。</p>
+<p class="translated">どちらのループでも、ループが <a class="reference internal" href="../reference/simple_stmts.html#break"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">break</span></code></a> によって終了した場合は <code class="xref std std-keyword docutils literal notranslate"><span class="pre">else</span></code> 句は <strong>実行されません</strong>。当然、 <a class="reference internal" href="../reference/simple_stmts.html#return"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">return</span></code></a> や例外の発生によってループが途中で終了した場合にも、<a class="reference internal" href="../reference/compound_stmts.html#else"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">else</span></code></a> 節の実行はスキップされます。</p>
+<p class="translated">その例として、素数を探索する <code class="xref std std-keyword docutils literal notranslate"><span class="pre">for</span></code> 文を以下に示します:</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">10</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="k">if</span> <span class="n">n</span> <span class="o">%</span> <span class="n">x</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+<span class="gp">... </span>            <span class="nb">print</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="s1">'equals'</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="s1">'*'</span><span class="p">,</span> <span class="n">n</span><span class="o">//</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">... </span>            <span class="k">break</span>
+<span class="gp">... </span>    <span class="k">else</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="c1"># 因数が見つからないとループは最後まで実行される</span>
+<span class="gp">... </span>        <span class="nb">print</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="s1">'is a prime number'</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="go">2 is a prime number</span>
+<span class="go">3 is a prime number</span>
+<span class="go">4 equals 2 * 2</span>
+<span class="go">5 is a prime number</span>
+<span class="go">6 equals 2 * 3</span>
+<span class="go">7 is a prime number</span>
+<span class="go">8 equals 2 * 4</span>
+<span class="go">9 equals 3 * 3</span>
+</pre></div>
+</div>
+<p class="translated">(そう、これは正しいコードです。よく見てください: <code class="docutils literal notranslate"><span class="pre">else</span></code> 節は <code class="docutils literal notranslate"><span class="pre">if</span></code> 文 <strong>ではなく</strong> 、 <code class="docutils literal notranslate"><span class="pre">for</span></code> ループに属しています。)</p>
+<p class="translated">else 節を理解するには、ループ内の <code class="docutils literal notranslate"><span class="pre">if</span></code> と対になると考える方法があります。ループが実行されるにつれて if/if/if/else のように処理が進みます。 <code class="docutils literal notranslate"><span class="pre">if</span></code> はループの内側にあり、何度も実行されます。条件が一度でも真になれば <code class="docutils literal notranslate"><span class="pre">break</span></code> が実行されます。一度も真にならなければ、ループの外側にある <code class="docutils literal notranslate"><span class="pre">else</span></code> 節が実行されます。</p>
+<p class="translated">ループの <code class="docutils literal notranslate"><span class="pre">else</span></code> 句は、 <code class="docutils literal notranslate"><span class="pre">if</span></code> 文の <code class="docutils literal notranslate"><span class="pre">else</span></code> よりも <a class="reference internal" href="../reference/compound_stmts.html#try"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">try</span></code></a> 文の <code class="docutils literal notranslate"><span class="pre">else</span></code> に似ています。 <code class="docutils literal notranslate"><span class="pre">try</span></code> 文の <code class="docutils literal notranslate"><span class="pre">else</span></code> 句は例外が発生しなかった時に実行され、ループの <code class="docutils literal notranslate"><span class="pre">else</span></code> 句は <code class="docutils literal notranslate"><span class="pre">break</span></code> されなかった場合に実行されます。 <code class="docutils literal notranslate"><span class="pre">try</span></code> 文と例外についての詳細は <a class="reference internal" href="errors.html#tut-handling"><span class="std std-ref">例外を処理する</span></a> を参照してください。</p>
+</section>
+<section id="pass-statements">
+<span id="tut-pass"></span><span id="index-1"></span><h2 class="translated"><span class="section-number">4.6. </span><code class="xref std std-keyword docutils literal notranslate"><span class="pre">pass</span></code> 文<a class="headerlink" href="#pass-statements" title="Link to this heading">¶</a></h2>
+<p class="translated"><a class="reference internal" href="../reference/simple_stmts.html#pass"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">pass</span></code></a> 文は何もしません。 <code class="docutils literal notranslate"><span class="pre">pass</span></code> は、文を書くことが構文上要求されているが、プログラム上何の動作もする必要がない時に使われます:</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">pass</span>  <span class="c1"># キーボード割り込み(Ctrl+C)のためのビジーウェイト</span>
+<span class="gp">...</span>
+</pre></div>
+</div>
+<p class="translated">これは最小のクラスを作るときによく使われる方法です:</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span><span class="w"> </span><span class="nc">MyEmptyClass</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">pass</span>
+<span class="gp">...</span>
+</pre></div>
+</div>
+<p class="translated"><a class="reference internal" href="../reference/simple_stmts.html#pass"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">pass</span></code></a> のもう 1 つの使い道は、新しいコードを書いているときの関数や条件文の仮置きの本体としてです。こうすることで、より抽象的なレベルで考え続けられます。
+<code class="xref std std-keyword docutils literal notranslate"><span class="pre">pass</span></code> は何事も無く無視されます</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">initlog</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">pass</span>   <span class="c1"># ここを忘れずに実装すること!</span>
+<span class="gp">...</span>
+</pre></div>
+</div>
+<p class="translated">この最後の例で、多くの人は <code class="code docutils literal notranslate"><span class="pre">pass</span></code> ではなく省略記号リテラル <code class="code docutils literal notranslate"><span class="pre">...</span></code> を使います。 この使い方は Python に対して特別な意味はなく、言語定義の一部でもありません（ここにはどんな定数式でも使えます）が、 <code class="code docutils literal notranslate"><span class="pre">...</span></code> は慣例的にプレースホルダ本体としても使われています。 <a class="reference internal" href="../builtins/stdtypes.html#bltin-ellipsis-object"><span class="std std-ref">Ellipsis オブジェクト</span></a> を参照してください。</p>
+</section>
+<section id="match-statements">
+<span id="tut-match"></span><h2 class="translated"><span class="section-number">4.7. </span><code class="xref std std-keyword docutils literal notranslate"><span class="pre">match</span></code> 文<a class="headerlink" href="#match-statements" title="Link to this heading">¶</a></h2>
+<p class="translated"><a class="reference internal" href="../reference/compound_stmts.html#match"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">match</span></code></a> 文は式を受け取り、その値を1つ以上の case ブロックに指定されたパターンと順に比較します。表面的には C、Java、JavaScript などの switch 文に似ていますが、Rust や Haskell などのパターンマッチングにより近いものです。最初にマッチしたパターンのブロックだけが実行されます。また、値から構成要素 (シーケンスの要素やオブジェクトの属性) を取り出して変数に代入することもできます。どの case にもマッチしなければ、どの分岐も実行されません。</p>
+<p class="translated">最も単純な形式では、対象の値を1つ以上のリテラルと比較します。</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">http_error</span><span class="p">(</span><span class="n">status</span><span class="p">):</span>
+    <span class="k">match</span> <span class="n">status</span><span class="p">:</span>
+        <span class="k">case</span> <span class="mi">400</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">"Bad request"</span>
+        <span class="k">case</span> <span class="mi">404</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">"Not found"</span>
+        <span class="k">case</span> <span class="mi">418</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">"I'm a teapot"</span>
+        <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">"Something's wrong with the internet"</span>
+</pre></div>
+</div>
+<p class="translated">最後のブロックについて: 変数名 <code class="docutils literal notranslate"><span class="pre">_</span></code> は <em>ワイルドカード</em> の働きをし、マッチに絶対失敗しません。</p>
+<p class="translated">複数のリテラルを <code class="docutils literal notranslate"><span class="pre">|</span></code> (&quot;or&quot;)を使用して組み合わせて1つのパターンにできます:</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">case</span> <span class="mi">401</span> <span class="o">|</span> <span class="mi">403</span> <span class="o">|</span> <span class="mi">404</span><span class="p">:</span>
+    <span class="k">return</span> <span class="s2">"Not allowed"</span>
+</pre></div>
+</div>
+<p class="translated">パターンはアンパック代入に似た形で書くことができ、変数に値を結びつけるために使えます。</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># point(座標) は (x, y) のタプル</span>
+<span class="k">match</span> <span class="n">point</span><span class="p">:</span>
+    <span class="k">case</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"原点"</span><span class="p">)</span>
+    <span class="k">case</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Y=</span><span class="si">{</span><span class="n">y</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">case</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"X=</span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">case</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"X=</span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s2">, Y=</span><span class="si">{</span><span class="n">y</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"座標ではない"</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="translated">このコードは注意して見てください！
+最初のパターンには2つのリテラルがあり、上で示したリテラルパターンの拡張と考えることができます。
+しかし次の2つのパターンはリテラルと変数の組み合わせのため、対象(<code class="docutils literal notranslate"><span class="pre">point</span></code>)から値を取り出して変数に <em>結びつけ</em> ます。
+4番目のパターンは2つの値を取り込みます。
+これは、アンパック代入 <code class="docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">y)</span> <span class="pre">=</span> <span class="pre">point</span></code> と概念的に似ています。</p>
+<p class="translated">データを構造化するためにクラスを使っている場合は、クラス名の後にコンストラクターに似た引数リストを指定できます。これにより属性の値を変数に取り込めます。</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Point</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">y</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">where_is</span><span class="p">(</span><span class="n">point</span><span class="p">):</span>
+    <span class="k">match</span> <span class="n">point</span><span class="p">:</span>
+        <span class="k">case</span> <span class="n">Point</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">"原点"</span><span class="p">)</span>
+        <span class="k">case</span> <span class="n">Point</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Y=</span><span class="si">{</span><span class="n">y</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">case</span> <span class="n">Point</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"X=</span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">case</span> <span class="n">Point</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">"それ以外のどこか"</span><span class="p">)</span>
+        <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">"座標ではない"</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="translated">属性の順序が定まっている一部の組み込みクラス (データクラスなど) では位置引数を使えます。自分のクラスに <code class="docutils literal notranslate"><span class="pre">__match_args__</span></code> 特殊属性を設定して、パターン内での各属性の位置を定義することもできます。この属性を (&quot;x&quot;, &quot;y&quot;) に設定すると、次のパターンはすべて等価になります (いずれも <code class="docutils literal notranslate"><span class="pre">y</span></code> 属性の値を <code class="docutils literal notranslate"><span class="pre">var</span></code> 変数に結びつけます)。</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">Point</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">var</span><span class="p">)</span>
+<span class="n">Point</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">var</span><span class="p">)</span>
+<span class="n">Point</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">var</span><span class="p">)</span>
+<span class="n">Point</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">var</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="translated">おすすめのパターンの読み方は、パターンが、代入文の左辺に配置するものを拡張した形式であるとみなすことです。
+これにより、どの変数になにが代入されるかが分かります。
+単独の名前（上記の <code class="docutils literal notranslate"><span class="pre">var</span></code> など）だけがマッチ文で値が代入されます。ドット付きの名前（<code class="docutils literal notranslate"><span class="pre">foo.bar</span></code> など）、属性名（上記の <code class="docutils literal notranslate"><span class="pre">x=</span></code>、<code class="docutils literal notranslate"><span class="pre">y=</span></code> など ）、クラス名（名前の後ろの &quot;(...)&quot;  によって判別される。上記の <code class="docutils literal notranslate"><span class="pre">Point</span></code> など）には値は代入されません。</p>
+<p class="translated">パターンは任意にネストできます。
+例えば、<code class="docutils literal notranslate"><span class="pre">__match_args__</span></code> を追加した <code class="docutils literal notranslate"><span class="pre">Point</span></code> クラスのインスタンスからなる短いリストがある場合、次のようにマッチできます。</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Point</span><span class="p">:</span>
+    <span class="n">__match_args__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">'x'</span><span class="p">,</span> <span class="s1">'y'</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">y</span>
+
+<span class="k">match</span> <span class="n">points</span><span class="p">:</span>
+    <span class="k">case</span> <span class="p">[]:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"座標が存在しない"</span><span class="p">)</span>
+    <span class="k">case</span> <span class="p">[</span><span class="n">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"原点"</span><span class="p">)</span>
+    <span class="k">case</span> <span class="p">[</span><span class="n">Point</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)]:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"1つの座標 </span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">y</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">case</span> <span class="p">[</span><span class="n">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">y1</span><span class="p">),</span> <span class="n">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">y2</span><span class="p">)]:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Y軸の </span><span class="si">{</span><span class="n">y1</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">y2</span><span class="si">}</span><span class="s2"> に2つの座標"</span><span class="p">)</span>
+    <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"それ以外のどこか"</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="translated">パターンには「ガード」と呼ばれる <code class="docutils literal notranslate"><span class="pre">if</span></code> 節を追加できます。ガードが偽なら、<code class="docutils literal notranslate"><span class="pre">match</span></code> は次の case ブロックのパターンとのマッチを試みます。値の取り込みはガードの評価より前に行われることに注意してください。</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">match</span> <span class="n">point</span><span class="p">:</span>
+    <span class="k">case</span> <span class="n">Point</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="n">y</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Y=X at </span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">case</span> <span class="n">Point</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"対角線上ではない"</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="translated">この文には、ほかにも次のような重要な特徴があります:</p>
+<ul>
+<li><p class="translated">アンパック代入のように、タプルとリストのパターンでは正確に同じ意味で、任意のシーケンスと一致します。重要な例外として、イテレーターや文字列ではマッチしません。</p></li>
+<li><p class="translated">シーケンスパターンは拡張アンパックをサポート: <code class="docutils literal notranslate"><span class="pre">[x,</span> <span class="pre">y,</span> <span class="pre">*rest]</span></code> と <code class="docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">y,</span> <span class="pre">*rest)</span></code> はアンパック代入として同じように動作します。<code class="docutils literal notranslate"><span class="pre">*</span></code> のあとの変数名は <code class="docutils literal notranslate"><span class="pre">_</span></code> でもよく、そのため <code class="docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">y,</span> <span class="pre">*_)</span></code> は最低でも2つのアイテムを持つシーケンスにマッチし、残りのアイテムは変数に結びつけられません。</p></li>
+<li><p class="translated">マッピングパターン: <code class="docutils literal notranslate"><span class="pre">{&quot;bandwidth&quot;:</span> <span class="pre">b,</span> <span class="pre">&quot;latency&quot;:</span> <span class="pre">l}</span></code> は辞書から <code class="docutils literal notranslate"><span class="pre">&quot;bandwidth&quot;</span></code> と <code class="docutils literal notranslate"><span class="pre">&quot;latency&quot;</span></code> の値を取り込みます。シーケンスパターンとは異なり、それ以外のキーは無視されます。アンパッキングのような <code class="docutils literal notranslate"><span class="pre">**rest</span></code> もサポートされています（しかし、 <code class="docutils literal notranslate"><span class="pre">**_</span></code> は冗長なため禁止されています）。</p></li>
+<li><p class="translated"><code class="docutils literal notranslate"><span class="pre">as</span></code> キーワードを使うと、サブパターンにマッチした値を変数に取り込めます。</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">case</span> <span class="p">(</span><span class="n">Point</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">),</span> <span class="n">Point</span><span class="p">(</span><span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">)</span> <span class="k">as</span> <span class="n">p2</span><span class="p">):</span> <span class="o">...</span>
+</pre></div>
+</div>
+<p class="translated">この例では入力から2番目の要素を <code class="docutils literal notranslate"><span class="pre">p2</span></code> として取り込みます（入力が2つのポイントのシーケンスである場合）</p>
+</li>
+<li><p class="translated">ほとんどのリテラルは値が等しいかどうかで比較しますが、シングルトンの <code class="docutils literal notranslate"><span class="pre">True</span></code>、<code class="docutils literal notranslate"><span class="pre">False</span></code>、<code class="docutils literal notranslate"><span class="pre">None</span></code> は同一のオブジェクトかどうかで比較します。</p></li>
+<li><p class="translated">名前付きの定数もパターンで使えます。値を取り込む変数と解釈されないよう、ドットを含む名前にする必要があります。</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Color</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="n">RED</span> <span class="o">=</span> <span class="s1">'red'</span>
+    <span class="n">GREEN</span> <span class="o">=</span> <span class="s1">'green'</span>
+    <span class="n">BLUE</span> <span class="o">=</span> <span class="s1">'blue'</span>
+
+<span class="n">color</span> <span class="o">=</span> <span class="n">Color</span><span class="p">(</span><span class="nb">input</span><span class="p">(</span><span class="s2">"Enter your choice of 'red', 'blue' or 'green': "</span><span class="p">))</span>
+
+<span class="k">match</span> <span class="n">color</span><span class="p">:</span>
+    <span class="k">case</span> <span class="n">Color</span><span class="o">.</span><span class="n">RED</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"I see red!"</span><span class="p">)</span>
+    <span class="k">case</span> <span class="n">Color</span><span class="o">.</span><span class="n">GREEN</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"Grass is green"</span><span class="p">)</span>
+    <span class="k">case</span> <span class="n">Color</span><span class="o">.</span><span class="n">BLUE</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"I'm feeling the blues :("</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p class="translated">より詳細な説明と追加の例は <span class="target" id="index-16"></span><a class="pep reference external" href="https://peps.python.org/pep-0636/"><strong>PEP 636</strong></a> にチュートリアル形式で記述してあります。</p>
+</section>
+<section id="defining-functions">
+<span id="tut-functions"></span><h2 class="translated"><span class="section-number">4.8. </span>関数を定義する<a class="headerlink" href="#defining-functions" title="Link to this heading">¶</a></h2>
+<p class="translated">フィボナッチ数列 (Fibonacci series) を任意の上限値まで書き出すような関数を作成できます:</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">fib</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>    <span class="c1"># n 未満のフィボナッチ数列を出力する</span>
+<span class="gp">... </span><span class="w">    </span><span class="sd">"""n 未満のフィボナッチ数列を出力する。"""</span>
+<span class="gp">... </span>    <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span>
+<span class="gp">... </span>    <span class="k">while</span> <span class="n">a</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">' '</span><span class="p">)</span>
+<span class="gp">... </span>        <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="p">,</span> <span class="n">a</span><span class="o">+</span><span class="n">b</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">()</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># 定義した関数を呼び出す:</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fib</span><span class="p">(</span><span class="mi">2000</span><span class="p">)</span>
+<span class="go">0 1 1 2 3 5 8 13 21 34 55 89 144 233 377 610 987 1597</span>
+</pre></div>
+</div>
+<p class="translated" id="index-3"><a class="reference internal" href="../reference/compound_stmts.html#def"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">def</span></code></a> は関数の <em>定義 (definition)</em> を導くキーワードです。 <code class="docutils literal notranslate"><span class="pre">def</span></code> の後には、関数名と仮引数を丸括弧で囲んだリストを続けなければなりません。関数の実体を構成する実行文は次の行から始め、インデントされていなければなりません。</p>
+<p class="translated">関数本体の最初の文は文字列リテラルにすることもできます。その場合、この文字列は関数のドキュメンテーション文字列 (documentation string)、または <em class="dfn">docstring</em> と呼ばれます。 (docstring については <a class="reference internal" href="#tut-docstrings"><span class="std std-ref">ドキュメンテーション文字列</span></a> でさらに扱っています。) ドキュメンテーション文字列を使ったツールには、オンライン文書や印刷文書を自動的に生成したり、ユーザが対話的にコードから直接閲覧できるようにするものがあります。自分が書くコードにドキュメンテーション文字列を入れるのはよい習慣です。書く癖をつけてください。</p>
+<p class="translated">関数を <em>実行 (execution)</em> すると、その関数のローカル変数に使う新しいシンボルテーブル (symbol table) が作られます。
+より正確には、関数内で変数に値を代入すると、その値はローカルなシンボルテーブルに格納されます。
+変数を参照するときは、まずローカルなシンボルテーブル、次に外側の関数のローカルなシンボルテーブル、その次にグローバルなシンボルテーブル、最後に組み込み名のテーブルを検索します。
+したがって、関数内からグローバル変数や外側の関数の変数を参照することはできますが、直接値を代入することはできません。
+ただし、グローバル変数を <a class="reference internal" href="../reference/simple_stmts.html#global"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">global</span></code></a> 文で指定した場合や、外側の関数の変数を <a class="reference internal" href="../reference/simple_stmts.html#nonlocal"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">nonlocal</span></code></a> 文で指定した場合は例外です。</p>
+<p class="translated">関数を呼び出す際の実際の引数 (実引数) は、関数が呼び出されるときに関数のローカルなシンボルテーブル内に取り込まれます。そうすることで、実引数は <em>値渡し (call by value)</em> で関数に渡されることになります (ここでの <em>値 (value)</em> とは常にオブジェクトへの <em>参照(reference)</em> をいい、オブジェクトの値そのものではありません) <a class="footnote-reference brackets" href="#id2" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>。ある関数がほかの関数を呼び出すときや、自身を再帰的に呼び出すときには、新たな呼び出しのためにローカルなシンボルテーブルが新たに作成されます。</p>
+<p class="translated">関数定義は、現在のシンボルテーブルで関数名と関数オブジェクトを関連付けます。
+インタープリタは、その名前が指すオブジェクトをユーザー定義関数 (user-defined function) として認識します。
+他の名前も同じ関数オブジェクトを指すことができ、その名前を使って関数にアクセスできます。</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fib</span>
+<span class="go">&lt;function fib at 10042ed0&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">fib</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="go">0 1 1 2 3 5 8 13 21 34 55 89</span>
+</pre></div>
+</div>
+<p class="translated">他の言語出身の人からは、 <code class="docutils literal notranslate"><span class="pre">fib</span></code> は値を返さないので関数ではなく手続き (procedure) だと異論があるかもしれませんね。技術的に言えば、実際には <a class="reference internal" href="../reference/simple_stmts.html#return"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">return</span></code></a> 文を持たない関数もややつまらない値ですが値を返しています。この値は <code class="docutils literal notranslate"><span class="pre">None</span></code> と呼ばれます (これは組み込みの名前です)。 <code class="docutils literal notranslate"><span class="pre">None</span></code> だけを書き出そうとすると、インタプリタは通常出力を抑制します。本当に出力したいのなら、以下のように <a class="reference internal" href="../builtins/functions.html#print" title="print"><code class="xref py py-func docutils literal notranslate"><span class="pre">print()</span></code></a> を使うと見ることができます:</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fib</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">fib</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+<span class="go">None</span>
+</pre></div>
+</div>
+<p class="translated">フィボナッチ数列を出力する代わりに、数列の値を含むリストを返す関数も簡単に書けます。</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">fib2</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>  <span class="c1"># n 未満のフィボナッチ数列を返す</span>
+<span class="gp">... </span><span class="w">    </span><span class="sd">"""n 未満のフィボナッチ数列を含むリストを返す。"""</span>
+<span class="gp">... </span>    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="gp">... </span>    <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span>
+<span class="gp">... </span>    <span class="k">while</span> <span class="n">a</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>    <span class="c1"># 以下参照</span>
+<span class="gp">... </span>        <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="p">,</span> <span class="n">a</span><span class="o">+</span><span class="n">b</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">result</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f100</span> <span class="o">=</span> <span class="n">fib2</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>    <span class="c1"># 関数を呼び出す</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f100</span>                <span class="c1"># 結果を出力する</span>
+<span class="go">[0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89]</span>
+</pre></div>
+</div>
+<p class="translated">この例は Python の新しい機能を示しています:</p>
+<ul class="simple">
+<li><p class="translated"><a class="reference internal" href="../reference/simple_stmts.html#return"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">return</span></code></a> 文は値を返して関数を終了します。式を指定しない <code class="xref std std-keyword docutils literal notranslate"><span class="pre">return</span></code> は <code class="docutils literal notranslate"><span class="pre">None</span></code> を返します。関数本体の末尾に到達した場合も <code class="docutils literal notranslate"><span class="pre">None</span></code> を返します。</p></li>
+<li><p class="translated">文 <code class="docutils literal notranslate"><span class="pre">result.append(a)</span></code> では、リストオブジェクト <code class="docutils literal notranslate"><span class="pre">result</span></code> の <em>メソッド (method)</em> を呼び出しています。メソッドとは、オブジェクトに '属している' 関数のことで、 <code class="docutils literal notranslate"><span class="pre">obj</span></code> を何らかのオブジェクト (式であっても構いません)、 <code class="docutils literal notranslate"><span class="pre">methodname</span></code> をそのオブジェクトの型で定義されているメソッド名とすると、 <code class="docutils literal notranslate"><span class="pre">obj.methodname</span></code> と書き表されます。異なる型は異なるメソッドを定義しています。異なる型のメソッドで同じ名前のメソッドを持つことができ、あいまいさを生じることはありません。 (<em>クラス (class)</em> を使うことで、自前のオブジェクト型とメソッドを定義することもできます。 <a class="reference internal" href="classes.html#tut-classes"><span class="std std-ref">クラス</span></a> 参照) 例で示されているメソッド <a class="reference internal" href="../builtins/stdtypes.html#list.append" title="list.append"><code class="xref py py-meth docutils literal notranslate"><span class="pre">append()</span></code></a> は、リストオブジェクトで定義されています; このメソッドはリストの末尾に新たな要素を追加します。この例での <code class="docutils literal notranslate"><span class="pre">append()</span></code> は <code class="docutils literal notranslate"><span class="pre">result</span> <span class="pre">=</span> <span class="pre">result</span> <span class="pre">+</span> <span class="pre">[a]</span></code> と等価ですが、より効率的です。</p></li>
+</ul>
+</section>
+<section id="more-on-defining-functions">
+<span id="tut-defining"></span><h2 class="translated"><span class="section-number">4.9. </span>関数定義についてもう少し<a class="headerlink" href="#more-on-defining-functions" title="Link to this heading">¶</a></h2>
+<p class="translated">可変個の引数を伴う関数を定義することもできます。引数の定義方法には 3 つの形式があり、それらを組み合わせることができます。</p>
+<section id="default-argument-values">
+<span id="tut-defaultargs"></span><h3 class="translated"><span class="section-number">4.9.1. </span>デフォルトの引数値<a class="headerlink" href="#default-argument-values" title="Link to this heading">¶</a></h3>
+<p class="translated">もっとも便利なのは、一つ以上の引数に対してデフォルトの値を指定する形式です。この形式を使うと、定義されている引数より少ない個数の引数で呼び出せる関数を作成します:</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">ask_ok</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span> <span class="n">retries</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">reminder</span><span class="o">=</span><span class="s1">'再試行してください!'</span><span class="p">):</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">reply</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="n">prompt</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">reply</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">'y'</span><span class="p">,</span> <span class="s1">'ye'</span><span class="p">,</span> <span class="s1">'yes'</span><span class="p">}:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">reply</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">'n'</span><span class="p">,</span> <span class="s1">'no'</span><span class="p">,</span> <span class="s1">'nop'</span><span class="p">,</span> <span class="s1">'nope'</span><span class="p">}:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">retries</span> <span class="o">=</span> <span class="n">retries</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">retries</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'無効なユーザーの入力'</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">reminder</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="translated">この関数はいくつかの方法で呼び出せます:</p>
+<ul class="simple">
+<li><p class="translated">必須の引数のみ与える: <code class="docutils literal notranslate"><span class="pre">ask_ok('Do</span> <span class="pre">you</span> <span class="pre">really</span> <span class="pre">want</span> <span class="pre">to</span> <span class="pre">quit?')</span></code></p></li>
+<li><p class="translated">一つのオプション引数を与える: <code class="docutils literal notranslate"><span class="pre">ask_ok('OK</span> <span class="pre">to</span> <span class="pre">overwrite</span> <span class="pre">the</span> <span class="pre">file?',</span> <span class="pre">2)</span></code></p></li>
+<li><p class="translated">全ての引数を与える: <code class="docutils literal notranslate"><span class="pre">ask_ok('OK</span> <span class="pre">to</span> <span class="pre">overwrite</span> <span class="pre">the</span> <span class="pre">file?',</span> <span class="pre">2,</span> <span class="pre">'Come</span> <span class="pre">on,</span> <span class="pre">only</span> <span class="pre">yes</span> <span class="pre">or</span> <span class="pre">no!')</span></code></p></li>
+</ul>
+<p class="translated">この例では <a class="reference internal" href="../reference/expressions.html#in"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">in</span></code></a> キーワードが導入されています。このキーワードはシーケンスが特定の値を含んでいるかどうか調べるのに使われます。</p>
+<p class="translated">デフォルト値は、関数が定義された時点で、関数を <em>定義している</em> 側のスコープ (scope) で評価されるので</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">i</span> <span class="o">=</span> <span class="mi">5</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">f</span><span class="p">(</span><span class="n">arg</span><span class="o">=</span><span class="n">i</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+
+<span class="n">i</span> <span class="o">=</span> <span class="mi">6</span>
+<span class="n">f</span><span class="p">()</span>
+</pre></div>
+</div>
+<p class="translated">は <code class="docutils literal notranslate"><span class="pre">5</span></code> を出力します。</p>
+<p class="translated"><strong>重要な警告:</strong> デフォルト値は1度しか評価されません。このことは、デフォルト値がリスト、辞書、多くのクラスのインスタンスなどのミュータブルなオブジェクトである場合に影響します。例えば、次の関数は呼び出されるたびに渡された引数を蓄積します。</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">f</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">L</span><span class="o">=</span><span class="p">[]):</span>
+    <span class="n">L</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">L</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+</pre></div>
+</div>
+<p class="translated">このコードは、以下を出力します</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+</pre></div>
+</div>
+<p class="translated">後続の関数呼び出しでデフォルト値を共有したくなければ、代わりに以下のように関数を書くことができます:</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">f</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">L</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">L</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">L</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">L</span>
+</pre></div>
+</div>
+</section>
+<section id="keyword-arguments">
+<span id="tut-keywordargs"></span><h3 class="translated"><span class="section-number">4.9.2. </span>キーワード引数<a class="headerlink" href="#keyword-arguments" title="Link to this heading">¶</a></h3>
+<p class="translated">関数を <code class="docutils literal notranslate"><span class="pre">kwarg=value</span></code> という形式の <a class="reference internal" href="../glossary.html#term-keyword-argument"><span class="xref std std-term">キーワード引数</span></a> を使って呼び出すこともできます。例えば、以下の関数:</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">parrot</span><span class="p">(</span><span class="n">voltage</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="s1">'a stiff'</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">'voom'</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s1">'Norwegian Blue'</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"-- This parrot wouldn't"</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">' '</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"if you put"</span><span class="p">,</span> <span class="n">voltage</span><span class="p">,</span> <span class="s2">"volts through it."</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"-- Lovely plumage, the"</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"-- It's"</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="s2">"!"</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="translated">は、1つの必須引数 (<code class="docutils literal notranslate"><span class="pre">voltage</span></code>) と3つのオプション引数 (<code class="docutils literal notranslate"><span class="pre">state</span></code>、<code class="docutils literal notranslate"><span class="pre">action</span></code>、<code class="docutils literal notranslate"><span class="pre">type</span></code>) を受け付けます。この関数は以下のいずれかの方法で呼び出せます。</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">parrot</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>                                          <span class="c1"># 1つの位置引数</span>
+<span class="n">parrot</span><span class="p">(</span><span class="n">voltage</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>                                  <span class="c1"># 1つのキーワード引数</span>
+<span class="n">parrot</span><span class="p">(</span><span class="n">voltage</span><span class="o">=</span><span class="mi">1000000</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">'VOOOOOM'</span><span class="p">)</span>             <span class="c1"># 2つのキーワード引数</span>
+<span class="n">parrot</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="s1">'VOOOOOM'</span><span class="p">,</span> <span class="n">voltage</span><span class="o">=</span><span class="mi">1000000</span><span class="p">)</span>             <span class="c1"># 2つのキーワード引数</span>
+<span class="n">parrot</span><span class="p">(</span><span class="s1">'a million'</span><span class="p">,</span> <span class="s1">'bereft of life'</span><span class="p">,</span> <span class="s1">'jump'</span><span class="p">)</span>         <span class="c1"># 3つの位置引数</span>
+<span class="n">parrot</span><span class="p">(</span><span class="s1">'a thousand'</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="s1">'pushing up the daisies'</span><span class="p">)</span>  <span class="c1"># 1つの位置引数と1つのキーワード引数</span>
+</pre></div>
+</div>
+<p class="translated">が、以下の呼び出しは不適切です:</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">parrot</span><span class="p">()</span>                     <span class="c1"># 必須の引数がない</span>
+<span class="n">parrot</span><span class="p">(</span><span class="n">voltage</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span> <span class="s1">'dead'</span><span class="p">)</span>  <span class="c1"># キーワード引数の後ろにキーワードのない引数</span>
+<span class="n">parrot</span><span class="p">(</span><span class="mi">110</span><span class="p">,</span> <span class="n">voltage</span><span class="o">=</span><span class="mi">220</span><span class="p">)</span>     <span class="c1"># 同じ引数に対して2つの値を指定</span>
+<span class="n">parrot</span><span class="p">(</span><span class="n">actor</span><span class="o">=</span><span class="s1">'John Cleese'</span><span class="p">)</span>  <span class="c1"># 未知のキーワード引数</span>
+</pre></div>
+</div>
+<p class="translated">関数の呼び出しにおいて、キーワード引数は位置引数の後でなければなりません。渡されるキーワード引数は全て、関数で受け付けられる引数のいずれかに対応していなければならず (例えば、<code class="docutils literal notranslate"><span class="pre">actor</span></code> はこの <code class="docutils literal notranslate"><span class="pre">parrot</span></code> 関数の引数として適切ではありません)、順序は重要ではありません。これはオプションでない引数でも同様です (例えば、<code class="docutils literal notranslate"><span class="pre">parrot(voltage=1000)</span></code> も適切です)。いかなる引数も値を複数回は受け取れません。この制限により失敗する例は:</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">function</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">pass</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">function</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+  File <span class="nb">"&lt;stdin&gt;"</span>, line <span class="m">1</span>, in <span class="n">&lt;module&gt;</span>
+<span class="gr">TypeError</span>: <span class="n">function() got multiple values for argument 'a'</span>
+</pre></div>
+</div>
+<p class="translated">仮引数の最後に <code class="docutils literal notranslate"><span class="pre">**name</span></code> の形式のものがあると、それまでの仮引数に対応したものを除くすべてのキーワード引数が入った辞書 (<a class="reference internal" href="../builtins/stdtypes.html#typesmapping"><span class="std std-ref">マッピング型 --- dict、frozendict</span></a> を参照) を受け取ります。
+<code class="docutils literal notranslate"><span class="pre">**name</span></code> は <code class="docutils literal notranslate"><span class="pre">*name</span></code> の形式をとる、仮引数のリストを超えた位置引数の入った <a class="reference internal" href="datastructures.html#tut-tuples"><span class="std std-ref">タプル</span></a> を受け取る引数 (次の小節で述べます) と組み合わせられます。
+(<code class="docutils literal notranslate"><span class="pre">*name</span></code> は <code class="docutils literal notranslate"><span class="pre">**name</span></code> より前になければなりません)。
+例えば、ある関数の定義を以下のようにすると:</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">cheeseshop</span><span class="p">(</span><span class="n">kind</span><span class="p">,</span> <span class="o">*</span><span class="n">arguments</span><span class="p">,</span> <span class="o">**</span><span class="n">keywords</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"-- Do you have any"</span><span class="p">,</span> <span class="n">kind</span><span class="p">,</span> <span class="s2">"?"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"-- I'm sorry, we're all out of"</span><span class="p">,</span> <span class="n">kind</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">arguments</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"-"</span> <span class="o">*</span> <span class="mi">40</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">kw</span> <span class="ow">in</span> <span class="n">keywords</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">kw</span><span class="p">,</span> <span class="s2">":"</span><span class="p">,</span> <span class="n">keywords</span><span class="p">[</span><span class="n">kw</span><span class="p">])</span>
+</pre></div>
+</div>
+<p class="translated">呼び出しは以下のようになり:</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">cheeseshop</span><span class="p">(</span><span class="s2">"Limburger"</span><span class="p">,</span> <span class="s2">"It's very runny, sir."</span><span class="p">,</span>
+           <span class="s2">"It's really very, VERY runny, sir."</span><span class="p">,</span>
+           <span class="n">shopkeeper</span><span class="o">=</span><span class="s2">"Michael Palin"</span><span class="p">,</span>
+           <span class="n">client</span><span class="o">=</span><span class="s2">"John Cleese"</span><span class="p">,</span>
+           <span class="n">sketch</span><span class="o">=</span><span class="s2">"Cheese Shop Sketch"</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="translated">もちろん以下のように出力されます:</p>
+<div class="translated highlight-none notranslate"><div class="highlight"><pre><span></span>-- Do you have any Limburger ?
+-- I'm sorry, we're all out of Limburger
+It's very runny, sir.
+It's really very, VERY runny, sir.
+----------------------------------------
+shopkeeper : Michael Palin
+client : John Cleese
+sketch : Cheese Shop Sketch
+</pre></div>
+</div>
+<p class="translated">なお、複数のキーワード引数を与えた場合に、それらが出力される順序は、関数呼び出しで与えられた順序と同じになります。</p>
+</section>
+<section id="special-parameters">
+<h3 class="translated"><span class="section-number">4.9.3. </span>特殊なパラメータ<a class="headerlink" href="#special-parameters" title="Link to this heading">¶</a></h3>
+<p class="translated">デフォルトでは、引数は位置またはキーワードによる明示で Python 関数に渡されます。
+可読性とパフォーマンスのために、その引数が位置、位置またはキーワード、キーワードのどれで渡されるかを開発者が判定するのに関数定義だけを見ればよいように、引数の渡され方を制限することには意味があります。</p>
+<p class="translated">関数定義は次のようになります:</p>
+<div class="translated highlight-none notranslate"><div class="highlight"><pre><span></span>def f(pos1, pos2, /, pos_or_kwd, *, kwd1, kwd2):
+      -----------    ----------     ----------
+        |             |                  |
+        |        位置またはキーワード    |
+        |                                - キーワード専用
+         -- 位置専用
+</pre></div>
+</div>
+<p class="translated">ここで <code class="docutils literal notranslate"><span class="pre">/</span></code> と <code class="docutils literal notranslate"><span class="pre">*</span></code> は省略できます。
+これらの記号を使うと、実引数を関数に渡せる方法に応じて、仮引数が位置専用、位置またはキーワード、キーワード専用のどれであるかを示せます。
+キーワードパラメータは、名前付きパラメータとも呼ばれます。</p>
+<section id="positional-or-keyword-arguments">
+<h4 class="translated"><span class="section-number">4.9.3.1. </span>位置またはキーワード引数<a class="headerlink" href="#positional-or-keyword-arguments" title="Link to this heading">¶</a></h4>
+<p class="translated">関数定義に <code class="docutils literal notranslate"><span class="pre">/</span></code> も <code class="docutils literal notranslate"><span class="pre">*</span></code> もない場合は、引数は位置またはキーワードで関数に渡されます。</p>
+</section>
+<section id="positional-only-parameters">
+<h4 class="translated"><span class="section-number">4.9.3.2. </span>位置専用引数<a class="headerlink" href="#positional-only-parameters" title="Link to this heading">¶</a></h4>
+<p class="translated">これをもう少し詳しく見てみると、特定の引数を <em>位置専用</em> と印を付けられます。
+<em>位置専用</em> の場合、引数の順序が重要であり、キーワードで引数を渡せません。
+位置専用引数は <code class="docutils literal notranslate"><span class="pre">/</span></code> （スラッシュ）の前に配置されます。
+<code class="docutils literal notranslate"><span class="pre">/</span></code> は、位置専用引数を残りの引数から論理的に分離するために使用されます。
+関数定義に <code class="docutils literal notranslate"><span class="pre">/</span></code> がない場合、位置専用引数はありません。</p>
+<p class="translated"><code class="docutils literal notranslate"><span class="pre">/</span></code> の後の引数は、 <em>位置またはキーワード</em> 、もしくは、 <em>キーワード専用</em> です。</p>
+</section>
+<section id="keyword-only-arguments">
+<h4 class="translated"><span class="section-number">4.9.3.3. </span>キーワード専用引数<a class="headerlink" href="#keyword-only-arguments" title="Link to this heading">¶</a></h4>
+<p class="translated">引数をキーワード引数で渡す必要があることを示す <em>キーワード専用</em> として引数をマークするには、引数リストの最初の <em>キーワード専用</em> 引数の直前に  <code class="docutils literal notranslate"><span class="pre">*</span></code> を配置します。</p>
+</section>
+<section id="function-examples">
+<h4 class="translated"><span class="section-number">4.9.3.4. </span>関数の例<a class="headerlink" href="#function-examples" title="Link to this heading">¶</a></h4>
+<p class="translated"><code class="docutils literal notranslate"><span class="pre">/</span></code> および <code class="docutils literal notranslate"><span class="pre">*</span></code> といったマーカーに注意を払って、次の関数定義の例を見てください:</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">standard_arg</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">pos_only_arg</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="o">/</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">kwd_only_arg</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">combined_example</span><span class="p">(</span><span class="n">pos_only</span><span class="p">,</span> <span class="o">/</span><span class="p">,</span> <span class="n">standard</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">kwd_only</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">pos_only</span><span class="p">,</span> <span class="n">standard</span><span class="p">,</span> <span class="n">kwd_only</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="translated">最も馴染みのある形式の最初の関数定義 <code class="docutils literal notranslate"><span class="pre">standard_arg</span></code>  は、呼び出し規約に制限を設けておらず、引数は位置またはキーワードで渡されます:</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">standard_arg</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">2</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">standard_arg</span><span class="p">(</span><span class="n">arg</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+<p class="translated">2番目の関数の <code class="docutils literal notranslate"><span class="pre">pos_only_arg</span></code> は、 <code class="docutils literal notranslate"><span class="pre">/</span></code> が関数定義にあるので、引数は位置専用になります:</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pos_only_arg</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">1</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pos_only_arg</span><span class="p">(</span><span class="n">arg</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+  File <span class="nb">"&lt;stdin&gt;"</span>, line <span class="m">1</span>, in <span class="n">&lt;module&gt;</span>
+<span class="gr">TypeError</span>: <span class="n">pos_only_arg() got some positional-only arguments passed as keyword arguments: 'arg'</span>
+</pre></div>
+</div>
+<p class="translated">3番目の関数 <code class="docutils literal notranslate"><span class="pre">kwd_only_arg</span></code> は、関数定義に <code class="docutils literal notranslate"><span class="pre">*</span></code> があるので、引数はキーワード専用になります:</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">kwd_only_arg</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+  File <span class="nb">"&lt;stdin&gt;"</span>, line <span class="m">1</span>, in <span class="n">&lt;module&gt;</span>
+<span class="gr">TypeError</span>: <span class="n">kwd_only_arg() takes 0 positional arguments but 1 was given</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">kwd_only_arg</span><span class="p">(</span><span class="n">arg</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">3</span>
+</pre></div>
+</div>
+<p class="translated">そして最後の関数は3つの引数の種類を一つの関数定義の中で使用しています:</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">combined_example</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+  File <span class="nb">"&lt;stdin&gt;"</span>, line <span class="m">1</span>, in <span class="n">&lt;module&gt;</span>
+<span class="gr">TypeError</span>: <span class="n">combined_example() takes 2 positional arguments but 3 were given</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">combined_example</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">kwd_only</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">1 2 3</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">combined_example</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">standard</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">kwd_only</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">1 2 3</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">combined_example</span><span class="p">(</span><span class="n">pos_only</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">standard</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">kwd_only</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+  File <span class="nb">"&lt;stdin&gt;"</span>, line <span class="m">1</span>, in <span class="n">&lt;module&gt;</span>
+<span class="gr">TypeError</span>: <span class="n">combined_example() got some positional-only arguments passed as keyword arguments: 'pos_only'</span>
+</pre></div>
+</div>
+<p class="translated">最後に、位置引数 <code class="docutils literal notranslate"><span class="pre">name</span></code> と <code class="docutils literal notranslate"><span class="pre">name</span></code> をキーとして持つ <code class="docutils literal notranslate"><span class="pre">**kwds</span></code> の間に潜在的な衝突がある関数定義を考えてみましょう。</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">foo</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwds</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s1">'name'</span> <span class="ow">in</span> <span class="n">kwds</span>
+</pre></div>
+</div>
+<p class="translated">キーワード引数 <code class="docutils literal notranslate"><span class="pre">'name'</span></code> は常に最初の引数に結びつけられるため、この関数が <code class="docutils literal notranslate"><span class="pre">True</span></code> を返す呼び出し方はありません。例えば次のようになります。</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">foo</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="p">{</span><span class="s1">'name'</span><span class="p">:</span> <span class="mi">2</span><span class="p">})</span>
+<span class="gt">Traceback (most recent call last):</span>
+  File <span class="nb">"&lt;stdin&gt;"</span>, line <span class="m">1</span>, in <span class="n">&lt;module&gt;</span>
+<span class="gr">TypeError</span>: <span class="n">foo() got multiple values for argument 'name'</span>
+<span class="gp">&gt;&gt;&gt;</span>
+</pre></div>
+</div>
+<p class="translated">しかし位置専用を示す <code class="docutils literal notranslate"><span class="pre">/</span></code> を使用すれば可能になります。 <code class="docutils literal notranslate"><span class="pre">name</span></code> は位置引数として、そして <code class="docutils literal notranslate"><span class="pre">'name'</span></code> はキーワード引数のキーワードとして認識されるからです:</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">foo</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">/</span><span class="p">,</span> <span class="o">**</span><span class="n">kwds</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="s1">'name'</span> <span class="ow">in</span> <span class="n">kwds</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">foo</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="p">{</span><span class="s1">'name'</span><span class="p">:</span> <span class="mi">2</span><span class="p">})</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p class="translated">言い換えると、位置専用引数であれば、その名前を <code class="docutils literal notranslate"><span class="pre">**kwds</span></code> の中で使用しても、曖昧にならないということです。</p>
+</section>
+<section id="recap">
+<h4 class="translated"><span class="section-number">4.9.3.5. </span>要約<a class="headerlink" href="#recap" title="Link to this heading">¶</a></h4>
+<p class="translated">関数定義でどの種類の引数を使うかは、用途に応じて決めます。</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">f</span><span class="p">(</span><span class="n">pos1</span><span class="p">,</span> <span class="n">pos2</span><span class="p">,</span> <span class="o">/</span><span class="p">,</span> <span class="n">pos_or_kwd</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">kwd1</span><span class="p">,</span> <span class="n">kwd2</span><span class="p">):</span>
+</pre></div>
+</div>
+<p class="translated">ガイドとしては、</p>
+<ul class="simple">
+<li><p class="translated">呼び出し側が引数名を使って指定できないようにしたい場合は、位置専用引数を使います。引数名に特に意味がない場合や、呼び出し時の引数の順序を固定したい場合、いくつかの位置引数と任意のキーワード引数を受け取りたい場合に便利です。</p></li>
+<li><p class="translated">引数名に意味があり、名前を明示した方が関数定義を理解しやすい場合や、呼び出し側が引数の位置に依存するのを防ぎたい場合は、キーワード専用引数を使います。</p></li>
+<li><p class="translated">API では位置専用引数を使うと、将来引数名を変更しても互換性を保てます。</p></li>
+</ul>
+</section>
+</section>
+<section id="arbitrary-argument-lists">
+<span id="tut-arbitraryargs"></span><h3 class="translated"><span class="section-number">4.9.4. </span>任意引数リスト<a class="headerlink" href="#arbitrary-argument-lists" title="Link to this heading">¶</a></h3>
+<p class="translated" id="index-4">最後に、最も使うことの少ない選択肢として、関数が任意の個数の引数で呼び出せるよう指定する方法があります。これらの引数はタプル (<a class="reference internal" href="datastructures.html#tut-tuples"><span class="std std-ref">タプルとシーケンス</span></a> を参照) に格納されます。可変個の引数の前に、ゼロ個かそれ以上の通常の引数があっても構いません。</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">write_multiple_items</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">separator</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">separator</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
+</pre></div>
+</div>
+<p class="translated">通常このような <em>可変</em> 引数は、関数に渡される入力引数の残りを全て掬い取るために、仮引数リストの最後に置かれます。
+<code class="docutils literal notranslate"><span class="pre">*args</span></code> 引数の後にある仮引数は 'キーワード専用' 引数で、位置引数ではなくキーワード引数としてのみ使えることを意味します。</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">concat</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">"/"</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">sep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">concat</span><span class="p">(</span><span class="s2">"earth"</span><span class="p">,</span> <span class="s2">"mars"</span><span class="p">,</span> <span class="s2">"venus"</span><span class="p">)</span>
+<span class="go">'earth/mars/venus'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">concat</span><span class="p">(</span><span class="s2">"earth"</span><span class="p">,</span> <span class="s2">"mars"</span><span class="p">,</span> <span class="s2">"venus"</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">"."</span><span class="p">)</span>
+<span class="go">'earth.mars.venus'</span>
+</pre></div>
+</div>
+</section>
+<section id="unpacking-argument-lists">
+<span id="tut-unpacking-arguments"></span><h3 class="translated"><span class="section-number">4.9.5. </span>引数リストのアンパック<a class="headerlink" href="#unpacking-argument-lists" title="Link to this heading">¶</a></h3>
+<p class="translated">引数がすでにリストやタプルになっていて、個別な位置引数を要求する関数呼び出しに渡すためにアンパックする必要がある場合には、逆の状況が起こります。例えば、組み込み関数 <a class="reference internal" href="../builtins/stdtypes.html#range" title="range"><code class="xref py py-func docutils literal notranslate"><span class="pre">range()</span></code></a> は引数 <em>start</em> と <em>stop</em> を別に与える必要があります。個別に引数を与えることができない場合、関数呼び出しを <code class="docutils literal notranslate"><span class="pre">*</span></code> 演算子を使って書き、リストやタプルから引数をアンパックします:</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>            <span class="c1"># 個別に引数を指定する通常の関数呼び出し</span>
+<span class="go">[3, 4, 5]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">))</span>            <span class="c1"># 引数リストをアンパックして関数呼び出し</span>
+<span class="go">[3, 4, 5]</span>
+</pre></div>
+</div>
+<p class="translated" id="index-5">同じやりかたで、<code class="docutils literal notranslate"><span class="pre">**</span></code> オペレータを使って辞書でもキーワード引数を渡すことができます:</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">parrot</span><span class="p">(</span><span class="n">voltage</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="s1">'a stiff'</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">'voom'</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="s2">"-- This parrot wouldn't"</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">' '</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="s2">"if you put"</span><span class="p">,</span> <span class="n">voltage</span><span class="p">,</span> <span class="s2">"volts through it."</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">' '</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="s2">"E's"</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="s2">"!"</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"voltage"</span><span class="p">:</span> <span class="s2">"four million"</span><span class="p">,</span> <span class="s2">"state"</span><span class="p">:</span> <span class="s2">"bleedin' demised"</span><span class="p">,</span> <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"VOOM"</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parrot</span><span class="p">(</span><span class="o">**</span><span class="n">d</span><span class="p">)</span>
+<span class="go">-- This parrot wouldn't VOOM if you put four million volts through it. E's bleedin' demised !</span>
+</pre></div>
+</div>
+</section>
+<section id="lambda-expressions">
+<span id="tut-lambda"></span><h3 class="translated"><span class="section-number">4.9.6. </span>ラムダ式<a class="headerlink" href="#lambda-expressions" title="Link to this heading">¶</a></h3>
+<p class="translated">キーワード <a class="reference internal" href="../reference/expressions.html#lambda"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">lambda</span></code></a> を使うと、名前のない小さな関数を生成できます。例えば <code class="docutils literal notranslate"><span class="pre">lambda</span> <span class="pre">a,</span> <span class="pre">b:</span> <span class="pre">a+b</span></code> は、二つの引数の和を返す関数です。ラムダ式の関数は、関数オブジェクトが要求されている場所にならどこでも使うことができます。ラムダ式は、構文上単一の式に制限されています。意味付け的には、ラムダ形式は単に通常の関数定義に構文的な糖衣をかぶせたものに過ぎません。入れ子構造になった関数定義と同様、ラムダ式もそれを取り囲むスコープから変数を参照することができます:</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">make_incrementor</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">+</span> <span class="n">n</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">make_incrementor</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">42</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">43</span>
+</pre></div>
+</div>
+<p class="translated">上記の例ではラムダ式を使って関数を返しています。  別の使い方としては、小さな関数を引数として渡すこともできます。  たとえば、 <a class="reference internal" href="../builtins/stdtypes.html#list.sort" title="list.sort"><code class="xref py py-meth docutils literal notranslate"><span class="pre">list.sort()</span></code></a> はソートキー関数 <em>key</em> を受け取りますが、これにはラムダ関数を渡せます:</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pairs</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">'one'</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s1">'two'</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="s1">'three'</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="s1">'four'</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pairs</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">pair</span><span class="p">:</span> <span class="n">pair</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pairs</span>
+<span class="go">[(4, 'four'), (1, 'one'), (3, 'three'), (2, 'two')]</span>
+</pre></div>
+</div>
+</section>
+<section id="documentation-strings">
+<span id="tut-docstrings"></span><h3 class="translated"><span class="section-number">4.9.7. </span>ドキュメンテーション文字列<a class="headerlink" href="#documentation-strings" title="Link to this heading">¶</a></h3>
+<p class="translated" id="index-6">ドキュメンテーション文字列については、その内容と書式に関する慣習をいくつか挙げます。</p>
+<p class="translated">最初の行には、オブジェクトの目的を短く簡潔にまとめます。
+簡潔にするため、オブジェクトの名前や型は明記しないようにします。
+これらは他の方法で分かるためです (ただし、名前が関数の動作を表す動詞である場合は例外です)。
+この行は大文字で始め、ピリオドで終えます。</p>
+<p class="translated">ドキュメンテーション文字列中にさらに記述すべき行がある場合、二行目は空行にし、まとめの行と残りの記述部分を視覚的に分離します。つづく行は一つまたはそれ以上の段落で、対象物の呼び出し規約や副作用について記述します。</p>
+<p class="translated">複数行の文字列リテラルがモジュール、クラス、関数のドキュメンテーション文字列として使われる場合、Python のパーサーはそのインデントを取り除きます。</p>
+<p class="translated">以下に複数行のドキュメンテーション文字列の例を示します:</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">my_function</span><span class="p">():</span>
+<span class="gp">... </span><span class="w">    </span><span class="sd">"""なにもしないがドキュメントは書く。</span>
+<span class="gp">...</span>
+<span class="gp">... </span><span class="sd">    本当になにもしない。</span>
+<span class="gp">...</span>
+<span class="gp">... </span><span class="sd">        &gt;&gt;&gt; my_function()</span>
+<span class="gp">... </span><span class="sd">        &gt;&gt;&gt;</span>
+<span class="gp">... </span><span class="sd">    """</span>
+<span class="gp">... </span>    <span class="k">pass</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">my_function</span><span class="o">.</span><span class="vm">__doc__</span><span class="p">)</span>
+<span class="go">なにもしないがドキュメントは書く。</span>
+
+<span class="go">本当になにもしない。</span>
+
+<span class="go">    &gt;&gt;&gt; my_function()</span>
+<span class="go">    &gt;&gt;&gt;</span>
+</pre></div>
+</div>
+</section>
+<section id="function-annotations">
+<span id="tut-annotations"></span><h3 class="translated"><span class="section-number">4.9.8. </span>関数のアノテーション<a class="headerlink" href="#function-annotations" title="Link to this heading">¶</a></h3>
+<p class="translated" id="index-7"><a class="reference internal" href="../reference/compound_stmts.html#function"><span class="std std-ref">関数アノテーション</span></a> はユーザ定義関数で使用される型についての完全にオプションなメタデータ情報です (詳細は <span class="target" id="index-17"></span><a class="pep reference external" href="https://peps.python.org/pep-3107/"><strong>PEP 3107</strong></a> と <span class="target" id="index-18"></span><a class="pep reference external" href="https://peps.python.org/pep-0484/"><strong>PEP 484</strong></a> を参照してください)。</p>
+<p class="translated"><a class="reference internal" href="../glossary.html#term-function-annotation"><span class="xref std std-term">アノテーション</span></a> は関数の <a class="reference internal" href="../reference/datamodel.html#object.__annotations__" title="object.__annotations__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">__annotations__</span></code></a> 属性に辞書として格納され、関数の他の部分には何も影響を与えません。パラメータアノテーションは、パラメータ名の後にコロンを続けることによって定義され、その後にアノテーションの値として評価される式が置かれます。戻り値アノテーションは、パラメータリストと <a class="reference internal" href="../reference/compound_stmts.html#def"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">def</span></code></a> 文の終わりを表すコロンの間に置かれたリテラル <code class="docutils literal notranslate"><span class="pre">-&gt;</span></code> によって定義され、その後に式が続きます。次の例は必須の引数とオプション引数、そして戻り値のアノテーションを持っています:</p>
+<div class="translated highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">f</span><span class="p">(</span><span class="n">ham</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">eggs</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'eggs'</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="s2">"Annotations:"</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="vm">__annotations__</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="s2">"Arguments:"</span><span class="p">,</span> <span class="n">ham</span><span class="p">,</span> <span class="n">eggs</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">ham</span> <span class="o">+</span> <span class="s1">' and '</span> <span class="o">+</span> <span class="n">eggs</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="s1">'spam'</span><span class="p">)</span>
+<span class="go">Annotations: {'ham': &lt;class 'str'&gt;, 'return': &lt;class 'str'&gt;, 'eggs': &lt;class 'str'&gt;}</span>
+<span class="go">Arguments: spam eggs</span>
+<span class="go">'spam and eggs'</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="intermezzo-coding-style">
+<span id="tut-codingstyle"></span><h2 class="translated"><span class="section-number">4.10. </span>間奏曲: コーディングスタイル<a class="headerlink" href="#intermezzo-coding-style" title="Link to this heading">¶</a></h2>
+<p class="translated" id="index-10">これから、より長く複雑な Python のコードを書くようになるので、ここで <em>コーディングスタイル</em> について説明します。ほとんどの言語ではさまざまなスタイルでコードを書けます (より正確には、コードを <em>整形</em> できます) が、スタイルによって読みやすさは異なります。他の人が読みやすいコードを書くことは常に大切で、よいコーディングスタイルを採用すると大いに役立ちます。</p>
+<p class="translated">Python には、ほとんどのプロジェクトが守っているスタイルガイドとして <span class="target" id="index-19"></span><a class="pep reference external" href="https://peps.python.org/pep-0008/"><strong>PEP 8</strong></a> があります。それは非常に読み易く目に優しいコーディングスタイルを推奨しています。全ての Python 開発者はある時点でそれを読むべきです。ここに最も重要な点を抜き出しておきます:</p>
+<ul>
+<li><p class="translated">インデントには空白 4 つを使い、タブは使わないこと。</p>
+<p class="translated">空白 4 つは (深くネストできる) 小さいインデントと (読み易い) 大きいインデントのちょうど中間に当たります。タブは混乱させるので、使わずにおくのが良いです。</p>
+</li>
+<li><p class="translated">ソースコードの幅が 79 文字を越えないように行を折り返すこと。</p>
+<p class="translated">こうすることで小さいディスプレイを使っているユーザも読み易くなり、大きなディスプレイではソースコードファイルを並べることもできるようになります。</p>
+</li>
+<li><p class="translated">関数やクラスや関数内の大きめのコードブロックの区切りに空行を使うこと。</p></li>
+<li><p class="translated">可能なら、コメントは行に独立で書くこと。</p></li>
+<li><p class="translated">docstring を使うこと。</p></li>
+<li><p class="translated">演算子の前後とコンマの後には空白を入れ、括弧類のすぐ内側には空白を入れないこと: <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">=</span> <span class="pre">f(1,</span> <span class="pre">2)</span> <span class="pre">+</span> <span class="pre">g(3,</span> <span class="pre">4)</span></code>。</p></li>
+<li><p class="translated">クラスや関数に一貫性のある名前を付けること。慣習では <code class="docutils literal notranslate"><span class="pre">UpperCamelCase</span></code> をクラス名に使い、 <code class="docutils literal notranslate"><span class="pre">lowercase_with_underscores</span></code> を関数名やメソッド名に使います。常に <code class="docutils literal notranslate"><span class="pre">self</span></code> をメソッドの第 1 引数の名前 (クラスやメソッドについては <a class="reference internal" href="classes.html#tut-firstclasses"><span class="std std-ref">クラス初見</span></a> を見よ) として使うこと。</p></li>
+<li><p class="translated">あなたのコードを世界中で使ってもらうつもりなら、風変りなエンコーディングは使わないこと。どんな場合でも、Python のデフォルト UTF-8 またはプレーン ASCII が最も上手くいきます。</p></li>
+<li><p class="translated">同様に、ほんの少しでも他の言語を話す人がコードを読んだりメンテナンスする可能性があるのであれば、非 ASCII 文字も識別子に使うべきではありません。</p></li>
+</ul>
+<p class="translated rubric">脚注</p>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id2" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p class="translated">実のところ、<em>オブジェクトへの参照渡し (call by object reference)</em> という言ったほうがより正確です。というのは、変更可能なオブジェクトが渡されると、呼び出された側の関数がオブジェクトに行った変更 (例えばリストに挿入された要素) はすべて、関数の呼び出し側にも反映されるからです。</p>
+</aside>
+</aside>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目次</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">4. その他の制御フローツール</a><ul>
+<li><a class="reference internal" href="#if-statements">4.1. <code class="xref std std-keyword docutils literal notranslate"><span class="pre">if</span></code> 文</a></li>
+<li><a class="reference internal" href="#for-statements">4.2. <code class="xref std std-keyword docutils literal notranslate"><span class="pre">for</span></code> 文</a></li>
+<li><a class="reference internal" href="#the-range-function">4.3. <code class="xref py py-func docutils literal notranslate"><span class="pre">range()</span></code> 関数</a></li>
+<li><a class="reference internal" href="#break-and-continue-statements">4.4. <code class="xref std std-keyword docutils literal notranslate"><span class="pre">break</span></code> 文と <code class="xref std std-keyword docutils literal notranslate"><span class="pre">continue</span></code> 文</a></li>
+<li><a class="reference internal" href="#else-clauses-on-loops">4.5. ループの <code class="xref std std-keyword docutils literal notranslate"><span class="pre">else</span></code> 節</a></li>
+<li><a class="reference internal" href="#pass-statements">4.6. <code class="xref std std-keyword docutils literal notranslate"><span class="pre">pass</span></code> 文</a></li>
+<li><a class="reference internal" href="#match-statements">4.7. <code class="xref std std-keyword docutils literal notranslate"><span class="pre">match</span></code> 文</a></li>
+<li><a class="reference internal" href="#defining-functions">4.8. 関数を定義する</a></li>
+<li><a class="reference internal" href="#more-on-defining-functions">4.9. 関数定義についてもう少し</a><ul>
+<li><a class="reference internal" href="#default-argument-values">4.9.1. デフォルトの引数値</a></li>
+<li><a class="reference internal" href="#keyword-arguments">4.9.2. キーワード引数</a></li>
+<li><a class="reference internal" href="#special-parameters">4.9.3. 特殊なパラメータ</a><ul>
+<li><a class="reference internal" href="#positional-or-keyword-arguments">4.9.3.1. 位置またはキーワード引数</a></li>
+<li><a class="reference internal" href="#positional-only-parameters">4.9.3.2. 位置専用引数</a></li>
+<li><a class="reference internal" href="#keyword-only-arguments">4.9.3.3. キーワード専用引数</a></li>
+<li><a class="reference internal" href="#function-examples">4.9.3.4. 関数の例</a></li>
+<li><a class="reference internal" href="#recap">4.9.3.5. 要約</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#arbitrary-argument-lists">4.9.4. 任意引数リスト</a></li>
+<li><a class="reference internal" href="#unpacking-argument-lists">4.9.5. 引数リストのアンパック</a></li>
+<li><a class="reference internal" href="#lambda-expressions">4.9.6. ラムダ式</a></li>
+<li><a class="reference internal" href="#documentation-strings">4.9.7. ドキュメンテーション文字列</a></li>
+<li><a class="reference internal" href="#function-annotations">4.9.8. 関数のアノテーション</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#intermezzo-coding-style">4.10. 間奏曲: コーディングスタイル</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>前のトピックへ</h4>
+    <p class="topless"><a href="introduction.html"
+                          title="前の章へ"><span class="section-number">3. </span>形式ばらない Python の紹介</a></p>
+  </div>
+  <div>
+    <h4>次のトピックへ</h4>
+    <p class="topless"><a href="datastructures.html"
+                          title="次の章へ"><span class="section-number">5. </span>データ構造</a></p>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const title = document.querySelector('meta[property="og:title"]').content;
+        const elements = document.querySelectorAll('.improvepage');
+        const pageurl = window.location.href.split('?')[0];
+        elements.forEach(element => {
+            const url = new URL(element.href.split('?')[0].replace("-nojs", ""));
+            url.searchParams.set('pagetitle', title);
+            url.searchParams.set('pageurl', pageurl);
+            url.searchParams.set('pagesource', "tutorial/controlflow.rst");
+            element.href = url.toString();
+        });
+    });
+  </script>
+  <div role="note" aria-label="source link">
+    <h3>このページ</h3>
+    <ul class="this-page-menu">
+      <li><a href="../bugs.html">バグを報告する</a></li>
+      <li><a class="improvepage" href="../improve-page-nojs.html">このページを改善する</a></li>
+      <li>
+        <a href="https://github.com/python/cpython/blob/3.15/Doc/tutorial/controlflow.rst?plain=1"
+            rel="nofollow">ソースを表示する
+        </a>
+      </li>
+      
+      <li>
+        <a href="https://github.com/python/python-docs-ja/blob/3.15/tutorial/controlflow.po?plain=1"
+           rel="nofollow">翻訳のソースを表示する</a>
+      </li>
+      
+    </ul>
+  </div>
+        </div>
+<div id="sidebarbutton" title="サイドバーをたたむ">
+<span>«</span>
+</div>
+
+      </div>
+      <div class="clearer"></div>
+    </div>  
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>ナビゲーション</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="総合索引"
+             >索引</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Pythonモジュール索引"
+             >モジュール</a> |</li>
+        <li class="right" >
+          <a href="datastructures.html" title="5. データ構造"
+             >次へ</a> |</li>
+        <li class="right" >
+          <a href="introduction.html" title="3. 形式ばらない Python の紹介"
+             >前へ</a> |</li>
+
+          <li class="root-icon"><img src="../_static/py.svg" alt="Python logo" style="vertical-align: middle; margin-top: -1px"></li>
+          <li><a href="https://www.python.org/">Python</a> &#187;</li>
+          <li class="switchers">
+            <div class="language_switcher_placeholder"></div>
+            <div class="version_switcher_placeholder"></div>
+          </li>
+          <li>
+              
+          </li>
+    <li id="cpython-language-and-version">
+      <a href="../index.html">3.15.2 documentation</a> &#187;
+    </li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" >Python チュートリアル</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><span class="section-number">4. </span>その他の制御フローツール</a></li>
+                <li class="right">
+                    
+
+    <div class="inline-search" role="search">
+        <form class="inline-search" action="../search.html" method="get">
+          <input placeholder="検索" aria-label="検索" type="search" name="q" id="search-box">
+          <input type="submit" value="検索">
+        </form>
+    </div>
+                     |
+                </li>
+            <li class="right">
+<label class="theme-selector-label">
+    テーマ
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">ライト</option>
+        <option value="dark">ダーク</option>
+    </select>
+</label> |</li>
+            
+      </ul>
+    </div>  
+    <div class="footer">
+    &copy; <a href="../copyright.html">Copyright</a> 2001 Python Software Foundation.
+    <br>
+    このページはPython Software Foundation License Version 2でライセンスされています。
+    <br>
+    ドキュメント内のサンプル、レシピ等のコードは、Zero Clause BSDライセンスの下で追加的にライセンスされています。
+    <br>
+    
+      詳しくは<a href="/license.html">歴史とライセンス</a>を参照してください。<br>
+    
+    
+    <br>
+
+    Pythonソフトウェア財団は非営利法人です。
+<a href="https://www.python.org/psf/donations/">寄付をするには</a>
+<br>
+    <br>
+      最終更新日: 11月 25, 2026 (07:46 UTC)
+    
+      <a href="/bugs.html">バグを報告する</a>
+    
+    <br>
+
+    <a href="https://www.sphinx-doc.org/">Sphinx</a>9.1.1を使って構築されています。
+    </div>
+
+    <script type="text/javascript" src="../_static/switchers.js"></script>
+  </body>
+</html>

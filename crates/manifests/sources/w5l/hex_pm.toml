@@ -1,0 +1,91 @@
+id = "hex_pm"
+name = "Hex.pm Elixir & Erlang Registry"
+summary = "Official BEAM (Elixir, Erlang, Gleam) package registry API for search, versions, licenses, and download statistics."
+aliases = ["hex", "hex.pm", "elixir packages", "erlang packages"]
+home_url = "https://hex.pm"
+tier = 1
+scopes = ["code"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 3.0, burst = 6, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 21600 }
+
+[op.search]
+summary = "Search Elixir/Erlang packages on Hex.pm sorted by downloads or update time."
+method = "GET"
+url = "https://hex.pm/api/packages"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "jason", limit = 3 }, min_results = 3, fixture = "fixtures/w5l/hex_pm/search/default.json" }
+examples = [
+  'source.call("hex_pm.search", { query: "jason", limit: 5 })',
+]
+
+[op.search.params]
+query = { type = "string", required = true, to = "search", doc = "Hex package search string" }
+sort = { type = "string", default = "downloads", enum = ["name", "recent_downloads", "total_downloads", "downloads", "inserted_at", "updated_at"], to = "sort", doc = "Sort order" }
+page = { type = "int", default = 1, min = 1, to = "page", doc = "1-based page number" }
+limit = { type = "int", default = 10, min = 1, max = 100, to = "per_page", doc = "Packages per page" }
+
+[op.search.map]
+items = ".[]"
+error = "if (type == \"object\") and (.message != null) then (.message | tostring) else null end"
+record = '''{
+  name: (.name // ""),
+  description: (.meta.description // ""),
+  licenses: (.meta.licenses // []),
+  links: (.meta.links // {}),
+  latestVersion: (.latest_stable_version // .latest_version // null),
+  downloadsAll: (.downloads.all // 0),
+  downloadsRecent: (.downloads.recent // 0),
+  docsUrl: (.docs_html_url // null),
+  updatedAt: (.updated_at // null),
+  url: (.html_url // ("https://hex.pm/packages/" + (.name // "")))
+}'''
+hit = '''{
+  title: ((.name // "") + (if (.latest_stable_version // .latest_version // "") != "" then " v" + (.latest_stable_version // .latest_version) else "" end)),
+  url: (.html_url // ("https://hex.pm/packages/" + (.name // ""))),
+  snippet: (
+    [
+      (if (.meta.description // "") != "" then .meta.description else null end),
+      (((.downloads.all // 0) | tostring) + " downloads")
+    ] | map(select(. != null)) | join(" · ")
+  )[0:280],
+  date: (.updated_at | parse_date),
+  dateSource: "api"
+}'''
+
+[op.package]
+summary = "Look up detailed Hex.pm package metadata, owners, releases, and retirement notices by exact name."
+method = "GET"
+url = "https://hex.pm/api/packages/{name}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { name = "jason" }, min_results = 1, fixture = "fixtures/w5l/hex_pm/package/default.json" }
+examples = [
+  'source.call("hex_pm.package", { name: "jason" })',
+]
+
+[op.package.params]
+name = { type = "string", required = true, in = "path", doc = "Exact Hex.pm package name (e.g. jason, phoenix, ecto)" }
+
+[op.package.map]
+items = "."
+error = "@ref:op.search.map.error"
+record = '''{
+  name: (.name // ""),
+  description: (.meta.description // ""),
+  licenses: (.meta.licenses // []),
+  links: (.meta.links // {}),
+  owners: [(.owners // [])[] | .username],
+  latestVersion: (.latest_stable_version // .latest_version // null),
+  downloadsAll: (.downloads.all // 0),
+  downloadsRecent: (.downloads.recent // 0),
+  recentReleases: [(.releases // [])[:5][] | { version, insertedAt: .inserted_at, hasDocs: .has_docs }],
+  docsUrl: (.docs_html_url // null),
+  updatedAt: (.updated_at // null),
+  url: (.html_url // ("https://hex.pm/packages/" + (.name // "")))
+}'''

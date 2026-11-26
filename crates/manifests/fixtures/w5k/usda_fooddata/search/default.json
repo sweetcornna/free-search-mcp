@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "usda_fooddata",
+  "op": "search",
+  "recordedAt": "2026-11-25T13:05:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.nal.usda.gov/fdc/v1/foods/search?query=cheddar+cheese&pageSize=3&pageNumber=1",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"totalHits\": 2418, \"currentPage\": 1, \"totalPages\": 806, \"foods\": [{\"fdcId\": 173414, \"description\": \"Cheese, cheddar\", \"dataType\": \"SR Legacy\", \"ndbNumber\": 1009, \"publishedDate\": \"2019-04-01\", \"foodCategory\": \"Dairy and Egg Products\", \"foodNutrients\": [{\"nutrientId\": 1008, \"nutrientName\": \"Energy\", \"nutrientNumber\": \"208\", \"unitName\": \"KCAL\", \"value\": 403.0}, {\"nutrientId\": 1003, \"nutrientName\": \"Protein\", \"nutrientNumber\": \"203\", \"unitName\": \"G\", \"value\": 24.9}, {\"nutrientId\": 1004, \"nutrientName\": \"Total lipid (fat)\", \"nutrientNumber\": \"204\", \"unitName\": \"G\", \"value\": 33.14}, {\"nutrientId\": 1087, \"nutrientName\": \"Calcium, Ca\", \"nutrientNumber\": \"301\", \"unitName\": \"MG\", \"value\": 721.0}]}, {\"fdcId\": 328637, \"description\": \"Cheese, cheddar, sharp, sliced\", \"dataType\": \"Foundation\", \"publishedDate\": \"2019-04-01\", \"foodCategory\": \"Dairy and Egg Products\", \"foodNutrients\": [{\"nutrientId\": 1008, \"nutrientName\": \"Energy\", \"nutrientNumber\": \"208\", \"unitName\": \"KCAL\", \"value\": 408.0}, {\"nutrientId\": 1003, \"nutrientName\": \"Protein\", \"nutrientNumber\": \"203\", \"unitName\": \"G\", \"value\": 22.87}, {\"nutrientId\": 1004, \"nutrientName\": \"Total lipid (fat)\", \"nutrientNumber\": \"204\", \"unitName\": \"G\", \"value\": 33.98}, {\"nutrientId\": 1087, \"nutrientName\": \"Calcium, Ca\", \"nutrientNumber\": \"301\", \"unitName\": \"MG\", \"value\": 710.0}]}, {\"fdcId\": 2705385, \"description\": \"Cheese, Cheddar, mild\", \"dataType\": \"Survey (FNDDS)\", \"publishedDate\": \"2024-10-31\", \"foodCategory\": \"Cheese\", \"foodNutrients\": [{\"nutrientId\": 1008, \"nutrientName\": \"Energy\", \"nutrientNumber\": \"208\", \"unitName\": \"KCAL\", \"value\": 403.0}, {\"nutrientId\": 1003, \"nutrientName\": \"Protein\", \"nutrientNumber\": \"203\", \"unitName\": \"G\", \"value\": 22.87}]}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

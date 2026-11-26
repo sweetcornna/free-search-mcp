@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "agrovoc_sparql",
+  "op": "query",
+  "recordedAt": "2026-11-25T12:18:37Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://agrovoc.fao.org/sparql?query=SELECT+%3Fs+%3Flabel+WHERE+%7B+%3Fs+%3Chttp%3A%2F%2Fwww.w3.org%2F2004%2F02%2Fskos%2Fcore%23prefLabel%3E+%3Flabel+.+FILTER%28LANG%28%3Flabel%29+%3D+%22en%22%29+%7D+LIMIT+3",
+        "headersSubset": {
+          "accept": "application/sparql-results+json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "cache-control",
+            "must-revalidate,no-cache,no-store"
+          ],
+          [
+            "content-type",
+            "application/sparql-results+json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{ \"head\": {\n    \"vars\": [ \"s\" , \"label\" ]\n  } ,\n  \"results\": {\n    \"bindings\": [\n      { \n        \"s\": { \"type\": \"uri\" , \"value\": \"http://aims.fao.org/aos/agrovoc/c_33899\" } ,\n        \"label\": { \"type\": \"literal\" , \"xml:lang\": \"en\" , \"value\": \"Teretriosoma nigrescens\" }\n      } ,\n      { \n        \"s\": { \"type\": \"uri\" , \"value\": \"http://aims.fao.org/aos/agrovoc/c_30244\" } ,\n        \"label\": { \"type\": \"literal\" , \"xml:lang\": \"en\" , \"value\": \"Agrotis ipsilon\" }\n      } ,\n      { \n        \"s\": { \"type\": \"uri\" , \"value\": \"http://aims.fao.org/aos/agrovoc/c_30245\" } ,\n        \"label\": { \"type\": \"literal\" , \"xml:lang\": \"en\" , \"value\": \"Agrotis segetum\" }\n      }\n    ]\n  }\n}\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

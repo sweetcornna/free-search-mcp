@@ -1,0 +1,91 @@
+id = "govuk"
+name = "GOV.UK Search & Content"
+summary = "Official UK government guidance, services, policy, and statistics on GOV.UK."
+aliases = ["gov.uk", "uk gov", "hmrc", "dvla"]
+home_url = "https://www.gov.uk"
+tier = 1
+scopes = ["gov"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "direct_claimant"
+limits = { rps = 4.0, burst = 8, concurrency = 4, timeout_ms = 8000, cache_ttl_s = 21600 }
+
+[claims]
+patterns = [
+  '(?i)gov\.uk|\bhmrc\b|\bdvla\b|\b(?:uk|british)\s+home office\b|\bhome office\s+(?:uk|visa|immigration|guidance)\b',
+  '(?i)\b(?:uk|british|britain)\b.*\b(?:visa|tax|benefit|passport|driving|licence|pension|immigration|customs|nhs)\b',
+  '(?i)\b(?:visa|tax|benefit|passport|driving|licence|pension|immigration|customs|nhs)\b.*\b(?:uk|british|britain)\b',
+  '英国(?:签证|政府|税|移民|海关)',
+]
+keywords = ["gov.uk", "hmrc", "dvla", "uk home office"]
+max_per_search = 3
+
+[op.search]
+summary = "Search GOV.UK guidance, forms, news, and policy pages."
+method = "GET"
+url = "https://www.gov.uk/api/search.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { fields = "title,link,description,public_timestamp,format,organisations" }
+paginate = { style = "offset", param = "start", start = 0, max_pages = 3 }
+probe = { params = { query = "passport", limit = 3 }, min_results = 2, fixture = "fixtures/w5d2/govuk/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Search terms" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "count", doc = "Number of results" }
+offset = { type = "int", min = 0, to = "start", doc = "Result offset" }
+
+[op.search.map]
+items = ".results[]"
+total = ".total"
+error = "if .error then (.error | tostring) else null end"
+record = '''{
+  title: ((.title // "") | collapse_ws // ""),
+  url: ((.link // "") | resolve_url("https://www.gov.uk") // "https://www.gov.uk"),
+  description: ((.description // "") | strip_tags // ""),
+  format: (.format // null),
+  publicTimestamp: ((.public_timestamp // null) | parse_date),
+  organisations: [(.organisations // [])[] | .title | select(. != null)]
+}'''
+hit = '''{
+  title: ((.title // "") | collapse_ws // ""),
+  url: ((.link // "") | resolve_url("https://www.gov.uk") // "https://www.gov.uk"),
+  snippet: (
+    [
+      (if .format then (.format | gsub("_"; " ")) else null end),
+      (if (.public_timestamp | parse_date) then ("updated " + (.public_timestamp | parse_date)) else null end),
+      (([(.organisations // [])[] | .title | select(. != null)] | .[0:2] | join(", ")) | if length > 0 then . else null end),
+      (((.description // "") | strip_tags // "") | if length > 0 then .[0:240] else null end)
+    ] | map(select(. != null)) | join(" · ")
+  ),
+  date: ((.public_timestamp // null) | parse_date),
+  dateSource: "api"
+}'''
+
+[op.content]
+summary = "Fetch structured GOV.UK Content API JSON for a page path."
+method = "GET"
+url = "https://www.gov.uk/api/content/{path}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { path = "bank-holidays" }, min_results = 1, fixture = "fixtures/w5d2/govuk/content/default.json" }
+
+[op.content.params]
+path = { type = "string", required = true, in = "path", encode = "raw", doc = "GOV.UK page path without leading slash, e.g. bank-holidays" }
+
+[op.content.map]
+items = "."
+error = "if .error then (.error | tostring) else null end"
+record = '''{
+  contentId: (.content_id // null),
+  title: ((.title // "") | collapse_ws // ""),
+  description: ((.description // "") | strip_tags // ""),
+  documentType: (.document_type // null),
+  locale: (.locale // "en"),
+  publicUpdatedAt: (.public_updated_at // null),
+  firstPublishedAt: (.first_published_at // null),
+  url: ((.base_path // "") | resolve_url("https://www.gov.uk") // "https://www.gov.uk"),
+  organisations: ([(.links.organisations // [])[], (.links.primary_publishing_organisation // [])[]] | map(.title | select(. != null)) | unique)
+}'''

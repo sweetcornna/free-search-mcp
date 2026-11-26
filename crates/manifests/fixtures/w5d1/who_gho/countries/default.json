@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "who_gho",
+  "op": "countries",
+  "recordedAt": "2026-11-25T12:12:19Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://ghoapi.azureedge.net/api/DIMENSION/COUNTRY/DimensionValues?%24filter=contains(tolower(Title),tolower(%27united%27))&%24top=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; odata.metadata=minimal; odata.streaming=true; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"@odata.context\":\"https://ghoapi.azureedge.net/api/$metadata#Collection(Default.DIMENSION_VALUE)\",\"value\":[{\"Code\":\"ARE\",\"Title\":\"United Arab Emirates\",\"ParentDimension\":\"REGION\",\"Dimension\":\"COUNTRY\",\"ParentCode\":\"EMR\",\"ParentTitle\":\"Eastern Mediterranean\"},{\"Code\":\"GBR\",\"Title\":\"United Kingdom of Great Britain and Northern Ireland\",\"ParentDimension\":\"REGION\",\"Dimension\":\"COUNTRY\",\"ParentCode\":\"EUR\",\"ParentTitle\":\"Europe\"},{\"Code\":\"TZA\",\"Title\":\"United Republic of Tanzania\",\"ParentDimension\":\"REGION\",\"Dimension\":\"COUNTRY\",\"ParentCode\":\"AFR\",\"ParentTitle\":\"Africa\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,112 @@
+id = "b2find_eudat"
+name = "EUDAT B2FIND Research Data Portal"
+summary = "Pan-European interdisciplinary research data discovery catalog aggregating 100+ European scientific data repositories via keyless CKAN API."
+aliases = ["b2find", "eudat b2find", "european research data"]
+home_url = "https://b2find.eudat.eu"
+tier = 1
+scopes = ["dataset", "academic"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.5, burst = 4, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 43200, host_bucket = "b2find.eudat.eu" }
+
+[op.search]
+summary = "Search federated European research datasets across EUDAT B2FIND communities."
+method = "GET"
+url = "https://b2find.eudat.eu/api/3/action/package_search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "start", start = 0, max_pages = 3 }
+probe = { params = { query = "paleoclimate", limit = 3 }, min_results = 2, fixture = "fixtures/w5h/b2find_eudat/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Dataset search query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "rows", doc = "Datasets per page" }
+start = { type = "int", default = 0, min = 0, to = "start", doc = "0-based offset" }
+
+[op.search.map]
+items = "(.result.results // [])[]"
+total = ".result.count"
+error = '''if (.success // true) == false then (if (.error | type) == "object" then (.error.message // (.error | tostring)) else (.error | tostring) end) else null end'''
+record = '''(
+  (([(.extras // [])[] | select(.key == "DOI") | .value][0]) // null) as $doi |
+  (([(.extras // [])[] | select(.key == "PublicationYear") | .value][0]) // null) as $py |
+  (([(.extras // [])[] | select(.key == "Rights") | .value][0]) // null) as $rights |
+  (([(.extras // [])[] | select(.key == "Discipline") | .value][0]) // null) as $disc |
+  (([(.extras // [])[] | select(.key == "OpenAccess") | .value][0]) // null) as $oa |
+  (.url // ("https://b2find.eudat.eu/dataset/" + (.name // .id // ""))) as $url |
+  {
+    id: (.id // ""),
+    name: (.name // ""),
+    title: (.title // "" | collapse_ws),
+    author: (.author // null | collapse_ws),
+    doi: ($doi | doi_norm),
+    publicationYear: ($py | to_int),
+    repository: (.organization.title // .organization.name // null),
+    discipline: ($disc | collapse_ws),
+    openAccess: (if ($oa | type) == "string" then (($oa | ascii_downcase) == "true") elif ($oa | type) == "boolean" then $oa else (.isopen // null) end),
+    description: (.notes // null | strip_tags),
+    license: (.license_title // .license_id // $rights // null | collapse_ws),
+    tags: [(.tags // [])[] | .display_name // .name | select(type == "string") | collapse_ws | select(length > 0)],
+    url: $url
+  }
+)'''
+hit = '''(
+  (.url // ("https://b2find.eudat.eu/dataset/" + (.name // .id // ""))) as $url |
+  (([(.extras // [])[] | select(.key == "PublicationYear") | .value][0]) // null) as $py |
+  ((.notes // "" | strip_tags) // "") as $desc |
+  {
+    title: (.title // .name // "B2FIND Dataset" | collapse_ws),
+    url: $url,
+    snippet: ([(.organization.title // ""), ((.author // "" | collapse_ws)[0:100]), ($desc[0:180])] | map(select(length > 0)) | join(" · ")),
+    date: (($py // null) | parse_date),
+    dateSource: (if ($py != null) then "api" else null end)
+  }
+)'''
+
+[op.dataset]
+summary = "Fetch full metadata and resource links for a single EUDAT B2FIND dataset by ID."
+method = "GET"
+url = "https://b2find.eudat.eu/api/3/action/package_show"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "23d3857f-8827-4287-afd2-d73896644dda" }, min_results = 1, fixture = "fixtures/w5h/b2find_eudat/dataset/default.json" }
+
+[op.dataset.params]
+id = { type = "string", required = true, to = "id", doc = "B2FIND dataset UUID or slug" }
+
+[op.dataset.map]
+items = ".result // empty"
+error = "@ref:op.search.map.error"
+record = '''(
+  (([(.extras // [])[] | select(.key == "DOI") | .value][0]) // null) as $doi |
+  (([(.extras // [])[] | select(.key == "PublicationYear") | .value][0]) // null) as $py |
+  (([(.extras // [])[] | select(.key == "Rights") | .value][0]) // null) as $rights |
+  (([(.extras // [])[] | select(.key == "Discipline") | .value][0]) // null) as $disc |
+  (([(.extras // [])[] | select(.key == "OpenAccess") | .value][0]) // null) as $oa |
+  (([(.extras // [])[] | select(.key == "Publisher") | .value][0]) // null) as $pub |
+  (([(.extras // [])[] | select(.key == "SpatialCoverage") | .value][0]) // null) as $spatial |
+  ([(.extras // [])[] | select(.key == "RelatedIdentifier") | .value | select(type == "string" and length > 0)]) as $rel |
+  (.url // ("https://b2find.eudat.eu/dataset/" + (.name // .id // ""))) as $url |
+  {
+    id: (.id // ""),
+    name: (.name // ""),
+    title: (.title // "" | collapse_ws),
+    author: (.author // null | collapse_ws),
+    doi: ($doi | doi_norm),
+    publicationYear: ($py | to_int),
+    repository: (.organization.title // .organization.name // null),
+    publisher: ($pub | collapse_ws),
+    discipline: ($disc | collapse_ws),
+    spatialCoverage: ($spatial | collapse_ws),
+    relatedIdentifiers: $rel,
+    openAccess: (if ($oa | type) == "string" then (($oa | ascii_downcase) == "true") elif ($oa | type) == "boolean" then $oa else (.isopen // null) end),
+    description: (.notes // null | strip_tags),
+    license: (.license_title // .license_id // $rights // null | collapse_ws),
+    tags: [(.tags // [])[] | .display_name // .name | select(type == "string") | collapse_ws | select(length > 0)],
+    resources: [(.resources // [])[] | { name: (.name // null), format: (.format // null), url: (.url // null) }],
+    url: $url
+  }
+)'''

@@ -1,0 +1,89 @@
+id = "datacite"
+name = "DataCite"
+summary = "Global DOI registry for 60M+ research datasets, software releases, preprints, and gray literature."
+aliases = ["datacite.org", "dataset doi"]
+home_url = "https://datacite.org"
+tier = 1
+scopes = ["academic", "dataset"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 5.0, burst = 10, concurrency = 4, timeout_ms = 8000, cache_ttl_s = 21600, host_bucket = "api.datacite.org" }
+
+[op.search]
+summary = "Search DataCite DOI metadata records for datasets, software, and preprints."
+method = "GET"
+url = "https://api.datacite.org/dois"
+headers = { Accept = "application/vnd.api+json" }
+response = "json"
+returns = "works"
+paginate = { style = "page", param = "page[number]", start = 1, max_pages = 3 }
+probe = { params = { query = "graph neural network", limit = 3 }, min_results = 2, fixture = "fixtures/seed/datacite/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "query", doc = "DataCite search query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "page[size]", doc = "Maximum DOIs to return" }
+page = { type = "int", min = 1, to = "page[number]", doc = "1-based page number" }
+resource_type = { type = "string", to = "resource-type-id", doc = "Optional resource type filter, e.g. dataset, software, preprint" }
+sort = { type = "string", to = "sort", doc = "Optional sort key, e.g. relevance, -published, -citations" }
+
+[op.search.map]
+items = "(.data // [])[] | select((.attributes.titles[0]?.title // \"\") != \"\")"
+total = ".meta.total // null"
+error = "if (.errors // [] | length) > 0 then (.errors[0].title // .errors[0].detail // \"DataCite API error\") else null end"
+work = '''(
+  (.attributes // {}) as $a |
+  (($a.doi // .id) | doi_norm) as $doi |
+  (($a.types.resourceTypeGeneral // "") | ascii_downcase) as $rt |
+  ($a.citationCount | to_int) as $cites |
+  (([($a.descriptions // [])[] | select(.descriptionType == "Abstract" or .descriptionType == null) | .description][0] // ($a.descriptions[0]?.description // null))) as $desc |
+  {
+    title: (($a.titles[0]?.title // "") | strip_tags | collapse_ws),
+    authors: [($a.creators // [])[] | {
+      name: (if (.name // "") != "" then .name else ([.givenName, .familyName] | map(select(type == "string" and length > 0)) | join(" ")) end),
+      orcid: (([(.nameIdentifiers // [])[] | select((.nameIdentifierScheme // "" | ascii_downcase) == "orcid") | .nameIdentifier][0] // null) | if type == "string" then sub("^https?://orcid\\.org/"; "") else null end),
+      affiliation: (if (.affiliation[0]? | type) == "string" then .affiliation[0] elif (.affiliation[0]? | type) == "object" then (.affiliation[0].name // null) else null end)
+    } | select(.name != "")],
+    year: ($a.publicationYear | to_int),
+    publishedDate: (($a.published // ($a.dates[0]?.date) // (if $a.publicationYear != null then ($a.publicationYear | tostring) else null end)) | parse_date),
+    venue: ($a.container.title // $a.publisher // null),
+    workType: (
+      if $rt == "dataset" then "dataset"
+      elif $rt == "software" then "software"
+      elif $rt == "preprint" then "preprint"
+      elif $rt == "book" then "book"
+      elif $rt == "bookchapter" then "chapter"
+      elif $rt == "dissertation" then "thesis"
+      elif $rt == "conferencepaper" or $rt == "conferenceproceeding" then "conference"
+      else "article"
+      end
+    ),
+    ids: {
+      doi: $doi
+    },
+    abstractText: (if ($desc // "") != "" then ($desc | strip_tags | collapse_ws) else null end),
+    citedBy: $cites,
+    citedBySource: (if $cites != null then "datacite" else null end),
+    retracted: false,
+    versions: [],
+    url: ($a.url // (if $doi != null then ("https://doi.org/" + $doi) else "" end)),
+    sources: ["datacite"]
+  }
+)'''
+
+[op.work]
+summary = "Fetch DataCite metadata for a single DOI."
+method = "GET"
+url = "https://api.datacite.org/dois/{doi}"
+headers = { Accept = "application/vnd.api+json" }
+response = "json"
+returns = "works"
+probe = { params = { doi = "10.5281/zenodo.24500003" }, min_results = 1, fixture = "fixtures/seed/datacite/work/default.json" }
+
+[op.work.params]
+doi = { type = "string", required = true, in = "path", encode = "raw", doc = "DataCite DOI e.g. 10.5281/zenodo.24500003" }
+
+[op.work.map]
+items = ".data"
+error = "@ref:op.search.map.error"
+work = "@ref:op.search.map.work"

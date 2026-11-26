@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "cristin_no",
+  "op": "projects",
+  "recordedAt": "2026-11-25T13:02:20Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.cristin.no/v2/projects?title=climate&per_page=3&page=1",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "[ {\n  \"cristin_project_id\" : \"2038522\",\n  \"title\" : {\n    \"en\" : \"4DSEIS: Assimilating 4D Seismic Data: Big Data Into Big Models\"\n  },\n  \"main_language\" : \"en\",\n  \"start_date\" : \"2019-01-31T00:00:00.000Z\",\n  \"end_date\" : \"2022-12-31T00:00:00.000Z\",\n  \"url\" : \"https://api.cristin.no/v2/projects/2038522\"\n}, {\n  \"cristin_project_id\" : \"2041457\",\n  \"title\" : {\n    \"en\" : \"Southeren Ocean Carbon and Heat Impact on Climate (SO-CHIC)\"\n  },\n  \"main_language\" : \"en\",\n  \"start_date\" : \"2019-11-01T00:00:00.000Z\",\n  \"end_date\" : \"2024-10-31T00:00:00.000Z\",\n  \"url\" : \"https://api.cristin.no/v2/projects/2041457\"\n}, {\n  \"cristin_project_id\" : \"2041637\",\n  \"title\" : {\n    \"en\" : \"Patient specific modelling of gene regulatory networks and association to clinical characteristics in Alzheimer’s disease\"\n  },\n  \"main_language\" : \"en\",\n  \"start_date\" : \"2020-02-01T00:00:00.000Z\",\n  \"end_date\" : \"2022-03-31T00:00:00.000Z\",\n  \"url\" : \"https://api.cristin.no/v2/projects/2041637\"\n} ]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

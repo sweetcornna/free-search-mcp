@@ -1,0 +1,81 @@
+id = "elsevier_scopus"
+name = "Elsevier Scopus Search API"
+summary = "Elsevier Scopus curated abstract, citation, and author search API across 94M+ records (requires free Elsevier developer key)."
+aliases = ["scopus", "elsevier", "sciencedirect"]
+home_url = "https://dev.elsevier.com"
+tier = 3
+scopes = ["academic", "academic.index"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 43200, host_bucket = "api.elsevier.com" }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_ELSEVIER_API_KEY"
+in = "header"
+name = "X-ELS-APIKey"
+format = "{key}"
+route_requires_key = true
+
+[op.search]
+summary = "Search Scopus curated scholarly records using Scopus boolean syntax."
+method = "GET"
+url = "https://api.elsevier.com/content/search/scopus"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+paginate = { style = "offset", param = "start", start = 0, max_pages = 3 }
+probe = { params = { query = "TITLE(transformer)", limit = 3 }, min_results = 2, fixture = "fixtures/w5h/elsevier_scopus/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "query", doc = "Scopus query e.g. TITLE(transformer), DOI(...), AUTHOR-NAME(...)" }
+limit = { type = "int", default = 10, min = 1, max = 25, to = "count", doc = "Results per page (standard key max 25)" }
+start = { type = "int", default = 0, min = 0, to = "start", doc = "0-based result offset" }
+sort = { type = "string", to = "sort", doc = "Optional sort e.g. -citedby-count, -coverDate" }
+
+[op.search.map]
+items = '''(."search-results".entry // [])[] | select(.error == null)'''
+total = '''(."search-results"."opensearch:totalResults" | to_int)'''
+error = '''if ."service-error" then (."service-error".status.statusText // ."service-error".status.statusCode) elif (."search-results".entry[0]?.error // null) != null and ((."search-results".entry[0].error | tostring | ascii_downcase) != "result set was empty") then ."search-results".entry[0].error else null end'''
+work = '''(
+  (([(.link // [])[] | select(."@ref" == "scopus") | ."@href"][0]) // (if ."prism:doi" then ("https://doi.org/" + ."prism:doi") else "" end)) as $url |
+  {
+    title: (."dc:title" // "" | strip_tags),
+    authors: (if (.author // null) != null then [.author[] | { name: (.authname // "" | collapse_ws), orcid: (.orcid // null) } | select(.name != "")] elif (."dc:creator" // "") != "" then [{ name: (."dc:creator" | collapse_ws) }] else [] end),
+    year: (((."prism:coverDate" // "")[0:4]) | to_int),
+    publishedDate: ((."prism:coverDate" // null) | parse_date),
+    venue: (."prism:publicationName" // null | collapse_ws),
+    workType: ((.subtypeDescription // ."prism:aggregationType" // "article") | ascii_downcase),
+    ids: {
+      doi: (."prism:doi" // null | doi_norm),
+      pmid: (."pubmed-id" // null)
+    },
+    abstractText: (."dc:description" // null | strip_tags),
+    citedBy: (."citedby-count" | to_int),
+    citedBySource: (if ."citedby-count" != null then "elsevier_scopus" else null end),
+    oa: (if (.openaccessFlag // false) == true then { status: "open", url: $url } else null end),
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["elsevier_scopus"]
+  }
+)'''
+
+[op.work]
+summary = "Look up a single Scopus record by DOI."
+method = "GET"
+url = "https://api.elsevier.com/content/search/scopus"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+const_query = { count = 1 }
+probe = { params = { doi = "10.1016/j.joi.2020.101000" }, min_results = 1, fixture = "fixtures/w5h/elsevier_scopus/work/default.json" }
+
+[op.work.params]
+doi = { type = "string", required = true, to = "query", template = "DOI({doi})", doc = "Publication DOI" }
+
+[op.work.map]
+items = "@ref:op.search.map.items"
+error = "@ref:op.search.map.error"
+work = "@ref:op.search.map.work"

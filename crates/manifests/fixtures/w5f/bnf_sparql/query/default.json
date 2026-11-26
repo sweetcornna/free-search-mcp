@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "bnf_sparql",
+  "op": "query",
+  "recordedAt": "2026-11-25T12:18:32Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://data.bnf.fr/sparql?query=SELECT+%3Fs+%3Flabel+WHERE+%7B+%3Fs+%3Chttp%3A%2F%2Fwww.w3.org%2F2004%2F02%2Fskos%2Fcore%23prefLabel%3E+%3Flabel+%7D+LIMIT+3",
+        "headersSubset": {
+          "accept": "application/sparql-results+json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/sparql-results+json"
+          ]
+        ],
+        "bodyText": "\n{ \"head\": { \"link\": [], \"vars\": [\"s\", \"label\"] },\n  \"results\": { \"distinct\": false, \"ordered\": true, \"bindings\": [\n    { \"s\": { \"type\": \"uri\", \"value\": \"http://data.bnf.fr/ark:/12148/cb118644229\" }\t, \"label\": { \"type\": \"literal\", \"xml:lang\": \"fr\", \"value\": \"Institut de recherche et coordination acoustique musique. Paris\" }},\n    { \"s\": { \"type\": \"uri\", \"value\": \"http://data.bnf.fr/ark:/12148/cb118752973\" }\t, \"label\": { \"type\": \"literal\", \"xml:lang\": \"fr\", \"value\": \"Congr\\u00E8s eucharistique international (42 ; 1981 ; Lourdes, Hautes-Pyr\\u00E9n\\u00E9es)\" }},\n    { \"s\": { \"type\": \"uri\", \"value\": \"http://data.bnf.fr/ark:/12148/cb11887667z\" }\t, \"label\": { \"type\": \"literal\", \"xml:lang\": \"fr\", \"value\": \"Tacite (0055?-0120?)\" }} ] } }",
+        "bodyB64": null
+      }
+    }
+  ]
+}

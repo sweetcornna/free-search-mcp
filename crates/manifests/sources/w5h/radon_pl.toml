@@ -1,0 +1,144 @@
+id = "radon_pl"
+name = "Poland RAD-on Open Science API"
+summary = "Polish Ministry of Science and Higher Education (POL-on / PBN) open data REST JSON API for Polish publications, research institutions, and scientific projects."
+aliases = ["radon", "rad-on", "polon", "poland open science", "POL-on", "Polska Bibliografia Naukowa", "PBN", "otwarta nauka"]
+home_url = "https://radon.nauka.gov.pl"
+tier = 2
+scopes = ["academic", "academic.index", "academic.grants"]
+caps = ["search", "lookup", "org", "grant"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.5, burst = 4, concurrency = 2, timeout_ms = 12000, cache_ttl_s = 43200, host_bucket = "radon.nauka.gov.pl" }
+
+[op.search]
+summary = "Search Polish national scholarly publications in RAD-on (POL-on / PBN)."
+method = "GET"
+url = "https://radon.nauka.gov.pl/opendata/polon/publications"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+paginate = { style = "token", param = "token", max_pages = 3 }
+probe = { params = { query = "quantum", limit = 3 }, min_results = 2, fixture = "fixtures/w5h/radon_pl/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "title", doc = "Publication title keyword (English or Polish)" }
+keyword = { type = "string", to = "keyword", doc = "Optional subject keyword" }
+author_last = { type = "string", to = "lastName", doc = "Optional author last name" }
+year_from = { type = "int", to = "yearFrom", doc = "Optional start publication year YYYY" }
+year_to = { type = "int", to = "yearTo", doc = "Optional end publication year YYYY" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "resultNumbers", doc = "Results per page" }
+cursor = { type = "string", to = "token", doc = "Pagination token from pagination.token" }
+
+[op.search.map]
+items = "(.results // [])[]"
+next_cursor = ".pagination.token // null"
+total = ".pagination.maxCount // null"
+error = '''if (type == "object" and (.error != null or ((.status | type) == "number" and .status >= 400))) then (.message // .error | tostring) else null end'''
+work = '''(
+  (.publicUri // (if .doi then ("https://doi.org/" + .doi) elif .objectId then ("https://radon.nauka.gov.pl/dane/publikacje/" + .objectId) else "https://radon.nauka.gov.pl" end)) as $url |
+  (.affiliations // []) as $affs |
+  {
+    title: (.title // "" | strip_tags),
+    authors: [(.authors // [])[] | (.objectId // null) as $aid | {
+      name: ([(.name // .firstName // ""), (.lastName // "")] | map(select(type == "string" and length > 0)) | join(" ") | collapse_ws),
+      orcid: (.orcidId // null),
+      affiliation: (if $aid != null then (([$affs[] | select((.affiliatedPersonIDs // .affiliatedPersonIds // []) | any(. == $aid)) | .institutionName | select(type == "string" and length > 0)][0] // null) | collapse_ws) else null end)
+    } | select(.name != "")],
+    year: (.year | to_int),
+    venue: (.journal.title // .book.title // .proceedings.title // null | collapse_ws),
+    workType: ((.type // "article") | ascii_downcase),
+    ids: { doi: (.doi // null | doi_norm) },
+    abstractText: ((.abstracts // [])[0]?.text // null | strip_tags),
+    oa: (if .openAccess != null then { status: "open", url: $url, license: (.openAccess.license // null) } else null end),
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["radon_pl"]
+  }
+)'''
+
+[op.work]
+summary = "Fetch a single RAD-on publication record by PBN publicationId."
+method = "GET"
+url = "https://radon.nauka.gov.pl/opendata/polon/publications"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+const_query = { resultNumbers = 1 }
+probe = { params = { id = "5e70f52b46e0fb0001b28fa8" }, min_results = 1, fixture = "fixtures/w5h/radon_pl/work/default.json" }
+
+[op.work.params]
+id = { type = "string", required = true, to = "publicationId", doc = "RAD-on / PBN publication objectId e.g. 5e70f52b46e0fb0001b28fa8" }
+
+[op.work.map]
+items = "(.results // [])[]"
+error = "@ref:op.search.map.error"
+work = "@ref:op.search.map.work"
+
+[op.institutions]
+summary = "Search Polish universities and research institutes in RAD-on as OrgProfile records."
+method = "GET"
+url = "https://radon.nauka.gov.pl/opendata/polon/institutions"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "token", param = "token", max_pages = 3 }
+probe = { params = { query = "Uniwersytet", limit = 3 }, min_results = 2, fixture = "fixtures/w5h/radon_pl/institutions/default.json" }
+
+[op.institutions.params]
+query = { type = "string", required = true, to = "name", doc = "Polish institution name query e.g. Uniwersytet" }
+city = { type = "string", to = "city", doc = "Optional city name e.g. Warszawa" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "resultNumbers", doc = "Results per page" }
+cursor = { type = "string", to = "token", doc = "Pagination token" }
+
+[op.institutions.map]
+items = "(.results // [])[]"
+next_cursor = ".pagination.token // null"
+total = ".pagination.maxCount // null"
+error = "@ref:op.search.map.error"
+record = '''{
+  name: (.name // .institutionName // "" | collapse_ws),
+  country: ((.country // "PL") | if (. == "Polska" or . == "Poland") then "PL" else . end),
+  orgType: (.iKindName // .uTypeName // null),
+  homepage: (.www // null),
+  sources: ["radon_pl"]
+}'''
+
+[op.projects]
+summary = "Search Polish scientific projects in RAD-on as GrantRecord items."
+method = "GET"
+url = "https://radon.nauka.gov.pl/opendata/polon/projects"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "token", param = "token", max_pages = 3 }
+probe = { params = { limit = 3 }, min_results = 2, fixture = "fixtures/w5h/radon_pl/projects/default.json" }
+
+[op.projects.params]
+query = { type = "string", to = "projectTitlePl", doc = "Optional Polish project title keyword" }
+query_en = { type = "string", to = "projectTitleEn", doc = "Optional English project title keyword" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "resultNumbers", doc = "Results per page" }
+cursor = { type = "string", to = "token", doc = "Pagination token" }
+
+[op.projects.map]
+items = "(.results // [])[]"
+next_cursor = ".pagination.token // null"
+total = ".pagination.maxCount // null"
+error = "@ref:op.search.map.error"
+record = '''(
+  (([(.projectManagers // [])[] | select(.kindManagerCode == "KP")][0]) // (.projectManagers[0]?)) as $pm |
+  (if $pm != null then ([($pm.firstName // ""), ($pm.middleName // ""), ($pm.lastName // "")] | map(select(type == "string" and length > 0)) | join(" ") | collapse_ws) else null end) as $pi |
+  {
+    id: (.projectNumber // .projectUuid // ""),
+    title: (.projectTitleEn // .projectTitlePl // "" | collapse_ws),
+    funder: (.financingInstitutions[0]?.financingInstitutionName // .fundingSourceName // .programName // "RAD-on Poland" | collapse_ws),
+    pi: (if ($pi | type) == "string" and ($pi | length) > 0 then $pi else null end),
+    org: (.entityShowingAchievementsName // .implementingInstitutions[0]?.institutionName // null | collapse_ws),
+    amount: ((.totalFunds // .nationalFunds // .fundingValue) | to_num),
+    currency: (.fundingCurrency // (if ((.nationalFunds | to_num) // 0) > 0 then "PLN" else null end)),
+    startDate: ((.projectStartDate // null) | parse_date),
+    endDate: ((.projectEndDate // null) | parse_date),
+    url: ("https://radon.nauka.gov.pl/dane/projekty/" + (.projectUuid // "")),
+    source: "radon_pl"
+  }
+)'''

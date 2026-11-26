@@ -1,0 +1,85 @@
+id = "sov2ex_cn"
+name = "SoV2EX Chinese Developer Community Search"
+summary = "Keyless Elasticsearch full-text archive search across V2EX Chinese developer community topics plus V2EX topic lookup."
+aliases = ["sov2ex", "v2ex", "chinese forum", "v2ex search"]
+home_url = "https://www.sov2ex.com"
+tier = 1
+scopes = ["forum"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.5, burst = 4, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 3600 }
+
+[op.search]
+summary = "Search V2EX Chinese tech forum discussions via SoV2EX Elasticsearch API."
+method = "GET"
+url = "https://www.sov2ex.com/api/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "from", start = 0, max_pages = 3 }
+examples = ['source.call("sov2ex_cn.search", { query: "rust", limit: 3 })']
+probe = { params = { query = "rust", limit = 3 }, min_results = 2, fixture = "fixtures/w5n/sov2ex_cn/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Topic keyword query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "size", doc = "Maximum topic hits" }
+from = { type = "int", min = 0, doc = "Offset for pagination" }
+sort = { type = "string", enum = ["sumup", "created"], doc = "Sort by relevance (sumup) or creation time (created)" }
+node = { type = "string", doc = "Optional V2EX node name or numeric ID" }
+
+[op.search.map]
+items = "(.hits // [])[]"
+total = ".total"
+record = '''{
+  id: (._source.id // (._id | to_int)),
+  title: (._source.title // ""),
+  member: (._source.member // null),
+  node: (._source.node // null),
+  replies: (._source.replies // 0),
+  created: (._source.created // null),
+  score: (._score // null),
+  content: ((._source.content | collapse_ws) // "" | if length > 400 then .[0:400] + "..." else . end),
+  url: ("https://www.v2ex.com/t/" + ((._source.id // ._id) | tostring))
+}'''
+hit = '''{
+  title: (._source.title // "V2EX Topic"),
+  url: ("https://www.v2ex.com/t/" + ((._source.id // ._id) | tostring)),
+  snippet: ([
+    (if (._source.member | type) == "string" then ("@" + ._source.member) else empty end),
+    (if (._source.replies | type) == "number" then ((._source.replies | tostring) + " replies") else empty end),
+    ((._source.content | collapse_ws) // "" | if length > 180 then .[0:180] + "..." else . end | select(length > 0))
+  ] | join(" · ")),
+  date: (._source.created | parse_date),
+  dateSource: (if (._source.created | parse_date) != null then "api" else null end)
+}'''
+
+[op.topic]
+summary = "Fetch full V2EX topic details and author/node metadata by numeric topic ID."
+method = "GET"
+url = "https://www.v2ex.com/api/topics/show.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+examples = ['source.call("sov2ex_cn.topic", { id: 431357 })']
+probe = { params = { id = 431357 }, min_results = 1, fixture = "fixtures/w5n/sov2ex_cn/topic/default.json" }
+
+[op.topic.params]
+id = { type = "int", required = true, doc = "Numeric V2EX topic ID (e.g. 431357)" }
+
+[op.topic.map]
+items = "(. // [])[]"
+record = '''{
+  id: .id,
+  title: (.title // ""),
+  member: (.member.username // null),
+  nodeName: (.node.name // null),
+  nodeTitle: (.node.title // null),
+  replies: (.replies // 0),
+  created: (.created // null),
+  createdIso: (.created | epoch_to_iso),
+  lastModified: (.last_modified // null),
+  lastModifiedIso: (.last_modified | epoch_to_iso),
+  content: (.content // ""),
+  url: (.url // ("https://www.v2ex.com/t/" + (.id | tostring)))
+}'''

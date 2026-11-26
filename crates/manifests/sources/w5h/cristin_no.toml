@@ -1,0 +1,127 @@
+id = "cristin_no"
+name = "Norway Cristin Research Information API"
+summary = "Norwegian national current research information system (CRIStin v2) indexing academic outputs, funded projects, and research institutions via keyless JSON REST API."
+aliases = ["cristin", "norway cristin", "nva cristin", "Nasjonalt vitenarkiv", "NVA"]
+home_url = "https://api.cristin.no/v2/doc/"
+tier = 1
+scopes = ["academic", "academic.index", "academic.grants"]
+caps = ["search", "lookup", "grant", "org"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 10000, cache_ttl_s = 43200, host_bucket = "api.cristin.no" }
+
+[op.search]
+summary = "Search Norwegian academic publications and research results in Cristin v2."
+method = "GET"
+url = "https://api.cristin.no/v2/results"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "climate", limit = 3 }, min_results = 2, fixture = "fixtures/w5h/cristin_no/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "title", doc = "Title keyword (English or Norwegian)" }
+contributor = { type = "string", to = "contributor", doc = "Optional author name filter" }
+year_from = { type = "int", to = "published_since", doc = "Optional start publication year" }
+year_to = { type = "int", to = "published_before", doc = "Optional end publication year" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "per_page", doc = "Results per page" }
+page = { type = "int", default = 1, min = 1, to = "page", doc = "1-based page number" }
+
+[op.search.map]
+items = ".[]"
+error = '''if (type == "object" and .errors != null) then (.errors | tostring) elif (type == "object" and .message != null and .cristin_result_id == null and .cristin_project_id == null and .cristin_institution_id == null) then (.message | tostring) else null end'''
+work = '''(
+  ((.title | if type == "object" then (.en // .nb // .nn // (to_entries[0]?.value)) else . end) // "" | strip_tags) as $title |
+  ((.summary | if type == "object" then (.en // .nb // .nn // (to_entries[0]?.value)) else null end) | strip_tags) as $abs |
+  (([(.links // [])[] | select(.url_type == "DOI") | .url][0]) // null) as $doi_url |
+  (([(.links // [])[] | select(.url_type == "ARKIV" or .url_type == "FULLTEKST") | .url][0]) // null) as $oa_url |
+  ($doi_url // $oa_url // (if .nva_result_id then ("https://nva.sikt.no/registration/" + (.nva_result_id | tostring)) elif .cristin_result_id then ("https://nva.sikt.no/filter?cristinIdentifier=" + (.cristin_result_id | tostring)) else "" end)) as $url |
+  {
+    title: $title,
+    authors: [(.contributors.preview // [])[] | {
+      name: ([(.first_name // ""), (.surname // "")] | map(select(length > 0)) | join(" ") | collapse_ws)
+    } | select(.name != "")],
+    year: ((((.year_published // .date_published // "") | tostring)[0:4]) | to_int),
+    publishedDate: ((.date_published // null) | parse_date),
+    venue: (.journal.name // .channel.title // null | collapse_ws),
+    workType: ((.category.code // "article") | ascii_downcase),
+    ids: { doi: ($doi_url | doi_norm) },
+    abstractText: (if ($abs | type) == "string" and ($abs | length) > 0 then $abs else null end),
+    oa: (if $oa_url != null then { status: "green", url: $oa_url } else null end),
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["cristin_no"]
+  }
+)'''
+
+[op.result]
+summary = "Fetch a single Cristin v2 research result by numeric Cristin result ID."
+method = "GET"
+url = "https://api.cristin.no/v2/results/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+probe = { params = { id = "10531514" }, min_results = 1, fixture = "fixtures/w5h/cristin_no/result/default.json" }
+
+[op.result.params]
+id = { type = "string", required = true, in = "path", doc = "Numeric Cristin result ID e.g. 10531514" }
+
+[op.result.map]
+items = "."
+error = "@ref:op.search.map.error"
+work = "@ref:op.search.map.work"
+
+[op.projects]
+summary = "Search Norwegian funded research projects in Cristin v2 as GrantRecord items."
+method = "GET"
+url = "https://api.cristin.no/v2/projects"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "climate", limit = 3 }, min_results = 2, fixture = "fixtures/w5h/cristin_no/projects/default.json" }
+
+[op.projects.params]
+query = { type = "string", required = true, to = "title", doc = "Project title keyword" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "per_page", doc = "Projects per page" }
+page = { type = "int", default = 1, min = 1, to = "page", doc = "1-based page number" }
+
+[op.projects.map]
+items = ".[]"
+error = "@ref:op.search.map.error"
+record = '''{
+  id: (.cristin_project_id // "" | tostring),
+  title: ((.title | if type == "object" then (.en // .nb // .nn // (to_entries[0]?.value)) else . end) // "" | collapse_ws),
+  funder: "Cristin Norway",
+  startDate: ((.start_date // null) | parse_date),
+  endDate: ((.end_date // null) | parse_date),
+  url: (if .cristin_project_id then ("https://nva.sikt.no/projects/" + (.cristin_project_id | tostring)) else null end),
+  source: "cristin_no"
+}'''
+
+[op.institutions]
+summary = "Search Norwegian and partner research institutions in Cristin v2 as OrgProfile records."
+method = "GET"
+url = "https://api.cristin.no/v2/institutions"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "Oslo", limit = 3 }, min_results = 2, fixture = "fixtures/w5h/cristin_no/institutions/default.json" }
+
+[op.institutions.params]
+query = { type = "string", required = true, to = "name", doc = "Institution name query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "per_page", doc = "Institutions per page" }
+page = { type = "int", default = 1, min = 1, to = "page", doc = "1-based page number" }
+
+[op.institutions.map]
+items = ".[]"
+error = "@ref:op.search.map.error"
+record = '''{
+  name: ((.institution_name | if type == "object" then (.en // .nb // .nn // (to_entries[0]?.value)) else . end) // "" | collapse_ws),
+  country: (.country // null),
+  homepage: null,
+  sources: ["cristin_no"]
+}'''

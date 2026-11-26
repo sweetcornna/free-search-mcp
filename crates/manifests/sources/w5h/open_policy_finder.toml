@@ -1,0 +1,78 @@
+id = "open_policy_finder"
+name = "Jisc Open Policy Finder (formerly Sherpa Romeo)"
+summary = "Authoritative publisher and journal open-access archiving policies, embargo periods, version permissions, and green-OA copyright rules (requires free Jisc API key)."
+aliases = ["sherpa romeo", "sherpa", "jisc policy", "oa policy", "open policy finder", "openpolicyfinder", "sherpa juliet"]
+home_url = "https://openpolicyfinder.jisc.ac.uk"
+tier = 3
+scopes = ["academic", "academic.openaccess"]
+caps = ["lookup", "venue", "integrity"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 86400, host_bucket = "api.openpolicyfinder.jisc.ac.uk" }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_OPEN_POLICY_FINDER_API_KEY"
+in = "header"
+name = "x-api-key"
+format = "{key}"
+route_requires_key = true
+
+[op.publication]
+summary = "Look up a journal's open-access archiving policy and VenueProfile by ISSN."
+method = "GET"
+url = "https://api.openpolicyfinder.jisc.ac.uk/retrieve_by_id"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { "item-type" = "publication", format = "Json" }
+probe = { params = { issn = "0028-0836" }, min_results = 1, fixture = "fixtures/w5h/open_policy_finder/publication/default.json" }
+
+[op.publication.params]
+issn = { type = "string", required = true, to = "identifier", doc = "Journal ISSN e.g. 0028-0836" }
+
+[op.publication.map]
+items = "(.items // [])[]"
+error = '''if (.message != null and .items == null) then .message else null end'''
+record = '''{
+  name: ((.title[0]?.title // .title // "") | tostring | collapse_ws),
+  issn: [(.issns // [])[] | if type == "object" then .issn else . end | select(type == "string" and length > 0)],
+  publisher: (.publishers[0]?.publisher.name[0]?.name // .publishers[0]?.name // null | collapse_ws),
+  doajVetted: (if (.listed_in_doaj // null) != null then ((.listed_in_doaj | tostring | ascii_downcase) == "yes" or .listed_in_doaj == true) else null end),
+  sources: ["open_policy_finder"]
+}'''
+
+[op.policies]
+summary = "Retrieve detailed journal OA archiving rules (permitted versions, embargoes, fees, locations) by filter."
+method = "GET"
+url = "https://api.openpolicyfinder.jisc.ac.uk/retrieve"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { "item-type" = "publication", format = "Json" }
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { filter = '[["issn","equals","0028-0836"]]', limit = 3 }, min_results = 1, fixture = "fixtures/w5h/open_policy_finder/policies/default.json" }
+
+[op.policies.params]
+filter = { type = "string", required = true, to = "filter", doc = "JSON filter array e.g. [[\"issn\",\"equals\",\"0028-0836\"]] or [[\"title\",\"contains\",\"Nature\"]]" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Max policy items" }
+offset = { type = "int", default = 0, min = 0, to = "offset", doc = "Offset" }
+
+[op.policies.map]
+items = "(.items // [])[]"
+total = "(.total // null | to_int)"
+error = "@ref:op.publication.map.error"
+record = '''{
+  id: (.system_metadata.id // .id // null),
+  title: ((.title[0]?.title // .title // "") | tostring),
+  issns: [(.issns // [])[] | if type == "object" then .issn else . end | select(type == "string")],
+  publisher: (.publishers[0]?.publisher.name[0]?.name // .publishers[0]?.name // null),
+  url: (.system_metadata.uri // .url // null),
+  permittedOa: [(.publisher_policy // [])[] | (.permitted_oa // [])[] | {
+    articleVersion: (.article_version // []),
+    additionalOaFee: (.additional_oa_fee // null),
+    embargo: (.embargo // null),
+    locations: (.location.location // []),
+    licenses: [(.license // [])[] | if type == "object" then .license else . end]
+  }]
+}'''

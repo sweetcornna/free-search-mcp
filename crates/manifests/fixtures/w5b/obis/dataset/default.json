@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "obis",
+  "op": "dataset",
+  "recordedAt": "2026-11-25T15:09:17Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.obis.org/v3/dataset/a54a77db-7b42-4101-8d71-1adec3dd4ed5",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ],
+          [
+            "etag",
+            "W/\"14e0-3gPcbUT1PjTf7CWnKydWE8ZstXY\""
+          ]
+        ],
+        "bodyText": "{\"total\":1,\"results\":[{\"id\":\"a54a77db-7b42-4101-8d71-1adec3dd4ed5\",\"url\":\"https://ipt-obis.gbif.us/resource?r=ncrmp_blt_fish_pacific\",\"archive\":\"https://ipt-obis.gbif.us/archive.do?r=ncrmp_blt_fish_pacific\",\"published\":\"2023-01-27T21:04:45.000Z\",\"created\":\"2020-04-01T23:40:06.228Z\",\"updated\":\"2025-11-12T15:12:51.273Z\",\"core\":\"event\",\"extensions\":[\"measurementorfact\",\"occurrence\"],\"statistics\":{\"Event\":26447,\"absence\":18,\"dropped\":18,\"Occurrence\":245157,\"DNADerivedData\":0,\"MeasurementOrFact\":1750385},\"extent\":\"POLYGON((-178.3785833 -14.560017,166.65736 -14.560017,166.65736 28.456708,-178.3785833 28.456708,-178.3785833 -14.560017))\",\"title\":\"NOAA Pacific Islands Fisheries Science Center, Ecosystem Science Division Coral Reef Ecosystem Program, Rapid Ecological Assessments of Fish Belt Transect Surveys (BLT) at Coral Reef Sites across the Pacific Ocean from 2000 to 2009\",\"citation\":\"Coral Reef Ecosystem Program; Pacific Islands Fisheries Science Center (2017). Pacific Reef Assessment and Monitoring Program: Rapid Ecological Assessments of Fish Belt Transect Surveys (BLT) in the Pacific Ocean from 2000-09-09 to 2009-05-05 (NCEI Accession 0162462). NOAA National Centers for Environmental Information. Dataset. https://accession.nodc.noaa.gov/0162462\",\"citation_id\":null,\"abstract\":\"Belt transects (BLT) are a non-invasive underwater-survey method that enumerates the diverse components of diurnally active shallow-water reef fish assemblages. At each Rapid Ecological Assessment survey site, BLT fish surveys are conducted along 3 consecutively-placed, 25m transect lines to quantify relatively small-bodied and abundant fishes. A pair of scuba diver-observers conducts parallel swims along the transect lines, recording size-class specific counts of all fishes encountered, to species-level where possible, within visually estimated but defined belt widths: 4 m wide for fishes &gt; 20 cm TL (100 m2 area) on the initial swim-out, and 2 m wide for fishes &lt; 20 cm TL (50 m2 area) on the subsequent swim back. Transect lines are typically set at depths of 10-15 m. Reef ledges and holes are visually searched. Stations are completed on all sides of the island/atoll, weather and sea conditions permitting. Raw survey data includes species level abundance estimates.\",\"intellectualrights\":\"To the extent possible under law, the publisher has waived all rights to these data and has dedicated them to the  Public Domain (CC0 1.0)\",\"feed\":{\"id\":\"8112d75b-7e78-4641-9e09-9a2cc7db7375\",\"url\":\"https://ipt-obis.gbif.us/rss.do\",\"website\":\"https://ipt-obis.gbif.us\",\"active\":true},\"institutes\":[{\"name\":\"National Oceanic and Atmospheric Administration, Washington\",\"oceanexpert_id\":11379,\"oceanexpert_parent_id\":null},{\"name\":\"U.S. Geological Survey HQ\",\"oceanexpert_id\":12976,\"oceanexpert_parent_id\":null},{\"name\":\"Pacific Islands Ocean Observing System\",\"oceanexpert_id\":20188,\"oceanexpert_parent_id\":null}],\"contacts\":[{\"role\":null,\"type\":\"creator\",\"givenname\":\"Ivor\",\"surname\":\"Williams\",\"organization\":\"National Oceanic and Atmospheric Administration\",\"position\":\"Research Fish Biologist\",\"email\":\"ivor.williams@noaa.gov\",\"url\":null,\"organization_oceanexpert_id\":11379,\"type_display\":\"Creator\"},{\"role\":null,\"type\":\"contact\",\"givenname\":\"Tye\",\"surname\":\"Kindinger\",\"organization\":\"National Oceanic and Atmospheric Administration\",\"position\":\"Supervisory Coral Reef Ecosystems Researcher\",\"email\":\"tye.kindinger@noaa.gov\",\"url\":null,\"organization_oceanexpert_id\":11379,\"type_display\":\"Contact\"},{\"role\":null,\"type\":\"contact\",\"givenname\":\"Jake\",\"surname\":\"Asher\",\"organization\":\"National Oceanic and Atmospheric Administration\",\"position\":\"Marine Ecosystems Research Specialist\",\"email\":\"jacob.asher@noaa.gov\",\"url\":null,\"organization_oceanexpert_id\":11379,\"type_display\":\"Contact\"},{\"role\":null,\"type\":\"metadataProvider\",\"givenname\":\"Annette\",\"surname\":\"DesRochers\",\"organization\":\"National Oceanic and Atmospheric Administration\",\"position\":\"Data Steward\",\"email\":\"annette.desrochers@noaa.gov\",\"url\":null,\"organization_oceanexpert_id\":11379,\"type_display\":\"Metadata Provider\"},{\"role\":\"publisher\",\"type\":\"associatedParty\",\"givenname\":\"Abby\",\"surname\":\"Benson\",\"organization\":\"U.S. Geological Survey\",\"position\":\"Biologist\",\"email\":\"albenson@usgs.gov\",\"url\":null,\"organization_oceanexpert_id\":12976,\"type_display\":\"Publisher\"},{\"role\":\"processor\",\"type\":\"associatedParty\",\"givenname\":\"Sarah\",\"surname\":\"Bingo\",\"organization\":\"Pacific Islands Ocean Observing System\",\"position\":\"Data Manager\",\"email\":\"sarahr6@hawaii.edu\",\"url\":null,\"organization_oceanexpert_id\":20188}],\"nodes\":[{\"id\":\"b7c47783-a020-4173-b390-7b57c4fa1426\",\"name\":\"OBIS USA\"}],\"keywords\":[{\"keyword\":\"Samplingevent\",\"thesaurus\":\"GBIF Dataset Type Vocabulary: http://rs.gbif.org/vocabulary/gbif/dataset_type.xml\"},{\"keyword\":\"Samplingevent\",\"thesaurus\":\"GBIF Dataset Type Vocabulary: http://rs.gbif.org/vocabulary/gbif/dataset_type_2015-07-10.xml\"}],\"downloads\":[{\"year\":2026,\"downloads\":29721,\"records\":65177983},{\"year\":2025,\"downloads\":35709,\"records\":607460128},{\"year\":2024,\"downloads\":37009,\"records\":796949475},{\"year\":2023,\"downloads\":11729,\"records\":604544435},{\"year\":2022,\"downloads\":12338,\"records\":431218279},{\"year\":2021,\"downloads\":37826,\"records\":487123852},{\"year\":2020,\"downloads\":3510,\"records\":155097455}],\"tags\":null,\"disable_extensions\":null}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

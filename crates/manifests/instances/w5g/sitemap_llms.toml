@@ -1,0 +1,67 @@
+protocol = "sitemap_llms"
+
+[[instance]]
+id = "owasp_cheatsheets"
+name = "OWASP Cheat Sheet Series (Sitemap)"
+summary = "Canonical application security cheat sheets index covering authentication, cryptography, XSS, and SSRF defenses."
+aliases = ["owasp cheatsheets", "cheatsheetseries.owasp.org"]
+base_url = "https://cheatsheetseries.owasp.org/sitemap.xml"
+scopes = ["security", "docs"]
+caps = ["search", "harvest"]
+tier = 1
+probe = { op = "search", params = { query = "authentication", limit = 5 }, min_results = 2 }
+
+[[instance]]
+id = "fastapi_docs"
+name = "FastAPI Documentation (Sitemap)"
+summary = "Official FastAPI web framework documentation URL index covering async routing, OpenAPI, and dependency injection."
+aliases = ["fastapi.tiangolo.com", "fastapi sitemap"]
+base_url = "https://fastapi.tiangolo.com/sitemap.xml"
+scopes = ["docs", "code"]
+caps = ["search", "harvest"]
+tier = 1
+probe = { op = "search", params = { query = "tutorial", limit = 5 }, min_results = 2 }
+
+[[instance]]
+id = "prometheus_docs"
+name = "Prometheus Documentation (Sitemap)"
+summary = "Official CNCF Prometheus monitoring, PromQL, alerting, and exporter documentation URL index."
+aliases = ["prometheus.io", "prometheus sitemap"]
+base_url = "https://prometheus.io/sitemap.xml"
+scopes = ["docs", "code"]
+caps = ["search", "harvest"]
+tier = 1
+probe = { op = "search", params = { query = "alerting", limit = 5 }, min_results = 2 }
+
+[[instance]]
+id = "mcp_llms"
+name = "Model Context Protocol Docs (llms.txt)"
+summary = "Official Model Context Protocol specification, architecture, and SDK Markdown navigation index."
+aliases = ["modelcontextprotocol.io", "mcp spec docs"]
+base_url = "https://modelcontextprotocol.io/llms.txt"
+scopes = ["docs", "code"]
+caps = ["search", "harvest"]
+tier = 1
+probe = { op = "search", params = { query = "tools", limit = 5 }, min_results = 2 }
+
+[[instance]]
+id = "cloudflare_llms"
+name = "Cloudflare Developer Docs (llms.txt)"
+summary = "Official Cloudflare Workers, DNS, TLS, Zero Trust, and R2 developer documentation Markdown index."
+aliases = ["developers.cloudflare.com", "cloudflare docs"]
+base_url = "https://developers.cloudflare.com/llms.txt"
+scopes = ["docs", "code"]
+caps = ["search", "harvest"]
+tier = 1
+probe = { op = "search", params = { query = "workers", limit = 5 }, min_results = 2 }
+
+[[instance]]
+id = "pydantic_llms"
+name = "Pydantic Documentation (llms.txt)"
+summary = "Official Pydantic v2 Python data validation, serialization, and JSON Schema documentation Markdown index."
+aliases = ["pydantic.dev", "pydantic docs"]
+base_url = "https://pydantic.dev/docs/validation/latest/llms.txt"
+scopes = ["docs", "code"]
+caps = ["search", "harvest"]
+tier = 1
+probe = { op = "search", params = { query = "validators", limit = 5 }, min_results = 2 }

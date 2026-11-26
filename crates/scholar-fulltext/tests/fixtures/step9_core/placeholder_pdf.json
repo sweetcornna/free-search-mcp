@@ -1,0 +1,192 @@
+{
+  "version": 1,
+  "source": "synthetic_step9_core_placeholder",
+  "op": "placeholder_fallback_pdf",
+  "recordedAt": "",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://pmc.ncbi.nlm.nih.gov/tools/idconv/api/v1/articles/?format=json&ids=10.1038%2Fnature12373&tool=free-search-mcp",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"status\":\"ok\",\"records\":[{\"requested-id\":\"10.1038/nature12373\",\"status\":\"error\"}]}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.openalex.org/works/https://doi.org/10.1038/nature12373?select=id%2Cids%2Cdoi%2Copen_access%2Cbest_oa_location%2Clocations%2Cprimary_location",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 404,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.semanticscholar.org/graph/v1/paper/DOI:10.1038/nature12373?fields=openAccessPdf%2CexternalIds%2Curl%2CisOpenAccess",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 404,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.core.ac.uk/v3/search/works?limit=3&q=doi%3A%2210.1038%2Fnature12373%22",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"totalHits\": 3, \"limit\": 3, \"offset\": 0, \"results\": [{\"acceptedDate\": \"\", \"arxivId\": null, \"authors\": [{\"name\": \"P. K. Lo\"}, {\"name\": \"P. C. Maurer\"}, {\"name\": \"N. Y. Yao\"}, {\"name\": \"M. Kubo\"}, {\"name\": \"G. Kucsko\"}, {\"name\": \"M. D. Lukin\"}, {\"name\": \"H. Park\"}, {\"name\": \"H. J. Noh\"}], \"citationCount\": 0, \"contributors\": [], \"outputs\": [\"https://api.core.ac.uk/v3/outputs/240489565\"], \"createdDate\": \"2023-05-18T02:00:00+01:00\", \"dataProviders\": [{\"id\": 4786, \"name\": \"Crossref\", \"url\": \"https://api.core.ac.uk/v3/data-providers/4786\", \"logo\": \"https://api.core.ac.uk/data-providers/4786/logo\"}], \"depositedDate\": \"2019-12-03T21:44:12+00:00\", \"abstract\": \"\", \"documentType\": null, \"doi\": \"10.1038/nature12373\", \"downloadUrl\": \"https://core.ac.uk/download/24001234.pdf\", \"fieldOfStudy\": null, \"fullText\": \"Not available for public API users.\", \"id\": 72404683, \"identifiers\": [{\"identifier\": \"240489565\", \"type\": \"core_id\"}, {\"identifier\": \"10.1038/nature12373\", \"type\": \"doi\"}], \"title\": \"Nanometre-scale thermometry in a living cell\", \"language\": null, \"magId\": null, \"oaiIds\": [], \"publishedDate\": \"\", \"publisher\": \"Springer Science and Business Media LLC\", \"pubmedId\": null, \"references\": [], \"sourceFulltextUrls\": [], \"updatedDate\": \"\", \"yearPublished\": 2013, \"journals\": [], \"links\": [{\"type\": \"display\", \"url\": \"https://core.ac.uk/works/72404683\"}]}, {\"acceptedDate\": \"\", \"arxivId\": null, \"authors\": [{\"name\": \"P C Maurer\"}, {\"name\": \"M Kubo\"}, {\"name\": \"P K Lo\"}, {\"name\": \"G Kucsko\"}, {\"name\": \"Noh, HJ\"}, {\"name\": \"Kucsko, G\"}, {\"name\": \"H J Noh\"}, {\"name\": \"H Park\"}, {\"name\": \"Yao, NY\"}, {\"name\": \"Maurer, PC\"}, {\"name\": \"Kubo, M\"}, {\"name\": \"Lo, PK\"}, {\"name\": \"Lukin, MD\"}, {\"name\": \"N Y Yao\"}, {\"name\": \"Park, H\"}, {\"name\": \"M D Lukin\"}], \"citationCount\": 0, \"contributors\": [\"The Pennsylvania State University CiteSeerX Archives\"], \"outputs\": [\"https://api.core.ac.uk/v3/outputs/357405897\", \"https://api.core.ac.uk/v3/outputs/573417054\"], \"createdDate\": \"2020-04-11T01:00:00+01:00\", \"dataProviders\": [{\"id\": 145, \"name\": \"CiteSeerX\", \"url\": \"https://api.core.ac.uk/v3/data-providers/145\", \"logo\": \"https://api.core.ac.uk/data-providers/145/logo\"}, {\"id\": 183, \"name\": \"eScholarship - University of California\", \"url\": \"https://api.core.ac.uk/v3/data-providers/183\", \"logo\": \"https://api.core.ac.uk/data-providers/183/logo\"}], \"depositedDate\": \"2020-04-11T01:00:00+01:00\", \"abstract\": \"Sensitive probing of temperature variations on nanometre scales is an outstanding challenge in many areas of modern science and technology  Many promising approaches to local temperature sensing 1 are being explored at present. These include scanning probe microscopy 1,9 , Raman spectroscopy 10 , and fluorescence-based measurements using nanoparticle\", \"documentType\": null, \"doi\": \"10.1038/nature12373\", \"downloadUrl\": \"https://core.ac.uk/download/573417054.pdf\", \"fieldOfStudy\": \"text\", \"fullText\": \"Not available for public API users.\", \"id\": 100925943, \"identifiers\": [{\"identifier\": \"357405897\", \"type\": \"core_id\"}, {\"identifier\": \"oai:citeseerx.psu:10.1.1.1056.6160\", \"type\": \"oai_id\"}, {\"identifier\": \"573417054\", \"type\": \"core_id\"}, {\"identifier\": \"10.1038/nature12373\", \"type\": \"doi\"}, {\"identifier\": \"oai:escholarship.org:ark:/13030/qt5035z3pq\", \"type\": \"oai_id\"}, {\"identifier\": \"oai:citeseerx.psu:10.1.1.1056.6160\", \"type\": \"oai\"}, {\"identifier\": \"oai:escholarship.org:ark:/13030/qt5035z3pq\", \"type\": \"oai\"}], \"title\": \"Nanometre-scale Thermometry in a Living Cell\", \"language\": {\"code\": \"en\", \"name\": \"English\"}, \"magId\": null, \"oaiIds\": [\"oai:citeseerx.psu:10.1.1.1056.6160\", \"oai:escholarship.org:ark:/13030/qt5035z3pq\"], \"publishedDate\": \"2013-01-01T00:00:00+00:00\", \"publisher\": \"eScholarship, University of California\", \"pubmedId\": null, \"references\": [], \"sourceFulltextUrls\": [\"https://core.ac.uk/download/573417054.pdf\"], \"updatedDate\": \"\", \"yearPublished\": 2013, \"journals\": [], \"links\": [{\"type\": \"download\", \"url\": \"https://core.ac.uk/download/573417054.pdf\"}, {\"type\": \"reader\", \"url\": \"https://core.ac.uk/reader/573417054\"}, {\"type\": \"thumbnail_m\", \"url\": \"https://core.ac.uk/image/573417054/large\"}, {\"type\": \"thumbnail_l\", \"url\": \"https://core.ac.uk/image/573417054/large\"}, {\"type\": \"display\", \"url\": \"https://core.ac.uk/works/100925943\"}]}, {\"acceptedDate\": \"\", \"arxivId\": null, \"authors\": [{\"name\": \"Kucsko, Georg\"}, {\"name\": \"Lo, P. K.\"}, {\"name\": \"Maurer, Peter Christian\"}, {\"name\": \"Park, Hongkun\"}, {\"name\": \"Yao, Norman\"}, {\"name\": \"Noh, Hyungi\"}, {\"name\": \"Kubo, Michael\"}, {\"name\": \"Lukin, Mikhail\"}, {\"name\": \"Noh, HJ\"}, {\"name\": \"G. Kucsko\"}, {\"name\": \"Kucsko, G\"}, {\"name\": \"Yao, NY\"}, {\"name\": \"M. D. Lukin\"}, {\"name\": \"H. Park\"}, {\"name\": \"Maurer, PC\"}, {\"name\": \"P. K. Lo\"}, {\"name\": \"Kubo, M\"}, {\"name\": \"P. C. Maurer\"}, {\"name\": \"N. Y. Yao\"}, {\"name\": \"M. Kubo\"}, {\"name\": \"Lo, PK\"}, {\"name\": \"Lukin, MD\"}, {\"name\": \"Park, H\"}, {\"name\": \"H. J. Noh\"}], \"citationCount\": 0, \"contributors\": [], \"outputs\": [\"https://api.core.ac.uk/v3/outputs/28948651\", \"https://api.core.ac.uk/v3/outputs/240489565\", \"https://api.core.ac.uk/v3/outputs/573417054\"], \"createdDate\": \"2015-02-06T12:24:08+00:00\", \"dataProviders\": [{\"id\": 660, \"name\": \"Harvard University - DASH\", \"url\": \"https://api.core.ac.uk/v3/data-providers/660\", \"logo\": \"https://api.core.ac.uk/data-providers/660/logo\"}, {\"id\": 4786, \"name\": \"Crossref\", \"url\": \"https://api.core.ac.uk/v3/data-providers/4786\", \"logo\": \"https://api.core.ac.uk/data-providers/4786/logo\"}, {\"id\": 183, \"name\": \"eScholarship - University of California\", \"url\": \"https://api.core.ac.uk/v3/data-providers/183\", \"logo\": \"https://api.core.ac.uk/data-providers/183/logo\"}], \"depositedDate\": \"2014-06-11T01:00:00+01:00\", \"abstract\": \"Sensitive probing of temperature variations on nanometre scales is an outstanding challenge in many areas of modern science and technology. In particular, a thermometer capable of subdegree temperature resolution over a large range of temperatures as well as integration within a living system could provide a powerful new tool in many areas of biological, physical and chemical research. Possibilities range from the temperature-induced control of gene expression and tumour metabolism to the cell-selective treatment of disease and the study of heat dissipation in integrated circuits. By combining local light-induced heat sources with sensitive nanoscale thermometry, it may also be possible to engineer biological processes at the subcellular level. Here we demonstrate a new approach to nanoscale thermometry that uses coherent manipulation of the electronic spin associated with nitrogen\\u2013vacancy colour centres in diamond. Our technique makes it possible to detect temperature variations as small as 1.8\\u2009mK (a sensitivity of \\\\(9\\u2009mK\\u2009Hz^{\\u22121/2}\\\\) in an ultrapure bulk diamond sample. Using nitrogen\\u2013vacancy centres in diamond nanocrystals (nanodiamonds), we directly measure the local thermal environment on length scales as short as 200\\u2009nanometres. Finally, by introducing both nanodiamonds and gold nanoparticles into a single human embryonic fibroblast, we demonstrate temperature-gradient control and mapping at the subcellular level, enabling unique potential applications in life sciences.PhysicsVersion of Recor\", \"documentType\": \"journal article\", \"doi\": \"10.1038/nature12373\", \"downloadUrl\": \"https://core.ac.uk/download/28948651.pdf\", \"fieldOfStudy\": null, \"fullText\": \"Not available for public API users.\", \"id\": 15077539, \"identifiers\": [{\"identifier\": \"28948651\", \"type\": \"core_id\"}, {\"identifier\": \"10.1038/nature12373\", \"type\": \"doi\"}, {\"identifier\": \"oai:dash.harvard.edu:1/12285462\", \"type\": \"oai_id\"}, {\"identifier\": \"oai:dash.harvard.edu:1/12285462\", \"type\": \"oai\"}, {\"identifier\": \"240489565\", \"type\": \"core_id\"}, {\"identifier\": \"2159974629\", \"type\": \"mag_id\"}, {\"identifier\": \"573417054\", \"type\": \"core_id\"}, {\"identifier\": \"oai:escholarship.org:ark:/13030/qt5035z3pq\", \"type\": \"oai_id\"}, {\"identifier\": \"oai:escholarship.org:ark:/13030/qt5035z3pq\", \"type\": \"oai\"}], \"title\": \"Nanometre-scale thermometry in a living cell\", \"language\": {\"code\": \"en\", \"name\": \"English\"}, \"magId\": null, \"oaiIds\": [\"oai:dash.harvard.edu:1/12285462\", \"oai:escholarship.org:ark:/13030/qt5035z3pq\"], \"publishedDate\": \"2013-08-01T01:00:00+01:00\", \"publisher\": \"Nature Publishing Group\", \"pubmedId\": null, \"references\": [], \"sourceFulltextUrls\": [\"https://core.ac.uk/download/28948651.pdf\"], \"updatedDate\": \"2026-11-03T09:31:57+00:00\", \"yearPublished\": 2013, \"journals\": [{\"title\": null, \"identifiers\": []}], \"links\": [{\"type\": \"download\", \"url\": \"https://core.ac.uk/download/28948651.pdf\"}, {\"type\": \"reader\", \"url\": \"https://core.ac.uk/reader/28948651\"}, {\"type\": \"thumbnail_m\", \"url\": \"https://core.ac.uk/image/28948651/large\"}, {\"type\": \"thumbnail_l\", \"url\": \"https://core.ac.uk/image/28948651/large\"}, {\"type\": \"display\", \"url\": \"https://core.ac.uk/works/15077539\"}]}], \"searchId\": \"5ab29c355c86d40b65101b6235fd9d27\"}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://doaj.org/api/search/articles/doi:10.1038%2Fnature12373",
+        "headersSubset": {
+          "accept": "application/json"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"total\":0,\"results\":[]}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.crossref.org/works/10.1038/nature12373",
+        "headersSubset": {
+          "accept": "application/json"
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": [
+          [
+            "content-type",
+            "text/plain"
+          ]
+        ],
+        "bodyText": "Resource not found.",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.datacite.org/dois/10.1038/nature12373",
+        "headersSubset": {
+          "accept": "application/vnd.api+json"
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": [
+          [
+            "content-type",
+            "application/vnd.api+json"
+          ]
+        ],
+        "bodyText": "{\"errors\":[{\"status\":\"404\"}]}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.archives-ouvertes.fr/search/?fl=halId_s%2Curi_s%2CfileMain_s%2CopenAccess_bool%2CdoiId_s&q=doiId_s%3A%2210.1038%2Fnature12373%22&rows=1&wt=json",
+        "headersSubset": {
+          "accept": "application/json"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"response\":{\"numFound\":0,\"docs\":[]}}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://zenodo.org/api/records?q=doi%3A%2210.1038%2Fnature12373%22&size=1",
+        "headersSubset": {
+          "accept": "application/json"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"hits\":{\"total\":0,\"hits\":[]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

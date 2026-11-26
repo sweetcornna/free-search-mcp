@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "source": "irdb_japan",
+  "op": "identify",
+  "recordedAt": "2026-11-25T12:13:54Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://irdb.nii.ac.jp/oai?verb=Identify",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/xml"
+          ],
+          [
+            "content-language",
+            "ja"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd\">\n  <responseDate>2026-11-25T12:13:54Z</responseDate>\n  <request verb=\"Identify\">http://irdb.nii.ac.jp/oai</request>\n  <Identify>\n    <repositoryName>Institutional Repositories DataBase (IRDB)</repositoryName>\n    <baseURL>https://irdb.nii.ac.jp/oai</baseURL>\n    <protocolVersion>2.0</protocolVersion>\n    <adminEmail>ir@nii.ac.jp</adminEmail>\n    <earliestDatestamp>2013-01-01T12:00:00Z</earliestDatestamp>\n    <deletedRecord>persistent</deletedRecord>\n    <granularity>YYYY-MM-DDThh:mm:ssZ</granularity>\n  </Identify>\n</OAI-PMH>\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

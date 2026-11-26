@@ -1,0 +1,117 @@
+id = "fred"
+name = "FRED (Federal Reserve Economic Data)"
+summary = "800,000+ US and international macroeconomic time series from the Federal Reserve Bank of St. Louis."
+aliases = ["stlouisfed", "federal reserve", "fred economic data"]
+home_url = "https://fred.stlouisfed.org"
+tier = 3
+scopes = ["finance", "dataset"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 21600 }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_FRED_API_KEY"
+in = "query"
+name = "api_key"
+route_requires_key = true
+
+[op.search]
+summary = "Search FRED economic time series by keyword."
+method = "GET"
+url = "https://api.stlouisfed.org/fred/series/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { file_type = "json" }
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "unemployment rate", limit = 3 }, min_results = 2, fixture = "fixtures/w5d1/fred/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "search_text", doc = "Keywords e.g. unemployment rate, CPI, GDP" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Max series" }
+offset = { type = "int", min = 0, to = "offset", doc = "Result offset" }
+order_by = { type = "string", enum = ["search_rank", "series_id", "title", "popularity", "last_updated"], to = "order_by", doc = "Sort order" }
+
+[op.search.map]
+items = "(.seriess // [])[]"
+total = ".count"
+error = ".error_message"
+record = '''{
+  id: .id,
+  title: .title,
+  frequency: .frequency,
+  units: .units,
+  seasonalAdjustment: .seasonal_adjustment,
+  observationStart: .observation_start,
+  observationEnd: .observation_end,
+  lastUpdated: (.last_updated | parse_date),
+  popularity: .popularity,
+  url: ("https://fred.stlouisfed.org/series/" + .id)
+}'''
+hit = '''{
+  title: ((.title // "") + " (" + (.id // "") + ")"),
+  url: ("https://fred.stlouisfed.org/series/" + (.id // "")),
+  snippet: (([(.frequency // empty), (.units // empty), (.seasonal_adjustment_short // empty), ((.observation_start // "") + ".." + (.observation_end // ""))] | join(" · "))),
+  date: (.last_updated | parse_date),
+  dateSource: (if (.last_updated | parse_date) then "api" else null end)
+}'''
+
+[op.series]
+summary = "Fetch metadata for a single FRED series by ID (e.g. GDP, CPIAUCSL, UNRATE, DFF)."
+method = "GET"
+url = "https://api.stlouisfed.org/fred/series"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { file_type = "json" }
+probe = { params = { series_id = "GDP" }, min_results = 1, fixture = "fixtures/w5d1/fred/series/default.json" }
+
+[op.series.params]
+series_id = { type = "string", required = true, to = "series_id", doc = "FRED series ID e.g. GDP, UNRATE, CPIAUCSL" }
+
+[op.series.map]
+items = "(.seriess // [])[]"
+error = ".error_message"
+record = '''{
+  id: .id,
+  title: .title,
+  frequency: .frequency,
+  units: .units,
+  seasonalAdjustment: .seasonal_adjustment,
+  observationStart: .observation_start,
+  observationEnd: .observation_end,
+  lastUpdated: (.last_updated | parse_date),
+  notes: (.notes // null),
+  url: ("https://fred.stlouisfed.org/series/" + .id)
+}'''
+
+[op.observations]
+summary = "Fetch time-series observation values for a FRED series ID."
+method = "GET"
+url = "https://api.stlouisfed.org/fred/series/observations"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { file_type = "json" }
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { series_id = "GDP", limit = 3, sort_order = "desc" }, min_results = 2, fixture = "fixtures/w5d1/fred/observations/default.json" }
+
+[op.observations.params]
+series_id = { type = "string", required = true, to = "series_id", doc = "FRED series ID e.g. GDP" }
+limit = { type = "int", default = 20, min = 1, max = 100, to = "limit", doc = "Max observations" }
+offset = { type = "int", min = 0, to = "offset", doc = "Observation offset" }
+sort_order = { type = "string", default = "desc", enum = ["asc", "desc"], to = "sort_order", doc = "Date ordering" }
+start = { type = "string", to = "observation_start", doc = "Start date YYYY-MM-DD" }
+end = { type = "string", to = "observation_end", doc = "End date YYYY-MM-DD" }
+
+[op.observations.map]
+items = "(.observations // [])[]"
+total = ".count"
+error = ".error_message"
+record = '''{
+  date: .date,
+  value: (if (.value == "." or .value == null) then null else ((.value | to_num) // .value) end),
+  rawValue: .value
+}'''

@@ -1,0 +1,108 @@
+id = "drops_dagstuhl"
+name = "Schloss Dagstuhl DROPS / LIPIcs"
+summary = "Diamond open-access theoretical computer science proceedings (LIPIcs, OASIcs, Dagstuhl Reports) via DROPS 2 OAI-PMH."
+aliases = ["drops", "lipics", "oasics", "dagstuhl"]
+home_url = "https://drops.dagstuhl.de"
+tier = 2
+scopes = ["academic", "academic.cs", "academic.openaccess"]
+caps = ["lookup", "harvest"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 12000, cache_ttl_s = 43200, host_bucket = "drops.dagstuhl.de" }
+
+[op.work]
+summary = "Fetch a DROPS / LIPIcs / OASIcs publication record by numeric DROPS OAI ID."
+method = "GET"
+url = "https://drops.dagstuhl.de/oai"
+headers = { Accept = "application/xml" }
+response = "xml"
+returns = "works"
+const_query = { metadataPrefix = "oai_dc", verb = "GetRecord" }
+probe = { params = { id = "28348" }, min_results = 1, fixture = "fixtures/w5i/drops_dagstuhl/work/default.json" }
+examples = ['source.call("drops_dagstuhl.work", {id: "28348"})']
+
+[op.work.params]
+id = { type = "string", required = true, to = "identifier", template = "oai:drops-oai.dagstuhl.de:{id}", doc = "Numeric DROPS OAI identifier (e.g. 28348)" }
+
+[op.work.map]
+items = '''."oai-pmh".getrecord.record | arr | .[] | select(.header."@status" != "deleted" and .metadata.dc != null)'''
+error = '''."oai-pmh".error | if . == null then null else (first_str // ."@code" // "OAI error") end'''
+work = '''(
+  .metadata.dc as $dc |
+  (($dc.title | first_str | collapse_ws) // "") as $title |
+  (($dc.description | first_str | collapse_ws) | if . == "" then null else . end) as $desc |
+  ($dc.date | first_str | parse_date) as $dt |
+  ($dc.rights | first_str) as $lic |
+  ($dc.relation | first_str | if . != null then (sub("^Is Part Of\\s+"; "") | collapse_ws) else null end) as $rel |
+  ([($dc.identifier | arr)[] | xml_text]) as $ids |
+  ([$ids[] | select(startswith("http"))][0] // "https://drops.dagstuhl.de") as $url |
+  ([$ids[] | doi_norm | select(. != null)][0] // null) as $doi |
+  {
+    title: $title,
+    authors: [($dc.creator | arr)[] | first_str | collapse_ws | select(. != null and . != "") | {name: .}],
+    year: (($dt // "")[0:4] | to_int),
+    publishedDate: $dt,
+    venue: ($rel // "Schloss Dagstuhl DROPS"),
+    workType: "proceedings-article",
+    ids: { doi: $doi },
+    abstractText: $desc,
+    oa: {
+      status: "diamond",
+      url: $url,
+      license: $lic
+    },
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["drops_dagstuhl"]
+  }
+)'''
+
+[op.identifiers]
+summary = "Harvest DROPS OAI-PMH identifiers incrementally by date range or setSpec."
+method = "GET"
+url = "https://drops.dagstuhl.de/oai"
+headers = { Accept = "application/xml" }
+response = "xml"
+returns = "records"
+const_query = { verb = "ListIdentifiers" }
+query_jaq = '''if ($p.cursor // "") != "" then [["resumptionToken", $p.cursor]] else ([["metadataPrefix", "oai_dc"]] + (if ($p.from // "") != "" then [["from", $p.from]] else [] end) + (if ($p.until // "") != "" then [["until", $p.until]] else [] end) + (if ($p.set // "") != "" then [["set", $p.set]] else [] end)) end'''
+paginate = { style = "token", param = "cursor", max_pages = 3 }
+probe = { params = { from = "2026-11-20", until = "2026-11-25" }, min_results = 2, fixture = "fixtures/w5i/drops_dagstuhl/identifiers/default.json" }
+examples = ['source.call("drops_dagstuhl.identifiers", {from: "2026-11-20", until: "2026-11-25"})']
+
+[op.identifiers.params]
+from = { type = "string", in = "none", doc = "Start date YYYY-MM-DD" }
+until = { type = "string", in = "none", doc = "End date YYYY-MM-DD" }
+set = { type = "string", in = "none", doc = "Optional OAI-PMH setSpec (e.g. ddc:004, open_access)" }
+cursor = { type = "string", in = "none", doc = "Exclusive OAI-PMH resumptionToken" }
+
+[op.identifiers.map]
+items = '''."oai-pmh".listidentifiers.header | arr | .[] | select(."@status" != "deleted")'''
+next_cursor = '''."oai-pmh".listidentifiers.resumptiontoken | first_str'''
+error = '''."oai-pmh".error | if . == null then null else (first_str // ."@code" // "OAI error") end'''
+record = '''{
+  identifier: (.identifier | xml_text),
+  dropsId: ((.identifier | xml_text) | sub("^oai:drops-oai\\.dagstuhl\\.de:"; "")),
+  datestamp: ((.datestamp | first_str | parse_date) // (.datestamp | xml_text)),
+  sets: [(.setspec | arr)[] | first_str | select(. != null)]
+}'''
+
+[op.sets]
+summary = "List OAI-PMH subject and series sets available on DROPS."
+method = "GET"
+url = "https://drops.dagstuhl.de/oai"
+headers = { Accept = "application/xml" }
+response = "xml"
+returns = "records"
+const_query = { verb = "ListSets" }
+probe = { params = {}, min_results = 5, fixture = "fixtures/w5i/drops_dagstuhl/sets/default.json" }
+examples = ['source.call("drops_dagstuhl.sets", {})']
+
+[op.sets.map]
+items = '''."oai-pmh".listsets.set | arr | .[]'''
+error = '''."oai-pmh".error | if . == null then null else (first_str // ."@code" // "OAI error") end'''
+record = '''{
+  setSpec: (.setspec | xml_text),
+  setName: ((.setname | xml_text | collapse_ws) // "")
+}'''

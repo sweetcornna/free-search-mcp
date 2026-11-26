@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "who_gho",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:12:19Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://ghoapi.azureedge.net/api/Indicator?%24filter=contains(tolower(IndicatorName),tolower(%27life%20expectancy%27))&%24top=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; odata.metadata=minimal; odata.streaming=true; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"@odata.context\":\"https://ghoapi.azureedge.net/api/$metadata#Indicator\",\"value\":[{\"IndicatorCode\":\"WHOSIS_000001\",\"IndicatorName\":\"Life expectancy at birth (years)\",\"Language\":\"EN\"},{\"IndicatorCode\":\"WHOSIS_000002\",\"IndicatorName\":\"Healthy life expectancy (HALE) at birth (years)\",\"Language\":\"EN\"},{\"IndicatorCode\":\"WHOSIS_000007\",\"IndicatorName\":\"Healthy life expectancy (HALE) at age 60 (years)\",\"Language\":\"EN\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

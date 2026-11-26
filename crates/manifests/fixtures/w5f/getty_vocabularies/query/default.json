@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "getty_vocabularies",
+  "op": "query",
+  "recordedAt": "2026-11-25T12:18:30Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://vocab.getty.edu/sparql?query=SELECT+%3Fs+%3Flabel+WHERE+%7B+%3Fs+%3Chttp%3A%2F%2Fwww.w3.org%2F2004%2F02%2Fskos%2Fcore%23inScheme%3E+%3Chttp%3A%2F%2Fvocab.getty.edu%2Faat%2F%3E+%3B+%3Chttp%3A%2F%2Fvocab.getty.edu%2Fontology%23prefLabelGVP%3E%2F%3Chttp%3A%2F%2Fwww.w3.org%2F2008%2F05%2Fskos-xl%23literalForm%3E+%3Flabel+%7D+LIMIT+3",
+        "headersSubset": {
+          "accept": "application/sparql-results+json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/sparql-results+json;charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\n  \"head\" : {\n    \"vars\" : [ \"s\", \"label\" ]\n  },\n  \"results\" : {\n    \"bindings\" : [ {\n      \"s\" : {\n        \"type\" : \"uri\",\n        \"value\" : \"http://vocab.getty.edu/aat/300189559\"\n      },\n      \"label\" : {\n        \"xml:lang\" : \"en\",\n        \"type\" : \"literal\",\n        \"value\" : \"male\"\n      }\n    }, {\n      \"s\" : {\n        \"type\" : \"uri\",\n        \"value\" : \"http://vocab.getty.edu/aat/300189557\"\n      },\n      \"label\" : {\n        \"xml:lang\" : \"en\",\n        \"type\" : \"literal\",\n        \"value\" : \"female\"\n      }\n    }, {\n      \"s\" : {\n        \"type\" : \"uri\",\n        \"value\" : \"http://vocab.getty.edu/aat/300457667\"\n      },\n      \"label\" : {\n        \"xml:lang\" : \"en\",\n        \"type\" : \"literal\",\n        \"value\" : \"cast iron architecture\"\n      }\n    } ]\n  }\n}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

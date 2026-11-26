@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "readthedocs_v3",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:56:47Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://app.readthedocs.org/api/v3/search/?q=project%3Adocs+installation&page_size=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"count\":8,\"next\":\"https://app.readthedocs.org/api/v3/search/?page=2&page_size=3&q=project%3Adocs+installation\",\"previous\":null,\"projects\":[{\"slug\":\"docs\",\"versions\":[{\"slug\":\"stable\"}]}],\"query\":\"installation\",\"results\":[{\"blocks\":[{\"content\":\"There are use cases that we don’t support, because it doesn’t further our goal of promoting documentation in the open source community. We do not support: Specific usage of Sphinx and Mkdocs, that don’t affect our hosting Custom installations of Read the Docs at your company Installation of Read the Docs on other platforms Any installation issues outside of the Read the Docs Python Code\",\"highlights\":{\"content\":[\"of Read the Docs at your company <span>Installation</span> of Read the Docs on other platforms Any <span>installation</span> issues\"],\"title\":[]},\"id\":\"unsupported\",\"title\":\"Unsupported\",\"type\":\"section\"}],\"domain\":\"https://docs.readthedocs.com\",\"highlights\":{\"title\":[]},\"path\":\"/platform/stable/open-source-philosophy.html\",\"project\":{\"alias\":\"platform\",\"slug\":\"docs\"},\"title\":\"Read the Docs open source philosophy\",\"type\":\"page\",\"version\":{\"slug\":\"stable\"}},{\"blocks\":[{\"content\":\"Install the project using pip install. The use of python setup.py install is deprecated. The path to the package, relative to the root of the project. Key: path Type: path Required: false The installation method. Key: method Options: pip, setuptools (deprecated), uv Default: pip Extra requirements section to install in addition to the package dependencies. Key: extra_requirements Type: list Default: [] For example, to run pip install .[docs]: version: 2 python: install: - method: pip path: . extra_requirements: - docs\",\"highlights\":{\"content\":[\"Key: path Type: path Required: false The <span>installation</span> method.\"],\"title\":[]},\"id\":\"packages\",\"title\":\"Packages\",\"type\":\"section\"},{\"content\":\"Read the Docs uses pip by default to install your Python packages. It also supports uv through python.install. If you are using a Conda environment to manage your build, you’ll need to use the Conda environment file instead. If you have a commercial plan you can also install private dependencies. List of installation methods of packages and requirements. You can have several of the following methods. Note When using method: uv, currently only one entry is allowed under python.install. Type: list Default: []\",\"highlights\":{\"content\":[\"List of <span>installation</span> methods of packages and requirements.\"],\"title\":[]},\"id\":\"python-install\",\"title\":\"python.install\",\"type\":\"section\"}],\"domain\":\"https://docs.readthedocs.com\",\"highlights\":{\"title\":[]},\"path\":\"/platform/stable/config-file/v2.html\",\"project\":{\"alias\":\"platform\",\"slug\":\"docs\"},\"title\":\"Configuration file reference\",\"type\":\"page\",\"version\":{\"slug\":\"stable\"}},{\"blocks\":[{\"content\":\"Only the latest version of Read the Docs will receive security updates. We don’t support security updates for custom installations of Read the Docs.\",\"highlights\":{\"content\":[\"We don’t support security updates for custom <span>installations</span> of Read the Docs.\"],\"title\":[]},\"id\":\"supported-versions\",\"title\":\"Supported versions\",\"type\":\"section\"},{\"content\":\"Version 3.2.0 resolved an issue where a specially crafted request could result in a DNS query to an arbitrary domain. This issue was found by Cyber Smart Defence who reported it as part of a security audit to a firm running a local installation of Read the Docs.\",\"highlights\":{\"content\":[\"found by Cyber Smart Defence who reported it as part of a security audit to a firm running a local <span>installation</span>\"],\"title\":[]},\"id\":\"version-3-2-0\",\"title\":\"Version 3.2.0\",\"type\":\"section\"}],\"domain\":\"https://docs.readthedocs.com\",\"highlights\":{\"title\":[]},\"path\":\"/platform/stable/security.html\",\"project\":{\"alias\":\"platform\",\"slug\":\"docs\"},\"title\":\"Security reports\",\"type\":\"page\",\"version\":{\"slug\":\"stable\"}}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

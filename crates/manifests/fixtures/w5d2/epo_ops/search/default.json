@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "epo_ops",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:14:49Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://ops.epo.org/3.2/rest-services/published-data/search/biblio?Range=1-3&q=ti%3Dsolar",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"ops:world-patent-data\": {\"ops:biblio-search\": {\"@total-result-count\": \"10000\", \"ops:range\": {\"@begin\": \"1\", \"@end\": \"3\"}, \"ops:search-result\": {\"exchange-documents\": [{\"exchange-document\": {\"@country\": \"EP\", \"@doc-number\": \"3912041\", \"@kind\": \"A1\", \"@family-id\": \"78512004\", \"bibliographic-data\": {\"publication-reference\": {\"document-id\": [{\"@document-id-type\": \"docdb\", \"country\": {\"$\": \"EP\"}, \"doc-number\": {\"$\": \"3912041\"}, \"kind\": {\"$\": \"A1\"}, \"date\": {\"$\": \"20211124\"}}]}, \"invention-title\": [{\"@lang\": \"en\", \"$\": \"Perovskite tandem solar cell with stabilized passivation layer\"}], \"parties\": {\"applicants\": {\"applicant\": [{\"@data-format\": \"epodoc\", \"applicant-name\": {\"name\": {\"$\": \"SOLAR RESEARCH GMBH [DE]\"}}}]}}}}}, {\"exchange-document\": {\"@country\": \"WO\", \"@doc-number\": \"2023104812\", \"@kind\": \"A1\", \"@family-id\": \"84201955\", \"bibliographic-data\": {\"publication-reference\": {\"document-id\": [{\"@document-id-type\": \"docdb\", \"country\": {\"$\": \"WO\"}, \"doc-number\": {\"$\": \"2023104812\"}, \"kind\": {\"$\": \"A1\"}, \"date\": {\"$\": \"20230615\"}}]}, \"invention-title\": [{\"@lang\": \"en\", \"$\": \"Bifacial solar photovoltaic module mounting tracker\"}], \"parties\": {\"applicants\": {\"applicant\": [{\"@data-format\": \"epodoc\", \"applicant-name\": {\"name\": {\"$\": \"HELIO TRACKING SA [ES]\"}}}]}}}}}, {\"exchange-document\": {\"@country\": \"EP\", \"@doc-number\": \"4105992\", \"@kind\": \"B1\", \"@family-id\": \"81104432\", \"bibliographic-data\": {\"publication-reference\": {\"document-id\": [{\"@document-id-type\": \"docdb\", \"country\": {\"$\": \"EP\"}, \"doc-number\": {\"$\": \"4105992\"}, \"kind\": {\"$\": \"B1\"}, \"date\": {\"$\": \"20240228\"}}]}, \"invention-title\": [{\"@lang\": \"en\", \"$\": \"Solar thermal storage receiver with molten salt loop\"}], \"parties\": {\"applicants\": {\"applicant\": [{\"@data-format\": \"epodoc\", \"applicant-name\": {\"name\": {\"$\": \"NORDIC THERMAL AB [SE]\"}}}]}}}}}]}}}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

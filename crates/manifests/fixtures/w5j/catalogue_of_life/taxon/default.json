@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "catalogue_of_life",
+  "op": "taxon",
+  "recordedAt": "2026-11-25T13:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.checklistbank.org/dataset/3LR/taxon/4CGXS",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ],
+          [
+            "cache-control",
+            "public, max-age=604800, s-maxage=604800"
+          ]
+        ],
+        "bodyText": "{\"created\":\"2026-11-06T18:43:51.331134\",\"createdBy\":101,\"modified\":\"2026-11-06T18:43:51.331134\",\"modifiedBy\":101,\"datasetKey\":317005,\"id\":\"4CGXS\",\"sectorKey\":1508,\"verbatimSourceKey\":373366261,\"name\":{\"created\":\"2026-11-06T18:43:51.331134\",\"createdBy\":101,\"modified\":\"2026-11-06T18:43:51.331134\",\"modifiedBy\":101,\"datasetKey\":317005,\"id\":\"TSvXhsqCVncHC0wSYksGl1\",\"sectorKey\":1508,\"verbatimSourceKey\":373366261,\"namesIndexId\":6526239,\"scientificName\":\"Panthera tigris\",\"authorship\":\"(Linnaeus, 1758)\",\"rank\":\"species\",\"genus\":\"Panthera\",\"specificEpithet\":\"tigris\",\"basionymAuthorship\":{\"authors\":[\"Linnaeus\"],\"year\":\"1758\"},\"code\":\"zoological\",\"nomStatus\":\"acceptable\",\"origin\":\"source\",\"type\":\"scientific\",\"link\":\"https://www.itis.gov/servlet/SingleRpt/SingleRpt?search_topic=TSN&search_value=183805\",\"remarks\":\"http://purl.obolibrary.org/obo/NOMEN_0000224\",\"merged\":false,\"parsed\":true,\"notho\":[]},\"status\":\"accepted\",\"origin\":\"source\",\"parentId\":\"6DBT\",\"link\":\"https://www.itis.gov/servlet/SingleRpt/SingleRpt?search_topic=TSN&search_value=183805\",\"referenceIds\":[\"6f1c1aa5-58e6-4988-aa10-830dbf425e0c\",\"16adedcd-6e1f-44b7-8989-30beaaad2548\",\"cae01153-6b8d-491e-87c9-6ce9ed9579c0\",\"0fcb5af6-2998-40ba-a0cc-116e2e7c305e\",\"e862129c-d23b-4f00-8158-f8f2bdde6926\"],\"scrutinizer\":\"W. Christopher Wozencraft,Alfred L. Gardner\",\"scrutinizerDate\":\"2024-06-25\",\"extinct\":false,\"label\":\"Panthera tigris (Linnaeus, 1758)\",\"labelHtml\":\"<i>Panthera tigris</i> (Linnaeus, 1758)\",\"merged\":false}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

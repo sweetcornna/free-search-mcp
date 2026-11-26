@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "crossref_funders",
+  "op": "search",
+  "recordedAt": "2026-11-25T11:55:10Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.crossref.org/funders?query=national+science&rows=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"status\":\"ok\",\"message-type\":\"funder-list\",\"message-version\":\"1.0.0\",\"message\":{\"items-per-page\":3,\"query\":{\"start-index\":0,\"search-terms\":\"national science\"},\"total-results\":384,\"items\":[{\"id\":\"501100001711\",\"location\":\"Switzerland\",\"name\":\"Schweizerischer Nationalfonds zur F\\u00f6rderung der Wissenschaftlichen Forschung\",\"alt-names\":[\"Fondo Nazionale Svizzero\",\"Fonds National Suisse\",\"Schweizerische Nationalfonds\",\"Fondo Nazionale Svizzero per la Ricerca Scientifica\",\"SNSF\",\"Fonds National Suisse de la Recherche Scientifique\",\"SNF\",\"Swiss National Science Foundation\",\"FNS\",\"The Swiss National Science Foundation (SNSF)\",\"Schweizerischer Nationalfonds\"],\"uri\":\"https:\\/\\/doi.org\\/10.13039\\/501100001711\",\"replaces\":[],\"replaced-by\":[],\"tokens\":[\"schweizerischer\",\"nationalfonds\",\"zur\",\"f\\u00f6rderung\",\"der\",\"wissenschaftlichen\",\"forschung\",\"fondo\",\"nazionale\",\"svizzero\",\"fonds\",\"national\",\"suisse\",\"schweizerische\",\"nationalfonds\",\"fondo\",\"nazionale\",\"svizzero\",\"per\",\"la\",\"ricerca\",\"scientifica\",\"snsf\",\"fonds\",\"national\",\"suisse\",\"de\",\"la\",\"recherche\",\"scientifique\",\"snf\",\"swiss\",\"national\",\"science\",\"foundation\",\"fns\",\"the\",\"swiss\",\"national\",\"science\",\"foundation\",\"snsf\",\"schweizerischer\",\"nationalfonds\"]},{\"id\":\"501100013368\",\"location\":\"Germany\",\"name\":\"Deutsche Akademie der Naturforscher Leopoldina - Nationale Akademie der Wissenschaften\",\"alt-names\":[\"German National Academy of Sciences\",\"German National Academy of Sciences Leopoldina\"],\"uri\":\"https:\\/\\/doi.org\\/10.13039\\/501100013368\",\"replaces\":[],\"replaced-by\":[],\"tokens\":[\"deutsche\",\"akademie\",\"der\",\"naturforscher\",\"leopoldina\",\"nationale\",\"akademie\",\"der\",\"wissenschaften\",\"german\",\"national\",\"academy\",\"of\",\"sciences\",\"german\",\"national\",\"academy\",\"of\",\"sciences\",\"leopoldina\"]},{\"id\":\"100000076\",\"location\":\"United States\",\"name\":\"Directorate for Biological Sciences\",\"alt-names\":[\"Biological Sciences\",\"Directorate for Biological Sciences at NSF\",\"Biological Sciences directorate at the National Science Foundation\",\"U.S. National Science Foundation Directorate for Biological Sciences\",\"The Directorate of Biological Sciences\",\"US NSF - BIO\",\"BIO\\/OAD\",\"The Directorate for Biological Sciences (BIO) at the National Science Foundation (NSF)\",\"US National Science Foundation Directorate of Biological Sciences\",\"BIO\",\"National Science Foundation's Directorate for Biological Sciences\",\"NSF\\/BIO\",\"NSF Directorate for Biological Sciences\",\"NSF Directorate of Biological Sciences\",\"NSF's Directorate for Biological Sciences\"],\"uri\":\"https:\\/\\/doi.org\\/10.13039\\/100000076\",\"replaces\":[],\"replaced-by\":[],\"tokens\":[\"directorate\",\"for\",\"biological\",\"sciences\",\"biological\",\"sciences\",\"directorate\",\"for\",\"biological\",\"sciences\",\"at\",\"nsf\",\"biological\",\"sciences\",\"directorate\",\"at\",\"the\",\"national\",\"science\",\"foundation\",\"us\",\"national\",\"science\",\"foundation\",\"directorate\",\"for\",\"biological\",\"sciences\",\"the\",\"directorate\",\"of\",\"biological\",\"sciences\",\"us\",\"nsf\",\"bio\",\"bio\\/oad\",\"the\",\"directorate\",\"for\",\"biological\",\"sciences\",\"bio\",\"at\",\"the\",\"national\",\"science\",\"foundation\",\"nsf\",\"us\",\"national\",\"science\",\"foundation\",\"directorate\",\"of\",\"biological\",\"sciences\",\"bio\",\"national\",\"science\",\"foundations\",\"directorate\",\"for\",\"biological\",\"sciences\",\"nsf\\/bio\",\"nsf\",\"directorate\",\"for\",\"biological\",\"sciences\",\"nsf\",\"directorate\",\"of\",\"biological\",\"sciences\",\"nsfs\",\"directorate\",\"for\",\"biological\",\"sciences\"]}]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

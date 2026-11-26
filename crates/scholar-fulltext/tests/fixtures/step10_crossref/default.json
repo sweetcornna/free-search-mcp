@@ -1,0 +1,194 @@
+{
+  "version": 1,
+  "source": "synthetic_step10b_crossref",
+  "op": "tdm_link",
+  "recordedAt": "",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://pmc.ncbi.nlm.nih.gov/tools/idconv/api/v1/articles/?format=json&ids=10.1038%2Fnature12373&tool=free-search-mcp",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"status\":\"ok\",\"records\":[{\"requested-id\":\"10.1038/nature12373\",\"status\":\"error\"}]}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.openalex.org/works/https://doi.org/10.1038/nature12373?select=id%2Cids%2Cdoi%2Copen_access%2Cbest_oa_location%2Clocations%2Cprimary_location",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 404,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.semanticscholar.org/graph/v1/paper/DOI:10.1038/nature12373?fields=openAccessPdf%2CexternalIds%2Curl%2CisOpenAccess",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 404,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.core.ac.uk/v3/search/works?limit=3&q=doi%3A%2210.1038%2Fnature12373%22",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"totalHits\":0,\"results\":[]}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://doaj.org/api/search/articles/doi:10.1038%2Fnature12373",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"total\":0,\"results\":[]}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.crossref.org/works/10.1038/nature12373",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"status\":\"ok\",\"message-type\":\"work\",\"message-version\":\"1.0.0\",\"message\":{\"indexed\":{\"date-parts\":[[2026,11,25]],\"date-time\":\"2026-11-25T10:12:42Z\",\"timestamp\":1795601562349,\"version\":\"4.11.0\"},\"reference-count\":30,\"publisher\":\"Springer Science and Business Media LLC\",\"issue\":\"7460\",\"license\":[{\"start\":{\"date-parts\":[[2013,7,31]],\"date-time\":\"2013-07-31T00:00:00Z\",\"timestamp\":1375228800000},\"content-version\":\"tdm\",\"delay-in-days\":0,\"URL\":\"http:\\/\\/www.springer.com\\/tdm\"}],\"content-domain\":{\"domain\":[],\"crossmark-restriction\":false},\"short-container-title\":[\"Nature\"],\"published-print\":{\"date-parts\":[[2013,8]]},\"DOI\":\"10.1038\\/nature12373\",\"type\":\"journal-article\",\"created\":{\"date-parts\":[[2013,7,30]],\"date-time\":\"2013-07-30T08:59:50Z\",\"timestamp\":1375174790000},\"page\":\"54-58\",\"source\":\"Crossref\",\"is-referenced-by-count\":1872,\"title\":[\"Nanometre-scale thermometry in a living cell\"],\"prefix\":\"10.1038\",\"volume\":\"500\",\"author\":[{\"given\":\"G.\",\"family\":\"Kucsko\",\"sequence\":\"first\",\"affiliation\":[],\"role\":[{\"vocabulary\":\"crossref\",\"role\":\"author\"}]},{\"given\":\"P. C.\",\"family\":\"Maurer\",\"sequence\":\"additional\",\"affiliation\":[],\"role\":[{\"vocabulary\":\"crossref\",\"role\":\"author\"}]},{\"given\":\"N. Y.\",\"family\":\"Yao\",\"sequence\":\"additional\",\"affiliation\":[],\"role\":[{\"vocabulary\":\"crossref\",\"role\":\"author\"}]},{\"given\":\"M.\",\"family\":\"Kubo\",\"sequence\":\"additional\",\"affiliation\":[],\"role\":[{\"vocabulary\":\"crossref\",\"role\":\"author\"}]},{\"given\":\"H. J.\",\"family\":\"Noh\",\"sequence\":\"additional\",\"affiliation\":[],\"role\":[{\"vocabulary\":\"crossref\",\"role\":\"author\"}]},{\"given\":\"P. K.\",\"family\":\"Lo\",\"sequence\":\"additional\",\"affiliation\":[],\"role\":[{\"vocabulary\":\"crossref\",\"role\":\"author\"}]},{\"given\":\"H.\",\"family\":\"Park\",\"sequence\":\"additional\",\"affiliation\":[],\"role\":[{\"vocabulary\":\"crossref\",\"role\":\"author\"}]},{\"given\":\"M. D.\",\"family\":\"Lukin\",\"sequence\":\"additional\",\"affiliation\":[],\"role\":[{\"vocabulary\":\"crossref\",\"role\":\"author\"}]}],\"member\":\"297\",\"published-online\":{\"date-parts\":[[2013,7,31]]},\"reference\":[{\"key\":\"BFnature12373_CR1\",\"doi-asserted-by\":\"publisher\",\"unstructured\":\"Yue, Y. & Wang, X. Nanoscale thermal probing. Nano Rev. \\n                    http:\\/\\/dx.doi.org\\/10.3402\\/nano.v3i0.11586\\n                    \\n                   (2012)\",\"DOI\":\"10.3402\\/nano.v3i0.11586\"},{\"key\":\"BFnature12373_CR2\",\"doi-asserted-by\":\"publisher\",\"first-page\":\"1134\",\"DOI\":\"10.1038\\/nature03509\",\"volume\":\"434\",\"author\":\"E Lucchetta\",\"year\":\"2005\",\"unstructured\":\"Lucchetta, E., Lee, J., Fu, L., Patel, N. & Ismagilov, R. Dynamics of Drosophila embryonic patterning network perturbed in space and time using microfluidics. Nature 434, 1134\\u20131138 (2005)\",\"journal-title\":\"Nature\"},{\"key\":\"BFnature12373_CR3\",\"doi-asserted-by\":\"publisher\",\"first-page\":\"136\",\"DOI\":\"10.1016\\/j.cell.2009.11.006\",\"volume\":\"140\",\"author\":\"SV Kumar\",\"year\":\"2010\",\"unstructured\":\"Kumar, S. V. & Wigge, P. A. H2A.Z-containing nucleosomes mediate the thermosensory response in Arabidopsis. Cell 140, 136\\u2013147 (2010)\",\"journal-title\":\"Cell\"},{\"key\":\"BFnature12373_CR4\",\"doi-asserted-by\":\"publisher\",\"first-page\":\"101\",\"DOI\":\"10.1038\\/nature11804\",\"volume\":\"493\",\"author\":\"VM Lauschke\",\"year\":\"2012\",\"unstructured\":\"Lauschke, V. M., Tsiairis, C. D., Fran\\u00e7ois, P. & Aulehla, A. Scaling of embryonic patterning based on phase-gradient encoding. Nature 493, 101\\u2013105 (2012)\",\"journal-title\":\"Nature\"},{\"key\":\"BFnature12373_CR5\",\"doi-asserted-by\":\"publisher\",\"first-page\":\"79\",\"DOI\":\"10.1038\\/nmeth.1278\",\"volume\":\"6\",\"author\":\"Y Kamei\",\"year\":\"2009\",\"unstructured\":\"Kamei, Y. et al. Infrared laser-mediated gene induction in targeted single cells in vivo. Nature Methods 6, 79\\u201381 (2009)\",\"journal-title\":\"Nature Methods\"},{\"key\":\"BFnature12373_CR6\",\"doi-asserted-by\":\"publisher\",\"first-page\":\"665\",\"DOI\":\"10.1007\\/s10549-012-2393-x\",\"volume\":\"137\",\"author\":\"T Vreugdenburg\",\"year\":\"2013\",\"unstructured\":\"Vreugdenburg, T., Willis, C., Mundy, L. & Hiller, J. A systematic review of elastography, electrical impedance scanning, and digital infrared thermography for breast cancer screening and diagnosis. Breast Cancer Res. Treat. 137, 665\\u2013676 (2013)\",\"journal-title\":\"Breast Cancer Res. Treat.\"},{\"key\":\"BFnature12373_CR7\",\"doi-asserted-by\":\"publisher\",\"first-page\":\"39\",\"DOI\":\"10.1038\\/nrc3180\",\"volume\":\"12\",\"author\":\"A Schroeder\",\"year\":\"2011\",\"unstructured\":\"Schroeder, A. et al. Treating metastatic cancer with nanotechnology. Nature Rev. Cancer 12, 39\\u201350 (2011)\",\"journal-title\":\"Nature Rev. Cancer\"},{\"key\":\"BFnature12373_CR8\",\"doi-asserted-by\":\"publisher\",\"first-page\":\"171\",\"DOI\":\"10.1016\\/j.canlet.2004.02.004\",\"volume\":\"209\",\"author\":\"DP O\\u2019Neal\",\"year\":\"2004\",\"unstructured\":\"O\\u2019Neal, D. P., Hirsch, L. R., Halas, N. J., Payne, J. D. & West, J. L. Photo-thermal tumor ablation in mice using near infrared-absorbing nanoparticles. Cancer Lett. 209, 171\\u2013176 (2004)\",\"journal-title\":\"Cancer Lett.\"},{\"key\":\"BFnature12373_CR9\",\"doi-asserted-by\":\"publisher\",\"first-page\":\"505\",\"DOI\":\"10.1146\\/annurev.matsci.29.1.505\",\"volume\":\"29\",\"author\":\"A Majumdar\",\"year\":\"1999\",\"unstructured\":\"Majumdar, A. Scanning thermal microscopy. Annu. Rev. Mater. Sci. 29, 505\\u2013585 (1999)\",\"journal-title\":\"Annu. Rev. Mater. Sci.\"},{\"key\":\"BFnature12373_CR10\",\"doi-asserted-by\":\"publisher\",\"first-page\":\"526\",\"DOI\":\"10.1088\\/0960-1317\\/16\\/3\\/007\",\"volume\":\"16\",\"author\":\"SH Kim\",\"year\":\"2006\",\"unstructured\":\"Kim, S. H. et al. Micro-Raman thermometry for measuring the temperature distribution inside the microchannel of a polymerase chain reaction chip. J. Micromech. Microeng. 16, 526 (2006)\",\"journal-title\":\"J. Micromech. Microeng.\"},{\"key\":\"BFnature12373_CR11\",\"doi-asserted-by\":\"publisher\",\"first-page\":\"5067\",\"DOI\":\"10.1021\\/nn201142f\",\"volume\":\"5\",\"author\":\"J Yang\",\"year\":\"2011\",\"unstructured\":\"Yang, J., Yang, H. & Lin, L. Quantum dot nano thermometers reveal heterogeneous local thermogenesis in living cells. ACS Nano 5, 5067\\u20135071 (2011)\",\"journal-title\":\"ACS Nano\"},{\"key\":\"BFnature12373_CR12\",\"doi-asserted-by\":\"publisher\",\"first-page\":\"3254\",\"DOI\":\"10.1021\\/nn100244a\",\"volume\":\"4\",\"author\":\"F Vetrone\",\"year\":\"2010\",\"unstructured\":\"Vetrone, F. et al. Temperature sensing using fluorescent nanothermometers. ACS Nano 4, 3254\\u20133258 (2010)\",\"journal-title\":\"ACS Nano\"},{\"key\":\"BFnature12373_CR13\",\"doi-asserted-by\":\"publisher\",\"first-page\":\"705\",\"DOI\":\"10.1038\\/ncomms1714\",\"volume\":\"3\",\"author\":\"K Okabe\",\"year\":\"2012\",\"unstructured\":\"Okabe, K. et al. Intracellular temperature mapping with a fluorescent polymeric thermometer and fluorescence lifetime imaging microscopy. Nature Commun. 3, 705 (2012)\",\"journal-title\":\"Nature Commun.\"},{\"key\":\"BFnature12373_CR14\",\"doi-asserted-by\":\"publisher\",\"first-page\":\"2107\",\"DOI\":\"10.1021\\/nl300389y\",\"volume\":\"12\",\"author\":\"J Donner\",\"year\":\"2012\",\"unstructured\":\"Donner, J., Thompson, S., Kreuzer, M., Baffou, G. & Quidant, R. Mapping intracellular temperature using green fluorescent protein. Nano Lett. 12, 2107\\u20132111 (2012)\",\"journal-title\":\"Nano Lett.\"},{\"key\":\"BFnature12373_CR15\",\"doi-asserted-by\":\"publisher\",\"first-page\":\"1870\",\"DOI\":\"10.1073\\/pnas.0909350107\",\"volume\":\"107\",\"author\":\"AK Shalek\",\"year\":\"2010\",\"unstructured\":\"Shalek, A. K. et al. Vertical silicon nanowires as a universal platform for delivering biomolecules into living cells. Proc. Natl Acad. Sci. USA 107, 1870\\u20131875 (2010)\",\"journal-title\":\"Proc. Natl Acad. Sci. USA\"},{\"key\":\"BFnature12373_CR16\",\"doi-asserted-by\":\"publisher\",\"first-page\":\"070801\",\"DOI\":\"10.1103\\/PhysRevLett.104.070801\",\"volume\":\"104\",\"author\":\"V Acosta\",\"year\":\"2010\",\"unstructured\":\"Acosta, V. et al. Temperature dependence of the nitrogen-vacancy magnetic resonance in diamond. Phys. Rev. Lett. 104, 070801 (2010)\",\"journal-title\":\"Phys. Rev. Lett.\"},{\"key\":\"BFnature12373_CR17\",\"first-page\":\"031001\",\"volume\":\"2\",\"author\":\"D Toyli\",\"year\":\"2012\",\"unstructured\":\"Toyli, D. et al. Measurement and control of single nitrogen-vacancy center spins above 600 K. Phys. Rev. X 2, 031001 (2012)\",\"journal-title\":\"Phys. Rev. X\"},{\"key\":\"BFnature12373_CR18\",\"doi-asserted-by\":\"publisher\",\"first-page\":\"161903\",\"DOI\":\"10.1063\\/1.3652910\",\"volume\":\"99\",\"author\":\"X-D Chen\",\"year\":\"2011\",\"unstructured\":\"Chen, X.-D. et al. Temperature dependent energy level shifts of nitrogen-vacancy centers in diamond. Appl. Phys. Lett. 99, 161903\\u2013161903 (2011)\",\"journal-title\":\"Appl. Phys. Lett.\"},{\"key\":\"BFnature12373_CR19\",\"doi-asserted-by\":\"publisher\",\"first-page\":\"810\",\"DOI\":\"10.1038\\/nphys1075\",\"volume\":\"4\",\"author\":\"J Taylor\",\"year\":\"2008\",\"unstructured\":\"Taylor, J. et al. High-sensitivity diamond magnetometer with nanoscale resolution. Nature Phys. 4, 810\\u2013816 (2008)\",\"journal-title\":\"Nature Phys.\"},{\"key\":\"BFnature12373_CR20\",\"doi-asserted-by\":\"publisher\",\"first-page\":\"4818\",\"DOI\":\"10.1021\\/nl2026585\",\"volume\":\"11\",\"author\":\"C Jin\",\"year\":\"2011\",\"unstructured\":\"Jin, C., Li, Z., Williams, R., Lee, K. & Park, I. Localized temperature and chemical reaction control in nanoscale space by nanowire array. Nano Lett. 11, 4818\\u20134825 (2011)\",\"journal-title\":\"Nano Lett.\"},{\"key\":\"BFnature12373_CR21\",\"doi-asserted-by\":\"publisher\",\"first-page\":\"644\",\"DOI\":\"10.1038\\/nature07279\",\"volume\":\"455\",\"author\":\"J Maze\",\"year\":\"2008\",\"unstructured\":\"Maze, J. et al. Nanoscale magnetic sensing with an individual electronic spin in diamond. Nature 455, 644\\u2013647 (2008)\",\"journal-title\":\"Nature\"},{\"key\":\"BFnature12373_CR22\",\"doi-asserted-by\":\"publisher\",\"first-page\":\"648\",\"DOI\":\"10.1038\\/nature07278\",\"volume\":\"455\",\"author\":\"G Balasubramanian\",\"year\":\"2008\",\"unstructured\":\"Balasubramanian, G. et al. Nanoscale imaging magnetometry with diamond spins under ambient conditions. Nature 455, 648\\u2013651 (2008)\",\"journal-title\":\"Nature\"},{\"key\":\"BFnature12373_CR23\",\"doi-asserted-by\":\"publisher\",\"first-page\":\"032118\",\"DOI\":\"10.1103\\/PhysRevA.87.032118\",\"volume\":\"87\",\"author\":\"J Hodges\",\"year\":\"2013\",\"unstructured\":\"Hodges, J. et al. Time keeping with electron spin states in diamond. Phys. Rev. A 87, 032118 (2013)\",\"journal-title\":\"Phys. Rev. A\"},{\"key\":\"BFnature12373_CR24\",\"doi-asserted-by\":\"publisher\",\"first-page\":\"383\",\"DOI\":\"10.1038\\/nmat2420\",\"volume\":\"8\",\"author\":\"G Balasubramanian\",\"year\":\"2009\",\"unstructured\":\"Balasubramanian, G. et al. Ultralong spin coherence time in isotopically engineered diamond. Nature Mater. 8, 383\\u2013387 (2009)\",\"journal-title\":\"Nature Mater.\"},{\"key\":\"BFnature12373_CR25\",\"doi-asserted-by\":\"publisher\",\"first-page\":\"459\",\"DOI\":\"10.1038\\/nphys1969\",\"volume\":\"7\",\"author\":\"F Dolde\",\"year\":\"2011\",\"unstructured\":\"Dolde, F. et al. Electric-field sensing using single diamond spins. Nature Phys. 7, 459\\u2013463 (2011)\",\"journal-title\":\"Nature Phys.\"},{\"key\":\"BFnature12373_CR26\",\"doi-asserted-by\":\"publisher\",\"first-page\":\"912\",\"DOI\":\"10.1038\\/nphys1774\",\"volume\":\"6\",\"author\":\"P Maurer\",\"year\":\"2010\",\"unstructured\":\"Maurer, P. et al. Far-field optical imaging and manipulation of individual spins with nanoscale resolution. Nature Phys. 6, 912\\u2013918 (2010)\",\"journal-title\":\"Nature Phys.\"},{\"key\":\"BFnature12373_CR27\",\"doi-asserted-by\":\"publisher\",\"first-page\":\"e49021\",\"DOI\":\"10.1371\\/journal.pone.0049021\",\"volume\":\"7\",\"author\":\"G Xu\",\"year\":\"2012\",\"unstructured\":\"Xu, G. et al. Identification of proteins sensitive to thermal stress in human neuroblastoma and glioma cell lines. PLoS ONE 7, e49021 (2012)\",\"journal-title\":\"PLoS ONE\"},{\"key\":\"BFnature12373_CR28\",\"doi-asserted-by\":\"publisher\",\"first-page\":\"932\",\"DOI\":\"10.1038\\/nmeth818\",\"volume\":\"2\",\"author\":\"F Helmchen\",\"year\":\"2005\",\"unstructured\":\"Helmchen, F. & Denk, W. Deep tissue two-photon microscopy. Nature Methods 2, 932\\u2013940 (2005)\",\"journal-title\":\"Nature Methods\"},{\"key\":\"BFnature12373_CR29\",\"doi-asserted-by\":\"publisher\",\"first-page\":\"9379\",\"DOI\":\"10.1021\\/jp073938o\",\"volume\":\"111\",\"author\":\"T-L Wee\",\"year\":\"2007\",\"unstructured\":\"Wee, T.-L. et al. Two-photon excited fluorescence of nitrogen-vacancy centers in proton-irradiated type Ib diamond. J. Phys. Chem. A 111, 9379\\u20139386 (2007)\",\"journal-title\":\"J. Phys. Chem. A\"},{\"key\":\"BFnature12373_CR30\",\"doi-asserted-by\":\"publisher\",\"first-page\":\"4372\",\"DOI\":\"10.1158\\/0008-5472.CAN-11-3536\",\"volume\":\"72\",\"author\":\"M Tsoli\",\"year\":\"2012\",\"unstructured\":\"Tsoli, M. et al. Activation of thermogenesis in brown adipose tissue and dysregulated lipid metabolism associated with cancer cachexia in mice. Cancer Res. 72, 4372\\u20134382 (2012)\",\"journal-title\":\"Cancer Res.\"}],\"container-title\":[\"Nature\"],\"original-title\":[],\"language\":\"en\",\"link\":[{\"URL\":\"http:\\/\\/www.nature.com\\/articles\\/nature12373.pdf\",\"content-type\":\"application\\/pdf\",\"content-version\":\"vor\",\"intended-application\":\"text-mining\"},{\"URL\":\"http:\\/\\/www.nature.com\\/articles\\/nature12373\",\"content-type\":\"text\\/html\",\"content-version\":\"vor\",\"intended-application\":\"text-mining\"},{\"URL\":\"http:\\/\\/www.nature.com\\/articles\\/nature12373.pdf\",\"content-type\":\"application\\/pdf\",\"content-version\":\"vor\",\"intended-application\":\"similarity-checking\"}],\"deposited\":{\"date-parts\":[[2023,5,18]],\"date-time\":\"2023-05-18T14:13:47Z\",\"timestamp\":1684419227000},\"score\":1,\"resource\":{\"primary\":{\"URL\":\"https:\\/\\/www.nature.com\\/articles\\/nature12373\"}},\"subtitle\":[],\"short-title\":[],\"issued\":{\"date-parts\":[[2013,7,31]]},\"references-count\":30,\"journal-issue\":{\"issue\":\"7460\",\"published-print\":{\"date-parts\":[[2013,8]]}},\"alternative-id\":[\"BFnature12373\"],\"URL\":\"https:\\/\\/doi.org\\/10.1038\\/nature12373\",\"relation\":{},\"ISSN\":[\"0028-0836\",\"1476-4687\"],\"issn-type\":[{\"value\":\"0028-0836\",\"type\":\"print\"},{\"value\":\"1476-4687\",\"type\":\"electronic\"}],\"subject\":[],\"published\":{\"date-parts\":[[2013,7,31]]}}}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.datacite.org/dois/10.1038/nature12373",
+        "headersSubset": {
+          "accept": "application/vnd.api+json"
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": [
+          [
+            "content-type",
+            "application/vnd.api+json"
+          ]
+        ],
+        "bodyText": "{\"errors\":[{\"status\":\"404\"}]}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.archives-ouvertes.fr/search/?fl=halId_s%2Curi_s%2CfileMain_s%2CopenAccess_bool%2CdoiId_s&q=doiId_s%3A%2210.1038%2Fnature12373%22&rows=1&wt=json",
+        "headersSubset": {
+          "accept": "application/json"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"response\":{\"numFound\":0,\"docs\":[]}}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://zenodo.org/api/records?q=doi%3A%2210.1038%2Fnature12373%22&size=1",
+        "headersSubset": {
+          "accept": "application/json"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"hits\":{\"total\":0,\"hits\":[]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

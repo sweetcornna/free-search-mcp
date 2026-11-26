@@ -1,0 +1,132 @@
+{
+  "version": 1,
+  "source": "synthetic_step11_wayback",
+  "op": "cdx_fallback",
+  "recordedAt": "",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://arxiv.org/html/1706.03762",
+        "headersSubset": {
+          "accept": "text/html"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 404,
+        "headers": [
+          [
+            "content-type",
+            "text/html"
+          ]
+        ],
+        "bodyText": "Not Found",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://ar5iv.labs.arxiv.org/html/1706.03762",
+        "headersSubset": {
+          "accept": "text/html"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 404,
+        "headers": [
+          [
+            "content-type",
+            "text/html"
+          ]
+        ],
+        "bodyText": "Not Found",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.semanticscholar.org/graph/v1/paper/ARXIV:1706.03762?fields=openAccessPdf%2CexternalIds%2Curl%2CisOpenAccess",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 404,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.core.ac.uk/v3/search/works?limit=3&q=arxivId%3A%221706.03762%22",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"totalHits\":0,\"results\":[]}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "HEAD",
+        "url": "https://arxiv.org/abs/1706.03762",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/html"
+          ]
+        ],
+        "bodyText": "",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://web.archive.org/cdx/search/cdx?filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode&limit=-1&output=json&url=https%3A%2F%2Farxiv.org%2Fpdf%2F1706.03762",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "[[\"timestamp\",\"original\",\"mimetype\",\"statuscode\"],\n[\"20261118024931\",\"https://arxiv.org/pdf/1706.03762\",\"application/pdf\",\"200\"]]\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

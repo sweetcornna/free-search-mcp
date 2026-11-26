@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "source": "opentargets_graphql",
+  "op": "target",
+  "recordedAt": "2026-11-25T13:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://api.platform.opentargets.org/api/v4/graphql",
+        "headersSubset": {
+          "accept": "application/json",
+          "content-type": "application/json"
+        },
+        "bodySha256": "69e48485c67203e38bf77f78c79006d4d20f8c89f94e01ece1679b55a9b190e0"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"data\":{\"target\":{\"id\":\"ENSG00000012048\",\"approvedSymbol\":\"BRCA1\",\"approvedName\":\"BRCA1 DNA repair associated\",\"biotype\":\"protein_coding\",\"functionDescriptions\":[\"E3 ubiquitin-protein ligase that specifically mediates the formation of 'Lys-6'-linked polyubiquitin chains and plays a central role in DNA repair by facilitating cellular responses to DNA damage (PubMed:10500182, PubMed:12887909, PubMed:12890688, PubMed:14976165, PubMed:16818604, PubMed:17525340, PubMed:19261748). It is unclear whether it also mediates the formation of other types of polyubiquitin chains (PubMed:12890688). The BRCA1-BARD1 heterodimer coordinates a diverse range of cellular pathways such as DNA damage repair, ubiquitination and transcriptional regulation to maintain genomic stability (PubMed:12890688, PubMed:14976165, PubMed:20351172). Regulates centrosomal microtubule nucleation (PubMed:18056443). Required for appropriate cell cycle arrests after ionizing irradiation in both the S-phase and the G2 phase of the cell cycle (PubMed:10724175, PubMed:11836499, PubMed:12183412, PubMed:19261748). Required for FANCD2 targeting to sites of DNA damage (PubMed:12887909). Inhibits lipid synthesis by binding to inactive phosphorylated ACACA and preventing its dephosphorylation (PubMed:16326698). Contributes to homologous recombination repair (HRR) via its direct interaction with PALB2, fine-tunes recombinational repair partly through its modulatory role in the PALB2-dependent loading of BRCA2-RAD51 repair machinery at DNA breaks (PubMed:19369211). Component of the BRCA1-RBBP8 complex which regulates CHEK1 activation and controls cell cycle G2/M checkpoints on DNA damage via BRCA1-mediated ubiquitination of RBBP8 (PubMed:16818604). Acts as a transcriptional activator (PubMed:20160719). {ECO:0000269|PubMed:10500182, ECO:0000269|PubMed:10724175, ECO:0000269|PubMed:11836499, ECO:0000269|PubMed:12183412, ECO:0000269|PubMed:12887909, ECO:0000269|PubMed:12890688, ECO:0000269|PubMed:14976165, ECO:0000269|PubMed:16326698, ECO:0000269|PubMed:16818604, ECO:0000269|PubMed:17525340, ECO:0000269|PubMed:18056443, ECO:0000269|PubMed:19261748, ECO:0000269|PubMed:19369211, ECO:0000269|PubMed:20160719, ECO:0000269|PubMed:20351172}.\"],\"associatedDiseases\":{\"count\":1324,\"rows\":[{\"score\":0.8436508158150241,\"disease\":{\"id\":\"MONDO_0007254\",\"name\":\"breast cancer\"}},{\"score\":0.8278837838347972,\"disease\":{\"id\":\"MONDO_0003582\",\"name\":\"hereditary breast ovarian cancer syndrome\"}},{\"score\":0.8173531116391729,\"disease\":{\"id\":\"MONDO_0054748\",\"name\":\"Fanconi anemia, complementation group S\"}}]}}}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

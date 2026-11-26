@@ -1,0 +1,117 @@
+id = "common_crawl"
+name = "Common Crawl Web CDX Index"
+summary = "Monthly web-scale archive URL and domain CDX index returning WARC filenames and byte ranges for historical webpage recovery."
+aliases = ["commoncrawl", "cc cdx", "warc index"]
+home_url = "https://commoncrawl.org"
+tier = 2
+scopes = ["web"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 1.0, burst = 2, concurrency = 2, timeout_ms = 15000, cache_ttl_s = 43200 }
+
+[op.search]
+summary = "Query the latest Common Crawl monthly CDX index for archived URL captures and WARC byte offsets."
+method = "GET"
+url = "https://index.commoncrawl.org/{pre}-index"
+headers = { Accept = "application/json" }
+response = "ndjson"
+returns = "records"
+const_query = { output = "json" }
+probe = { params = { query = "example.com", limit = 3 }, min_results = 2, fixture = "fixtures/w5l/common_crawl/search/default.json" }
+examples = [
+  'source.call("common_crawl.search", { query: "example.com", limit: 5 })',
+]
+
+[[op.search.pre]]
+method = "GET"
+url = "https://index.commoncrawl.org/collinfo.json"
+headers = { Accept = "application/json" }
+response = "json"
+bind = ".[0].id"
+on_empty = "empty"
+
+[op.search.params]
+query = { type = "string", required = true, to = "url", doc = "Target URL, host, or wildcard pattern (e.g. example.com or *.example.com/*)" }
+limit = { type = "int", default = 10, min = 1, max = 100, to = "limit", doc = "Maximum CDX capture rows" }
+match_type = { type = "string", enum = ["exact", "prefix", "host", "domain"], to = "matchType", doc = "CDX URL match mode" }
+
+[op.search.map]
+items = ".[]"
+record = '''{
+  url: (.url // ""),
+  urlkey: (.urlkey // ""),
+  timestamp: (.timestamp // ""),
+  status: (.status // null),
+  mime: (.mime // null),
+  mimeDetected: (.["mime-detected"] // null),
+  digest: (.digest // null),
+  languages: (.languages // null),
+  encoding: (.encoding // null),
+  filename: (.filename // null),
+  offset: (.offset | to_int),
+  length: (.length | to_int),
+  warcUrl: (if .filename then ("https://data.commoncrawl.org/" + .filename) else null end)
+}'''
+hit = '''(
+  (if (.timestamp | type) == "string" and (.timestamp | length) >= 8 then (.timestamp[0:8] | parse_date) else null end) as $dt |
+  {
+    title: ((.url // .urlkey // "") + (if $dt then " [" + $dt + "]" else "" end)),
+    url: (.url // ""),
+    snippet: (
+      [
+        (if .status then ("HTTP " + (.status | tostring)) else null end),
+        (.mime // null),
+        (if .filename then ("WARC " + .filename + " @" + (.offset // "" | tostring) + "+" + (.length // "" | tostring)) else null end)
+      ] | map(select(. != null)) | join(" · ")
+    )[0:280],
+    date: $dt,
+    dateSource: "api"
+  }
+)'''
+
+[op.crawl_cdx]
+summary = "Query a specific historical Common Crawl index (e.g. CC-MAIN-2026-43) by URL or domain."
+method = "GET"
+url = "https://index.commoncrawl.org/{crawl}-index"
+headers = { Accept = "application/json" }
+response = "ndjson"
+returns = "records"
+const_query = { output = "json" }
+probe = { params = { crawl = "CC-MAIN-2026-43", url = "example.com", limit = 3 }, min_results = 2, fixture = "fixtures/w5l/common_crawl/crawl_cdx/default.json" }
+examples = [
+  'source.call("common_crawl.crawl_cdx", { crawl: "CC-MAIN-2026-43", url: "example.com", limit: 5 })',
+]
+
+[op.crawl_cdx.params]
+crawl = { type = "string", required = true, in = "path", doc = "Common Crawl collection ID (e.g. CC-MAIN-2026-43)" }
+url = { type = "string", required = true, to = "url", doc = "Target URL, host, or wildcard pattern" }
+limit = { type = "int", default = 10, min = 1, max = 100, to = "limit", doc = "Maximum CDX capture rows" }
+match_type = { type = "string", enum = ["exact", "prefix", "host", "domain"], to = "matchType", doc = "CDX URL match mode" }
+
+[op.crawl_cdx.map]
+items = ".[]"
+record = "@ref:op.search.map.record"
+
+[op.collections]
+summary = "List all monthly Common Crawl CDX collections with crawl date ranges and CDX API endpoints."
+method = "GET"
+url = "https://index.commoncrawl.org/collinfo.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = {}, min_results = 10, fixture = "fixtures/w5l/common_crawl/collections/default.json" }
+examples = [
+  'source.call("common_crawl.collections", {})',
+]
+
+[op.collections.map]
+items = ".[]"
+record = '''{
+  id: (.id // ""),
+  name: (.name // ""),
+  cdxApi: (.["cdx-api"] // ""),
+  timegate: (.timegate // null),
+  from: (.from // null),
+  to: (.to // null)
+}'''

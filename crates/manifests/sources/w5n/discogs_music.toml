@@ -1,0 +1,124 @@
+id = "discogs_music"
+name = "Discogs Music & Vinyl Database API"
+summary = "Global discography, vinyl/CD releases, artists, and record labels database (keyless 25 req/min; optional token 60 req/min)."
+aliases = ["discogs", "vinyl", "discography", "releases"]
+home_url = "https://www.discogs.com/developers"
+tier = 1
+scopes = ["media"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 0.4, burst = 2, concurrency = 1, timeout_ms = 8000, cache_ttl_s = 86400 }
+
+[auth]
+mode = "optional"
+env = "SEARCH_MCP_DISCOGS_TOKEN"
+in = "header"
+name = "Authorization"
+format = "Discogs token={key}"
+route_requires_key = false
+
+[op.search]
+summary = "Search Discogs releases, masters, artists, and labels."
+method = "GET"
+url = "https://api.discogs.com/database/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+examples = ['source.call("discogs_music.search", { query: "nirvana", limit: 3 })']
+probe = { params = { query = "nirvana", limit = 3 }, min_results = 2, fixture = "fixtures/w5n/discogs_music/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Artist, album, release, or label query" }
+type = { type = "string", enum = ["release", "master", "artist", "label"], doc = "Entity type filter" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "per_page", doc = "Results per page" }
+page = { type = "int", min = 1, doc = "Page number (1-based)" }
+
+[op.search.map]
+items = "(.results // [])[]"
+total = ".pagination.items"
+error = "if .message and (.results == null) then .message else null end"
+record = '''{
+  id: .id,
+  type: (.type // null),
+  title: (.title // ""),
+  year: (.year // null),
+  country: (.country // null),
+  format: (.format // []),
+  label: (.label // []),
+  genre: (.genre // []),
+  style: (.style // []),
+  masterId: (.master_id // null),
+  resourceUrl: (.resource_url // null),
+  url: ((.uri | resolve_url("https://www.discogs.com")) // "https://www.discogs.com")
+}'''
+hit = '''{
+  title: (.title // "Discogs Item"),
+  url: ((.uri | resolve_url("https://www.discogs.com")) // "https://www.discogs.com"),
+  snippet: ([
+    (.type // empty),
+    (.year // empty | tostring),
+    (.country // empty),
+    (if ((.format // []) | length) > 0 then ((.format // []) | join(", ")) else empty end),
+    (if ((.genre // []) | length) > 0 then ((.genre // []) | join(", ")) else empty end)
+  ] | join(" · ")),
+  date: (.year | parse_date),
+  dateSource: (if (.year | parse_date) != null then "api" else null end)
+}'''
+
+[op.artist]
+summary = "Fetch full Discogs artist profile, aliases, and URLs by numeric artist ID."
+method = "GET"
+url = "https://api.discogs.com/artists/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+examples = ['source.call("discogs_music.artist", { id: 125246 })']
+probe = { params = { id = 125246 }, min_results = 1, fixture = "fixtures/w5n/discogs_music/artist/default.json" }
+
+[op.artist.params]
+id = { type = "int", required = true, in = "path", doc = "Discogs numeric artist ID (e.g. 125246)" }
+
+[op.artist.map]
+items = "."
+error = "if .message and (.id == null) then .message else null end"
+record = '''{
+  id: .id,
+  name: (.name // ""),
+  realName: (.realname // null),
+  profile: (.profile // null),
+  urls: (.urls // []),
+  members: [(.members // [])[] | {id: .id, name: .name, active: .active}],
+  url: (.uri // ("https://www.discogs.com/artist/" + (.id | tostring)))
+}'''
+
+[op.release]
+summary = "Fetch Discogs release tracklist, labels, formats, and credits by numeric release ID."
+method = "GET"
+url = "https://api.discogs.com/releases/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+examples = ['source.call("discogs_music.release", { id: 249504 })']
+probe = { params = { id = 249504 }, min_results = 1, fixture = "fixtures/w5n/discogs_music/release/default.json" }
+
+[op.release.params]
+id = { type = "int", required = true, in = "path", doc = "Discogs numeric release ID (e.g. 249504)" }
+
+[op.release.map]
+items = "."
+error = "if .message and (.id == null) then .message else null end"
+record = '''{
+  id: .id,
+  title: (.title // ""),
+  artists: [(.artists // [])[] | .name],
+  year: (.year // null),
+  released: (.released // null),
+  country: (.country // null),
+  genres: (.genres // []),
+  styles: (.styles // []),
+  labels: [(.labels // [])[] | {name: .name, catno: .catno}],
+  tracklist: [(.tracklist // [])[] | {position: .position, title: .title, duration: .duration}],
+  url: (.uri // ("https://www.discogs.com/release/" + (.id | tostring)))
+}'''

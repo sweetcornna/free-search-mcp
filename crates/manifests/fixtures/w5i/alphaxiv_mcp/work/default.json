@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "alphaxiv_mcp",
+  "op": "work",
+  "recordedAt": "2026-11-25T12:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.alphaxiv.org/papers/v3/1706.03762",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ],
+          [
+            "cache-control",
+            "no-store"
+          ]
+        ],
+        "bodyText": "{\"type\":\"public\",\"groupId\":\"015c9ef4-ac30-768d-928b-847320902575\",\"versionId\":\"0189b531-a930-7613-9d2e-dd918c8435a5\",\"firstPublicationDate\":1497315454000,\"uploader\":null,\"sourceName\":\"arXiv\",\"sourceUrl\":\"https://arxiv.org/abs/1706.03762v7\",\"citationBibtex\":\"@misc{vaswani2023attentionneed,\\n      title={Attention Is All You Need}, \\n      author={Ashish Vaswani and Noam Shazeer and Niki Parmar and Jakob Uszkoreit and Llion Jones and Aidan N. Gomez and Lukasz Kaiser and Illia Polosukhin},\\n      year={2023},\\n      eprint={1706.03762},\\n      archivePrefix={arXiv},\\n      primaryClass={cs.CL},\\n      url={https://arxiv.org/abs/1706.03762}, \\n}\",\"citationsCount\":301453,\"googleCitationId\":null,\"versionOrder\":7,\"versionLabel\":\"v7\",\"title\":\"Attention Is All You Need\",\"abstract\":\"The dominant sequence transduction models are based on complex recurrent or\\nconvolutional neural networks in an encoder-decoder configuration. The best\\nperforming models also connect the encoder and decoder through an attention\\nmechanism. We propose a new simple network architecture, the Transformer, based\\nsolely on attention mechanisms, dispensing with recurrence and convolutions\\nentirely. Experiments on two machine translation tasks show these models to be\\nsuperior in quality while being more parallelizable and requiring significantly\\nless time to train. Our model achieves 28.4 BLEU on the WMT 2014\\nEnglish-to-German translation task, improving over the existing best results,\\nincluding ensembles by over 2 BLEU. On the WMT 2014 English-to-French\\ntranslation task, our model establishes a new single-model state-of-the-art\\nBLEU score of 41.8 after training for 3.5 days on eight GPUs, a small fraction\\nof the training costs of the best models from the literature. We show that the\\nTransformer generalizes well to other tasks by applying it successfully to\\nEnglish constituency parsing both with large and limited training data.\",\"publicationDate\":1690962078000,\"license\":\"http://creativecommons.org/licenses/by/4.0/\",\"pageWidthPt\":612,\"pageHeightPt\":792,\"resources\":[],\"versions\":[],\"universalId\":\"1706.03762\",\"pdfOnly\":false}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

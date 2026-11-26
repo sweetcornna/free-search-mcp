@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "source": "ecdc_news_rss",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:44:38Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.ecdc.europa.eu/en/taxonomy/term/1310/feed",
+        "headersSubset": {
+          "accept": "application/rss+xml, application/xml, text/xml"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/rss+xml; charset=utf-8"
+          ],
+          [
+            "last-modified",
+            "Wed, 25 Nov 2026 12:25:38 GMT"
+          ],
+          [
+            "etag",
+            "W/\"1795609538-gzip\""
+          ],
+          [
+            "cache-control",
+            "public, max-age=300, s-maxage=300"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<rss xmlns:dc=\"http://purl.org/dc/elements/1.1/\" version=\"2.0\" xml:base=\"https://www.ecdc.europa.eu/en\">\n  <channel>\n    <title>Epidemiological update</title>\n    <link>https://www.ecdc.europa.eu/en</link>\n    <description/>\n    <language>en</language>\n    \n    <item>\n  <title>Ebola disease: Multi-country outbreak 2026</title>\n  <link>https://www.ecdc.europa.eu/en/ebola-disease-multi-country-outbreak-2026</link>\n  <description>&lt;p&gt;Since May 2026, an Ebola virus disease outbreak caused by Bundibugyo virus has been ongoing in the Democratic Republic of the Congo (DRC).&lt;/p&gt;\n</description>\n  <pubDate>Tue, 17 Nov 2026 17:36:21 +0100</pubDate>\n    <dc:creator>ECDC</dc:creator>\n    <guid isPermaLink=\"true\">https://www.ecdc.europa.eu/en/ebola-disease-multi-country-outbreak-2026</guid>\n    </item>\n<item>\n  <title>Chikungunya virus disease worldwide overview</title>\n  <link>https://www.ecdc.europa.eu/en/chikungunya-monthly</link>\n  <description>&lt;p&gt;Every month ECDC provides detailed epidemiological overview of the worldwide transmission of chikungunya virus disease in its weekly threat report (Communicable Diseases Threat Report).&lt;/p&gt;\n</description>\n  <pubDate>Mon, 05 Oct 2026 16:05:05 +0200</pubDate>\n    <dc:creator>ECDC</dc:creator>\n    <guid isPermaLink=\"true\">https://www.ecdc.europa.eu/en/chikungunya-monthly</guid>\n    </item>\n<item>\n  <title>Dengue worldwide overview</title>\n  <link>https://www.ecdc.europa.eu/en/dengue-monthly</link>\n  <description>&lt;p&gt;Every month ECDC provides detailed epidemiological overview of the worldwide transmission of dengue in its weekly threat report (Communicable Diseases Threat Report).&lt;/p&gt;\n</description>\n  <pubDate>Mon, 28 Sep 2026 09:17:53 +0200</pubDate>\n    <dc:creator>ECDC</dc:creator>\n    <guid isPermaLink=\"true\">https://www.ecdc.europa.eu/en/dengue-monthly</guid>\n    </item>\n<item>\n  <title>Epidemiological update – 11 August 2026: Imported case of Andes hantavirus in the EU/EEA</title>\n  <link>https://www.ecdc.europa.eu/en/news-events/epidemiological-update-11-august-2026-imported-case-andes-hantavirus-eueea</link>\n  <description>&lt;p&gt;On 6 August 2026, French public health authorities reported an imported case of Andes hantavirus infection in a traveller from Argentina.&amp;nbsp;&lt;/p&gt;\n</description>\n  <pubDate>Thu, 20 Aug 2026 13:39:42 +0200</pubDate>\n    <dc:creator>ECDC</dc:creator>\n    <guid isPermaLink=\"true\">https://www.ecdc.europa.eu/en/news-events/epidemiological-update-11-august-2026-imported-case-andes-hantavirus-eueea</guid>\n    </item>\n<item>\n  <title>Andes hantavirus outbreak in cruise ship</title>\n  <link>https://www.ecdc.europa.eu/en/infectious-disease-topics/hantavirus-infection/surveillance-and-updates/andes-hantavirus-outbreak</link>\n  <description>&lt;p&gt;ECDC was notified on 2 May 2026 of a cluster of severe respiratory illness on MV Hondius, a Dutch-flagged cruise ship with passengers and crew from 23 countries, including nine EU/EEA countries. The virus has been identified as Andes hantavirus.&lt;/p&gt;\n</description>\n  <pubDate>Tue, 26 May 2026 17:56:17 +0200</pubDate>\n    <dc:creator>ECDC</dc:creator>\n    <guid isPermaLink=\"true\">https://www.ecdc.europa.eu/en/infectious-disease-topics/hantavirus-infection/surveillance-and-updates/andes-hantavirus-outbreak</guid>\n    </item>\n<item>\n  <title>Epidemiological update: Spread of multidrug-resistant and extensively-drug resistant Shigella in Europe</title>\n  <link>https://www.ecdc.europa.eu/en/news-events/epidemiological-update-spread-multidrug-resistant-and-extensively-drug-resistant</link>\n  <description>&lt;p&gt;Since 2023, 14 countries have reported more than 2 300 infections caused by multidrug-resistant (MDR) or extensively drug-resistant (XDR) Shigella sonnei and Shigella flexneri to ECDC. Seven genetically distinct MDR/XDR clusters, some with prolonged circulation and others more recent, have been reported.&lt;/p&gt;\n</description>\n  <pubDate>Wed, 20 May 2026 13:16:59 +0200</pubDate>\n    <dc:creator>ECDC</dc:creator>\n    <guid isPermaLink=\"true\">https://www.ecdc.europa.eu/en/news-events/epidemiological-update-spread-multidrug-resistant-and-extensively-drug-resistant</guid>\n    </item>\n<item>\n  <title>Mpox worldwide overview</title>\n  <link>https://www.ecdc.europa.eu/en/mpox-worldwide-overview</link>\n  <description>&lt;p&gt;Every month ECDC provides detailed epidemiological overview of the worldwide transmission of mpox in its weekly threat report.&lt;/p&gt;\n</description>\n  <pubDate>Wed, 13 May 2026 12:26:15 +0200</pubDate>\n    <dc:creator>ECDC</dc:creator>\n    <guid isPermaLink=\"true\">https://www.ecdc.europa.eu/en/mpox-worldwide-overview</guid>\n    </item>\n<item>\n  <title>Epidemiological update: Shigellosis and other gastrointestinal infections in travellers returning from Cabo Verde</title>\n  <link>https://www.ecdc.europa.eu/en/news-events/epidemiological-update-shigellosis-and-other-gastrointestinal-infections-travellers</link>\n  <description>&lt;p&gt;As of March 2026, over 1 000 confirmed and possible cases of shigellosis and other gastrointestinal infections, including salmonellosis, have been detected in travellers returning from Cabo Verde to several countries in the European Union/European Economic Area (EU/EEA), the United Kingdom (UK), and the United States (US), with new cases still being reported.&lt;/p&gt;\n</description>\n  <pubDate>Wed, 18 Mar 2026 10:32:55 +0100</pubDate>\n    <dc:creator>ECDC</dc:creator>\n    <guid isPermaLink=\"true\">https://www.ecdc.europa.eu/en/news-events/epidemiological-update-shigellosis-and-other-gastrointestinal-infections-travellers</guid>\n    </item>\n<item>\n  <title>Early estimates of seasonal influenza vaccine effectiveness against influenza requiring medical attention at primary care level in Europe, week 41 - 49, 2025</title>\n  <link>https://www.ecdc.europa.eu/en/news-events/early-estimates-seasonal-influenza-vaccine-effectiveness-against-influenza-requiring</link>\n  <description>&lt;p&gt;The 2025/26 influenza season has begun earlier than the previous two seasons, driven by the recently-emerged influenza virus A(H3N2) subclade K.&lt;/p&gt;\n</description>\n  <pubDate>Fri, 19 Dec 2025 14:32:38 +0100</pubDate>\n    <dc:creator>ECDC</dc:creator>\n    <guid isPermaLink=\"true\">https://www.ecdc.europa.eu/en/news-events/early-estimates-seasonal-influenza-vaccine-effectiveness-against-influenza-requiring</guid>\n    </item>\n<item>\n  <title>Two cases of Middle East respiratory syndrome (MERS) in travellers returning to France from the Arabian Peninsula</title>\n  <link>https://www.ecdc.europa.eu/en/news-events/cases-middle-east-respiratory-syndrome-coronavirus-mers-cov-travellers</link>\n  <description>&lt;p&gt;On 3 December 2025, the French Ministry of Health reported two imported human Middle East respiratory syndrome (MERS) cases with travel history to the Arabian Peninsula.&lt;/p&gt;\n</description>\n  <pubDate>Fri, 05 Dec 2025 16:43:12 +0100</pubDate>\n    <dc:creator>ECDC</dc:creator>\n    <guid isPermaLink=\"true\">https://www.ecdc.europa.eu/en/news-events/cases-middle-east-respiratory-syndrome-coronavirus-mers-cov-travellers</guid>\n    </item>\n\n  </channel>\n</rss>\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

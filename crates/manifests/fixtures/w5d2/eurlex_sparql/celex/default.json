@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "source": "eurlex_sparql",
+  "op": "celex",
+  "recordedAt": "2026-11-25T12:12:46Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://publications.europa.eu/webapi/rdf/sparql",
+        "headersSubset": {
+          "accept": "application/sparql-results+json",
+          "content-type": "application/sparql-query"
+        },
+        "bodySha256": "36c7bf94457ef81bdef65bd1892d0edb36b564e7a1010ad55d0fa762b289e3ed"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/sparql-results+json"
+          ]
+        ],
+        "bodyText": "\n{ \"head\": { \"link\": [], \"vars\": [\"work\", \"celex\", \"title\", \"date\", \"eli\"] },\n  \"results\": { \"distinct\": false, \"ordered\": true, \"bindings\": [\n    { \"work\": { \"type\": \"uri\", \"value\": \"http://publications.europa.eu/resource/cellar/3e485e15-11bd-11e6-ba9a-01aa75ed71a1\" }\t, \"celex\": { \"type\": \"literal\", \"datatype\": \"http://www.w3.org/2001/XMLSchema#string\", \"value\": \"32016R0679\" }\t, \"title\": { \"type\": \"literal\", \"value\": \"Regulation (EU) 2016/679 of the European Parliament and of the Council of 27 April 2016 on the protection of natural persons with regard to the processing of personal data and on the free movement of such data, and repealing Directive 95/46/EC (General Data Protection Regulation) (Text with EEA relevance)\" }\t, \"date\": { \"type\": \"literal\", \"datatype\": \"http://www.w3.org/2001/XMLSchema#date\", \"value\": \"2016-04-27\" }\t, \"eli\": { \"type\": \"literal\", \"datatype\": \"http://www.w3.org/2001/XMLSchema#anyURI\", \"value\": \"http://data.europa.eu/eli/reg/2016/679/oj\" }} ] } }",
+        "bodyB64": null
+      }
+    }
+  ]
+}

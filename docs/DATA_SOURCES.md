@@ -1,5 +1,15 @@
 # Keyless data sources: a survey
 
+> **1.0.0 Status**: Many of the keyless endpoints surveyed below are now
+> integrated directly into `free-search-mcp` 1.0's catalog of **500+ sources**
+> (42 native Rust engines, 18 generic protocol adapters across curated
+> instances, and declarative TOML + `jaq` manifests). To inspect live
+> availability, operations, and parameters, call
+> `search({ query: "...", scope: "catalog" })`, `catalog.describe(id)` inside
+> `exec`, or `free-search-mcp sources` from the terminal. The original
+> 2026-09 survey notes and upstream rate-limit/header caveats are preserved
+> below as reference for adding new manifests.
+
 A list of JSON endpoints that answer a factual question with the record
 itself and need no API key, gathered on 2026-09-21 and 2026-09-22 for the
 next round of direct-fact engines. About 150 candidate URLs were taken from

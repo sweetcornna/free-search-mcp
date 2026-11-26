@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "source": "legifrance_open",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:14:49Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://api.piste.gouv.fr/dila/legifrance/lf-engine-app/search",
+        "headersSubset": {
+          "accept": "application/json",
+          "content-type": "application/json"
+        },
+        "bodySha256": "66dfeabfdb2e5abb0dc95770fd41ac8a6740f09b23cab9d0c306cad69ef5e1f2"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"totalResultNumber\": 1420, \"results\": [{\"titles\": [{\"id\": \"LEGITEXT000006072050\", \"cid\": \"LEGITEXT000006072050\", \"title\": \"Code du travail\"}], \"nature\": \"CODE\", \"etat\": \"VIGUEUR\", \"date\": \"2008-05-01\", \"sections\": [{\"extracts\": [{\"id\": \"LEGIARTI000006900823\", \"num\": \"L1221-1\", \"values\": [\"Le contrat de travail est soumis aux règles du droit commun.\"]}]}]}, {\"titles\": [{\"id\": \"LEGITEXT000006070721\", \"cid\": \"LEGITEXT000006070721\", \"title\": \"Code civil\"}], \"nature\": \"CODE\", \"etat\": \"VIGUEUR\", \"date\": \"2016-10-01\", \"sections\": [{\"extracts\": [{\"id\": \"LEGIARTI000032040787\", \"num\": \"1101\", \"values\": [\"Le contrat est un accord de volontés entre deux ou plusieurs personnes.\"]}]}]}, {\"titles\": [{\"id\": \"LEGITEXT000006073189\", \"cid\": \"LEGITEXT000006073189\", \"title\": \"Code de la sécurité sociale\"}], \"nature\": \"CODE\", \"etat\": \"VIGUEUR\", \"date\": \"2020-01-01\", \"sections\": [{\"extracts\": [{\"id\": \"LEGIARTI000039784512\", \"num\": \"L311-2\", \"values\": [\"Sont affiliées obligatoirement aux assurances sociales toutes les personnes salariées.\"]}]}]}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

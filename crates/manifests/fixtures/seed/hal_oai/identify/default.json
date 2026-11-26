@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "source": "hal_oai",
+  "op": "identify",
+  "recordedAt": "2026-11-25T14:25:06Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.archives-ouvertes.fr/oai/hal/?verb=Identify",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/xml; charset=utf-8"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<?xml-stylesheet type=\"text/xsl\" href=\"/oai/xsl\"?>\n<OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd\">\n  <responseDate>2026-11-25T14:25:19Z</responseDate>\n  <request verb=\"Identify\">http://api.archives-ouvertes.fr/oai/hal/</request>\n  <Identify>\n    <repositoryName>HAL</repositoryName>\n    <baseURL>http://api.archives-ouvertes.fr/oai/hal/</baseURL>\n    <protocolVersion>2.0</protocolVersion>\n    <adminEmail>contact@archives-ouvertes.fr</adminEmail>\n    <earliestDatestamp>2002-09-23</earliestDatestamp>\n    <deletedRecord>no</deletedRecord>\n    <granularity>YYYY-MM-DD</granularity>\n    <description>\n      <oai-identifier xmlns=\"http://www.openarchives.org/OAI/2.0/oai-identifier\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/oai-identifier http://www.openarchives.org/OAI/2.0/oai-identifier.xsd\">\n        <scheme>oai</scheme>\n        <repositoryIdentifier>hal.archives-ouvertes.fr</repositoryIdentifier>\n        <delimiter>:</delimiter>\n        <sampleIdentifier>oai:HAL:hal-00000001</sampleIdentifier>\n      </oai-identifier>\n    </description>\n    <description>\n      <eprints xmlns=\"http://www.openarchives.org/OAI/1.1/eprints\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/1.1/eprints http://www.openarchives.org/OAI/1.1/eprints.xsd\">\n        <content>\n          <text>Author self-archived open archive</text>\n        </content>\n        <metadataPolicy>\n          <text>Metadata is licensed under CC0: https://creativecommons.org/publicdomain/zero/1.0/</text>\n        </metadataPolicy>\n        <dataPolicy>\n          <text/>\n        </dataPolicy>\n      </eprints>\n    </description>\n  </Identify>\n</OAI-PMH>\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

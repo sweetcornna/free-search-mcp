@@ -1,0 +1,58 @@
+id = "arxiv_rss"
+name = "arXiv Daily Subject Announcement Feeds"
+summary = "Zero-lag daily subject-category RSS announcement feeds for new and cross-listed arXiv preprints."
+aliases = ["rss.arxiv.org", "arxiv daily", "arxiv new"]
+home_url = "https://rss.arxiv.org"
+tier = 2
+scopes = ["academic", "academic.preprint", "academic.cs", "academic.math", "academic.physics"]
+caps = ["harvest"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 0.5, burst = 2, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 3600, host_bucket = "rss.arxiv.org" }
+
+[op.feed]
+summary = "Fetch today's arXiv subject announcement feed by category code (e.g. cs.AI, cs.LG, cs.AI+cs.LG, hep-th, econ.TH)."
+method = "GET"
+url = "https://rss.arxiv.org/rss/{category}"
+headers = { Accept = "application/rss+xml" }
+response = "xml"
+returns = "works"
+probe = { params = { category = "econ.TH" }, min_results = 2, fixture = "fixtures/w5i/arxiv_rss/feed/default.json" }
+examples = ['source.call("arxiv_rss.feed", {category: "cs.AI"})', 'source.call("arxiv_rss.feed", {category: "cs.AI+cs.LG"})']
+
+[op.feed.params]
+category = { type = "string", required = true, default = "cs.AI", in = "path", encode = "raw", doc = "arXiv category, archive, or '+'-joined multi-category feed (e.g. cs.AI, cs.AI+cs.LG, econ.TH)" }
+
+[op.feed.map]
+items = ".rss.channel.item | arr | .[]"
+work = '''(
+  (.link | xml_text) as $url |
+  (($url | sub("^https?://arxiv\\.org/abs/"; "") | sub("v[0-9]+$"; "")) // "") as $aid |
+  ((.description | xml_text) | sub("^arXiv:[^\\n]*\\nAbstract:\\s*"; "") | collapse_ws) as $abs |
+  ([(.category | arr)[] | first_str | select(. != null)] | join(", ")) as $cats |
+  (.pubdate | first_str | parse_date) as $pub |
+  ((.announce_type | first_str) // "" | ascii_downcase) as $atype |
+  (if ($aid | test("^[0-9]{4}\\.")) then ("20" + $aid[0:2] + "-" + $aid[2:4]) else null end) as $aid_ym |
+  (if $atype == "new" or ($aid_ym != null and $aid_ym == (($pub // "")[0:7])) then $pub elif $aid_ym != null then $aid_ym else $pub end) as $pd |
+  {
+    title: ((.title | xml_text | collapse_ws) // ""),
+    authors: [(.creator | xml_text | split(","))[] | collapse_ws | select(. != null and . != "") | {name: .}],
+    year: (if ($aid | test("^[0-9]{4}\\.")) then ("20" + $aid[0:2] | to_int) else (($pd // "")[0:4] | to_int) end),
+    publishedDate: $pd,
+    venue: (if $cats != "" then ("arXiv (" + $cats + ")") else "arXiv" end),
+    workType: "preprint",
+    ids: { arxiv: (if $aid != "" then $aid else null end) },
+    abstractText: (if ($abs // "") != "" then $abs else null end),
+    oa: {
+      status: "green",
+      url: $url,
+      pdfUrl: (if $aid != "" then ("https://arxiv.org/pdf/" + $aid) else null end),
+      structuredFormat: "html5",
+      license: (.rights | first_str)
+    },
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["arxiv_rss"]
+  }
+)'''

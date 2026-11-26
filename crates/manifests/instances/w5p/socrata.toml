@@ -1,0 +1,61 @@
+protocol = "socrata"
+
+[[instance]]
+id = "la_city_data"
+name = "Los Angeles Open Data (City of LA)"
+summary = "City of Los Angeles municipal open data portal covering public safety, mobility, housing, permitting, and city finance."
+aliases = ["los angeles data", "lacity data", "data.lacity.org"]
+base_url = "https://data.lacity.org"
+scopes = ["dataset", "gov"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+default_params = { domains = "data.lacity.org" }
+probe = { op = "search", params = { query = "crime", limit = 3, domains = "data.lacity.org" }, min_results = 1 }
+
+[[instance]]
+id = "wa_state_data"
+name = "Washington State Open Data"
+summary = "State of Washington official open data catalog covering electric vehicles, energy, environment, public health, and state finances."
+aliases = ["washington state data", "data.wa.gov"]
+base_url = "https://data.wa.gov"
+scopes = ["dataset", "gov"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+default_params = { domains = "data.wa.gov" }
+probe = { op = "search", params = { query = "energy", limit = 3, domains = "data.wa.gov" }, min_results = 1 }
+
+[[instance]]
+id = "maryland_open_data"
+name = "Maryland Open Data Portal"
+summary = "State of Maryland open government data portal covering healthcare, transportation, economy, education, and public safety."
+aliases = ["maryland data", "opendata.maryland.gov"]
+base_url = "https://opendata.maryland.gov"
+scopes = ["dataset", "gov"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+default_params = { domains = "opendata.maryland.gov" }
+probe = { op = "search", params = { query = "health", limit = 3, domains = "opendata.maryland.gov" }, min_results = 1 }
+
+[[instance]]
+id = "colombia_datos"
+name = "Datos Abiertos Colombia"
+summary = "Colombian national Socrata open data portal aggregating thousands of health, education, procurement, and civic datasets."
+aliases = ["colombia open data", "datos.gov.co", "datos abiertos colombia"]
+base_url = "https://www.datos.gov.co"
+scopes = ["dataset", "gov"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+default_params = { domains = "www.datos.gov.co" }
+probe = { op = "search", params = { query = "salud", limit = 3, domains = "www.datos.gov.co" }, min_results = 1 }
+
+[[instance]]
+id = "edmonton_open_data"
+name = "City of Edmonton Open Data"
+summary = "City of Edmonton municipal open data catalog covering transit ridership, infrastructure, zoning, parks, and civic performance."
+aliases = ["edmonton data", "data.edmonton.ca"]
+base_url = "https://data.edmonton.ca"
+scopes = ["dataset", "gov"]
+caps = ["search", "lookup", "dataset"]
+tier = 2
+default_params = { domains = "data.edmonton.ca" }
+probe = { op = "search", params = { query = "transit", limit = 3, domains = "data.edmonton.ca" }, min_results = 1 }

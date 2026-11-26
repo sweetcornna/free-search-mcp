@@ -1,0 +1,98 @@
+id = "ons_uk_stats"
+name = "UK Office for National Statistics (ONS) API"
+summary = "Official UK Office for National Statistics open API for macroeconomic bulletins, census data, social survey datasets, and dataset editions."
+aliases = ["ons", "ons uk", "uk statistics"]
+home_url = "https://developer.ons.gov.uk"
+tier = 1
+scopes = ["dataset", "finance"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 10000, cache_ttl_s = 21600, host_bucket = "api.beta.ons.gov.uk" }
+
+[op.search]
+summary = "Search UK ONS statistical bulletins, datasets, time series, and releases."
+method = "GET"
+url = "https://api.beta.ons.gov.uk/v1/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "inflation", limit = 3, offset = 0 }, min_results = 2, fixture = "fixtures/w5k/ons_uk_stats/search/default.json" }
+examples = ['source.call("ons_uk_stats.search", { query: "inflation", limit: 5 })']
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Statistical search query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Results per page" }
+offset = { type = "int", default = 0, min = 0, to = "offset", doc = "Pagination offset" }
+
+[op.search.map]
+items = "(.items // [])[]"
+total = ".count"
+record = '''{
+  title: ((.title // "") | collapse_ws),
+  type: (.type // null),
+  datasetId: (if (.dataset_id // "") != "" then .dataset_id else null end),
+  cdid: (if (.cdid // "") != "" then .cdid else null end),
+  edition: (.edition // null),
+  releaseDate: (.release_date | parse_date),
+  summary: ((.summary // .meta_description) | strip_tags | if . != null and length > 0 then . else null end),
+  url: ("https://www.ons.gov.uk" + (.uri // ""))
+}'''
+hit = '''(
+  (.release_date | parse_date) as $d |
+  {
+    title: ((.title // "") | collapse_ws),
+    url: ("https://www.ons.gov.uk" + (.uri // "")),
+    snippet: ([(.type // ""), ((.summary // .meta_description // "") | strip_tags)] | map(select(. != null and length > 0)) | join(" · ")),
+    date: $d,
+    dateSource: (if $d != null then "api" else null end)
+  }
+)'''
+
+[op.datasets]
+summary = "List curated ONS open API datasets with latest version links and release cadence."
+method = "GET"
+url = "https://api.beta.ons.gov.uk/v1/datasets"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { limit = 3, offset = 0 }, min_results = 2, fixture = "fixtures/w5k/ons_uk_stats/datasets/default.json" }
+examples = ['source.call("ons_uk_stats.datasets", { limit: 10 })']
+
+[op.datasets.params]
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Datasets per page" }
+offset = { type = "int", default = 0, min = 0, to = "offset", doc = "Pagination offset" }
+
+[op.datasets.map]
+items = "(.items // [])[]"
+total = ".total_count"
+record = '''{
+  id: (.id // ""),
+  title: ((.title // "") | collapse_ws),
+  description: (.description | strip_tags | if . != null and length > 0 then . else null end),
+  keywords: (.keywords // []),
+  license: (.license // null),
+  releaseFrequency: (.release_frequency // null),
+  lastUpdated: (.last_updated | parse_date),
+  latestVersionUrl: (.links.latest_version.href // null),
+  url: ("https://www.ons.gov.uk/datasets/" + (.id // ""))
+}'''
+
+[op.dataset]
+summary = "Fetch full metadata and version links for a single ONS dataset ID (e.g. cpih01)."
+method = "GET"
+url = "https://api.beta.ons.gov.uk/v1/datasets/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "cpih01" }, min_results = 1, fixture = "fixtures/w5k/ons_uk_stats/dataset/default.json" }
+examples = ['source.call("ons_uk_stats.dataset", { id: "cpih01" })']
+
+[op.dataset.params]
+id = { type = "string", required = true, in = "path", doc = "ONS dataset slug e.g. cpih01, wellbeing-quarterly" }
+
+[op.dataset.map]
+items = "."
+record = "@ref:op.datasets.map.record"

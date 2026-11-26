@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "source": "scanr_fr",
+  "op": "doi",
+  "recordedAt": "2026-11-25T13:02:20Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://scanr.enseignementsup-recherche.gouv.fr/api/scanr-publications/_search",
+        "headersSubset": {
+          "accept": "application/json",
+          "content-type": "application/json"
+        },
+        "bodySha256": "b7262276f74eac79bfd40a859600f7aff112cf1ff4bf67bb53cf6aefc48333c9"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"took\":33,\"timed_out\":false,\"_shards\":{\"total\":1,\"successful\":1,\"skipped\":0,\"failed\":0},\"hits\":{\"total\":{\"value\":1,\"relation\":\"eq\"},\"max_score\":23.049496,\"hits\":[{\"_index\":\"scanr-publications-20261012\",\"_id\":\"OGfGNqEBPe3qgKgighC9\",\"_score\":23.049496,\"_source\":{\"id\":\"doi10.1785/0120110225\",\"title\":{\"default\":\"Fault Delineation and Regional Stress Direction from the Analysis of Background Microseismicity in the southern Apennines, Italy\",\"en\":\"Fault Delineation and Regional Stress Direction from the Analysis of Background Microseismicity in the southern Apennines, Italy\"},\"doiUrl\":\"http://doi.org/10.1785/0120110225\",\"externalIds\":[{\"type\":\"doi\",\"id\":\"10.1785/0120110225\"},{\"type\":\"hal\",\"id\":\"hal-02962044\"}],\"year\":2012,\"publicationDate\":\"2012-08-01T00:00:00\",\"type\":\"journal-article\",\"isOa\":false,\"source\":{\"title\":\"Bulletin of the Seismological Society of America\",\"publisher\":\"Seismological Society of America (SSA)\",\"journalIssns\":[\"0037-1106\",\"1943-3573\"],\"isOa\":false,\"isInDoaj\":false},\"landingPage\":\"http://doi.org/10.1785/0120110225\",\"authors\":[{\"firstName\":\"R.\",\"lastName\":\"de Matteis\",\"fullName\":\"R. De Matteis\",\"role\":\"author\"},{\"firstName\":\"E.\",\"lastName\":\"Matrullo\",\"fullName\":\"E. Matrullo\",\"person\":\"idref033783519\",\"denormalized\":{\"id\":\"idref033783519\",\"idref\":\"033783519\"},\"id_name\":\"idref033783519###E. Matrullo\",\"role\":\"author\"},{\"firstName\":\"Luis\",\"lastName\":\"Rivera\",\"fullName\":\"L. Rivera\",\"person\":\"idref075979977\",\"denormalized\":{\"id\":\"idref075979977\",\"idref\":\"075979977\",\"orcid\":\"0000-0002-0726-5445\",\"id_hal\":\"210089\"},\"id_name\":\"idref075979977###Luis Rivera\",\"role\":\"author\",\"affiliations\":[{\"detected_countries\":[\"fr\"],\"name\":\"Sismologie (IPGS), IPGS-Sismologie, IPGS, Institut de physique du globe de Strasbourg, France\",\"hal_docid\":\"389735\",\"country\":\"France\",\"structId\":\"389735\",\"ids\":[{\"id\":\"199712581T\",\"type\":\"rnsr\"},{\"id\":\"180089013\",\"type\":\"siren\"},{\"id\":\"130005457\",\"type\":\"siren\"}]},{\"detected_countries\":[\"fr\"],\"name\":\"Institut de physique du globe de Strasbourg, UMR7516, IPGS, UNISTRA, INSU - CNRS, CNRS, Université de Strasbourg, Institut national des sciences de l'Univers, Centre National de la Recherche Scientifique, 5 Rue René Descartes 67084 STRASBOURG CEDEX, France\",\"hal_docid\":\"93740\",\"country\":\"France\",\"structId\":\"93740\",\"ids\":[{\"id\":\"grid.11843.3f\",\"type\":\"grid\"},{\"id\":\"199712581T\",\"type\":\"rnsr\"},{\"id\":\"130005457\",\"type\":\"sirene\"},{\"id\":\"13000545700010\",\"type\":\"siret\"},{\"id\":\"180089013\",\"type\":\"siren\"},{\"id\":\"130005457\",\"type\":\"siren\"}]},{\"detected_countries\":[\"fr\"],\"name\":\"Université de Strasbourg, UNISTRA, 4 rue Blaise Pascal - CS 90032 - 67081 Strasbourg cedex, France\",\"hal_docid\":\"199013\",\"country\":\"France\",\"ror\":\"https://ror.org/00pg6eq24\",\"structId\":\"199013\",\"ids\":[{\"id\":\"grid.11843.3f\",\"type\":\"grid\"},{\"id\":\"130005457\",\"type\":\"sirene\"},{\"id\":\"13000545700010\",\"type\":\"siret\"}]},{\"detected_countries\":[\"fr\"],\"name\":\"Institut national des sciences de l'Univers, INSU - CNRS, INSU-CNRS3 rue Michel-Ange, 75794 Paris Cedex 16, France\",\"hal_docid\":\"300045\",\"country\":\"France\",\"ror\":\"https://ror.org/04kdfz702\",\"structId\":\"300045\",\"ids\":[{\"id\":\"grid.452348.c\",\"type\":\"grid\"},{\"id\":\"18008901303738\",\"type\":\"sirene\"},{\"id\":\"18008901303738\",\"type\":\"siret\"}]},{\"detected_countries\":[\"fr\"],\"name\":\"Centre National de la Recherche Scientifique, CNRS, France\",\"hal_docid\":\"441569\",\"country\":\"France\",\"ror\":\"https://ror.org/02feahw73\",\"structId\":\"441569\",\"ids\":[{\"id\":\"grid.4444.0\",\"type\":\"grid\"},{\"id\":\"180089013\",\"type\":\"sirene\"},{\"id\":\"18008901303720\",\"type\":\"siret\"}]}]},{\"fullName\":\"T. A. Stabile\",\"role\":\"author\"},{\"firstName\":\"G.\",\"lastName\":\"Pasquale\",\"fullName\":\"G. Pasquale\",\"role\":\"author\"},{\"firstName\":\"A.\",\"lastName\":\"Zollo\",\"fullName\":\"A. Zollo\",\"person\":\"idref073971030\",\"denormalized\":{\"id\":\"idref073971030\",\"idref\":\"073971030\",\"orcid\":\"0000-0002-8191-9566\"},\"id_name\":\"idref073971030###Aldo Zollo\",\"role\":\"author\",\"affiliations\":[{\"detected_countries\":[\"it\"],\"name\":\"Dipartimento di Scienze Fisiche [Naples], UNINA, University of Naples Federico II = Università degli studi di Napoli Federico II, Università degli Studi di Napoli Federico II - Complesso Universitario di Monte Sant'Angelo - Via Cinthia, I-80126, Napoli, Italy\",\"hal_docid\":\"212293\",\"country\":\"Italy\",\"structId\":\"212293\"},{\"detected_countries\":[\"it\"],\"name\":\"University of Naples Federico II = Università degli studi di Napoli Federico II, UNINA, Via Cintia Monte S. Angelo, 80126 Napoli, Italy, Italy\",\"hal_docid\":\"544964\",\"country\":\"Italy\",\"ror\":\"https://ror.org/05290cv24\",\"structId\":\"544964\"}]}]}}]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

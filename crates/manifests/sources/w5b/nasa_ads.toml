@@ -1,0 +1,100 @@
+id = "nasa_ads"
+name = "NASA Astrophysics Data System (ADS)"
+summary = "Astronomy, astrophysics, planetary science, and physics literature index with bibcodes and citations."
+aliases = ["nasa ads", "scix", "bibcode", "adsabs", "astrophysics", "ads"]
+home_url = "https://ui.adsabs.harvard.edu"
+tier = 2
+scopes = ["academic.physics", "academic"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 5.0, burst = 10, concurrency = 4, timeout_ms = 6000, cache_ttl_s = 43200 }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_ADS_API_KEY"
+in = "header"
+name = "Authorization"
+format = "Bearer {key}"
+route_requires_key = true
+
+[op.search]
+summary = "Search NASA ADS astronomy and physics literature records."
+method = "GET"
+url = "https://api.adsabs.harvard.edu/v1/search/query"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+const_query = { fl = "bibcode,title,author,year,pubdate,pub,doctype,doi,identifier,property,esources,citation_count,abstract", sort = "score desc, id asc" }
+paginate = { style = "cursor", param = "cursorMark", max_pages = 3 }
+probe = { params = { query = "exoplanet atmosphere", limit = 3 }, min_results = 2, fixture = "fixtures/w5b/nasa_ads/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "NASA ADS Solr query (e.g. exoplanet atmosphere, author:Seager)" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "rows", doc = "Number of rows to return" }
+cursor = { type = "string", default = "*", to = "cursorMark", doc = "Cursor mark for pagination" }
+
+[op.search.map]
+items = ".response.docs[]"
+next_cursor = ".nextCursorMark"
+total = ".response.numFound"
+error = 'if type == "object" and (.error // null) != null then (if (.error | type) == "object" then (.error.msg // .error.message // (.error | tostring)) else (.error | tostring) end) else null end'
+work = '''(
+  ((.pubdate // (if .year != null then (.year | tostring) else null end)) | if type == "string" then (sub("-00$"; "") | sub("-00$"; "")) else . end | parse_date) as $pd |
+  (.doctype // "article" | ascii_downcase) as $dt |
+  (.property // []) as $prop |
+  (.esources // []) as $es |
+  {
+    title: ((.title[0] // "") | strip_tags),
+    authors: [(.author // [])[] | {name: (. | collapse_ws)}],
+    year: ((.year | to_int) // (if $pd != null then ($pd[0:4] | to_int) else null end)),
+    publishedDate: $pd,
+    venue: ((.pub // null) | collapse_ws),
+    workType: (
+      if $dt == "eprint" then "preprint"
+      elif $dt == "inproceedings" or $dt == "proceedings" then "proceedings-article"
+      elif $dt == "book" then "book"
+      elif $dt == "inbook" then "chapter"
+      elif $dt == "phdthesis" or $dt == "mastersthesis" then "thesis"
+      elif $dt == "software" then "software"
+      else "article"
+      end
+    ),
+    ids: {
+      doi: ((.doi[0] // null) | doi_norm),
+      arxiv: (([(.identifier // [])[] | select(type == "string" and test("^arXiv:")) | sub("^arXiv:"; "")][0]) // null)
+    },
+    abstractText: ((.abstract // null) | strip_tags),
+    citedBy: (.citation_count | to_int),
+    citedBySource: (if .citation_count != null then "nasa_ads" else null end),
+    oa: (
+      if (($prop | index("OPENACCESS")) != null or ($es | index("EPRINT_PDF")) != null) then {
+        status: (if ($prop | index("PUB_OPENACCESS")) != null then "gold" elif ($prop | index("EPRINT_OPENACCESS")) != null or ($es | index("EPRINT_PDF")) != null then "green" else "open" end),
+        url: ("https://ui.adsabs.harvard.edu/abs/" + .bibcode),
+        pdfUrl: (if ($es | index("PUB_PDF")) != null then ("https://ui.adsabs.harvard.edu/link_gateway/" + .bibcode + "/PUB_PDF") elif ($es | index("EPRINT_PDF")) != null then ("https://ui.adsabs.harvard.edu/link_gateway/" + .bibcode + "/EPRINT_PDF") else null end)
+      } else null end
+    ),
+    retracted: false,
+    versions: [],
+    url: ("https://ui.adsabs.harvard.edu/abs/" + .bibcode),
+    sources: ["nasa_ads"]
+  }
+)'''
+
+[op.work]
+summary = "Look up a NASA ADS record by bibcode."
+method = "GET"
+url = "https://api.adsabs.harvard.edu/v1/search/query"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+const_query = { fl = "bibcode,title,author,year,pubdate,pub,doctype,doi,identifier,property,esources,citation_count,abstract", rows = "1" }
+probe = { params = { bibcode = "2010ARA&A..48..631S" }, min_results = 1, fixture = "fixtures/w5b/nasa_ads/work/default.json" }
+
+[op.work.params]
+bibcode = { type = "string", required = true, to = "q", template = "bibcode:{bibcode}", doc = "ADS bibcode (e.g. 2010ARA&A..48..631S)" }
+
+[op.work.map]
+items = ".response.docs[]"
+error = 'if type == "object" and (.error // null) != null then (if (.error | type) == "object" then (.error.msg // .error.message // (.error | tostring)) else (.error | tostring) end) else null end'
+work = "@ref:op.search.map.work"

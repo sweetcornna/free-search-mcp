@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "schneier_security",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:13:28Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.schneier.com/wp-json/wp/v2/search?search=cryptography&per_page=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ]
+        ],
+        "bodyText": "[{\"id\":71856,\"title\":\"Google Wants to Transition to Post-Quantum Cryptography by 2029\",\"url\":\"https:\\/\\/www.schneier.com\\/blog\\/archives\\/2026\\/04\\/google-wants-to-transition-to-post-quantum-cryptography-by-2029.html\",\"type\":\"post\",\"subtype\":\"post\",\"_links\":{\"self\":[{\"embeddable\":true,\"href\":\"https:\\/\\/www.schneier.com\\/wp-json\\/wp\\/v2\\/posts\\/71856\",\"targetHints\":{\"allow\":[\"GET\"]}}],\"about\":[{\"href\":\"https:\\/\\/www.schneier.com\\/wp-json\\/wp\\/v2\\/types\\/post\"}],\"collection\":[{\"href\":\"https:\\/\\/www.schneier.com\\/wp-json\\/wp\\/v2\\/search\"}]}},{\"id\":71821,\"title\":\"Inventors of Quantum Cryptography Win Turing Award\",\"url\":\"https:\\/\\/www.schneier.com\\/blog\\/archives\\/2026\\/03\\/inventors-of-quantum-cryptography-win-turing-award.html\",\"type\":\"post\",\"subtype\":\"post\",\"_links\":{\"self\":[{\"embeddable\":true,\"href\":\"https:\\/\\/www.schneier.com\\/wp-json\\/wp\\/v2\\/posts\\/71821\",\"targetHints\":{\"allow\":[\"GET\"]}}],\"about\":[{\"href\":\"https:\\/\\/www.schneier.com\\/wp-json\\/wp\\/v2\\/types\\/post\"}],\"collection\":[{\"href\":\"https:\\/\\/www.schneier.com\\/wp-json\\/wp\\/v2\\/search\"}]}},{\"id\":71300,\"title\":\"Applied Cryptography (Paperback)\",\"url\":\"https:\\/\\/www.schneier.com\\/product\\/applied-cryptography-paperback\\/\",\"type\":\"post\",\"subtype\":\"product\",\"_links\":{\"self\":[{\"embeddable\":true,\"href\":\"https:\\/\\/www.schneier.com\\/wp-json\\/wp\\/v2\\/product\\/71300\",\"targetHints\":{\"allow\":[\"GET\"]}}],\"about\":[{\"href\":\"https:\\/\\/www.schneier.com\\/wp-json\\/wp\\/v2\\/types\\/product\"}],\"collection\":[{\"href\":\"https:\\/\\/www.schneier.com\\/wp-json\\/wp\\/v2\\/search\"}]}}]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

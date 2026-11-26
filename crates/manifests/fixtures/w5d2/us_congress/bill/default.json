@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "us_congress",
+  "op": "bill",
+  "recordedAt": "2026-11-25T12:14:49Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.congress.gov/v3/bill/118/hr/1?format=json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"bill\": {\"congress\": 118, \"type\": \"HR\", \"number\": \"1\", \"title\": \"Lower Energy Costs Act\", \"originChamber\": \"House\", \"originChamberCode\": \"H\", \"introducedDate\": \"2023-03-14\", \"sponsors\": [{\"bioguideId\": \"S001176\", \"fullName\": \"Rep. Scalise, Steve [R-LA-1]\", \"party\": \"R\", \"state\": \"LA\", \"district\": 1}], \"cosponsors\": {\"count\": 55, \"url\": \"https://api.congress.gov/v3/bill/118/hr/1/cosponsors?format=json\"}, \"committees\": {\"count\": 5, \"url\": \"https://api.congress.gov/v3/bill/118/hr/1/committees?format=json\"}, \"latestAction\": {\"actionDate\": \"2023-03-30\", \"text\": \"Received in the Senate and Read twice and referred to the Committee on Energy and Natural Resources.\"}, \"policyArea\": {\"name\": \"Energy\"}, \"updateDate\": \"2024-05-18T10:15:30Z\", \"url\": \"https://api.congress.gov/v3/bill/118/hr/1?format=json\"}, \"request\": {\"contentType\": \"application/json\", \"format\": \"json\"}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

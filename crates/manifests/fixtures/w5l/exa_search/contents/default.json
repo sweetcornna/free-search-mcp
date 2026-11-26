@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "exa_search",
+  "op": "contents",
+  "recordedAt": "2026-11-25T12:56:38Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://api.exa.ai/contents",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": "cb75c8d73d98440c3d502f815d4adc945047abffb4284b8d744b3a9944d57553"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"requestId\": \"a9021ef3c4d842a1b54f7a8b99e102cd\", \"results\": [{\"id\": \"https://arxiv.org/abs/2312.10997\", \"url\": \"https://arxiv.org/abs/2312.10997\", \"title\": \"Retrieval-Augmented Generation for Large Language Models: A Survey\", \"publishedDate\": \"2023-12-18T00:00:00.000Z\", \"author\": \"Yunfan Gao et al.\", \"text\": \"Large Language Models showcase impressive capabilities but encounter hallucination and outdated knowledge. Retrieval-Augmented Generation (RAG) incorporates external databases to improve accuracy and credibility.\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

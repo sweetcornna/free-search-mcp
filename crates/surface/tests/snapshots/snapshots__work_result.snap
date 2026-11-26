@@ -1,0 +1,35 @@
+---
+source: crates/surface/tests/snapshots.rs
+expression: out
+---
+# Academic: crispr — 3 works · europepmc, crossref, openalex · 1.48s
+_subscope: academic.biomed_
+
+## 1. Synthetic Biology Tools and Strategies for Microbial Cell Factory Construction.
+<https://doi.org/10.1007/10_2026_363>
+Authors: Jiang J, Zhang X, Zhang L, Tan GY
+_2027 · Advances in biochemical engineering/biotechnology · article · cited by 0 (europepmc)_
+IDs: doi:10.1007/10_2026_363 · PMID:42888301
+> Microbial cell factories have emerged as important platforms for the sustainable production of fuels, chemicals, pharmaceuticals, and other value-added bioproducts. Synthetic biology provides a systematic engineering framework for their construction and optimization through standardized biological parts, modular design …
+_sources: europepmc_
+
+## 2. CRISPR/Cas Systems: Biological Basis and Genome Editing Applications.
+<https://doi.org/10.1007/978-1-0716-5547-4_1>
+Authors: Cakiroglu E, Senturk S
+_2027 · Methods in molecular biology (Clifton, N.J.) · article · cited by 0 (europepmc)_
+IDs: doi:10.1007/978-1-0716-5547-4_1 · PMID:42771304
+> Clustered regularly interspaced short palindromic repeats (CRISPR) and associated (Cas) systems have revolutionized the field of genome engineering by providing versatile, efficient, and programmable tools for precise genetic manipulation.
+>
+> […truncated]
+_sources: europepmc_
+
+## 3. RETRACTED: Hydroxychloroquine or chloroquine with or without a macrolide for treatment of COVID-19: a multinational registry analysis ⚠️ **RETRACTED**
+<https://doi.org/10.1016/s0140-6736(20)31180-6>
+Authors: Mandeep R. Mehra, Sapan S. Desai, Frank Thomas Ruschitzka, Amit N. Patel
+_2020 · The Lancet · article · cited by 1322 (openalex) · OA: bronze_
+IDs: doi:10.1016/s0140-6736(20)31180-6 · OpenAlex:W3027680906
+> ⚠️ **Retraction:** Publisher retraction (2020-06-05): unverified primary data
+_sources: crossref, openalex_
+
+notes: 1 retracted work flagged and demoted
+next: `scholar.fulltext(id)` · `scholar.graph(id)` · `scholar.integrity(doi)` · `scholar.cite(id)`.

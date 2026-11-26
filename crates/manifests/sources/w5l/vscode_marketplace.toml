@@ -1,0 +1,115 @@
+id = "vscode_marketplace"
+name = "VS Code Extension Marketplace"
+summary = "Visual Studio Code Marketplace public gallery API for searching extensions, install metrics, ratings, and versions."
+aliases = ["vscode", "vs code", "vscode extensions", "visual studio marketplace"]
+home_url = "https://marketplace.visualstudio.com/vscode"
+tier = 1
+scopes = ["code"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 4, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 21600 }
+
+[op.search]
+summary = "Search Visual Studio Code extensions via POST gallery extensionquery."
+method = "POST"
+url = "https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery"
+headers = { Accept = "application/json;api-version=7.2-preview.1" }
+response = "json"
+returns = "records"
+body = { kind = "json", jaq = '''{
+  filters: [{
+    criteria: [
+      { filterType: 8, value: "Microsoft.VisualStudio.Code" },
+      { filterType: 10, value: $p.query }
+    ],
+    pageNumber: ($p.page // 1),
+    pageSize: ($p.limit // 10),
+    sortBy: 0,
+    sortOrder: 0
+  }],
+  assetTypes: [],
+  flags: 870
+}''' }
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "rust-analyzer", limit = 3 }, min_results = 2, fixture = "fixtures/w5l/vscode_marketplace/search/default.json" }
+examples = [
+  'source.call("vscode_marketplace.search", { query: "rust-analyzer", limit: 5 })',
+]
+
+[op.search.params]
+query = { type = "string", required = true, in = "body", doc = "Extension search text" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "body", doc = "Extensions per page" }
+page = { type = "int", default = 1, min = 1, in = "body", doc = "1-based page number" }
+
+[op.search.map]
+items = "(.results[0].extensions // [])[]"
+error = "if .message and (.results == null) then (.message | tostring) else null end"
+record = '''(
+  ((.publisher.publisherName // "") + "." + (.extensionName // "")) as $extId |
+  ([(.statistics // [])[] | select(.statisticName == "install") | .value][0] // 0) as $installs |
+  ([(.statistics // [])[] | select(.statisticName == "averagerating") | .value][0] // null) as $rating |
+  ([(.statistics // [])[] | select(.statisticName == "ratingcount") | .value][0] // 0) as $ratingCount |
+  {
+    id: $extId,
+    displayName: ((.displayName // .extensionName // "") | collapse_ws // ""),
+    publisher: (.publisher.publisherName // ""),
+    publisherDisplayName: ((.publisher.displayName // "") | collapse_ws // ""),
+    shortDescription: ((.shortDescription // "") | collapse_ws // ""),
+    version: ((.versions // [])[0].version // null),
+    lastUpdated: (.lastUpdated // null),
+    publishedDate: (.publishedDate // null),
+    installs: $installs,
+    averageRating: $rating,
+    ratingCount: $ratingCount,
+    categories: (.categories // []),
+    tags: (.tags // []),
+    url: ("https://marketplace.visualstudio.com/items?itemName=" + $extId)
+  }
+)'''
+hit = '''(
+  ((.publisher.publisherName // "") + "." + (.extensionName // "")) as $extId |
+  ([(.statistics // [])[] | select(.statisticName == "install") | .value][0] // 0) as $installs |
+  {
+    title: (((.displayName // .extensionName // "") | collapse_ws // "") + " (" + $extId + ")"),
+    url: ("https://marketplace.visualstudio.com/items?itemName=" + $extId),
+    snippet: (
+      [
+        (if (.shortDescription // "") != "" then (.shortDescription | collapse_ws // "") else null end),
+        ("v" + ((.versions // [])[0].version // "?")),
+        (($installs | floor | tostring) + " installs")
+      ] | map(select(. != null)) | join(" · ")
+    )[0:280],
+    date: (.lastUpdated | parse_date),
+    dateSource: "api"
+  }
+)'''
+
+[op.extension]
+summary = "Look up a specific VS Code extension by exact publisher.name identifier."
+method = "POST"
+url = "https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery"
+headers = { Accept = "application/json;api-version=7.2-preview.1" }
+response = "json"
+returns = "records"
+body = { kind = "json", jaq = '''{
+  filters: [{
+    criteria: [{ filterType: 7, value: $p.id }],
+    pageNumber: 1,
+    pageSize: 1
+  }],
+  assetTypes: [],
+  flags: 870
+}''' }
+probe = { params = { id = "rust-lang.rust-analyzer" }, min_results = 1, fixture = "fixtures/w5l/vscode_marketplace/extension/default.json" }
+examples = [
+  'source.call("vscode_marketplace.extension", { id: "rust-lang.rust-analyzer" })',
+]
+
+[op.extension.params]
+id = { type = "string", required = true, in = "body", doc = "Extension ID as publisher.extensionName (e.g. rust-lang.rust-analyzer)" }
+
+[op.extension.map]
+items = "(.results[0].extensions // [])[]"
+error = "@ref:op.search.map.error"
+record = "@ref:op.search.map.record"

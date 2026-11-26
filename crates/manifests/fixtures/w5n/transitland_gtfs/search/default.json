@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "transitland_gtfs",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://transit.land/api/v2/rest/feeds?search=bart&limit=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"feeds\":[{\"id\":1234,\"onestop_id\":\"f-9q9-bart\",\"name\":\"Bay Area Rapid Transit\",\"spec\":\"GTFS\",\"urls\":{\"static_current\":\"https://www.bart.gov/dev/schedules/google_transit.zip\",\"realtime_trip_updates\":\"https://api.bart.gov/gtfsrt/tripupdate.aspx\",\"realtime_vehicle_positions\":\"\",\"realtime_alerts\":\"https://api.bart.gov/gtfsrt/alerts.aspx\"},\"license\":{\"url\":\"https://www.bart.gov/schedules/developers/developer-license-agreement\",\"use_without_attribution\":\"yes\"},\"tags\":{\"gtfs_data_exchange\":\"airbart\"}},{\"id\":1235,\"onestop_id\":\"f-9q9-bart~rt\",\"name\":\"Bay Area Rapid Transit (GTFS-RT)\",\"spec\":\"GTFS-RT\",\"urls\":{\"static_current\":\"\",\"realtime_trip_updates\":\"https://api.bart.gov/gtfsrt/tripupdate.aspx\",\"realtime_vehicle_positions\":\"\",\"realtime_alerts\":\"https://api.bart.gov/gtfsrt/alerts.aspx\"},\"license\":{\"url\":\"https://www.bart.gov/schedules/developers/developer-license-agreement\",\"use_without_attribution\":\"yes\"},\"tags\":{}},{\"id\":1236,\"onestop_id\":\"f-9q9-bayarea~511\",\"name\":\"511 SF Bay Regional GTFS (includes BART)\",\"spec\":\"GTFS\",\"urls\":{\"static_current\":\"https://api.511.org/transit/datafeeds?operator_id=RG\",\"realtime_trip_updates\":\"\",\"realtime_vehicle_positions\":\"\",\"realtime_alerts\":\"\"},\"license\":{\"url\":\"https://511.org/open-data/terms\",\"use_without_attribution\":\"yes\"},\"tags\":{}}],\"meta\":{\"after\":1236,\"next\":\"https://transit.land/api/v2/rest/feeds?after=1236&limit=3&search=bart\"}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

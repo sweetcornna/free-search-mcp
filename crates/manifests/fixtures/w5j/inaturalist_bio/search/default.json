@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "source": "inaturalist_bio",
+  "op": "search",
+  "recordedAt": "2026-11-25T13:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.inaturalist.org/v2/observations?q=vulpes&per_page=3&page=1&fields=%28id%3A%21t%2Cuuid%3A%21t%2Cspecies_guess%3A%21t%2Cobserved_on%3A%21t%2Cplace_guess%3A%21t%2Cquality_grade%3A%21t%2Curi%3A%21t%2Ctaxon%3A%28id%3A%21t%2Cname%3A%21t%2Cpreferred_common_name%3A%21t%2Crank%3A%21t%29%2Cgeojson%3A%21t%29",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ],
+          [
+            "cache-control",
+            "public, max-age=300"
+          ],
+          [
+            "etag",
+            "W/\"50a-yGNZa7XwERhdduqm/UULj3DtFsU\""
+          ]
+        ],
+        "bodyText": "{\"total_results\":177392,\"page\":1,\"per_page\":3,\"results\":[{\"uuid\":\"0da1b1b2-85c3-43e1-9b7d-312ff32172c6\",\"id\":416881599,\"species_guess\":\"Red Fox\",\"observed_on\":\"2026-04-23\",\"place_guess\":\"Clarksville\",\"quality_grade\":\"needs_id\",\"uri\":\"https://www.inaturalist.org/observations/416881599\",\"taxon\":{\"id\":42069,\"name\":\"Vulpes vulpes\",\"preferred_common_name\":\"Red Fox\",\"rank\":\"species\"},\"geojson\":{\"coordinates\":[-76.9768979028,39.215619915],\"type\":\"Point\"}},{\"uuid\":\"dceeba89-2a9d-4f29-b5ed-044e9c9ba124\",\"id\":416876895,\"species_guess\":\"Red Fox\",\"observed_on\":\"2026-11-25\",\"place_guess\":\"Ruby St, Burwood East, VIC, AU\",\"quality_grade\":\"research\",\"uri\":\"https://www.inaturalist.org/observations/416876895\",\"taxon\":{\"id\":42069,\"name\":\"Vulpes vulpes\",\"preferred_common_name\":\"Red Fox\",\"rank\":\"species\"},\"geojson\":{\"coordinates\":[145.1571799145,-37.8522457039],\"type\":\"Point\"}},{\"uuid\":\"b2299fc5-ba62-40e4-bb91-57245cc00d02\",\"id\":416876246,\"species_guess\":\"Renard de Rüppell\",\"observed_on\":\"2026-11-17\",\"place_guess\":\"Dhofar, Oman\",\"quality_grade\":\"needs_id\",\"uri\":\"https://www.inaturalist.org/observations/416876246\",\"taxon\":{\"id\":42057,\"name\":\"Vulpes rueppellii\",\"preferred_common_name\":\"Rüppell's Fox\",\"rank\":\"species\"},\"geojson\":{\"coordinates\":[53.9788656566,17.9953888694],\"type\":\"Point\"}}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

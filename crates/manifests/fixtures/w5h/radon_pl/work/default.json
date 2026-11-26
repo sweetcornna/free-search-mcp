@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "radon_pl",
+  "op": "work",
+  "recordedAt": "2026-11-25T13:02:20Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://radon.nauka.gov.pl/opendata/polon/publications?resultNumbers=1&publicationId=5e70f52b46e0fb0001b28fa8",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"results\":[{\"mainLanguageName\":null,\"keywords\":[],\"year\":2000,\"isbn\":null,\"book\":null,\"typeName\":\"Artykuł\",\"affiliations\":[],\"type\":\"ARTICLE\",\"title\":\"Time Evolution of Quantum Fractals\",\"mainLanguage\":null,\"journal\":{\"objectId\":\"5e6f7d4e878c285145479269\",\"mniswId\":\"16093\",\"title\":\"Physical Review Letters\",\"doi\":null,\"issn\":\"0031-9007\",\"eissn\":\"1079-7114\",\"websiteLink\":null,\"metadataSource\":\"SCOPUS\",\"editor\":null,\"documentHash\":\"e928f814-eb5f-4137-8dc4-a90840cddcd6\"},\"pages\":null,\"publicationPlace\":null,\"translators\":[],\"institutionProfile\":false,\"openAccess\":null,\"bookEvaluation\":null,\"translationEditors\":[],\"articleEvaluation\":null,\"proceedings\":null,\"_version\":4,\"objectId\":\"5e70f52b46e0fb0001b28fa8\",\"editors\":[],\"conferenceSeries\":null,\"contributionOrder\":{},\"issue\":null,\"abstracts\":[],\"lastRefresh\":\"1761897231421\",\"journalIssue\":null,\"conferenceEdition\":null,\"originalLanguage\":null,\"editionNumber\":null,\"volume\":null,\"pagesFromTo\":null,\"issn\":null,\"series\":null,\"translation\":false,\"publisher\":null,\"ismn\":null,\"otherTitles\":[],\"publicUri\":null,\"numberInSeries\":null,\"authors\":[{\"objectId\":\"5e7092ee878c28a04739f5b1\",\"name\":\"DANIEL\",\"lastName\":\"WÓJCIK\",\"uuid\":\"66E18CC566F0E6B89E4DC92E19A7929D9BA7216B05AFDD277F8DC92CAA8CF46021EC3D2A1A0BD31E13FFDD89F3A14625A199EF14C183A605C000D175181EFD5E\",\"orcidId\":\"0000-0003-0812-9872\",\"documentHash\":\"af777624-7096-4632-8f0b-32bd12f40b95\"},{\"objectId\":\"5e7092b9878c28a04739b78c\",\"name\":\"Karol\",\"lastName\":\"Życzkowski\",\"uuid\":\"7E81CF9B5BE81A84B5E097CD448924E7BA290A0270D614E442BF00AACA3AC2EA6A0CE72E3D4312E9EA69C62DC06B085C1C828FDDF9930A3A349F39FD98E45A10\",\"orcidId\":\"0000-0002-0653-3639\",\"documentHash\":\"4f4463d2-b044-4e30-8bbb-e0f21de4827f\"},{\"objectId\":\"5e7092b7878c28a04739b55d\",\"name\":\"Iwo\",\"lastName\":\"Białynicki- Birula\",\"uuid\":\"463C628EDBB1B84553AAA5D200F0ABA01BF904161E50D878B1C2D255D1694EAECE3A9DE01A08249B412D675C4ECE276C5C22E8CCFC7A93FFD98E918D4C458344\",\"orcidId\":\"0000-0002-5195-4133\",\"documentHash\":\"f1c31de6-91af-4ce1-a028-186ca35bf57a\"}],\"doi\":null}],\"pagination\":{\"maxCount\":1,\"token\":\"MTc2MTg5NzIzMTQyMQ==\"},\"version\":\"1.2.8\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+id = "issn_portal"
+name = "ISSN International Portal"
+summary = "Official ISSN International Centre linked-data registry for serials, key titles, and ISSN-L links."
+aliases = ["issn", "cieps", "issn-l", "serial registry"]
+home_url = "https://portal.issn.org"
+tier = 1
+scopes = ["academic", "reference"]
+caps = ["lookup", "venue"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 2.0, burst = 4, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 604800 }
+
+[op.lookup]
+summary = "Look up serial metadata, key title, medium, and ISSN-L linking by ISSN."
+method = "GET"
+url = "https://portal.issn.org/resource/ISSN/{issn}"
+headers = { Accept = "application/ld+json" }
+response = "json"
+returns = "records"
+const_query = { format = "json" }
+probe = { params = { issn = "0028-0836" }, min_results = 1, fixture = "fixtures/w5b/issn_portal/lookup/default.json" }
+
+[op.lookup.params]
+issn = { type = "string", required = true, in = "path", doc = "8-digit ISSN with hyphen (e.g. 0028-0836)" }
+
+[op.lookup.map]
+items = "."
+error = 'if type == "object" and (.error // .message // null) != null then (.error // .message | tostring) else null end'
+record = '''{
+  name: ((.identifiedBy["#KeyTitle"].value // .mainTitle // (.name | first_str) // "") | collapse_ws),
+  issn: ([(.identifier // empty), (.identifiedBy["#ISSN-L"].value // empty)] | unique),
+  publisher: null,
+  sources: ["issn_portal"]
+}'''

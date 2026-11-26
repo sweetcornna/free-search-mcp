@@ -1,0 +1,78 @@
+protocol = "socrata"
+
+[[instance]]
+id = "socrata_global"
+name = "Socrata Global Open Data Discovery"
+summary = "Cross-portal Discovery catalog indexing public datasets across hundreds of Socrata municipal, state, and federal portals."
+aliases = ["socrata", "socrata discovery", "tyler open data"]
+base_url = "https://api.us.socrata.com"
+scopes = ["dataset", "gov"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "health", limit = 3 }, min_results = 1 }
+
+[[instance]]
+id = "cdc_open_data"
+name = "US CDC Public Health Open Data"
+summary = "Centers for Disease Control and Prevention public health surveillance, epidemiology, vaccination, and mortality datasets."
+aliases = ["cdc", "cdc data", "data.cdc.gov"]
+base_url = "https://data.cdc.gov"
+scopes = ["dataset", "gov", "academic.biomed"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "influenza", limit = 3, domains = "data.cdc.gov" }, min_results = 1 }
+
+[[instance]]
+id = "nyc_open_data"
+name = "NYC Open Data"
+summary = "New York City official municipal datasets covering 311 requests, transit, housing, public safety, and city finance."
+aliases = ["nyc", "new york city data", "data.cityofnewyork.us"]
+base_url = "https://data.cityofnewyork.us"
+scopes = ["dataset", "gov"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "311", limit = 3, domains = "data.cityofnewyork.us" }, min_results = 1 }
+
+[[instance]]
+id = "chicago_open_data"
+name = "City of Chicago Data Portal"
+summary = "Chicago municipal open data covering crime incidents, building permits, transit, inspections, and civic budgets."
+aliases = ["chicago data", "data.cityofchicago.org"]
+base_url = "https://data.cityofchicago.org"
+scopes = ["dataset", "gov"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "crime", limit = 3, domains = "data.cityofchicago.org" }, min_results = 1 }
+
+[[instance]]
+id = "ny_state_data"
+name = "New York State Open Data"
+summary = "New York State government datasets covering energy, transportation, health, education, and economic development."
+aliases = ["ny open data", "data.ny.gov"]
+base_url = "https://data.ny.gov"
+scopes = ["dataset", "gov"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "energy", limit = 3, domains = "data.ny.gov" }, min_results = 1 }
+
+[[instance]]
+id = "texas_open_data"
+name = "Texas Open Data Portal"
+summary = "State of Texas public datasets covering water resources, licensing, public safety, budgets, and infrastructure."
+aliases = ["texas data", "data.texas.gov"]
+base_url = "https://data.texas.gov"
+scopes = ["dataset", "gov"]
+caps = ["search", "lookup", "dataset"]
+tier = 2
+probe = { op = "search", params = { query = "water", limit = 3, domains = "data.texas.gov" }, min_results = 1 }
+
+[[instance]]
+id = "calgary_open_data"
+name = "City of Calgary Open Data"
+summary = "Calgary municipal datasets covering transit, urban planning, demographics, environment, and public services."
+aliases = ["calgary data", "data.calgary.ca"]
+base_url = "https://data.calgary.ca"
+scopes = ["dataset", "gov"]
+caps = ["search", "lookup", "dataset"]
+tier = 2
+probe = { op = "search", params = { query = "transit", limit = 3, domains = "data.calgary.ca" }, min_results = 1 }

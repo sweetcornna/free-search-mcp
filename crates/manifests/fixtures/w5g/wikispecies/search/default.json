@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "wikispecies",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:12:57Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://species.wikimedia.org/w/api.php?action=query&list=search&srsearch=Homo+sapiens&srlimit=3&format=json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "cache-control",
+            "private, must-revalidate, max-age=0"
+          ],
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"batchcomplete\":\"\",\"continue\":{\"sroffset\":3,\"continue\":\"-||\"},\"query\":{\"searchinfo\":{\"totalhits\":20},\"search\":[{\"ns\":0,\"title\":\"Homo sapiens\",\"pageid\":37,\"size\":2153,\"wordcount\":393,\"snippet\":\"<span class=\\\"searchmatch\\\">Homo</span> Species: <span class=\\\"searchmatch\\\">Homo</span> <span class=\\\"searchmatch\\\">sapiens</span> Subspecies: H.\\u00a0s.\\u00a0<span class=\\\"searchmatch\\\">sapiens</span>\\u00a0\\u2013 \\u2020H.\\u00a0s.\\u00a0idaltu\\u00a0\\u2013 (debated) \\u2020H.\\u00a0s.\\u00a0neanderthalensis\\u00a0\\u2013 (debated) \\u2020H.\\u00a0s.\\u00a0denisovan (debated) <span class=\\\"searchmatch\\\">Homo</span> sapiens\",\"timestamp\":\"2026-09-07T16:41:14Z\"},{\"ns\":0,\"title\":\"Homo sapiens idaltu\",\"pageid\":5821,\"size\":906,\"wordcount\":109,\"snippet\":\"Subfamilia: Homininae Tribus: Hominini Genus: <span class=\\\"searchmatch\\\">Homo</span> Species: <span class=\\\"searchmatch\\\">Homo</span> <span class=\\\"searchmatch\\\">sapiens</span> Subspecies: \\u2020<span class=\\\"searchmatch\\\">Homo</span> <span class=\\\"searchmatch\\\">sapiens</span> idaltu <span class=\\\"searchmatch\\\">Homo</span> <span class=\\\"searchmatch\\\">sapiens</span> idaltu (White et al., 2003) Type locality:\",\"timestamp\":\"2026-06-09T01:02:44Z\"},{\"ns\":0,\"title\":\"Homo sapiens sapiens\",\"pageid\":3921,\"size\":7903,\"wordcount\":741,\"snippet\":\"Genus: <span class=\\\"searchmatch\\\">Homo</span> Species: <span class=\\\"searchmatch\\\">Homo</span> <span class=\\\"searchmatch\\\">sapiens</span> Subspecies: <span class=\\\"searchmatch\\\">Homo</span> <span class=\\\"searchmatch\\\">sapiens</span> <span class=\\\"searchmatch\\\">sapiens</span> <span class=\\\"searchmatch\\\">Homo</span> <span class=\\\"searchmatch\\\">sapiens</span> <span class=\\\"searchmatch\\\">sapiens</span> Linnaeus is designated as the lectotype of H. <span class=\\\"searchmatch\\\">sapiens</span> (Stearn\",\"timestamp\":\"2026-07-20T15:20:17Z\"}]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

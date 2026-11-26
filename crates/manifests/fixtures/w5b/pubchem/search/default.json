@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "pubchem",
+  "op": "search",
+  "recordedAt": "2026-11-25T11:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/aspirin/property/MolecularFormula,MolecularWeight,ConnectivitySMILES,IUPACName,InChIKey,Title/JSON",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "cache-control",
+            "private"
+          ],
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\n  \"PropertyTable\": {\n    \"Properties\": [\n      {\n        \"CID\": 2244,\n        \"MolecularFormula\": \"C9H8O4\",\n        \"MolecularWeight\": \"180.16\",\n        \"ConnectivitySMILES\": \"CC(=O)OC1=CC=CC=C1C(=O)O\",\n        \"InChIKey\": \"BSYNRYMUTXBXSQ-UHFFFAOYSA-N\",\n        \"IUPACName\": \"2-acetyloxybenzoic acid\",\n        \"Title\": \"Aspirin\"\n      }\n    ]\n  }\n}\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

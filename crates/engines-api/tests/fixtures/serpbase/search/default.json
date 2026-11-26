@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "source": "serpbase",
+  "op": "search",
+  "recordedAt": "2026-11-25T10:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://api.serpbase.dev/google/search",
+        "headersSubset": {
+          "accept": "application/json",
+          "content-type": "application/json"
+        },
+        "bodySha256": "d0156f5d503a1159ee564ce5bd8d69f05d46afa15ff69c5a197576908d4e37be"
+      },
+      "response": {
+        "status": 200,
+        "headers": [["content-type", "application/json"]],
+        "bodyText": "{\"status\":0,\"request_id\":\"req_abc123\",\"elapsed_ms\":812,\"credits_charged\":1,\"organic\":[{\"title\":\"Result A\",\"link\":\"https://example.com/a\",\"snippet\":\"first snippet body\",\"position\":1},{\"title\":\"Result <strong>B</strong>\",\"link\":\"https://example.com/b\",\"snippet\":\"a highlighted <em>result</em>\",\"position\":2},{\"title\":\"Result C with Second keyword\",\"link\":\"https://example.com/c\",\"snippet\":\"third body\",\"position\":3}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

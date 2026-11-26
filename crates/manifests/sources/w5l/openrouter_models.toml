@@ -1,0 +1,99 @@
+id = "openrouter_models"
+name = "OpenRouter LLM Directory & Pricing"
+summary = "Keyless directory of 300+ large language models with model IDs, context windows, modalities, token pricing, and provider endpoints."
+aliases = ["openrouter", "llm pricing", "llm directory", "ai models"]
+home_url = "https://openrouter.ai/models"
+tier = 1
+scopes = ["code"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 4, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 21600 }
+
+[op.search]
+summary = "Search OpenRouter LLM models by ID, name, or description (optional server-side category filter + client-side substring filter)."
+method = "GET"
+url = "https://openrouter.ai/api/v1/models"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { query = "deepseek", category = "programming", limit = 3 }, min_results = 2, fixture = "fixtures/w5l/openrouter_models/search/default.json" }
+examples = [
+  'source.call("openrouter_models.search", { query: "claude", limit: 5 })',
+  'source.call("openrouter_models.search", { query: "deepseek", category: "programming", limit: 5 })',
+]
+
+[op.search.params]
+query = { type = "string", required = true, in = "none", doc = "Case-insensitive substring matched against model id, name, or description" }
+category = { type = "string", enum = ["programming", "roleplay", "marketing", "seo", "technology", "science", "translation", "legal", "finance", "health", "trivia", "academia"], to = "category", doc = "Optional OpenRouter server-side model category filter" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "none", doc = "Maximum matching models to return" }
+
+[op.search.map]
+items = '''[(.data // [])[] | select((((.id // "") + " " + (.name // "") + " " + (.description // "")) | ascii_downcase) | contains(($p.query // "") | ascii_downcase))][0:($p.limit // 10)][]'''
+total = ".total_count"
+error = "if .error then (.error.message // (.error | tostring)) else null end"
+record = '''{
+  id: (.id // ""),
+  canonicalSlug: (.canonical_slug // null),
+  name: (.name // ""),
+  createdAt: (.created | epoch_to_iso),
+  contextLength: (.context_length // null),
+  modality: (.architecture.modality // null),
+  inputModalities: (.architecture.input_modalities // []),
+  outputModalities: (.architecture.output_modalities // []),
+  pricingPromptPerToken: (.pricing.prompt // null),
+  pricingCompletionPerToken: (.pricing.completion // null),
+  huggingFaceId: (.hugging_face_id // null),
+  description: (((.description // "") | collapse_ws // "")[0:400]),
+  url: ("https://openrouter.ai/" + (.id // ""))
+}'''
+hit = '''{
+  title: ((.name // .id // "") + " (" + (.id // "") + ")"),
+  url: ("https://openrouter.ai/" + (.id // "")),
+  snippet: (
+    [
+      (if .context_length then ("ctx " + (.context_length | tostring)) else null end),
+      (if .pricing.prompt then ("in $" + (.pricing.prompt | tostring) + "/tok") else null end),
+      (if .pricing.completion then ("out $" + (.pricing.completion | tostring) + "/tok") else null end),
+      (if (.description // "") != "" then ((.description | collapse_ws // "")[0:160]) else null end)
+    ] | map(select(. != null)) | join(" · ")
+  )[0:280],
+  date: (.created | parse_date),
+  dateSource: "api"
+}'''
+
+[op.endpoints]
+summary = "Inspect live inference provider endpoints, pricing, and quantization for a specific OpenRouter model."
+method = "GET"
+url = "https://openrouter.ai/api/v1/models/{author}/{slug}/endpoints"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { author = "openai", slug = "gpt-4o" }, min_results = 1, fixture = "fixtures/w5l/openrouter_models/endpoints/default.json" }
+examples = [
+  'source.call("openrouter_models.endpoints", { author: "openai", slug: "gpt-4o" })',
+]
+
+[op.endpoints.params]
+author = { type = "string", required = true, in = "path", doc = "Model author/org prefix (e.g. openai, anthropic, deepseek)" }
+slug = { type = "string", required = true, in = "path", doc = "Model slug (e.g. gpt-4o, claude-3.5-sonnet)" }
+
+[op.endpoints.map]
+items = "if .data then .data else empty end"
+error = "@ref:op.search.map.error"
+record = '''{
+  id: (.id // ""),
+  name: (.name // ""),
+  description: ((.description // "")[0:400]),
+  modality: (.architecture.modality // null),
+  endpoints: [(.endpoints // [])[] | {
+    name,
+    providerName: .provider_name,
+    contextLength: .context_length,
+    maxCompletionTokens: .max_completion_tokens,
+    quantization: .quantization,
+    pricing: .pricing,
+    status: .status
+  }],
+  url: ("https://openrouter.ai/" + (.id // ""))
+}'''

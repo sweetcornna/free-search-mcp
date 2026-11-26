@@ -1,0 +1,127 @@
+id = "episciences_oa"
+name = "Episciences Overlay Journals API"
+summary = "CCSD-hosted French and international diamond open-access overlay journals platform (mathematics, computer science, and humanities) with keyless JSON search and metadata API."
+aliases = ["episciences", "ccsd episciences", "overlay journals", "revues en accès ouvert", "épirevues"]
+home_url = "https://www.episciences.org"
+tier = 2
+scopes = ["academic", "academic.openaccess", "academic.math", "academic.cs", "academic.humanities"]
+caps = ["search", "lookup", "venue"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.5, burst = 4, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 43200, host_bucket = "api.episciences.org" }
+
+[op.search]
+summary = "Search published Episciences diamond open-access overlay journal papers (call episciences_oa.paper with docid for full landing and PDF URLs)."
+method = "GET"
+url = "https://api.episciences.org/api/search/"
+headers = { Accept = "application/ld+json" }
+response = "json"
+returns = "works"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "graph", limit = 3 }, min_results = 2, fixture = "fixtures/w5h/episciences_oa/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "terms", doc = "Search terms" }
+journal = { type = "string", to = "rvcode", doc = "Optional Episciences journal code e.g. dmtcs, lmcs, jdmdh" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "itemsPerPage", doc = "Results per page" }
+page = { type = "int", default = 1, min = 1, to = "page", doc = "1-based page number" }
+
+[op.search.map]
+items = "(if type == \"array\" then . else (.\"hydra:member\" // []) end)[]"
+total = "(if type == \"object\" then (.\"hydra:totalItems\" | to_int) else null end)"
+error = '''if (type == "object" and (."hydra:description" != null or .detail != null) and ."hydra:member" == null and .paperid == null) then (."hydra:description" // .detail | tostring) else null end'''
+work = '''(
+  ((.en_paper_title_t // .paper_title_t[0]? // .fr_paper_title_t // "") | tostring | strip_tags) as $title |
+  ((.en_abstract_t // .abstract_t[0]? // .fr_abstract_t // null) | strip_tags) as $abs |
+  (if (.doi_s // "") != "" then ("https://doi.org/" + .doi_s) elif ($p.journal // "") != "" and .docid != null then ("https://" + $p.journal + ".episciences.org/" + (.docid | tostring)) else null end) as $human_url |
+  (.revue_title_s // (if ((.en_volume_title_t // "") | test("^vol\\."; "i")) then ("Episciences (" + .en_volume_title_t + ")") else .en_volume_title_t end) // "Episciences") as $venue |
+  {
+    title: $title,
+    authors: [(.author_fullname_s // [])[] | select(type == "string" and length > 0) | { name: (. | collapse_ws) }],
+    year: (((.publication_date_tdate // "")[0:4]) | to_int),
+    publishedDate: ((.publication_date_tdate // null) | parse_date),
+    venue: ($venue | collapse_ws),
+    workType: "article",
+    ids: { doi: (.doi_s // null | doi_norm) },
+    abstractText: (if ($abs | type) == "string" and ($abs | length) > 0 then $abs else null end),
+    oa: (if $human_url != null then { status: "diamond", url: $human_url } else { status: "diamond" } end),
+    retracted: false,
+    versions: [],
+    url: ($human_url // "https://www.episciences.org"),
+    sources: ["episciences_oa"]
+  }
+)'''
+
+[op.paper]
+summary = "Fetch full structured Episciences paper metadata including DOI and preprint links by docid."
+method = "GET"
+url = "https://api.episciences.org/api/papers/{docid}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+probe = { params = { docid = "20214" }, min_results = 1, fixture = "fixtures/w5h/episciences_oa/paper/default.json" }
+
+[op.paper.params]
+docid = { type = "string", required = true, in = "path", doc = "Episciences numeric docid e.g. 20214" }
+
+[op.paper.map]
+items = "."
+error = "@ref:op.search.map.error"
+work = '''(
+  (.document.journal // {}) as $j |
+  ($j.journal_article // {}) as $a |
+  ($a.doi_data.resource // (if $a.doi_data.doi then ("https://doi.org/" + $a.doi_data.doi) else "https://www.episciences.org" end)) as $url |
+  (([($a.doi_data.collection | arr)[] | .item.resource | if type == "object" then (if ."@mime_type" == "application/pdf" then .value else null end) elif type == "string" and test("pdf"; "i") then . else null end | select(type == "string" and length > 0)][0]) // null) as $pdf |
+  (([($a.program | arr)[] | select(type == "object") | (.related_item // empty) | arr | .[] | .intra_work_relation | select(type == "object" and ."@identifier-type" == "arxiv") | .value][0]) // null) as $raw_ax |
+  (if ($raw_ax | type) == "string" then ($raw_ax | sub("^arXiv:"; "")) else null end) as $arxiv |
+  ([($a.program | arr)[] | select(type == "object") | (.related_item // empty) | arr | .[] | .intra_work_relation | select(type == "object" and ."@relationship-type" == "hasPreprint" and (.value | type) == "string" and (.value | test("^https?://"))) | { kind: "preprint", url: .value }]) as $vers |
+  ($j.journal_issue.publication_date // $a.publication_date // {}) as $pd |
+  (if ($pd.year != null and $pd.month != null and $pd.day != null) then (($pd.year | tostring) + "/" + ($pd.month | tostring) + "/" + ($pd.day | tostring) | parse_date) elif ($pd.year != null and $pd.month != null) then (($pd.year | tostring) + "/" + ($pd.month | tostring) | parse_date) elif ($pd.year != null) then (($pd.year | tostring) | parse_date) else null end) as $pub_date |
+  {
+    title: ((($a.titles.title | arr)[0] // "") | strip_tags),
+    authors: [($a.contributors.person_name | arr)[] | {
+      name: ([(.given_name // ""), (.surname // "")] | map(select(type == "string" and length > 0)) | join(" ") | collapse_ws),
+      orcid: (if (.ORCID | type) == "string" then (.ORCID | sub("^https?://orcid\\.org/"; "")) else null end),
+      affiliation: (((.affiliations.institution | arr)[0]?.institution_name) // null | collapse_ws)
+    } | select(.name != "")],
+    year: (($pd.year // null) | to_int),
+    publishedDate: $pub_date,
+    venue: ($j.journal_metadata.full_title // $j.journal_issue.issue // "Episciences" | collapse_ws),
+    workType: "article",
+    ids: {
+      doi: ($a.doi_data.doi // null | doi_norm),
+      arxiv: $arxiv
+    },
+    abstractText: ($a.abstract.value // null | strip_tags),
+    oa: { status: "diamond", url: $url, pdfUrl: $pdf },
+    retracted: false,
+    versions: $vers,
+    url: $url,
+    sources: ["episciences_oa"]
+  }
+)'''
+
+[op.journals]
+summary = "List Episciences diamond open-access overlay journals as VenueProfile records."
+method = "GET"
+url = "https://api.episciences.org/api/journals/"
+headers = { Accept = "application/ld+json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { limit = 3 }, min_results = 2, fixture = "fixtures/w5h/episciences_oa/journals/default.json" }
+
+[op.journals.params]
+limit = { type = "int", default = 10, min = 1, max = 50, to = "itemsPerPage", doc = "Journals per page" }
+page = { type = "int", default = 1, min = 1, to = "page", doc = "1-based page number" }
+
+[op.journals.map]
+items = "(if type == \"array\" then . else (.\"hydra:member\" // []) end)[]"
+total = "(if type == \"object\" then (.\"hydra:totalItems\" | to_int) else null end)"
+error = "@ref:op.search.map.error"
+record = '''{
+  name: (.name // .code // ""),
+  issn: ([(.settings // [])[] | select(.setting == "ISSN" or .setting == "eISSN") | .value | select(type == "string" and length > 0)] | unique),
+  publisher: "Episciences (CCSD)",
+  sources: ["episciences_oa"]
+}'''

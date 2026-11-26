@@ -1,0 +1,115 @@
+id = "fatcat_ia"
+name = "Internet Archive Fatcat Scholarly Catalog (v2)"
+summary = "Internet Archive Scholar Fatcat v2 catalog (~100M+ releases) for DOI/PMID/arXiv resolution and Wayback Machine preserved OA PDF file provenance."
+aliases = ["fatcat", "ia scholar", "internet archive scholar"]
+home_url = "https://scholar.archive.org"
+tier = 2
+scopes = ["academic", "academic.openaccess"]
+caps = ["lookup", "fulltext"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 1.0, burst = 2, concurrency = 1, timeout_ms = 12000, cache_ttl_s = 86400, host_bucket = "scholar.archive.org" }
+
+[op.lookup]
+summary = "Look up a Fatcat v2 scholarly release by DOI, PMID, PMCID, arXiv ID, or Wikidata QID."
+method = "GET"
+url = "https://scholar.archive.org/api/fatcat/v2/release/lookup"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+probe = { params = { id_type = "doi", id_value = "10.1038/nature12373" }, min_results = 1, fixture = "fixtures/w5h/fatcat_ia/lookup/default.json" }
+
+[op.lookup.params]
+id_type = { type = "string", default = "doi", enum = ["doi", "pmid", "pmcid", "arxiv", "wikidata_qid", "isbn13", "jstor", "ark", "mag", "doaj", "dblp", "oai", "hdl"], to = "id_type", doc = "External identifier namespace" }
+id_value = { type = "string", required = true, to = "id_value", doc = "Identifier value e.g. 10.1038/nature12373" }
+
+[op.lookup.map]
+items = "select(.id != null)"
+error = '''if (type == "object" and .detail != null) then (.detail | tostring) else null end'''
+work = '''(
+  (([(.extids // [])[] | select(.id_type == "doi") | .id_value][0]) // null) as $doi |
+  (([(.extids // [])[] | select(.id_type == "pmid") | .id_value][0]) // null) as $pmid |
+  (([(.extids // [])[] | select(.id_type == "pmcid") | .id_value][0]) // null) as $pmcid |
+  (([(.extids // [])[] | select(.id_type == "arxiv") | .id_value][0]) // null) as $arxiv |
+  (if $doi != null then ("https://doi.org/" + $doi) elif .work_id != null then ("https://scholar.archive.org/work/" + .work_id) else "https://scholar.archive.org" end) as $url |
+  {
+    title: (.title // "" | strip_tags),
+    authors: [(.contribs // [])[] | select((.role // "author") == "author") | {
+      name: ((.raw_name // ([(.given_name // ""), (.surname // "")] | map(select(length > 0)) | join(" "))) | collapse_ws),
+      affiliation: (.raw_affiliation // null | collapse_ws)
+    } | select(.name != "")],
+    year: (.release_year | to_int),
+    publishedDate: ((.release_date // null) | parse_date),
+    venue: (.container.name // .extra.container_name // .publisher // null | collapse_ws),
+    workType: (.release_type // "article"),
+    ids: {
+      doi: ($doi | doi_norm),
+      pmid: $pmid,
+      pmcid: $pmcid,
+      arxiv: $arxiv
+    },
+    abstractText: (.abstracts[0]?.content // null | strip_tags),
+    oa: (if $pmcid != null then { status: "green", url: ("https://pmc.ncbi.nlm.nih.gov/articles/" + $pmcid + "/"), license: (.license_slug // null) } elif (.license_slug // null) != null then { status: "open", url: $url, license: .license_slug } else null end),
+    retracted: ((.withdrawn_status // null) != null),
+    versions: [],
+    url: $url,
+    sources: ["fatcat_ia"]
+  }
+)'''
+
+[op.release]
+summary = "Look up raw Fatcat v2 release metadata including releaseId UUID (for calling fatcat_ia.files) by DOI, PMID, PMCID, arXiv ID, or Wikidata QID."
+method = "GET"
+url = "https://scholar.archive.org/api/fatcat/v2/release/lookup"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id_type = "doi", id_value = "10.1038/nature12373" }, min_results = 1, fixture = "fixtures/w5h/fatcat_ia/release/default.json" }
+
+[op.release.params]
+id_type = { type = "string", default = "doi", enum = ["doi", "pmid", "pmcid", "arxiv", "wikidata_qid", "isbn13", "jstor", "ark", "mag", "doaj", "dblp", "oai", "hdl"], to = "id_type", doc = "External identifier namespace" }
+id_value = { type = "string", required = true, to = "id_value", doc = "Identifier value e.g. 10.1038/nature12373" }
+
+[op.release.map]
+items = "select(.id != null)"
+error = "@ref:op.lookup.map.error"
+record = '''{
+  releaseId: (.id // ""),
+  workId: (.work_id // null),
+  title: (.title // "" | strip_tags),
+  year: (.release_year | to_int),
+  doi: (([(.extids // [])[] | select(.id_type == "doi") | .id_value][0]) // null | doi_norm),
+  pmid: (([(.extids // [])[] | select(.id_type == "pmid") | .id_value][0]) // null),
+  pmcid: (([(.extids // [])[] | select(.id_type == "pmcid") | .id_value][0]) // null),
+  url: (if .work_id != null then ("https://scholar.archive.org/work/" + .work_id) else "https://scholar.archive.org" end)
+}'''
+
+[op.files]
+summary = "List preserved PDF/file snapshots and Wayback Machine URLs for a Fatcat release UUID."
+method = "GET"
+url = "https://scholar.archive.org/api/fatcat/v2/release/{ident}/files"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { ident = "df9cbd15-174e-4e0d-84cf-ffa9daed96e7", limit = 3 }, min_results = 1, fixture = "fixtures/w5h/fatcat_ia/files/default.json" }
+
+[op.files.params]
+ident = { type = "string", required = true, in = "path", doc = "Fatcat v2 release UUID e.g. df9cbd15-174e-4e0d-84cf-ffa9daed96e7" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Max file records" }
+offset = { type = "int", default = 0, min = 0, to = "offset", doc = "0-based offset" }
+
+[op.files.map]
+items = "(.items // [])[]"
+total = ".count"
+error = "@ref:op.lookup.map.error"
+record = '''{
+  id: (.id // ""),
+  sha1: (.sha1 // null),
+  sha256: (.sha256 // null),
+  md5: (.md5 // null),
+  sizeBytes: (.size_bytes // null),
+  mimetype: (.mimetype // null),
+  waybackUrls: [(.urls // [])[] | select(.rel == "webarchive") | .url],
+  urls: [(.urls // [])[] | { rel: (.rel // ""), url: (.url // "") }]
+}'''

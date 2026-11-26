@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "jp_estat",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsList?searchWord=population&lang=E&limit=3&startPosition=1",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"GET_STATS_LIST\":{\"RESULT\":{\"STATUS\":0,\"ERROR_MSG\":\"The process was normally terminated.\",\"DATE\":\"2026-11-25T21:45:00.000+09:00\"},\"PARAMETER\":{\"LANG\":\"E\",\"SEARCH_WORD\":\"population\",\"LIMIT\":3},\"DATALIST_INF\":{\"NUMBER\":1284,\"RESULT_INF\":{\"FROM_NUMBER\":1,\"TO_NUMBER\":2,\"NEXT_KEY\":3},\"TABLE_INF\":[{\"@id\":\"0003448233\",\"STAT_NAME\":{\"@code\":\"00200521\",\"$\":\"Population Census\"},\"GOV_ORG\":{\"@code\":\"00200\",\"$\":\"Ministry of Internal Affairs and Communications\"},\"STATISTICS_NAME\":\"2020 Population Census Basic Complete Tabulation on Population and Households\",\"TITLE\":{\"@no\":\"00100\",\"$\":\"Population, Population Change, Area and Population Density by Prefecture\"},\"CYCLE\":\"-\",\"SURVEY_DATE\":\"202010\",\"OPEN_DATE\":\"2021-11-30\",\"OVERALL_TOTAL_NUMBER\":\"1450\",\"UPDATED_DATE\":\"2024-03-15\"},{\"@id\":\"0003448237\",\"STAT_NAME\":{\"@code\":\"00200524\",\"$\":\"Population Estimates\"},\"GOV_ORG\":{\"@code\":\"00200\",\"$\":\"Ministry of Internal Affairs and Communications\"},\"STATISTICS_NAME\":\"Monthly Report on Current Population Estimates\",\"TITLE\":{\"@no\":\"00200\",\"$\":\"Population by Age (Five-Year Groups) and Sex - Total Population\"},\"CYCLE\":\"3\",\"SURVEY_DATE\":\"202610\",\"OPEN_DATE\":\"2026-11-20\",\"OVERALL_TOTAL_NUMBER\":\"4280\",\"UPDATED_DATE\":\"2026-11-20\"}]}}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

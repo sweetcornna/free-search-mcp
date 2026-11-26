@@ -1,0 +1,75 @@
+id = "arcgis_hub"
+name = "ArcGIS Hub Global Geospatial Datasets"
+summary = "Keyless search and lookup across 2,000+ municipal, environmental, and civic GIS open data portals aggregated by ArcGIS Hub v3."
+aliases = ["arcgis", "esri hub", "gis open data"]
+home_url = "https://hub.arcgis.com"
+tier = 1
+scopes = ["dataset", "reference.geo"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 3.0, burst = 6, concurrency = 3, timeout_ms = 10000, cache_ttl_s = 21600 }
+
+[op.search]
+summary = "Search global ArcGIS Hub geospatial datasets, layers, and civic maps by keyword."
+method = "GET"
+url = "https://hub.arcgis.com/api/v3/datasets"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page[number]", start = 1, max_pages = 3 }
+probe = { params = { query = "transit", limit = 3 }, min_results = 2, fixture = "fixtures/w5m/arcgis_hub/search/default.json" }
+examples = ["source.call('arcgis_hub.search', { query: 'transit', limit: 5 })"]
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Geospatial dataset search query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "page[size]", doc = "Datasets per page" }
+page = { type = "int", default = 1, min = 1, to = "page[number]", doc = "1-based page number" }
+
+[op.search.map]
+items = "(.data // [])[]"
+total = ".meta.stats.totalCount"
+error = 'if .errors then ([.errors[] | (.detail // .title // tostring)] | join("; ")) else null end'
+record = '''{
+  id: .id,
+  name: ((.attributes.name // "") | collapse_ws),
+  hubType: (.attributes.hubType // .attributes.type // null),
+  organization: (.attributes.organization // .attributes.orgName // .attributes.source // null),
+  region: (.attributes.region // null),
+  license: (.attributes.license // null),
+  openData: .attributes.openData,
+  downloadable: .attributes.downloadable,
+  hasApi: .attributes.hasApi,
+  tags: [(.attributes.tags // [])[] | collapse_ws],
+  categories: [(.attributes.categories // [])[] | collapse_ws],
+  description: ((.attributes.searchDescription // .attributes.snippet // .attributes.description // "") | strip_tags),
+  createdDate: (.attributes.created | epoch_to_iso),
+  modifiedDate: (.attributes.modified | epoch_to_iso),
+  url: (.links.itemPage // ("https://hub.arcgis.com/datasets/" + .id)),
+  apiUrl: (.links.self // ("https://hub.arcgis.com/api/v3/datasets/" + .id))
+}'''
+hit = '''{
+  title: ((.attributes.name // .id) | collapse_ws),
+  url: (.links.itemPage // ("https://hub.arcgis.com/datasets/" + .id)),
+  snippet: ((if (.attributes.organization // .attributes.source) then ((.attributes.organization // .attributes.source) + " · ") else "" end) + ((.attributes.searchDescription // .attributes.snippet // .attributes.description // "") | strip_tags)),
+  date: ((.attributes.modified // .attributes.created) | parse_date),
+  dateSource: "api"
+}'''
+
+[op.dataset]
+summary = "Fetch full metadata, tags, license, and ArcGIS REST links for a single ArcGIS Hub dataset by ID."
+method = "GET"
+url = "https://hub.arcgis.com/api/v3/datasets/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "01cc44421fc04f609b31100ca10f9c97" }, min_results = 1, fixture = "fixtures/w5m/arcgis_hub/dataset/default.json" }
+examples = ["source.call('arcgis_hub.dataset', { id: '01cc44421fc04f609b31100ca10f9c97' })"]
+
+[op.dataset.params]
+id = { type = "string", required = true, in = "path", doc = "ArcGIS Hub dataset ID" }
+
+[op.dataset.map]
+items = ".data"
+error = "@ref:op.search.map.error"
+record = "@ref:op.search.map.record"

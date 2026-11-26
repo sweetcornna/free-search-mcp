@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "cristin_no",
+  "op": "search",
+  "recordedAt": "2026-11-25T13:02:20Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.cristin.no/v2/results?title=climate&per_page=3&page=1",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "[ {\n  \"category\" : {\n    \"code\" : \"ACADEMICREVIEW\",\n    \"name\" : {\n      \"en\" : \"Academic literature review\"\n    }\n  },\n  \"channel\" : {\n    \"title\" : \"Springer Nature Link IFIP\"\n  },\n  \"contributors\" : {\n    \"url\" : \"https://api.cristin.no/v2/results/10531514/contributors\",\n    \"count\" : 1,\n    \"preview\" : [ {\n      \"first_name\" : \"Savis\",\n      \"surname\" : \"Gohari\"\n    } ]\n  },\n  \"cristin_result_id\" : \"10531514\",\n  \"nva_result_id\" : \"01a21261a966-ee84fa59-aefb-4142-a758-7f3bd9983862\",\n  \"created\" : {\n    \"date\" : \"2026-11-25T11:05:19.000Z\"\n  },\n  \"last_modified\" : {\n    \"date\" : \"2026-11-25T11:55:17.000Z\"\n  },\n  \"links\" : [ {\n    \"url_type\" : \"DOI\",\n    \"url\" : \"https://doi.org/10.1007/978-3-032-27698-8_109\"\n  }, {\n    \"url_type\" : \"ARKIV\",\n    \"url\" : \"https://hdl.handle.net/11250/5602809\"\n  } ],\n  \"original_language\" : \"en\",\n  \"summary\" : {\n    \"en\" : \"The European Commission set an ambitious goal of achieving 100 Positive Energy Districts (PEDs) by 2030, but the target remains unmet. A key challenge has been the lack of a unified definition, roadmap, or clear direction for PEDs, with cities pursuing individual,...\"\n  },\n  \"title\" : {\n    \"en\" : \"Pathways to Positive Energy Districts: Proposing a Roadmap for Achieving Climate Neutrality by 2050 | Springer Nature Link\"\n  },\n  \"year_published\" : \"2026\",\n  \"url\" : \"https://api.cristin.no/v2/results/10531514\",\n  \"journal\" : {\n    \"cristin_journal_id\" : \"A606C1D6-777E-4EE3-AD22-88B2B787C957\",\n    \"name\" : \"Springer Nature Link IFIP\",\n    \"external_url\" : \"https://kanalregister.hkdir.no/publiseringskanaler/info/nvakanal?pid=A606C1D6-777E-4EE3-AD22-88B2B787C957\"\n  }\n}, {\n  \"category\" : {\n    \"code\" : \"LECTURE\",\n    \"name\" : {\n      \"en\" : \"Lecture\"\n    }\n  },\n  \"contributors\" : {\n    \"url\" : \"https://api.cristin.no/v2/results/10531208/contributors\",\n    \"count\" : 1,\n    \"preview\" : [ {\n      \"first_name\" : \"Geir Kjetil Ferkingstad\",\n      \"surname\" : \"Sandve\"\n    } ]\n  },\n  \"cristin_result_id\" : \"10531208\",\n  \"nva_result_id\" : \"01a20f8f26b8-620f7427-0da4-4022-b708-616f93fa036c\",\n  \"created\" : {\n    \"date\" : \"2026-11-24T21:56:09.000Z\"\n  },\n  \"last_modified\" : {\n    \"date\" : \"2026-11-24T22:11:57.000Z\"\n  },\n  \"date_published\" : \"2026-02-24T00:00:00.000Z\",\n  \"links\" : [ {\n    \"url_type\" : \"ARKIV\",\n    \"url\" : \"https://hdl.handle.net/11250/5602498\"\n  } ],\n  \"original_language\" : \"en\",\n  \"summary\" : {\n    \"en\" : \"Spatiotemporal ML for climate-sensitive disease early warning; GLMMs and decision support.\"\n  },\n  \"title\" : {\n    \"en\" : \"Modeling for the short term — climate-informed early warning\"\n  },\n  \"year_published\" : \"2026\",\n  \"url\" : \"https://api.cristin.no/v2/results/10531208\",\n  \"event\" : {\n    \"name\" : \"Kigali modelling workshop\",\n    \"location\" : \"Kigali\",\n    \"date_from\" : \"2026-02-23T23:00:00.000Z\",\n    \"date_to\" : \"2026-02-23T23:00:00.000Z\",\n    \"arranged_by\" : {\n      \"name\" : \"HISP Centre, TRUST and CSIDNet\"\n    }\n  }\n}, {\n  \"category\" : {\n    \"code\" : \"LECTURE\",\n    \"name\" : {\n      \"en\" : \"Lecture\"\n    }\n  },\n  \"contributors\" : {\n    \"url\" : \"https://api.cristin.no/v2/results/10531207/contributors\",\n    \"count\" : 1,\n    \"preview\" : [ {\n      \"first_name\" : \"Geir Kjetil Ferkingstad\",\n      \"surname\" : \"Sandve\"\n    } ]\n  },\n  \"cristin_result_id\" : \"10531207\",\n  \"nva_result_id\" : \"01a20f8f2241-edf8b81b-727c-4a03-8e27-d7be8b9bb60b\",\n  \"created\" : {\n    \"date\" : \"2026-11-24T21:56:08.000Z\"\n  },\n  \"last_modified\" : {\n    \"date\" : \"2026-11-24T22:12:34.000Z\"\n  },\n  \"date_published\" : \"2026-02-05T00:00:00.000Z\",\n  \"links\" : [ {\n    \"url_type\" : \"ARKIV\",\n    \"url\" : \"https://hdl.handle.net/11250/5602499\"\n  } ],\n  \"original_language\" : \"en\",\n  \"summary\" : {\n    \"en\" : \"Norwegian talk on sustainability vs preparedness, the EWS gap, DHIS2 inspiration and CHAP.\"\n  },\n  \"title\" : {\n    \"en\" : \"Can AI help solve major climate-related health challenges?\"\n  },\n  \"year_published\" : \"2026\",\n  \"url\" : \"https://api.cristin.no/v2/results/10531207\",\n  \"event\" : {\n    \"name\" : \"IFI KI-dag\",\n    \"location\" : \"Oslo\",\n    \"date_from\" : \"2026-02-04T23:00:00.000Z\",\n    \"date_to\" : \"2026-02-04T23:00:00.000Z\",\n    \"arranged_by\" : {\n      \"name\" : \"Institutt for informatikk, Universitetet i Oslo\"\n    }\n  }\n} ]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

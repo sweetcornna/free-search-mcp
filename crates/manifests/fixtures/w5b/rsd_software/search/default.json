@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "rsd_software",
+  "op": "search",
+  "recordedAt": "2026-11-25T15:09:17Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://research-software-directory.org/api/v1/software?select=id%2Cslug%2Cbrand_name%2Cshort_statement%2Cconcept_doi%2Cget_started_url%2Cupdated_at&limit=3&or=%28brand_name.ilike.%22%2Aclimate%2A%22%2Cshort_statement.ilike.%22%2Aclimate%2A%22%29",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "[{\"id\":\"4e41cc13-49a8-4635-adbf-d26cae90182c\",\"slug\":\"era5cli\",\"brand_name\":\"era5cli\",\"short_statement\":\"A command line interface to download ERA5 data from the Copernicus Climate Data Store\",\"concept_doi\":\"10.5281/zenodo.3252665\",\"get_started_url\":\"https://era5cli.readthedocs.io\",\"updated_at\":\"2022-07-06T15:41:57.646939+00:00\"}, \n {\"id\":\"627c77e4-225d-45c1-97e1-89ef85e1aeee\",\"slug\":\"c3s-magic-wps\",\"brand_name\":\"c3s-magic-wps\",\"short_statement\":\"Web Processing Service for Climate Data Analysis in the MAGIC project.\",\"concept_doi\":\"10.5281/zenodo.3240041\",\"get_started_url\":\"https://c3s-magic-wps.readthedocs.io/en/latest/index.html\",\"updated_at\":\"2022-07-06T15:41:57.646939+00:00\"}, \n {\"id\":\"38de344d-96f1-4798-a70a-a0f9c931ac71\",\"slug\":\"eucp-atlas\",\"brand_name\":\"Atlas of climate projections\",\"short_statement\":\"The atlas demonstrates outputs from the probabilistic projection methods developed or assessed in the European Climate Projection system EUCP Horizon2020 project.\",\"concept_doi\":\"10.5281/zenodo.5654740\",\"get_started_url\":\"https://eucp-project.github.io/atlas/\",\"updated_at\":\"2022-07-06T15:41:57.646939+00:00\"}]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

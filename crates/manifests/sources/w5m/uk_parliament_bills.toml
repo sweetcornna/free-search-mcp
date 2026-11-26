@@ -1,0 +1,114 @@
+id = "uk_parliament_bills"
+name = "UK Parliament Bills API v1"
+summary = "Keyless official UK Parliament API for searching House of Commons and House of Lords bills, legislative progress, sponsors, and stage sittings."
+aliases = ["uk bills", "parliament bills", "westminster bills"]
+home_url = "https://bills-api.parliament.uk/index.html"
+tier = 1
+scopes = ["gov", "gov.law"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 3.0, burst = 6, concurrency = 3, timeout_ms = 10000, cache_ttl_s = 21600 }
+
+[op.search]
+summary = "Search UK Parliament bills by title keyword, current House, or Act status."
+method = "GET"
+url = "https://bills-api.parliament.uk/api/v1/Bills"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "Skip", start = 0, max_pages = 3 }
+probe = { params = { query = "data", limit = 3 }, min_results = 2, fixture = "fixtures/w5m/uk_parliament_bills/search/default.json" }
+examples = ["source.call('uk_parliament_bills.search', { query: 'data', limit: 5 })"]
+
+[op.search.params]
+query = { type = "string", required = true, to = "SearchTerm", doc = "Bill title search term" }
+current_house = { type = "string", enum = ["All", "Commons", "Lords"], to = "CurrentHouse", doc = "Filter by current parliamentary House" }
+is_act = { type = "bool", to = "IsAct", doc = "Filter to enacted Acts of Parliament" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "Take", doc = "Bills per page" }
+offset = { type = "int", default = 0, min = 0, to = "Skip", doc = "0-based offset" }
+
+[op.search.map]
+items = "(.items // [])[]"
+total = ".totalResults"
+record = '''{
+  billId: .billId,
+  shortTitle: (.shortTitle // ""),
+  currentHouse: (.currentHouse // null),
+  originatingHouse: (.originatingHouse // null),
+  isAct: (.isAct // false),
+  isDefeated: (.isDefeated // false),
+  withdrawn: (.billWithdrawn != null),
+  currentStage: (.currentStage.description // null),
+  currentStageHouse: (.currentStage.house // null),
+  lastUpdate: (.lastUpdate // null),
+  url: ("https://bills.parliament.uk/bills/" + (.billId | tostring))
+}'''
+hit = '''{
+  title: (.shortTitle // ""),
+  url: ("https://bills.parliament.uk/bills/" + (.billId | tostring)),
+  snippet: ((.currentHouse // "") + " · " + (.currentStage.description // "Stage unknown") + (if .isAct then " · Enacted Act" else "" end)),
+  date: (.lastUpdate | parse_date),
+  dateSource: "api"
+}'''
+
+[op.bill]
+summary = "Fetch full details, long title, sponsors, and current legislative stage for a UK bill by billId."
+method = "GET"
+url = "https://bills-api.parliament.uk/api/v1/Bills/{bill_id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { bill_id = 4053 }, min_results = 1, fixture = "fixtures/w5m/uk_parliament_bills/bill/default.json" }
+examples = ["source.call('uk_parliament_bills.bill', { bill_id: 4053 })"]
+
+[op.bill.params]
+bill_id = { type = "int", required = true, in = "path", min = 1, doc = "UK Parliament bill ID from search results" }
+
+[op.bill.map]
+items = "."
+record = '''{
+  billId: .billId,
+  shortTitle: (.shortTitle // ""),
+  longTitle: (if .longTitle then (.longTitle | collapse_ws) else null end),
+  summary: (if .summary then (.summary | strip_tags) else null end),
+  currentHouse: (.currentHouse // null),
+  originatingHouse: (.originatingHouse // null),
+  isAct: (.isAct // false),
+  isDefeated: (.isDefeated // false),
+  currentStage: (.currentStage.description // null),
+  lastUpdate: (.lastUpdate // null),
+  sponsors: [(.sponsors // [])[] | {
+    name: (.member.name // .organisation.name // null),
+    party: (.member.party // null),
+    house: (.member.house // null),
+    constituency: (.member.memberFrom // null)
+  }],
+  url: ("https://bills.parliament.uk/bills/" + (.billId | tostring))
+}'''
+
+[op.stages]
+summary = "List legislative stages and sitting dates for a UK Parliament bill by billId."
+method = "GET"
+url = "https://bills-api.parliament.uk/api/v1/Bills/{bill_id}/Stages"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { bill_id = 4053 }, min_results = 1, fixture = "fixtures/w5m/uk_parliament_bills/stages/default.json" }
+examples = ["source.call('uk_parliament_bills.stages', { bill_id: 4053 })"]
+
+[op.stages.params]
+bill_id = { type = "int", required = true, in = "path", min = 1, doc = "UK Parliament bill ID" }
+
+[op.stages.map]
+items = "(.items // [])[]"
+total = ".totalResults"
+record = '''{
+  id: .id,
+  stageId: .stageId,
+  description: (.description // ""),
+  abbreviation: (.abbreviation // null),
+  house: (.house // null),
+  sortOrder: (.sortOrder // null),
+  sittingDates: [(.stageSittings // [])[] | .date]
+}'''

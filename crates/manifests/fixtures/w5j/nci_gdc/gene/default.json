@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "source": "nci_gdc",
+  "op": "gene",
+  "recordedAt": "2026-11-25T13:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://api.gdc.cancer.gov/genes",
+        "headersSubset": {
+          "accept": "application/json",
+          "content-type": "application/json"
+        },
+        "bodySha256": "fa62006c64f85b302883706dfde49b62e44c00e708734961e45c9403cde57ed0"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"data\": {\"hits\": [{\"id\": \"ENSG00000012048\", \"biotype\": \"protein_coding\", \"symbol\": \"BRCA1\", \"cytoband\": [\"17q21.31\"], \"is_cancer_gene_census\": true, \"name\": \"BRCA1 DNA repair associated\", \"gene_id\": \"ENSG00000012048\"}], \"pagination\": {\"count\": 1, \"total\": 1, \"size\": 3, \"from\": 0, \"sort\": \"\", \"page\": 1, \"pages\": 1}}, \"warnings\": {}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

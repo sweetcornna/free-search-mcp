@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "nasa_exoplanet",
+  "op": "planet",
+  "recordedAt": "2026-11-25T13:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query=select+pl_name%2Chostname%2Cdiscoverymethod%2Cdisc_year%2Cdisc_facility%2Cpl_orbper%2Cpl_rade%2Cpl_bmasse%2Cpl_eqt%2Csy_dist%2Cst_teff%2Cst_rad%2Cst_mass+from+pscomppars+where+pl_name%3D%27Kepler-186+f%27&MAXREC=5&format=json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "[\n{\"pl_name\": \"Kepler-186 f\",\n\"hostname\": \"Kepler-186\",\n\"discoverymethod\": \"Transit\",\n\"disc_year\": 2014,\n\"disc_facility\": \"Kepler\",\n\"pl_orbper\": 129.94410000000,\n\"pl_rade\": 1.17000000,\n\"pl_bmasse\": 1.71000000,\n\"pl_eqt\": 177.00,\n\"sy_dist\": 177.59400000,\n\"st_teff\": 3755.00,\n\"st_rad\": 0.523000,\n\"st_mass\": 0.544000}\n]\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

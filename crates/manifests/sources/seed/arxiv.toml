@@ -1,0 +1,87 @@
+id = "arxiv"
+name = "arXiv Preprints"
+summary = "Open-access e-print archive for CS, physics, mathematics, quantitative biology, and economics."
+aliases = ["arxiv.org", "eprint", "preprints"]
+home_url = "https://arxiv.org"
+tier = 1
+scopes = ["academic", "academic.preprint", "academic.cs", "academic.math", "academic.physics"]
+caps = ["search", "lookup", "fulltext"]
+transport = "plain"
+pool_role = "default"
+limits = { rps = 0.5, burst = 3, concurrency = 2, timeout_ms = 6000, cache_ttl_s = 21600, host_bucket = "export.arxiv.org" }
+
+[op.search]
+summary = "Search arXiv preprints via the public Atom API."
+method = "GET"
+url = "https://export.arxiv.org/api/query"
+response = "xml"
+returns = "works"
+const_query = { sortOrder = "descending" }
+query_jaq = '''(
+  ($p.query | collapse_ws) as $text |
+  ["a","all","an","and","are","as","at","be","by","for","from","in","is","it","of","on","or","the","to","versus","via","vs","with","you"] as $sw |
+  (
+    if ($text | test("^(ti|au|abs|co|jr|cat|rn|id|all):"; "i")) then $text
+    elif ($text | contains("\"")) then ("all:" + $text)
+    else
+      ([$text | scan("[A-Za-z0-9][A-Za-z0-9_.+#-]*") | select((ascii_downcase) as $w | ($sw | index($w)) == null)][:8]) as $words |
+      if ($words | length) < 2 then ("all:" + $text)
+      else ("all:\"" + $text + "\" OR (" + ($words | map("all:" + .) | join(" AND ")) + ")")
+      end
+    end
+  ) as $sq |
+  ($p.sort // (if $cfg.freshness != null then "submittedDate" else "relevance" end)) as $sort_by |
+  [["search_query", $sq], ["sortBy", $sort_by]]
+)'''
+probe = { params = { query = "attention is all you need", limit = 3 }, min_results = 2, fixture = "fixtures/seed/arxiv/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, in = "none", doc = "arXiv search query (supports fielded syntax like au:Vaswani, quoted phrases, or free text)" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "max_results", doc = "Maximum preprints to return" }
+sort = { type = "string", enum = ["relevance", "lastUpdatedDate", "submittedDate"], in = "none", doc = "Sort order (descending; defaults to submittedDate when freshness is set, else relevance)" }
+
+[op.search.map]
+items = '''.feed.entry | arr | .[] | select(((.id | xml_text | collapse_ws) // "") | test("arxiv\\.org/abs/"))'''
+work = '''(
+  ((.id | xml_text | collapse_ws) | capture("abs/(?<x>.+?)(v\\d+)?$").x) as $aid |
+  ("https://arxiv.org/abs/" + $aid) as $abs_url |
+  ("https://arxiv.org/pdf/" + $aid) as $pdf_url |
+  {
+    title: ((.title | xml_text) | collapse_ws | strip_tags),
+    authors: [.author | arr | .[] | { name: ((.name | xml_text) | collapse_ws) } | select(.name != "")],
+    year: (((.published | xml_text | collapse_ws)[0:4] // "") | to_int),
+    publishedDate: ((.published | xml_text | collapse_ws) | parse_date),
+    venue: ((.journal_ref | first_str) // "arXiv"),
+    workType: "preprint",
+    ids: {
+      arxiv: $aid,
+      doi: ((.doi | first_str) | doi_norm)
+    },
+    abstractText: ((.summary | xml_text) | collapse_ws),
+    oa: {
+      status: "green",
+      url: $abs_url,
+      pdfUrl: $pdf_url,
+      structuredFormat: "html5"
+    },
+    retracted: false,
+    versions: [],
+    url: $abs_url,
+    sources: ["arxiv"]
+  }
+)'''
+
+[op.work]
+summary = "Look up an arXiv preprint by exact arXiv ID (supports both modern and legacy category/YYMMNNN IDs)."
+method = "GET"
+url = "https://export.arxiv.org/api/query"
+response = "xml"
+returns = "works"
+probe = { params = { id = "1706.03762" }, min_results = 1, fixture = "fixtures/seed/arxiv/work/default.json" }
+
+[op.work.params]
+id = { type = "string", required = true, to = "id_list", doc = "arXiv ID without prefix, e.g. 1706.03762 or hep-th/9901001" }
+
+[op.work.map]
+items = "@ref:op.search.map.items"
+work = "@ref:op.search.map.work"

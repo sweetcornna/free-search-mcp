@@ -1,0 +1,129 @@
+id = "open_prices"
+name = "Open Food Facts Open Prices API"
+summary = "Crowdsourced ODbL retail grocery product prices, barcodes, currencies, and OSM store locations."
+aliases = ["openprices", "off prices", "grocery prices"]
+home_url = "https://prices.openfoodfacts.org/api/docs"
+tier = 2
+scopes = ["commerce", "dataset"]
+caps = ["lookup", "dataset"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 12000, cache_ttl_s = 3600 }
+
+[op.prices]
+summary = "List crowdsourced retail product prices with optional barcode, currency, or OSM location filter."
+method = "GET"
+url = "https://prices.openfoodfacts.org/api/v1/prices"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+examples = ['source.call("open_prices.prices", { limit: 3 })']
+probe = { params = { limit = 3 }, min_results = 2, fixture = "fixtures/w5n/open_prices/prices/default.json" }
+
+[op.prices.params]
+product_code = { type = "string", doc = "Optional product EAN/UPC barcode" }
+currency = { type = "string", doc = "Optional ISO-4217 currency code (e.g. EUR, USD)" }
+location_osm_id = { type = "int", doc = "Optional OpenStreetMap location ID" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "size", doc = "Page size" }
+page = { type = "int", min = 1, doc = "Page number (1-based)" }
+
+[op.prices.map]
+items = "(.items // [])[]"
+total = ".total"
+record = '''{
+  id: .id,
+  productCode: (.product_code // .product.code // null),
+  productName: (.product_name // .product.product_name // null),
+  categoryTag: (.category_tag // null),
+  price: (.price // null),
+  priceIsDiscounted: (.price_is_discounted // false),
+  currency: (.currency // null),
+  date: (.date // null),
+  locationName: (.location.osm_name // null),
+  city: (.location.osm_address_city // null),
+  country: (.location.osm_address_country // null),
+  url: ("https://prices.openfoodfacts.org/prices/" + (.id | tostring))
+}'''
+
+[op.product]
+summary = "Look up Open Prices product summary and price count by EAN/UPC barcode."
+method = "GET"
+url = "https://prices.openfoodfacts.org/api/v1/products/code/{code}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+examples = ['source.call("open_prices.product", { code: "3017620422003" })']
+probe = { params = { code = "3017620422003" }, min_results = 1, fixture = "fixtures/w5n/open_prices/product/default.json" }
+
+[op.product.params]
+code = { type = "string", required = true, in = "path", doc = "EAN/UPC product barcode (e.g. 3017620422003)" }
+
+[op.product.map]
+items = "."
+error = "if .detail then .detail else null end"
+record = '''{
+  id: .id,
+  code: .code,
+  name: (.product_name // null),
+  brands: (.brands // null),
+  quantity: (.quantity // null),
+  categories: (.categories_tags // []),
+  nutriscore: (.nutriscore_grade // null),
+  priceCount: (.price_count // 0),
+  locationCount: (.location_count // 0),
+  url: ("https://prices.openfoodfacts.org/products/" + (.code | tostring))
+}'''
+
+[op.products]
+summary = "List products indexed in Open Food Facts Open Prices."
+method = "GET"
+url = "https://prices.openfoodfacts.org/api/v1/products"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+examples = ['source.call("open_prices.products", { limit: 3 })']
+probe = { params = { limit = 3 }, min_results = 2, fixture = "fixtures/w5n/open_prices/products/default.json" }
+
+[op.products.params]
+limit = { type = "int", default = 10, min = 1, max = 50, to = "size", doc = "Page size" }
+page = { type = "int", min = 1, doc = "Page number (1-based)" }
+
+[op.products.map]
+items = "(.items // [])[]"
+total = ".total"
+record = "@ref:op.product.map.record"
+
+[op.locations]
+summary = "List OpenStreetMap retail store locations recorded in Open Prices."
+method = "GET"
+url = "https://prices.openfoodfacts.org/api/v1/locations"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+examples = ['source.call("open_prices.locations", { limit: 3 })']
+probe = { params = { limit = 3 }, min_results = 2, fixture = "fixtures/w5n/open_prices/locations/default.json" }
+
+[op.locations.params]
+limit = { type = "int", default = 10, min = 1, max = 50, to = "size", doc = "Page size" }
+page = { type = "int", min = 1, doc = "Page number (1-based)" }
+
+[op.locations.map]
+items = "(.items // [])[]"
+total = ".total"
+record = '''{
+  id: .id,
+  osmId: (.osm_id // null),
+  osmType: (.osm_type // null),
+  name: (.osm_name // null),
+  displayName: (.osm_display_name // null),
+  city: (.osm_address_city // null),
+  country: (.osm_address_country // null),
+  countryCode: (.osm_address_country_code // null),
+  lat: (.osm_lat // null),
+  lon: (.osm_lon // null),
+  priceCount: (.price_count // 0),
+  url: ("https://prices.openfoodfacts.org/locations/" + (.id | tostring))
+}'''

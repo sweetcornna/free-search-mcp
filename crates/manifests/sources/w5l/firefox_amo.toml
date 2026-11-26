@@ -1,0 +1,119 @@
+id = "firefox_amo"
+name = "Firefox Add-ons (AMO) API v5"
+summary = "Official Mozilla Add-ons (AMO) v5 API for searching Firefox browser extensions, ratings, user counts, and licenses."
+aliases = ["amo", "firefox addons", "mozilla addons", "firefox extensions"]
+home_url = "https://addons.mozilla.org"
+tier = 1
+scopes = ["code"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 3.0, burst = 6, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 21600 }
+
+[op.search]
+summary = "Search Firefox Add-ons (extensions, themes, dictionaries) via AMO API v5."
+method = "GET"
+url = "https://addons.mozilla.org/api/v5/addons/search/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "ublock", limit = 3 }, min_results = 3, fixture = "fixtures/w5l/firefox_amo/search/default.json" }
+examples = [
+  'source.call("firefox_amo.search", { query: "ublock", limit: 5 })',
+]
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Add-on search query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "page_size", doc = "Results per page" }
+lang = { type = "string", default = "en-US", to = "lang", doc = "BCP-47 locale for localized strings (keeps payloads compact)" }
+sort = { type = "string", enum = ["relevance", "users", "rating", "created", "updated", "downloads"], to = "sort", doc = "Sort criterion" }
+type = { type = "string", enum = ["extension", "statictheme", "dictionary", "language"], to = "type", doc = "Add-on type filter" }
+page = { type = "int", min = 1, to = "page", doc = "1-based page number" }
+
+[op.search.map]
+items = "(.results // [])[]"
+total = ".count"
+error = "if .detail then (.detail | tostring) else null end"
+record = '''(
+  (if (.name | type) == "object" then (.name["en-US"] // ((.name | to_entries)[0].value // "")) else (.name // "") end) as $name |
+  (if (.summary | type) == "object" then (.summary["en-US"] // ((.summary | to_entries)[0].value // "")) else (.summary // "") end) as $summary |
+  {
+    id: .id,
+    slug: (.slug // ""),
+    name: $name,
+    summary: $summary,
+    type: (.type // ""),
+    version: (.current_version.version // null),
+    license: (.current_version.license.slug // null),
+    authors: [(.authors // [])[] | .name],
+    categories: (.categories // []),
+    averageDailyUsers: (.average_daily_users // 0),
+    ratingAverage: (.ratings.average // null),
+    ratingCount: (.ratings.count // 0),
+    lastUpdated: (.last_updated // null),
+    url: (.url // "")
+  }
+)'''
+hit = '''(
+  (if (.name | type) == "object" then (.name["en-US"] // ((.name | to_entries)[0].value // "")) else (.name // "") end) as $name |
+  (if (.summary | type) == "object" then (.summary["en-US"] // ((.summary | to_entries)[0].value // "")) else (.summary // "") end) as $summary |
+  {
+    title: $name,
+    url: (.url // ""),
+    snippet: (
+      [
+        (if $summary != "" then $summary else null end),
+        (((.average_daily_users // 0) | tostring) + " daily users"),
+        (if .ratings.average then ("★" + ((.ratings.average * 10 | round / 10) | tostring)) else null end)
+      ] | map(select(. != null)) | join(" · ")
+    )[0:280],
+    date: (.last_updated | parse_date),
+    dateSource: "api"
+  }
+)'''
+
+[op.addon]
+summary = "Fetch full metadata, homepage, license, and compatibility for a Firefox add-on by slug."
+method = "GET"
+url = "https://addons.mozilla.org/api/v5/addons/addon/{slug}/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { slug = "ublock-origin" }, min_results = 1, fixture = "fixtures/w5l/firefox_amo/addon/default.json" }
+examples = [
+  'source.call("firefox_amo.addon", { slug: "ublock-origin" })',
+]
+
+[op.addon.params]
+slug = { type = "string", required = true, in = "path", doc = "AMO add-on slug or GUID (e.g. ublock-origin)" }
+lang = { type = "string", default = "en-US", to = "lang", doc = "BCP-47 locale for localized strings" }
+
+[op.addon.map]
+items = "."
+error = "@ref:op.search.map.error"
+record = '''(
+  (if (.name | type) == "object" then (.name["en-US"] // ((.name | to_entries)[0].value // "")) else (.name // "") end) as $name |
+  (if (.summary | type) == "object" then (.summary["en-US"] // ((.summary | to_entries)[0].value // "")) else (.summary // "") end) as $summary |
+  (if (.homepage.url | type) == "object" then (.homepage.url["en-US"] // ((.homepage.url | to_entries)[0].value // null)) else (.homepage.url // null) end) as $homepage |
+  {
+    id: .id,
+    slug: (.slug // ""),
+    guid: (.guid // null),
+    name: $name,
+    summary: $summary,
+    homepage: $homepage,
+    type: (.type // ""),
+    version: (.current_version.version // null),
+    license: (.current_version.license.slug // null),
+    permissions: (.current_version.file.permissions // []),
+    authors: [(.authors // [])[] | .name],
+    categories: (.categories // []),
+    averageDailyUsers: (.average_daily_users // 0),
+    ratingAverage: (.ratings.average // null),
+    ratingCount: (.ratings.count // 0),
+    created: (.created // null),
+    lastUpdated: (.last_updated // null),
+    url: (.url // "")
+  }
+)'''
