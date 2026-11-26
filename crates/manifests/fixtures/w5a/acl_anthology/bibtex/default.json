@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "source": "acl_anthology",
+  "op": "bibtex",
+  "recordedAt": "2026-11-25T12:14:03Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://aclanthology.org/2024.acl-long.1.bib",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/plain; charset=utf-8"
+          ]
+        ],
+        "bodyText": "@inproceedings{zhang-etal-2024-quantized,\n    title = \"Quantized Side Tuning: Fast and Memory-Efficient Tuning of Quantized Large Language Models\",\n    author = \"Zhang, Zhengxin  and\n      Zhao, Dan  and\n      Miao, Xupeng  and\n      Oliaro, Gabriele  and\n      Zhang, Zhihao  and\n      Li, Qing  and\n      Jiang, Yong  and\n      Jia, Zhihao\",\n    editor = \"Ku, Lun-Wei  and\n      Martins, Andre  and\n      Srikumar, Vivek\",\n    booktitle = \"Proceedings of the 62nd Annual Meeting of the {A}ssociation for {C}omputational {L}inguistics (Volume 1: Long Papers)\",\n    month = aug,\n    year = \"2024\",\n    address = \"Bangkok, Thailand\",\n    publisher = \"Association for Computational Linguistics\",\n    url = \"https://aclanthology.org/2024.acl-long.1/\",\n    doi = \"10.18653/v1/2024.acl-long.1\",\n    pages = \"1--17\"\n}\n\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

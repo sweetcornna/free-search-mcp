@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "binance_market",
+  "op": "ticker_24h",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json;charset=UTF-8"
+          ],
+          [
+            "cache-control",
+            "no-cache, no-store, must-revalidate"
+          ]
+        ],
+        "bodyText": "{\"symbol\":\"BTCUSDT\",\"priceChange\":\"-1664.20000000\",\"priceChangePercent\":\"-2.758\",\"weightedAvgPrice\":\"59439.37085147\",\"prevClosePrice\":\"60338.20000000\",\"lastPrice\":\"58674.00000000\",\"lastQty\":\"0.11287000\",\"bidPrice\":\"58674.00000000\",\"bidQty\":\"6.35451000\",\"askPrice\":\"58674.01000000\",\"askQty\":\"0.72511000\",\"openPrice\":\"60338.20000000\",\"highPrice\":\"60687.53000000\",\"lowPrice\":\"58456.25000000\",\"volume\":\"21065.54124000\",\"quoteVolume\":\"1252122517.95136480\",\"openTime\":1795524120011,\"closeTime\":1795610520011,\"firstId\":6906633812,\"lastId\":6911227833,\"count\":4594022}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

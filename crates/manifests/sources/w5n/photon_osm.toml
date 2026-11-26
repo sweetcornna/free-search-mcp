@@ -1,0 +1,82 @@
+id = "photon_osm"
+name = "Photon Komoot OSM Geocoder"
+summary = "Fast keyless OpenStreetMap autocomplete, forward geocoding, and reverse geocoding returning GeoJSON."
+aliases = ["photon", "komoot", "osm geocode", "geocoder"]
+home_url = "https://photon.komoot.io"
+tier = 1
+scopes = ["reference.geo"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 6000, cache_ttl_s = 86400 }
+
+[op.search]
+summary = "Forward geocode and fuzzy-search OpenStreetMap places via Photon."
+method = "GET"
+url = "https://photon.komoot.io/api"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+examples = ['source.call("photon_osm.search", { query: "Berlin", limit: 3 })']
+probe = { params = { query = "Berlin", limit = 3 }, min_results = 2, fixture = "fixtures/w5n/photon_osm/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Place name or address query" }
+limit = { type = "int", default = 10, min = 1, max = 50, doc = "Maximum GeoJSON features" }
+lang = { type = "string", enum = ["default", "en", "de", "fr"], doc = "Preferred output language" }
+lat = { type = "float", doc = "Optional latitude bias for proximity ranking" }
+lon = { type = "float", doc = "Optional longitude bias for proximity ranking" }
+
+[op.search.map]
+items = "(.features // [])[]"
+record = '''{
+  osmType: .properties.osm_type,
+  osmId: .properties.osm_id,
+  name: (.properties.name // ""),
+  type: (.properties.type // .properties.osm_value // null),
+  osmKey: (.properties.osm_key // null),
+  osmValue: (.properties.osm_value // null),
+  street: (.properties.street // null),
+  housenumber: (.properties.housenumber // null),
+  city: (.properties.city // null),
+  county: (.properties.county // null),
+  state: (.properties.state // null),
+  postcode: (.properties.postcode // null),
+  country: (.properties.country // null),
+  countryCode: (.properties.countrycode // null),
+  lon: (.geometry.coordinates[0] // null),
+  lat: (.geometry.coordinates[1] // null),
+  extent: (.properties.extent // null),
+  url: ("https://www.openstreetmap.org/" + (if .properties.osm_type == "R" then "relation" elif .properties.osm_type == "W" then "way" else "node" end) + "/" + (.properties.osm_id | tostring))
+}'''
+hit = '''{
+  title: (.properties.name // .properties.city // .properties.country // "OSM Place"),
+  url: ("https://www.openstreetmap.org/" + (if .properties.osm_type == "R" then "relation" elif .properties.osm_type == "W" then "way" else "node" end) + "/" + (.properties.osm_id | tostring)),
+  snippet: ([
+    (.properties.type // .properties.osm_value // empty),
+    (.properties.city // empty),
+    (.properties.state // empty),
+    (.properties.country // empty),
+    (if (.geometry.coordinates | length) == 2 then ((.geometry.coordinates[1] | tostring) + ", " + (.geometry.coordinates[0] | tostring)) else empty end)
+  ] | join(" · "))
+}'''
+
+[op.reverse]
+summary = "Reverse geocode WGS84 coordinates into OpenStreetMap places via Photon."
+method = "GET"
+url = "https://photon.komoot.io/reverse"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+examples = ['source.call("photon_osm.reverse", { lat: 52.5174, lon: 13.3951, limit: 3 })']
+probe = { params = { lat = 52.5174, lon = 13.3951, limit = 3 }, min_results = 1, fixture = "fixtures/w5n/photon_osm/reverse/default.json" }
+
+[op.reverse.params]
+lat = { type = "float", required = true, doc = "WGS84 latitude" }
+lon = { type = "float", required = true, doc = "WGS84 longitude" }
+limit = { type = "int", default = 5, min = 1, max = 20, doc = "Maximum matching features" }
+lang = { type = "string", enum = ["default", "en", "de", "fr"], doc = "Preferred output language" }
+
+[op.reverse.map]
+items = "(.features // [])[]"
+record = "@ref:op.search.map.record"

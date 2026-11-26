@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "ieee_xplore",
+  "op": "search",
+  "recordedAt": "2026-11-25T13:03:45Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://ieeexploreapi.ieee.org/api/v1/search/articles?querytext=transformer&max_records=3&start_record=1",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"total_records\": 91420, \"total_searched\": 6120000, \"articles\": [{\"article_number\": \"9147599\", \"title\": \"Deep Transformer Networks for Signal Classification\", \"publication_title\": \"IEEE Access\", \"content_type\": \"Journals\", \"publication_year\": 2020, \"publication_date\": \"2020-07-22\", \"doi\": \"10.1109/ACCESS.2020.3010000\", \"citing_paper_count\": 42, \"access_type\": \"Open Access\", \"html_url\": \"https://ieeexplore.ieee.org/document/9147599/\", \"pdf_url\": \"https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9147599\", \"abstract\": \"Self-attention transformer architectures achieve robust modulation recognition under low SNR regimes.\", \"authors\": {\"authors\": [{\"full_name\": \"Alex Chen\", \"author_order\": 1, \"affiliation\": \"MIT, Cambridge, MA, USA\"}, {\"full_name\": \"Priya Nair\", \"author_order\": 2, \"affiliation\": \"Stanford University, CA, USA\"}]}}, {\"article_number\": \"9812345\", \"title\": \"Hardware-Aware Quantization of Vision Transformers on Edge FPGAs\", \"publication_title\": \"IEEE Transactions on Computers\", \"content_type\": \"Journals\", \"publication_year\": 2023, \"publication_date\": \"2023-03-10\", \"doi\": \"10.1109/TC.2023.3245678\", \"citing_paper_count\": 19, \"access_type\": \"Locked\", \"html_url\": \"https://ieeexplore.ieee.org/document/9812345/\", \"abstract\": \"Mixed-precision integer quantization reduces transformer inference latency by 3.4x on embedded FPGA fabric.\", \"authors\": {\"authors\": [{\"full_name\": \"Min-Jun Park\", \"author_order\": 1, \"affiliation\": \"KAIST, Daejeon, South Korea\"}]}}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

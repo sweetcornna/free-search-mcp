@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "open_prices",
+  "op": "product",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://prices.openfoodfacts.org/api/v1/products/code/3017620422003",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"id\":238068,\"code\":\"3017620422003\",\"source\":\"off\",\"source_last_synced\":\"2026-11-25T09:09:25.892967Z\",\"product_name\":\"Nutella\",\"image_url\":null,\"product_quantity\":400,\"product_quantity_unit\":\"g\",\"quantity\":\"400 g e\",\"categories_tags\":[\"en:breakfasts\",\"en:desserts\",\"en:spreads\",\"en:sweet-spreads\",\"fr:pates-a-tartiner\",\"en:chocolate-spreads\",\"en:hazelnut-spreads\",\"en:cocoa-and-hazelnuts-spreads\",\"en:confectionary-based-spreads\"],\"brands\":\"Ferrero, Nutella\",\"brands_tags\":[\"xx:ferrero\",\"xx:nutella\"],\"labels_tags\":[\"en:vegetarian\",\"en:no-gluten\",\"fr:triman\"],\"nutriscore_grade\":\"e\",\"ecoscore_grade\":\"f\",\"nova_group\":3,\"creator\":\"openfoodfacts-contributors\",\"unique_scans_n\":838,\"price_count\":168,\"price_currency_count\":1,\"location_count\":112,\"location_type_osm_country_count\":5,\"user_count\":19,\"proof_count\":152,\"created\":\"2024-01-11T06:06:20.089281Z\",\"updated\":\"2026-11-23T15:20:18.280758Z\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

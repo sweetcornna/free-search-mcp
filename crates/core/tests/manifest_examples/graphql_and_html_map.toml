@@ -1,0 +1,59 @@
+# A1 §G.4.5 test vector: body.kind = "graphql" (query + variables_jaq) and an
+# [op.<name>.html] table feeding [op.<name>.map] (A1 §B.4).
+id = "anilist_a1"
+name = "AniList (A1 vector)"
+summary = "Anime and manga database via the AniList GraphQL API, plus an HTML listing."
+aliases = ["anilist"]
+home_url = "https://anilist.co"
+tier = 3
+scopes = ["media"]
+caps = ["search"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 0.5, burst = 2, concurrency = 1, timeout_ms = 8000, cache_ttl_s = 21600 }
+
+[op.search]
+summary = "Search anime/manga titles."
+method = "POST"
+url = "https://graphql.anilist.co"
+response = "json"
+returns = "records"
+probe = { params = { query = "frieren", limit = 3 }, min_results = 1 }
+
+[op.search.body]
+kind = "graphql"
+operation_name = "Search"
+query = """
+query Search($search: String, $type: MediaType, $perPage: Int) {
+  Page(perPage: $perPage) {
+    media(search: $search, type: $type) { id title { romaji english } siteUrl description }
+  }
+}
+"""
+variables_jaq = '''{ search: $p.query, type: ($p.media_type // "ANIME"), perPage: ($p.limit // 10) }'''
+
+[op.search.params]
+query = { type = "string", required = true, in = "body", doc = "Title to search" }
+media_type = { type = "string", default = "ANIME", enum = ["ANIME", "MANGA"], in = "body", doc = "ANIME or MANGA" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "body", doc = "Max results" }
+
+[op.search.map]
+items = ".data.Page.media[]"
+record = '''{ id, title: (.title.english // .title.romaji), url: .siteUrl }'''
+hit = '''{ title: (.title.english // .title.romaji // ""), url: .siteUrl, snippet: ((.description // "") | strip_tags) }'''
+
+[op.trending]
+summary = "Trending titles from the public HTML listing."
+method = "GET"
+url = "https://anilist.co/search/anime/trending"
+response = "html"
+returns = "records"
+
+[op.trending.html]
+items_css = "div.media-card"
+fields = { title = "a.title | text", url = "a.title | attr(href)" }
+wall_markers = ["Access Denied"]
+
+[op.trending.map]
+items = ".[]"
+record = '''{ title, url: ("https://anilist.co" + .url) }'''

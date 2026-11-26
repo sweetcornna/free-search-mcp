@@ -1,0 +1,28 @@
+---
+source: crates/surface/tests/snapshots.rs
+expression: out
+---
+> ⚠️ **RETRACTED PAPER**: do not cite this as a standing result.
+
+# RETRACTED: Hydroxychloroquine or chloroquine with or without a macrolide for treatment of COVID-19: a multinational registry analysis
+
+<https://doi.org/10.1016/s0140-6736(20)31180-6>
+Authors: Mandeep R. Mehra, Sapan S. Desai, Frank Thomas Ruschitzka, Amit N. Patel
+_2020 · The Lancet · cited by 1322 · resolved via doi_
+IDs: doi:10.1016/s0140-6736(20)31180-6 · OpenAlex:W3027680906
+
+⚠️ **Expression of concern** (2020-06-03) — <https://doi.org/10.1016/s0140-6736(20)31290-3>
+
+⚠️ **Correction** (2020-05-30) — <https://doi.org/10.1016/s0140-6736(20)31249-6>
+
+## References (what it builds on)
+
+1. **Chloroquine or hydroxychloroquine for prophylaxis of COVID-19**
+   <https://doi.org/10.1016/S1473-3099(20)30296-6>
+   _Principi · 2020 · Lancet Infect Dis · doi:10.1016/S1473-3099(20)30296-6_
+
+2. **The anti-viral facet of anti-rheumatic drugs: lessons from COVID-19**
+   <https://doi.org/10.1016/j.jaut.2020.102468>
+   _Perricone · 2020 · J Autoimmun · doi:10.1016/j.jaut.2020.102468_
+
+_Retraction notices verified via Crossref updated-by & OpenAlex._

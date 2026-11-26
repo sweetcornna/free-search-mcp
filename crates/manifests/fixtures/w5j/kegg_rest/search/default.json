@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "kegg_rest",
+  "op": "search",
+  "recordedAt": "2026-11-25T13:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://rest.kegg.jp/find/drug/metformin",
+        "headersSubset": {
+          "accept": "text/plain"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/plain; charset=utf-8"
+          ]
+        ],
+        "bodyText": "D00944\tMetformin hydrochloride (JP19/USP); Glucophage (TN)\nD04966\tMetformin (USAN/INN)\nD09744\tPioglitazone hydrochloride and metformin hydrochloride (JP19); Pioglitazone and metformin; Metact (TN)\nD10244\tMetformin hydrochloride and rosiglitazone maleate; Avandamet (TN)\nD10253\tAlogliptin benzoate and metformin hydrochloride; Kazano (TN); Vipdomet (TN)\nD10261\tMetformin hydrochloride and sitagliptin phosphate; Janumet (TN)\nD10263\tMetformin hydrochloride and saxagliptin hydrochloride; Kombiglyze (TN)\nD10264\tLinagliptin and metformin hydrochloride; Jentaduet (TN)\nD10265\tGlipizide and metformin hydrochloride; Metaglip (TN)\nD10266\tGlyburide and metformin hydrochloride; Glibenclamide and metformin hydrochloride; Glucovance (TN)\nD10500\tMetformin hydrochloride and repaglinide; Prandimet (TN)\nD10586\tDapagliflozin and metformin; Xigduo xr (TN)\nD10587\tCanagliflozin and metformin; Invokamet (TN)\nD10743\tVildagliptin and metformin hydrochloride\nD10752\tEmpagliflozin and metformin; Synjardy (TN)\nD11067\tErtugliflozin and metformin; Segluromet (TN)\nD11109\tAnagliptin and Metformin hydrochloride\nD11711\tDapagliflozin, metformin and saxagliptin; Qternmet xr (TN)\nD11856\tEmpagliflozin, linagliptin and metformin hydrochloride; Trijardy xr (TN)\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

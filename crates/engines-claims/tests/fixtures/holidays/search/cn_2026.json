@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "source": "holidays",
+  "op": "search",
+  "recordedAt": "2026-11-25T10:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://raw.githubusercontent.com/NateScarlet/holiday-cn/master/2026.json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          ["content-type", "text/plain; charset=utf-8"]
+        ],
+        "bodyText": "{\"year\":2026,\"papers\":[\"https://www.gov.cn/zhengce/zhengceku/202511/content_7047091.htm\"],\"days\":[{\"name\":\"元旦\",\"date\":\"2026-01-01\",\"isOffDay\":true},{\"name\":\"元旦\",\"date\":\"2026-01-02\",\"isOffDay\":true},{\"name\":\"元旦\",\"date\":\"2026-01-03\",\"isOffDay\":true},{\"name\":\"元旦\",\"date\":\"2026-01-04\",\"isOffDay\":false},{\"name\":\"春节\",\"date\":\"2026-02-14\",\"isOffDay\":false},{\"name\":\"春节\",\"date\":\"2026-02-15\",\"isOffDay\":true},{\"name\":\"春节\",\"date\":\"2026-02-23\",\"isOffDay\":true}]}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://nagerholidays.com/api/v4/Holidays/DE/2027",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          ["content-type", "application/json"]
+        ],
+        "bodyText": "[{\"date\":\"2027-01-01\",\"name\":\"New Year's Day\",\"countryCode\":\"DE\",\"nationalHoliday\":true},{\"date\":\"2027-01-06\",\"name\":\"Epiphany\",\"countryCode\":\"DE\",\"nationalHoliday\":false}]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

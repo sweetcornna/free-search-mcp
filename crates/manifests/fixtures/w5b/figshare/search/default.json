@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "source": "figshare",
+  "op": "search",
+  "recordedAt": "2026-11-25T11:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://api.figshare.com/v2/articles/search",
+        "headersSubset": {
+          "accept": "application/json",
+          "content-type": "application/json"
+        },
+        "bodySha256": "25850375b90932f85fa27a903c3b78a9f8ca79cd2c829e1ab81e808262d17a49"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "[{\"project_id\": null, \"id\": 35117926, \"title\": \"Supplementary file 3_Community-based monitoring: shoreline change in Southwest Alaska.docx\", \"doi\": \"10.3389/fclim.2024.1410329.s002\", \"handle\": \"\", \"url\": \"https://api.figshare.com/v2/articles/35117926\", \"published_date\": \"2026-11-25T11:52:34Z\", \"thumb\": \"\", \"defined_type\": 3, \"defined_type_name\": \"dataset\", \"group_id\": 25941, \"url_private_api\": \"https://api.figshare.com/v2/account/articles/35117926\", \"url_public_api\": \"https://api.figshare.com/v2/articles/35117926\", \"url_private_html\": \"https://figshare.com/account/articles/35117926\", \"url_public_html\": \"https://frontiersin.figshare.com/articles/dataset/Supplementary_file_3_Community-based_monitoring_shoreline_change_in_Southwest_Alaska_docx/35117926\", \"timeline\": {\"posted\": \"2026-11-25T11:52:34\"}, \"resource_title\": \"Community-based monitoring: shoreline change in Southwest Alaska\", \"resource_doi\": \"10.3389/fclim.2024.1410329\", \"created_date\": \"2026-11-25T11:52:34Z\", \"modified_date\": \"2026-11-25T11:52:34Z\"}, {\"project_id\": null, \"id\": 35117929, \"title\": \"Supplementary file 4_Community-based monitoring: shoreline change in Southwest Alaska.docx\", \"doi\": \"10.3389/fclim.2024.1410329.s001\", \"handle\": \"\", \"url\": \"https://api.figshare.com/v2/articles/35117929\", \"published_date\": \"2026-11-25T11:52:34Z\", \"thumb\": \"\", \"defined_type\": 3, \"defined_type_name\": \"dataset\", \"group_id\": 25941, \"url_private_api\": \"https://api.figshare.com/v2/account/articles/35117929\", \"url_public_api\": \"https://api.figshare.com/v2/articles/35117929\", \"url_private_html\": \"https://figshare.com/account/articles/35117929\", \"url_public_html\": \"https://frontiersin.figshare.com/articles/dataset/Supplementary_file_4_Community-based_monitoring_shoreline_change_in_Southwest_Alaska_docx/35117929\", \"timeline\": {\"posted\": \"2026-11-25T11:52:34\"}, \"resource_title\": \"Community-based monitoring: shoreline change in Southwest Alaska\", \"resource_doi\": \"10.3389/fclim.2024.1410329\", \"created_date\": \"2026-11-25T11:52:34Z\", \"modified_date\": \"2026-11-25T11:52:34Z\"}, {\"project_id\": null, \"id\": 35117920, \"title\": \"Supplementary file 1_Community-based monitoring: shoreline change in Southwest Alaska.docx\", \"doi\": \"10.3389/fclim.2024.1410329.s004\", \"handle\": \"\", \"url\": \"https://api.figshare.com/v2/articles/35117920\", \"published_date\": \"2026-11-25T11:52:33Z\", \"thumb\": \"\", \"defined_type\": 3, \"defined_type_name\": \"dataset\", \"group_id\": 25941, \"url_private_api\": \"https://api.figshare.com/v2/account/articles/35117920\", \"url_public_api\": \"https://api.figshare.com/v2/articles/35117920\", \"url_private_html\": \"https://figshare.com/account/articles/35117920\", \"url_public_html\": \"https://frontiersin.figshare.com/articles/dataset/Supplementary_file_1_Community-based_monitoring_shoreline_change_in_Southwest_Alaska_docx/35117920\", \"timeline\": {\"posted\": \"2026-11-25T11:52:33\"}, \"resource_title\": \"Community-based monitoring: shoreline change in Southwest Alaska\", \"resource_doi\": \"10.3389/fclim.2024.1410329\", \"created_date\": \"2026-11-25T11:52:33Z\", \"modified_date\": \"2026-11-25T11:52:33Z\"}]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en-gb">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="canonical" href="https://simonwillison.net/2024/Mar/22/claude-and-chatgpt-case-study/">
+<title>Claude and ChatGPT for ad-hoc sidequests</title>
+<script defer data-domain="simonwillison.net" src="https://plausible.io/js/plausible.js"></script>
+<link rel="alternate" type="application/atom+xml" title="Atom" href="/atom/everything/">
+<link rel="stylesheet" type="text/css" href="/static/css/all.720790b1a99c.css">
+<link rel="webmention" href="https://webmention.io/simonwillison.net/webmention">
+<link rel="pingback" href="https://webmention.io/simonwillison.net/xmlrpc">
+<meta name="author" content="Simon Willison">
+<meta property="og:site_name" content="Simon Willison’s Weblog">
+
+
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://static.simonwillison.net/static/2024/shapely-chatgpt-1.jpg">
+<meta name="twitter:creator" content="@simonw">
+<meta property="og:url" content="https://simonwillison.net/2024/Mar/22/claude-and-chatgpt-case-study/">
+<meta property="og:title" content="Claude and ChatGPT for ad-hoc sidequests">
+<meta property="og:image" content="https://static.simonwillison.net/static/2024/shapely-chatgpt-1.jpg">
+<meta property="og:type" content="article">
+<meta property="og:description" content="Here is a short, illustrative example of one of the ways in which I use Claude and ChatGPT on a daily basis. I recently learned that the Adirondack Park is …">
+<meta property="og:updated_time" content="1711136652">
+
+
+
+
+
+<script>
+(function() { // Apply theme immediately to prevent flash
+  const theme = localStorage.getItem('theme');
+  if (theme === 'light' || theme === 'dark') {
+    document.documentElement.setAttribute('data-theme', theme);
+  }
+})();
+</script>
+</head>
+<body class="smallhead">
+
+<div id="smallhead">
+  <div id="smallhead-inner">
+    <h1><a href="/">Simon Willison’s Weblog</a></h1>
+    <a id="smallhead-about" href="/newsletters/">Newsletter</a>
+  </div>
+</div><!-- #smallhead -->
+
+
+<div id="sponsored-banner" class="sponsor-scheme-sky">
+  <div id="sponsored-banner-inner">
+    <strong class="sponsored-label">Sponsored by:</strong> WorkOS &mdash; Auth.md: signup built for agents. <a class="sponsor-learn-more-label" href="https://10xn.link/simon-workos" rel="sponsored noopener" target="_blank">See how it works</a>
+  </div>
+</div>
+
+
+
+<div id="wrapper">
+<div id="primary">
+
+<div class="entry entryPage">
+
+
+<div data-permalink-context="/2024/Mar/22/claude-and-chatgpt-case-study/">
+<h2>Claude and ChatGPT for ad-hoc sidequests</h2>
+<p class="mobile-date">22nd March 2024</p>
+
+
+
+<p>Here is a short, illustrative example of one of the ways in which I use Claude and ChatGPT on a daily basis.</p>
+<p>I recently learned that the <a href="https://en.wikipedia.org/wiki/Adirondack_Park">Adirondack Park</a> is the single largest park in the contiguous United States, taking up a fifth of the state of New York.</p>
+<p>Naturally, my first thought was that it would be neat to have a GeoJSON file representing the boundary of the park.</p>
+<p>A quick search landed me on the <a href="https://apa.ny.gov/gis/ApaData.html">Adirondack Park Agency GIS data page</a>, which offered me a shapefile of the “Outer boundary of the New York State Adirondack Park as described in Section 9-0101 of the New York Environmental Conservation Law”. Sounds good!</p>
+<p>I knew there were tools for converting shapefiles to GeoJSON, but I couldn’t remember what they were. Since I had a terminal window open already, I typed the following:</p>
+<div class="highlight highlight-source-shell"><pre style="white-space: pre-wrap">llm -m opus -c <span class="pl-s"><span class="pl-pds">'</span>give me options on macOS for CLI tools to turn a shapefile into GeoJSON<span class="pl-pds">'</span></span></pre></div>
+<p>Here I am using my <a href="https://llm.datasette.io/">LLM tool</a> (and <a href="https://github.com/simonw/llm-claude-3">llm-claude-3</a> plugin) to run a prompt through the new <a href="https://www.anthropic.com/news/claude-3-family">Claude 3 Opus</a>, my current favorite language model.</p>
+<p>It <a href="https://gist.github.com/simonw/331918e46f33e27e997afb4e7c62fc74">replied with a couple of options</a>, but the first was this:</p>
+<div class="highlight highlight-source-shell"><pre>ogr2ogr -f GeoJSON output.geojson input.shp</pre></div>
+<p>So I ran that against the shapefile, and then pasted <a href="https://gist.github.com/simonw/c941f3454cdec7e10f500dc5a752b614">the resulting GeoJSON</a> into <a href="https://geojson.io/">geojson.io</a> to check if it worked... and nothing displayed. Then I looked at the GeoJSON and spotted this:</p>
+<p><code>"coordinates": [ [ -8358911.527799999341369, 5379193.197800002992153 ] ...</code></p>
+<p>That didn’t look right. Those co-ordinates aren’t the correct scale for latitude and longitude values.</p>
+<p>So I sent a follow-up prompt to the model (the <code>-c</code> option means “continue previous conversation”):</p>
+<div class="highlight highlight-source-shell"><pre style="white-space: pre-wrap">llm -c <span class="pl-s"><span class="pl-pds">'</span>i tried using ogr2ogr but it gave me back GeoJSON with a weird coordinate system that was not lat/lon that i am used to<span class="pl-pds">'</span></span></pre></div>
+<p>It suggested this new command:</p>
+<div class="highlight highlight-source-shell"><pre>ogr2ogr -f GeoJSON -t_srs EPSG:4326 output.geojson input.shp</pre></div>
+<p>This time <a href="https://gist.github.com/simonw/6c4cf102a8ea532dc365c2773f0eb6ea">it worked</a>! The shapefile has now been converted to GeoJSON.</p>
+<p>Time elapsed so far: 2.5 minutes (I can tell from <a href="https://llm.datasette.io/en/stable/logging.html">my LLM logs</a>).</p>
+<p>I pasted it into <a href="https://datasette.io/">Datasette</a> (with <a href="https://github.com/datasette/datasette-paste">datasette-paste</a> and <a href="https://datasette.io/plugins/datasette-leaflet-geojson">datasette-leaflet-geojson</a>) to take a look at it more closely, and got this:</p>
+<p><img src="https://static.simonwillison.net/static/2024/datasette-adirondack-boundaries.jpg" alt="A Datasette table with 106 rows. The first two are shown - both have properties and a geometry, and the geometry is a single line on a map. The first one has a ECL_Text of thence southerly along the westerly line of lots 223, 241, 259, 276, 293, 309, 325 and 340 to the southwesterly corner of lot number 340 in the Brantingham Tract and the second has thence westerly along the northern line of lots 204 and 203 to the midpoint of the northern line of lot 203" style="max-width: 100%;"></p>
+<p>That’s not a single polygon! That’s 106 line segments... and they are fascinating. Look at those descriptions:</p>
+<blockquote>
+<p>thence westerly along the northern line of lots 204 and 203 to the midpoint of the northern line of lot 203</p>
+</blockquote>
+<p>This is utterly delightful. The shapefile description did say “as described in Section 9-0101 of the New York Environmental Conservation Law”, so I guess this is how you write geographically boundaries into law!</p>
+<p>But it’s not what I wanted. I want a single polygon of the whole park, not 106 separate lines.</p>
+<p>I decided to switch models. ChatGPT has access to Code Interpreter, and I happen to know that Code Interpreter is quite effective at processing GeoJSON.</p>
+<p>I opened a new ChatGPT (with GPT-4) browser tab, uploaded my GeoJSON file and prompted it:</p>
+<blockquote>
+<p>This GeoJSON file is full of line segments. Use them to create me a single shape that is a Polygon</p>
+</blockquote>
+<p><img src="https://static.simonwillison.net/static/2024/shapely-chatgpt-1.jpg" alt="ChatGPT screenshot - it shows some Python code with a result of &lt;shapely.geometry.polygon.Polygon at 0x7eba83f9fca0 /&gt;, then says: I've created a polygon from the line segments in the GeoJSON file. You can now use this polygon for further analysis or visualization. If you have specific requirements for the polygon or need it in a particular format, please let me know! ​​" style="max-width: 100%;"></p>
+<p>OK, so it wrote some Python code and ran it. But did it work?</p>
+<p>I happen to know that Code Interpreter can save files to disk and provide links to download them, so I told it to do that:</p>
+<blockquote>
+<p>Save it to a GeoJSON file for me to download</p>
+</blockquote>
+<p><img src="https://static.simonwillison.net/static/2024/shapely-chatgpt-2.jpg" alt="ChatGPT screenshot - this time it writes more Python code to define a GeoJSON polygon, then saves that to a file called /mnt/data/polygon.geojson and gives me a link to download it.​​" style="max-width: 100%;"></p>
+<p>I pasted <a href="https://gist.github.com/simonw/c1002dbf5249de7addd0b65cb774d3e9">that</a> into <a href="https://geojson.io/">geojson.io</a>, and it was clearly wrong:</p>
+<p><img src="https://static.simonwillison.net/static/2024/shapely-chatgpt-bad-map.jpg" alt="geojson.io screenshot - a triangle shape sits on top of an area of upstate New York, clearly not in the shape of the park" style="max-width: 100%;"></p>
+<p>So I told it to try again. I didn’t think very hard about this prompt, I basically went with a version of “do better”:</p>
+<blockquote>
+<p>that doesn’t look right to me, check that it has all of the lines in it</p>
+</blockquote>
+<p><img src="https://static.simonwillison.net/static/2024/shapely-chatgpt-3.jpg" alt="ChatGPT screenshot - it writes more Python code and outputs a link to complete_polygon.geojson​​" style="max-width: 100%;"></p>
+<p>It gave me a new file, optimistically named <code>complete_polygon.geojson</code>. Here’s what that one looked like:</p>
+<p><img src="https://static.simonwillison.net/static/2024/shapely-chatgpt-almost.jpg" alt="ChatGPT screenshot - it writes more Python code and outputs a link to complete_polygon.geojson​​" style="max-width: 100%;"></p>
+<p>This is getting a lot closer! Note how the right hand boundary of the park looks correct, but the rest of the image is scrambled.</p>
+<p>I had a hunch about the fix. I pasted in a screenshot of where we were so far and added my hunch about the solution:</p>
+<blockquote>
+<p>That almost works but you need to sort the line segments first, it looked like this:</p>
+</blockquote>
+<p>Honestly, pasting in the screenshot probably wasn’t necessary here, but it amused me.</p>
+<p><img src="https://static.simonwillison.net/static/2024/shapely-chatgpt-4.jpg" alt="That almost works but you need to sort the line segments first, it looked like this: an a screenshot of a map" style="max-width: 100%;"></p>
+<p>... and ChatGPT churned away again ...</p>
+<p><img src="https://static.simonwillison.net/static/2024/shapely-chatgpt-5.jpg" alt="More Python code - link to the full transcript is below" style="max-width: 100%;"></p>
+<p><a href="https://gist.github.com/simonw/b9e4325b76e4a3813ff5482aa278c342">sorted_polygon.geojson</a> is spot on! Here’s what it looks like:</p>
+<p><img src="https://static.simonwillison.net/static/2024/shapely-good-map.jpg" alt="A shaded polygon showing the exact shape of the boundary of Adirondack Park, overlayed on a map of the area" style="max-width: 100%;"></p>
+<p>Total time spent in ChatGPT: 3 minutes and 35 seconds. Plus 2.5 minutes with Claude 3 earlier, so an overall total of just over 6 minutes.</p>
+<p>Here’s <a href="https://gist.github.com/simonw/0343cdd3568bbe28cad15d1097b1b1c7">the full Claude transcript</a> and the <a href="https://gist.github.com/simonw/3eb845823c5ad4c48d2b4eb7586f1533">full transcript from ChatGPT</a>.</p>
+<h4 id="not-notable">This isn’t notable</h4>
+<p>The most notable thing about this example is how completely <em>not</em> notable it is.</p>
+<p>I get results like this from these tools several times a day. I’m not at all surprised that this worked, in fact, I would’ve been mildly surprised if it had not.</p>
+<p>Could I have done this without LLM assistance? Yes, but not nearly as quickly. And this was not a task on my critical path for the day—it was a sidequest at best and honestly more of a distraction.</p>
+<p>So, without LLM tools, I would likely have given this one up at the first hurdle.</p>
+<p>A year ago I wrote about how <a href="https://simonwillison.net/2023/Mar/27/ai-enhanced-development/">AI-enhanced development makes me more ambitious with my projects</a>. They are now so firmly baked into my daily work that they influence not just side projects but tiny sidequests like this one as well.</p>
+<h4 id="not-simple">This certainly wasn’t simple</h4>
+<p>Something else I like about this example is that it illustrates quite how much depth there is to getting great results out of these systems.</p>
+<p>In those few minutes I used two different interfaces to call two different models. I sent multiple follow-up prompts. I triggered Code Interpreter, took advantage of GPT-4 Vision and mixed in external tools like <a href="https://geojson.io/">geojson.io</a> and Datasette as well.</p>
+<p>I leaned a lot on my existing knowledge and experience:</p>
+<ul>
+<li>I knew that tools existed for commandline processing of shapefiles and GeoJSON</li>
+<li>I instinctively knew that Claude 3 Opus was likely to correctly answer my initial prompt</li>
+<li>I knew the capabilities of Code Interpreter, including that it has libraries that can process geometries, what to say to get it to kick into action and how to get it to give me files to download</li>
+<li>My limited GIS knowledge was strong enough to spot a likely coordinate system problem, and I guessed the fix for the jumbled lines</li>
+<li>My prompting intuition is developed to the point that I didn’t have to think very hard about what to say to get the best results</li>
+</ul>
+<p>If you have the right combination of domain knowledge and hard-won experience driving LLMs, you can <em>fly</em> with these things.</p>
+<h4 id="a-bit-trivial">Isn’t this a bit trivial?</h4>
+<p>Yes it is, and that’s the point. This was a five minute sidequest. Writing about it here took ten times longer than the exercise itself.</p>
+<p>I take on LLM-assisted sidequests like this one dozens of times a week. Many of them are substantially larger and more useful. They are having a very material impact on my work: I can get more done and solve much more interesting problems, because I’m not wasting valuable cycles figuring out <code>ogr2ogr</code> invocations or mucking around with polygon libraries.</p>
+<p>Not to mention that I find working this way <em>fun</em>! It feels like science fiction every time I do it. Our AI-assisted future is here right now and I’m still finding it weird, fascinating and deeply entertaining.</p>
+<h4 id="llms-are-useful">LLMs are useful</h4>
+<p>There are many legitimate criticisms of LLMs. The copyright issues involved in their training, their enormous power consumption and the risks of people trusting them when they shouldn’t (considering both accuracy and bias) are three that I think about a lot.</p>
+<p>The one criticism I wont accept is that they aren’t <em>useful</em>.</p>
+<p>One of the greatest misconceptions concerning LLMs is the idea that they are easy to use. They really aren’t: getting great results out of them requires a great deal of experience and hard-fought intuition, combined with deep domain knowledge of the problem you are applying them to.</p>
+<p>I use these things every day. They help me take on much more interesting and ambitious problems than I could otherwise. I would miss them terribly if they were no longer available to me.</p>
+
+
+</div>
+<div class="entryFooter">Posted <a href="/2024/Mar/22/">22nd March 2024</a> at 7:44 pm &middot; Follow me on <a href="https://fedi.simonwillison.net/@simon">Mastodon</a>, <a href="https://bsky.app/profile/simonwillison.net">Bluesky</a>, <a href="https://twitter.com/simonw">Twitter</a> or <a href="https://simonwillison.net/about/#subscribe">subscribe to my newsletter</a></div>
+<p class="edit-page-link" data-admin-url="/admin/blog/entry/8331/" style="display: none;"></p>
+
+</div>
+
+
+<div class="recent-articles">
+<h2>More recent articles</h2>
+<ul class="bullets">
+  
+    <li><a href="/2026/Nov/24/llm-inflection-points/">Three LLM inflection points in twelve months</a> - 24th November 2026</li>
+  
+    <li><a href="/2026/Nov/23/ladybird/">Ladybird&#x27;s first alpha release</a> - 23rd November 2026</li>
+  
+    <li><a href="/2026/Nov/17/datasette-lite/">Running the full server-side Datasette Python app in the browser with service workers and Pyodide</a> - 17th November 2026</li>
+  
+    <li><a href="/2026/Nov/9/mysterious-beeps/">Locating the source of a mysterious beep with Claude</a> - 9th November 2026</li>
+  
+</ul>
+</div>
+
+
+
+</div> <!-- #primary -->
+
+<div id="secondary">
+
+<div class="metabox">
+<p class="this-is">This is <strong>Claude and ChatGPT for ad-hoc sidequests</strong> by Simon Willison, posted on <a href="/2024/Mar/22/">22nd March 2024</a>.</p>
+
+<div class="series-info">
+  <p>Part of series <strong><a href="/series/using-llms/">How I use LLMs and ChatGPT</a></strong></p>
+  <ol start="7">
+    
+      
+        <li><a href="/2023/Apr/12/code-interpreter/">Running Python micro-benchmarks using the ChatGPT Code Interpreter alpha</a> - April 12, 2023, 1:14 a.m. </li>
+      
+    
+      
+        <li><a href="/2023/Aug/6/annotated-presentations/">How I make annotated presentations</a> - Aug. 6, 2023, 5:15 p.m. </li>
+      
+    
+      
+        <li><a href="/2023/Nov/15/gpts/">Exploring GPTs: ChatGPT in a trench coat?</a> - Nov. 15, 2023, 3:39 p.m. </li>
+      
+    
+      
+        <li><strong>Claude and ChatGPT for ad-hoc sidequests</strong></a> - March 22, 2024, 7:44 p.m. </li>
+      
+    
+      
+        <li><a href="/2024/Mar/23/building-c-extensions-for-sqlite-with-chatgpt-code-interpreter/">Building and testing C extensions for SQLite with ChatGPT Code Interpreter</a> - March 23, 2024, 5:50 p.m. </li>
+      
+    
+      
+        <li><a href="/2024/Mar/26/llm-cmd/">llm cmd undo last git commit - a new plugin for LLM</a> - March 26, 2024, 3:37 p.m. </li>
+      
+    
+      
+        <li><a href="/2024/Mar/30/ocr-pdfs-images/">Running OCR against PDFs and images directly in your browser</a> - March 30, 2024, 5:59 p.m. </li>
+      
+    
+    <li style="list-style-type: none;"><a href="/series/using-llms/">&#8230; more</a></li>
+  </ol>
+</div>
+
+
+    
+        <a class="item-tag" href="/tags/geospatial/" rel="tag">
+            geospatial
+            <span>87</span>
+        </a>
+    
+        <a class="item-tag" href="/tags/shapefiles/" rel="tag">
+            shapefiles
+            <span>7</span>
+        </a>
+    
+        <a class="item-tag" href="/tags/geojson/" rel="tag">
+            geojson
+            <span>16</span>
+        </a>
+    
+        <a class="item-tag" href="/tags/ai/" rel="tag">
+            ai
+            <span>2,339</span>
+        </a>
+    
+        <a class="item-tag" href="/tags/openai/" rel="tag">
+            openai
+            <span>481</span>
+        </a>
+    
+        <a class="item-tag" href="/tags/generative-ai/" rel="tag">
+            generative-ai
+            <span>2,077</span>
+        </a>
+    
+        <a class="item-tag" href="/tags/chatgpt/" rel="tag">
+            chatgpt
+            <span>208</span>
+        </a>
+    
+        <a class="item-tag" href="/tags/llms/" rel="tag">
+            llms
+            <span>2,041</span>
+        </a>
+    
+        <a class="item-tag" href="/tags/ai-assisted-programming/" rel="tag">
+            ai-assisted-programming
+            <span>409</span>
+        </a>
+    
+        <a class="item-tag" href="/tags/anthropic/" rel="tag">
+            anthropic
+            <span>358</span>
+        </a>
+    
+        <a class="item-tag" href="/tags/claude/" rel="tag">
+            claude
+            <span>329</span>
+        </a>
+    
+        <a class="item-tag" href="/tags/code-interpreter/" rel="tag">
+            code-interpreter
+            <span>32</span>
+        </a>
+    
+        <a class="item-tag" href="/tags/coding-agents/" rel="tag">
+            coding-agents
+            <span>271</span>
+        </a>
+    
+        <a class="item-tag" href="/tags/leaflet/" rel="tag">
+            leaflet
+            <span>47</span>
+        </a>
+    
+
+
+
+<p><strong>Next:</strong> <a href="/2024/Mar/23/building-c-extensions-for-sqlite-with-chatgpt-code-interpreter/">Building and testing C extensions for SQLite with ChatGPT Code Interpreter</a></p>
+
+
+<p><strong>Previous:</strong> <a href="/2024/Mar/16/weeknotes-the-aftermath-of-nicar/">Weeknotes: the aftermath of NICAR</a></p>
+
+
+<section style="
+    /* .promo */
+    border-radius: 8px;
+    margin: 1.5rem 0;
+    padding: 1rem 1.25rem;
+    /* .variant-a */
+    border: 2px solid #6c3eb9;
+  ">
+  <h3 style="
+      /* h3 */
+      margin: 0 0 0.5rem;
+      font-size: 1.25rem;
+    ">
+    Monthly briefing
+  </h3>
+  <p style="
+      /* p */
+      margin: 0 0 1rem;
+      line-height: 1.4;
+    ">
+    Sponsor me for <strong>$10/month</strong> and get a curated email digest of the month's most important LLM developments.
+  </p>
+  <p style="
+      /* p */
+      margin: 0 0 1rem;
+      line-height: 1.4;
+    ">
+    Pay me to send you less!
+  </p>
+  <a href="https://github.com/sponsors/simonw/" style="
+      /* a.button */
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      background: #6c3eb9;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 4px;
+      font-weight: 600;
+    ">
+    Sponsor &amp; subscribe
+  </a>
+</section>
+</div>
+
+
+
+</div> <!-- #secondary -->
+</div> <!-- #wrapper -->
+
+
+
+
+
+
+
+
+
+
+
+<div id="ft">
+    <ul>
+      <li><a href="/about/#disclosures">Disclosures</a></li>
+      <li><a href="/about/#about-site">Colophon</a></li>
+      <li>&copy;</li>
+      <li><a href="/2002/">2002</a></li>
+      <li><a href="/2003/">2003</a></li>
+      <li><a href="/2004/">2004</a></li>
+      <li><a href="/2005/">2005</a></li>
+      <li><a href="/2006/">2006</a></li>
+      <li><a href="/2007/">2007</a></li>
+      <li><a href="/2008/">2008</a></li>
+      <li><a href="/2009/">2009</a></li>
+      <li><a href="/2010/">2010</a></li>
+      <li><a href="/2011/">2011</a></li>
+      <li><a href="/2012/">2012</a></li>
+      <li><a href="/2013/">2013</a></li>
+      <li><a href="/2014/">2014</a></li>
+      <li><a href="/2015/">2015</a></li>
+      <li><a href="/2016/">2016</a></li>
+      <li><a href="/2017/">2017</a></li>
+      <li><a href="/2018/">2018</a></li>
+      <li><a href="/2019/">2019</a></li>
+      <li><a href="/2020/">2020</a></li>
+      <li><a href="/2021/">2021</a></li>
+      <li><a href="/2022/">2022</a></li>
+      <li><a href="/2023/">2023</a></li>
+      <li><a href="/2024/">2024</a></li>
+      <li><a href="/2025/">2025</a></li>
+      <li><a href="/2026/">2026</a></li>
+      <li>
+        <button id="theme-toggle" type="button" aria-label="Toggle theme">
+          <!-- Auto/System icon (default) -->
+          <svg id="icon-auto" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2V4a8 8 0 1 0 0 16z"/></svg>
+          <!-- Light icon -->
+          <svg id="icon-light" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="display:none"><path d="M12 18a6 6 0 1 1 0-12 6 6 0 0 1 0 12zm0-2a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM11 1h2v3h-2V1zm0 19h2v3h-2v-3zM3.515 4.929l1.414-1.414L7.05 5.636 5.636 7.05 3.515 4.93zM16.95 18.364l1.414-1.414 2.121 2.121-1.414 1.414-2.121-2.121zm2.121-14.85l1.414 1.415-2.121 2.121-1.414-1.414 2.121-2.121zM5.636 16.95l1.414 1.414-2.121 2.121-1.414-1.414 2.121-2.121zM23 11v2h-3v-2h3zM4 11v2H1v-2h3z"/></svg>
+          <!-- Dark icon -->
+          <svg id="icon-dark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="display:none"><path d="M10 7a7 7 0 0 0 12 4.9v.1c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2h.1A6.979 6.979 0 0 0 10 7zm-6 5a8 8 0 0 0 15.062 3.762A9 9 0 0 1 8.238 4.938 7.999 7.999 0 0 0 4 12z"/></svg>
+        </button>
+      </li>
+    </ul>
+</div>
+
+
+
+<style>image-gallery:not(:defined) img {max-height: 150px;} captioned-image-gallery:not(:defined) > figure {max-height: 240px; overflow: hidden;}</style>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('h2[id],h3[id],h4[id],h5[id],h6[id]').forEach(el => {
+    const id = el.getAttribute('id');
+    const permalinkContext = el.closest('[data-permalink-context]');
+    if (permalinkContext) {
+      const url = permalinkContext.getAttribute('data-permalink-context');
+      const hashLink = document.createElement('a');
+      hashLink.style.borderBottom = 'none';
+      hashLink.style.color = '#666';
+      hashLink.style.fontSize = '1em';
+      hashLink.style.opacity = 0.8;
+      hashLink.setAttribute('href', url + '#' + id);
+      hashLink.innerText = '#';
+      el.appendChild(document.createTextNode('\u00A0'));
+      el.appendChild(hashLink);
+    }
+  });
+});
+</script>
+<script type="module">
+const config = [
+  {"tag": "lite-youtube", "js": "/static/lite-yt-embed.js", "css": "/static/lite-yt-embed.css"},
+  {"tag": "image-gallery", "js": "/static/image-gallery.js", "css": null},
+  {"tag": "captioned-image-gallery", "js": "/static/captioned-image-gallery.js", "css": null},
+  {"tag": "click-to-play", "js": "/static/click-to-play.js", "css": "/static/click-to-play.css"},
+  {"tag": "github-code", "js": "/static/github-code.js", "css": null}
+];
+for (const {tag, js, css} of config) {
+  if (document.querySelector(tag)) {
+    if (css) {
+      document.head.appendChild(
+        Object.assign(document.createElement('link'), {
+          rel: 'stylesheet',
+          href: css
+        })
+      );
+    }
+    if (js) {
+      await import(js);
+    }
+  }
+}
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    if (window.localStorage.getItem('ADMIN')) {
+      document.querySelectorAll('.edit-page-link').forEach(el => {
+        const url = el.getAttribute('data-admin-url');
+        if (url) {
+          const a = document.createElement('a');
+          a.href = url;
+          a.className = 'edit-link';
+          a.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Edit';
+          el.appendChild(a);
+          el.style.display = 'block';
+        }
+      });
+    }
+  });
+</script>
+<script>
+// Random tag navigation - shows button if recently came from tag random
+(function() {
+  const stored = localStorage.getItem('random_tag');
+  if (!stored) return;
+
+  try {
+    const data = JSON.parse(stored);
+    const elapsed = Date.now() - data.timestamp;
+
+    // Only show if within 5 seconds
+    if (elapsed > 5000) return;
+
+    const header = document.getElementById('smallhead-inner');
+    if (!header) return;
+
+    const btn = document.createElement('a');
+    btn.href = '/random/' + encodeURIComponent(data.tag) + '/';
+    btn.className = 'random-tag-nav';
+    btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" stroke="none"></circle><circle cx="15.5" cy="8.5" r="1.5" fill="currentColor" stroke="none"></circle><circle cx="8.5" cy="15.5" r="1.5" fill="currentColor" stroke="none"></circle><circle cx="15.5" cy="15.5" r="1.5" fill="currentColor" stroke="none"></circle><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"></circle></svg> Random ' + data.tag;
+
+    btn.addEventListener('click', function(e) {
+      // Bump the timestamp before navigating
+      localStorage.setItem('random_tag', JSON.stringify({
+        tag: data.tag,
+        timestamp: Date.now()
+      }));
+    });
+
+    // Insert before the Newsletter link
+    const subscribeLink = document.getElementById('smallhead-about');
+    if (subscribeLink) {
+      header.insertBefore(btn, subscribeLink);
+    } else {
+      header.appendChild(btn);
+    }
+  } catch (e) {
+    // Invalid JSON, clear it
+    localStorage.removeItem('random_tag');
+  }
+})();
+</script>
+<script>
+// Theme toggle functionality
+(function() {
+  const toggle = document.getElementById('theme-toggle');
+  const iconAuto = document.getElementById('icon-auto');
+  const iconLight = document.getElementById('icon-light');
+  const iconDark = document.getElementById('icon-dark');
+
+  // Theme states: 'auto' (default), 'light', 'dark'
+  function getTheme() {
+    return localStorage.getItem('theme') || 'auto';
+  }
+
+  function setTheme(theme) {
+    if (theme === 'auto') {
+      localStorage.removeItem('theme');
+      document.documentElement.removeAttribute('data-theme');
+    } else {
+      localStorage.setItem('theme', theme);
+      document.documentElement.setAttribute('data-theme', theme);
+    }
+    updateIcon(theme);
+  }
+
+  function updateIcon(theme) {
+    iconAuto.style.display = theme === 'auto' ? 'block' : 'none';
+    iconLight.style.display = theme === 'light' ? 'block' : 'none';
+    iconDark.style.display = theme === 'dark' ? 'block' : 'none';
+
+    // Update aria-label for accessibility
+    const labels = {
+      'auto': 'Theme: Auto (system preference). Click to switch to light.',
+      'light': 'Theme: Light. Click to switch to dark.',
+      'dark': 'Theme: Dark. Click to switch to auto.'
+    };
+    toggle.setAttribute('aria-label', labels[theme]);
+  }
+
+  // Cycle through themes: auto -> light -> dark -> auto
+  function cycleTheme() {
+    const current = getTheme();
+    const next = current === 'auto' ? 'light' : current === 'light' ? 'dark' : 'auto';
+    setTheme(next);
+  }
+
+  // Initialize
+  updateIcon(getTheme());
+  toggle.addEventListener('click', cycleTheme);
+})();
+</script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" data-cf-beacon='{"version":"2024.11.0","token":"42c41055028944ee9764ce8039f69a82","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

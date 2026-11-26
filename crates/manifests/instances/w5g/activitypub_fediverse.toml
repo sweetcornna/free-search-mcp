@@ -1,0 +1,61 @@
+protocol = "activitypub_fediverse"
+
+[[instance]]
+id = "lemmy_world"
+name = "Lemmy.world"
+summary = "Largest federated Lemmy link-aggregator and discussion server with keyless full-text post search."
+aliases = ["lemmy.world", "lemmy"]
+base_url = "https://lemmy.world"
+scopes = ["forum"]
+caps = ["search"]
+tier = 1
+dialect = { flavor = "lemmy" }
+probe = { op = "search", params = { query = "rust", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "lemmy_ml"
+name = "Lemmy.ml"
+summary = "Flagship free-software, Linux, privacy, and technology federated discussion server on Lemmy."
+aliases = ["lemmy.ml", "lemmy foss"]
+base_url = "https://lemmy.ml"
+scopes = ["forum", "code"]
+caps = ["search"]
+tier = 1
+dialect = { flavor = "lemmy" }
+probe = { op = "search", params = { query = "linux", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "mastodon_social"
+name = "Mastodon.social"
+summary = "Flagship Mastodon ActivityPub server supporting keyless public hashtag timeline discovery."
+aliases = ["mastodon.social", "mastodon"]
+base_url = "https://mastodon.social"
+scopes = ["forum"]
+caps = ["search"]
+tier = 2
+dialect = { flavor = "mastodon" }
+probe = { op = "search", params = { query = "rust", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "hachyderm"
+name = "Hachyderm.io"
+summary = "Mastodon community for systems engineers, security researchers, and open-source infrastructure maintainers."
+aliases = ["hachyderm.io", "hachyderm mastodon"]
+base_url = "https://hachyderm.io"
+scopes = ["forum", "code"]
+caps = ["search"]
+tier = 2
+dialect = { flavor = "mastodon" }
+probe = { op = "search", params = { query = "rust", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "fediscience"
+name = "FediScience"
+summary = "Mastodon server for publishing academic researchers and scientists sharing preprints, methods, and commentary."
+aliases = ["fediscience.org", "science mastodon"]
+base_url = "https://fediscience.org"
+scopes = ["forum"]
+caps = ["search"]
+tier = 2
+dialect = { flavor = "mastodon" }
+probe = { op = "search", params = { query = "science", limit = 3 }, min_results = 2 }

@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "string_db",
+  "op": "partners",
+  "recordedAt": "2026-11-25T13:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://string-db.org/api/json/interaction_partners?identifiers=TP53&species=9606&limit=3&required_score=400&caller_identity=free_search_mcp",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/json; charset=utf-8"
+          ],
+          [
+            "cache-control",
+            "max-age=86400"
+          ]
+        ],
+        "bodyText": "[{\"stringId_A\": \"9606.ENSP00000269305\", \"stringId_B\": \"9606.ENSP00000212015\", \"preferredName_A\": \"TP53\", \"preferredName_B\": \"SIRT1\", \"ncbiTaxonId\": 9606, \"score\": 0.999, \"nscore\": 0, \"fscore\": 0, \"pscore\": 0, \"ascore\": 0, \"escore\": 0.999, \"dscore\": 0.9, \"tscore\": 0.886}, {\"stringId_A\": \"9606.ENSP00000269305\", \"stringId_B\": \"9606.ENSP00000215832\", \"preferredName_A\": \"TP53\", \"preferredName_B\": \"MAPK1\", \"ncbiTaxonId\": 9606, \"score\": 0.999, \"nscore\": 0, \"fscore\": 0, \"pscore\": 0, \"ascore\": 0.052, \"escore\": 0.999, \"dscore\": 0.9, \"tscore\": 0.68}, {\"stringId_A\": \"9606.ENSP00000269305\", \"stringId_B\": \"9606.ENSP00000216911\", \"preferredName_A\": \"TP53\", \"preferredName_B\": \"AURKA\", \"ncbiTaxonId\": 9606, \"score\": 0.999, \"nscore\": 0, \"fscore\": 0, \"pscore\": 0, \"ascore\": 0.075, \"escore\": 0.999, \"dscore\": 0.75, \"tscore\": 0.679}]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

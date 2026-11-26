@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "discogs_music",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.discogs.com/database/search?q=nirvana&per_page=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"pagination\":{\"page\":1,\"pages\":3333,\"per_page\":3,\"items\":17792,\"urls\":{\"last\":\"https://api.discogs.com/database/search?q=nirvana&per_page=3&page=3333\",\"next\":\"https://api.discogs.com/database/search?q=nirvana&per_page=3&page=2\"}},\"results\":[{\"id\":125246,\"type\":\"artist\",\"master_id\":null,\"master_url\":null,\"uri\":\"/artist/125246-Nirvana\",\"title\":\"Nirvana\",\"thumb\":\"\",\"cover_image\":\"\",\"resource_url\":\"https://api.discogs.com/artists/125246\"},{\"country\":\"US\",\"year\":\"2002\",\"format\":[\"CD\",\"Compilation\"],\"label\":[\"DGC\",\"Geffen Records\",\"Geffen Records\",\"Universal Music & Video Distribution, Corp.\",\"Universal Music & Video Distribution, Corp.\",\"Future Media\",\"Future Media\"],\"type\":\"master\",\"genre\":[\"Rock\"],\"style\":[\"Grunge\"],\"id\":42476,\"barcode\":[\"606949350727\",\"6 06949 35072 7\",\"IFPI LG33\",\"FM/CA FM 22851 (0694935072/TE001) C01 M04 S01\",\"IFPI 3V53\",\"FM/CA FM 22851 (0694935072/TE001) C01 M03 S04\",\"IFPI 3V42\",\"FM/CA FM 22851 (0694935072/TE001) C01 M03 S03\",\"IFPI 3V15\",\"FM/CA FM 22851 (0694935072/TE001) C01 M02 S07\",\"IFPI 3V36\",\"FM/CA FM 22851 (0694935072/TE001) C01 M01 S01\",\"IFPI 3V04\",\"FM/CA FM 22851 (0694935072/TE001) C02 M02 S02\",\"IFPI 3V18\",\"FM/CA FM 22851 (0694935072/TE001) C01 M02 S04\",\"IFPI 3V17\",\"FM/CA FM 22851 (0694935072/TE001) C02 M01 S04\",\"IFPI 3V22\"],\"master_id\":42476,\"master_url\":\"https://api.discogs.com/masters/42476\",\"uri\":\"/master/42476-Nirvana-Nirvana\",\"catno\":\"0694935072\",\"title\":\"Nirvana - Nirvana\",\"thumb\":\"\",\"cover_image\":\"\",\"resource_url\":\"https://api.discogs.com/masters/42476\",\"community\":{\"want\":20708,\"have\":92728}},{\"id\":307513,\"type\":\"artist\",\"master_id\":null,\"master_url\":null,\"uri\":\"/artist/307513-Nirvana-2\",\"title\":\"Nirvana (2)\",\"thumb\":\"\",\"cover_image\":\"\",\"resource_url\":\"https://api.discogs.com/artists/307513\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

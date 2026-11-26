@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "source": "w3c_specs",
+  "op": "list",
+  "recordedAt": "2026-11-25T12:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.w3.org/specifications?embed=true&items=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/hal+json;version=1.0"
+          ],
+          [
+            "cache-control",
+            "public, s-maxage=900"
+          ],
+          [
+            "last-modified",
+            "Wed, 25 Nov 2026 12:42:24 GMT"
+          ]
+        ],
+        "bodyText": "{\n    \"page\": 1,\n    \"limit\": 3,\n    \"pages\": 575,\n    \"total\": 1723,\n    \"_links\": {\n        \"specifications\": [\n            {\n                \"href\": \"https://api.w3.org/specifications/2dcontext\",\n                \"title\": \"HTML Canvas 2D Context\"\n            },\n            {\n                \"href\": \"https://api.w3.org/specifications/2dcontext2\",\n                \"title\": \"HTML Canvas 2D Context, Level 2\"\n            },\n            {\n                \"href\": \"https://api.w3.org/specifications/abstract-ui\",\n                \"title\": \"MBUI - Abstract User Interface Models\"\n            }\n        ],\n        \"self\": {\n            \"href\": \"https://api.w3.org/specifications?embed=1&page=1&items=3\"\n        },\n        \"first\": {\n            \"href\": \"https://api.w3.org/specifications?embed=1&page=1&items=3\"\n        },\n        \"last\": {\n            \"href\": \"https://api.w3.org/specifications?embed=1&page=575&items=3\"\n        },\n        \"next\": {\n            \"href\": \"https://api.w3.org/specifications?embed=1&page=2&items=3\"\n        }\n    },\n    \"_embedded\": {\n        \"specifications\": [\n            {\n                \"shortlink\": \"https://www.w3.org/TR/2dcontext/\",\n                \"description\": \"<p>Defines the flat cartesian surface that is the context for the canvas element (for drawing). </p>\",\n                \"title\": \"HTML Canvas 2D Context\",\n                \"shortname\": \"2dcontext\",\n                \"_links\": {\n                    \"self\": {\n                        \"href\": \"https://api.w3.org/specifications/2dcontext\"\n                    },\n                    \"version-history\": {\n                        \"href\": \"https://api.w3.org/specifications/2dcontext/versions\"\n                    },\n                    \"first-version\": {\n                        \"href\": \"https://api.w3.org/specifications/2dcontext/versions/20100304\",\n                        \"title\": \"Working Draft\"\n                    },\n                    \"latest-version\": {\n                        \"href\": \"https://api.w3.org/specifications/2dcontext/versions/20210128\",\n                        \"title\": \"Retired\"\n                    },\n                    \"series\": {\n                        \"href\": \"https://api.w3.org/specification-series/2dcontext\"\n                    }\n                }\n            },\n            {\n                \"shortlink\": \"https://www.w3.org/TR/2dcontext2/\",\n                \"description\": \"<p>This specification defines the 2D Context, Level 2 for the HTML canvas element. The 2D Context provides objects, methods, and properties to draw and manipulate graphics on a canvas drawing surface.</p>\",\n                \"title\": \"HTML Canvas 2D Context, Level 2\",\n                \"shortname\": \"2dcontext2\",\n                \"series-version\": \"2\",\n                \"_links\": {\n                    \"self\": {\n                        \"href\": \"https://api.w3.org/specifications/2dcontext2\"\n                    },\n                    \"version-history\": {\n                        \"href\": \"https://api.w3.org/specifications/2dcontext2/versions\"\n                    },\n                    \"first-version\": {\n                        \"href\": \"https://api.w3.org/specifications/2dcontext2/versions/20121217\",\n                        \"title\": \"Working Draft\"\n                    },\n                    \"latest-version\": {\n                        \"href\": \"https://api.w3.org/specifications/2dcontext2/versions/20150929\",\n                        \"title\": \"Retired\"\n                    },\n                    \"series\": {\n                        \"href\": \"https://api.w3.org/specification-series/2dcontext\"\n                    }\n                }\n            },\n            {\n                \"shortlink\": \"https://www.w3.org/TR/abstract-ui/\",\n                \"description\": \"<p>Defines a meta-model and XML serialization for interchange of user interface designs, that are expressed at an abstract level, independent of the target platform or modes of interaction.</p>\",\n                \"title\": \"MBUI - Abstract User Interface Models\",\n                \"shortname\": \"abstract-ui\",\n                \"_links\": {\n                    \"self\": {\n                        \"href\": \"https://api.w3.org/specifications/abstract-ui\"\n                    },\n                    \"version-history\": {\n                        \"href\": \"https://api.w3.org/specifications/abstract-ui/versions\"\n                    },\n                    \"first-version\": {\n                        \"href\": \"https://api.w3.org/specifications/abstract-ui/versions/20131105\",\n                        \"title\": \"First Public Working Draft\"\n                    },\n                    \"latest-version\": {\n                        \"href\": \"https://api.w3.org/specifications/abstract-ui/versions/20140408\",\n                        \"title\": \"Retired\"\n                    },\n                    \"series\": {\n                        \"href\": \"https://api.w3.org/specification-series/abstract-ui\"\n                    }\n                }\n            }\n        ]\n    }\n}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

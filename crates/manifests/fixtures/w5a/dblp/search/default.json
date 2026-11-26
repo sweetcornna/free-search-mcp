@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "source": "dblp",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:13:21Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://sparql.dblp.org/sparql",
+        "headersSubset": {
+          "content-type": "application/sparql-query",
+          "accept": "application/sparql-results+json"
+        },
+        "bodySha256": "4c1b9dc216c85f5783b5f9ead67d5d6eb20ce85587f712d1c8847960aed301c2"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/sparql-results+json"
+          ]
+        ],
+        "bodyText": "{\"head\":{\"vars\":[\"publ\",\"title\",\"year\",\"venue\",\"doi\",\"ee\",\"authors\"]},\"results\":{\"bindings\":[{\"publ\":{\"type\":\"uri\",\"value\":\"https://dblp.org/rec/conf/clef/FrobeHVP23\"},\"title\":{\"type\":\"literal\",\"value\":\"Open Web Search at LongEval 2023: Reciprocal Rank Fusion on Automatically Generated Query Variants.\"},\"year\":{\"datatype\":\"http://www.w3.org/2001/XMLSchema#gYear\",\"type\":\"literal\",\"value\":\"2023\"},\"venue\":{\"type\":\"literal\",\"value\":\"CLEF (Working Notes)\"},\"authors\":{\"type\":\"literal\",\"value\":\"Maik Fröbe; Gijs Hendriksen; Martin Potthast; Arjen P. de Vries\"}},{\"publ\":{\"type\":\"uri\",\"value\":\"https://dblp.org/rec/conf/ccnc/KafiSS26\"},\"title\":{\"type\":\"literal\",\"value\":\"Weighted Reciprocal Rank Fusion RAG for Context-Aware DoS Attack Mitigation.\"},\"year\":{\"datatype\":\"http://www.w3.org/2001/XMLSchema#gYear\",\"type\":\"literal\",\"value\":\"2026\"},\"venue\":{\"type\":\"literal\",\"value\":\"CCNC\"},\"doi\":{\"type\":\"uri\",\"value\":\"https://doi.org/10.1109/CCNC65079.2026.11366368\"},\"authors\":{\"type\":\"literal\",\"value\":\"Sajal Saha; Abdullahil Kafi; Nashid Shahriar\"}},{\"publ\":{\"type\":\"uri\",\"value\":\"https://dblp.org/rec/conf/doceng/KassaieKT25\"},\"title\":{\"type\":\"literal\",\"value\":\"Exploiting Query Reformulation and Reciprocal Rank Fusion in Math-Aware Search Engines.\"},\"year\":{\"datatype\":\"http://www.w3.org/2001/XMLSchema#gYear\",\"type\":\"literal\",\"value\":\"2025\"},\"venue\":{\"type\":\"literal\",\"value\":\"DocEng\"},\"doi\":{\"type\":\"uri\",\"value\":\"https://doi.org/10.1145/3704268.3742687\"},\"authors\":{\"type\":\"literal\",\"value\":\"Besat Kassaie; Andrew Kane; Frank Wm. Tompa\"}}]},\"meta\":{\"query-time-ms\":1943,\"result-size-total\":3}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

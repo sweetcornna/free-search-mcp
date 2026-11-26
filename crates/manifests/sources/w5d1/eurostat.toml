@@ -1,0 +1,110 @@
+id = "eurostat"
+name = "Eurostat Statistics API"
+summary = "Official European Union statistical datasets (GDP, population, inflation, labour, trade) in JSON-stat 2.0 by Eurostat code (e.g. tps00001, nama_10_gdp)."
+aliases = ["eu stats", "estat", "eurostat api"]
+home_url = "https://ec.europa.eu/eurostat"
+tier = 1
+scopes = ["finance", "dataset", "gov"]
+caps = ["lookup", "dataset"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 10000, cache_ttl_s = 21600 }
+
+[op.data]
+summary = "Fetch a Eurostat dataset via Statistics API 1.0 (JSON-stat 2.0) filtered by country geo and recent periods."
+method = "GET"
+url = "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/{dataset}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { lang = "EN" }
+probe = { params = { dataset = "tps00001", geo = "DE", limit = 3 }, min_results = 2, fixture = "fixtures/w5d1/eurostat/data/default.json" }
+
+[op.data.params]
+dataset = { type = "string", required = true, in = "path", doc = "Eurostat dataset code e.g. tps00001, tec00115, nama_10_gdp" }
+geo = { type = "string", to = "geo", doc = "Eurostat geo code e.g. DE, FR, EU27_2020" }
+limit = { type = "int", default = 5, min = 1, max = 50, to = "lastTimePeriod", doc = "Most recent time periods" }
+since = { type = "string", to = "sinceTimePeriod", doc = "Start period e.g. 2020" }
+
+[op.data.map]
+items = '''
+. as $root
+| (.id // []) as $ids
+| (.size // []) as $sizes
+| ($ids | length) as $n
+| (reduce range(0; $n) as $i ({}; . + { ($ids[$i]): ($root.dimension[$ids[$i]].category.index | to_entries | map({ (.value | tostring): .key }) | add) })) as $inv
+| ($root.value // {}) | to_entries[]
+| (.key | tonumber) as $flat
+| (reduce range(0; $n) as $i ({ rem: $flat, dims: {} };
+    ($n - 1 - $i) as $pos
+    | ($sizes[$pos]) as $sz
+    | ((.rem % $sz) | floor) as $coord
+    | { rem: (((.rem - $coord) / $sz) | floor), dims: (.dims + { ($ids[$pos]): ($inv[$ids[$pos]][$coord | tostring] // ($coord | tostring)) }) }
+  )).dims as $dims
+| {
+    dataset: ($root.extension.id // null),
+    label: ($root.label // null),
+    updated: ($root.updated | parse_date),
+    period: ($dims.time // null),
+    geo: ($dims.geo // null),
+    dimensions: $dims,
+    value: .value,
+    status: (if ($root.status | type == "object") then ($root.status[.key | tostring] // null) elif ($root.status | type == "array") then ($root.status[.key | tonumber] // null) else null end)
+  }
+'''
+error = 'if (.error? | type == "array" and length > 0) then (.error[0].label // (.error[0] | tostring)) else null end'
+record = "."
+
+[op.sdmx_data]
+summary = "Fetch a Eurostat dataset via SDMX 2.1 key filtering (JSON-stat 2.0), e.g. dataset=nama_10_gdp, key=A.CP_MEUR.B1GQ.DE."
+method = "GET"
+url = "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/{dataset}/{key}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "JSON", lang = "EN" }
+probe = { params = { dataset = "nama_10_gdp", key = "A.CP_MEUR.B1GQ.DE", limit = 3 }, min_results = 2, fixture = "fixtures/w5d1/eurostat/sdmx_data/default.json" }
+
+[op.sdmx_data.params]
+dataset = { type = "string", required = true, in = "path", doc = "Eurostat dataset code e.g. nama_10_gdp" }
+key = { type = "string", required = true, in = "path", encode = "raw", doc = "SDMX dimension key e.g. A.CP_MEUR.B1GQ.DE" }
+limit = { type = "int", default = 5, min = 1, max = 50, to = "lastNObservations", doc = "Most recent observations" }
+start = { type = "string", to = "startPeriod", doc = "Start period" }
+end = { type = "string", to = "endPeriod", doc = "End period" }
+
+[op.sdmx_data.map]
+items = "@ref:op.data.map.items"
+error = "@ref:op.data.map.error"
+record = "."
+
+[op.dataflow]
+summary = "Fetch metadata, observation coverage, update date, DOI, and ESMS link for a single Eurostat dataset code."
+method = "GET"
+url = "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/dataflow/ESTAT/{dataset}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { lang = "en" }
+probe = { params = { dataset = "nama_10_gdp" }, min_results = 1, fixture = "fixtures/w5d1/eurostat/dataflow/default.json" }
+
+[op.dataflow.params]
+dataset = { type = "string", required = true, in = "path", doc = "Eurostat dataset code e.g. nama_10_gdp" }
+
+[op.dataflow.map]
+items = "."
+error = "@ref:op.data.map.error"
+record = '''
+(.extension.annotation // []) as $anns
+| {
+  id: (.extension.id // null),
+  label: (.label // null),
+  agency: (.extension.agencyId // "ESTAT"),
+  version: (.extension.version // null),
+  obsCount: ((($anns | map(select(.type == "OBS_COUNT") | .title) | .[0]) // null) | to_int),
+  periodOldest: (($anns | map(select(.type == "OBS_PERIOD_OVERALL_OLDEST") | .title) | .[0]) // null),
+  periodLatest: (($anns | map(select(.type == "OBS_PERIOD_OVERALL_LATEST") | .title) | .[0]) // null),
+  updated: ((($anns | map(select(.type == "UPDATE_DATA") | .date) | .[0]) // null) | parse_date),
+  doi: ((($anns | map(select(.type == "DISSEMINATION_DOI_XML") | .title) | .[0]) // "") | (try capture("(?<d>10\\.[0-9]{4,9}/[^<\"]+)").d catch null) | doi_norm),
+  metadataUrl: (($anns | map(select(.type == "ESMS_HTML") | .href) | .[0]) // null),
+  url: ("https://ec.europa.eu/eurostat/databrowser/view/" + ((.extension.id // "") | ascii_downcase) + "/default/table")
+}'''

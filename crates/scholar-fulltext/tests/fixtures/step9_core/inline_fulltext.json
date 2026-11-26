@@ -1,0 +1,192 @@
+{
+  "version": 1,
+  "source": "synthetic_step9_core_inline",
+  "op": "inline_fulltext",
+  "recordedAt": "",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://pmc.ncbi.nlm.nih.gov/tools/idconv/api/v1/articles/?format=json&ids=10.1145%2F3580305.3599501&tool=free-search-mcp",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"status\":\"ok\",\"records\":[{\"requested-id\":\"10.1145/3580305.3599501\",\"status\":\"error\"}]}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.openalex.org/works/https://doi.org/10.1145/3580305.3599501?select=id%2Cids%2Cdoi%2Copen_access%2Cbest_oa_location%2Clocations%2Cprimary_location",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"id\":\"https://openalex.org/W4385000001\",\"doi\":\"https://doi.org/10.1145/3580305.3599501\",\"open_access\":{\"is_oa\":false,\"oa_status\":\"closed\",\"oa_url\":null},\"primary_location\":{\"landing_page_url\":\"https://dl.acm.org/doi/10.1145/3580305.3599501\"},\"best_oa_location\":null,\"locations\":[]}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.semanticscholar.org/graph/v1/paper/DOI:10.1145/3580305.3599501?fields=openAccessPdf%2CexternalIds%2Curl%2CisOpenAccess",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"paperId\":\"abc123\",\"url\":\"https://www.semanticscholar.org/paper/abc123\",\"isOpenAccess\":false,\"openAccessPdf\":null,\"externalIds\":{\"DOI\":\"10.1145/3580305.3599501\"}}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.core.ac.uk/v3/search/works?limit=3&q=doi%3A%2210.1145%2F3580305.3599501%22",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"totalHits\":1,\"results\":[{\"id\":99100234,\"doi\":\"10.1145/3580305.3599501\",\"title\":\"Scalable Subgraph Sampling for Dynamic Graphs\",\"downloadUrl\":\"https://core.ac.uk/download/99100234.pdf\",\"links\":[{\"type\":\"display\",\"url\":\"https://core.ac.uk/works/99100234\"},{\"type\":\"download\",\"url\":\"https://core.ac.uk/download/99100234.pdf\"}],\"fullText\":\"Abstract\\nDynamic graphs evolve continuously across streaming edges. We introduce an unbiased temporal reservoir sampler that bounds variance while keeping O(1) amortized update cost.\\n\\n1. Introduction\\nStreaming graph workloads appear in financial risk monitoring, citation cascades, and social networks. Traditional static snapshots discard fine-grained temporal dependencies.\\n\\n2. Methods\\nEach incoming edge (u, v, t) is hashed into a bounded temporal bucket with priority weight proportional to decay factor exp(-lambda * dt). The sampler maintains exact Horvitz-Thompson inclusion probabilities across sliding windows.\\n\\n3. Results\\nAcross four billion-edge benchmarks, our sampler achieves 4.7x higher throughput than prior dynamic GNN loaders with under 0.3% F1 degradation.\"}]}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://doaj.org/api/search/articles/doi:10.1145%2F3580305.3599501",
+        "headersSubset": {
+          "accept": "application/json"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"total\":0,\"results\":[]}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.crossref.org/works/10.1145/3580305.3599501",
+        "headersSubset": {
+          "accept": "application/json"
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": [
+          [
+            "content-type",
+            "text/plain"
+          ]
+        ],
+        "bodyText": "Resource not found.",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.datacite.org/dois/10.1145/3580305.3599501",
+        "headersSubset": {
+          "accept": "application/vnd.api+json"
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": [
+          [
+            "content-type",
+            "application/vnd.api+json"
+          ]
+        ],
+        "bodyText": "{\"errors\":[{\"status\":\"404\"}]}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.archives-ouvertes.fr/search/?fl=halId_s%2Curi_s%2CfileMain_s%2CopenAccess_bool%2CdoiId_s&q=doiId_s%3A%2210.1145%2F3580305.3599501%22&rows=1&wt=json",
+        "headersSubset": {
+          "accept": "application/json"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"response\":{\"numFound\":0,\"docs\":[]}}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://zenodo.org/api/records?q=doi%3A%2210.1145%2F3580305.3599501%22&size=1",
+        "headersSubset": {
+          "accept": "application/json"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"hits\":{\"total\":0,\"hits\":[]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

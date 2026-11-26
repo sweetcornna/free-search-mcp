@@ -1,0 +1,87 @@
+id = "cordis"
+name = "CORDIS EU Research Grants"
+summary = "European Commission Framework Programmes (FP1–FP7, Horizon 2020, Horizon Europe) funded projects."
+aliases = ["cordis", "erc", "eu grants", "horizon europe", "horizon 2020"]
+home_url = "https://cordis.europa.eu"
+tier = 1
+scopes = ["academic.grants", "academic"]
+caps = ["search", "lookup", "grant"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 86400 }
+
+[op.search]
+summary = "Search EU CORDIS funded research projects."
+method = "GET"
+url = "https://cordis.europa.eu/search/en"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "json" }
+paginate = { style = "page", param = "p", start = 1, max_pages = 3 }
+probe = { params = { query = "quantum", limit = 3 }, min_results = 2, fixture = "fixtures/w5b/cordis/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", template = "contenttype='project' AND {query}", doc = "Search terms for CORDIS projects" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "num", doc = "Number of hits to return" }
+page = { type = "int", default = 1, min = 1, to = "p", doc = "1-based page number" }
+
+[op.search.map]
+items = '''if (.content.hits | type) == "array" then (.content.hits[] | .source // .) else ((.hits.hit // [])[] | .project) end'''
+total = "(.content.header.total // .result.header.totalHits) | to_int"
+record = '''(
+  (if (.relations.associations | type) == "array" then
+    (([.relations.associations[] | select(.contenttype == "organization" and (.attributes.type // .["@attributes"].type) == "coordinator") | .legalName][0]) // ([.relations.associations[] | select(.contenttype == "organization") | .legalName][0]) // null)
+  else
+    (([(.relations.associations.organization | arr)[] | select(.["@attributes"].type == "coordinator") | .legalName][0]) // (.relations.associations.organization | arr | .[0].legalName // null))
+  end) as $org |
+  {
+    id: (.id // .rcn // "" | tostring),
+    title: ((.title // "") | strip_tags),
+    funder: "European Commission (CORDIS)",
+    pi: null,
+    org: ($org | collapse_ws),
+    amount: ((.ecMaxContribution | to_num) // (.totalCost | to_num)),
+    currency: "EUR",
+    startDate: ((.startDate // null) | parse_date),
+    endDate: ((.endDate // null) | parse_date),
+    url: ("https://cordis.europa.eu/project/id/" + (.id // "" | tostring)),
+    source: "cordis"
+  }
+)'''
+hit = '''((.startDate // null) | parse_date) as $d | {
+  title: (((if (.acronym // "") != "" then (.acronym + " — ") else "" end) + (.title // "")) | strip_tags),
+  url: ("https://cordis.europa.eu/project/id/" + (.id // "" | tostring)),
+  snippet: (((.status // "") + (if (.ecMaxContribution // "") != "" then (" · EUR " + (.ecMaxContribution | tostring)) else "" end) + " — " + ((.teaser // .objective // "") | strip_tags)) | collapse_ws)[0:280],
+  date: $d,
+  dateSource: (if $d != null then "api" else null end)
+}'''
+
+[op.project]
+summary = "Fetch a CORDIS EU project record by grant agreement ID."
+method = "GET"
+url = "https://cordis.europa.eu/project/id/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "json" }
+probe = { params = { id = "101201649" }, min_results = 1, fixture = "fixtures/w5b/cordis/project/default.json" }
+
+[op.project.params]
+id = { type = "string", required = true, in = "path", doc = "CORDIS grant agreement ID (e.g. 101201649)" }
+
+[op.project.map]
+items = "."
+record = '''{
+  id: (.id // .rcn // "" | tostring),
+  title: ((.title // "") | strip_tags),
+  funder: "European Commission (CORDIS)",
+  pi: null,
+  org: ((([(.relations.associations // [])[] | select(.contenttype == "organization" and .attributes.type == "coordinator") | .legalName][0]) // ([(.relations.associations // [])[] | select(.contenttype == "organization") | .legalName][0]) // null) | collapse_ws),
+  amount: ((.ecMaxContribution | to_num) // (.totalCost | to_num)),
+  currency: "EUR",
+  startDate: ((.startDate // null) | parse_date),
+  endDate: ((.endDate // null) | parse_date),
+  url: ("https://cordis.europa.eu/project/id/" + (.id // "" | tostring)),
+  source: "cordis"
+}'''

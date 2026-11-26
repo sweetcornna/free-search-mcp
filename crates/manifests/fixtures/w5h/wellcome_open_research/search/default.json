@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "source": "wellcome_open_research",
+  "op": "search",
+  "recordedAt": "2026-11-25T13:02:20Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://wellcomeopenresearch.org/extapi/search?q=malaria&rows=3&page=1",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/xml;charset=UTF-8"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><results numberOfResultsInPage=\"3\" totalNumberOfPages=\"129\"><doi>10.12688/wellcomeopenres.15166.1</doi><doi>10.12688/wellcomeopenres.15467.3</doi><doi>10.12688/wellcomeopenres.14769.2</doi></results>",
+        "bodyB64": null
+      }
+    }
+  ]
+}

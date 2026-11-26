@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "pubtator3",
+  "op": "work",
+  "recordedAt": "2026-11-25T12:14:15Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.ncbi.nlm.nih.gov/research/pubtator3-api/publications/export/biocjson?pmids=34668968",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"PubTator3\": [{\"_id\": \"34668968|None\", \"id\": \"34668968\", \"infons\": {}, \"passages\": [{\"infons\": {\"journal\": \"Biol Reprod. 2022 Jan 13;106(1):24-46. doi: 10.1093/biolre/ioab196.\", \"year\": \"2022\", \"type\": \"title\", \"authors\": \"Dehdilani N, Yousefi Taemeh S, Goshayeshi L, Dehghani H\"}, \"offset\": 0, \"text\": \"Genetically engineered birds; pre-CRISPR and CRISPR era .\", \"sentences\": [], \"annotations\": [], \"relations\": []}, {\"infons\": {\"type\": \"abstract\"}, \"offset\": 58, \"text\": \"Generating biopharmaceuticals in genetically engineered bioreactors continues to reign supreme. Hence, genetically engineered birds have attracted considerable attention from the biopharmaceutical industry. Fairly recent genome engineering methods have made genome manipulation an easy and affordable task. In this review, we first provide a broad overview of the approaches and main impediments ahead of generating efficient and reliable genetically engineered birds, and various factors that affect the fate of a transgene. This section provides an essential background for the rest of the review, in which we discuss and compare different genome manipulation methods in the pre-clustered regularly interspaced short palindromic repeats (CRISPR) and CRISPR era in the field of avian genome engineering.\", \"sentences\": [], \"annotations\": [], \"relations\": []}], \"relations\": [], \"pmid\": 34668968, \"pmcid\": null, \"meta\": {}, \"date\": \"2022-01-13T00:00:00Z\", \"journal\": \"Biol Reprod\", \"authors\": [\"Dehdilani N\", \"Yousefi Taemeh S\", \"Goshayeshi L\", \"Dehghani H\"], \"relations_display\": []}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

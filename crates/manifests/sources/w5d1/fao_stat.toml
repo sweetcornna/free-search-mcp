@@ -1,0 +1,146 @@
+id = "fao_stat"
+name = "FAO Data Catalog & SDMX (FAOSTAT)"
+summary = "UN Food and Agriculture Organization dataset catalog (FAOSTAT holdings) and official FAO SDMX SDG/agri-food series."
+aliases = ["faostat", "fao", "un fao", "agriculture statistics"]
+home_url = "https://www.fao.org/faostat"
+tier = 1
+scopes = ["dataset"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 4, concurrency = 3, timeout_ms = 10000, cache_ttl_s = 43200 }
+
+[op.search]
+summary = "Search FAO Data Catalog datasets (including FAOSTAT agriculture, food balance, forestry, and land-use tables)."
+method = "GET"
+url = "https://data.apps.fao.org/catalog/api/3/action/package_search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "start", start = 0, max_pages = 3 }
+probe = { params = { query = "faostat", limit = 3 }, min_results = 2, fixture = "fixtures/w5d1/fao_stat/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Keywords e.g. faostat, wheat, forestry, food security" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "rows", doc = "Max datasets" }
+offset = { type = "int", min = 0, to = "start", doc = "Result offset" }
+
+[op.search.map]
+items = "(.result.results // [])[]"
+total = ".result.count"
+error = "if .success == false then (.error.message // \"FAO catalog error\") else null end"
+record = '''{
+  id: .id,
+  slug: .name,
+  title: ((.title | strip_tags) // .name),
+  notes: (.notes | strip_tags),
+  organization: (.organization.title // null),
+  license: (.license_title // null),
+  modified: (.metadata_modified | parse_date),
+  resourceCount: ((.resources // []) | length),
+  url: ("https://data.apps.fao.org/catalog/dataset/" + .name)
+}'''
+hit = '''
+((.notes | strip_tags) // "") as $n
+| ((.title | strip_tags) // .name // "") as $t
+| (if $n != "" then $n else $t end) as $desc
+| {
+  title: $t,
+  url: ("https://data.apps.fao.org/catalog/dataset/" + (.name // "")),
+  snippet: ([(.organization.title // "FAO"), $desc] | map(select(. != "")) | join(" · ")),
+  date: (.metadata_modified | parse_date),
+  dateSource: (if (.metadata_modified | parse_date) then "api" else null end)
+}'''
+
+[op.dataset]
+summary = "Fetch full metadata and downloadable resources for a single FAO catalog dataset by slug or UUID."
+method = "GET"
+url = "https://data.apps.fao.org/catalog/api/3/action/package_show"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "grassland-global-national-annual-faostat" }, min_results = 1, fixture = "fixtures/w5d1/fao_stat/dataset/default.json" }
+
+[op.dataset.params]
+id = { type = "string", required = true, to = "id", doc = "Dataset slug or UUID e.g. grassland-global-national-annual-faostat" }
+
+[op.dataset.map]
+items = ".result"
+error = "if .success == false then (.error.message // \"FAO catalog error\") else null end"
+record = '''{
+  id: .id,
+  slug: .name,
+  title: ((.title | strip_tags) // .name),
+  notes: (.notes | strip_tags),
+  organization: (.organization.title // null),
+  license: (.license_title // null),
+  modified: (.metadata_modified | parse_date),
+  resources: [(.resources // [])[] | {name: .name, format: .format, url: .url}],
+  url: ("https://data.apps.fao.org/catalog/dataset/" + .name)
+}'''
+
+[op.sdmx_dataflows]
+summary = "List FAO SDMX statistical dataflows (SDG agri-food, forest area, food loss, undernourishment)."
+method = "GET"
+url = "https://nsi-release-ro-statsuite.fao.org/rest/dataflow/FAO"
+headers = { Accept = "application/vnd.sdmx.structure+json;version=1.0" }
+response = "json"
+returns = "records"
+const_query = { detail = "allstubs" }
+probe = { params = {}, min_results = 5, fixture = "fixtures/w5d1/fao_stat/sdmx_dataflows/default.json" }
+
+[op.sdmx_dataflows.map]
+items = "(.data.dataflows // [])[]"
+error = "@ref:op.sdmx_data.map.error"
+record = '''{
+  id: .id,
+  name: (.name // .names.en // .id),
+  version: (.version // null),
+  agency: (.agencyID // "FAO")
+}'''
+
+[op.sdmx_data]
+summary = "Fetch SDMX-JSON observations from an FAO SDMX dataflow (e.g. flow=DF_SDG_15_1_1); includes series attributes such as UNIT_MULT."
+method = "GET"
+url = "https://nsi-release-ro-statsuite.fao.org/rest/data/FAO,{flow}/{key}"
+headers = { Accept = "application/vnd.sdmx.data+json;version=1.0" }
+response = "json"
+returns = "records"
+probe = { params = { flow = "DF_SDG_15_1_1", key = "A.AG_LND_TOTL.762._T._T._T._T._T.HA._T._T._T", limit = 3 }, min_results = 2, fixture = "fixtures/w5d1/fao_stat/sdmx_data/default.json" }
+
+[op.sdmx_data.params]
+flow = { type = "string", required = true, in = "path", doc = "FAO SDMX dataflow ID e.g. DF_SDG_15_1_1" }
+key = { type = "string", required = true, in = "path", encode = "raw", doc = "SDMX 12-dimension key (dot-separated)" }
+limit = { type = "int", default = 5, min = 1, max = 50, to = "lastNObservations", doc = "Most recent observations per series" }
+start = { type = "string", to = "startPeriod", doc = "Start period e.g. 2015" }
+end = { type = "string", to = "endPeriod", doc = "End period" }
+
+[op.sdmx_data.map]
+items = '''
+.data as $d
+| ($d.structure // $d.structures[0]) as $st
+| ($st.dimensions.series // []) as $sdims
+| ($st.attributes.series // []) as $sattrs
+| ($st.dimensions.observation[0].values // []) as $periods
+| ($d.dataSets[0].series // {}) | to_entries[]
+| (.key | split(":") | map(tonumber)) as $idx
+| (.value.attributes // []) as $aidx
+| (reduce range(0; ($sdims | length)) as $i ({}; . + { ($sdims[$i].id): ($sdims[$i].values[$idx[$i]].id // null) })) as $dims
+| (reduce range(0; ($sattrs | length)) as $i ({};
+    if ($aidx[$i] != null) then
+      ($sattrs[$i].values[$aidx[$i]]? | (.id // .name // null)) as $v
+      | if ($v != null) then (. + { ($sattrs[$i].id): $v }) else . end
+    else . end
+  )) as $attrs
+| .value.observations | to_entries[]
+| {
+    seriesName: ($st.name // null),
+    dimensions: $dims,
+    attributes: $attrs,
+    unitMult: (($attrs.UNIT_MULT | to_int) // null),
+    period: ($periods[.key | tonumber].id // .key),
+    value: (if (.value[0] == "" or .value[0] == null) then null else ((.value[0] | to_num) // .value[0]) end)
+  }
+'''
+error = 'if (.errors? | type == "array" and length > 0) then (.errors[0].message // (.errors[0] | tostring)) else null end'
+record = "."

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "eia_energy",
+  "op": "route",
+  "recordedAt": "2026-11-25T12:13:33Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.eia.gov/v2/electricity",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"response\": {\"id\": \"electricity\", \"name\": \"Electricity\", \"description\": \"EIA electricity survey data\", \"routes\": [{\"id\": \"retail-sales\", \"name\": \"Electricity Sales to Ultimate Customers\", \"description\": \"Electricity sales to ultimate customer by state and sector.\"}, {\"id\": \"electric-power-operational-data\", \"name\": \"Electric Power Operations (Annual and Monthly)\", \"description\": \"Monthly and annual electric power operations by state, sector, and energy source.\"}, {\"id\": \"rto\", \"name\": \"Electricity Grid Monitor\", \"description\": \"Hourly and daily data on electric system operations.\"}]}, \"request\": {\"command\": \"/v2/electricity\", \"params\": {}}, \"apiVersion\": \"2.1.7\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

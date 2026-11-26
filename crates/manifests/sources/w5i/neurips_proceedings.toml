@@ -1,0 +1,163 @@
+id = "neurips_proceedings"
+name = "NeurIPS Proceedings Archive"
+summary = "Neural Information Processing Systems (NeurIPS/NIPS) open-access proceedings archive from 1987 to present with search, per-year indexes, PDFs, and pre-2022 JSON metadata."
+aliases = ["neurips", "nips", "proceedings.neurips.cc"]
+home_url = "https://proceedings.neurips.cc"
+tier = 2
+scopes = ["academic", "academic.cs", "academic.openaccess"]
+caps = ["search", "lookup", "fulltext"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 86400, host_bucket = "proceedings.neurips.cc" }
+
+[op.search]
+summary = "Search NeurIPS proceedings papers across all years (1987-present)."
+method = "GET"
+url = "https://proceedings.neurips.cc/papers/search"
+headers = { Accept = "text/html" }
+response = "html"
+returns = "works"
+probe = { params = { query = "attention is all you need" }, min_results = 2, fixture = "fixtures/w5i/neurips_proceedings/search/default.json" }
+examples = ['source.call("neurips_proceedings.search", {query: "attention is all you need"})']
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Paper title or author keywords" }
+limit = { type = "int", default = 10, min = 1, max = 100, in = "none", doc = "Maximum matching papers to return" }
+
+[op.search.html]
+items_css = "ul.paper-list li"
+fields = { title = "a | text", path = "a | attr(href)", full = "| text" }
+wall_markers = ["Access Denied", "Just a moment"]
+
+[op.search.map]
+items = '''[.[] | select((.title // "") != "")][0:($p.limit // 10)][]'''
+work = '''(
+  ((.path | resolve_url("https://proceedings.neurips.cc/")) // "https://proceedings.neurips.cc/") as $url |
+  ((.path // "") | [try capture("/paper/(?<y>[0-9]{4})/").y catch empty][0]) as $yr |
+  ($url | sub("/hash/"; "/file/") | sub("-Abstract"; "-Paper") | sub("\\.html$"; ".pdf")) as $pdfUrl |
+  ((.title // "") | collapse_ws // "") as $title |
+  ((.full // "") | collapse_ws // "") as $full |
+  ($full | split($title)) as $parts |
+  (if ($parts | length) > 1 then ($parts[1:] | join($title) | collapse_ws // "") else "" end) as $authStr |
+  {
+    title: $title,
+    authors: [($authStr | split(","))[] | collapse_ws | select(. != null and . != "") | {name: .}],
+    year: ($yr | to_int),
+    publishedDate: null,
+    venue: (if $yr != null then ("NeurIPS " + $yr) else "NeurIPS" end),
+    workType: "proceedings-article",
+    ids: {},
+    oa: {
+      status: "diamond",
+      url: $url,
+      pdfUrl: $pdfUrl
+    },
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["neurips_proceedings"]
+  }
+)'''
+hit = '''(
+  ((.path | resolve_url("https://proceedings.neurips.cc/")) // "https://proceedings.neurips.cc/") as $url |
+  ((.path // "") | [try capture("/paper/(?<y>[0-9]{4})/").y catch empty][0]) as $yr |
+  ((.title // "") | collapse_ws // "") as $title |
+  ((.full // "") | collapse_ws // "") as $full |
+  ($full | split($title)) as $parts |
+  (if ($parts | length) > 1 then ($parts[1:] | join($title) | collapse_ws // "") else "" end) as $authStr |
+  {
+    title: $title,
+    url: $url,
+    snippet: ([(if $yr != null then ("NeurIPS " + $yr) else "NeurIPS" end), $authStr] | map(select(length > 0)) | join(" · ")),
+    date: $yr,
+    dateSource: (if $yr != null then "html" else null end)
+  }
+)'''
+
+[op.year]
+summary = "List or filter NeurIPS papers published in a given conference year (1987-present)."
+method = "GET"
+url = "https://proceedings.neurips.cc/paper_files/paper/{year}"
+headers = { Accept = "text/html" }
+response = "html"
+returns = "works"
+probe = { params = { year = 1987 }, min_results = 5, fixture = "fixtures/w5i/neurips_proceedings/year/default.json" }
+examples = ['source.call("neurips_proceedings.year", {year: 1987, limit: 20})']
+
+[op.year.params]
+year = { type = "int", required = true, min = 1987, max = 2030, in = "path", doc = "NeurIPS conference year (1987-present)" }
+query = { type = "string", in = "none", doc = "Optional case-insensitive substring filter on paper title or authors" }
+limit = { type = "int", default = 50, min = 1, max = 200, in = "none", doc = "Maximum papers to return (capped at 200)" }
+
+[op.year.html]
+items_css = "ul.paper-list li"
+fields = { title = "a | text", path = "a | attr(href)", authors = ".paper-authors | text" }
+wall_markers = ["Access Denied"]
+
+[op.year.map]
+items = '''(($p.query // "") | ascii_downcase) as $q | [.[] | select((.title // "") != "") | select($q == "" or (((.title // "") | ascii_downcase | contains($q)) or ((.authors // "") | ascii_downcase | contains($q))))][0:($p.limit // 50)][]'''
+work = '''(
+  ((.path | resolve_url("https://proceedings.neurips.cc/")) // "https://proceedings.neurips.cc/") as $url |
+  ($url | sub("/hash/"; "/file/") | sub("-Abstract"; "-Paper") | sub("\\.html$"; ".pdf")) as $pdfUrl |
+  {
+    title: ((.title // "") | collapse_ws // ""),
+    authors: [(.authors // "") | split(",")[] | collapse_ws | select(. != null and . != "") | {name: .}],
+    year: ($p.year | to_int),
+    publishedDate: null,
+    venue: ("NeurIPS " + (($p.year // "") | tostring)),
+    workType: "proceedings-article",
+    ids: {},
+    oa: {
+      status: "diamond",
+      url: $url,
+      pdfUrl: $pdfUrl
+    },
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["neurips_proceedings"]
+  }
+)'''
+
+[op.metadata]
+summary = "Fetch structured JSON metadata (authors, book, abstract) for a pre-2022 NeurIPS paper (1987-2021; 2022+ papers do not publish -Metadata.json)."
+method = "GET"
+url = "https://proceedings.neurips.cc/paper_files/paper/{year}/file/{hash}-Metadata.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+probe = { params = { year = 1987, hash = "03004620ea802b9118dd44d69f07af56" }, min_results = 1, fixture = "fixtures/w5i/neurips_proceedings/metadata/default.json" }
+examples = ['source.call("neurips_proceedings.metadata", {year: 1987, hash: "03004620ea802b9118dd44d69f07af56"})']
+
+[op.metadata.params]
+year = { type = "int", required = true, min = 1987, max = 2021, in = "path", doc = "NeurIPS conference year (1987-2021 only; 2022+ proceedings omit -Metadata.json)" }
+hash = { type = "string", required = true, in = "path", doc = "32-character paper hash from paper_files URL" }
+
+[op.metadata.map]
+items = "."
+work = '''(
+  ("https://proceedings.neurips.cc/paper_files/paper/" + (($p.year // "") | tostring) + "/hash/" + ($p.hash // "") + "-Abstract.html") as $url |
+  ("https://proceedings.neurips.cc/paper_files/paper/" + (($p.year // "") | tostring) + "/file/" + ($p.hash // "") + "-Paper.pdf") as $pdfUrl |
+  {
+    title: ((.title // "") | collapse_ws // ""),
+    authors: [(.authors // [])[] | {
+      name: ([.given_name, .family_name] | map(select(type == "string") | collapse_ws | select(. != null and . != "")) | join(" ")),
+      affiliation: (.institution | collapse_ws)
+    } | select(.name != "")],
+    year: ($p.year | to_int),
+    publishedDate: null,
+    venue: ((.book | collapse_ws) // ("NeurIPS " + (($p.year // "") | tostring))),
+    workType: "proceedings-article",
+    ids: {},
+    abstractText: ((.abstract | collapse_ws) | if . == "" then null else . end),
+    oa: {
+      status: "diamond",
+      url: $url,
+      pdfUrl: $pdfUrl
+    },
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["neurips_proceedings"]
+  }
+)'''

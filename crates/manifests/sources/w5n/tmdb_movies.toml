@@ -1,0 +1,132 @@
+id = "tmdb_movies"
+name = "TMDB Movies & TV Database API v3"
+summary = "Global movie and TV series metadata, ratings, release dates, genres, and multilingual overviews (free API key)."
+aliases = ["tmdb", "themoviedb", "movies", "film"]
+home_url = "https://developer.themoviedb.org/docs"
+tier = 3
+scopes = ["media"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 4.0, burst = 10, concurrency = 4, timeout_ms = 8000, cache_ttl_s = 43200 }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_TMDB_API_KEY"
+in = "query"
+name = "api_key"
+format = "{key}"
+route_requires_key = true
+
+[op.search]
+summary = "Search movies by title on The Movie Database (TMDB v3)."
+method = "GET"
+url = "https://api.themoviedb.org/3/search/movie"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+examples = ['source.call("tmdb_movies.search", { query: "inception" })']
+probe = { params = { query = "inception", language = "en-US" }, min_results = 2, fixture = "fixtures/w5n/tmdb_movies/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, doc = "Movie title query" }
+language = { type = "string", default = "en-US", doc = "BCP-47 locale (e.g. en-US, zh-CN, ja-JP)" }
+year = { type = "int", doc = "Optional primary release year filter" }
+page = { type = "int", min = 1, doc = "Page number (1-based)" }
+
+[op.search.map]
+items = "(.results // [])[]"
+total = ".total_results"
+error = "if .success == false then (.status_message // \"TMDB API error\") else null end"
+record = '''{
+  id: .id,
+  title: (.title // .original_title // ""),
+  originalTitle: (.original_title // null),
+  originalLanguage: (.original_language // null),
+  releaseDate: (.release_date // null),
+  voteAverage: (.vote_average // null),
+  voteCount: (.vote_count // null),
+  popularity: (.popularity // null),
+  overview: (.overview // null),
+  posterUrl: (if .poster_path then ("https://image.tmdb.org/t/p/w500" + .poster_path) else null end),
+  url: ("https://www.themoviedb.org/movie/" + (.id | tostring))
+}'''
+hit = '''{
+  title: (.title // .original_title // "TMDB Movie"),
+  url: ("https://www.themoviedb.org/movie/" + (.id | tostring)),
+  snippet: ([
+    (if (.vote_average | type) == "number" then ("rating " + (.vote_average | tostring) + "/10") else empty end),
+    (.release_date // empty | select(length > 0)),
+    ((.overview // "") | if length > 200 then .[0:200] + "..." else . end | select(length > 0))
+  ] | join(" · ")),
+  date: (.release_date | parse_date),
+  dateSource: (if (.release_date | parse_date) != null then "api" else null end)
+}'''
+
+[op.tv_search]
+summary = "Search TV series by title on The Movie Database (TMDB v3)."
+method = "GET"
+url = "https://api.themoviedb.org/3/search/tv"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+examples = ['source.call("tmdb_movies.tv_search", { query: "severance" })']
+probe = { params = { query = "severance", language = "en-US" }, min_results = 1, fixture = "fixtures/w5n/tmdb_movies/tv_search/default.json" }
+
+[op.tv_search.params]
+query = { type = "string", required = true, doc = "TV show title query" }
+language = { type = "string", default = "en-US", doc = "BCP-47 locale" }
+page = { type = "int", min = 1, doc = "Page number (1-based)" }
+
+[op.tv_search.map]
+items = "(.results // [])[]"
+total = ".total_results"
+error = "if .success == false then (.status_message // \"TMDB API error\") else null end"
+record = '''{
+  id: .id,
+  name: (.name // .original_name // ""),
+  originalName: (.original_name // null),
+  firstAirDate: (.first_air_date // null),
+  originCountry: (.origin_country // []),
+  voteAverage: (.vote_average // null),
+  voteCount: (.vote_count // null),
+  overview: (.overview // null),
+  url: ("https://www.themoviedb.org/tv/" + (.id | tostring))
+}'''
+
+[op.movie]
+summary = "Fetch complete movie details, runtime, budget, revenue, genres, and IMDb ID by TMDB movie ID."
+method = "GET"
+url = "https://api.themoviedb.org/3/movie/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+examples = ['source.call("tmdb_movies.movie", { id: 27205 })']
+probe = { params = { id = 27205, language = "en-US" }, min_results = 1, fixture = "fixtures/w5n/tmdb_movies/movie/default.json" }
+
+[op.movie.params]
+id = { type = "int", required = true, in = "path", doc = "TMDB numeric movie ID (e.g. 27205)" }
+language = { type = "string", default = "en-US", doc = "BCP-47 locale" }
+
+[op.movie.map]
+items = "."
+error = "if .success == false then (.status_message // \"TMDB API error\") else null end"
+record = '''{
+  id: .id,
+  imdbId: (.imdb_id // null),
+  title: (.title // ""),
+  tagline: (.tagline // null),
+  status: (.status // null),
+  releaseDate: (.release_date // null),
+  runtimeMin: (.runtime // null),
+  budget: (.budget // null),
+  revenue: (.revenue // null),
+  voteAverage: (.vote_average // null),
+  voteCount: (.vote_count // null),
+  genres: [(.genres // [])[] | .name],
+  homepage: (.homepage // null),
+  overview: (.overview // null),
+  url: ("https://www.themoviedb.org/movie/" + (.id | tostring))
+}'''

@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "source": "usaspending_gov",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://api.usaspending.gov/api/v2/search/spending_by_award/",
+        "headersSubset": {
+          "accept": "application/json",
+          "content-type": "application/json"
+        },
+        "bodySha256": "ece81e2300b41253a7f0b9a628fe79efafc38d3f3aacbfb17552209d4dd99d61"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"spending_level\":\"awards\",\"limit\":3,\"results\":[{\"internal_id\":350878422,\"Award ID\":\"ZX14\",\"Recipient Name\":\"QUANTUM DYNAMICS, INC\",\"Award Amount\":22951.86,\"Awarding Agency\":\"Department of Defense\",\"Start Date\":\"2010-11-04\",\"End Date\":\"2011-01-08\",\"Description\":\"PASS LABOR\",\"generated_internal_id\":\"CONT_AWD_ZX14_9700_W912JB06D4017_9700\",\"awarding_agency_id\":1173,\"agency_slug\":\"department-of-defense\"},{\"internal_id\":350878389,\"Award ID\":\"ZX12\",\"Recipient Name\":\"QUANTUM DYNAMICS, INC\",\"Award Amount\":793520.09,\"Awarding Agency\":\"Department of Defense\",\"Start Date\":\"2010-06-23\",\"End Date\":\"2011-07-18\",\"Description\":\"COMPUTER PROGRAMMER I PASS LABOR\",\"generated_internal_id\":\"CONT_AWD_ZX12_9700_W912JB06D4017_9700\",\"awarding_agency_id\":1173,\"agency_slug\":\"department-of-defense\"},{\"internal_id\":350878317,\"Award ID\":\"ZX08\",\"Recipient Name\":\"QUANTUM DYNAMICS, INC\",\"Award Amount\":0.0,\"Awarding Agency\":\"Department of Defense\",\"Start Date\":\"2008-09-15\",\"End Date\":\"2009-09-28\",\"Description\":\"MANAGEMENT SERVICES\",\"generated_internal_id\":\"CONT_AWD_ZX08_9700_W912JB06D4017_9700\",\"awarding_agency_id\":1173,\"agency_slug\":\"department-of-defense\"}],\"page_metadata\":{\"page\":1,\"hasNext\":true,\"last_record_unique_id\":350878317,\"last_record_sort_value\":\"ZX08\"},\"messages\":[\"For searches, time period start and end dates are currently limited to an earliest date of 2007-10-01.  For data going back to 2000-10-01, use either the Custom Award Download feature on the website or one of our download or bulk_download API endpoints as listed on https://api.usaspending.gov/docs/endpoints. \"]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

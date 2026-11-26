@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "source": "synthetic_step6_springer_oa",
+  "op": "jats",
+  "recordedAt": "",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://pmc.ncbi.nlm.nih.gov/tools/idconv/api/v1/articles/?format=json&ids=10.1186%2Fs13059-024-03199-x&tool=free-search-mcp",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"status\":\"ok\",\"records\":[{\"requested-id\":\"10.1186/s13059-024-03199-x\",\"status\":\"error\",\"errmsg\":\"no pmcid\"}]}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.springernature.com/openaccess/jats?q=doi%3A10.1186%2Fs13059-024-03199-x",
+        "headersSubset": {
+          "accept": "application/xml"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/xml; charset=utf-8"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><response><records><article xmlns:xlink=\"http://www.w3.org/1999/xlink\"><front><article-meta><title-group><article-title>Single-cell multi-omics benchmark for regulatory inference</article-title></title-group><permissions><license license-type=\"open-access\" xlink:href=\"https://creativecommons.org/licenses/by/4.0/\"><license-p>Open Access CC BY 4.0</license-p></license></permissions><abstract><p>We benchmark single-cell gene regulatory inference across six tissues using paired chromatin and RNA measurements.</p></abstract></article-meta></front><body><sec id=\"Sec1\"><title>Background</title><p>Regulatory network reconstruction from single-cell assays remains sensitive to sparsity and batch effects.</p></sec><sec id=\"Sec2\"><title>Methods</title><sec id=\"Sec3\"><title>Preprocessing</title><p>Cells with fewer than 500 detected transcripts were removed prior to normalization.</p></sec><sec id=\"Sec4\"><title>Evaluation Metrics</title><p>Precision-recall area under the curve was computed against ChIP-seq gold standards.</p></sec></sec><sec id=\"Sec5\"><title>Results</title><p>Joint ATAC+RNA models improved early precision by 34% compared with RNA-only baselines.</p></sec></body></article></records></response>",
+        "bodyB64": null
+      }
+    }
+  ]
+}

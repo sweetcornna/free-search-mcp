@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "perseus_cts",
+  "op": "passage",
+  "recordedAt": "2026-11-25T13:05:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.perseus.tufts.edu/hopper/CTS?request=GetPassage&urn=urn%3Acts%3AgreekLit%3Atlg0012.tlg001.perseus-grc1%3A1.1-1.5",
+        "headersSubset": {
+          "accept": "application/xml"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/xml;charset=utf-8"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<cts:GetPassage xmlns:m=\"http://mulberrytech.com/xslt/util\"\n                xmlns:cts=\"http://chs.harvard.edu/xmlns/cts3\"\n                xmlns:tei=\"http://www.tei-c.org/ns/1.0\">\n   <cts:request>\n      <cts:requestName>GetPassage</cts:requestName>\n      <cts:requestUrn>urn:cts:greekLit:tlg0012.tlg001.perseus-grc1:1.1-1.5</cts:requestUrn>\n      <cts:psg>1.1-1.5</cts:psg>\n      <cts:workUrn>urn:cts:greekLit:tlg0012.tlg001.perseus-grc1</cts:workUrn>\n      <cts:groupname>Homer</cts:groupname>\n      <cts:title>Iliad</cts:title>\n      <cts:label>Iliad</cts:label>\n      <cts:versionInfo>Perseus 4.0</cts:versionInfo>\n   </cts:request>\n   <cts:reply>\n      <tei:TEI>\n         <tei:text xml:lang=\"grc\">\n            <tei:body>\n               <tei:div type=\"line\">οἰωνοῖσί τε πᾶσι, Διὸς δ᾽ ἐτελείετο βουλή,</tei:div>\n            </tei:body>\n         </tei:text>\n      </tei:TEI>\n   </cts:reply>\n</cts:GetPassage>\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

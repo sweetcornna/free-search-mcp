@@ -1,0 +1,114 @@
+id = "springer_nature"
+name = "Springer Nature Meta v2 & OpenAccess API"
+summary = "Springer, Nature, BMC, and Palgrave journal/book metadata search and open-access JATS XML full text (requires free Basic API key, 500 req/day)."
+aliases = ["springer", "nature", "bmc", "springernature"]
+home_url = "https://dev.springernature.com"
+tier = 3
+scopes = ["academic", "academic.index", "academic.openaccess"]
+caps = ["search", "lookup", "fulltext"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.5, burst = 5, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 43200, host_bucket = "api.springernature.com" }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_SPRINGER_NATURE_API_KEY"
+in = "query"
+name = "api_key"
+format = "{key}"
+route_requires_key = true
+
+[op.search]
+summary = "Search Springer Nature Meta v2 journal and book metadata."
+method = "GET"
+url = "https://api.springernature.com/meta/v2/json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+paginate = { style = "offset", param = "s", start = 1, max_pages = 3 }
+probe = { params = { query = "transformer", limit = 3 }, min_results = 2, fixture = "fixtures/w5h/springer_nature/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Springer Nature query (supports keyword:, doi:, issn:, year:, openaccess:true)" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "p", doc = "Records per page" }
+start = { type = "int", default = 1, min = 1, to = "s", doc = "1-based start offset" }
+
+[op.search.map]
+items = "(.records // [])[]"
+total = "(.result[0]?.total | to_int)"
+error = '''if (.status // "") == "Fail" then (.message // (if (.error | type) == "object" then (.error.error_description // (.error | tostring)) elif .error != null then (.error | tostring) else null end) // "Springer Nature API error") else null end'''
+work = '''(
+  (([(.url // [])[] | select(.format == "html" or .format == "") | .value][0]) // (.url[0]?.value) // (if .doi then ("https://doi.org/" + .doi) else "" end)) as $url |
+  (([(.url // [])[] | select(.format == "pdf") | .value][0]) // null) as $pdf |
+  ((.openaccess // "false") | tostring | ascii_downcase == "true") as $is_oa |
+  {
+    title: (.title // "" | strip_tags),
+    authors: [(.creators // [])[] | {
+      name: (.creator // "" | collapse_ws),
+      orcid: (.ORCID // null)
+    } | select(.name != "")],
+    year: (((.publicationDate // .onlineDate // "")[0:4]) | to_int),
+    publishedDate: ((.publicationDate // .onlineDate // null) | parse_date),
+    venue: (.publicationName // null | collapse_ws),
+    workType: ((.contentType // "article") | ascii_downcase),
+    ids: { doi: (.doi // null | doi_norm) },
+    abstractText: (if (.abstract | type) == "string" and (.abstract | length) > 0 then (.abstract | strip_tags) else null end),
+    oa: (if $is_oa then { status: "gold", url: $url, pdfUrl: $pdf, structuredFormat: "jats" } else null end),
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["springer_nature"]
+  }
+)'''
+
+[op.work]
+summary = "Look up a single Springer Nature publication by DOI via Meta v2."
+method = "GET"
+url = "https://api.springernature.com/meta/v2/json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+const_query = { p = 1 }
+probe = { params = { doi = "10.1038/s41598-020-79929-0" }, min_results = 1, fixture = "fixtures/w5h/springer_nature/work/default.json" }
+
+[op.work.params]
+doi = { type = "string", required = true, to = "q", template = "doi:{doi}", doc = "Publication DOI" }
+
+[op.work.map]
+items = "(.records // [])[]"
+error = "@ref:op.search.map.error"
+work = "@ref:op.search.map.work"
+
+[op.openaccess]
+summary = "Search Springer Nature Open Access articles with JATS XML full-text availability."
+method = "GET"
+url = "https://api.springernature.com/openaccess/json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+paginate = { style = "offset", param = "s", start = 1, max_pages = 3 }
+probe = { params = { query = "keyword:crispr", limit = 3 }, min_results = 2, fixture = "fixtures/w5h/springer_nature/openaccess/default.json" }
+
+[op.openaccess.params]
+query = { type = "string", required = true, to = "q", doc = "OpenAccess query (e.g. keyword:crispr, doi:...)" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "p", doc = "Records per page" }
+start = { type = "int", default = 1, min = 1, to = "s", doc = "1-based start offset" }
+
+[op.openaccess.map]
+items = "(.records // [])[]"
+total = "(.result[0]?.total | to_int)"
+error = "@ref:op.search.map.error"
+work = "@ref:op.search.map.work"
+
+[op.jats]
+summary = "Fetch raw JATS full-text XML for a Springer Nature Open Access DOI (note: non-OA/unknown DOIs return XML with <total>0</total><records/>)."
+method = "GET"
+url = "https://api.springernature.com/openaccess/jats"
+headers = { Accept = "application/xml" }
+response = "text"
+returns = "text"
+const_query = { p = 1 }
+probe = { params = { doi = "10.1038/s41598-020-79929-0" }, min_results = 1, fixture = "fixtures/w5h/springer_nature/jats/default.json" }
+
+[op.jats.params]
+doi = { type = "string", required = true, to = "q", template = "doi:{doi}", doc = "Open-access DOI" }

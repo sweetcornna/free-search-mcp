@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "bundestag_dip",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:14:49Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://search.dip.bundestag.de/api/v1/drucksache?f.titel=Klima&format=json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"numFound\": 176, \"cursor\": \"AoJwgNjC_PYCMURydWNrc2FjaGUtMjQ5MjYw\", \"documents\": [{\"id\": \"270123\", \"typ\": \"Dokument\", \"dokumentart\": \"Drucksache\", \"drucksachetyp\": \"Gesetzentwurf\", \"dokumentnummer\": \"20/10450\", \"wahlperiode\": 20, \"herausgeber\": \"BT\", \"datum\": \"2024-02-21\", \"aktualisiert\": \"2024-03-01T14:20:00+01:00\", \"titel\": \"Entwurf eines Gesetzes zur Änderung des Bundes-Klimaschutzgesetzes\", \"fundstelle\": {\"id\": \"270123\", \"dokumentart\": \"Drucksache\", \"pdf_url\": \"https://dserver.bundestag.de/btd/20/104/2010450.pdf\", \"dokumentnummer\": \"20/10450\", \"datum\": \"2024-02-21\", \"herausgeber\": \"BT\"}}, {\"id\": \"269810\", \"typ\": \"Dokument\", \"dokumentart\": \"Drucksache\", \"drucksachetyp\": \"Antrag\", \"dokumentnummer\": \"20/10212\", \"wahlperiode\": 20, \"herausgeber\": \"BT\", \"datum\": \"2024-01-30\", \"aktualisiert\": \"2024-02-05T09:10:00+01:00\", \"titel\": \"Klimaneutrale Industrie und bezahlbare Energie sichern\", \"fundstelle\": {\"id\": \"269810\", \"dokumentart\": \"Drucksache\", \"pdf_url\": \"https://dserver.bundestag.de/btd/20/102/2010212.pdf\", \"dokumentnummer\": \"20/10212\", \"datum\": \"2024-01-30\", \"herausgeber\": \"BT\"}}, {\"id\": \"268905\", \"typ\": \"Dokument\", \"dokumentart\": \"Drucksache\", \"drucksachetyp\": \"Kleine Anfrage\", \"dokumentnummer\": \"20/9801\", \"wahlperiode\": 20, \"herausgeber\": \"BT\", \"datum\": \"2023-12-14\", \"aktualisiert\": \"2024-01-11T11:45:00+01:00\", \"titel\": \"Umsetzung des Klimaanpassungsgesetzes in den Kommunen\", \"fundstelle\": {\"id\": \"268905\", \"dokumentart\": \"Drucksache\", \"pdf_url\": \"https://dserver.bundestag.de/btd/20/098/2009801.pdf\", \"dokumentnummer\": \"20/9801\", \"datum\": \"2023-12-14\", \"herausgeber\": \"BT\"}}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

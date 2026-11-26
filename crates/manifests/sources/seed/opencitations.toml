@@ -1,0 +1,104 @@
+id = "opencitations"
+name = "OpenCitations"
+summary = "CC0 open citation graph (Index v2 citations/references and Meta v1 bibliographic metadata across 2B+ citation links)."
+aliases = ["opencitations.net", "coci", "oc index"]
+home_url = "https://opencitations.net"
+tier = 1
+scopes = ["academic", "academic.index"]
+caps = ["lookup", "graph"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 2.5, burst = 5, concurrency = 3, timeout_ms = 10000, cache_ttl_s = 86400, host_bucket = "api.opencitations.net" }
+
+[auth]
+mode = "optional"
+env = "SEARCH_MCP_OPENCITATIONS_TOKEN"
+in = "header"
+name = "authorization"
+format = "{key}"
+route_requires_key = false
+
+[op.citations]
+summary = "Fetch incoming citation links for a DOI from OpenCitations Index v2."
+method = "GET"
+url = "https://api.opencitations.net/index/v2/citations/doi:{doi}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { doi = "10.1162/qss_a_00023", limit = 5 }, min_results = 1, fixture = "fixtures/seed/opencitations/citations/default.json" }
+
+[op.citations.params]
+doi = { type = "string", required = true, in = "path", encode = "raw", doc = "Cited DOI e.g. 10.1162/qss_a_00023" }
+limit = { type = "int", default = 25, min = 1, max = 200, in = "none", doc = "Maximum citation records to return" }
+
+[op.citations.map]
+items = "(if type == \"array\" then . else [] end)[:($p.limit // 25)][]"
+record = '''(
+  (([(.citing // "") | split(" ")[] | select(startswith("doi:")) | sub("^doi:"; "")][0]) // null | doi_norm) as $citing_doi |
+  (([(.cited // "") | split(" ")[] | select(startswith("doi:")) | sub("^doi:"; "")][0]) // null | doi_norm) as $cited_doi |
+  {
+    oci: (.oci // null),
+    citing: (.citing // ""),
+    citingDoi: $citing_doi,
+    cited: (.cited // ""),
+    citedDoi: $cited_doi,
+    creation: (.creation | parse_date),
+    timespan: (.timespan // null),
+    journalSelfCitation: ((.journal_sc // "no") == "yes"),
+    authorSelfCitation: ((.author_sc // "no") == "yes")
+  }
+)'''
+
+[op.references]
+summary = "Fetch outgoing reference links for a DOI from OpenCitations Index v2."
+method = "GET"
+url = "https://api.opencitations.net/index/v2/references/doi:{doi}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { doi = "10.1162/qss_a_00023", limit = 5 }, min_results = 1, fixture = "fixtures/seed/opencitations/references/default.json" }
+
+[op.references.params]
+doi = { type = "string", required = true, in = "path", encode = "raw", doc = "Citing DOI e.g. 10.1162/qss_a_00023" }
+limit = { type = "int", default = 25, min = 1, max = 200, in = "none", doc = "Maximum reference records to return" }
+
+[op.references.map]
+items = "@ref:op.citations.map.items"
+record = "@ref:op.citations.map.record"
+
+[op.metadata]
+summary = "Fetch bibliographic metadata for a DOI from OpenCitations Meta v1."
+method = "GET"
+url = "https://api.opencitations.net/meta/v1/metadata/doi:{doi}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+probe = { params = { doi = "10.1002/adfm.201505328" }, min_results = 1, fixture = "fixtures/seed/opencitations/metadata/default.json" }
+
+[op.metadata.params]
+doi = { type = "string", required = true, in = "path", encode = "raw", doc = "DOI e.g. 10.1002/adfm.201505328" }
+
+[op.metadata.map]
+items = "(if type == \"array\" then . else [] end)[] | select((.title // \"\") != \"\")"
+work = '''(
+  (([(.id // "") | split(" ")[] | select(startswith("doi:")) | sub("^doi:"; "")][0]) // null | doi_norm) as $doi |
+  (([(.id // "") | split(" ")[] | select(startswith("openalex:")) | sub("^openalex:"; "")][0]) // null) as $oa |
+  (([(.id // "") | split(" ")[] | select(startswith("pmid:")) | sub("^pmid:"; "")][0]) // null) as $pmid |
+  {
+    title: ((.title // "") | collapse_ws),
+    authors: (if (.author // "") != "" then [.author | split("; ")[] | { name: (sub("\\s*\\[.*\\]$"; "") | collapse_ws) } | select(.name != "")] else [] end),
+    year: (((.pub_date // "")[0:4]) | to_int),
+    publishedDate: (.pub_date | parse_date),
+    venue: (if (.venue // "") != "" then (.venue | sub("\\s*\\[.*\\]$"; "") | collapse_ws) else null end),
+    workType: (if (.type // "") == "book" then "book" elif (.type // "") == "book chapter" then "chapter" elif (.type // "") == "proceedings article" then "conference" else "article" end),
+    ids: {
+      doi: $doi,
+      openalex: $oa,
+      pmid: $pmid
+    },
+    retracted: false,
+    versions: [],
+    url: (if $doi != null then ("https://doi.org/" + $doi) else "" end),
+    sources: ["opencitations"]
+  }
+)'''

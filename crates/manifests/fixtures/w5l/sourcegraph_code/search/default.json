@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "sourcegraph_code",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:56:58Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://sourcegraph.com/.api/graphql",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": "1dc22c2069bb87a763a6e7e6d030405a564cc513133d7cc9c767de54c066cf28"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "cache-control",
+            "no-cache, max-age=0"
+          ],
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"data\":{\"search\":{\"results\":{\"matchCount\":3,\"results\":[{\"__typename\":\"FileMatch\",\"repository\":{\"name\":\"github.com/a16z/helios\",\"url\":\"/r/github.com/a16z/helios\"},\"file\":{\"path\":\"core/src/execution/filter_state.rs\",\"url\":\"/r/github.com/a16z/helios/-/blob/core/src/execution/filter_state.rs\"},\"lineMatches\":[{\"lineNumber\":5,\"preview\":\"use tokio::sync::RwLock;\"}]},{\"__typename\":\"FileMatch\",\"repository\":{\"name\":\"github.com/a16z/helios\",\"url\":\"/r/github.com/a16z/helios\"},\"file\":{\"path\":\"core/src/execution/providers/block/block_cache.rs\",\"url\":\"/r/github.com/a16z/helios/-/blob/core/src/execution/providers/block/block_cache.rs\"},\"lineMatches\":[{\"lineNumber\":12,\"preview\":\"use tokio::sync::RwLock;\"}]},{\"__typename\":\"FileMatch\",\"repository\":{\"name\":\"github.com/Daniel-King-8/CoreOps\",\"url\":\"/r/github.com/Daniel-King-8/CoreOps\"},\"file\":{\"path\":\"src-tauri/src/state.rs\",\"url\":\"/r/github.com/Daniel-King-8/CoreOps/-/blob/src-tauri/src/state.rs\"},\"lineMatches\":[{\"lineNumber\":5,\"preview\":\"use tokio::sync::RwLock;\"}]}]}}}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

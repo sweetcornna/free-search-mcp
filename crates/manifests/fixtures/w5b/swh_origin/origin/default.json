@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "swh_origin",
+  "op": "origin",
+  "recordedAt": "2026-11-25T11:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://archive.softwareheritage.org/api/1/origin/https%3A%2F%2Fgithub.com%2Frust-lang%2Frust/get/",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"url\":\"https://github.com/rust-lang/rust\",\"visit_types\":[\"git\"],\"origin_visits_url\":\"https://archive.softwareheritage.org/api/1/origin/https://github.com/rust-lang/rust/visits/\",\"metadata_authorities_url\":\"https://archive.softwareheritage.org/api/1/raw-extrinsic-metadata/swhid/swh:1:ori:4ee39abf60ee8a85deecf6c90d5729192441ad64/authorities/\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+id = "tib_av_portal"
+name = "TIB AV-Portal Scientific Videos API"
+summary = "German National Library of Science and Technology (TIB) AV-Portal indexing 54k+ DOI-minted scientific lectures, conference talks, and experiment videos."
+aliases = ["tib av", "av.tib.eu", "scientific videos"]
+home_url = "https://av.tib.eu"
+tier = 1
+scopes = ["academic", "academic.openaccess", "media"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.5, burst = 4, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 43200, host_bucket = "av.tib.eu" }
+
+[op.search]
+summary = "Search TIB AV-Portal scientific videos and lectures via keyless JSON search API."
+method = "GET"
+url = "https://av.tib.eu/api/v0/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { metadata = false, viewable = true }
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "quantum", limit = 3, offset = 0 }, min_results = 2, fixture = "fixtures/w5k/tib_av_portal/search/default.json" }
+examples = ['source.call("tib_av_portal.search", { query: "quantum", limit: 5 })']
+
+[op.search.params]
+query = { type = "string", required = true, to = "query", doc = "Video title, speaker, or topic query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "max-videos", doc = "Videos per page" }
+offset = { type = "int", default = 0, min = 0, to = "offset", doc = "Pagination offset" }
+
+[op.search.map]
+items = "(.entries // [])[]"
+total = ".totalEntries"
+record = '''{
+  id: (.id // ""),
+  doi: (("10.5446/" + (.id // "")) | doi_norm),
+  title: ((.title // "") | collapse_ws),
+  language: (.language // null),
+  duration: (.duration // null),
+  durationSeconds: (.durationInSeconds // null),
+  viewCount: (.viewCount // null),
+  firstPublished: (.firstPublished | parse_date),
+  url: ("https://av.tib.eu/media/" + (.id // ""))
+}'''
+hit = '''(
+  (.firstPublished | parse_date) as $d |
+  {
+    title: ((.title // "") | collapse_ws),
+    url: ("https://av.tib.eu/media/" + (.id // "")),
+    snippet: ([("DOI 10.5446/" + (.id // "")), (.duration // ""), (.language // ""), (if .viewCount != null then ((.viewCount | tostring) + " views") else "" end)] | map(select(length > 0)) | join(" · ")),
+    date: $d,
+    dateSource: (if $d != null then "api" else null end)
+  }
+)'''
+
+[op.video_meta]
+summary = "Search TIB AV-Portal with full creator, abstract, publisher, and keyword metadata mapped to ScholarlyWork."
+method = "GET"
+url = "https://av.tib.eu/api/v0/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+const_query = { metadata = true, viewable = true }
+probe = { params = { query = "The quantum computer is growing up", limit = 1, offset = 0 }, min_results = 1, fixture = "fixtures/w5k/tib_av_portal/video_meta/default.json" }
+examples = ['source.call("tib_av_portal.video_meta", { query: "The quantum computer is growing up", limit: 1 })']
+
+[op.video_meta.params]
+query = { type = "string", required = true, to = "query", doc = "Exact video title or keywords" }
+limit = { type = "int", default = 1, min = 1, max = 5, to = "max-videos", doc = "Videos returned (keep small; includes full transcripts)" }
+offset = { type = "int", default = 0, min = 0, to = "offset", doc = "Pagination offset" }
+
+[op.video_meta.map]
+items = "(.entries // [])[]"
+total = ".totalEntries"
+work = '''{
+  title: ((.metadata.mainTitle[0]?.value // .title // "") | strip_tags),
+  authors: [(.metadata.creator // [])[] | { name: ((.value // "") | collapse_ws) } | select(.name != "")],
+  year: ((.metadata.publicationYear[0]?.value // (.firstPublished // "")[0:4]) | to_int),
+  publishedDate: (.firstPublished | parse_date),
+  venue: ((.metadata.publisher[0]?.value // "TIB AV-Portal") | collapse_ws),
+  workType: "audiovisual",
+  ids: { doi: (("10.5446/" + (.id // "")) | doi_norm) },
+  abstractText: (.metadata.abstract[0]?.value | strip_tags),
+  oa: { status: "open", url: ("https://av.tib.eu/media/" + (.id // "")) },
+  retracted: false,
+  versions: [],
+  url: ("https://av.tib.eu/media/" + (.id // "")),
+  sources: ["tib_av_portal"]
+}'''

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "semanticscholar",
+  "op": "citations",
+  "recordedAt": "2026-11-25T14:08:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.semanticscholar.org/graph/v1/paper/ARXIV:1706.03762/citations?fields=paperId%2Ctitle%2Cyear%2CpublicationDate%2Cvenue%2CcitationCount%2CinfluentialCitationCount%2CisOpenAccess%2CopenAccessPdf%2CexternalIds%2Cauthors&limit=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"offset\":0,\"data\":[{\"citingPaper\":{\"paperId\":\"df2b0e26d0599ce3e70df8a9da02e51594e0e992\",\"title\":\"BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding\",\"year\":2019,\"publicationDate\":\"2019-06-02\",\"venue\":\"NAACL\",\"citationCount\":92000,\"influentialCitationCount\":9800,\"isOpenAccess\":true,\"openAccessPdf\":{\"url\":\"https://aclanthology.org/N19-1423.pdf\",\"status\":\"GOLD\"},\"externalIds\":{\"DOI\":\"10.18653/v1/N19-1423\",\"ArXiv\":\"1810.04805\"},\"authors\":[{\"name\":\"Jacob Devlin\"}]}},{\"citingPaper\":{\"paperId\":\"32ac52069e562d4f900afee70bdca63f53461281\",\"title\":\"An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale\",\"year\":2020,\"publicationDate\":\"2020-10-22\",\"venue\":\"ICLR\",\"citationCount\":42000,\"influentialCitationCount\":4100,\"isOpenAccess\":true,\"openAccessPdf\":{\"url\":\"https://arxiv.org/pdf/2010.11929.pdf\",\"status\":\"GREEN\"},\"externalIds\":{\"ArXiv\":\"2010.11929\"},\"authors\":[{\"name\":\"Alexey Dosovitskiy\"}]}}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

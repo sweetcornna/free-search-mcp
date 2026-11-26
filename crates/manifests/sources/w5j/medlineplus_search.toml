@@ -1,0 +1,61 @@
+id = "medlineplus_search"
+name = "NLM MedlinePlus Health Topics"
+summary = "US National Library of Medicine clinical health topics and disease encyclopedia search in English and Spanish."
+aliases = ["medlineplus", "nlm health topics", "medlineplus xml"]
+home_url = "https://medlineplus.gov"
+tier = 1
+scopes = ["academic.biomed", "reference"]
+caps = ["search"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 43200, host_bucket = "wsearch.nlm.nih.gov" }
+
+[op.search]
+summary = "Search MedlinePlus consumer and clinical health topics via NLM XML web service."
+method = "GET"
+url = "https://wsearch.nlm.nih.gov/ws/query"
+headers = { Accept = "application/xml" }
+response = "xml"
+returns = "records"
+paginate = { style = "offset", param = "retstart", start = 0, max_pages = 3 }
+probe = { params = { query = "diabetes", limit = 3 }, min_results = 2, fixture = "fixtures/w5j/medlineplus_search/search/default.json" }
+examples = ["source.call('medlineplus_search.search', { query: 'diabetes', limit: 5 })"]
+
+[op.search.params]
+query = { type = "string", required = true, to = "term", doc = "Health topic, disease, or symptom query" }
+db = { type = "string", default = "healthTopics", enum = ["healthTopics", "healthTopicsSpanish"], to = "db", doc = "MedlinePlus database (English or Spanish)" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "retmax", doc = "Maximum topics to return" }
+offset = { type = "int", default = 0, min = 0, to = "retstart", doc = "0-based result offset" }
+
+[op.search.map]
+items = ".nlmsearchresult.list.document | arr | .[]"
+total = ".nlmsearchresult.count | to_int"
+record = '''(
+  (.content | arr) as $c |
+  (([ $c[] | select(."@name" == "title") | xml_text ][0] // "") | gsub("</?span[^>]*>"; "") | strip_tags // "") as $title |
+  (([ $c[] | select(."@name" == "snippet") | xml_text ][0] // "") | gsub("</?(a|span|em|strong|b|i)[^>]*>"; "") | gsub("</?(p|br|li|div|h[1-6])[^>]*>"; " ") | strip_tags // "") as $snip |
+  (([ $c[] | select(."@name" == "FullSummary") | xml_text ][0] // "") | gsub("</?(a|span|em|strong|b|i)[^>]*>"; "") | gsub("</?(p|br|li|div|h[1-6])[^>]*>"; " ") | strip_tags // "") as $summary |
+  {
+    rank: (."@rank" | to_int),
+    title: $title,
+    url: (."@url" // ""),
+    organization: ([ $c[] | select(."@name" == "organizationName") | xml_text ][0] // null),
+    altTitles: [ $c[] | select(."@name" == "altTitle") | xml_text | gsub("</?span[^>]*>"; "") | strip_tags // "" | select(length > 0) ],
+    mesh: [ $c[] | select(."@name" == "mesh") | xml_text | gsub("</?span[^>]*>"; "") | strip_tags // "" | select(length > 0) ],
+    groups: [ $c[] | select(."@name" == "groupName") | xml_text | gsub("</?span[^>]*>"; "") | strip_tags // "" | select(length > 0) ],
+    snippet: $snip,
+    summary: (if ($summary | length) > 800 then ($summary[0:800] + "...") else $summary end)
+  }
+)'''
+hit = '''(
+  (.content | arr) as $c |
+  (([ $c[] | select(."@name" == "title") | xml_text ][0] // "") | gsub("</?span[^>]*>"; "") | strip_tags // "") as $title |
+  (([ $c[] | select(."@name" == "snippet") | xml_text ][0] // [ $c[] | select(."@name" == "FullSummary") | xml_text ][0] // "") | gsub("</?(a|span|em|strong|b|i)[^>]*>"; "") | gsub("</?(p|br|li|div|h[1-6])[^>]*>"; " ") | strip_tags // "") as $snip |
+  {
+    title: $title,
+    url: (."@url" // "https://medlineplus.gov"),
+    snippet: (if ($snip | length) > 280 then ($snip[0:277] + "...") else $snip end),
+    date: null,
+    dateSource: "xml"
+  }
+)'''

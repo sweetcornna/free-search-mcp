@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "gnews_api",
+  "op": "top_headlines",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://gnews.io/api/v4/top-headlines?category=technology&lang=en&max=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"totalArticles\":640,\"articles\":[{\"id\":\"7b2a1c0d9e8f1a000001\",\"title\":\"Open-weight reasoning models narrow efficiency gap on local workstations\",\"description\":\"Quantized 32B models reach competitive coding benchmarks on single consumer GPUs.\",\"content\":\"Quantized 32B models reach competitive coding benchmarks on single consumer GPUs... [1050 chars]\",\"url\":\"https://arstechnica.com/ai/2026/11/open-weight-workstation-benchmarks/\",\"image\":\"https://arstechnica.com/img/workstation.jpg\",\"publishedAt\":\"2026-11-25T07:30:00Z\",\"lang\":\"en\",\"source\":{\"id\":\"src-ars\",\"name\":\"Ars Technica\",\"url\":\"https://arstechnica.com\",\"country\":\"us\"}},{\"id\":\"7b2a1c0d9e8f1a000002\",\"title\":\"W3C publishes WebGPU compute shader memory model recommendation\",\"description\":\"Browser vendors align on portable subgroup operations and memory barrier semantics.\",\"content\":\"Browser vendors align on portable subgroup operations and memory barrier semantics... [910 chars]\",\"url\":\"https://www.theverge.com/2026/11/24/w3c-webgpu-compute-recommendation\",\"image\":null,\"publishedAt\":\"2026-11-24T18:00:00Z\",\"lang\":\"en\",\"source\":{\"id\":\"src-verge\",\"name\":\"The Verge\",\"url\":\"https://www.theverge.com\",\"country\":\"us\"}}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

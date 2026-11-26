@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "source": "synthetic_step5_arxiv_pdf",
+  "op": "pdf_fallback",
+  "recordedAt": "",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://arxiv.org/html/1706.03762",
+        "headersSubset": {
+          "accept": "text/html"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 404,
+        "headers": [
+          [
+            "content-type",
+            "text/html"
+          ]
+        ],
+        "bodyText": "Not Found",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://ar5iv.labs.arxiv.org/html/1706.03762",
+        "headersSubset": {
+          "accept": "text/html"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 404,
+        "headers": [
+          [
+            "content-type",
+            "text/html"
+          ]
+        ],
+        "bodyText": "Not Found",
+        "bodyB64": null
+      }
+    }
+  ]
+}

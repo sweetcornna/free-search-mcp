@@ -1,0 +1,79 @@
+id = "string_db"
+name = "STRING Protein Interaction Network"
+summary = "Cross-species protein-protein interaction networks, confidence sub-scores, and protein identifier mapping."
+aliases = ["string", "protein interactions", "ppi network"]
+home_url = "https://string-db.org"
+tier = 1
+scopes = ["academic.biomed", "dataset"]
+caps = ["search", "lookup", "graph"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 43200, host_bucket = "string-db.org" }
+
+[op.search]
+summary = "Resolve gene or protein symbols to canonical STRING protein identifiers and functional annotations."
+method = "GET"
+url = "https://string-db.org/api/json/get_string_ids"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { caller_identity = "free_search_mcp" }
+probe = { params = { query = "TP53", limit = 3 }, min_results = 1, fixture = "fixtures/w5j/string_db/search/default.json" }
+examples = ["source.call('string_db.search', { query: 'TP53', species: 9606, limit: 3 })"]
+
+[op.search.params]
+query = { type = "string", required = true, to = "identifiers", doc = "Protein or gene symbol(s) (e.g. TP53)" }
+species = { type = "int", default = 9606, min = 1, to = "species", doc = "NCBI taxonomy ID (9606 = Homo sapiens)" }
+limit = { type = "int", default = 5, min = 1, max = 50, to = "limit", doc = "Maximum matched STRING identifiers per query" }
+
+[op.search.map]
+items = ".[]"
+record = '''{
+  stringId: (.stringId // ""),
+  preferredName: (.preferredName // ""),
+  queryItem: (.queryItem // null),
+  taxonId: (.ncbiTaxonId // null),
+  taxonName: (.taxonName // null),
+  annotation: (.annotation // ""),
+  url: ("https://string-db.org/network/" + (.stringId // ""))
+}'''
+hit = '''{
+  title: ((.preferredName // "") + " (" + (.stringId // "") + ")"),
+  url: ("https://string-db.org/network/" + (.stringId // "")),
+  snippet: (((.taxonName // "") + (if (.annotation // "") != "" then (" — " + (.annotation // "")) else "" end)) | if length > 280 then .[0:277] + "..." else . end),
+  date: null,
+  dateSource: "api"
+}'''
+
+[op.partners]
+summary = "Retrieve top interacting protein partners and combined/experimental/text-mining confidence scores."
+method = "GET"
+url = "https://string-db.org/api/json/interaction_partners"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { caller_identity = "free_search_mcp" }
+probe = { params = { identifiers = "TP53", limit = 3 }, min_results = 2, fixture = "fixtures/w5j/string_db/partners/default.json" }
+examples = ["source.call('string_db.partners', { identifiers: 'TP53', species: 9606, limit: 5 })"]
+
+[op.partners.params]
+identifiers = { type = "string", required = true, to = "identifiers", doc = "Gene/protein symbol or STRING ID" }
+species = { type = "int", default = 9606, min = 1, to = "species", doc = "NCBI taxonomy ID (9606 = Homo sapiens)" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Maximum interacting partners" }
+required_score = { type = "int", default = 400, min = 0, max = 1000, to = "required_score", doc = "Minimum combined interaction score (0..1000)" }
+
+[op.partners.map]
+items = ".[]"
+record = '''{
+  proteinA: (.preferredName_A // ""),
+  stringIdA: (.stringId_A // ""),
+  proteinB: (.preferredName_B // ""),
+  stringIdB: (.stringId_B // ""),
+  taxonId: (.ncbiTaxonId // null),
+  score: (.score // null),
+  experimentalScore: (.escore // null),
+  databaseScore: (.dscore // null),
+  textminingScore: (.tscore // null),
+  coexpressionScore: (.ascore // null),
+  url: ("https://string-db.org/network/" + (.stringId_A // ""))
+}'''

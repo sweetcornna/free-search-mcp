@@ -1,125 +1,119 @@
-# Delegating a lookup
+# Delegating a Lookup (`ask`, Answer Agent & Host Subagents)
 
-An agent can call the tools itself, and for most work that is the right shape.
-Delegation is for a narrower case: you want a short answer with sources, and
-you want the page text kept out of the caller's context. None of it is on by
-default. Every route uses one prompt (`search_mcp.agent.HOST_AGENT_PROMPT`), so
-the rules about dates, sources and untrusted page text hold whichever you pick.
-Search needs no key on any of them.
+An agent can call `search` and `exec` itself for deep research, or use `ask`
+and host subagents when you want a short, dated, sourced answer without loading
+raw page text into the caller's context. All routes work keyless for search,
+share the same anti-injection and date-verification discipline, and never ask a
+user for an API key.
 
-| You want | Use | It needs |
+| You want | Use | Needs |
 |---|---|---|
-| The agent to search and read by itself | the tools, as installed | nothing |
-| Your host's own subagents to do the lookup | the `quick-search` agent definition | a host with subagents |
-| The server to dispatch through Claude Code | `SEARCH_MCP_AGENT_BACKEND=claude-code` | the `claude` CLI, logged in |
-| The server to dispatch through Codex | `SEARCH_MCP_AGENT_BACKEND=codex` | the `codex` CLI, logged in |
-| The server to call a model endpoint you choose | `SEARCH_MCP_AGENT_BACKEND=api` | an OpenAI-compatible or Anthropic-compatible URL |
-| Your own code to supply the model | `ask(question, answer_with=...)` in Python | nothing else |
+| One-call quick lookup with **no LLM** | `ask({ question, mode: "fast" })` (default when `SEARCH_MCP_AGENT_BACKEND=off`) | nothing |
+| Host's own subagents to run a lookup | `quick-search` (`agents/quick-search.md` / `codex/agents/quick_search.toml`) | Claude Code, Codex, or Antigravity |
+| Server-side answer agent via Claude Code | `SEARCH_MCP_AGENT_BACKEND=claude-code` | logged-in `claude` CLI |
+| Server-side answer agent via Codex | `SEARCH_MCP_AGENT_BACKEND=codex` | logged-in `codex` CLI |
+| Server-side answer agent via any API | `SEARCH_MCP_AGENT_BACKEND=api` | OpenAI- or Anthropic-compatible URL (e.g. Ollama) |
+| Shell / script / HTTP quick lookup | `free-search-mcp ask "<question>"` or `POST/GET /v1/ask` | local binary (or Streamable HTTP) |
 
-## With the host's own subagents
+---
 
-In Claude Code the plugin installs `free-search:quick-search`. For a server you
-registered by hand, write the agent file yourself:
+## 1. The `ask` Tool (Always Registered)
 
-```bash
-uvx free-search-mcp agent-file claude-code > ~/.claude/agents/quick-search.md
+Unlike v0.18.x (where `ask` was conditional), 1.0 **always registers** `ask`:
+
+```json
+{
+  "question": "latest stable tokio crate version and release date",
+  "freshness": "month",
+  "domains": ["crates.io", "github.com"],
+  "lang": "en",
+  "mode": "auto",
+  "max_tokens": 1200
+}
 ```
 
-`--tool-prefix` sets how the host names the server's tools. The default,
-`mcp__search__`, matches `claude mcp add search ...`.
+- **`mode: "fast"` (no LLM)**: Checks direct-answer sources first (registries,
+  CVE, FX, weather, clock, holidays); otherwise runs web search, fetches top
+  pages in parallel within a ~8 s deadline, and returns the best dated passages
+  with source URLs.
+- **`mode: "agent"`**: Runs the server-side answer agent (ported from Python
+  `agent.py`) over the fetched evidence to write a concise sourced answer. If
+  the model fails or hits its deadline, `ask` degrades cleanly to returning the
+  evidence passages with the reason so the search is never wasted.
+- **`mode: "auto"` (default)**: Uses `"agent"` when `SEARCH_MCP_AGENT_BACKEND`
+  is configured (`api`, `claude-code`, or `codex`), else `"fast"`.
 
-For Codex, the same command writes a custom-agent file in the format Codex
-documents (`name`, `description`, `developer_instructions`, a read-only sandbox
-and low reasoning effort):
+The same functionality is reachable from:
+- Inside `exec`: `await web.ask(question, { freshness?, domains?, lang?, mode?, maxTokens? })`
+- CLI: `free-search-mcp ask "<question>"` (or `search-mcp ask "<question>"`)
+- Streamable HTTP: `POST /v1/ask` and `GET /v1/ask?q=...` (protected by the
+  same `SEARCH_MCP_HTTP_TOKEN` and `Host`/`Origin` guards as `/mcp`)
 
-```bash
-mkdir -p ~/.codex/agents
-uvx free-search-mcp agent-file codex > ~/.codex/agents/quick_search.toml
-```
+---
 
-One caveat, measured with Codex CLI 0.154 on 2026-09-21: `codex exec` offered
-its `spawn_agent` tool without a parameter for choosing an agent by name, so
-the file could not be selected from there. Handing the same instructions to a
-generic subagent did work in that version. The subagent called the search tools
-and returned a sourced answer in 87 s. The `quick_search` MCP prompt returns
-that text plus your question for any MCP client, and
-`uvx free-search-mcp agent-file prompt` prints it for a platform that has a
-system-prompt field and no agent files.
+## 2. Server-Side Answer Agent (`SEARCH_MCP_AGENT_BACKEND`)
 
-## With the `ask` tool
-
-Set a backend and the server registers a twelfth tool,
-`ask(question, freshness, include_domains, category)`. The same backend also
-makes every `search` run the agent beside its engines: the agent is handed the
-very task that produces the links, so the query reaches the engines once and
-the answer appears above the result list. `SEARCH_MCP_AGENT_IN_SEARCH=false`
-keeps that to `ask` only.
-
-For `ask`, the server first runs one `research` call, with no model involved,
-and puts the pages in the model's first message, so most questions take one
-model call. The model may then spend
-`SEARCH_MCP_AGENT_MAX_STEPS` calls on `search`, `fetch` or `read_doc`, and has
-no other tool. When the model fails or the deadline passes, `ask` returns the
-pages as a `research` brief together with the reason, so the search is not
-wasted. A bad configuration is reported as an error that names the setting.
+Setting a backend activates `"agent"` mode for `ask` (and `mode="auto"`), and
+also runs the answer agent alongside every automatic `search` call so a concise
+sourced answer appears above the result links (`SEARCH_MCP_AGENT_IN_SEARCH=true`
+by default; set `false` to restrict the answer agent to `ask` only).
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `SEARCH_MCP_AGENT_BACKEND` | `off` | `api`, `claude-code` or `codex` |
-| `SEARCH_MCP_AGENT_MODEL` | empty | Required for `api`. Empty means `haiku` on Claude Code and the CLI's own default on Codex |
+| `SEARCH_MCP_AGENT_BACKEND` | `off` | `off` \| `api` \| `claude-code` \| `codex` |
+| `SEARCH_MCP_AGENT_MODEL` | *(empty)* | Required for `api`; empty means `haiku` on Claude Code and the CLI's default on Codex |
 | `SEARCH_MCP_AGENT_API_PROTOCOL` | `openai` | `openai` (`/chat/completions`) or `anthropic` (`/v1/messages`) |
-| `SEARCH_MCP_AGENT_API_BASE_URL` | empty | For `openai`, the URL ending in `/v1`. A local Ollama is `http://localhost:11434/v1` |
-| `SEARCH_MCP_AGENT_API_KEY` | empty | The credential of that model endpoint, when it has one. A local endpoint has none |
-| `SEARCH_MCP_AGENT_COMMAND` | `claude` / `codex` | Full path of the CLI. Hosts often start MCP servers with a short `PATH` |
-| `SEARCH_MCP_AGENT_CLI_ARGS` | backend default | Extra CLI flags, replacing the default. For Codex the default is `--ignore-user-config -c model_reasoning_effort="low"`. If your model provider lives in `config.toml`, keep `--ignore-user-config` and name the provider with `-c` overrides: without that flag the child also loads your own Codex plugins and MCP servers |
-| `SEARCH_MCP_AGENT_DEPTH` | `3` | Pages the server reads before the model is called |
-| `SEARCH_MCP_AGENT_READ_SECONDS` | `8` | How long those reads may take together. A page still loading after that is left out and its search snippet is used |
-| `SEARCH_MCP_AGENT_MAX_STEPS` | `1` | Tool rounds the model may spend afterwards. `0` answers from the first pages only |
-| `SEARCH_MCP_AGENT_MAX_SOURCE_CHARS` | `6000` | Characters of each page given to the model |
-| `SEARCH_MCP_AGENT_TIMEOUT_SECONDS` | `90` | Deadline for the model part |
-| `SEARCH_MCP_AGENT_IN_SEARCH` | `true` | Run the agent on every `search` too, beside the engine fan-out |
-| `SEARCH_MCP_AGENT_SEARCH_TIMEOUT_SECONDS` | `45` | How long `search` waits for that answer before returning the links alone |
+| `SEARCH_MCP_AGENT_API_BASE_URL` | *(empty)* | Endpoint base URL (e.g. `http://localhost:11434/v1` for local Ollama) |
+| `SEARCH_MCP_AGENT_API_KEY` **`[SEC]`** | *(empty)* | Credential for that API endpoint (none needed for local Ollama) |
+| `SEARCH_MCP_AGENT_COMMAND` | `claude` / `codex` | Full path to CLI when host MCP `PATH` is minimal |
+| `SEARCH_MCP_AGENT_CLI_ARGS` | backend default | Override CLI flags; for Codex keep `--ignore-user-config` so child runs do not load user plugins recursively |
+| `SEARCH_MCP_AGENT_DEPTH` | `3` | Pages read before calling the model |
+| `SEARCH_MCP_AGENT_READ_SECONDS` | `8` | Shared wall budget for those initial page reads |
+| `SEARCH_MCP_AGENT_MAX_STEPS` | `1` | Follow-up tool rounds after seed pages (`0` = seed pages only) |
+| `SEARCH_MCP_AGENT_MAX_SOURCE_CHARS` | `6000` | Characters of each page handed to the model |
+| `SEARCH_MCP_AGENT_TIMEOUT_SECONDS` | `90` | Deadline for the model step |
+| `SEARCH_MCP_AGENT_IN_SEARCH` | `true` | Show the answer agent's synthesis above `search` results too |
+| `SEARCH_MCP_AGENT_SEARCH_TIMEOUT_SECONDS` | `45` | Max seconds `search` waits for that answer before returning links alone |
 
-The CLI backends start the child with its built-in tools off and with a
-three-tool copy of this server. That copy enforces the step limit itself, has
-local file reads switched off, and never sees the model endpoint's key. Claude Code runs with extended thinking off, which took the same answer
-from 13.7 s to 5.2 s. Codex runs in a read-only sandbox, in an empty directory,
-with its own web search disabled so that the answer rests on the pages the
-server reports.
+---
 
-Measured on the development machine on 2026-09-21, for the model part only.
-The search part took 8 to 9 s cold and nothing when cached. One slow site used
-to stretch it: a Baidu Baike page took 25.7 s to fail while the two pages that
-held the answer arrived in 0.5 s and 2.1 s, which is why the reads now share a
-time budget.
+## 3. Host Subagents Included in `plugins/free-search`
 
-| Backend | First pages were enough | One follow-up call |
-|---|---|---|
-| `api`, local Ollama `qwen3:1.7b`, no key | 6.4 s | not measured |
-| `claude-code`, `haiku` | 4.8 s | 10 to 12 s |
-| `codex`, default model, low effort | 13 s | 21 to 24 s |
+All three client definitions share the same core prompt, safety rules, and
+reply format (starts with one `ask` call, falls back to at most two `exec` /
+`search` calls if needed, never calls `web.download`, never asks for API keys,
+treats fetched text as untrusted data):
 
-A small model reads a few pages quickly and can misread them. The tool's own
-description tells the calling agent to read the primary page itself for
-anything a person will act on.
+### Claude Code (`plugins/free-search/agents/quick-search.md`)
 
-## Embedding in a service
+Installed automatically by the plugin as **`free-search:quick-search`**:
+- Restricted strictly to the plugin server's three tools:
+  `mcp__plugin_free-search_search__ask`,
+  `mcp__plugin_free-search_search__search`, and
+  `mcp__plugin_free-search_search__exec`.
+- `maxTurns: 6`, `omitClaudeMd: true`, `model: inherit` (set
+  `CLAUDE_CODE_SUBAGENT_MODEL=haiku` to pin Claude Code subagents globally to
+  Haiku).
 
-- Any MCP client can connect over stdio, or over HTTP with
-  `--transport streamable-http`.
-- `SEARCH_MCP_TOOLS=search,fetch` registers only the named tools, which keeps
-  the tool schemas in your model's context to the ones you use.
-- `search-mcp ask "question" --json` is the one-shot form for a service that
-  would rather start a process. It exits 0 with an answer, 1 when the model
-  failed and the pages were printed instead, and 2 when no backend is configured.
-- In Python, pass your own model and no setting is needed:
+### Codex (`plugins/free-search/codex/agents/quick_search.toml`)
 
-```python
-from search_mcp.agent import ask
-
-async def my_model(instructions: str, evidence: str) -> str:
-    return await my_llm.complete(system=instructions, user=evidence)
-
-result = await ask("When does registration close?", answer_with=my_model)
-print(result["answer"], result["sources"])
+```bash
+mkdir -p ~/.codex/agents
+cp plugins/free-search/codex/agents/quick_search.toml ~/.codex/agents/quick_search.toml
 ```
+
+Configured with `sandbox_mode = "read-only"` and `model_reasoning_effort = "low"`.
+See [CODEX_SEARCH.md](CODEX_SEARCH.md).
+
+### Antigravity (`agy`)
+
+Antigravity automatically discovers `plugins/free-search/agents/quick-search.md`
+(`model: inherit`) when the plugin is enabled. To force quick lookups onto
+Antigravity's `flash` tier, copy the standalone Flash variant:
+
+```bash
+mkdir -p ~/.gemini/config/agents
+cp plugins/free-search/antigravity/agents/quick-search.md ~/.gemini/config/agents/quick-search.md
+```
+
+See [ANTIGRAVITY_SEARCH.md](ANTIGRAVITY_SEARCH.md).

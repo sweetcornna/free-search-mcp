@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "source": "yahoo",
+  "op": "search",
+  "recordedAt": "2026-11-25T13:48:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://search.yahoo.com/search?p=python+asyncio+taskgroup&ei=UTF-8",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 500,
+        "headers": [
+          [
+            "set-cookie",
+            "YBV=v0.1.replay; Domain=search.yahoo.com; Path=/"
+          ]
+        ],
+        "bodyText": "",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://search.yahoo.com/search?p=python+asyncio+taskgroup&ei=UTF-8",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 307,
+        "headers": [
+          [
+            "location",
+            "/_bv/v.gif?orig=1"
+          ],
+          [
+            "set-cookie",
+            "YBV=v0.2.replay; Domain=search.yahoo.com; Path=/"
+          ]
+        ],
+        "bodyText": "",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://search.yahoo.com/_bv/v.gif?orig=1",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 302,
+        "headers": [
+          [
+            "location",
+            "/search?p=python+asyncio+taskgroup&ei=UTF-8"
+          ],
+          [
+            "set-cookie",
+            "YBV=v0.3.replay; Domain=search.yahoo.com; Path=/"
+          ],
+          [
+            "set-cookie",
+            "A3=d=AQABreplay; Domain=.yahoo.com; Path=/"
+          ]
+        ],
+        "bodyText": "",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://search.yahoo.com/search?p=python+asyncio+taskgroup&ei=UTF-8",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/html; charset=UTF-8"
+          ]
+        ],
+        "bodyText": "<!doctype html><html id=\"atomic\" lang=\"en-US\"><head><title>python asyncio taskgroup - Yahoo Search Results</title></head><body><ol class=\"reg searchCenterMiddle\"><li><div class=\"dd fst algo algo-sr relsrch Sr\" data-yga='{\"yModuleName\":\"Sr\",\"yModType\":\"algo\"}'><div class=\"compTitle options-toggle\"><a class=\"d-ib va-top mt-38 mb-4 mxw-100p\" data-matarget=\"algo\" target=\"_blank\" referrerpolicy=\"origin\" href=\"https://r.search.yahoo.com/_ylt=A2RRAQgvZuVqxwIAOXlXNyoA;_ylu=Y29sbwN1cy1lYXN0LTEEcG9zAzEEdnRpZAMEc2VjA3Ny/RV=2/RE=1794628399/RO=10/RU=https%3a%2f%2fwww.geeksforgeeks.org%2fpython%2fpython-taskgroups-with-asyncio%2f/RK=2/RS=TgXmVHRHuwoXIIPaa1P2PwBK3Qg-\"><div class=\"d-ib p-abs t-0 l-0 fz-13 lh-16 fc-dustygray\"><span class=\"d-ib va-mid\"><span class=\"fc-141414 d-b\">GeeksForGeeks</span>https://www.geeksforgeeks.org › python › python-taskgroups</span></div><h3 class=\"title\"><span class=\"d-b fz-20\">Python Taskgroups with asyncIO - GeeksforGeeks</span></h3></a></div><div class=\"compText aAbs\"><p class=\"fc-dustygray\"><span class=\"fc-smoke\">Jul 23, 2025 · </span>  Prerequisite <b>Exception</b> <b>Handling</b> <b>Asyncio</b> <b>Python</b></p></div></div></li><li><div class=\"dd algo algo-sr relsrch Sr\" data-yga='{\"yModuleName\":\"Sr\",\"yModType\":\"algo\"}'><div class=\"compTitle options-toggle\"><a class=\"d-ib va-top mt-38 mb-4 mxw-100p\" data-matarget=\"algo\" target=\"_blank\" referrerpolicy=\"origin\" href=\"https://r.search.yahoo.com/_ylt=A2RRAQgvZuVqxwIAP3lXNyoA;_ylu=Y29sbwN1cy1lYXN0LTEEcG9zAzEEdnRpZAMEc2VjA3Ny/RV=2/RE=1794628399/RO=10/RU=https%3a%2f%2fdocs.python.org%2f3%2flibrary%2fasyncio-task.html/RK=2/RS=TgXmVHRHuwoXIIPaa1P2PwBK3Qg-\"><div class=\"d-ib p-abs t-0 l-0 fz-13 lh-16 fc-dustygray\"><span class=\"d-ib va-mid\"><span class=\"fc-141414 d-b\">Python</span>https://docs.python.org › 3 › library</span></div><h3 class=\"title\"><span class=\"d-b fz-20\">Coroutines and tasks — Python 3.15.2 documentation</span></h3></a></div><div class=\"compText aAbs\"><p class=\"fc-dustygray\"><span class=\"fc-smoke\">1 day ago · </span>  Note <b>asyncio</b>.<b>TaskGroup</b>.create_task() is a new alternative leveraging structural concurrency</p></div></div></li><li><div class=\"dd lst algo algo-sr relsrch richAlgo\" data-yga='{\"yModuleName\":\"Sr\",\"yModType\":\"algo\"}'><div class=\"compTitle options-toggle\"><a class=\"d-ib va-top mt-38 mb-4 mxw-100p\" data-matarget=\"algo\" target=\"_blank\" referrerpolicy=\"origin\" href=\"https://r.search.yahoo.com/_ylt=A2RRAQgvZuVqxwIAQnlXNyoA;_ylu=Y29sbwN1cy1lYXN0LTEEcG9zAzEEdnRpZAMEc2VjA3Ny/RV=2/RE=1794628399/RO=10/RU=https%3a%2f%2fen.wikipedia.org%2fwiki%2fC%252B%252B/RK=2/RS=TgXmVHRHuwoXIIPaa1P2PwBK3Qg-\"><div class=\"d-ib p-abs t-0 l-0 fz-13 lh-16 fc-dustygray\"><span class=\"d-ib va-mid\"><span class=\"fc-141414 d-b\">Wikipedia</span>https://en.wikipedia.org › wiki › C++</span></div><h3 class=\"title\"><span class=\"d-b fz-20\">C++ - Wikipedia</span></h3></a></div><div class=\"compText aAbs\"><p class=\"fc-dustygray\">C++ is a high-level, general-purpose programming language.</p></div></div></li></ol></body></html>",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "regulations_gov",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.regulations.gov/v4/documents?filter%5BsearchTerm%5D=methane+emissions&page%5Bsize%5D=5&page%5Bnumber%5D=1",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/vnd.api+json"
+          ]
+        ],
+        "bodyText": "{\"data\":[{\"id\":\"EPA-HQ-OAR-2023-0001-0002\",\"type\":\"documents\",\"attributes\":{\"documentType\":\"Proposed Rule\",\"title\":\"Standards of Performance for New, Reconstructed, and Modified Sources and Emissions Guidelines for Existing Sources: Oil and Natural Gas Sector Methane Emissions\",\"docketId\":\"EPA-HQ-OAR-2023-0001\",\"agencyId\":\"EPA\",\"postedDate\":\"2026-03-14T04:00:00Z\",\"commentEndDate\":\"2026-05-15T03:59:59Z\",\"summary\":\"Proposed updates to methane leak detection and continuous monitoring standards.\"},\"links\":{\"self\":\"https://api.regulations.gov/v4/documents/EPA-HQ-OAR-2023-0001-0002\"}},{\"id\":\"EPA-HQ-OAR-2024-0118-0001\",\"type\":\"documents\",\"attributes\":{\"documentType\":\"Rule\",\"title\":\"Waste Emissions Charge for Petroleum and Natural Gas Systems\",\"docketId\":\"EPA-HQ-OAR-2024-0118\",\"agencyId\":\"EPA\",\"postedDate\":\"2026-01-22T05:00:00Z\",\"commentEndDate\":null,\"summary\":\"Final reporting and calculation rules for methane waste emissions.\"},\"links\":{\"self\":\"https://api.regulations.gov/v4/documents/EPA-HQ-OAR-2024-0118-0001\"}}],\"meta\":{\"totalElements\":842,\"totalPages\":169,\"number\":1,\"size\":5}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

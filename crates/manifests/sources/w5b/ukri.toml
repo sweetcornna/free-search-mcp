@@ -1,0 +1,92 @@
+id = "ukri"
+name = "UKRI Gateway to Research (GtR)"
+summary = "UK Research and Innovation grants across EPSRC, MRC, ESRC, BBSRC, STFC, AHRC, NERC, and Innovate UK."
+aliases = ["gtr", "ukri grants", "epsrc", "mrc"]
+home_url = "https://gtr.ukri.org"
+tier = 1
+scopes = ["academic.grants", "academic"]
+caps = ["search", "lookup", "grant"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 4, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 86400 }
+
+[op.search]
+summary = "Search UKRI funded research projects (min page size 10; org is department-level; use op.fund for grant amounts)."
+method = "GET"
+url = "https://gtr.ukri.org/gtr/api/projects"
+headers = { Accept = "application/vnd.rcuk.gtr.json-v7" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "p", start = 1, max_pages = 3 }
+probe = { params = { query = "\"CRISPR gene editing\"", limit = 10 }, min_results = 2, fixture = "fixtures/w5b/ukri/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Keyword query for UKRI projects" }
+limit = { type = "int", default = 10, min = 10, max = 100, to = "s", doc = "Page size (UKRI GtR enforces minimum 10)" }
+page = { type = "int", default = 1, min = 1, to = "p", doc = "1-based page number" }
+
+[op.search.map]
+items = ".project[]"
+total = ".totalSize"
+record = '''{
+  id: (.identifiers.identifier[0].value // .id // ""),
+  title: ((.title // "") | strip_tags),
+  funder: (.leadFunder // "UKRI"),
+  pi: null,
+  org: ((.leadOrganisationDepartment // null) | collapse_ws),
+  amount: null,
+  currency: "GBP",
+  startDate: ((([(.links.link // [])[] | select(.rel == "FUND") | .start | select(type == "number")][0]) // (if (.start | type) == "number" then .start else null end)) | if type == "number" then ((. + 3600000) | epoch_to_iso | if . then .[0:10] else null end) else null end),
+  endDate: ((([(.links.link // [])[] | select(.rel == "FUND") | .end | select(type == "number")][0]) // (if (.end | type) == "number" then .end else null end)) | if type == "number" then ((. + 3600000) | epoch_to_iso | if . then .[0:10] else null end) else null end),
+  fundId: (([(.links.link // [])[] | select(.rel == "FUND") | .href | select(type == "string") | split("/")[-1]][0]) // null),
+  url: ("https://gtr.ukri.org/projects?ref=" + (.identifiers.identifier[0].value // .id // "")),
+  source: "ukri"
+}'''
+hit = '''((([(.links.link // [])[] | select(.rel == "FUND") | .start | select(type == "number")][0]) // (if (.start | type) == "number" then .start else null end)) | if type == "number" then ((. + 3600000) | epoch_to_iso | if . then .[0:10] else null end) else null end) as $d | {
+  title: ((.title // "") | strip_tags),
+  url: ("https://gtr.ukri.org/projects?ref=" + (.identifiers.identifier[0].value // .id // "")),
+  snippet: (((.leadFunder // "UKRI") + " · " + (.status // "") + " · " + (.grantCategory // "") + " — " + ((.abstractText // "") | strip_tags)) | collapse_ws)[0:280],
+  date: $d,
+  dateSource: (if $d != null then "api" else null end)
+}'''
+
+[op.project]
+summary = "Fetch a UKRI project record by GtR project UUID (org is department-level; use op.fund with fundId for funding amount)."
+method = "GET"
+url = "https://gtr.ukri.org/gtr/api/projects/{id}"
+headers = { Accept = "application/vnd.rcuk.gtr.json-v7" }
+response = "json"
+returns = "records"
+probe = { params = { id = "F71A563C-4DDC-4ED3-AAE2-A9D1D19618BE" }, min_results = 1, fixture = "fixtures/w5b/ukri/project/default.json" }
+
+[op.project.params]
+id = { type = "string", required = true, in = "path", doc = "UKRI GtR project UUID" }
+
+[op.project.map]
+items = "."
+record = "@ref:op.search.map.record"
+
+[op.fund]
+summary = "Fetch UKRI grant funding amount, currency, and dates by GtR fund UUID (from project.fundId)."
+method = "GET"
+url = "https://gtr.ukri.org/gtr/api/funds/{id}"
+headers = { Accept = "application/vnd.rcuk.gtr.json-v7" }
+response = "json"
+returns = "records"
+probe = { params = { id = "60EDB785-ED04-48D3-A2E8-D4239EDA5683" }, min_results = 1, fixture = "fixtures/w5b/ukri/fund/default.json" }
+
+[op.fund.params]
+id = { type = "string", required = true, in = "path", doc = "UKRI GtR fund UUID (from op.search / op.project fundId)" }
+
+[op.fund.map]
+items = "."
+record = '''{
+  id: (.id // ""),
+  amount: (.valuePounds.amount | to_num),
+  currency: (.valuePounds.currencyCode // "GBP"),
+  category: (.category // null),
+  startDate: (if (.start | type) == "number" then ((.start + 3600000) | epoch_to_iso | if . then .[0:10] else null end) else null end),
+  endDate: (if (.end | type) == "number" then ((.end + 3600000) | epoch_to_iso | if . then .[0:10] else null end) else null end),
+  projectId: (([(.links.link // [])[] | select(.rel == "FUNDED") | .href | select(type == "string") | split("/")[-1]][0]) // null),
+  url: ("https://gtr.ukri.org/gtr/api/funds/" + (.id // ""))
+}'''

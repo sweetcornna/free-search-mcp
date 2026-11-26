@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "bis_stats",
+  "op": "dataflow",
+  "recordedAt": "2026-11-25T12:12:19Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://stats.bis.org/api/v2/structure/dataflow/BIS/WS_CBPOL/latest?format=sdmx-json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json;charset=UTF-8"
+          ]
+        ],
+        "bodyText": "{\"meta\":{\"id\":\"IDREFb118776c-ea0a-424f-86e6-f9cc4745c2d1\",\"test\":false,\"schema\":\"https://raw.githubusercontent.com/sdmx-twg/sdmx-json/develop/structure-message/tools/schemas/1.0/sdmx-json-structure-schema.json\",\"prepared\":\"2026-11-25T11:50:27Z\",\"contentLanguages\":[\"en\"],\"sender\":{\"id\":\"UNKNOWN\"}},\"data\":{\"dataflows\":[{\"links\":[{\"rel\":\"self\",\"type\":\"dataflow\",\"uri\":\"https://raw.githubusercontent.com/sdmx-twg/sdmx-json/develop/structure-message/tools/schemas/1.0/sdmx-json-structure-schema.json\",\"urn\":\"urn:sdmx:org.sdmx.infomodel.datastructure.Dataflow=BIS:WS_CBPOL(1.0)\"}],\"id\":\"WS_CBPOL\",\"name\":\"Central bank policy rates\",\"names\":{\"en\":\"Central bank policy rates\"},\"description\":\"The interest rate which best captures the monetary authorities' policy intentions.\",\"descriptions\":{\"en\":\"The interest rate which best captures the monetary authorities' policy intentions.\"},\"version\":\"1.0\",\"agencyID\":\"BIS\",\"isExternalReference\":false,\"isFinal\":false,\"structure\":\"urn:sdmx:org.sdmx.infomodel.datastructure.DataStructure=BIS:BIS_CBPOL(1.0)\"}]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

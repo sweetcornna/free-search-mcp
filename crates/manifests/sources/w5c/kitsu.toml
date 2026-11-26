@@ -1,0 +1,131 @@
+id = "kitsu"
+name = "Kitsu (Anime & Manga)"
+summary = "Keyless JSON:API catalog for anime and manga titles, ratings, synopses, and episode/chapter counts."
+aliases = ["kitsu anime", "kitsu manga", "anime database", "jikan", "アニメ", "マンガ"]
+home_url = "https://kitsu.app"
+tier = 1
+scopes = ["media"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 3.0, burst = 6, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 43200 }
+
+[op.search]
+summary = "Search anime titles on Kitsu via JSON:API."
+method = "GET"
+url = "https://kitsu.io/api/edge/anime"
+headers = { Accept = "application/vnd.api+json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "page[offset]", start = 0, max_pages = 3 }
+probe = { params = { query = "cowboy bebop", limit = 3 }, min_results = 2, fixture = "fixtures/w5c/kitsu/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "filter[text]", doc = "Anime title keywords" }
+limit = { type = "int", default = 10, min = 1, max = 20, to = "page[limit]", doc = "Results per page" }
+offset = { type = "int", min = 0, to = "page[offset]", doc = "Result offset" }
+
+[op.search.map]
+items = ".data[]"
+total = ".meta.count"
+error = "if (.errors | type) == \"array\" and (.errors | length) > 0 then (.errors[0].detail // .errors[0].title) else null end"
+record = '''{
+  id: .id,
+  type: .type,
+  slug: .attributes.slug,
+  title: (.attributes.canonicalTitle // .attributes.titles.en // .attributes.titles.en_jp // ""),
+  subtype: .attributes.subtype,
+  status: .attributes.status,
+  episodeCount: .attributes.episodeCount,
+  averageRating: (.attributes.averageRating | to_num),
+  startDate: .attributes.startDate,
+  endDate: .attributes.endDate,
+  synopsis: ((.attributes.synopsis // "") | collapse_ws),
+  url: ("https://kitsu.app/" + (.type // "anime") + "/" + (.attributes.slug // .id))
+}'''
+hit = '''
+(.attributes.startDate | parse_date) as $dt |
+{
+  title: (.attributes.canonicalTitle // .attributes.titles.en // .attributes.titles.en_jp // ""),
+  url: ("https://kitsu.app/" + (.type // "anime") + "/" + (.attributes.slug // .id)),
+  snippet: ([
+    (if (.attributes.subtype | type) == "string" then .attributes.subtype else empty end),
+    (if (.attributes.averageRating | type) == "string" then "rating \(.attributes.averageRating)%" else empty end),
+    (if (.attributes.episodeCount | type) == "number" then "\(.attributes.episodeCount) eps" else empty end),
+    (if (.attributes.chapterCount | type) == "number" and .attributes.chapterCount > 0 then "\(.attributes.chapterCount) chapters" else empty end),
+    (if (.attributes.volumeCount | type) == "number" and .attributes.volumeCount > 0 then "\(.attributes.volumeCount) vols" else empty end),
+    (((.attributes.synopsis // "") | collapse_ws) | if length > 200 then .[0:200] + "..." else . end | select(length > 0))
+  ] | join(" · ")),
+  date: $dt,
+  dateSource: (if $dt != null then "api" else null end)
+}'''
+
+[op.anime]
+summary = "Look up a Kitsu anime record by numeric ID."
+method = "GET"
+url = "https://kitsu.io/api/edge/anime/{id}"
+headers = { Accept = "application/vnd.api+json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "1" }, min_results = 1, fixture = "fixtures/w5c/kitsu/anime/default.json" }
+
+[op.anime.params]
+id = { type = "string", required = true, in = "path", doc = "Numeric Kitsu anime ID" }
+
+[op.anime.map]
+items = ".data"
+error = "@ref:op.search.map.error"
+record = "@ref:op.search.map.record"
+
+[op.manga]
+summary = "Search manga titles on Kitsu via JSON:API."
+method = "GET"
+url = "https://kitsu.io/api/edge/manga"
+headers = { Accept = "application/vnd.api+json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "page[offset]", start = 0, max_pages = 3 }
+probe = { params = { query = "berserk", limit = 3 }, min_results = 2, fixture = "fixtures/w5c/kitsu/manga/default.json" }
+
+[op.manga.params]
+query = { type = "string", required = true, to = "filter[text]", doc = "Manga title keywords" }
+limit = { type = "int", default = 10, min = 1, max = 20, to = "page[limit]", doc = "Results per page" }
+offset = { type = "int", min = 0, to = "page[offset]", doc = "Result offset" }
+
+[op.manga.map]
+items = ".data[]"
+total = ".meta.count"
+error = "@ref:op.search.map.error"
+record = '''{
+  id: .id,
+  type: .type,
+  slug: .attributes.slug,
+  title: (.attributes.canonicalTitle // .attributes.titles.en // .attributes.titles.en_jp // ""),
+  subtype: .attributes.subtype,
+  status: .attributes.status,
+  chapterCount: .attributes.chapterCount,
+  volumeCount: .attributes.volumeCount,
+  averageRating: (.attributes.averageRating | to_num),
+  startDate: .attributes.startDate,
+  endDate: .attributes.endDate,
+  synopsis: ((.attributes.synopsis // "") | collapse_ws),
+  url: ("https://kitsu.app/manga/" + (.attributes.slug // .id))
+}'''
+hit = "@ref:op.search.map.hit"
+
+[op.manga_item]
+summary = "Look up a Kitsu manga record by numeric ID."
+method = "GET"
+url = "https://kitsu.io/api/edge/manga/{id}"
+headers = { Accept = "application/vnd.api+json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "8" }, min_results = 1, fixture = "fixtures/w5c/kitsu/manga_item/default.json" }
+
+[op.manga_item.params]
+id = { type = "string", required = true, in = "path", doc = "Numeric Kitsu manga ID" }
+
+[op.manga_item.map]
+items = ".data"
+error = "@ref:op.search.map.error"
+record = "@ref:op.manga.map.record"

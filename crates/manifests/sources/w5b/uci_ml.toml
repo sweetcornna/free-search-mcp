@@ -1,0 +1,73 @@
+id = "uci_ml"
+name = "UCI Machine Learning Repository"
+summary = "Canonical curated archive of 680+ classical machine learning benchmark datasets."
+aliases = ["uci", "uci datasets", "uci ml repo"]
+home_url = "https://archive.ics.uci.edu"
+tier = 2
+scopes = ["dataset", "academic.cs"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 86400 }
+
+[op.search]
+summary = "Search UCI ML Repository catalog by dataset name (client-side filter over full 33 KB catalog list)."
+method = "GET"
+url = "https://archive.ics.uci.edu/api/datasets/list"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { query = "iris", limit = 5 }, min_results = 1, fixture = "fixtures/w5b/uci_ml/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, in = "none", doc = "Case-insensitive substring matched against dataset names" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "none", doc = "Maximum matching datasets to return" }
+
+[op.search.map]
+items = '''[.data[] | select((.name // "" | ascii_downcase) | contains(($p.query // "") | ascii_downcase))][0:($p.limit // 10)][]'''
+error = 'if type == "object" and ((.status | to_int) // 200) >= 400 then (.message // .statusText // "UCI ML API error") else null end'
+record = '''{
+  id: (.id | to_int),
+  name: ((.name // "") | collapse_ws),
+  url: ("https://archive.ics.uci.edu/dataset/" + (.id | tostring))
+}'''
+hit = '''{
+  title: ((.name // "") | collapse_ws),
+  url: ("https://archive.ics.uci.edu/dataset/" + (.id | tostring)),
+  snippet: ("UCI ML Repository dataset #" + (.id | tostring)),
+  date: null,
+  dateSource: null
+}'''
+
+[op.dataset]
+summary = "Fetch full metadata, schema stats, and CSV download link for a UCI dataset by numeric ID."
+method = "GET"
+url = "https://archive.ics.uci.edu/api/dataset"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "53" }, min_results = 1, fixture = "fixtures/w5b/uci_ml/dataset/default.json" }
+
+[op.dataset.params]
+id = { type = "string", required = true, to = "id", doc = "Numeric UCI dataset ID (e.g. 53 for Iris)" }
+
+[op.dataset.map]
+items = ".data"
+error = 'if type == "object" and ((.status | to_int) // 200) >= 400 then (.message // .statusText // "UCI ML API error") else null end'
+record = '''{
+  id: (.uci_id | to_int),
+  doi: ((.dataset_doi // null) | doi_norm),
+  name: ((.name // "") | collapse_ws),
+  creators: (.creators // []),
+  yearCreated: (.year_of_dataset_creation | to_int),
+  abstractText: ((.abstract // null) | collapse_ws),
+  area: (.area // null),
+  tasks: (.tasks // []),
+  characteristics: (.characteristics // []),
+  numInstances: (.num_instances | to_int),
+  numFeatures: (.num_features | to_int),
+  featureTypes: (.feature_types // []),
+  targetCol: (.target_col // []),
+  dataUrl: (.data_url // null),
+  url: (.repository_url // ("https://archive.ics.uci.edu/dataset/" + (.uci_id | tostring)))
+}'''

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "fred",
+  "op": "series",
+  "recordedAt": "2026-11-25T12:13:33Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.stlouisfed.org/fred/series?file_type=json&series_id=GDP",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"realtime_start\": \"2026-11-25\", \"realtime_end\": \"2026-11-25\", \"seriess\": [{\"id\": \"GDP\", \"realtime_start\": \"2026-11-25\", \"realtime_end\": \"2026-11-25\", \"title\": \"Gross Domestic Product\", \"observation_start\": \"1947-01-01\", \"observation_end\": \"2026-07-01\", \"frequency\": \"Quarterly\", \"frequency_short\": \"Q\", \"units\": \"Billions of Dollars\", \"units_short\": \"Bil. of $\", \"seasonal_adjustment\": \"Seasonally Adjusted Annual Rate\", \"seasonal_adjustment_short\": \"SAAR\", \"last_updated\": \"2026-10-30 07:53:02-05\", \"popularity\": 95, \"notes\": \"BEA Account Code: A191RC. Gross domestic product is the value of the goods and services produced by the nation's economy.\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

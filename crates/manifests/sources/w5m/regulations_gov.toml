@@ -1,0 +1,120 @@
+id = "regulations_gov"
+name = "Regulations.gov Federal Dockets v4"
+summary = "Search US federal agency proposed rules, final rules, notices, and rulemaking dockets via JSON:API v4 (requires free api.data.gov key)."
+aliases = ["regulations.gov", "federal dockets", "rulemaking"]
+home_url = "https://open.gsa.gov/api/regulationsgov/"
+tier = 3
+scopes = ["gov", "gov.law"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 0.25, burst = 3, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 21600, host_bucket = "api_data_gov" }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_DATA_GOV_API_KEY"
+in = "header"
+name = "X-Api-Key"
+format = "{key}"
+route_requires_key = true
+
+[op.search]
+summary = "Search federal rulemaking documents by keyword, agency acronym, and document type."
+method = "GET"
+url = "https://api.regulations.gov/v4/documents"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page[number]", start = 1, max_pages = 3 }
+probe = { params = { query = "methane emissions", limit = 5 }, min_results = 2, fixture = "fixtures/w5m/regulations_gov/search/default.json" }
+examples = ["source.call('regulations_gov.search', { query: 'methane emissions', agency: 'EPA', limit: 5 })"]
+
+[op.search.params]
+query = { type = "string", required = true, to = "filter[searchTerm]", doc = "Full-text search term" }
+agency = { type = "string", to = "filter[agencyId]", doc = "Federal agency acronym e.g. EPA, FDA, SEC, FCC" }
+doc_type = { type = "string", enum = ["Notice", "Rule", "Proposed Rule", "Supporting & Related Material", "Other"], to = "filter[documentType]", doc = "Document type filter" }
+sort = { type = "string", enum = ["postedDate", "-postedDate", "lastModifiedDate", "-lastModifiedDate"], to = "sort", doc = "Sort order" }
+limit = { type = "int", default = 10, min = 5, max = 50, to = "page[size]", doc = "Documents per page (Regulations.gov minimum is 5)" }
+page = { type = "int", default = 1, min = 1, to = "page[number]", doc = "1-based page number" }
+
+[op.search.map]
+items = "(.data // [])[]"
+total = ".meta.totalElements"
+error = 'if .error then (.error.message // .error.code) elif .errors then ([.errors[] | (.detail // .title // tostring)] | join("; ")) else null end'
+record = '''{
+  id: .id,
+  documentType: (.attributes.documentType // null),
+  title: ((.attributes.title // "") | strip_tags),
+  docketId: (.attributes.docketId // null),
+  agencyId: (.attributes.agencyId // null),
+  postedDate: (.attributes.postedDate | parse_date),
+  commentEndDate: (.attributes.commentEndDate | parse_date),
+  summary: (if .attributes.summary then (.attributes.summary | strip_tags) else null end),
+  url: ("https://www.regulations.gov/document/" + .id)
+}'''
+hit = '''{
+  title: ((.attributes.title // .id) | strip_tags),
+  url: ("https://www.regulations.gov/document/" + .id),
+  snippet: ((.attributes.agencyId // "") + " · " + (.attributes.documentType // "") + " · Docket " + (.attributes.docketId // "")),
+  date: (.attributes.postedDate | parse_date),
+  dateSource: "api"
+}'''
+
+[op.document]
+summary = "Fetch full metadata for a single Regulations.gov document by document ID."
+method = "GET"
+url = "https://api.regulations.gov/v4/documents/{document_id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { document_id = "EPA-HQ-OAR-2023-0001-0002" }, min_results = 1, fixture = "fixtures/w5m/regulations_gov/document/default.json" }
+examples = ["source.call('regulations_gov.document', { document_id: 'EPA-HQ-OAR-2023-0001-0002' })"]
+
+[op.document.params]
+document_id = { type = "string", required = true, in = "path", doc = "Regulations.gov document ID" }
+
+[op.document.map]
+items = ".data"
+error = "@ref:op.search.map.error"
+record = '''{
+  id: .id,
+  documentType: (.attributes.documentType // null),
+  title: ((.attributes.title // "") | strip_tags),
+  docketId: (.attributes.docketId // null),
+  agencyId: (.attributes.agencyId // null),
+  postedDate: (.attributes.postedDate | parse_date),
+  commentStartDate: (.attributes.commentStartDate | parse_date),
+  commentEndDate: (.attributes.commentEndDate | parse_date),
+  rin: (.attributes.rin // null),
+  summary: (if .attributes.summary then (.attributes.summary | strip_tags) else null end),
+  topics: (.attributes.topics // []),
+  url: ("https://www.regulations.gov/document/" + .id)
+}'''
+
+[op.docket]
+summary = "Fetch metadata and abstract for a Regulations.gov rulemaking docket by docket ID."
+method = "GET"
+url = "https://api.regulations.gov/v4/dockets/{docket_id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { docket_id = "EPA-HQ-OAR-2003-0129" }, min_results = 1, fixture = "fixtures/w5m/regulations_gov/docket/default.json" }
+examples = ["source.call('regulations_gov.docket', { docket_id: 'EPA-HQ-OAR-2003-0129' })"]
+
+[op.docket.params]
+docket_id = { type = "string", required = true, in = "path", doc = "Regulations.gov docket ID e.g. EPA-HQ-OAR-2003-0129" }
+
+[op.docket.map]
+items = ".data"
+error = "@ref:op.search.map.error"
+record = '''{
+  id: .id,
+  agencyId: (.attributes.agencyId // null),
+  docketType: (.attributes.docketType // null),
+  title: ((.attributes.title // "") | strip_tags),
+  shortTitle: (.attributes.shortTitle // null),
+  rin: (.attributes.rin // null),
+  abstract: (if .attributes.dkAbstract then (.attributes.dkAbstract | strip_tags) else null end),
+  modifyDate: (.attributes.modifyDate | parse_date),
+  url: ("https://www.regulations.gov/docket/" + .id)
+}'''

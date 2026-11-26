@@ -1,0 +1,80 @@
+id = "trove_au"
+name = "Trove National Library of Australia API v3"
+summary = "Australian national library catalog of academic research, theses, monographs, journals, and historical newspapers (requires free Trove API key)."
+aliases = ["trove", "nla trove", "australia national library"]
+home_url = "https://trove.nla.gov.au"
+tier = 3
+scopes = ["academic", "academic.humanities", "academic.theses", "academic.books", "news"]
+caps = ["search", "lookup", "thesis", "book"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 43200, host_bucket = "api.trove.nla.gov.au" }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_TROVE_API_KEY"
+in = "header"
+name = "X-API-KEY"
+format = "{key}"
+route_requires_key = true
+
+[op.search]
+summary = "Search Trove v3 research papers, theses, books, and historical articles."
+method = "GET"
+url = "https://api.trove.nla.gov.au/v3/result"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+const_query = { encoding = "json" }
+paginate = { style = "cursor", param = "s", max_pages = 3 }
+probe = { params = { query = "climate", category = "research", limit = 3 }, min_results = 2, fixture = "fixtures/w5h/trove_au/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Trove search query" }
+category = { type = "string", default = "research", enum = ["research", "book", "magazine", "newspaper", "image", "music", "diary", "people", "list"], to = "category", doc = "Trove search category" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "n", doc = "Results per page" }
+cursor = { type = "string", default = "*", to = "s", doc = "Pagination cursor token" }
+
+[op.search.map]
+items = "(.category // [])[] | (.records.work // .records.article // .records.people // .records.list // [])[]"
+next_cursor = ".category[0]?.records.nextStart // null"
+total = ".category[0]?.records.total // null"
+error = '''if (.message != null and .category == null) then (.message | tostring) else null end'''
+work = '''(
+  (.troveUrl // .url // (if .id then ("https://trove.nla.gov.au/work/" + (.id | tostring)) else "" end)) as $url |
+  (.contributor | arr) as $contribs |
+  (.type | arr) as $types |
+  (([(.identifier | arr)[] | (if type == "object" then (if ((.type // "") | ascii_downcase) == "doi" or ((.value // "") | tostring | test("^10\\.|doi\\.org/")) then .value else null end) elif type == "string" and test("^10\\.|doi\\.org/") then . else null end) | select(. != null)][0] // null) | doi_norm) as $doi |
+  {
+    title: ((if (.heading | type) == "string" and (.heading | length) > 0 then .heading elif (.title | type) == "string" then .title else (.title | first_str // "") end) | strip_tags),
+    authors: [$contribs[] | select(type == "string" and length > 0) | { name: (. | collapse_ws) }],
+    year: ((((.issued // .date // "") | tostring)[0:4]) | to_int),
+    publishedDate: ((.date // null) | parse_date),
+    venue: ((if (.title | type) == "object" then (.title.value // .title.title // null) else ((.isPartOf | arr)[0]? | first_str) end) | collapse_ws),
+    workType: (if ($types | any(test("thesis|dissertation"; "i"))) then "thesis" elif ($types | any(test("book"; "i"))) then "book" else "article" end),
+    ids: { doi: $doi },
+    abstractText: (.snippet // null | strip_tags),
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["trove_au"]
+  }
+)'''
+
+[op.work]
+summary = "Fetch a single Trove work record by Trove work ID."
+method = "GET"
+url = "https://api.trove.nla.gov.au/v3/work/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+const_query = { encoding = "json" }
+probe = { params = { id = "190226707" }, min_results = 1, fixture = "fixtures/w5h/trove_au/work/default.json" }
+
+[op.work.params]
+id = { type = "string", required = true, in = "path", doc = "Trove work ID e.g. 190226707" }
+
+[op.work.map]
+items = "(.work // .)"
+error = '''if (.message != null and .id == null and .work == null) then (.message | tostring) else null end'''
+work = "@ref:op.search.map.work"

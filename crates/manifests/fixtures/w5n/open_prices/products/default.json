@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "open_prices",
+  "op": "products",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://prices.openfoodfacts.org/api/v1/products?size=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"items\":[{\"id\":1,\"code\":\"1541513213246\",\"source\":null,\"source_last_synced\":null,\"product_name\":null,\"image_url\":null,\"product_quantity\":null,\"product_quantity_unit\":null,\"quantity\":null,\"categories_tags\":[],\"brands\":null,\"brands_tags\":[],\"labels_tags\":[],\"nutriscore_grade\":null,\"ecoscore_grade\":null,\"nova_group\":null,\"creator\":null,\"unique_scans_n\":0,\"price_count\":3,\"price_currency_count\":1,\"location_count\":1,\"location_type_osm_country_count\":1,\"user_count\":1,\"proof_count\":3,\"created\":\"2023-11-27T11:37:14.015774Z\",\"updated\":null},{\"id\":2,\"code\":\"1541513213253\",\"source\":null,\"source_last_synced\":null,\"product_name\":null,\"image_url\":null,\"product_quantity\":null,\"product_quantity_unit\":null,\"quantity\":null,\"categories_tags\":[],\"brands\":null,\"brands_tags\":[],\"labels_tags\":[],\"nutriscore_grade\":null,\"ecoscore_grade\":null,\"nova_group\":null,\"creator\":null,\"unique_scans_n\":0,\"price_count\":3,\"price_currency_count\":1,\"location_count\":1,\"location_type_osm_country_count\":1,\"user_count\":1,\"proof_count\":3,\"created\":\"2023-11-27T11:37:15.357143Z\",\"updated\":null},{\"id\":3,\"code\":\"1541513213260\",\"source\":null,\"source_last_synced\":null,\"product_name\":null,\"image_url\":null,\"product_quantity\":null,\"product_quantity_unit\":null,\"quantity\":null,\"categories_tags\":[],\"brands\":null,\"brands_tags\":[],\"labels_tags\":[],\"nutriscore_grade\":null,\"ecoscore_grade\":null,\"nova_group\":null,\"creator\":null,\"unique_scans_n\":0,\"price_count\":3,\"price_currency_count\":1,\"location_count\":1,\"location_type_osm_country_count\":1,\"user_count\":1,\"proof_count\":3,\"created\":\"2023-11-27T11:37:16.633361Z\",\"updated\":null}],\"page\":1,\"pages\":1550815,\"size\":3,\"total\":4652445}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

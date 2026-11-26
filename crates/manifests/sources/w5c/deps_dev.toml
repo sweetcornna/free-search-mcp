@@ -1,0 +1,99 @@
+id = "deps_dev"
+name = "deps.dev (Open Source Insights)"
+summary = "Google Open Source Insights v3 API for package versions, licenses, provenance, links, and advisories across PyPI, npm, Cargo, Go, Maven, NuGet, and RubyGems."
+aliases = ["deps.dev", "open source insights", "osi"]
+home_url = "https://deps.dev"
+tier = 1
+scopes = ["code", "security"]
+caps = ["lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 5.0, burst = 10, concurrency = 4, timeout_ms = 6000, cache_ttl_s = 21600 }
+
+[op.package]
+summary = "List versions and publication metadata for an ecosystem package on deps.dev."
+method = "GET"
+url = "https://api.deps.dev/v3/systems/{system}/packages/{name}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { system = "pypi", name = "httpx" }, min_results = 1, fixture = "fixtures/w5c/deps_dev/package/default.json" }
+
+[op.package.params]
+system = { type = "string", required = true, enum = ["pypi", "npm", "cargo", "go", "maven", "nuget", "rubygems"], in = "path", doc = "Package ecosystem slug" }
+name = { type = "string", required = true, in = "path", doc = "Raw package name (auto percent-encoded; e.g. httpx, @types/node, github.com/gin-gonic/gin)" }
+
+[op.package.map]
+items = "."
+error = "if (.code | type) == \"number\" and .code != 0 then (.message // \"deps.dev API error\") else null end"
+record = '''
+((.packageKey.system // "") | ascii_downcase) as $sys |
+((.packageKey.name // "") | gsub("/"; "%2F") | gsub("@"; "%40")) as $enc |
+{
+  system: $sys,
+  name: .packageKey.name,
+  versionCount: ((.versions // []) | length),
+  defaultVersion: ([(.versions // [])[] | select(.isDefault == true) | .versionKey.version][0] // ((.versions // []) | last | .versionKey.version // null)),
+  recentVersions: ((.versions // []) | (if length > 5 then .[length - 5:] else . end) | map({ version: .versionKey.version, publishedAt, isDefault, isDeprecated })),
+  url: ("https://deps.dev/" + $sys + "/" + $enc)
+}'''
+
+[op.version]
+summary = "Fetch licenses, advisories, links, and provenance for a specific package version."
+method = "GET"
+url = "https://api.deps.dev/v3/systems/{system}/packages/{name}/versions/{version}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { system = "pypi", name = "httpx", version = "0.27.2" }, min_results = 1, fixture = "fixtures/w5c/deps_dev/version/default.json" }
+
+[op.version.params]
+system = { type = "string", required = true, enum = ["pypi", "npm", "cargo", "go", "maven", "nuget", "rubygems"], in = "path", doc = "Package ecosystem slug" }
+name = { type = "string", required = true, in = "path", doc = "Raw package name (auto percent-encoded)" }
+version = { type = "string", required = true, in = "path", doc = "Exact version string" }
+
+[op.version.map]
+items = "."
+error = "@ref:op.package.map.error"
+record = '''
+((.versionKey.system // "") | ascii_downcase) as $sys |
+((.versionKey.name // "") | gsub("/"; "%2F") | gsub("@"; "%40")) as $enc |
+{
+  system: $sys,
+  name: .versionKey.name,
+  version: .versionKey.version,
+  publishedAt: .publishedAt,
+  isDefault: (.isDefault // false),
+  isDeprecated: (.isDeprecated // false),
+  projectStatus: (.projectStatus.status // null),
+  licenses: (.licenses // []),
+  advisories: [(.advisoryKeys // [])[] | .id],
+  slsaProvenances: (.slsaProvenances // []),
+  attestations: (.attestations // []),
+  links: (.links // []),
+  url: ("https://deps.dev/" + $sys + "/" + $enc + "/" + (.versionKey.version // ""))
+}'''
+
+[op.advisory]
+summary = "Look up a security advisory record on deps.dev by GHSA or OSV identifier."
+method = "GET"
+url = "https://api.deps.dev/v3/advisories/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "GHSA-34jh-p97f-mpxf" }, min_results = 1, fixture = "fixtures/w5c/deps_dev/advisory/default.json" }
+
+[op.advisory.params]
+id = { type = "string", required = true, in = "path", doc = "Advisory ID e.g. GHSA-34jh-p97f-mpxf" }
+
+[op.advisory.map]
+items = "."
+error = "@ref:op.package.map.error"
+record = '''{
+  id: .advisoryKey.id,
+  title: (.title // ""),
+  url: .url,
+  aliases: (.aliases // []),
+  cvss3Score: .cvss3Score,
+  cvss3Vector: .cvss3Vector
+}'''

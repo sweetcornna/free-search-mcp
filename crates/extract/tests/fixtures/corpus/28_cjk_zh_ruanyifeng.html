@@ -1,0 +1,2293 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" id="sixapart-standard" lang="zh-CN">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="generator" content="Movable Type  5.2.2" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<!--link rel="stylesheet" href="http://www.ruanyifeng.com/blog/styles.css" type="text/css" /-->
+<link rel="start" href="https://www.ruanyifeng.com/blog/" title="Home" />
+<link rel="alternate" type="application/atom+xml" title="Recent Entries" href="https://feeds.feedburner.com/ruanyifeng" />
+<script type="text/javascript" src="https://www.ruanyifeng.com/blog/mt.js"></script>
+<script type="text/javascript" src="/blog/advertisements.js"></script>
+<!--
+<rdf:RDF xmlns="http://web.resource.org/cc/"
+         xmlns:dc="http://purl.org/dc/elements/1.1/"
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+<Work rdf:about="http://www.ruanyifeng.com/blog/2011/07/formula_online_generator.html">
+<dc:title>数学公式生成器</dc:title>
+<dc:description>上一篇文章《数学常数e的含义》，有很多数学公式。...</dc:description>
+<dc:creator>阮一峰</dc:creator>
+<dc:date>2011-07-11T22:12:13+08:00</dc:date>
+<license rdf:resource="http://creativecommons.org/licenses/by-nc-nd/3.0/" />
+</Work>
+<License rdf:about="http://creativecommons.org/licenses/by-nc-nd/3.0/">
+</License>
+</rdf:RDF>
+-->
+
+<style>
+body {
+  background-color: #f5f5d5;
+}
+
+#container::before {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  background: rgba(0,0,0,0.1);
+  text-align: center;
+  content: "本站显示不正常，可能因为您使用了广告拦截器。";
+}
+
+</style>
+<script>
+function loadjscssfile(filename, filetype){
+    if (filetype=="js"){ //if filename is a external JavaScript file
+        var fileref=document.createElement('script')
+        fileref.setAttribute("type","text/javascript")
+        fileref.setAttribute("src", filename)
+    }
+    else if (filetype=="css"){ //if filename is an external CSS file
+        var fileref=document.createElement("link")
+        fileref.setAttribute("rel", "stylesheet")
+        fileref.setAttribute("type", "text/css")
+        fileref.setAttribute("href", filename)
+    }
+    if (typeof fileref!="undefined")
+        document.getElementsByTagName("head")[0].appendChild(fileref)
+}
+//loadjscssfile("http://www.ruanyifeng.com/blog/styles.css", "css");
+loadjscssfile('/static/themes/theme_scrapbook/theme_scrapbook.min.css', "css");
+
+
+function checker() {
+  if (/mobile|android/i.test(navigator.userAgent)) return; 
+  window.comments && window.comments.setAttribute("style", "!important");
+  // var img = document.querySelector('img[src^="http://www.ruanyifeng.com/blog/images"]');
+  var img = document.querySelector('a > img[src*="wangbase.com/blogimg/asset/"]');
+  var isAdblocker = (typeof adblock === 'undefined');
+  if (
+    /*isAdblocker || */
+    (img && window.getComputedStyle(img).display === 'none') ||
+    (img && window.getComputedStyle(img.parentElement).display === 'none')
+  ){
+    var sponsor = document.querySelector('#main-content');
+    var prompt = document.createElement('div');
+    prompt.style = 'border: 1px solid #c6c6c6;border-radius: 4px;background-color: #f5f2f0;padding: 15px; font-size: 14px;';
+    prompt.innerHTML = '<p>您使用了广告拦截器，导致本站内容无法显示。</p><p>请将 www.ruanyifeng.com 加入白名单，解除广告屏蔽后，刷新页面。谢谢。</p>';
+    sponsor.parentNode.replaceChild(prompt, sponsor);
+    // document.querySelector('#main-content').innerHTML = '';
+  }
+}
+
+setTimeout(checker, 1000);
+</script>
+    
+    <link rel="prev" href="https://www.ruanyifeng.com/blog/2020/08/weekly-issue-121.html" title="科技爱好者周刊（第 121 期）：为什么人类没有越来越闲？" />
+    <link rel="next" href="https://www.ruanyifeng.com/blog/2020/08/weekly-issue-122.html" title="科技爱好者周刊（第 122 期）：谈谈互联网公司的高估值" />
+    
+    <title>rsync 用法教程 - 阮一峰的网络日志</title>
+</head>
+<body id="scrapbook" class="mt-entry-archive one-column">
+<script>
+if (/mobile/i.test(navigator.userAgent) || /android/i.test(navigator.userAgent)) document.body.classList.add('mobile');
+
+/*
+window.addEventListener('load', function(event) {
+  setTimeout(function () {
+    hab('#sup-post-2');
+    hab('#cre-inner');
+  }, 1000);
+});
+*/
+</script>
+    <div id="container">
+        <div id="container-inner">
+
+            <div id="header">
+    <div id="header-inner">
+        <div id="header-content">
+
+
+            <div id="header-name">阮一峰的网络日志 <span id="site_location"> » <a href="https://www.ruanyifeng.com/blog/" accesskey="1">首页</a></span><span id="site_archive"> » <a href="https://www.ruanyifeng.com/blog/archives.html">档案</a></span>
+</div>
+
+<div id="google_search">
+<!-- SiteSearch Google -->
+<form action="https://www.baidu.com/s" target="_blank" method="get" id="cse-search-box">
+  <div>
+  <input type="text" size="20" name="origin" class="searchbox" id="sbi" value="" />
+  <input type="hidden" name="wd" value="" />
+  <!--input type="image" src="/static/themes/theme_scrapbook/images/top_search_submit.gif" class="searchbox_submit" value="" alt="搜索" name="sa" onclick="this.form.wd.value = this.form.origin.value + ' inurl:www.ruanyifeng.com/blog'" /-->
+  <input type="image" src="/static/themes/theme_scrapbook/images/top_search_submit.gif" class="searchbox_submit" value="" alt="搜索" name="sa" onclick="this.form.wd.value = this.form.origin.value + ' 阮一峰'" />
+</div>
+</form>
+
+<!-- SiteSearch Google -->
+</div>
+<div id="feed_icon">
+<a href="/feed.html?utm_source=" title="订阅Feed">
+<!--img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAUzSURBVHjavFdbbFRVFF3nPjoz7dTWTittaW0jUDRAUqaNojyqREnEQKgfUj9MqqAmhqRt/OCD4CuY+Kckoh+aiGKC+gMJbdHoRysJ8dkhhmJLNdDKtJU+6GMK87j3Hs85d2Z6HzNtMYWb3Dn3NWftvfba+5xNYDl+e6Fkj6yqb/oDRbWq14vlPBLRKCITkxf0ROLt+hNjp1PPSRK4kA3vF1dXNRcWlyA2OQU9eos9opAkAiKxD+XkKO6t15aRWO7J/MgmAZU8MEgexgZHMX518Dh72sYMmVKShnxWuWHdHtxKIDIYTgMuDzgfmSOIQkYMpdUF8OY92Hytt4/jvkg47czzU16iQovM3QFwmNck+Yyduu7D6NA0Z6JR4THntFs9V4tWQg6Ui3s6MwKDncsFTnXKLJhDSeUK3AgPtyhccDzmVs999buRt/1Vm4i0od+hX7+MRG87jPGB/w1u8FPj9xEw7McVrnYuOCvtpjTth3J/nTg99c8LRhKhr6D3dTB5R24bXFwbMXBsyZzeoXaycEpJ95TB09AGX/NpqLVNtw8urnVzLvHjFNxiFqRy2OOHuqUVnue+ACkoWzo4O6lGzTmuHq6nPvY2m9rVqjrIK2rMEKxqyG5NPAKt+wjo0LklgfNxJkZMA3KJvqRUk3z5UFY3QH14P0h+WUY79HPvgv7VuSg4ZRGY1YgZgqXmORccF17sy2ehnf9AeO085K2HQFbtXBScj0LcpgF2cN+WV+DZ/LJQu6gD4R7oV7pBJwbSgtMvfiPoVp56DySwxm7EtkMs1WdAB7qzggsDJKQYsHucSkOudrkiCPWR/fA2nYCn8SNIK4NptSMyAu3sAdDRkIsJdfth0LzSrODUoPNZ4KI9SxJI5UHk7D4GdQfz2us31c7CoHMjRkKuDPHseCMrONVhNcDJwMJpKFVvg9L4OaTiNWm1x789KCqkrXhVBiEz0WYCT2nAzQAD1/vaETv1GrRfP4Vx5cfMNcDPwvP0h0DhanPym7OIf/+O67vcJ1/PCJ4KgdzaUP6Wz+dU+5yIL6fV+PsHGAOdwlPpvvUOyeeAVGyCdqkDNB6DPjsBSrnndfOGevOh3RhGItxvA+fX1CtbGFhgYUFkFMZPR6F1HnClHq8HyubWtJexX06CRmdt33hrd7nA7SFY4qoGpnYuOKcRykPPgDCBcsHx9Iv+fNL2PueBehCWUfYQIIMGLOCcOmXDXsh1+yCt35tUPfvzGFuSvzvoinXOxqa02qOhM6733nVP2MAdaej2XN11DPKjLZCD+yBvahGCo7JfTKAN9UD7s8Oe9zUNIhz8fWI8DG2k38WCFdxugANcXrvTVd1IEbuv3Jour7Hzn7jLMBNfKs7R3i67gRVrbeCOEDhinmWhAatsqdquM2XzHZINhK2cqTjHr/XZdVJUbgN3MWAVXKbSyg9jesRW2xP9di+lwrL5ojM3m2H/kG9hwcIA37c71W6wJdW2J2S5nrjYbq/t1AHAhJsKQeyfPvf6IMJgghPJhFZ4x0KlfLFvt22du45Au/A1SOlGc0P672XXwhLtOcM0kTTEMMd0qkVmMNXxMd/tsedUjInr4SQDgOfeXMSiN0FCL5WHah4L1qqYXPJOJlttd+a5M+YpcG5poLYKQ5f+6JJ4r8bbJYP47hq4r7QAs9PjYNhHJd4o8l5taiwuOpa7AS4XKqI/5NjJbTnaWK92nLdLuhQAJayRNMiygXPBeQN+Qbvu0zDc3y+aUzhbkGR73sI7ljvUnndx2q3t+X8CDAD66FtrIL864AAAAABJRU5ErkJggg==" alt="" style="border: 0pt none;" /-->
+<img src="https://cdn.beekka.com/blogimg/asset/202107/bg2021072117.png" alt="" style="border: 0pt none;" />
+</a></div>
+
+        </div>
+    </div>
+</div>
+
+
+
+            <div id="content">
+                <div id="content-inner">
+
+
+                    <div id="alpha">
+                        <div id="alpha-inner">
+
+
+                            <div id="entry-2202" class="entry-asset asset hentry">
+                                <div class="asset-header">
+<div class="asset-nav entry-nav">
+
+<div class="entry-location">
+<ul>
+<li>上一篇：<a href="https://www.ruanyifeng.com/blog/2020/08/weekly-issue-121.html" title="科技爱好者周刊（第 121 期）：为什么人类没有越来越闲？">科技爱好者周刊（第&nbsp;1</a></li>
+<li>下一篇：<a href="https://www.ruanyifeng.com/blog/2020/08/weekly-issue-122.html" title="科技爱好者周刊（第 122 期）：谈谈互联网公司的高估值">科技爱好者周刊（第&nbsp;1</a></li>
+</ul>
+</div>
+
+
+    
+                                    <div class="entry-categories">
+                                        <p>分类<span class="delimiter">：</span></p>
+                                        <ul>
+                                            <li><a href="https://www.ruanyifeng.com/blog/developer/" rel="tag">开发者手册</a></li>
+                                        </ul>
+                                    </div>
+    
+
+
+                                            
+<div class="entry-location-mobile" style="float: right;">
+<ul>
+<li><a href="https://www.ruanyifeng.com/blog/2020/08/weekly-issue-121.html" title="科技爱好者周刊（第 121 期）：为什么人类没有越来越闲？">⇐&nbsp;</a></li>
+<li><a href="https://www.ruanyifeng.com/blog/2020/08/weekly-issue-122.html" title="科技爱好者周刊（第 122 期）：谈谈互联网公司的高估值">&nbsp;⇒</a></li>
+</ul>
+</div>
+
+</div>
+</div>
+
+                          
+<article class="hentry">
+                                    <h1 id="page-title" class="asset-name entry-title">rsync 用法教程</h1>
+
+<div class="asset-meta">
+                                        
+
+                                            <p class="vcard author">作者： <a class="fn url" href="https://www.ruanyifeng.com">阮一峰</a></p>
+                                    <p>日期： <a href="https://www.ruanyifeng.com/blog/2020/08/"><abbr class="published" title="2020-08-26T10:17:20+08:00">2020年8月26日</abbr></a></p>
+
+
+</div>
+
+
+
+
+
+
+
+
+
+
+                                
+                                <div class="asset-content entry-content" id="main-content">
+
+                                    <!-- div class="asset-body" -->
+                                        <h2>一、简介</h2>
+
+<p>rsync 是一个常用的 Linux 应用程序，用于文件同步。</p>
+
+                                    <!-- /div -->
+
+
+                                    <!-- div id="more" class="asset-more" -->
+                                        <p>它可以在本地计算机与远程计算机之间，或者两个本地目录之间同步文件（但不支持两台远程计算机之间的同步）。它也可以当作文件复制工具，替代<code>cp</code>和<code>mv</code>命令。</p>
+
+<p><img src="https://cdn.beekka.com/blogimg/asset/202008/bg2020082602.jpg" alt="" title="" /></p>
+
+<p>它名称里面的<code>r</code>指的是 remote，rsync 其实就是"远程同步"（remote sync）的意思。与其他文件传输工具（如 FTP 或 scp）不同，rsync 的最大特点是会检查发送方和接收方已有的文件，仅传输有变动的部分（默认规则是文件大小或修改时间有变动）。</p>
+
+<h2>二、安装</h2>
+
+<p>如果本机或者远程计算机没有安装 rsync，可以用下面的命令安装。</p>
+
+<blockquote><pre><code class="language-bash">
+# Debian
+$ sudo apt-get install rsync
+
+# Red Hat
+$ sudo yum install rsync
+
+# Arch Linux
+$ sudo pacman -S rsync
+</code></pre></blockquote>
+
+<p>注意，传输的双方都必须安装 rsync。</p>
+
+<h2>三、基本用法</h2>
+
+<h3>3.1 <code>-r</code> 参数</h3>
+
+<p>本机使用 rsync 命令时，可以作为<code>cp</code>和<code>mv</code>命令的替代方法，将源目录同步到目标目录。</p>
+
+<blockquote><pre><code class="language-bash">
+$ rsync -r source destination
+</code></pre></blockquote>
+
+<p>上面命令中，<code>-r</code>表示递归，即包含子目录。注意，<code>-r</code>是必须的，否则 rsync 运行不会成功。<code>source</code>目录表示源目录，<code>destination</code>表示目标目录。</p>
+
+<p>如果有多个文件或目录需要同步，可以写成下面这样。</p>
+
+<blockquote><pre><code class="language-bash">
+$ rsync -r source1 source2 destination
+</code></pre></blockquote>
+
+<p>上面命令中，<code>source1</code>、<code>source2</code>都会被同步到<code>destination</code>目录。</p>
+
+<h3>3.2 <code>-a</code> 参数</h3>
+
+<p><code>-a</code>参数可以替代<code>-r</code>，除了可以递归同步以外，还可以同步元信息（比如修改时间、权限等）。由于 rsync 默认使用文件大小和修改时间决定文件是否需要更新，所以<code>-a</code>比<code>-r</code>更有用。下面的用法才是常见的写法。</p>
+
+<blockquote><pre><code class="language-bash">
+$ rsync -a source destination
+</code></pre></blockquote>
+
+<p>目标目录<code>destination</code>如果不存在，rsync 会自动创建。执行上面的命令后，源目录<code>source</code>被完整地复制到了目标目录<code>destination</code>下面，即形成了<code>destination/source</code>的目录结构。</p>
+
+<p>如果只想同步源目录<code>source</code>里面的内容到目标目录<code>destination</code>，则需要在源目录后面加上斜杠。</p>
+
+<blockquote><pre><code class="language-bash">
+$ rsync -a source/ destination
+</code></pre></blockquote>
+
+<p>上面命令执行后，<code>source</code>目录里面的内容，就都被复制到了<code>destination</code>目录里面，并不会在<code>destination</code>下面创建一个<code>source</code>子目录。</p>
+
+<h3>3.3 <code>-n</code> 参数</h3>
+
+<p>如果不确定 rsync 执行后会产生什么结果，可以先用<code>-n</code>或<code>--dry-run</code>参数模拟执行的结果。</p>
+
+<blockquote><pre><code class="language-bash">
+$ rsync -anv source/ destination
+</code></pre></blockquote>
+
+<p>上面命令中，<code>-n</code>参数模拟命令执行的结果，并不真的执行命令。<code>-v</code>参数则是将结果输出到终端，这样就可以看到哪些内容会被同步。</p>
+
+<h3>3.4 <code>--delete</code> 参数</h3>
+
+<p>默认情况下，rsync 只确保源目录的所有内容（明确排除的文件除外）都复制到目标目录。它不会使两个目录保持相同，并且不会删除文件。如果要使得目标目录成为源目录的镜像副本，则必须使用<code>--delete</code>参数，这将删除只存在于目标目录、不存在于源目录的文件。</p>
+
+<blockquote><pre><code class="language-bash">
+$ rsync -av --delete source/ destination
+</code></pre></blockquote>
+
+<p>上面命令中，<code>--delete</code>参数会使得<code>destination</code>成为<code>source</code>的一个镜像。</p>
+
+<h2>四、排除文件</h2>
+
+<h3>4.1 <code>--exclude</code> 参数</h3>
+
+<p>有时，我们希望同步时排除某些文件或目录，这时可以用<code>--exclude</code>参数指定排除模式。</p>
+
+<blockquote><pre><code class="language-bash">
+$ rsync -av --exclude='*.txt' source/ destination
+# 或者
+$ rsync -av --exclude '*.txt' source/ destination
+</code></pre></blockquote>
+
+<p>上面命令排除了所有 TXT 文件。</p>
+
+<p>注意，rsync 会同步以"点"开头的隐藏文件，如果要排除隐藏文件，可以这样写<code>--exclude=".*"</code>。</p>
+
+<p>如果要排除某个目录里面的所有文件，但不希望排除目录本身，可以写成下面这样。</p>
+
+<blockquote><pre><code class="language-bash">
+$ rsync -av --exclude 'dir1/*' source/ destination
+</code></pre></blockquote>
+
+<p>多个排除模式，可以用多个<code>--exclude</code>参数。</p>
+
+<blockquote><pre><code class="language-bash">
+$ rsync -av --exclude 'file1.txt' --exclude 'dir1/*' source/ destination
+</code></pre></blockquote>
+
+<p>多个排除模式也可以利用 Bash 的大扩号的扩展功能，只用一个<code>--exclude</code>参数。</p>
+
+<blockquote><pre><code class="language-bash">
+$ rsync -av --exclude={'file1.txt','dir1/*'} source/ destination
+</code></pre></blockquote>
+
+<p>如果排除模式很多，可以将它们写入一个文件，每个模式一行，然后用<code>--exclude-from</code>参数指定这个文件。</p>
+
+<blockquote><pre><code class="language-bash">
+$ rsync -av --exclude-from='exclude-file.txt' source/ destination
+</code></pre></blockquote>
+
+<h3>4.2 <code>--include</code> 参数</h3>
+
+<p><code>--include</code>参数用来指定必须同步的文件模式，往往与<code>--exclude</code>结合使用。</p>
+
+<blockquote><pre><code class="language-bash">
+$ rsync -av --include="*.txt" --exclude='*' source/ destination
+</code></pre></blockquote>
+
+<p>上面命令指定同步时，排除所有文件，但是会包括 TXT 文件。</p>
+
+<h2>五、远程同步</h2>
+
+<h3>5.1 SSH 协议</h3>
+
+<p>rsync 除了支持本地两个目录之间的同步，也支持远程同步。它可以将本地内容，同步到远程服务器。</p>
+
+<blockquote><pre><code class="language-bash">
+$ rsync -av source/ username@remote_host:destination
+</code></pre></blockquote>
+
+<p>也可以将远程内容同步到本地。</p>
+
+<blockquote><pre><code class="language-bash">
+$ rsync -av username@remote_host:source/ destination
+</code></pre></blockquote>
+
+<p>rsync 默认使用 SSH 进行远程登录和数据传输。</p>
+
+<p>由于早期 rsync 不使用 SSH 协议，需要用<code>-e</code>参数指定协议，后来才改的。所以，下面<code>-e ssh</code>可以省略。</p>
+
+<blockquote><pre><code class="language-bash">
+$ rsync -av -e ssh source/ user@remote_host:/destination
+</code></pre></blockquote>
+
+<p>但是，如果 ssh 命令有附加的参数，则必须使用<code>-e</code>参数指定所要执行的 SSH 命令。</p>
+
+<blockquote><pre><code class="language-bash">
+$ rsync -av -e 'ssh -p 2234' source/ user@remote_host:/destination
+</code></pre></blockquote>
+
+<p>上面命令中，<code>-e</code>参数指定 SSH 使用2234端口。</p>
+
+<h3>5.2 rsync 协议</h3>
+
+<p>除了使用 SSH，如果另一台服务器安装并运行了 rsync 守护程序，则也可以用<code>rsync://</code>协议（默认端口873）进行传输。具体写法是服务器与目标目录之间使用双冒号分隔<code>::</code>。</p>
+
+<blockquote><pre><code class="language-bash">
+$ rsync -av source/ 192.168.122.32::module/destination
+</code></pre></blockquote>
+
+<p>注意，上面地址中的<code>module</code>并不是实际路径名，而是 rsync 守护程序指定的一个资源名，由管理员分配。</p>
+
+<p>如果想知道 rsync 守护程序分配的所有 module 列表，可以执行下面命令。</p>
+
+<blockquote><pre><code class="language-bash">
+$ rsync rsync://192.168.122.32
+</code></pre></blockquote>
+
+<p>rsync 协议除了使用双冒号，也可以直接用<code>rsync://</code>协议指定地址。</p>
+
+<blockquote><pre><code class="language-bash">
+$ rsync -av source/ rsync://192.168.122.32/module/destination
+</code></pre></blockquote>
+
+<h2>六、增量备份</h2>
+
+<p>rsync 的最大特点就是它可以完成增量备份，也就是默认只复制有变动的文件。</p>
+
+<p>除了源目录与目标目录直接比较，rsync 还支持使用基准目录，即将源目录与基准目录之间变动的部分，同步到目标目录。</p>
+
+<p>具体做法是，第一次同步是全量备份，所有文件在基准目录里面同步一份。以后每一次同步都是增量备份，只同步源目录与基准目录之间有变动的部分，将这部分保存在一个新的目标目录。这个新的目标目录之中，也是包含所有文件，但实际上，只有那些变动过的文件是存在于该目录，其他没有变动的文件都是指向基准目录文件的硬链接。</p>
+
+<p><code>--link-dest</code>参数用来指定同步时的基准目录。</p>
+
+<blockquote><pre><code class="language-bash">
+$ rsync -a --delete --link-dest /compare/path /source/path /target/path
+</code></pre></blockquote>
+
+<p>上面命令中，<code>--link-dest</code>参数指定基准目录<code>/compare/path</code>，然后源目录<code>/source/path</code>跟基准目录进行比较，找出变动的文件，将它们拷贝到目标目录<code>/target/path</code>。那些没变动的文件则会生成硬链接。这个命令的第一次备份时是全量备份，后面就都是增量备份了。</p>
+
+<p>下面是一个脚本示例，备份用户的主目录。</p>
+
+<blockquote><pre><code class="language-bash">
+#!/bin/bash
+
+# A script to perform incremental backups using rsync
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+readonly SOURCE_DIR="${HOME}"
+readonly BACKUP_DIR="/mnt/data/backups"
+readonly DATETIME="$(date '+%Y-%m-%d_%H:%M:%S')"
+readonly BACKUP_PATH="${BACKUP_DIR}/${DATETIME}"
+readonly LATEST_LINK="${BACKUP_DIR}/latest"
+
+mkdir -p "${BACKUP_DIR}"
+
+rsync -av --delete \
+  "${SOURCE_DIR}/" \
+  --link-dest "${LATEST_LINK}" \
+  --exclude=".cache" \
+  "${BACKUP_PATH}"
+
+rm -rf "${LATEST_LINK}"
+ln -s "${BACKUP_PATH}" "${LATEST_LINK}"
+</code></pre></blockquote>
+
+<p>上面脚本中，每一次同步都会生成一个新目录<code>${BACKUP_DIR}/${DATETIME}</code>，并将软链接<code>${BACKUP_DIR}/latest</code>指向这个目录。下一次备份时，就将<code>${BACKUP_DIR}/latest</code>作为基准目录，生成新的备份目录。最后，再将软链接<code>${BACKUP_DIR}/latest</code>指向新的备份目录。</p>
+
+<h2>七、配置项</h2>
+
+<p><code>-a</code>、<code>--archive</code>参数表示存档模式，保存所有的元数据，比如修改时间（modification time）、权限、所有者等，并且软链接也会同步过去。</p>
+
+<p><code>--append</code>参数指定文件接着上次中断的地方，继续传输。</p>
+
+<p><code>--append-verify</code>参数跟<code>--append</code>参数类似，但会对传输完成后的文件进行一次校验。如果校验失败，将重新发送整个文件。</p>
+
+<p><code>-b</code>、<code>--backup</code>参数指定在删除或更新目标目录已经存在的文件时，将该文件更名后进行备份，默认行为是删除。更名规则是添加由<code>--suffix</code>参数指定的文件后缀名，默认是<code>~</code>。</p>
+
+<p><code>--backup-dir</code>参数指定文件备份时存放的目录，比如<code>--backup-dir=/path/to/backups</code>。</p>
+
+<p><code>--bwlimit</code>参数指定带宽限制，默认单位是 KB/s，比如<code>--bwlimit=100</code>。</p>
+
+<p><code>-c</code>、<code>--checksum</code>参数改变<code>rsync</code>的校验方式。默认情况下，rsync 只检查文件的大小和最后修改日期是否发生变化，如果发生变化，就重新传输；使用这个参数以后，则通过判断文件内容的校验和，决定是否重新传输。</p>
+
+<p><code>--delete</code>参数删除只存在于目标目录、不存在于源目标的文件，即保证目标目录是源目标的镜像。</p>
+
+<p><code>-e</code>参数指定使用 SSH 协议传输数据。</p>
+
+<p><code>--exclude</code>参数指定排除不进行同步的文件，比如<code>--exclude="*.iso"</code>。</p>
+
+<p><code>--exclude-from</code>参数指定一个本地文件，里面是需要排除的文件模式，每个模式一行。</p>
+
+<p><code>--existing</code>、<code>--ignore-non-existing</code>参数表示不同步目标目录中不存在的文件和目录。</p>
+
+<p><code>-h</code>参数表示以人类可读的格式输出。</p>
+
+<p><code>-h</code>、<code>--help</code>参数返回帮助信息。</p>
+
+<p><code>-i</code>参数表示输出源目录与目标目录之间文件差异的详细情况。</p>
+
+<p><code>--ignore-existing</code>参数表示只要该文件在目标目录中已经存在，就跳过去，不再同步这些文件。</p>
+
+<p><code>--include</code>参数指定同步时要包括的文件，一般与<code>--exclude</code>结合使用。</p>
+
+<p><code>--link-dest</code>参数指定增量备份的基准目录。</p>
+
+<p><code>-m</code>参数指定不同步空目录。</p>
+
+<p><code>--max-size</code>参数设置传输的最大文件的大小限制，比如不超过200KB（<code>--max-size='200k'</code>）。</p>
+
+<p><code>--min-size</code>参数设置传输的最小文件的大小限制，比如不小于10KB（<code>--min-size=10k</code>）。</p>
+
+<p><code>-n</code>参数或<code>--dry-run</code>参数模拟将要执行的操作，而并不真的执行。配合<code>-v</code>参数使用，可以看到哪些内容会被同步过去。</p>
+
+<p><code>-P</code>参数是<code>--progress</code>和<code>--partial</code>这两个参数的结合。</p>
+
+<p><code>--partial</code>参数允许恢复中断的传输。不使用该参数时，<code>rsync</code>会删除传输到一半被打断的文件；使用该参数后，传输到一半的文件也会同步到目标目录，下次同步时再恢复中断的传输。一般需要与<code>--append</code>或<code>--append-verify</code>配合使用。</p>
+
+<p><code>--partial-dir</code>参数指定将传输到一半的文件保存到一个临时目录，比如<code>--partial-dir=.rsync-partial</code>。一般需要与<code>--append</code>或<code>--append-verify</code>配合使用。</p>
+
+<p><code>--progress</code>参数表示显示进展。</p>
+
+<p><code>-r</code>参数表示递归，即包含子目录。</p>
+
+<p><code>--remove-source-files</code>参数表示传输成功后，删除发送方的文件。</p>
+
+<p><code>--size-only</code>参数表示只同步大小有变化的文件，不考虑文件修改时间的差异。</p>
+
+<p><code>--suffix</code>参数指定文件名备份时，对文件名添加的后缀，默认是<code>~</code>。</p>
+
+<p><code>-u</code>、<code>--update</code>参数表示同步时跳过目标目录中修改时间更新的文件，即不同步这些有更新的时间戳的文件。</p>
+
+<p><code>-v</code>参数表示输出细节。<code>-vv</code>表示输出更详细的信息，<code>-vvv</code>表示输出最详细的信息。</p>
+
+<p><code>--version</code>参数返回 rsync 的版本。</p>
+
+<p><code>-z</code>参数指定同步时压缩数据。</p>
+
+<h2>八、参考链接</h2>
+
+<ul>
+<li><a href="https://www.digitalocean.com/community/tutorials/how-to-use-rsync-to-sync-local-and-remote-directories-on-a-vps">How To Use Rsync to Sync Local and Remote Directories on a VPS</a>, Justin Ellingwood</li>
+<li><a href="https://www.howtoforge.com/mirroring_with_rsync">Mirror Your Web Site With rsync</a>, Falko Timme</li>
+<li><a href="https://linuxconfig.org/examples-on-how-to-use-rsync-for-local-and-remote-data-backups-and-synchonization">Examples on how to use Rsync</a>, Egidio Docile</li>
+<li><a href="https://linuxconfig.org/how-to-create-incremental-backups-using-rsync-on-linux">How to create incremental backups using rsync on Linux</a>, Egidio Docile</li>
+</ul>
+
+<p>（完）</p>
+
+                                    <!-- /div -->
+
+                                </div>
+    <script type="text/javascript" src="/newwindow.js"></script>
+                                <div class="asset-footer">
+
+<h3>文档信息</h3>
+<ul>
+<li>版权声明：自由转载-非商用-非衍生-保持署名（<a href="http://creativecommons.org/licenses/by-nc-nd/3.0/deed.zh">创意共享3.0许可证</a>）</li>
+<li>发表日期： <abbr class="published" title="2020-08-26T10:17:20+08:00">2020年8月26日</abbr></li>
+
+</ul>
+                                </div>
+</article>
+                            </div>
+
+
+<div id="related_entries">
+<h2>相关文章</h2>
+<ul>
+
+<li><strong>2026.01.22: <a href="https://www.ruanyifeng.com/blog/2026/01/ai-native-workspace.html">AI native Workspace 也许是智能体的下一阶段</a></strong>
+
+                           <div class="entry-body">
+                              一、智能体的形态
+
+我问大家一个问题，什么是 AI 的产品形态？
+
+                           </div>
+
+</li>
+
+ 
+<li><strong>2025.12.23: <a href="https://www.ruanyifeng.com/blog/2025/12/minimax-m2.1.html">我如何用 AI 处理历史遗留代码：MiniMax M2.1 升级体验</a></strong>
+
+                           <div class="entry-body">
+                              一、
+
+最近，我写了好几篇 AI 教程，就收到留言，要我谈谈我自己的 AI 编程。
+
+                           </div>
+
+</li>
+
+ 
+<li><strong>2025.11.26: <a href="https://www.ruanyifeng.com/blog/2025/11/trae-solo.html">终于有人做了 Subagent，TRAE 国内版 SOLO 模式来了</a></strong>
+
+                           <div class="entry-body">
+                              一、
+
+全世界最好的 AI 编程工具，我不知道。
+
+                           </div>
+
+</li>
+
+ 
+<li><strong>2025.11.19: <a href="https://www.ruanyifeng.com/blog/2025/11/vs-code-minimax-m2.html">VS Code 使用国产大模型 MiniMax M2 教程</a></strong>
+
+                           <div class="entry-body">
+                              一、
+
+上周，我写了一篇 Claude Code 接入国产大模型的教程，就有同学问我，为什么不用 VS Code？
+
+                           </div>
+
+</li>
+
+ 
+</ul>
+</div>
+
+
+
+                    
+
+                    <div id="comments" class="comments">
+
+
+    
+    
+        
+    <h2 class="comments-header">留言（45条）</h2>
+
+    <div id="comments-content" class="comments-content" style="clear: left;">
+        
+        <div id="comment-421736" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">AlbertWei</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-421736">
+            <p>学习了，很实用</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="August 26, 2020  3:09 PM">2020年8月26日 15:09</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-421736">#</a>
+ | <a href="#comment-text" title="引用AlbertWei的这条留言" onclick="return CommentQuote('comment-quote-421736','AlbertWei');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-421766" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">pasiso</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-421766">
+            <p>3.2 -a 参数 这一节里面疑似rsync笔误<br />
+-----------------------------------------------<br />
+目标目录destination如果不存在，rsyce 会自动创建。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="August 27, 2020 12:22 AM">2020年8月27日 00:22</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-421766">#</a>
+ | <a href="#comment-text" title="引用pasiso的这条留言" onclick="return CommentQuote('comment-quote-421766','pasiso');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-421767" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">阮一峰</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-421767">
+            <p>@pasiso：</p>
+
+<p>谢谢指出，已经更正。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="August 27, 2020  8:48 AM">2020年8月27日 08:48</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-421767">#</a>
+ | <a href="#comment-text" title="引用阮一峰的这条留言" onclick="return CommentQuote('comment-quote-421767','阮一峰');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-421768" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">cnfczn</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-421768">
+            <p>有个地方rsync拼错了,打成了rsyce</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="August 27, 2020  8:50 AM">2020年8月27日 08:50</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-421768">#</a>
+ | <a href="#comment-text" title="引用cnfczn的这条留言" onclick="return CommentQuote('comment-quote-421768','cnfczn');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-421779" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">dykingdy</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-421779">
+            <p>rsync + inotify结合使用，可以实现两台机器的文件同步</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="August 27, 2020  3:44 PM">2020年8月27日 15:44</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-421779">#</a>
+ | <a href="#comment-text" title="引用dykingdy的这条留言" onclick="return CommentQuote('comment-quote-421779','dykingdy');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-421787" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">Kevin</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-421787">
+            <p>正要用，阮老师就发出来了，太及时了。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="August 28, 2020  9:15 AM">2020年8月28日 09:15</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-421787">#</a>
+ | <a href="#comment-text" title="引用Kevin的这条留言" onclick="return CommentQuote('comment-quote-421787','Kevin');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-421876" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">Jerry</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-421876">
+            <p>学习了 ~</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="September  1, 2020  9:49 AM">2020年9月 1日 09:49</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-421876">#</a>
+ | <a href="#comment-text" title="引用Jerry的这条留言" onclick="return CommentQuote('comment-quote-421876','Jerry');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-421890" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">田鹏</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-421890">
+            <p>"上面脚本中，上一次备份的目录${BACKUP_DIR}/${DATETIME}是基准目录，每一次同步都会生成一个新目录，然后将${BACKUP_DIR}/latest指向这个新目录，作为下一次的基准目录，再删除上一次的基准目录"</p>
+
+<p>这里描述有点问题：</p>
+
+<p>删除的不是上一次的基准目录，是latest软连接，然后重建latest到本次建立目录，每次的目录都会保留，只有latest会不断变化。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="September  1, 2020 12:04 PM">2020年9月 1日 12:04</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-421890">#</a>
+ | <a href="#comment-text" title="引用田鹏的这条留言" onclick="return CommentQuote('comment-quote-421890','田鹏');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-421893" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">阮一峰</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-421893">
+            <p>@田鹏：</p>
+
+<p>谢谢指出，已经更正了。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="September  1, 2020  2:58 PM">2020年9月 1日 14:58</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-421893">#</a>
+ | <a href="#comment-text" title="引用阮一峰的这条留言" onclick="return CommentQuote('comment-quote-421893','阮一峰');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-421902" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">noah_</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-421902">
+            <p>Mac好像自带的，刚才复制15000多张图片和视频到Nas上，Finder怎么也搞不定，等很久也没反应。cp和mv和提示数量太多。结果rsync一下就搞定...</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="September  1, 2020 10:55 PM">2020年9月 1日 22:55</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-421902">#</a>
+ | <a href="#comment-text" title="引用noah_的这条留言" onclick="return CommentQuote('comment-quote-421902','noah_');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-421983" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">大李子</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-421983">
+            <p>如果是同步到远程（比如用rsync协议） ，--link-dest 该怎么设置呢？  试了好久都提示 --link-dest arg does not exist:</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="September  4, 2020  6:00 PM">2020年9月 4日 18:00</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-421983">#</a>
+ | <a href="#comment-text" title="引用大李子的这条留言" onclick="return CommentQuote('comment-quote-421983','大李子');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-423344" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">usiantein</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-423344">
+            <p>谢谢阮老师，非常实用。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="October 21, 2020  2:36 PM">2020年10月21日 14:36</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-423344">#</a>
+ | <a href="#comment-text" title="引用usiantein的这条留言" onclick="return CommentQuote('comment-quote-423344','usiantein');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-423696" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">马丁2003</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-423696">
+            <p>请问windows下有无推荐的rsync客户端？</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="November  7, 2020 12:12 AM">2020年11月 7日 00:12</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-423696">#</a>
+ | <a href="#comment-text" title="引用马丁2003的这条留言" onclick="return CommentQuote('comment-quote-423696','马丁2003');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-423816" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">大鱼</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-423816">
+            <p>在A、B两个服务器之间相互保持图片文件夹的同步，假如A服务器现在增加了一个图片，同步给B服务器，B服务器上的监听服务发现B的图片多了，又会同步给A。这种岂不是循环了，请问是如何解决的？</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="November 15, 2020 11:36 PM">2020年11月15日 23:36</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-423816">#</a>
+ | <a href="#comment-text" title="引用大鱼的这条留言" onclick="return CommentQuote('comment-quote-423816','大鱼');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-424460" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">冰翼</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-424460">
+            <p>Ubuntu 18.04 测试，直接 rsync -a --delete 是可以增量同步的，第二次执行同步会打印 sending incremental file list，并且只有修改或新增的文件被同步了。所以增量备份应该不需要使用 --link-dest 参数。</p>
+
+<p>我使用的完整命令是 sudo rsync -a --delete --exclude=".cache" --progress -v source dest<br />
+</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="December 24, 2020  5:39 PM">2020年12月24日 17:39</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-424460">#</a>
+ | <a href="#comment-text" title="引用冰翼的这条留言" onclick="return CommentQuote('comment-quote-424460','冰翼');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-426622" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">liwf</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-426622">
+            <p>--remove-source-files这个参数有问题<br />
+比如我要同步a目录下有b这个子目录，b里面有文件1<br />
+加上这个参数会把文件1同步到远端<br />
+但是源里面的这个b目录还在，而只是删掉了b里面的文件1，也就是说保留了空目录b</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="April 28, 2021  9:47 AM">2021年4月28日 09:47</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-426622">#</a>
+ | <a href="#comment-text" title="引用liwf的这条留言" onclick="return CommentQuote('comment-quote-426622','liwf');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-427125" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">猎魔人</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-427125">
+            <blockquote>
+<pre>引用马丁2003的发言：</pre>
+
+<p>请问windows下有无推荐的rsync客户端？</p>
+
+</blockquote>
+
+<p>装虚拟机</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="May 29, 2021  3:02 PM">2021年5月29日 15:02</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-427125">#</a>
+ | <a href="#comment-text" title="引用猎魔人的这条留言" onclick="return CommentQuote('comment-quote-427125','猎魔人');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-428166" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">且夕夕</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-428166">
+            <p>请问rsync在同步时需要保证源目录中的文件没有在写入吗？</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="July 22, 2021  4:12 PM">2021年7月22日 16:12</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-428166">#</a>
+ | <a href="#comment-text" title="引用且夕夕的这条留言" onclick="return CommentQuote('comment-quote-428166','且夕夕');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-428567" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">解子</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-428567">
+            <p>rsync 怎么能够验证本地和远程服务器的两个文件是否一致，有没有什么命令之类的东西可以直接验证并返回一个可视化的结果</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="August  3, 2021  7:48 PM">2021年8月 3日 19:48</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-428567">#</a>
+ | <a href="#comment-text" title="引用解子的这条留言" onclick="return CommentQuote('comment-quote-428567','解子');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-428662" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">Ted Wang</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-428662">
+            <p>@冰翼：</p>
+
+<p>看说明，作者是使用了 --link-test 生成了类似时光机一样的链式多版本(按日期)备份，基准目录是起到一个压缩存储作用。跟版本库的原理是类似的。与增量同步是不一样的。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="August  8, 2021  4:05 PM">2021年8月 8日 16:05</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-428662">#</a>
+ | <a href="#comment-text" title="引用Ted Wang的这条留言" onclick="return CommentQuote('comment-quote-428662','Ted Wang');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-429550" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">从水之道</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-429550">
+            <p>请问阮老师：<br />
+--exclude="${HOME}/.local/share/Trash/*"<br />
+添加了这项之后，为什么备份的时候还是会备份Trash/下的文件？</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="September 14, 2021 12:25 PM">2021年9月14日 12:25</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-429550">#</a>
+ | <a href="#comment-text" title="引用从水之道的这条留言" onclick="return CommentQuote('comment-quote-429550','从水之道');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-430184" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">0315</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-430184">
+            <p>--remove-source-files  备份文件夹后，删除src文件，但是src目录结构还存在，这就很蛋疼，不知道src子路径下会不会存在某个文件未同步，为什么不是删掉整个src，却要保留目录结构？</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="October 22, 2021 11:18 AM">2021年10月22日 11:18</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-430184">#</a>
+ | <a href="#comment-text" title="引用0315的这条留言" onclick="return CommentQuote('comment-quote-430184','0315');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-430789" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">feasin</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-430789">
+            <p>很实用，讲解很详细</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="November 25, 2021  4:37 PM">2021年11月25日 16:37</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-430789">#</a>
+ | <a href="#comment-text" title="引用feasin的这条留言" onclick="return CommentQuote('comment-quote-430789','feasin');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-431842" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">荟八大圣</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-431842">
+            <p>为什么说 rsync不支持两台远程计算机之间的同步 呢？我理解只要是能找到对应计算机的话都是可以使用rrsync的，远程计算机有什么特殊的地方吗？</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="January 19, 2022  4:45 PM">2022年1月19日 16:45</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-431842">#</a>
+ | <a href="#comment-text" title="引用荟八大圣的这条留言" onclick="return CommentQuote('comment-quote-431842','荟八大圣');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-431860" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">zjh</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-431860">
+            <blockquote>
+<pre>引用马丁2003的发言：</pre>
+
+<p>请问windows下有无推荐的rsync客户端？</p>
+
+</blockquote>
+
+<p>syncctoy</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="January 20, 2022 10:45 PM">2022年1月20日 22:45</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-431860">#</a>
+ | <a href="#comment-text" title="引用zjh的这条留言" onclick="return CommentQuote('comment-quote-431860','zjh');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-431931" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">吊车尾</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-431931">
+            <blockquote>
+<pre>引用解子的发言：</pre>
+
+<p>rsync 怎么能够验证本地和远程服务器的两个文件是否一致，有没有什么命令之类的东西可以直接验证并返回一个可视化的结果</p>
+
+</blockquote>
+
+<p>我也不知道有没有类似命令，但你说的怎么能够验证本地和远程文件是否一致：博主开头就说了“默认规则是文件大小或修改时间有变动”，我记得这个规则是可以手动调整配置的，你可以了解了解！</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="January 23, 2022  1:46 AM">2022年1月23日 01:46</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-431931">#</a>
+ | <a href="#comment-text" title="引用吊车尾的这条留言" onclick="return CommentQuote('comment-quote-431931','吊车尾');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-432400" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">Joey</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-432400">
+            <p>rsync -av --include="*.txt" --exclude='*' source/ destination<br />
+这个名只会同步第一层目录下的 txt 文件，不会递归同步</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="February 26, 2022 11:41 AM">2022年2月26日 11:41</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-432400">#</a>
+ | <a href="#comment-text" title="引用Joey的这条留言" onclick="return CommentQuote('comment-quote-432400','Joey');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-432435" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">sappine</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-432435">
+            <p>有个问题，有没有可能让rsync只覆盖更大的目标文件，忽略从A主机复制到B主机时，发现目标文件已经存在于B，且字节数更大的情况。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="March  2, 2022  4:25 PM">2022年3月 2日 16:25</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-432435">#</a>
+ | <a href="#comment-text" title="引用sappine的这条留言" onclick="return CommentQuote('comment-quote-432435','sappine');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-432533" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">魏先生</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-432533">
+            <p>请教一下：只同步指定目录下的 2022开头的文件该如何实现</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="March  7, 2022  6:05 PM">2022年3月 7日 18:05</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-432533">#</a>
+ | <a href="#comment-text" title="引用魏先生的这条留言" onclick="return CommentQuote('comment-quote-432533','魏先生');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-433426" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">User</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-433426">
+            <p>@冰翼：</p>
+
+<p>这样你就没办法保存历史版本<br />
+</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="May  6, 2022 11:23 AM">2022年5月 6日 11:23</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-433426">#</a>
+ | <a href="#comment-text" title="引用User的这条留言" onclick="return CommentQuote('comment-quote-433426','User');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-433741" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">R</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-433741">
+            <p>哪位大神知道，如果目标目录存在相同名字的文件夹，就直接覆盖掉 是怎么设置？？</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="May 30, 2022  3:14 PM">2022年5月30日 15:14</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-433741">#</a>
+ | <a href="#comment-text" title="引用R的这条留言" onclick="return CommentQuote('comment-quote-433741','R');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-434422" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">conorzhong</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-434422">
+            <blockquote>
+<pre>引用从水之道的发言：</pre>
+
+<p>请问阮老师：<br />
+--exclude="${HOME}/.local/share/Trash/*"<br />
+添加了这项之后，为什么备份的时候还是会备份Trash/下的文件？</p>
+
+</blockquote>
+
+<p>只能是相对路径</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="July 25, 2022 10:41 AM">2022年7月25日 10:41</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-434422">#</a>
+ | <a href="#comment-text" title="引用conorzhong的这条留言" onclick="return CommentQuote('comment-quote-434422','conorzhong');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-435435" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">ssk</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-435435">
+            <p>正在学习rsync，读了，并试验了最后一段脚本。这似乎就实现了macOS的time machine功能了？</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="October  7, 2022 12:51 AM">2022年10月 7日 00:51</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-435435">#</a>
+ | <a href="#comment-text" title="引用ssk的这条留言" onclick="return CommentQuote('comment-quote-435435','ssk');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-435965" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">零一居士</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-435965">
+            <p>增量备份会全局扫描吗？</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="November 16, 2022 10:21 AM">2022年11月16日 10:21</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-435965">#</a>
+ | <a href="#comment-text" title="引用零一居士的这条留言" onclick="return CommentQuote('comment-quote-435965','零一居士');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-437144" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">CommandNotFound ⚡️ 坑否</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-437144">
+            <p>rsync 同步大文件的时候，CPU过高，这个有什么参数可以调吗</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="February 27, 2023  2:16 PM">2023年2月27日 14:16</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-437144">#</a>
+ | <a href="#comment-text" title="引用CommandNotFound ⚡️ 坑否的这条留言" onclick="return CommentQuote('comment-quote-437144','CommandNotFound ⚡️ 坑否');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-439359" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">刘云飞</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-439359">
+            <p>阮老师您好，我在使用命令“rsync -avx <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="ccbea3a3b88cfdf5fee2fdfaf4e2faf8e2fdfefa">[email&#160;protected]</a>:/ PCComputer<br />
+”同步A开发板根文件到个人PC电脑的时候，发现有些文件夹拷贝过来是空的，比如/dev，/sys，/proc。这是什么原因导致这个结果呀，谢谢阮老师的回复。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="August 24, 2023 10:01 AM">2023年8月24日 10:01</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-439359">#</a>
+ | <a href="#comment-text" title="引用刘云飞的这条留言" onclick="return CommentQuote('comment-quote-439359','刘云飞');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-440666" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">wuhulamb</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-440666">
+            <blockquote>
+<pre>引用马丁2003的发言：</pre>
+
+<p>请问windows下有无推荐的rsync客户端？</p>
+
+</blockquote>
+
+<p>可以打开windows的sshd服务，然后在linux上用rsync将windows上的文件/文件夹拷到linux上，代码示例如下：</p>
+
+<p>rsync -av <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="196c6a7c6b7778747c5928202b37282f213728372c">[email&#160;protected]</a>:/D/xxx/yyy/ zzz # 将windows上D:\xxx\yyy里面的文件同步到linux的zzz文件夹下</p>
+
+<p>本质上还是利用了OpenSSH在windows和linux之间进行的通信，和在linux上远程登录windows有几分相像。</p>
+
+<p>以上是我个人的理解，如果有误，还望诸君不吝赐教。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="December 10, 2023 12:53 AM">2023年12月10日 00:53</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-440666">#</a>
+ | <a href="#comment-text" title="引用wuhulamb的这条留言" onclick="return CommentQuote('comment-quote-440666','wuhulamb');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-442013" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">zen010101</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-442013">
+            <p>第六小节的代码，似乎不是每次都是增量。我们模拟一下脚本的执行过程：</p>
+
+<p>1. 第一次执行，生成 dir1 为全量文件，latest 链接到 dir1<br />
+2. 第二次执行，生成 dir2 为增量文件，相对于 dir1 , latest 链接到 dir2<br />
+3. 第三次执行，问题来了，生成 dir3 是相对于 dir2 的增量，实际上就是 dir1 + 【实际增量】，而我想原本目的是 dir3 只保存 【实际增量】 吧？<br />
+4. 第四次执行，同第二步，生成的 dir4 是增量，相当于 dir2 + 【实际增量】<br />
+5. 第五次执行，同第三步，又生成了 dir5, 相当于 dir1 + dir3 + 【实际增量】</p>
+
+<p>这个脚本的意义何在呢？</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="April 13, 2024  1:55 PM">2024年4月13日 13:55</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-442013">#</a>
+ | <a href="#comment-text" title="引用zen010101的这条留言" onclick="return CommentQuote('comment-quote-442013','zen010101');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-442028" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">Dov</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-442028">
+            <p>我的前端Node开发的一个app，要使用rsync进行文件的同步与备份。主管要求安装了app就能使用，用户不需要另外再在自己的电脑上安装rsync命令行工具。请问这种情况有什么好的解决方案吗？</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="April 15, 2024 11:17 AM">2024年4月15日 11:17</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-442028">#</a>
+ | <a href="#comment-text" title="引用Dov的这条留言" onclick="return CommentQuote('comment-quote-442028','Dov');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-442843" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">刘浩文</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-442843">
+            <blockquote>
+<pre>引用Dov的发言：</pre>
+
+<p>我的前端Node开发的一个app，要使用rsync进行文件的同步与备份。主管要求安装了app就能使用，用户不需要另外再在自己的电脑上安装rsync命令行工具。请问这种情况有什么好的解决方案吗？</p>
+
+</blockquote>
+
+<p>把rsync也打包进软件安装目录下</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 21, 2024 11:52 AM">2024年6月21日 11:52</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-442843">#</a>
+ | <a href="#comment-text" title="引用刘浩文的这条留言" onclick="return CommentQuote('comment-quote-442843','刘浩文');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-442844" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">刘浩文</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-442844">
+            <p>如果单独使用--partial，而不搭配--append或--append-verify，会有哪些潜在的风险吗，有人遇到过吗？</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 21, 2024 11:54 AM">2024年6月21日 11:54</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-442844">#</a>
+ | <a href="#comment-text" title="引用刘浩文的这条留言" onclick="return CommentQuote('comment-quote-442844','刘浩文');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-445209" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">王</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-445209">
+            <p>怎么安装  没有软件包</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="December 17, 2024 10:28 AM">2024年12月17日 10:28</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-445209">#</a>
+ | <a href="#comment-text" title="引用王的这条留言" onclick="return CommentQuote('comment-quote-445209','王');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-445386" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">卡飞因</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-445386">
+            <p>屌毛这exclude={}方法，跟原本的意思不一样</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="December 31, 2024  5:04 PM">2024年12月31日 17:04</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-445386">#</a>
+ | <a href="#comment-text" title="引用卡飞因的这条留言" onclick="return CommentQuote('comment-quote-445386','卡飞因');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-445637" class="comment">
+    <div  class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">joe</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-445637">
+            <p>学习了，正好要使用这个命令。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="January 16, 2025  4:39 PM">2025年1月16日 16:39</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-445637">#</a>
+ | <a href="#comment-text" title="引用joe的这条留言" onclick="return CommentQuote('comment-quote-445637','joe');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-446521" class="comment">
+    <div id="comment-last" class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">hh</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-446521">
+            <p>@zen010101：</p>
+
+<p>硬链接，指向同一个文件，两个都可以当作文件本身，也就是dir2包含了dir1，dir3是dir2+Δdir2，也是dir1+Δdir1+Δdir2</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="April  9, 2025 10:22 AM">2025年4月 9日 10:22</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2020/08/rsync.html#comment-446521">#</a>
+ | <a href="#comment-text" title="引用hh的这条留言" onclick="return CommentQuote('comment-quote-446521','hh');">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    </div>
+        
+    
+
+
+    
+    
+    <div class="comments-open" id="comments-open">
+        <h2 class="comments-open-header">我要发表看法</h2>
+        <div class="comments-open-content">
+
+        
+            <div id="comment-greeting"></div>
+
+            <form method="post" action="https://www.ruanyifeng.com/cgi-bin/mtos/mt-comments.cgi" name="comments_form" id="comments-form" onsubmit="return pleaseWait();">
+                <input type="hidden" name="static" value="1" />
+                <input type="hidden" name="entry_id" value="2202" />
+                <input type="hidden" name="__lang" value="en" />
+                <input type="hidden" name="parent_id" value="" id="comment-parent-id" />
+                <input type="hidden" name="armor" value="1" />
+                <input type="hidden" name="preview" value="" />
+                <input type="hidden" name="sid" value="" />
+                <div id="comments-open-data">
+            <div id="comments-open-text">
+                    <p><label for="comment-text">您的留言
+                    （HTML标签部分可用）</label></p>
+                    <p><textarea id="comment-text" name="text" rows="10" cols="50"></textarea></p>
+                </div>
+                    <div id="comment-form-name">
+                        <p><label for="comment-author">您的大名：</label></p>
+                        <p><input id="comment-author" name="author" size="30" value="" />  <span class="hint"> &laquo;-必填</span></p>
+                    </div>
+                    <div id="comment-form-email">
+                        <p><label for="comment-email">电子邮件：</label></p>
+                        <p><input id="comment-email" name="email" size="30" value="" />  <span class="hint"> &laquo;-必填，不公开</span></p>
+                    </div>
+                    <div id="comment-form-url">
+                        <p><label for="comment-url">个人网址：</label></p>
+                        <p><input id="comment-url" name="url" size="30" value="" />  <span class="hint"> &laquo;-我信任你，不会填写广告链接</span></p>
+                    </div>
+                    <div id="comment-form-remember-me">
+                        <p>
+                        <label for="comment-bake-cookie">记住个人信息？</label><input type="checkbox" id="comment-bake-cookie" name="bakecookie" onclick="!this.checked?forgetMe(document.comments_form):rememberMe(document.comments_form)" value="1" accesskey="r" /></p>
+                    </div>
+                </div>
+                    <div id="comment-form-reply" style="display:none">
+                    <input type="checkbox" id="comment-reply" name="comment_reply" value="" onclick="mtSetCommentParentID()" />
+                    <label for="comment-reply" id="comment-reply-label"></label>
+                </div>
+                <div id="comments-open-captcha"></div>
+                <div id="comments-open-footer">
+<div id="wait" style="display:none;">
+<p><strong>正在发表您的评论，请稍候</strong></p>
+<p>
+<input type="text" name="percent" size="3" style="font-family:Arial; color:black;text-align:center; border-width:medium; border-style:none;">           
+<input type="text" name="chart" size="46" style="font-family:Arial;font-weight:bolder; color:black; padding:0px; border-style:none;">
+</p>
+</div>
+
+                    <p><input type="submit" accesskey="s" name="post" id="comment-submit" value="发表" />  <span class="hint"> &laquo;- 点击按钮</span></p>
+                </div>
+            </form>
+
+
+        </div>
+    </div>
+
+    
+
+
+</div>
+
+
+
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="text/javascript" src="https://www.ruanyifeng.com/blog/js/prism.js"></script>
+        <script type="text/javascript" src="/blog/checker.js"></script> 
+            <div id="footer">
+<div id="footer-inner">
+  <div id="footer-content">
+
+      
+<!--
+      <section> 
+     </section>
+  <p><a title="Instagram" target="_blank" href="http://instagram.com/ruanyf">Instagram</a></p>
+       <p><a title="订阅" href="https://app.feedblitz.com/f/f.fbz?Sub=348868" target="_blank">邮件订阅</a></p>
+  
+       <h2>Feed</h2>
+       <p><a title="FeedBurner" href="http://feeds.feedburner.com/ruanyifeng" target="_blank">FeedBurner</a></p>
+       <p><a title="atom.xml" href="http://www.ruanyifeng.com/blog/atom.xml" target="_blank">atom.xml</a></p>
+     
+      <p>支付宝：<a title="支付宝" href="alipays://platformapi/startapp?appId=20000067&url=http%3A%2F%2Fwww.ruanyifeng.com%2Fblog" target="_blank">yifeng.ruan@gmail.com</a></p>
+-->
+
+     <section>
+<!--
+       <h2>授权方式</h2>
+       <p><a title="许可证" href="http://creativecommons.org/licenses/by-nc-nd/3.0/deed.zh" target="_blank">自由转载-非商用-非衍生-保持署名</a></p>
+       <h2>微信公号</h2>
+       <h2>社交帐号</h2>
+       <h2>联系方式</h2>
+     -->
+       <p><img src="https://cdn.beekka.com/blogimg/asset/202001/bg2020013101.jpg" alt="微信扫描"></p>
+       <p>
+         <a title="微博" href="http://weibo.com/ruanyf" target="_blank">Weibo</a> | 
+         <a title="Twitter" target="_blank" href="https://twitter.com/ruanyf">Twitter</a> |
+         <a title="GitHub" target="_blank" href="https://github.com/ruanyf">GitHub</a>
+       </p>
+     
+     <p>Email: <a title="电子邮件" href="/cdn-cgi/l/email-protection#81f8e8e7e4efe6aff3f4e0efc1e6ece0e8edafe2eeec" target="_blank"><span class="__cf_email__" data-cfemail="2a53434c4f444d04585f4b446a4d474b434604494547">[email&#160;protected]</span></a></p>
+     </section>
+  
+  
+
+
+  </div>
+</div>
+</div>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+function insertLine(e,t){for(var n=0;n<t;n++)e.parentNode.insertBefore(document.createElement("p"),e)}function getImg(){if(!window["main-content"])return!1;for(var e,t=Array.prototype.slice.call(window["main-content"].getElementsByTagName("img")),n=0;n<t.length;n++){if("display: none !important;"===(e=t[n]).getAttribute("style"))return e;if(n===t.length-1)return!1}}function toObjectUrl(e,t){return fetch(e).then(e=>e.blob()).then(e=>{t(URL.createObjectURL(e))})}function toDataURL(e,t){var n=new XMLHttpRequest;n.open("get",e),n.responseType="blob",n.onload=function(){var e=new FileReader;e.onload=function(){t(this.result)},e.readAsDataURL(n.response)},n.send()}setTimeout(function(){var e=getImg();e&&(insertLine(e.parentNode,2),toObjectUrl(e.src,function(t){var n=document.createElement("p"),r=document.createElement("img");r.src=t,n.appendChild(r),e.parentNode.parentNode.insertBefore(n,e.parentNode)}))},3e3);
+</script>                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+
+
+<script type="text/javascript" src="/blog/stats.js"></script>
+<script>
+var supportImg = document.querySelector('#support-img');
+
+if (supportImg && _hmt) {
+  _hmt.push(['_trackEvent', 'banner', 'load']);
+  supportImg.addEventListener('click', function () {
+    _hmt.push(['_trackEvent', 'banner', 'click']);
+  }, false);
+}
+
+var homepageImg = document.querySelector('#homepage_sponsor');
+if (homepageImg && _hmt) {
+  _hmt.push(['_trackEvent', 'homepage-banner', 'load']);
+  homepageImg.addEventListener('click', function () {
+    _hmt.push(['_trackEvent', 'homepage-banner', 'click']);
+  }, false);
+}
+</script>
+
+
+
+        </div>
+    </div>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a60119d5dbb5710a',t:'MTc5NTYxNDQwMA=='};var l=window.parent.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a60119d5dbb5710a',a=document.createElement('script');a.src=o?new URL(u,o).href:u;document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" data-cf-beacon='{"version":"2024.11.0","token":"9d597acca856497f9d2e99af87452aa4","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

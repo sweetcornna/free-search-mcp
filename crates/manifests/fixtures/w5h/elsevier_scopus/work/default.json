@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "elsevier_scopus",
+  "op": "work",
+  "recordedAt": "2026-11-25T13:03:45Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.elsevier.com/content/search/scopus?count=1&query=DOI%2810.1016%2Fj.joi.2020.101000%29",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ]
+        ],
+        "bodyText": "{\"search-results\": {\"opensearch:totalResults\": \"1\", \"opensearch:startIndex\": \"0\", \"opensearch:itemsPerPage\": \"1\", \"entry\": [{\"dc:identifier\": \"SCOPUS_ID:85078901234\", \"dc:title\": \"Open bibliometric indicators across scholarly citation graphs\", \"dc:creator\": \"Smith J.\", \"prism:publicationName\": \"Journal of Informetrics\", \"prism:coverDate\": \"2020-05-01\", \"prism:doi\": \"10.1016/j.joi.2020.101000\", \"citedby-count\": \"42\", \"prism:aggregationType\": \"Journal\", \"subtypeDescription\": \"Article\", \"openaccessFlag\": true, \"link\": [{\"@ref\": \"scopus\", \"@href\": \"https://www.scopus.com/inward/record.uri?partnerID=HzOxMe3b&scp=85078901234\"}]}]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

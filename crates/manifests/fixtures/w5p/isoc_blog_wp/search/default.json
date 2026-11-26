@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "isoc_blog_wp",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:41:32Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.internetsociety.org/wp-json/wp/v2/search?search=routing&per_page=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ]
+        ],
+        "bodyText": "[{\"id\":213935,\"title\":\"US Government Networks Get a Security Boost: White House Roadmap Tackles Routing Vulnerabilities\",\"url\":\"https:\\/\\/www.internetsociety.org\\/blog\\/2024\\/09\\/white-house-roadmap-tackles-routing-vulnerabilities\\/\",\"type\":\"post\",\"subtype\":\"post\",\"_links\":{\"self\":[{\"embeddable\":true,\"href\":\"https:\\/\\/www.internetsociety.org\\/wp-json\\/wp\\/v2\\/posts\\/213935\",\"targetHints\":{\"allow\":[\"GET\"]}}],\"about\":[{\"href\":\"https:\\/\\/www.internetsociety.org\\/wp-json\\/wp\\/v2\\/types\\/post\"}],\"collection\":[{\"href\":\"https:\\/\\/www.internetsociety.org\\/wp-json\\/wp\\/v2\\/search\"}]}},{\"id\":210324,\"title\":\"The US Makes a Big Step Toward Better Routing Security\",\"url\":\"https:\\/\\/www.internetsociety.org\\/blog\\/2024\\/05\\/the-us-makes-a-big-step-toward-better-routing-security\\/\",\"type\":\"post\",\"subtype\":\"post\",\"_links\":{\"self\":[{\"embeddable\":true,\"href\":\"https:\\/\\/www.internetsociety.org\\/wp-json\\/wp\\/v2\\/posts\\/210324\",\"targetHints\":{\"allow\":[\"GET\"]}}],\"about\":[{\"href\":\"https:\\/\\/www.internetsociety.org\\/wp-json\\/wp\\/v2\\/types\\/post\"}],\"collection\":[{\"href\":\"https:\\/\\/www.internetsociety.org\\/wp-json\\/wp\\/v2\\/search\"}]}},{\"id\":194681,\"title\":\"Routing Security Summit 2023\\u00a0\",\"url\":\"https:\\/\\/www.internetsociety.org\\/events\\/routing-security-summit-2023\\/\",\"type\":\"post\",\"subtype\":\"events\",\"_links\":{\"self\":[{\"embeddable\":true,\"href\":\"https:\\/\\/www.internetsociety.org\\/wp-json\\/wp\\/v2\\/events\\/194681\",\"targetHints\":{\"allow\":[\"GET\"]}}],\"about\":[{\"href\":\"https:\\/\\/www.internetsociety.org\\/wp-json\\/wp\\/v2\\/types\\/events\"}],\"collection\":[{\"href\":\"https:\\/\\/www.internetsociety.org\\/wp-json\\/wp\\/v2\\/search\"}]}}]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

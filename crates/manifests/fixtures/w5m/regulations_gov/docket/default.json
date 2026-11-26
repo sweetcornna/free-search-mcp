@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "regulations_gov",
+  "op": "docket",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.regulations.gov/v4/dockets/EPA-HQ-OAR-2003-0129",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/vnd.api+json"
+          ]
+        ],
+        "bodyText": "{\"data\":{\"id\":\"EPA-HQ-OAR-2003-0129\",\"type\":\"dockets\",\"attributes\":{\"agencyId\":\"EPA\",\"docketType\":\"Rulemaking\",\"title\":\"National Emission Standards for Hazardous Air Pollutants for Industrial, Commercial, and Institutional Boilers and Process Heaters\",\"shortTitle\":\"Boiler MACT\",\"rin\":\"2060-AK97\",\"dkAbstract\":\"Rulemaking docket for hazardous air pollutant emission standards governing industrial boilers and process heaters.\",\"modifyDate\":\"2025-11-10T18:22:00Z\"},\"links\":{\"self\":\"https://api.regulations.gov/v4/dockets/EPA-HQ-OAR-2003-0129\"}}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

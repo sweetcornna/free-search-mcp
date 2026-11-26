@@ -1,0 +1,109 @@
+id = "eastmoney_cn"
+name = "East Money (东方财富) China Market & DataCenter API"
+summary = "Keyless Chinese A-share security lookup, live stock quotes, and East Money DataCenter financial & macro tables."
+aliases = ["eastmoney", "东方财富", "a股", "china stocks"]
+home_url = "https://data.eastmoney.com"
+tier = 1
+scopes = ["finance"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.5, burst = 4, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 1800 }
+
+[op.search]
+summary = "Search Chinese A-share, HK, and US tickers on East Money to resolve QuoteID / secid."
+method = "GET"
+url = "https://searchapi.eastmoney.com/api/suggest/get"
+headers = { Accept = "application/json" }
+const_query = { type = "14" }
+response = "json"
+returns = "records"
+examples = ['source.call("eastmoney_cn.search", { query: "茅台", limit: 3 })']
+probe = { params = { query = "茅台", limit = 3 }, min_results = 1, fixture = "fixtures/w5n/eastmoney_cn/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "input", doc = "Company name, pinyin, or stock code (e.g. 茅台, 600519)" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "count", doc = "Maximum matching securities" }
+
+[op.search.map]
+items = "(.QuotationCodeTable.Data // [])[]"
+total = ".QuotationCodeTable.TotalCount"
+error = "if (.QuotationCodeTable.Status | type) == \"number\" and .QuotationCodeTable.Status != 0 then (.QuotationCodeTable.Message // \"East Money suggest error\") else null end"
+record = '''{
+  code: .Code,
+  name: (.Name // ""),
+  pinyin: (.PinYin // null),
+  secid: (.QuoteID // null),
+  marketType: (.MarketType // null),
+  securityType: (.SecurityTypeName // null),
+  classify: (.Classify // null),
+  url: ("https://quote.eastmoney.com/" + (if .MarketType == "1" then "sh" elif .MarketType == "0" then "sz" else "" end) + (.Code // "") + ".html")
+}'''
+hit = '''{
+  title: ((.Name // "") + " (" + (.Code // "") + ")"),
+  url: ("https://quote.eastmoney.com/" + (if .MarketType == "1" then "sh" elif .MarketType == "0" then "sz" else "" end) + (.Code // "") + ".html"),
+  snippet: ([
+    (.SecurityTypeName // empty),
+    (.Classify // empty),
+    (if (.QuoteID | type) == "string" then ("secid=" + .QuoteID) else empty end)
+  ] | join(" · "))
+}'''
+
+[op.quote]
+summary = "Fetch live A-share quote, price, change %, volume, market cap, PE, and PB by East Money secid."
+method = "GET"
+url = "https://push2.eastmoney.com/api/qt/stock/get"
+headers = { Accept = "application/json" }
+const_query = { fields = "f43,f44,f45,f46,f47,f48,f57,f58,f60,f116,f117,f162,f167,f170" }
+response = "json"
+returns = "records"
+examples = ['source.call("eastmoney_cn.quote", { secid: "1.600519" })']
+probe = { params = { secid = "1.600519" }, min_results = 1, fixture = "fixtures/w5n/eastmoney_cn/quote/default.json" }
+
+[op.quote.params]
+secid = { type = "string", required = true, doc = "East Money secid: 1.<code> for Shanghai (e.g. 1.600519), 0.<code> for Shenzhen" }
+
+[op.quote.map]
+items = "[.data | select(. != null)][]"
+record = '''{
+  code: (.f57 // null),
+  name: (.f58 // ""),
+  price: (if (.f43 | type) == "number" then (.f43 / 100) else null end),
+  high: (if (.f44 | type) == "number" then (.f44 / 100) else null end),
+  low: (if (.f45 | type) == "number" then (.f45 / 100) else null end),
+  open: (if (.f46 | type) == "number" then (.f46 / 100) else null end),
+  prevClose: (if (.f60 | type) == "number" then (.f60 / 100) else null end),
+  changePct: (if (.f170 | type) == "number" then (.f170 / 100) else null end),
+  volumeLots: (.f47 // null),
+  turnoverCny: (.f48 // null),
+  totalMarketCapCny: (.f116 // null),
+  floatMarketCapCny: (.f117 // null),
+  peDynamic: (if (.f162 | type) == "number" then (.f162 / 100) else null end),
+  pbRatio: (if (.f167 | type) == "number" then (.f167 / 100) else null end)
+}'''
+
+[op.data]
+summary = "Query East Money DataCenter public financial statement, filing, and Chinese macro tables by reportName."
+method = "GET"
+url = "https://datacenter-web.eastmoney.com/api/data/v1/get"
+headers = { Accept = "application/json" }
+const_query = { columns = "ALL" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "pageNumber", start = 1, max_pages = 3 }
+examples = ['source.call("eastmoney_cn.data", { report_name: "RPT_ECONOMY_CPI", page: 1, limit: 3 })']
+probe = { params = { report_name = "RPT_ECONOMY_CPI", page = 1, limit = 3 }, min_results = 2, fixture = "fixtures/w5n/eastmoney_cn/data/default.json" }
+
+[op.data.params]
+report_name = { type = "string", required = true, to = "reportName", doc = "DataCenter table name (e.g. RPT_ECONOMY_CPI, RPT_DMSK_FN_INCOME, RPT_LICO_FN_CPD)" }
+filter = { type = "string", doc = "Optional East Money filter expression (e.g. (SECURITY_CODE=\"600519\"))" }
+sort_columns = { type = "string", to = "sortColumns", doc = "Optional sort column(s)" }
+sort_types = { type = "string", to = "sortTypes", doc = "Optional sort direction(s): -1 desc, 1 asc" }
+page = { type = "int", default = 1, min = 1, to = "pageNumber", doc = "Page number (1-based)" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "pageSize", doc = "Rows per page" }
+
+[op.data.map]
+items = "(.result.data // [])[]"
+total = ".result.count"
+error = "if .success == false then (.message // \"East Money DataCenter error\") else null end"
+record = "."

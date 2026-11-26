@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "source": "endoflife",
+  "op": "search",
+  "recordedAt": "2026-11-25T10:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://endoflife.date/api/v1/products",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          ["content-type", "application/json"]
+        ],
+        "bodyText": "{\"result\":[{\"name\":\"python\",\"label\":\"Python\",\"aliases\":[]},{\"name\":\"ubuntu\",\"label\":\"Ubuntu\",\"aliases\":[\"ubuntu-linux\"]},{\"name\":\"redhat\",\"label\":\"Red Hat Enterprise Linux\",\"aliases\":[\"rhel\",\"red hat\"]},{\"name\":\"go\",\"label\":\"Go\",\"aliases\":[\"golang\"]}]}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://endoflife.date/api/v1/products/python",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          ["content-type", "application/json"]
+        ],
+        "bodyText": "{\"result\":{\"name\":\"python\",\"label\":\"Python\",\"releases\":[{\"name\":\"3.14\",\"isEol\":false,\"eolFrom\":\"2030-10-31\",\"latest\":{\"name\":\"3.14.7\",\"date\":\"2026-08-05\"}},{\"name\":\"3.13\",\"isEol\":false,\"eolFrom\":\"2029-10-31\"},{\"name\":\"3.12\",\"isEol\":false,\"eolFrom\":\"2028-10-31\"},{\"name\":\"3.11\",\"isEol\":false,\"eolFrom\":\"2027-10-31\"},{\"name\":\"3.10\",\"isEol\":false,\"eolFrom\":\"2026-10-31\"},{\"name\":\"3.9\",\"isEol\":true,\"eolFrom\":\"2025-10-31\"}]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "simbad_cfa",
+  "op": "object",
+  "recordedAt": "2026-11-25T13:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://simbad.cfa.harvard.edu/simbad/sim-tap/sync?query=SELECT+b.main_id%2C+b.otype%2C+b.ra%2C+b.dec%2C+b.sp_type%2C+b.rvz_radvel%2C+b.plx_value%2C+b.nbref+FROM+basic+AS+b+JOIN+ident+AS+i+ON+b.oid+%3D+i.oidref+WHERE+i.id+%3D+%27Vega%27&MAXREC=5&format=json&lang=adql&request=doQuery",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json;charset=UTF-8"
+          ]
+        ],
+        "bodyText": "{\"metadata\":[{\"name\":\"main_id\",\"description\":\"Main identifier for an object\",\"datatype\":\"CHAR\",\"arraysize\":\"*\",\"ucd\":\"meta.id;meta.main\",\"utype\":\"mango:MangoObject.identifier\"},{\"name\":\"otype\",\"description\":\"Object type\",\"datatype\":\"CHAR\",\"arraysize\":\"*\",\"ucd\":\"src.class\",\"utype\":\"mango:Label.text[CT.vocabulary=https://www.ivoa.net/rdf/uat#classification]\"},{\"name\":\"ra\",\"description\":\"Right ascension\",\"datatype\":\"DOUBLE\",\"unit\":\"deg\",\"ucd\":\"pos.eq.ra;meta.main\",\"utype\":\"mango:EpochPosition.longitude[CS.spaceSys=ICRS CT.epoch=J2000]\"},{\"name\":\"dec\",\"description\":\"Declination\",\"datatype\":\"DOUBLE\",\"unit\":\"deg\",\"ucd\":\"pos.eq.dec;meta.main\",\"utype\":\"mango:EpochPosition.latitude[CS.spaceSys=ICRS CT.epoch=J2000]\"},{\"name\":\"sp_type\",\"description\":\"MK spectral type\",\"datatype\":\"CHAR\",\"arraysize\":\"*\",\"ucd\":\"src.spType\"},{\"name\":\"rvz_radvel\",\"description\":\"Radial Velocity\",\"datatype\":\"DOUBLE\",\"unit\":\"km.s-1\",\"ucd\":\"spect.dopplerVeloc.opt\",\"utype\":\"mango:EpochPosition.radialVelocity[CS.spaceSys=ICRS CT.epoch=J2000]\"},{\"name\":\"plx_value\",\"description\":\"Parallax\",\"datatype\":\"DOUBLE\",\"unit\":\"mas\",\"ucd\":\"pos.parallax.trig\",\"utype\":\"mango:EpochPosition.parallax[CS.spaceSys=ICRS CT.epoch=J2000]\"},{\"name\":\"nbref\",\"description\":\"number of references\",\"datatype\":\"INT\",\"ucd\":\"meta.bib;arith.sum\"}],\"data\":[[\"* alf Lyr\",\"dS*\",279.234734787025,38.783688956244,\"A0V\",-13.5,130.23,2817]]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

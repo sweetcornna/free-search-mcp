@@ -1,0 +1,90 @@
+# W0a test vector: copy of crates/manifests/staging/w5f/ckan.toml (2026-11-25), verbatim.
+protocol = "ckan"
+
+[[instance]]
+id = "open_canada"
+name = "Open Government Canada"
+summary = "Canadian federal open data catalog indexing national climate, census, health, transportation, and geospatial datasets."
+aliases = ["canada open data", "open.canada.ca"]
+base_url = "https://open.canada.ca/data"
+scopes = ["dataset", "gov"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "climate", limit = 3 }, min_results = 1 }
+
+[[instance]]
+id = "hdx_ocha"
+name = "Humanitarian Data Exchange (UN OCHA)"
+summary = "United Nations OCHA global humanitarian open data platform covering crises, epidemiology, displacement, food security, and boundaries."
+aliases = ["hdx", "humdata", "un ocha"]
+base_url = "https://data.humdata.org"
+scopes = ["dataset", "gov"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "malaria", limit = 2 }, min_results = 1 }
+
+[[instance]]
+id = "data_qld_au"
+name = "Queensland Government Open Data (Australia)"
+summary = "Australian state open data portal with 17k+ hydrology, environment, health, transport, and public sector datasets."
+aliases = ["queensland open data", "data.qld.gov.au"]
+base_url = "https://www.data.qld.gov.au"
+scopes = ["dataset", "gov"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "water", limit = 2 }, min_results = 1 }
+
+[[instance]]
+id = "opendata_swiss"
+name = "opendata.swiss (Switzerland)"
+summary = "Central Swiss federal, cantonal, and municipal open government data catalog across statistics, climate, transit, and law."
+aliases = ["swiss open data", "ckan.opendata.swiss"]
+base_url = "https://ckan.opendata.swiss"
+scopes = ["dataset", "gov"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "climate", limit = 2 }, min_results = 1 }
+
+[[instance]]
+id = "data_gov_ie"
+name = "Ireland Open Data Portal"
+summary = "Irish Government national open data catalog covering transport, housing, economy, climate, and public administration."
+aliases = ["ireland open data", "data.gov.ie"]
+base_url = "https://data.gov.ie"
+scopes = ["dataset", "gov"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "transport", limit = 3 }, min_results = 1 }
+
+[[instance]]
+id = "data_egov_jp"
+name = "Japan e-Gov Open Data Portal"
+summary = "Japanese Digital Agency national open government data catalog indexing municipal and ministerial statistical and geospatial datasets."
+aliases = ["e-gov data", "japan open data", "data.e-gov.go.jp"]
+base_url = "https://data.e-gov.go.jp/data"
+scopes = ["dataset", "gov"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "人口", limit = 3 }, min_results = 1 }
+
+[[instance]]
+id = "energydata_info"
+name = "Energydata.info (World Bank)"
+summary = "World Bank Group global open energy data platform covering solar/wind resource maps, power grids, electrification, and emissions."
+aliases = ["energydata", "world bank energy"]
+base_url = "https://energydata.info"
+scopes = ["dataset", "reference.geo"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "solar", limit = 3 }, min_results = 1 }
+
+[[instance]]
+id = "data_ca_gov"
+name = "California Open Data Portal"
+summary = "State of California open data catalog covering air quality, water resources, wildfires, healthcare, transportation, and budgets."
+aliases = ["california open data", "data.ca.gov"]
+base_url = "https://data.ca.gov"
+scopes = ["dataset", "gov"]
+caps = ["search", "lookup", "dataset"]
+tier = 2
+probe = { op = "search", params = { query = "air", limit = 2 }, min_results = 1 }

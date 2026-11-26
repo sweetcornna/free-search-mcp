@@ -1,0 +1,81 @@
+# W0a test vector: copy of crates/manifests/staging/w5b/clinicaltrials.toml (2026-11-25), A1 §F.3: op.study map.items "[.]" -> "." (§B.5).
+id = "clinicaltrials"
+name = "ClinicalTrials.gov v2"
+summary = "US NLM registry of 500k+ interventional and observational clinical trials."
+aliases = ["ctgov", "nct", "clinical trials"]
+home_url = "https://clinicaltrials.gov"
+tier = 1
+scopes = ["academic", "academic.trial", "academic.biomed"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 5.0, burst = 10, concurrency = 4, timeout_ms = 6000, cache_ttl_s = 21600 }
+
+[op.search]
+summary = "Search clinical trials by condition, intervention, or status."
+method = "GET"
+url = "https://clinicaltrials.gov/api/v2/studies"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "json", fields = "protocolSection.identificationModule,protocolSection.statusModule,protocolSection.designModule,protocolSection.conditionsModule,protocolSection.sponsorCollaboratorsModule,protocolSection.descriptionModule" }
+paginate = { style = "token", param = "pageToken", max_pages = 3 }
+probe = { params = { query = "crispr", limit = 3 }, min_results = 2, fixture = "fixtures/w5b/clinicaltrials/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "query.term", doc = "Condition, intervention, or free-text term" }
+status = { type = "string", to = "filter.overallStatus", doc = "Optional status filter (RECRUITING, COMPLETED, ACTIVE_NOT_RECRUITING, etc.)" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "pageSize", doc = "Number of studies per page" }
+cursor = { type = "string", to = "pageToken", doc = "Pagination token from next_cursor" }
+
+[op.search.map]
+items = ".studies[]"
+next_cursor = ".nextPageToken"
+record = '''{
+  nct: .protocolSection.identificationModule.nctId,
+  title: (.protocolSection.identificationModule.briefTitle // .protocolSection.identificationModule.officialTitle // ""),
+  status: (.protocolSection.statusModule.overallStatus // null),
+  phase: (.protocolSection.designModule.phases // []),
+  enrollment: (.protocolSection.designModule.enrollmentInfo.count // null),
+  conditions: (.protocolSection.conditionsModule.conditions // []),
+  sponsor: (.protocolSection.sponsorCollaboratorsModule.leadSponsor.name // null),
+  startDate: (.protocolSection.statusModule.startDateStruct.date // null),
+  summary: (.protocolSection.descriptionModule.briefSummary // null),
+  url: ("https://clinicaltrials.gov/study/" + .protocolSection.identificationModule.nctId)
+}'''
+hit = '''{
+  title: (.protocolSection.identificationModule.nctId + " — " + (.protocolSection.identificationModule.briefTitle // .protocolSection.identificationModule.officialTitle // "")),
+  url: ("https://clinicaltrials.gov/study/" + .protocolSection.identificationModule.nctId),
+  snippet: (((.protocolSection.statusModule.overallStatus // "") + " · " + ((.protocolSection.conditionsModule.conditions // []) | join(", ")) + " — " + (.protocolSection.descriptionModule.briefSummary // ""))[0:300]),
+  date: (.protocolSection.statusModule.lastUpdatePostDateStruct.date // .protocolSection.statusModule.startDateStruct.date // null),
+  dateSource: "api"
+}'''
+
+[op.study]
+summary = "Fetch full study protocol by NCT identifier."
+method = "GET"
+url = "https://clinicaltrials.gov/api/v2/studies/{nct}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "json", fields = "protocolSection.identificationModule,protocolSection.statusModule,protocolSection.designModule,protocolSection.conditionsModule,protocolSection.sponsorCollaboratorsModule,protocolSection.descriptionModule,protocolSection.eligibilityModule,protocolSection.armsInterventionsModule" }
+probe = { params = { nct = "NCT04280705" }, min_results = 1, fixture = "fixtures/w5b/clinicaltrials/study/default.json" }
+
+[op.study.params]
+nct = { type = "string", required = true, in = "path", doc = "NCT identifier (e.g. NCT04280705)" }
+
+[op.study.map]
+items = "."
+record = '''{
+  nct: .protocolSection.identificationModule.nctId,
+  title: (.protocolSection.identificationModule.officialTitle // .protocolSection.identificationModule.briefTitle // ""),
+  briefTitle: (.protocolSection.identificationModule.briefTitle // null),
+  status: (.protocolSection.statusModule.overallStatus // null),
+  phase: (.protocolSection.designModule.phases // []),
+  conditions: (.protocolSection.conditionsModule.conditions // []),
+  sponsor: (.protocolSection.sponsorCollaboratorsModule.leadSponsor.name // null),
+  eligibility: (.protocolSection.eligibilityModule.eligibilityCriteria // null),
+  interventions: [(.protocolSection.armsInterventionsModule.interventions // [])[] | {type, name}],
+  summary: (.protocolSection.descriptionModule.briefSummary // null),
+  url: ("https://clinicaltrials.gov/study/" + .protocolSection.identificationModule.nctId)
+}'''

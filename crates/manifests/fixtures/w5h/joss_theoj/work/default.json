@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "joss_theoj",
+  "op": "work",
+  "recordedAt": "2026-11-25T13:02:20Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://joss.theoj.org/papers/10.21105/joss.03082.json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"title\":\"toqito -- Theory of quantum information toolkit: A Python package for studying quantum information\",\"state\":\"accepted\",\"submitted_at\":\"2021-02-11T23:48:36.205Z\",\"software_repository\":\"https://github.com/vprusso/toqito\",\"doi\":\"10.21105/joss.03082\",\"published_at\":\"2021-05-09T14:43:05.478Z\",\"volume\":6,\"issue\":61,\"year\":\"2021\",\"page\":\"3082\",\"authors\":[{\"given_name\":\"Vincent\",\"middle_name\":null,\"last_name\":\"Russo\",\"orcid\":null,\"affiliation\":\"ISARA Corporation, Modellicity Inc.\"}],\"submitting_author\":\"@vprusso\",\"editor\":\"@poulson\",\"editor_status\":\"Retired\",\"editor_name\":\"Jack  Poulson\",\"editor_url\":\"https://hodgestar.com\",\"editor_orcid\":\"0000-0002-5435-2883\",\"reviewers\":[\"@rurz\",\"@jameshclrk\",\"@marwahaha\"],\"languages\":[\"Python\"],\"tags\":[\"quantum information\",\"quantum computing\",\"entanglement\",\"nonlocal games\",\"matrix analysis\"],\"paper_review\":\"https://github.com/openjournals/joss-reviews/issues/3082\",\"meta_review_issue_id\":3033,\"pdf_url\":\"https://joss.theoj.org/papers/10.21105/joss.03082.pdf\",\"software_archive\":\"https://doi.org/10.5281/zenodo.4743211\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

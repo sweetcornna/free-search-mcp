@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "firecrawl",
+  "op": "scrape",
+  "recordedAt": "2026-11-25T15:02:26Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://api.firecrawl.dev/v2/scrape",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": "822508c8b4b4e553dcf960e0bf68392fdeedc3bd51c6c49017e42461529956d7"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ],
+          [
+            "etag",
+            "W/\"70e-GFt1BZL0A3t9LsPa/92Ce8tyPx0\""
+          ]
+        ],
+        "bodyText": "{\"success\":true,\"data\":{\"markdown\":\"This domain is for use in documentation examples without needing permission. This is not a service; avoid relying on it for testing and monitoring purposes.\\n\\nهذا النطاق مُخصص للاستخدام في أمثلة التوثيق دون الحاجة إلى إذن. هذه ليست خدمة، يُرجى تجنب الاعتماد عليها لأغراض الاختبار والمراقبة.\\n\\n该域名仅用于文档示例，无需获得许可。这并非一项服务，请勿将其用于测试和监控目的。\\n\\nL’usage de ce domaine est réservé à des exemples de documentation, sans autorisation préalable. Il ne s’agit pas d’un service ; son utilisation à des fins de test ou de surveillance est à éviter.\\n\\nДанный домен предназначен для использования в примерах документации без необходимости получения предварительного разрешения. Это не сервис; не рекомендуется его использование для тестирования и мониторинга.\\n\\nEste dominio está destinado al uso en ejemplos de documentación sin necesidad de permiso. Esto no es un servicio; evitar utilizarlo para realizar pruebas o monitoreos.\\n\\n [Learn more](https://iana.org/help/example-domains)\",\"metadata\":{\"viewport\":\"width=device-width,initial-scale=1\",\"language\":\"en\",\"title\":\"Example Domain\",\"favicon\":\"data:,\",\"scrapeId\":\"01a2133a-be20-755e-807d-d27c4b505ed4\",\"sourceURL\":\"https://example.com\",\"url\":\"https://example.com/\",\"statusCode\":200,\"contentType\":\"text/html; charset=utf-8\",\"proxyUsed\":\"basic\",\"cacheState\":\"hit\",\"cachedAt\":\"2026-11-25T15:02:22.891Z\",\"creditsUsed\":1,\"concurrencyLimited\":false}}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+protocol = "opendatasoft"
+
+[[instance]]
+id = "paris_open_data"
+name = "Open Data Paris"
+summary = "City of Paris official municipal open data catalog covering cycling counts, transit, cultural venues, environment, and urban planning."
+aliases = ["paris data", "opendata.paris.fr"]
+base_url = "https://opendata.paris.fr"
+scopes = ["dataset", "gov", "reference.geo"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "velo", limit = 3 }, min_results = 1 }
+
+[[instance]]
+id = "brussels_open_data"
+name = "Open Data Brussels (Brussels-Capital Region)"
+summary = "Brussels-Capital Region multilingual open data portal covering rail/urban mobility, public facilities, environment, and administration."
+aliases = ["brussels data", "opendata.brussels.be", "bruxelles open data"]
+base_url = "https://opendata.brussels.be"
+scopes = ["dataset", "gov", "reference.geo"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "transport", limit = 3 }, min_results = 1 }
+
+[[instance]]
+id = "basel_open_data"
+name = "Open Data Basel-Stadt"
+summary = "Canton of Basel-Stadt high-frequency Swiss open data portal covering traffic, climate/meteorology, energy, and municipal statistics."
+aliases = ["basel data", "data.bs.ch", "basel-stadt open data"]
+base_url = "https://data.bs.ch"
+scopes = ["dataset", "gov", "reference.geo"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "verkehr", limit = 3 }, min_results = 1 }
+
+[[instance]]
+id = "uk_power_networks"
+name = "UK Power Networks Open Data"
+summary = "UK electricity distribution network operator portal publishing grid flexibility dispatches, solar/DER connections, and substation capacity."
+aliases = ["ukpn", "ukpowernetworks.opendatasoft.com"]
+base_url = "https://ukpowernetworks.opendatasoft.com"
+scopes = ["dataset", "reference.geo"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "solar", limit = 3 }, min_results = 1 }
+
+[[instance]]
+id = "sncf_rail_fr"
+name = "SNCF Open Data (French National Railways)"
+summary = "French national rail operator open data catalog covering stations, TGV/Transilien punctuality, timetables, ridership, and rail infrastructure."
+aliases = ["sncf", "data.sncf.com", "french rail data"]
+base_url = "https://data.sncf.com"
+scopes = ["dataset", "reference.geo"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "gare", limit = 3 }, min_results = 1 }
+
+[[instance]]
+id = "leicester_uk_ods"
+name = "Leicester Open Data"
+summary = "Leicester City Council UK local government open data catalog covering demographics, census indicators, air quality, and local services."
+aliases = ["leicester data", "data.leicester.gov.uk"]
+base_url = "https://data.leicester.gov.uk"
+scopes = ["dataset", "gov"]
+caps = ["search", "lookup", "dataset"]
+tier = 2
+probe = { op = "search", params = { query = "air", limit = 3 }, min_results = 1 }

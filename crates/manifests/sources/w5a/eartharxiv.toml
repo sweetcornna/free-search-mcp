@@ -1,0 +1,81 @@
+id = "eartharxiv"
+name = "EarthArXiv Preprints"
+summary = "Open-access earth, atmospheric, and planetary science preprint archive hosted by California Digital Library (via Crossref prefix 10.31223)."
+aliases = ["eartharxiv.org", "earth science preprints", "cdl eartharxiv", "seismology", "geophysics"]
+home_url = "https://eartharxiv.org"
+tier = 1
+scopes = ["academic", "academic.preprint"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 43200, host_bucket = "api.crossref.org" }
+
+[op.search]
+summary = "Search active EarthArXiv earth-science preprints via Crossref's exclusive 10.31223 DOI prefix."
+method = "GET"
+url = "https://api.crossref.org/works"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+const_query = { filter = "prefix:10.31223" }
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "climate", limit = 3 }, min_results = 2, fixture = "fixtures/w5a/eartharxiv/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "query", doc = "Earth-science search query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "rows", doc = "Max results" }
+offset = { type = "int", min = 0, to = "offset", doc = "Result offset" }
+
+[op.search.map]
+items = ".message.items[]"
+total = '''.message."total-results"'''
+error = '''if (.status // "ok") == "failed" then (if (.message | type) == "array" then (.message[0]?.message // "crossref error") elif (.message | type) == "string" then .message else "crossref error" end) else null end'''
+work = '''(
+  (.resource.primary.URL // .URL // ("https://doi.org/" + (.DOI // ""))) as $url |
+  (.posted."date-parts"[0]? // .issued."date-parts"[0]? // .published."date-parts"[0]? // []) as $dp |
+  (if ($dp | length) >= 3 and $dp[0] != null and $dp[1] != null and $dp[2] != null then (($dp[0] | tostring) + "-" + (if $dp[1] < 10 then "0" else "" end) + ($dp[1] | tostring) + "-" + (if $dp[2] < 10 then "0" else "" end) + ($dp[2] | tostring)) elif ($dp | length) >= 2 and $dp[0] != null and $dp[1] != null then (($dp[0] | tostring) + "-" + (if $dp[1] < 10 then "0" else "" end) + ($dp[1] | tostring)) elif ($dp | length) >= 1 and $dp[0] != null then ($dp[0] | tostring) else null end | parse_date) as $dt |
+  (if (.abstract // "") != "" then (.abstract | strip_tags | unescape_html | collapse_ws) else null end) as $abs |
+  {
+    title: ((.title[0]? // "") | strip_tags),
+    authors: [(.author // [])[] | {
+      name: ([.given, .family] | map(select(type == "string" and length > 0)) | join(" ") | collapse_ws),
+      orcid: ((.ORCID // null) | if type == "string" then sub("^https?://orcid\\.org/"; "") else null end),
+      affiliation: (.affiliation[0]?.name // null)
+    } | select(.name != "")],
+    year: ($dp[0]? | to_int),
+    publishedDate: $dt,
+    venue: "EarthArXiv",
+    workType: "preprint",
+    ids: { doi: (.DOI // null | doi_norm) },
+    abstractText: (if ($abs // "") != "" then $abs else null end),
+    citedBy: (."is-referenced-by-count" | to_int),
+    citedBySource: (if ."is-referenced-by-count" != null then "crossref" else null end),
+    oa: {
+      status: "green",
+      url: $url,
+      pdfUrl: ([(.link // [])[] | select(."content-type" == "application/pdf") | .URL][0] // null),
+      license: (.license[0]?.URL // null)
+    },
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["eartharxiv"]
+  }
+)'''
+
+[op.work]
+summary = "Fetch a single EarthArXiv preprint record by DOI (10.31223/...)."
+method = "GET"
+url = "https://api.crossref.org/works/{doi}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+probe = { params = { doi = "10.31223/x5q23r" }, min_results = 1, fixture = "fixtures/w5a/eartharxiv/work/default.json" }
+
+[op.work.params]
+doi = { type = "string", required = true, in = "path", encode = "raw", doc = "EarthArXiv DOI e.g. 10.31223/x5q23r" }
+
+[op.work.map]
+items = ".message"
+error = "@ref:op.search.map.error"
+work = "@ref:op.search.map.work"

@@ -1,0 +1,99 @@
+id = "ror"
+name = "ROR (Research Organization Registry v2)"
+summary = "Global registry of 115k+ research organizations with multilingual names, IDs, and affiliation-string matching."
+aliases = ["ror.org", "research organizations", "affiliations"]
+home_url = "https://ror.org"
+tier = 1
+scopes = ["academic", "academic.index"]
+caps = ["search", "lookup", "org"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 5.0, burst = 10, concurrency = 4, timeout_ms = 8000, cache_ttl_s = 86400, host_bucket = "api.ror.org" }
+
+[op.search]
+summary = "Search research organizations by name or keyword."
+method = "GET"
+url = "https://api.ror.org/v2/organizations"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "tsinghua" }, min_results = 2, fixture = "fixtures/w5a/ror/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "query", doc = "Organization name or search string" }
+filter = { type = "string", to = "filter", doc = "Optional ROR filter e.g. country.country_code:US,types:education" }
+limit = { type = "int", default = 20, min = 1, max = 50, in = "none", doc = "Max organizations" }
+page = { type = "int", min = 1, to = "page", doc = "1-indexed page number" }
+
+[op.search.map]
+items = ".items[:($p.limit // 20)][]"
+total = ".number_of_results"
+error = '''if (.errors | type) == "array" and (.errors | length) > 0 then ((.errors | map(if type == "string" then . else (.detail // (. | tostring)) end)) | join("; ")) else null end'''
+record = '''(
+  (([(.names // [])[] | select((.types // []) | any(. == "ror_display")) | .value][0]) // (.names[0]?.value // "")) as $nm |
+  {
+    name: ($nm | collapse_ws),
+    ror: (.id // null),
+    country: (.locations[0]?.geonames_details.country_code // null),
+    orgType: (.types[0]? // null),
+    homepage: ([(.links // [])[] | select(.type == "website") | .value][0] // null),
+    sources: ["ror"]
+  }
+)'''
+hit = '''(
+  (([(.names // [])[] | select((.types // []) | any(. == "ror_display")) | .value][0]) // (.names[0]?.value // "")) as $nm |
+  {
+    title: ($nm | collapse_ws),
+    url: (.id // ""),
+    snippet: ([(.types // [] | join(", ")), (.locations[0]?.geonames_details.name // ""), (.locations[0]?.geonames_details.country_name // ""), (.domains[0]? // "")] | map(select(length > 0)) | join(" · ")),
+    date: null,
+    dateSource: "api"
+  }
+)'''
+
+[op.affiliation]
+summary = "Disambiguate a raw author affiliation string to confirmed ROR organizations (chosen == true)."
+method = "GET"
+url = "https://api.ror.org/v2/organizations"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { affiliation = "Tsinghua University" }, min_results = 1, fixture = "fixtures/w5a/ror/affiliation/default.json" }
+
+[op.affiliation.params]
+affiliation = { type = "string", required = true, to = "affiliation", doc = "Raw affiliation string e.g. Department of Computer Science, Tsinghua University" }
+
+[op.affiliation.map]
+items = ".items[] | select(.chosen == true)"
+total = ".number_of_results"
+error = "@ref:op.search.map.error"
+record = '''(
+  .organization as $o |
+  (([($o.names // [])[] | select((.types // []) | any(. == "ror_display")) | .value][0]) // ($o.names[0]?.value // "")) as $nm |
+  {
+    name: ($nm | collapse_ws),
+    ror: ($o.id // null),
+    country: ($o.locations[0]?.geonames_details.country_code // null),
+    orgType: ($o.types[0]? // null),
+    homepage: ([($o.links // [])[] | select(.type == "website") | .value][0] // null),
+    sources: ["ror"]
+  }
+)'''
+
+[op.org]
+summary = "Look up a single research organization by ROR ID."
+method = "GET"
+url = "https://api.ror.org/v2/organizations/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "03cve4549" }, min_results = 1, fixture = "fixtures/w5a/ror/org/default.json" }
+
+[op.org.params]
+id = { type = "string", required = true, in = "path", doc = "ROR ID e.g. 03cve4549" }
+
+[op.org.map]
+items = "."
+error = "@ref:op.search.map.error"
+record = "@ref:op.search.map.record"

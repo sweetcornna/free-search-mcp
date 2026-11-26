@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "obis",
+  "op": "taxon",
+  "recordedAt": "2026-11-25T11:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.obis.org/v3/taxon/Mola%20mola",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ],
+          [
+            "etag",
+            "W/\"328-ilPI3/QxeWjjrTv0htTGtkLo7kE\""
+          ]
+        ],
+        "bodyText": "{\"total\":1,\"results\":[{\"scientificName\":\"Mola mola\",\"scientificNameAuthorship\":\"(Linnaeus, 1758)\",\"taxonID\":127405,\"ncbi_id\":94237,\"taxonRank\":\"Species\",\"taxonomicStatus\":\"accepted\",\"acceptedNameUsage\":\"Mola mola\",\"acceptedNameUsageID\":127405,\"is_marine\":true,\"is_brackish\":false,\"is_freshwater\":false,\"is_terrestrial\":false,\"kingdom\":\"Animalia\",\"phylum\":\"Chordata\",\"subphylum\":\"Vertebrata\",\"infraphylum\":\"Gnathostomata\",\"superclass\":\"Actinopteri\",\"class\":\"Teleostei\",\"order\":\"Tetraodontiformes\",\"family\":\"Molidae\",\"genus\":\"Mola\",\"species\":\"Mola mola\",\"kingdomid\":2,\"phylumid\":1821,\"subphylumid\":146419,\"infraphylumid\":1828,\"superclassid\":843664,\"classid\":293496,\"orderid\":10332,\"familyid\":125609,\"genusid\":126233,\"speciesid\":127405,\"category\":\"VU\",\"vernacularNames\":[\"ocean sunfish\",\"sun-fish\",\"sunfish\"]}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

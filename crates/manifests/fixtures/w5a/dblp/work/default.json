@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "source": "dblp",
+  "op": "work",
+  "recordedAt": "2026-11-25T15:05:10Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://sparql.dblp.org/sparql",
+        "headersSubset": {
+          "accept": "application/sparql-results+json",
+          "content-type": "application/sparql-query"
+        },
+        "bodySha256": "ca421b7dd57b1d1c106427db5c293d914ae502f778a4c3c7279038f154ecdfd6"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "date",
+            "Wed, 25 Nov 2026 15:05:04 GMT"
+          ],
+          [
+            "server",
+            "Apache/2.4.52 (Ubuntu)"
+          ],
+          [
+            "content-type",
+            "application/sparql-results+json"
+          ],
+          [
+            "access-control-allow-origin",
+            "*"
+          ],
+          [
+            "access-control-allow-headers",
+            "*"
+          ],
+          [
+            "access-control-allow-methods",
+            "GET, POST, OPTIONS"
+          ],
+          [
+            "content-security-policy",
+            "frame-ancestors 'self' https://dblps.uni-trier.de"
+          ]
+        ],
+        "bodyText": "{\"head\":{\"vars\":[\"publ\",\"title\",\"year\",\"venue\",\"doi\",\"ee\",\"authors\"]},\"results\":{\"bindings\":[{\"publ\":{\"type\":\"uri\",\"value\":\"https://dblp.org/rec/conf/sigir/CormackCB09\"},\"title\":{\"type\":\"literal\",\"value\":\"Reciprocal rank fusion outperforms condorcet and individual rank learning methods.\"},\"year\":{\"datatype\":\"http://www.w3.org/2001/XMLSchema#gYear\",\"type\":\"literal\",\"value\":\"2009\"},\"venue\":{\"type\":\"literal\",\"value\":\"SIGIR\"},\"doi\":{\"type\":\"uri\",\"value\":\"https://doi.org/10.1145/1571941.1572114\"},\"authors\":{\"type\":\"literal\",\"value\":\"Stefan Büttcher; Charles L. A. Clarke; Gordon V. Cormack\"}}]},\"meta\":{\"query-time-ms\":5529,\"result-size-total\":1}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,114 @@
+id = "defillama_crypto"
+name = "DefiLlama Crypto Prices & DeFi TVL"
+summary = "Keyless multi-chain cryptocurrency current/historical prices, percentage changes, protocol TVL, and blockchain TVL directory."
+aliases = ["defillama", "llama.fi", "defi tvl"]
+home_url = "https://defillama.com/docs/api"
+tier = 1
+scopes = ["finance"]
+caps = ["lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 3.0, burst = 6, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 300 }
+
+[op.prices]
+summary = "Fetch current USD prices for comma-separated tokens (e.g. coingecko:bitcoin or ethereum:0x...)."
+method = "GET"
+url = "https://coins.llama.fi/prices/current/{coins}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { coins = "coingecko:bitcoin,coingecko:ethereum" }, min_results = 2, fixture = "fixtures/w5m/defillama_crypto/prices/default.json" }
+examples = ["source.call('defillama_crypto.prices', { coins: 'coingecko:bitcoin,coingecko:ethereum' })"]
+
+[op.prices.params]
+coins = { type = "string", required = true, in = "path", encode = "raw", doc = "Comma-separated {chain}:{address} or coingecko:{id} list" }
+
+[op.prices.map]
+items = "(.coins // {}) | to_entries[]"
+record = '''{
+  coin: .key,
+  symbol: (.value.symbol // null),
+  priceUsd: .value.price,
+  timestamp: (.value.timestamp // null),
+  timestampIso: (.value.timestamp | epoch_to_iso),
+  confidence: (.value.confidence // null)
+}'''
+
+[op.historical_price]
+summary = "Fetch historical USD prices for tokens at a specific Unix timestamp (seconds)."
+method = "GET"
+url = "https://coins.llama.fi/prices/historical/{timestamp}/{coins}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { timestamp = 1704067200, coins = "coingecko:bitcoin" }, min_results = 1, fixture = "fixtures/w5m/defillama_crypto/historical_price/default.json" }
+examples = ["source.call('defillama_crypto.historical_price', { timestamp: 1704067200, coins: 'coingecko:bitcoin' })"]
+
+[op.historical_price.params]
+timestamp = { type = "int", required = true, in = "path", min = 1230768000, doc = "Unix timestamp in seconds" }
+coins = { type = "string", required = true, in = "path", encode = "raw", doc = "Comma-separated {chain}:{address} or coingecko:{id}" }
+
+[op.historical_price.map]
+items = "@ref:op.prices.map.items"
+record = "@ref:op.prices.map.record"
+
+[op.price_change]
+summary = "Fetch percentage price change over a lookback period (e.g. 24h, 7d, 30d) for one or more coins."
+method = "GET"
+url = "https://coins.llama.fi/percentage/{coins}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { coins = "coingecko:bitcoin,coingecko:ethereum" }, min_results = 2, fixture = "fixtures/w5m/defillama_crypto/price_change/default.json" }
+examples = ["source.call('defillama_crypto.price_change', { coins: 'coingecko:bitcoin,coingecko:ethereum', period: '7d' })"]
+
+[op.price_change.params]
+coins = { type = "string", required = true, in = "path", encode = "raw", doc = "Comma-separated {chain}:{address} or coingecko:{id}" }
+period = { type = "string", to = "period", doc = "Lookback period e.g. 24h, 7d, 30d" }
+
+[op.price_change.map]
+items = "(.coins // {}) | to_entries[]"
+record = '''{
+  coin: .key,
+  changePercent: .value
+}'''
+
+[op.protocol_tvl]
+summary = "Fetch current total value locked (USD) for a DeFi protocol by slug (e.g. aave, lido, uniswap)."
+method = "GET"
+url = "https://api.llama.fi/tvl/{protocol}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { protocol = "aave" }, min_results = 1, fixture = "fixtures/w5m/defillama_crypto/protocol_tvl/default.json" }
+examples = ["source.call('defillama_crypto.protocol_tvl', { protocol: 'aave' })"]
+
+[op.protocol_tvl.params]
+protocol = { type = "string", required = true, in = "path", doc = "DefiLlama protocol slug e.g. aave, uniswap, makerdao" }
+
+[op.protocol_tvl.map]
+items = "."
+record = '''{
+  tvlUsd: .
+}'''
+
+[op.chains]
+summary = "List all blockchains tracked by DefiLlama with current TVL, native token symbol, and chain ID."
+method = "GET"
+url = "https://api.llama.fi/v2/chains"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = {}, min_results = 10, fixture = "fixtures/w5m/defillama_crypto/chains/default.json" }
+examples = ["source.call('defillama_crypto.chains', {})"]
+
+[op.chains.map]
+items = ".[]"
+record = '''{
+  name: .name,
+  tokenSymbol: (.tokenSymbol // null),
+  tvlUsd: (.tvl // 0),
+  geckoId: (.gecko_id // null),
+  cmcId: (.cmcId // null),
+  chainId: (.chainId // null)
+}'''

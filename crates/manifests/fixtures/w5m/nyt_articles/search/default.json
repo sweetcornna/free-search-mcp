@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "nyt_articles",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.nytimes.com/svc/search/v2/articlesearch.json?q=semiconductor+supply+chain&page=0",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"status\":\"OK\",\"copyright\":\"Copyright (c) 2026 The New York Times Company. All Rights Reserved.\",\"response\":{\"docs\":[{\"_id\":\"nyt://article/a1b2c3d4-0001\",\"uri\":\"nyt://article/a1b2c3d4-0001\",\"web_url\":\"https://www.nytimes.com/2026/10/05/technology/semiconductor-packaging-supply-chain.html\",\"snippet\":\"Chipmakers are expanding advanced packaging facilities across Arizona, Japan, and Europe to relieve AI accelerator bottlenecks.\",\"abstract\":\"Chipmakers are expanding advanced packaging facilities across Arizona, Japan, and Europe to relieve AI accelerator bottlenecks.\",\"lead_paragraph\":\"Advanced packaging has become the defining constraint of the global semiconductor supply chain.\",\"source\":\"The New York Times\",\"headline\":{\"main\":\"Why Advanced Packaging Became the New Bottleneck in Global Chipmaking\",\"print_headline\":\"Packaging Takes Center Stage in Chip Race\"},\"pub_date\":\"2026-10-05T13:10:00+0000\",\"document_type\":\"article\",\"news_desk\":\"Business\",\"section_name\":\"Technology\",\"byline\":{\"original\":\"By Don Clark\"},\"word_count\":1340},{\"_id\":\"nyt://article/a1b2c3d4-0002\",\"uri\":\"nyt://article/a1b2c3d4-0002\",\"web_url\":\"https://www.nytimes.com/2026/09/18/business/economy/chip-export-equipment-rules.html\",\"snippet\":\"Allied governments coordinate updated licensing rules for lithography tools and specialty materials.\",\"abstract\":\"Allied governments coordinate updated licensing rules for lithography tools and specialty materials.\",\"lead_paragraph\":\"Trade officials finalized new semiconductor equipment guidance following months of technical consultations.\",\"source\":\"The New York Times\",\"headline\":{\"main\":\"Allied Trade Officials Harmonize Semiconductor Equipment Licensing Rules\",\"print_headline\":\"New Rules for Chip Equipment\"},\"pub_date\":\"2026-09-18T17:45:00+0000\",\"document_type\":\"article\",\"news_desk\":\"Business\",\"section_name\":\"Business Day\",\"byline\":{\"original\":\"By Ana Swanson\"},\"word_count\":1180}],\"meta\":{\"hits\":1842,\"offset\":0,\"time\":24}}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

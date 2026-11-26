@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "ietf",
+  "op": "rfc",
+  "recordedAt": "2026-11-25T11:54:05Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://datatracker.ietf.org/api/v1/doc/document/?format=json&name=rfc9110",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ],
+          [
+            "etag",
+            "W/\"a6d03d1488ebe3a54e2a43935ed6da89\""
+          ]
+        ],
+        "bodyText": "{\"meta\": {\"limit\": 20, \"next\": null, \"offset\": 0, \"previous\": null, \"total_count\": 1}, \"objects\": [{\"abstract\": \"The Hypertext Transfer Protocol (HTTP) is a stateless application-level protocol for distributed, collaborative, hypertext information systems. This document describes the overall architecture of HTTP, establishes common terminology, and defines aspects of the protocol that are shared by all versions. In this definition are core protocol elements, extensibility mechanisms, and the \\\"http\\\" and \\\"https\\\" Uniform Resource Identifier (URI) schemes.\\n\\n This document updates RFC 3864 and obsoletes RFCs 2818, 7231, 7232, 7233, 7235, 7538, 7615, 7694, and portions of 7230.\", \"ad\": \"/api/v1/person/person/119822/\", \"expires\": null, \"external_url\": \"\", \"group\": \"/api/v1/group/group/1718/\", \"id\": 130912, \"intended_std_level\": null, \"keywords\": \"['Hypertext Transfer Protocol', 'HTTP', 'HTTP semantics', 'HTTP content', 'HTTP method', 'HTTP status code']\", \"name\": \"rfc9110\", \"note\": \"\", \"notify\": \"\", \"pages\": 194, \"resource_uri\": \"/api/v1/doc/document/rfc9110/\", \"rev\": \"\", \"rfc\": \"9110\", \"rfc_number\": 9110, \"shepherd\": null, \"states\": [\"/api/v1/doc/state/177/\"], \"std_level\": \"/api/v1/name/stdlevelname/std/\", \"stream\": \"/api/v1/name/streamname/ietf/\", \"submissions\": [], \"tags\": [\"/api/v1/name/doctagname/errata/\", \"/api/v1/name/doctagname/verified-errata/\"], \"time\": \"2026-05-20T15:43:39Z\", \"title\": \"HTTP Semantics\", \"type\": \"/api/v1/name/doctypename/rfc/\", \"uploaded_filename\": \"\", \"words\": null}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "uspto_odp",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:14:49Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.uspto.gov/api/v1/patent/applications/search?limit=3&q=neural+network",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"count\": 14820, \"patentFileWrapperDataBag\": [{\"applicationNumberText\": \"16330077\", \"applicationMetaData\": {\"inventionTitle\": \"Neural network accelerator with sparse matrix execution\", \"filingDate\": \"2019-03-15\", \"applicationTypeLabelName\": \"Utility\", \"applicationStatusDescriptionText\": \"Patented Case\", \"applicationStatusDate\": \"2022-05-10\", \"patentNumber\": \"11328189\", \"grantDate\": \"2022-05-10\", \"firstInventorName\": \"Doe, Jane\", \"firstApplicantName\": \"Example Silicon Corp.\", \"cpcClassificationBag\": [\"G06N3/063\", \"G06N3/04\"]}}, {\"applicationNumberText\": \"17112450\", \"applicationMetaData\": {\"inventionTitle\": \"Quantized transformer inference on edge devices\", \"filingDate\": \"2020-12-04\", \"applicationTypeLabelName\": \"Utility\", \"applicationStatusDescriptionText\": \"Patented Case\", \"applicationStatusDate\": \"2023-08-22\", \"patentNumber\": \"11734572\", \"grantDate\": \"2023-08-22\", \"firstInventorName\": \"Chen, Wei\", \"firstApplicantName\": \"Edge Compute Labs Inc.\", \"cpcClassificationBag\": [\"G06N3/045\", \"G06F9/30\"]}}, {\"applicationNumberText\": \"18045912\", \"applicationMetaData\": {\"inventionTitle\": \"Federated neural network training with differential privacy\", \"filingDate\": \"2023-01-19\", \"applicationTypeLabelName\": \"Utility\", \"applicationStatusDescriptionText\": \"Non Final Action Mailed\", \"applicationStatusDate\": \"2025-02-14\", \"patentNumber\": null, \"grantDate\": null, \"firstInventorName\": \"Patel, Maya\", \"firstApplicantName\": \"Privacy Systems LLC\", \"cpcClassificationBag\": [\"G06N3/098\", \"G06F21/62\"]}}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

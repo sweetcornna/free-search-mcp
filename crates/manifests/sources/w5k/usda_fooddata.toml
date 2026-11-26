@@ -1,0 +1,103 @@
+id = "usda_fooddata"
+name = "USDA FoodData Central Research API"
+summary = "USDA National Agricultural Library laboratory food nutrient composition database (SR Legacy, Foundation, FNDDS, Branded; requires free api.data.gov key)."
+aliases = ["fooddata", "usda fdc", "usda nutrition"]
+home_url = "https://fdc.nal.usda.gov"
+tier = 3
+scopes = ["dataset", "academic.biomed"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 86400, host_bucket = "api.nal.usda.gov" }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_DATA_GOV_API_KEY"
+in = "header"
+name = "X-Api-Key"
+format = "{key}"
+route_requires_key = true
+
+[op.search]
+summary = "Search USDA FoodData Central foods and summarized nutrient profiles."
+method = "GET"
+url = "https://api.nal.usda.gov/fdc/v1/foods/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "pageNumber", start = 1, max_pages = 3 }
+probe = { params = { query = "cheddar cheese", limit = 3, page = 1 }, min_results = 2, fixture = "fixtures/w5k/usda_fooddata/search/default.json" }
+examples = ['source.call("usda_fooddata.search", { query: "cheddar cheese", limit: 5 })']
+
+[op.search.params]
+query = { type = "string", required = true, to = "query", doc = "Food name or ingredient query" }
+data_type = { type = "string", to = "dataType", doc = "Optional dataset filter (Foundation, SR Legacy, Survey (FNDDS), Branded)" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "pageSize", doc = "Results per page" }
+page = { type = "int", default = 1, min = 1, to = "pageNumber", doc = "1-based page number" }
+
+[op.search.map]
+items = "(.foods // [])[]"
+total = ".totalHits"
+error = "if .error then (.error.message // (.error | tostring)) else null end"
+record = '''(
+  def us_date:
+    if type == "string" and test("^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$") then
+      (split("/") | "\(.[2])-\(if (.[0]|length)==1 then "0"+.[0] else .[0] end)-\(if (.[1]|length)==1 then "0"+.[1] else .[1] end)")
+    else parse_date end;
+  {
+    fdcId: .fdcId,
+    description: ((.description // "") | collapse_ws),
+    dataType: (.dataType // null),
+    foodCategory: (.foodCategory // null),
+    publishedDate: (.publishedDate | us_date),
+    nutrients: [(.foodNutrients // [])[] | { name: (.nutrientName // .name // ""), number: (.nutrientNumber // .number // null), value: (.value // .amount // null), unit: (.unitName // null) }],
+    url: ("https://fdc.nal.usda.gov/food-details/" + (.fdcId | tostring) + "/nutrients")
+  }
+)'''
+hit = '''(
+  def us_date:
+    if type == "string" and test("^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$") then
+      (split("/") | "\(.[2])-\(if (.[0]|length)==1 then "0"+.[0] else .[0] end)-\(if (.[1]|length)==1 then "0"+.[1] else .[1] end)")
+    else parse_date end;
+  (.publishedDate | us_date) as $d |
+  {
+    title: ((.description // "") | collapse_ws),
+    url: ("https://fdc.nal.usda.gov/food-details/" + (.fdcId | tostring) + "/nutrients"),
+    snippet: ([(.dataType // ""), (.foodCategory // ""), (([(.foodNutrients // [])[:3][] | ((.nutrientName // "") + ": " + ((.value // "") | tostring) + " " + (.unitName // ""))]) | join(", "))] | map(select(length > 0)) | join(" · ")),
+    date: $d,
+    dateSource: (if $d != null then "api" else null end)
+  }
+)'''
+
+[op.food]
+summary = "Fetch abridged nutrient details for a single FoodData Central fdcId."
+method = "GET"
+url = "https://api.nal.usda.gov/fdc/v1/food/{fdc_id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "abridged" }
+probe = { params = { fdc_id = "173414" }, min_results = 1, fixture = "fixtures/w5k/usda_fooddata/food/default.json" }
+examples = ['source.call("usda_fooddata.food", { fdc_id: "173414" })']
+
+[op.food.params]
+fdc_id = { type = "string", required = true, in = "path", doc = "FoodData Central numeric fdcId e.g. 173414" }
+
+[op.food.map]
+items = "."
+error = "@ref:op.search.map.error"
+record = '''(
+  def us_date:
+    if type == "string" and test("^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$") then
+      (split("/") | "\(.[2])-\(if (.[0]|length)==1 then "0"+.[0] else .[0] end)-\(if (.[1]|length)==1 then "0"+.[1] else .[1] end)")
+    else parse_date end;
+  {
+    fdcId: .fdcId,
+    description: ((.description // "") | collapse_ws),
+    dataType: (.dataType // null),
+    ndbNumber: (.ndbNumber // null),
+    publicationDate: (.publicationDate | us_date),
+    nutrients: [(.foodNutrients // [])[] | { name: (.name // .nutrientName // ""), number: (.number // .nutrientNumber // null), amount: (.amount // .value // null), unit: (.unitName // null) }],
+    url: ("https://fdc.nal.usda.gov/food-details/" + (.fdcId | tostring) + "/nutrients")
+  }
+)'''

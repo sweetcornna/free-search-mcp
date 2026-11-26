@@ -1,0 +1,65 @@
+id = "us_datagov_v4"
+name = "Data.gov US Federal Open Data v4"
+summary = "Search 300k+ US federal, state, and local open datasets via the GSA Data.gov v4 DCAT-US catalog API (requires free api.data.gov key)."
+aliases = ["data.gov", "datagov", "us open data", "gsa datagov"]
+home_url = "https://data.gov"
+tier = 3
+scopes = ["dataset", "gov"]
+caps = ["search", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 0.25, burst = 3, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 21600, host_bucket = "api_data_gov" }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_DATA_GOV_API_KEY"
+in = "header"
+name = "X-Api-Key"
+format = "{key}"
+route_requires_key = true
+
+[op.search]
+summary = "Search US federal open datasets by keyword, publisher organization slug, and sort order."
+method = "GET"
+url = "https://api.gsa.gov/technology/datagov/v4/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "cursor", param = "after", max_pages = 3 }
+probe = { params = { query = "climate", limit = 3 }, min_results = 2, fixture = "fixtures/w5m/us_datagov_v4/search/default.json" }
+examples = ["source.call('us_datagov_v4.search', { query: 'climate', org_slug: 'noaa-gov', limit: 5 })"]
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Full-text dataset search query" }
+org_slug = { type = "string", to = "org_slug", doc = "Filter by publisher slug e.g. nasa, noaa-gov, epa-gov" }
+org_type = { type = "string", to = "org_type", doc = "Filter by organization type e.g. Federal Government, City Government" }
+sort = { type = "string", default = "relevance", enum = ["relevance", "popularity", "distance", "last_harvested_date"], to = "sort", doc = "Sort order" }
+limit = { type = "int", default = 10, min = 1, max = 100, to = "per_page", doc = "Datasets per page" }
+cursor = { type = "string", to = "after", doc = "Opaque pagination cursor returned in after" }
+
+[op.search.map]
+items = "(.results // [])[]"
+next_cursor = ".after"
+error = 'if .error then (.error.message // .error.code // (.error | tostring)) else null end'
+record = '''{
+  identifier: (.identifier // null),
+  title: ((.title // "") | strip_tags),
+  description: ((.description // "") | strip_tags),
+  organization: (.organization.title // .organization.name // null),
+  orgSlug: (.organization.slug // null),
+  orgType: (.organization.org_type // null),
+  issued: (.issued | parse_date),
+  modified: (.modified | parse_date),
+  license: (.license // null),
+  keywords: (.keyword // []),
+  themes: (.theme // []),
+  distributions: [(.distribution // [])[] | { title: (.title // null), format: (.format // .mediaType // null), url: (.downloadURL // .accessURL // null) }],
+  url: (.landingPage // ("https://catalog.data.gov/dataset/" + (.identifier // "")))
+}'''
+hit = '''{
+  title: ((.title // "") | strip_tags),
+  url: (.landingPage // ("https://catalog.data.gov/dataset/" + (.identifier // ""))),
+  snippet: ((if (.organization.title // .organization.name) then ((.organization.title // .organization.name) + " — ") else "" end) + ((.description // "") | strip_tags)),
+  date: ((.modified // .issued) | parse_date),
+  dateSource: "api"
+}'''

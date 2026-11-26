@@ -1,0 +1,92 @@
+id = "protein_databank"
+name = "RCSB Protein Data Bank (PDB)"
+summary = "220k+ experimental 3D macromolecular structures (X-ray, cryo-EM, NMR) and primary citations."
+aliases = ["pdb", "rcsb", "rcsb pdb"]
+home_url = "https://www.rcsb.org"
+tier = 1
+scopes = ["academic.biomed", "dataset"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 3.0, burst = 6, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 43200, host_bucket = "rcsb.org" }
+
+[op.search]
+summary = "Full-text search for 3D macromolecular structure entries in RCSB PDB with titles, methods, resolutions, and release dates."
+method = "GET"
+url = "https://data.rcsb.org/graphql"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { query = "{ entries(entry_ids: [{pre}]) { rcsb_id struct { title } rcsb_entry_info { experimental_method resolution_combined deposited_atom_count } rcsb_accession_info { deposit_date initial_release_date } rcsb_primary_citation { pdbx_database_id_DOI pdbx_database_id_PubMed } } }" }
+probe = { params = { query = "hemoglobin", limit = 3 }, min_results = 2, fixture = "fixtures/w5b/protein_databank/search/default.json" }
+
+[[op.search.pre]]
+method = "POST"
+url = "https://search.rcsb.org/rcsbsearch/v2/query"
+headers = { Accept = "application/json", "Content-Type" = "application/json" }
+body = { kind = "json", jaq = '''{
+  query: { parameters: { value: $p.query }, service: "full_text", type: "terminal" },
+  request_options: { paginate: { rows: ($p.limit // 10), start: ($p.offset // 0) } },
+  return_type: "entry"
+}''' }
+response = "json"
+bind = '''[.result_set[]?.identifier | select(type == "string" and length > 0) | tojson] | join(",")'''
+on_empty = "empty"
+
+[op.search.params]
+query = { type = "string", required = true, in = "none", doc = "Protein, ligand, or macromolecule search terms" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "none", doc = "Number of PDB entries to return" }
+offset = { type = "int", default = 0, min = 0, in = "none", doc = "Result offset" }
+
+[op.search.map]
+items = "(.data.entries // [])[]"
+error = 'if type == "object" and (.errors // [] | length) > 0 then (.errors | map(.message // tostring) | join("; ")) else null end'
+record = '''{
+  pdbId: (.rcsb_id // ""),
+  title: ((.struct.title // "") | collapse_ws),
+  experimentalMethod: (.rcsb_entry_info.experimental_method // null),
+  resolutionAngstrom: (.rcsb_entry_info.resolution_combined[0] | to_num),
+  depositedAtomCount: (.rcsb_entry_info.deposited_atom_count | to_int),
+  depositDate: ((.rcsb_accession_info.deposit_date // null) | parse_date),
+  releaseDate: ((.rcsb_accession_info.initial_release_date // null) | parse_date),
+  primaryDoi: ((.rcsb_primary_citation.pdbx_database_id_DOI // null) | doi_norm),
+  primaryPmid: (.rcsb_primary_citation.pdbx_database_id_PubMed | to_int),
+  url: ("https://www.rcsb.org/structure/" + (.rcsb_id // ""))
+}'''
+hit = '''((.rcsb_accession_info.initial_release_date // .rcsb_accession_info.deposit_date // null) | parse_date) as $d | {
+  title: ((if (.struct.title // "") != "" then ((.rcsb_id // "") + " — " + (.struct.title | collapse_ws)) else ("PDB " + (.rcsb_id // "")) end) | collapse_ws),
+  url: ("https://www.rcsb.org/structure/" + (.rcsb_id // "")),
+  snippet: ((((.rcsb_entry_info.experimental_method // "Structure") + (if (.rcsb_entry_info.resolution_combined[0] // null) != null then (" · " + (.rcsb_entry_info.resolution_combined[0] | tostring) + " Å") else "" end) + (if (.rcsb_primary_citation.pdbx_database_id_DOI // "") != "" then (" · DOI: " + .rcsb_primary_citation.pdbx_database_id_DOI) else "" end))) | collapse_ws),
+  date: $d,
+  dateSource: (if $d != null then "api" else null end)
+}'''
+
+[op.entry]
+summary = "Fetch core experimental metadata, resolution, and primary citation for a PDB entry ID."
+method = "GET"
+url = "https://data.rcsb.org/rest/v1/core/entry/{pdb_id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { pdb_id = "4HHB" }, min_results = 1, fixture = "fixtures/w5b/protein_databank/entry/default.json" }
+
+[op.entry.params]
+pdb_id = { type = "string", required = true, in = "path", doc = "4-character PDB entry ID (e.g. 4HHB)" }
+
+[op.entry.map]
+items = "."
+error = 'if type == "object" and ((.status | to_int) // 200) >= 400 then (.message // "RCSB API error") else null end'
+record = '''{
+  pdbId: (.entry.id // ""),
+  title: ((.struct.title // "") | collapse_ws),
+  experimentalMethod: (.rcsb_entry_info.experimental_method // null),
+  resolutionAngstrom: (.rcsb_entry_info.resolution_combined[0] | to_num),
+  depositedAtomCount: (.rcsb_entry_info.deposited_atom_count | to_int),
+  polymerEntityCount: (.rcsb_entry_info.polymer_entity_count | to_int),
+  depositDate: ((.rcsb_accession_info.deposit_date // null) | parse_date),
+  releaseDate: ((.rcsb_accession_info.initial_release_date // null) | parse_date),
+  primaryDoi: ((([(.citation // [])[] | select(.rcsb_is_primary == "Y") | .pdbx_database_id_DOI][0]) // (.citation[0].pdbx_database_id_DOI // null)) | doi_norm),
+  primaryPmid: ((([(.citation // [])[] | select(.rcsb_is_primary == "Y") | .pdbx_database_id_PubMed][0]) // (.citation[0].pdbx_database_id_PubMed // null)) | to_int),
+  authors: [(.audit_author // [])[] | (.name | collapse_ws)],
+  url: ("https://www.rcsb.org/structure/" + (.entry.id // ""))
+}'''

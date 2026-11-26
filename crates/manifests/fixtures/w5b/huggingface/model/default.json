@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "huggingface",
+  "op": "model",
+  "recordedAt": "2026-11-25T15:09:17Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://huggingface.co/api/models/google-bert/bert-base-uncased",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ],
+          [
+            "etag",
+            "W/\"119d-1P2VdnDlJEzuoZoSPZFx3Cs8Vm4\""
+          ]
+        ],
+        "bodyText": "{\"_id\":\"621ffdc036468d709f174338\",\"id\":\"google-bert/bert-base-uncased\",\"private\":false,\"pipeline_tag\":\"fill-mask\",\"library_name\":\"transformers\",\"tags\":[\"transformers\",\"pytorch\",\"tf\",\"jax\",\"rust\",\"coreml\",\"onnx\",\"safetensors\",\"bert\",\"fill-mask\",\"exbert\",\"en\",\"dataset:bookcorpus\",\"dataset:wikipedia\",\"arxiv:1810.04805\",\"license:apache-2.0\",\"endpoints_compatible\",\"deploy:sagemaker\",\"deploy:azure\",\"region:us\"],\"downloads\":33110968,\"likes\":3092,\"modelId\":\"google-bert/bert-base-uncased\",\"author\":\"google-bert\",\"sha\":\"86b5e0934494bd15c9632b12f734a8a67f723594\",\"lastModified\":\"2024-02-19T11:06:12.000Z\",\"gated\":false,\"disabled\":false,\"mask_token\":\"[MASK]\",\"widgetData\":[{\"text\":\"Paris is the [MASK] of France.\"},{\"text\":\"The goal of life is [MASK].\"}],\"model-index\":null,\"config\":{\"architectures\":[\"BertForMaskedLM\"],\"model_type\":\"bert\",\"tokenizer_config\":{}},\"cardData\":{\"language\":\"en\",\"tags\":[\"exbert\"],\"license\":\"apache-2.0\",\"datasets\":[\"bookcorpus\",\"wikipedia\"]},\"transformersInfo\":{\"auto_model\":\"AutoModelForMaskedLM\",\"pipeline_tag\":\"fill-mask\",\"processor\":\"AutoTokenizer\"},\"siblings\":[{\"rfilename\":\".gitattributes\"},{\"rfilename\":\"LICENSE\"},{\"rfilename\":\"README.md\"},{\"rfilename\":\"config.json\"},{\"rfilename\":\"coreml/fill-mask/float32_model.mlpackage/Data/com.apple.CoreML/model.mlmodel\"},{\"rfilename\":\"coreml/fill-mask/float32_model.mlpackage/Data/com.apple.CoreML/weights/weight.bin\"},{\"rfilename\":\"coreml/fill-mask/float32_model.mlpackage/Manifest.json\"},{\"rfilename\":\"flax_model.msgpack\"},{\"rfilename\":\"model.onnx\"},{\"rfilename\":\"model.safetensors\"},{\"rfilename\":\"pytorch_model.bin\"},{\"rfilename\":\"rust_model.ot\"},{\"rfilename\":\"tf_model.h5\"},{\"rfilename\":\"tokenizer.json\"},{\"rfilename\":\"tokenizer_config.json\"},{\"rfilename\":\"vocab.txt\"}],\"spaces\":[\"galilai-group/prh_demo\",\"emanforhelp/model-pulse\",\"Dhshshd/Ninqggoai\",\"alexnasa/Chain-of-Zoom\",\"merve/Grounding_DINO_demo\",\"Nightfury16/virtual-staging\",\"microsoft/HuggingGPT\",\"Vision-CAIR-Admin/minigpt4\",\"lnyan/stablediffusion-infinity\",\"mediasynthesismuseum/latentdiffusion\",\"mrfakename/MeloTTS\",\"Salesforce/BLIP\",\"shi-labs/Versatile-Diffusion\",\"yizhangliu/Grounded-Segment-Anything\",\"stepfun-ai/Step1X-Edit\",\"haiyangliu0/TANGO\",\"hilamanor/audioEditing\",\"xinyu1205/recognize-anything\",\"cvlab/zero123-live\",\"AIGC-Audio/AudioGPT\",\"m-ric/chunk_visualizer\",\"Audio-AGI/AudioSep\",\"jadechoghari/OpenMusic\",\"DAMO-NLP-SG/Video-LLaMA\",\"exbert-project/exbert\",\"embedl/hfviewer\",\"gligen/demo\",\"declare-lab/mustango\",\"Yiwen-ntu/MeshAnything\",\"shgao/EditAnything\",\"multimodalart/MoDA-fast-talking-head\",\"LiruiZhao/Diffree\",\"nikigoli/countgd\",\"Vision-CAIR-Admin/MiniGPT-v2\",\"Yuliang/ECON\",\"THUdyh/Oryx\",\"OpenSound/CapSpeech-TTS\",\"IDEA-Research/Grounded-SAM\",\"ShilongLiu/Grounding_DINO_demo\",\"Awiny/Image2Paragraph\",\"yangheng/Super-Resolution-Anime-Diffusion\",\"liuyuan-pal/SyncDreamer\",\"Nick088/Audio-SR\",\"XiangJinYu/SPO\",\"sam-hq-team/sam-hq\",\"haotiz/glip-zeroshot-demo\",\"TencentARC/BrushEdit\",\"Yiwen-ntu/MeshAnythingV2\",\"nateraw/lavila\",\"abyildirim/inst-inpaint\",\"Pinwheel/GLIP-BLIP-Object-Detection-VQA\",\"Junfeng5/GLEE_demo\",\"shi-labs/Matting-Anything\",\"fffiloni/Video-Matting-Anything\",\"burtenshaw/autotrain-mcp\",\"Vision-CAIR-Admin/MiniGPT4-video\",\"linfanluntan/Grounded-SAM\",\"magicr/BuboGPT\",\"nvidia/audio-flamingo-2\",\"WensongSong/Insert-Anything\",\"clip-italian/clip-italian-demo\",\"OpenGVLab/InternGPT\",\"yenniejun/tokenizers-languages\",\"3DTopia/3DTopia\",\"mmlab-ntu/relate-anything-model\",\"Amphion/PicoAudio\",\"alexnasa/ReCamMaster-ZEROGPU\",\"byeongjun-park/HarmonyView\",\"fffiloni/vta-ldm\",\"zakaria-narjis/photo-enhancer\",\"acmc/whatsapp-chats-finetuning-formatter\",\"SVGRender/DiffSketcher\",\"keras-io/bert-semantic-similarity\",\"MirageML/sjc\",\"AIGC-Audio/AudioLCM\",\"NAACL2022/CLIP-Caption-Reward\",\"society-ethics/model-card-regulatory-check\",\"fffiloni/miniGPT4-Video-Zero\",\"Gladiator/Text-Summarizer\",\"ysharma/text-to-image-to-video\",\"LittleFrog/IntrinsicAnything\",\"ethanchern/Anole\",\"kevinwang676/E2-F5-TTS\",\"backtracking/tiny-tts-demo\",\"milyiyo/reimagine-it\",\"bartar/tokenizers\",\"OpenGVLab/VideoChatGPT\",\"sonalkum/GAMA\",\"kaushalya/medclip-roco\",\"AIGC-Audio/Make_An_Audio\",\"avid-ml/bias-detection\",\"kgout/asr\",\"RitaParadaRamos/SmallCapDemo\",\"codelion/Grounding_DINO_demo\",\"llizhx/TinyGPT-V\",\"ZebangCheng/Emotion-LLaMA\",\"flosstradamus/FluxMusicGUI\",\"Jingkang/EgoGPT-7B\",\"Tinkering/Pytorch-day-prez\",\"sasha/BiasDetection\"],\"createdAt\":\"2022-03-02T23:29:04.000Z\",\"safetensors\":{\"parameters\":{\"F32\":110106428},\"total\":110106428},\"inference\":\"warm\",\"usedStorage\":6722260570}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "source": "crossref",
+  "op": "work",
+  "recordedAt": "2026-11-25T14:07:12Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.crossref.org/works/10.9999/fsm-scholar-nonexistent"
+      },
+      "response": {
+        "status": 404,
+        "headers": [
+          [
+            "content-type",
+            "text/plain"
+          ]
+        ],
+        "bodyText": "Resource not found."
+      }
+    }
+  ]
+}

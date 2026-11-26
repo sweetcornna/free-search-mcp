@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "semanticscholar",
+  "op": "work",
+  "recordedAt": "2026-11-25T14:08:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.semanticscholar.org/graph/v1/paper/ARXIV:1706.03762?fields=paperId%2Ctitle%2Cabstract%2Cyear%2CpublicationDate%2Cvenue%2CcitationCount%2CinfluentialCitationCount%2CisOpenAccess%2CopenAccessPdf%2CexternalIds%2Cauthors",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"paperId\":\"204e3073870fae3d05bcbc2f6a8e263d9b72e776\",\"title\":\"Attention is All you Need\",\"abstract\":\"The dominant sequence transduction models are based on complex recurrent or convolutional neural networks.\",\"year\":2017,\"publicationDate\":\"2017-06-12\",\"venue\":\"Neural Information Processing Systems\",\"citationCount\":140000,\"influentialCitationCount\":15000,\"isOpenAccess\":true,\"openAccessPdf\":{\"url\":\"https://arxiv.org/pdf/1706.03762.pdf\",\"status\":\"GREEN\"},\"externalIds\":{\"ArXiv\":\"1706.03762\",\"DBLP\":\"conf/nips/VaswaniSPUJGKP17\"},\"authors\":[{\"name\":\"Ashish Vaswani\"},{\"name\":\"Noam Shazeer\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+id = "socarxiv"
+name = "SocArXiv Preprints"
+summary = "Open archive of the social sciences hosted on OSF Preprints."
+aliases = ["socarxiv.org", "social science preprints"]
+home_url = "https://osf.io/preprints/socarxiv"
+tier = 2
+scopes = ["academic", "academic.preprint", "academic.humanities"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 43200, host_bucket = "api.osf.io" }
+
+[op.search]
+summary = "Search SocArXiv social-science preprints by title substring."
+method = "GET"
+url = "https://api.osf.io/v2/preprints/"
+headers = { Accept = "application/vnd.api+json" }
+response = "json"
+returns = "works"
+const_query = { embed = "contributors", "filter[provider]" = "socarxiv" }
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "inequality", limit = 3 }, min_results = 2, fixture = "fixtures/w5a/socarxiv/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "filter[title][contains]", doc = "Title substring filter" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "page[size]", doc = "Results per page" }
+page = { type = "int", min = 1, to = "page", doc = "1-indexed page number" }
+
+[op.search.map]
+items = ".data[]"
+total = ".links.meta.total"
+error = '''if (.errors | type) == "array" and (.errors | length) > 0 then (.errors[0]?.detail // .errors[0]?.title // (.errors[0] | tostring)) else null end'''
+work = '''(
+  .attributes as $a |
+  (.links.html // ("https://osf.io/preprints/socarxiv/" + .id + "/")) as $url |
+  ($a.doi // null | doi_norm) as $pubdoi |
+  (.links.preprint_doi // null | doi_norm) as $predoi |
+  (($a.date_published // $a.date_created) | parse_date) as $dt |
+  (($a.description // "") | unescape_html | collapse_ws) as $abs |
+  (if $predoi != null and $pubdoi != null and $predoi != $pubdoi then [{ kind: "preprint", doi: $predoi, url: ("https://doi.org/" + $predoi) }, { kind: "published", doi: $pubdoi, url: ("https://doi.org/" + $pubdoi) }] else [] end) as $vers |
+  {
+    title: (($a.title // "") | unescape_html | collapse_ws),
+    authors: [(.embeds.contributors.data // [])[] | .embeds.users.data.attributes? | select(. != null) | {
+      name: ((.full_name // "") | collapse_ws),
+      orcid: (.external_identity.ORCID.id // null)
+    } | select(.name != "")],
+    year: (if $dt != null then ($dt[0:4] | to_int) else null end),
+    publishedDate: $dt,
+    venue: "SocArXiv",
+    workType: "preprint",
+    ids: { doi: ($predoi // $pubdoi) },
+    abstractText: (if ($abs // "") != "" then $abs else null end),
+    oa: { status: "green", url: $url },
+    retracted: ($a.date_withdrawn != null),
+    retractionReason: (if ($a.withdrawal_justification // "") != "" then ($a.withdrawal_justification | collapse_ws) else null end),
+    versions: $vers,
+    url: $url,
+    sources: ["socarxiv"]
+  }
+)'''
+
+[op.work]
+summary = "Fetch a single SocArXiv preprint by OSF preprint ID."
+method = "GET"
+url = "https://api.osf.io/v2/preprints/{id}/"
+headers = { Accept = "application/vnd.api+json" }
+response = "json"
+returns = "works"
+const_query = { embed = "contributors" }
+probe = { params = { id = "ghr65_v1" }, min_results = 1, fixture = "fixtures/w5a/socarxiv/work/default.json" }
+
+[op.work.params]
+id = { type = "string", required = true, in = "path", doc = "SocArXiv OSF ID e.g. ghr65_v1" }
+
+[op.work.map]
+items = ".data"
+error = "@ref:op.search.map.error"
+work = "@ref:op.search.map.work"

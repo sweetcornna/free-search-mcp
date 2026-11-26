@@ -1,0 +1,113 @@
+id = "openverse"
+name = "Openverse"
+summary = "Search openly-licensed Creative Commons images and audio across Wikimedia Commons, Flickr, Freesound, and museums."
+aliases = ["cc search", "openverse images", "openverse audio"]
+home_url = "https://openverse.org"
+tier = 1
+scopes = ["media"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.5, burst = 4, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 21600 }
+
+[op.search]
+summary = "Search openly-licensed images on Openverse."
+method = "GET"
+url = "https://api.openverse.org/v1/images/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "json", mature = "false" }
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "aurora", limit = 3 }, min_results = 2, fixture = "fixtures/w5c/openverse/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Image search keywords" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "page_size", doc = "Images per page" }
+license = { type = "string", to = "license", doc = "License filter e.g. cc0, by, by-sa" }
+page = { type = "int", min = 1, to = "page", doc = "1-based page number" }
+
+[op.search.map]
+items = ".results[]"
+total = ".result_count"
+error = "if (.detail | type) == \"string\" and (.detail | length) > 0 then .detail else null end"
+record = '''{
+  id: .id,
+  title: (if (.title | type) == "string" and (.title | length) > 0 then .title else ((.url // "") | split("/") | last) end),
+  url: .url,
+  landingUrl: .foreign_landing_url,
+  creator: .creator,
+  license: .license,
+  licenseVersion: .license_version,
+  licenseUrl: .license_url,
+  width: .width,
+  height: .height,
+  source: .source,
+  provider: .provider,
+  thumbnail: .thumbnail
+}'''
+hit = '''{
+  title: (if (.title | type) == "string" and (.title | length) > 0 then .title else ((.url // "") | split("/") | last) end),
+  url: (.url // ""),
+  snippet: ([
+    (if (.license | type) == "string" and (.license | length) > 0 then ((if .license == "cc0" then "CC0" elif .license == "pdm" then "PDM" else "CC " + (.license | ascii_upcase) end) + (if (.license_version | type) == "string" and (.license_version | length) > 0 then " " + .license_version else "" end)) else empty end),
+    (if (.creator | type) == "string" and (.creator | length) > 0 then "by \(.creator)" else empty end),
+    (if (.width | type) == "number" and (.height | type) == "number" then "\(.width)x\(.height)px" else empty end),
+    (if (.duration | type) == "number" and .duration > 0 then "\((.duration / 1000) | floor)s" else empty end),
+    (if (.foreign_landing_url | type) == "string" and (.foreign_landing_url | length) > 0 then "source: \(.foreign_landing_url)" else empty end)
+  ] | join(" · ")),
+  date: null,
+  dateSource: null
+}'''
+
+[op.audio]
+summary = "Search openly-licensed audio tracks and sound effects on Openverse."
+method = "GET"
+url = "https://api.openverse.org/v1/audio/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "json", mature = "false" }
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "piano", limit = 3 }, min_results = 2, fixture = "fixtures/w5c/openverse/audio/default.json" }
+
+[op.audio.params]
+query = { type = "string", required = true, to = "q", doc = "Audio search keywords" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "page_size", doc = "Tracks per page" }
+license = { type = "string", to = "license", doc = "License filter" }
+page = { type = "int", min = 1, to = "page", doc = "1-based page number" }
+
+[op.audio.map]
+items = ".results[]"
+total = ".result_count"
+error = "@ref:op.search.map.error"
+record = '''{
+  id: .id,
+  title: (.title // ""),
+  url: .url,
+  landingUrl: .foreign_landing_url,
+  creator: .creator,
+  license: .license,
+  licenseVersion: .license_version,
+  durationMs: .duration,
+  source: .source
+}'''
+hit = "@ref:op.search.map.hit"
+
+[op.image]
+summary = "Fetch full metadata for an Openverse image by UUID."
+method = "GET"
+url = "https://api.openverse.org/v1/images/{id}/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "json" }
+probe = { params = { id = "1c3cefca-c00e-484c-af57-4a5316c8e3a2" }, min_results = 1, fixture = "fixtures/w5c/openverse/image/default.json" }
+
+[op.image.params]
+id = { type = "string", required = true, in = "path", doc = "Openverse image UUID" }
+
+[op.image.map]
+items = "."
+error = "@ref:op.search.map.error"
+record = "@ref:op.search.map.record"

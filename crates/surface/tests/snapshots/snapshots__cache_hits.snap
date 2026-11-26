@@ -1,0 +1,13 @@
+---
+source: crates/surface/tests/snapshots.rs
+expression: cache_md
+---
+# Cache hits for `backdoor` (1 result)
+
+## 1. A backdoor in xz
+<https://lwn.net/Articles/967180/>
+_LWN.net · 2024-03-29_
+
+> …investigation into a [backdoor] that was shipped with versions 5.6.0 and 5.6.1…
+
+next: `cache.getPage(url)` to read a full cached page.

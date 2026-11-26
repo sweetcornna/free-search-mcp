@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "thesportsdb_free",
+  "op": "events",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.thesportsdb.com/api/v1/json/123/searchevents.php?e=Arsenal_vs_Chelsea",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"event\":[{\"idEvent\":\"2494022\",\"idAPIfootball\":\"1557387\",\"strTimestamp\":\"2026-09-06T15:30:00\",\"strEvent\":\"Arsenal vs Chelsea\",\"strEventAlternate\":\"Chelsea @ Arsenal\",\"strFilename\":\"English Premier League 2026-09-06 Arsenal vs Chelsea\",\"strSport\":\"Soccer\",\"idLeague\":\"4328\",\"strLeague\":\"English Premier League\",\"strLeagueBadge\":\"https:\\/\\/r2.thesportsdb.com\\/images\\/media\\/league\\/badge\\/gasy9d1737743125.png\",\"strSeason\":\"2026-2027\",\"strDescriptionEN\":\"Defending champions Arsenal welcome Chelsea to the Emirates Stadium for an early-season London derby between two sides that have started the Premier League campaign strongly. Mikel Arteta’s team will look to extend their long unbeaten run against the Blues, while Xabi Alonso’s Chelsea arrive with an aggressive new-look attack and the opportunity to make an early statement against one of their principal title rivals.\",\"strHomeTeam\":\"Arsenal\",\"strAwayTeam\":\"Chelsea\",\"intHomeScore\":\"2\",\"intHomeScoreExtra\":null,\"intAwayScoreExtra\":null,\"intRound\":\"3\",\"intAwayScore\":\"1\",\"intSpectators\":null,\"strOfficial\":\"\",\"strWeather\":\"\",\"dateEvent\":\"2026-09-06\",\"dateEventLocal\":\"2026-09-06\",\"strTime\":\"15:30:00\",\"strTimeLocal\":\"16:30:00\",\"strGroup\":\"\",\"idHomeTeam\":\"133604\",\"strHomeTeamBadge\":\"https:\\/\\/r2.thesportsdb.com\\/images\\/media\\/team\\/badge\\/uyhbfe1612467038.png\",\"idAwayTeam\":\"133610\",\"strAwayTeamBadge\":\"https:\\/\\/r2.thesportsdb.com\\/images\\/media\\/team\\/badge\\/pbf4ul1782638263.png\",\"intScore\":\"8\",\"intScoreVotes\":\"1\",\"strResult\":\"Arsenal recovered from conceding after just 77 seconds to defeat Chelsea 2–1 and preserve their perfect start to the Premier League season. Morgan Rogers gave the visitors an immediate lead, but Kai Havertz equalised in the 25th minute before captain Martin Ødegaard completed the comeback five minutes after halftime, with David Raya producing a crucial late save from Estêvão to protect all three points.\",\"idVenue\":\"15528\",\"strVenue\":\"Emirates Stadium\",\"strCountry\":\"England\",\"strCity\":\"\",\"strPoster\":\"https:\\/\\/r2.thesportsdb.com\\/images\\/media\\/event\\/poster\\/0l3uib1785931591.jpg\",\"strSquare\":\"https:\\/\\/r2.thesportsdb.com\\/images\\/media\\/event\\/square\\/xgqyzb1785931689.jpg\",\"strFanart\":null,\"strThumb\":\"https:\\/\\/r2.thesportsdb.com\\/images\\/media\\/event\\/thumb\\/uxuamm1785931532.jpg\",\"strThumbAlternate\":null,\"strBanner\":\"https:\\/\\/r2.thesportsdb.com\\/images\\/media\\/event\\/banner\\/m3ktrt1785931642.jpg\",\"strMap\":null,\"strTweet1\":\"\",\"strVideo\":\"https:\\/\\/www.youtube.com\\/watch?v=af99CJ4f_yc\",\"strStatus\":\"FT\",\"strPostponed\":\"no\",\"strLocked\":\"unlocked\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

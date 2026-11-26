@@ -1,0 +1,193 @@
+{
+  "version": 1,
+  "source": "synthetic_step10a_doaj",
+  "op": "fulltext",
+  "recordedAt": "",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://pmc.ncbi.nlm.nih.gov/tools/idconv/api/v1/articles/?format=json&ids=10.3390%2Fgenes14010001&tool=free-search-mcp",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"status\":\"ok\",\"records\":[{\"requested-id\":\"10.3390/genes14010001\",\"status\":\"error\"}]}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.openalex.org/works/https://doi.org/10.3390/genes14010001?select=id%2Cids%2Cdoi%2Copen_access%2Cbest_oa_location%2Clocations%2Cprimary_location",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 404,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.semanticscholar.org/graph/v1/paper/DOI:10.3390/genes14010001?fields=openAccessPdf%2CexternalIds%2Curl%2CisOpenAccess",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 404,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.core.ac.uk/v3/search/works?limit=3&q=doi%3A%2210.3390%2Fgenes14010001%22",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"totalHits\":0,\"results\":[]}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://doaj.org/api/search/articles/doi:10.3390%2Fgenes14010001",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"total\": 1, \"page\": 1, \"pageSize\": 10, \"timestamp\": \"2026-11-25T13:46:14.600947Z\", \"query\": \"doi:10.3390/genes14010001\", \"results\": [{\"last_updated\": \"2025-08-19T20:12:47Z\", \"bibjson\": {\"identifier\": [{\"id\": \"1553-7390\", \"type\": \"pissn\"}, {\"id\": \"1553-7404\", \"type\": \"eissn\"}, {\"id\": \"10.3390/genes14010001\", \"type\": \"doi\"}], \"journal\": {\"volume\": \"8\", \"number\": \"6\", \"country\": \"US\", \"issns\": [\"1553-7390\", \"1553-7404\"], \"publisher\": \"Public Library of Science (PLoS)\", \"language\": [\"EN\"], \"title\": \"PLoS Genetics\"}, \"month\": \"0\", \"year\": \"2012\", \"start_page\": \"e1002441\", \"subject\": [{\"code\": \"QH426-470\", \"scheme\": \"LCC\", \"term\": \"Genetics\"}], \"author\": [{\"name\": \"Mina Rho\"}, {\"name\": \"Yu-Wei Wu\"}, {\"name\": \"Haixu Tang\"}, {\"name\": \"Thomas G Doak\"}, {\"name\": \"Yuzhen Ye\"}], \"link\": [{\"type\": \"fulltext\", \"url\": \"http://europepmc.org/articles/PMC3374615?pdf=render\"}], \"abstract\": \"CRISPR (Clustered Regularly Interspaced Short Palindromic Repeats) loci, together with cas (CRISPR-associated) genes, form the CRISPR/Cas adaptive immune system, a primary defense strategy that eubacteria and archaea mobilize against foreign nucleic acids, including phages and conjugative plasmids. Short spacer sequences separated by the repeats are derived from foreign DNA and direct interference to future infections. The availability of hundreds of shotgun metagenomic datasets from the Human Microbiome Project (HMP) enables us to explore the distribution and diversity of known CRISPRs in human-associated microbial communities and to discover new CRISPRs. We propose a targeted assembly strategy to reconstruct CRISPR arrays, which whole-metagenome assemblies fail to identify. For each known CRISPR type (identified from reference genomes), we use its direct repeat consensus sequence to recruit reads from each HMP dataset and then assemble the recruited reads into CRISPR loci; the unique spacer sequences can then be extracted for analysis. We also identified novel CRISPRs or new CRISPR variants in contigs from whole-metagenome assemblies and used targeted assembly to more comprehensively identify these CRISPRs across samples. We observed that the distributions of CRISPRs (including 64 known and 86 novel ones) are largely body-site specific. We provide detailed analysis of several CRISPR loci, including novel CRISPRs. For example, known streptococcal CRISPRs were identified in most oral microbiomes, totaling \\u223c8,000 unique spacers: samples resampled from the same individual and oral site shared the most spacers; different oral sites from the same individual shared significantly fewer, while different individuals had almost no common spacers, indicating the impact of subtle niche differences on the evolution of CRISPR defenses. We further demonstrate potential applications of CRISPRs to the tracing of rare species and the virus exposure of individuals. This work indicates the importance of effective identification and characterization of CRISPR loci to the study of the dynamic ecology of microbiomes.\", \"title\": \"Diverse CRISPRs evolving in human microbiomes.\"}, \"created_date\": \"2016-06-14T06:01:01Z\", \"id\": \"1f1a41efafff47ab9724677eb56ea09c\"}], \"last\": \"https://doaj.org/api/v4/search/articles/doi:10.3390/genes14010001?page=1&pageSize=10\"}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.crossref.org/works/10.3390/genes14010001",
+        "headersSubset": {
+          "accept": "application/json"
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": [
+          [
+            "content-type",
+            "text/plain"
+          ]
+        ],
+        "bodyText": "Resource not found.",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.datacite.org/dois/10.3390/genes14010001",
+        "headersSubset": {
+          "accept": "application/vnd.api+json"
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": [
+          [
+            "content-type",
+            "application/vnd.api+json"
+          ]
+        ],
+        "bodyText": "{\"errors\":[{\"status\":\"404\"}]}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.archives-ouvertes.fr/search/?fl=halId_s%2Curi_s%2CfileMain_s%2CopenAccess_bool%2CdoiId_s&q=doiId_s%3A%2210.3390%2Fgenes14010001%22&rows=1&wt=json",
+        "headersSubset": {
+          "accept": "application/json"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"response\":{\"numFound\":0,\"docs\":[]}}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://zenodo.org/api/records?q=doi%3A%2210.3390%2Fgenes14010001%22&size=1",
+        "headersSubset": {
+          "accept": "application/json"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"hits\":{\"total\":0,\"hits\":[]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

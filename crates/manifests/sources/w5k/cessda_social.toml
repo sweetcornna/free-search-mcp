@@ -1,0 +1,78 @@
+id = "cessda_social"
+name = "CESSDA European Social Science Data Catalogue"
+summary = "Consortium of European Social Science Data Archives (CESSDA) catalogue indexing 40k+ survey, demographic, election, and social research datasets across Europe."
+aliases = ["cessda", "social science data", "european surveys"]
+home_url = "https://datacatalogue.cessda.eu"
+tier = 1
+scopes = ["dataset", "academic.humanities"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.5, burst = 4, concurrency = 2, timeout_ms = 12000, cache_ttl_s = 43200, host_bucket = "datacatalogue.cessda.eu" }
+
+[op.search]
+summary = "Search CESSDA European Social Science Data Catalogue studies by keyword and metadata language."
+method = "GET"
+url = "https://datacatalogue.cessda.eu/api/DataSets/v2/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "election", lang = "en", limit = 3, offset = 0 }, min_results = 2, fixture = "fixtures/w5k/cessda_social/search/default.json" }
+examples = ['source.call("cessda_social.search", { query: "election", lang: "en", limit: 5 })']
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Study search keywords" }
+lang = { type = "string", default = "en", to = "metadataLanguage", doc = "Metadata language ISO-639-1 code (required by CESSDA API, default en)" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Studies per page" }
+offset = { type = "int", default = 0, min = 0, to = "offset", doc = "Pagination offset" }
+
+[op.search.map]
+items = "(.Results // [])[]"
+total = ".ResultsCount.available"
+error = "if .message then .message else null end"
+record = '''{
+  id: (.id // ""),
+  studyNumber: (.studyNumber // null),
+  title: ((.titleStudy // "") | strip_tags),
+  abstract: ((.abstract // "") | strip_tags | strip_tags | if . != null and length > 0 then . else null end),
+  publisher: (.publisher.publisher | collapse_ws),
+  creators: [(.creators // [])[] | .name | collapse_ws | select(. != null and length > 0)],
+  countries: [(.studyAreaCountries // [])[] | .country | select(. != null)],
+  keywords: [(.keywords // [])[] | .term | collapse_ws | select(. != null and length > 0)],
+  doi: ((([(.pidStudies // [])[] | select(.agency == "DOI") | .pid][0]) // null) | doi_norm),
+  publicationYear: (.publicationYear | parse_date),
+  url: (.studyUrl // ("https://datacatalogue.cessda.eu/detail/" + (.id // "")))
+}'''
+hit = '''(
+  (.publicationYear | parse_date) as $d |
+  {
+    title: ((.titleStudy // "") | strip_tags),
+    url: (.studyUrl // ("https://datacatalogue.cessda.eu/detail/" + (.id // ""))),
+    snippet: ([((.publisher.publisher // "") | collapse_ws), (([(.studyAreaCountries // [])[:3][] | .country] | join(", "))), (((.abstract // "") | strip_tags | strip_tags // "")[0:160] | collapse_ws)] | map(select(. != null and length > 0)) | join(" · ")),
+    date: $d,
+    dateSource: (if $d != null then "api" else null end)
+  }
+)'''
+
+[op.oai_identify]
+summary = "Identify the CESSDA Data Catalogue OAI-PMH 2.0 metadata harvesting repository."
+method = "GET"
+url = "https://datacatalogue.cessda.eu/oai-pmh/v0/oai"
+headers = { Accept = "application/xml" }
+response = "xml"
+returns = "records"
+const_query = { verb = "Identify" }
+probe = { params = {}, min_results = 1, fixture = "fixtures/w5k/cessda_social/oai_identify/default.json" }
+examples = ['source.call("cessda_social.oai_identify", {})']
+
+[op.oai_identify.map]
+items = ".\"oai-pmh\".identify"
+error = "if .\"oai-pmh\".error then (.\"oai-pmh\".error.\"@code\" // (.\"oai-pmh\".error | tostring)) else null end"
+record = '''{
+  repositoryName: (.repositoryname // ""),
+  baseUrl: (.baseurl // ""),
+  protocolVersion: (.protocolversion // null),
+  earliestDatestamp: (.earliestdatestamp // null),
+  granularity: (.granularity // null)
+}'''

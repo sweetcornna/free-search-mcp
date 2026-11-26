@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "source": "musicbrainz",
+  "op": "recording",
+  "recordedAt": "2026-11-25T11:55:51Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://musicbrainz.org/ws/2/recording/?fmt=json&query=creep&limit=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ],
+          [
+            "last-modified",
+            "Wed, 25 Nov 2026 11:54:57 GMT"
+          ],
+          [
+            "etag",
+            "\"ZDQ3ODgxMDAwMDAwMDAwMFNvbHI=--gzip\""
+          ]
+        ],
+        "bodyText": "{\"created\":\"2026-11-25T11:55:51.141Z\",\"count\":15108,\"offset\":0,\"recordings\":[{\"id\":\"f3f032af-a693-40e8-af93-878ad0d00397\",\"score\":100,\"artist-credit-id\":\"c0de9edb-70f9-3dcc-8e97-9b9818a11fd5\",\"title\":\"Creep Creep\",\"length\":205000,\"video\":null,\"artist-credit\":[{\"name\":\"Flexx G\",\"artist\":{\"id\":\"c287090e-9005-4d07-b538-e5ac1fc8abbe\",\"name\":\"Flexx G\",\"sort-name\":\"Flexx G\",\"disambiguation\":\"US rapper\"}}],\"first-release-date\":\"1999\",\"releases\":[{\"id\":\"f72276b5-15ee-4118-8e36-0ca42ceecb23\",\"status-id\":\"4e304316-386d-3409-af2e-78857eec5cfe\",\"count\":1,\"title\":\"When Reality Strikes\",\"status\":\"Official\",\"release-group\":{\"id\":\"f578641e-0abd-49fc-b3d9-4219f8708079\",\"type-id\":\"f529b476-6e62-324f-b0aa-1f3e33d313fc\",\"primary-type-id\":\"f529b476-6e62-324f-b0aa-1f3e33d313fc\",\"title\":\"When Reality Strikes\",\"primary-type\":\"Album\"},\"date\":\"1999\",\"country\":\"US\",\"release-events\":[{\"date\":\"1999\",\"area\":{\"id\":\"489ce91b-6658-3307-9877-795b68554c98\",\"name\":\"United States\",\"sort-name\":\"United States\",\"iso-3166-1-codes\":[\"US\"]}}],\"track-count\":15,\"media\":[{\"id\":\"652fde7d-1f37-3967-aa8e-e1e0ea2cd1e7\",\"position\":1,\"format\":\"CD\",\"track\":[{\"id\":\"becf0bff-ce60-4ac7-a87c-6c1cf495f80a\",\"number\":\"5\",\"title\":\"Creep Creep\",\"length\":205000}],\"track-count\":15,\"track-offset\":4}]}]},{\"id\":\"4cab581a-d85b-4cda-9530-5a22a4c8923c\",\"score\":100,\"artist-credit-id\":\"5ac3e02c-9cf5-4ee3-8ec8-f16e19526985\",\"title\":\"Creep Creep\",\"length\":136944,\"video\":null,\"artist-credit\":[{\"name\":\"Heavy Lids\",\"artist\":{\"id\":\"90a3b049-aa91-4661-b168-7b15f34b32b3\",\"name\":\"Heavy Lids\",\"sort-name\":\"Heavy Lids\",\"disambiguation\":\"US garage/punk band from New Orleans, Louisiana\"}}],\"first-release-date\":\"2018-01-12\",\"releases\":[{\"id\":\"58182d42-8f03-48d1-97f8-b774a43a1f43\",\"status-id\":\"4e304316-386d-3409-af2e-78857eec5cfe\",\"count\":1,\"title\":\"Final Days\",\"status\":\"Official\",\"release-group\":{\"id\":\"d2adf190-faca-4b92-a8a5-89abee5bc604\",\"type-id\":\"f529b476-6e62-324f-b0aa-1f3e33d313fc\",\"primary-type-id\":\"f529b476-6e62-324f-b0aa-1f3e33d313fc\",\"title\":\"Final Days\",\"primary-type\":\"Album\"},\"date\":\"2018-01-12\",\"country\":\"US\",\"release-events\":[{\"date\":\"2018-01-12\",\"area\":{\"id\":\"489ce91b-6658-3307-9877-795b68554c98\",\"name\":\"United States\",\"sort-name\":\"United States\",\"iso-3166-1-codes\":[\"US\"]}}],\"track-count\":9,\"media\":[{\"id\":\"d46122e2-5517-3593-b53e-0f57ab485c96\",\"position\":1,\"format\":\"12\\\" Vinyl\",\"track\":[{\"id\":\"e13fdb00-3a33-41c7-b8b2-7d98a0c943a2\",\"number\":\"B1\",\"title\":\"Creep Creep\",\"length\":136944}],\"track-count\":9,\"track-offset\":5}]}]},{\"id\":\"d4997ccf-3c36-498c-b4f8-abf9548b0462\",\"score\":97,\"artist-credit-id\":\"2cf20e50-7e6f-3232-86ec-0eb47b610061\",\"title\":\"Creep, creep, softly creep\",\"length\":249000,\"video\":null,\"artist-credit\":[{\"name\":\"Catherine Bott\",\"artist\":{\"id\":\"954d1c83-259f-4a25-8878-10c19bb097af\",\"name\":\"Catherine Bott\",\"sort-name\":\"Bott, Catherine\",\"disambiguation\":\"soprano\"}}],\"first-release-date\":\"1994\",\"releases\":[{\"id\":\"b70b86c4-b40c-4509-a2e3-375a80668fa1\",\"status-id\":\"4e304316-386d-3409-af2e-78857eec5cfe\",\"count\":1,\"title\":\"Sweeter than Roses\",\"status\":\"Official\",\"release-group\":{\"id\":\"47481366-c975-4f56-a72e-270628a90b5d\",\"title\":\"Sweeter than Roses\"},\"date\":\"1994\",\"country\":\"XW\",\"release-events\":[{\"date\":\"1994\",\"area\":{\"id\":\"525d4e18-3d00-31b9-a58b-a146a916de8f\",\"name\":\"[Worldwide]\",\"sort-name\":\"[Worldwide]\",\"iso-3166-1-codes\":[\"XW\"]}}],\"track-count\":21,\"media\":[{\"id\":\"09e4fd21-e782-4455-b2f9-19f654d2292d\",\"position\":1,\"format\":\"CD\",\"track\":[{\"id\":\"189ece1e-691f-4401-8479-dc40e3fae841\",\"number\":\"9\",\"title\":\"Creep, creep, softly creep\",\"length\":249000}],\"track-count\":21,\"track-offset\":8}]}]}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

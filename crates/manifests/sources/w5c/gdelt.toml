@@ -1,0 +1,82 @@
+id = "gdelt"
+name = "GDELT Project"
+summary = "Global news archive in 100+ languages (DOC 2.0) and US broadcast TV closed-caption clips (TV 2.0)."
+aliases = ["gdelt doc", "gdelt news", "gdelt tv"]
+home_url = "https://www.gdeltproject.org"
+tier = 1
+scopes = ["news"]
+caps = ["search"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 0.1, burst = 1, concurrency = 1, timeout_ms = 20000, cache_ttl_s = 21600 }
+
+[op.search]
+summary = "Search global multilingual news articles via GDELT DOC 2.0 API (strictly <=1 req/5-10s)."
+method = "GET"
+url = "https://api.gdeltproject.org/api/v2/doc/doc"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { mode = "ArtList", format = "json", sort = "hybridrel" }
+probe = { params = { query = "climate", limit = 3 }, min_results = 2, fixture = "fixtures/w5c/gdelt/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "query", doc = "GDELT query expression" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "maxrecords", doc = "Max articles to return" }
+timespan = { type = "string", to = "timespan", doc = "Lookback window e.g. 1d, 1w, 1m, 12m" }
+
+[op.search.map]
+items = "(.articles // [])[]"
+record = '''{
+  title: ((.title // "") | collapse_ws),
+  url: (.url // ""),
+  domain: .domain,
+  language: .language,
+  sourceCountry: .sourcecountry,
+  seenDate: (if (.seendate | type) == "string" and (.seendate | length) >= 8 then (.seendate[0:8] | parse_date) else null end),
+  socialImage: (if (.socialimage | type) == "string" and (.socialimage | length) > 0 then .socialimage else null end)
+}'''
+hit = '''
+(if (.seendate | type) == "string" and (.seendate | length) >= 8 then (.seendate[0:8] | parse_date) else null end) as $dt |
+{
+  title: ((.title // "") | collapse_ws),
+  url: (.url // ""),
+  snippet: ([.domain, .sourcecountry, .language] | map(select(type == "string" and length > 0)) | join(" · ")),
+  date: $dt,
+  dateSource: (if $dt != null then "api" else null end)
+}'''
+
+[op.tv]
+summary = "Search broadcast TV news closed-caption clips (query must include station: e.g. station:CNN)."
+method = "GET"
+url = "https://api.gdeltproject.org/api/v2/tv/tv"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { mode = "clipgallery", format = "json" }
+probe = { params = { query = "climate station:CNN", limit = 3 }, min_results = 1, fixture = "fixtures/w5c/gdelt/tv/default.json" }
+
+[op.tv.params]
+query = { type = "string", required = true, to = "query", doc = "TV query including station:<CODE> e.g. climate station:CNN" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "maxrecords", doc = "Max clips" }
+
+[op.tv.map]
+items = "(.clips // [])[]"
+record = '''{
+  show: .show,
+  station: .station,
+  date: .date,
+  iaShowId: .ia_show_id,
+  url: .preview_url,
+  thumbnail: .preview_thumb,
+  snippet: (.snippet // "")
+}'''
+hit = '''
+(.date | parse_date) as $dt |
+{
+  title: ("\(.station // "TV"): \(.show // "Broadcast Clip")"),
+  url: (.preview_url // ""),
+  snippet: ((.snippet // "") | collapse_ws | if length > 280 then .[0:280] + "..." else . end),
+  date: $dt,
+  dateSource: (if $dt != null then "api" else null end)
+}'''

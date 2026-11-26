@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "source": "eurlex_sparql",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:12:46Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://publications.europa.eu/webapi/rdf/sparql",
+        "headersSubset": {
+          "accept": "application/sparql-results+json",
+          "content-type": "application/sparql-query"
+        },
+        "bodySha256": "97c629eef7db3d2d9f3788ac11c9de722de20eef9fbe6914cca2e8c57ac6c036"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/sparql-results+json"
+          ]
+        ],
+        "bodyText": "\n{ \"head\": { \"link\": [], \"vars\": [\"celex\", \"title\", \"date\"] },\n  \"results\": { \"distinct\": false, \"ordered\": true, \"bindings\": [\n    { \"celex\": { \"type\": \"literal\", \"datatype\": \"http://www.w3.org/2001/XMLSchema#string\", \"value\": \"C/2026/04668\" }\t, \"title\": { \"type\": \"literal\", \"xml:lang\": \"en\", \"value\": \"Notice of open competition\\u00A0\\u2013 EPSO/AD/430/26 \\u2013 Administrators (AD\\u00A08) in the following fields: 1. Artificial intelligence (AI); 2. Cybersecurity\" }\t, \"date\": { \"type\": \"literal\", \"datatype\": \"http://www.w3.org/2001/XMLSchema#date\", \"value\": \"2026-09-08\" }},\n    { \"celex\": { \"type\": \"literal\", \"datatype\": \"http://www.w3.org/2001/XMLSchema#string\", \"value\": \"02024R1689-20260727\" }\t, \"title\": { \"type\": \"literal\", \"xml:lang\": \"en\", \"value\": \"Regulation (EU) 2024/1689 of the European Parliament and of the Council of 13\\u00A0June 2024 laying down harmonised rules on artificial intelligence and amending Regulations (EC) No\\u00A0300/2008, (EU) No\\u00A0167/2013, (EU) No\\u00A0168/2013, (EU) 2018/858, (EU) 2018/1139 and (EU) 2019/2144 and Directives 2014/90/EU, (EU) 2016/797 and (EU) 2020/1828 (Artificial Intelligence Act) (Text with EEA relevance)\" }\t, \"date\": { \"type\": \"literal\", \"datatype\": \"http://www.w3.org/2001/XMLSchema#date\", \"value\": \"2026-07-27\" }},\n    { \"celex\": { \"type\": \"literal\", \"datatype\": \"http://www.w3.org/2001/XMLSchema#string\", \"value\": \"32026R1744\" }\t, \"title\": { \"type\": \"literal\", \"xml:lang\": \"en\", \"value\": \"Regulation (EU) 2026/1744 of the European Parliament and of the Council of 8 July 2026 amending Regulations (EU) 2024/1689, (EU) 2018/1139 and (EU) 2023/1230 as regards the simplification of the implementation of harmonised rules on artificial intelligence (Digital Omnibus on AI) (Text with EEA relevance)\" }\t, \"date\": { \"type\": \"literal\", \"datatype\": \"http://www.w3.org/2001/XMLSchema#date\", \"value\": \"2026-07-08\" }} ] } }",
+        "bodyB64": null
+      }
+    }
+  ]
+}

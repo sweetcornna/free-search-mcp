@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "usgs_pubs",
+  "op": "work",
+  "recordedAt": "2026-11-25T12:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://pubs.usgs.gov/pubs-services/publication/70282754",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json;charset=UTF-8"
+          ],
+          [
+            "cache-control",
+            "no-cache, no-store, max-age=0, must-revalidate"
+          ]
+        ],
+        "bodyText": "{\"id\":70282754,\"text\":\"70282754 - 2027 - Ground failure resulting from earthquake ground motions\",\"interactions\":[],\"lastModifiedDate\":\"2026-09-30T13:17:19.833183\",\"indexId\":\"70282754\",\"displayToPublicDate\":\"2026-08-08T15:43:02\",\"publicationYear\":\"2027\",\"noYear\":false,\"publicationType\":{\"id\":5,\"text\":\"Book chapter\"},\"publicationSubtype\":{\"id\":24,\"text\":\"Book Chapter\"},\"chapter\":\"4\",\"title\":\"Ground failure resulting from earthquake ground motions\",\"docAbstract\":\"<p>The ground failure resulting from an earthquake, at all scales, is ultimately controlled by the details of near-surface earthquake ground motions, the spatially distributed mechanical characteristics of surface materials and how the two interact. This chapter introduces the aspects of ground-motion seismology that are most relevant to the triggering of different types of ground failure, such as landslides and liquefaction. In particular, the chapter focuses on different sources of local modification (e.g. amplification) of earthquake ground motions in the shallow subsurface, known as site effects. The chapter ends with an overview of the controls on, general spatial patterns of, and approaches to regional modelling of the manifestation of ground failure that may be triggered by an earthquake.</p>\",\"largerWorkType\":{\"id\":4,\"text\":\"Book\"},\"largerWorkTitle\":\"Geomorphic impacts of earthquakes: Post-seismic landscape evolution\",\"largerWorkSubtype\":{\"id\":15,\"text\":\"Monograph\"},\"language\":\"English\",\"publisher\":\"Elsevier\",\"doi\":\"10.1016/B978-0-443-40375-0.00008-6\",\"isbn\":\"9780443403750\",\"usgsCitation\":\"Allstadt, K.E., and Thompson, E.M., 2027, Ground failure resulting from earthquake ground motions, chap. 4 <i>of</i> Geomorphic impacts of earthquakes: Post-seismic landscape evolution, p. 41-79, https://doi.org/10.1016/B978-0-443-40375-0.00008-6.\",\"productDescription\":\"39 p.\",\"startPage\":\"41\",\"endPage\":\"79\",\"ipdsId\":\"IP-186048\",\"costCenters\":[{\"id\":78941,\"text\":\"Geologic Hazards Science Center - Landslides / Earthquake Geology\",\"active\":true,\"usgs\":true}],\"links\":[{\"id\":512569,\"rank\":1,\"type\":{\"id\":24,\"text\":\"Thumbnail\"},\"url\":\"https://pubs.usgs.gov/thumbnails/outside_thumb.jpg\"}],\"noUsgsAuthors\":false,\"publicationStatus\":\"PW\",\"contributors\":{\"authors\":[{\"text\":\"Allstadt, Kate E. 0000-0003-4977-5248\",\"orcid\":\"https://orcid.org/0000-0003-4977-5248\",\"contributorId\":138704,\"corporation\":false,\"usgs\":true,\"family\":\"Allstadt\",\"given\":\"Kate\",\"email\":\"\",\"middleInitial\":\"E.\",\"affiliations\":[{\"id\":300,\"text\":\"Geologic Hazards Science Center\",\"active\":true,\"usgs\":true}],\"preferred\":true,\"id\":973457,\"contributorType\":{\"id\":1,\"text\":\"Authors\"},\"rank\":1},{\"text\":\"Thompson, Eric M. 0000-0002-6943-4806 emthompson@usgs.gov\",\"orcid\":\"https://orcid.org/0000-0002-6943-4806\",\"contributorId\":150897,\"corporation\":false,\"usgs\":true,\"family\":\"Thompson\",\"given\":\"Eric\",\"email\":\"emthompson@usgs.gov\",\"middleInitial\":\"M.\",\"affiliations\":[{\"id\":300,\"text\":\"Geologic Hazards Science Center\",\"active\":true,\"usgs\":true}],\"preferred\":true,\"id\":973458,\"contributorType\":{\"id\":1,\"text\":\"Authors\"},\"rank\":2}]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

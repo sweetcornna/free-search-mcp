@@ -1,33 +1,33 @@
-# Build + run free-search-mcp in a container.
+# Build + run free-search-mcp 1.0 in a distroless container (~25 MB).
 #   docker compose build
 #   docker compose run --rm search-mcp     # attaches stdio for MCP
 #
 # To wire into a client, point the client's command at:
 #   docker compose run --rm search-mcp
-# (or `docker run -i --rm search-mcp`).
+# (or `docker run -i --rm free-search-mcp`).
 #
-# For the HTTP transport, set SEARCH_MCP_TRANSPORT=streamable-http and
-# SEARCH_MCP_HTTP_HOST=0.0.0.0 below, then publish `ports: ["8000:8000"]`.
-# Note the server is unauthenticated — keep it on an internal network or put
-# an authenticating proxy in front.
+# For Streamable HTTP transport, set SEARCH_MCP_TRANSPORT=streamable-http,
+# SEARCH_MCP_HTTP_HOST=0.0.0.0, and SEARCH_MCP_HTTP_TOKEN=<secret>, then
+# publish `ports: ["127.0.0.1:8000:8000"]` (or terminate auth in a proxy).
 services:
   search-mcp:
     build: .
-    image: search-mcp
+    image: free-search-mcp:1.0.0
     # MCP uses stdio — STDIN must stay open.
     stdin_open: true
     tty: false
     volumes:
       - search-mcp-cache:/data
+      - search-mcp-config:/config
     environment:
       # Override any SEARCH_MCP_* knob here (see .env.example for the full list).
-      # No API key is needed for anything below. This is the shipped default
-      # pool, all plain HTTP; googlenews joins on its own for freshness=day|week
-      # and category=news, so360 and quark for Chinese queries, naver for
-      # Korean ones, and the reserves (yahoo, seznam, so360, brave) only while
-      # fewer than 3 general engines are healthy.
-      SEARCH_MCP_DEFAULT_ENGINES: '["duckduckgo","bing","yahoojp","anysearch"]'
+      # No API key is needed. Shipped 1.0 keyless web pool: duckduckgo, bing,
+      # yahoojp, seznam; reserves: yahoo, youcom, mwmbl; googlenews joins for
+      # freshness=day|week; so360/quark/baidu for Chinese; naver/daum for Korean.
+      SEARCH_MCP_DEFAULT_ENGINES: '["duckduckgo","bing","yahoojp","seznam"]'
       SEARCH_MCP_CACHE_DIR: /data
+      SEARCH_MCP_CONFIG_DIR: /config
 
 volumes:
   search-mcp-cache:
+  search-mcp-config:

@@ -1,0 +1,93 @@
+id = "ipaustralia_patents"
+name = "IP Australia Patent Search API"
+summary = "Official Australian Patent Search API v1 (IP Australia) for searching Australian patents and retrieving bibliographic patent records."
+aliases = ["ipaustralia", "auspat", "australian patents"]
+home_url = "https://portal.api.ipaustralia.gov.au"
+tier = 3
+scopes = ["gov", "gov.patents"]
+caps = ["search", "lookup", "patent"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 43200, host_bucket = "production.api.ipaustralia.gov.au" }
+
+[auth]
+kind = "oauth2_client_credentials"
+mode = "required"
+token_url = "https://production.api.ipaustralia.gov.au/public/external-token-api/v1/access_token"
+env_id = "SEARCH_MCP_IPAUSTRALIA_CLIENT_ID"
+env_secret = "SEARCH_MCP_IPAUSTRALIA_CLIENT_SECRET"
+style = "body"
+route_requires_key = true
+
+[op.search]
+summary = "Run an Australian patent quick search via IP Australia Patent Search API v1."
+method = "POST"
+url = "https://production.api.ipaustralia.gov.au/public/australian-patent-search-api/v1/search/quick"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+body = { kind = "json", jaq = '''{ query: $p.query }''' }
+probe = { params = { query = "solar" }, min_results = 2, fixture = "fixtures/w5i/ipaustralia_patents/search/default.json" }
+examples = ['source.call("ipaustralia_patents.search", {query: "solar"})']
+
+[op.search.params]
+query = { type = "string", required = true, in = "body", doc = "Patent keyword or boolean search expression" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "none", doc = "Maximum matching patents to return" }
+
+[op.search.map]
+items = "(.results // [])[0:($p.limit // 10)][]"
+total = ".totalResults"
+error = "if .error then (.error | if type == \"string\" then . else tostring end) else null end"
+record = '''{
+  id: (.ipRightIdentifier // .applicationNumber // ""),
+  applicationNumber: (.applicationNumber // .ipRightIdentifier // ""),
+  title: ((.title // "") | collapse_ws // ""),
+  status: (.status // null),
+  applicants: (.applicantNames // []),
+  inventors: (.inventorNames // []),
+  filingDate: (.filingDate | parse_date),
+  ipcClasses: (.ipcClasses // []),
+  url: ("https://ipsearch.ipaustralia.gov.au/patents/" + (.ipRightIdentifier // .applicationNumber // ""))
+}'''
+hit = '''(
+  (.filingDate | parse_date) as $dt |
+  {
+    title: ((.title // ("AU Patent " + (.ipRightIdentifier // .applicationNumber // ""))) | collapse_ws // ""),
+    url: ("https://ipsearch.ipaustralia.gov.au/patents/" + (.ipRightIdentifier // .applicationNumber // "")),
+    snippet: ([("AU " + (.ipRightIdentifier // .applicationNumber // "")), (.status // ""), ([(.applicantNames // [])[] | select(type == "string")] | join(", "))] | map(select(length > 0)) | join(" · ")),
+    date: $dt,
+    dateSource: (if $dt != null then "api" else null end)
+  }
+)'''
+
+[op.patent]
+summary = "Fetch bibliographic metadata for a single Australian patent by IP right identifier / application number."
+method = "GET"
+url = "https://production.api.ipaustralia.gov.au/public/australian-patent-search-api/v1/patent/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "2020100000" }, min_results = 1, fixture = "fixtures/w5i/ipaustralia_patents/patent/default.json" }
+examples = ['source.call("ipaustralia_patents.patent", {id: "2020100000"})']
+
+[op.patent.params]
+id = { type = "string", required = true, in = "path", doc = "Australian patent IP right identifier / application number (e.g. 2020100000)" }
+
+[op.patent.map]
+items = "."
+error = "if .error then (.error | if type == \"string\" then . else tostring end) else null end"
+record = '''{
+  id: (.ipRightIdentifier // .applicationNumber // $p.id // ""),
+  applicationNumber: (.applicationNumber // .ipRightIdentifier // $p.id // ""),
+  patentType: (.patentType // null),
+  title: ((.title // "") | collapse_ws // ""),
+  abstractText: ((.abstract | collapse_ws) | if . == "" then null else . end),
+  status: (.status // null),
+  filingDate: (.filingDate | parse_date),
+  publicationDate: (.publicationDate | parse_date),
+  grantDate: (.grantDate | parse_date),
+  applicants: (.applicantNames // []),
+  inventors: (.inventorNames // []),
+  ipcClasses: (.ipcClasses // []),
+  url: ("https://ipsearch.ipaustralia.gov.au/patents/" + (.ipRightIdentifier // .applicationNumber // $p.id // ""))
+}'''

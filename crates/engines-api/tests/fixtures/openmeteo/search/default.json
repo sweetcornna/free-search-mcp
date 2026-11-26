@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "source": "openmeteo",
+  "op": "search",
+  "recordedAt": "2026-11-25T10:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://geocoding-api.open-meteo.com/v1/search?name=%E4%B8%8A%E6%B5%B7&count=1&language=zh",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [["content-type", "application/json"]],
+        "bodyText": "{\"results\":[{\"name\":\"上海\",\"admin1\":\"上海市\",\"country\":\"中国\",\"latitude\":31.22222,\"longitude\":121.45806}]}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.open-meteo.com/v1/forecast?latitude=31.2222&longitude=121.4581&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum&timezone=auto&forecast_days=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [["content-type", "application/json"]],
+        "bodyText": "{\"timezone\":\"Asia/Shanghai\",\"current\":{\"time\":\"2026-09-22T10:15\",\"temperature_2m\":27.6,\"relative_humidity_2m\":57,\"weather_code\":2,\"wind_speed_10m\":5.8},\"daily\":{\"time\":[\"2026-09-22\",\"2026-09-23\"],\"weather_code\":[3,51],\"temperature_2m_max\":[29.6,29.3],\"temperature_2m_min\":[21.9,22.1],\"precipitation_probability_max\":[6,30],\"precipitation_sum\":[0.0,0.3]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

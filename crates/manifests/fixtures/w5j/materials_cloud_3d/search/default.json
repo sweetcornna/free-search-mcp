@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "materials_cloud_3d",
+  "op": "search",
+  "recordedAt": "2026-11-25T13:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://optimade.materialscloud.org/main/mc3d-pbesol-v2/v1/structures?filter=chemical_formula_reduced%3D%22O2Si%22&page_limit=3&page_offset=0&response_fields=chemical_formula_reduced%2Cchemical_formula_descriptive%2Celements%2Cnelements%2Cnsites%2Cdimension_types%2Clattice_vectors%2Clast_modified",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/vnd.api+json"
+          ]
+        ],
+        "bodyText": "{\"data\":[{\"id\":\"1dfa1260-03db-4a27-a6ff-f60141fba49a\",\"relationships\":null,\"links\":null,\"type\":\"structures\",\"attributes\":{\"last_modified\":\"2025-09-08T17:17:30.014852+02:00\",\"elements\":[\"O\",\"Si\"],\"nelements\":2,\"chemical_formula_descriptive\":\"O4Si2\",\"chemical_formula_reduced\":\"O2Si\",\"dimension_types\":[1,1,1],\"lattice_vectors\":[[4.1956889576834,0.0,0.0],[0.0,4.1956889576834,0.0],[0.0,0.0,2.6821170936724]],\"nsites\":6}},{\"id\":\"6fdce085-40dd-4b80-919d-7d0dfb5869f8\",\"relationships\":null,\"links\":null,\"type\":\"structures\",\"attributes\":{\"last_modified\":\"2025-09-08T17:17:35.561757+02:00\",\"elements\":[\"O\",\"Si\"],\"nelements\":2,\"chemical_formula_descriptive\":\"O2Si\",\"chemical_formula_reduced\":\"O2Si\",\"dimension_types\":[1,1,1],\"lattice_vectors\":[[0.0,2.273189543164,2.273189543164],[2.273189543164,0.0,2.273189543164],[2.273189543164,2.273189543164,0.0]],\"nsites\":3}},{\"id\":\"fa50e327-b7e0-47c1-aaca-ee213ef6a855\",\"relationships\":null,\"links\":null,\"type\":\"structures\",\"attributes\":{\"last_modified\":\"2025-09-08T17:17:38.187846+02:00\",\"elements\":[\"O\",\"Si\"],\"nelements\":2,\"chemical_formula_descriptive\":\"O6Si3\",\"chemical_formula_reduced\":\"O2Si\",\"dimension_types\":[1,1,1],\"lattice_vectors\":[[4.9635118261145,-2.9063992278129e-15,1.3434735560376e-49],[-2.4817559130072,4.2985273333046,-1.2619965633876e-35],[2.2687566059342e-49,-2.3024469779289e-35,5.4527337815308]],\"nsites\":9}}],\"meta\":{\"query\":{\"representation\":\"/main/mc3d-pbesol-v2/v1/structures?filter=chemical_formula_reduced%3D%22O2Si%22&page_limit=3&page_offset=0&response_fields=chemical_formula_reduced%2Cchemical_formula_descriptive%2Celements%2Cnelements%2Cnsites%2Cdimension_types%2Clattice_vectors%2Clast_modified\"},\"api_version\":\"1.2.0\",\"more_data_available\":true,\"schema\":\"https://schemas.optimade.org/openapi/v1.2.0/optimade.json\",\"time_stamp\":\"2026-11-25T13:02:59.735716\",\"data_returned\":140,\"provider\":{\"name\":\"Materials Cloud\",\"description\":\"A platform for Open Science built for seamless sharing of resources in computational materials science\",\"prefix\":\"mcloud\",\"homepage\":\"https://www.materialscloud.org/\"},\"data_available\":33142,\"implementation\":{\"name\":\"OPTIMADE Python Tools\",\"version\":\"1.4.1\",\"homepage\":\"https://optimade.org/optimade-python-tools\",\"source_url\":\"https://github.com/Materials-Consortia/optimade-python-tools\",\"maintainer\":{\"email\":\"dev@optimade.org\"},\"issue_tracker\":\"https://github.com/Materials-Consortia/optimade-python-tools/issues\"}},\"included\":[],\"links\":{\"next\":\"https://optimade.materialscloud.org/main/mc3d-pbesol-v2/v1/structures?filter=chemical_formula_reduced%3D%22O2Si%22&page_limit=3&page_offset=3&response_fields=chemical_formula_reduced%2Cchemical_formula_descriptive%2Celements%2Cnelements%2Cnsites%2Cdimension_types%2Clattice_vectors%2Clast_modified\"}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+
+
+<html class="no-js" lang="en">
+<head>
+<meta charset="utf-8">
+<title>A list of new(ish) command line tools</title>
+<meta name="author" content="Julia Evans">
+<meta name="HandheldFriendly" content="True">
+<meta name="MobileOptimized" content="320">
+<meta name="description" content="A list of new(ish) command line tools">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta property="og:title" content='A list of new(ish) command line tools'>
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://jvns.ca/blog/2022/04/12/a-list-of-new-ish--command-line-tools/" />
+<meta property="og:site_name" content="Julia Evans" />
+
+<link rel="canonical" href="https://jvns.ca/blog/2022/04/12/a-list-of-new-ish--command-line-tools/">
+<link href="/favicon.ico" rel="icon">
+
+<link href="/stylesheets/screen.css" rel="preload" type="text/css" as="style">
+
+<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+<link href="/stylesheets/print.css" media="print" rel="stylesheet" type="text/css">
+
+
+<link href="/atom.xml" rel="alternate" title="Julia Evans" type="application/atom+xml">
+
+ 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css" integrity="sha384-vKruj+a13U8yHIkAyGgK1J3ArTLzrFGBbBc0tDp4ad/EyewESeXE/Iv67Aj8gKZ0" crossorigin="anonymous">
+<script defer data-domain="jvns.ca" src="https://plausible.io/js/script.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.js" integrity="sha384-PwRUT/YqbnEjkZO0zZxNqcxACrXe+j766U2amXcgMg5457rve2Y7I6ZJSm2A0mS4" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+<script defer type="text/javascript">   
+window.heap=window.heap||[],heap.load=function(e,t){window.heap.appid=e,window.heap.config=t=t||{};var r=document.createElement("script");r.type="text/javascript",r.async=!0,r.src="https://cdn.heapanalytics.com/js/heap-"+e+".js";var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(r,a);for(var n=function(e){return function(){heap.push([e].concat(Array.prototype.slice.call(arguments,0)))}},p=["addEventProperties","addUserProperties","clearEventProperties","identify","resetIdentity","removeEventProperty","setEventProperties","track","unsetEventProperty"],o=0;o<p.length;o++)heap[p[o]]=n(p[o])};   
+heap.load("2242143965"); 
+</script> 
+</head>
+<body>
+<div id="skiptocontent">
+  <a href="#main">Skip to main content</a>
+</div>
+<div id="wrap">
+<header role="banner">
+<hgroup>
+<h1><a href="/">Julia Evans</a></h1>
+</hgroup>
+<ul class="header-links">
+<li><a href="/about">About</a></li>
+<li><a href="/talks">Talks</a></li>
+<li><a href="/projects/">Projects</a></li>
+<li><a rel="me" href="https://social.jvns.ca/@b0rk">Mastodon</a></li>
+<li><a href="https://bsky.app/profile/b0rk.jvns.ca">Bluesky</a></li>
+<li><a href="https://github.com/jvns">Github</a></li>
+</ul>
+</header>
+<nav role="navigation" class="header-nav"><ul class="main-navigation">
+<li><a href="/categories/favorite/">Favorites</a></li>
+<li><a href="/til/">TIL</a></li>
+<li><a href="https://wizardzines.com">Zines</a></li>
+<li class="subscription" data-subscription="rss"><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+</ul>
+</nav>
+<div id="main">
+<div id="content">
+
+
+<div>
+<article class="hentry" role="article">
+<header>
+<h1 class="entry-title">A list of new(ish) command line tools</h1>
+
+<div class="post-tags">
+  
+</div>
+<p class="meta sans">
+<time class="date" datetime="2022-04-12T15:30:07" pubdate data-updated="true">
+
+  April 12, 2022
+  
+</time>
+</p>
+</header>
+<main>
+     <p>Hello! Today I asked <a href="https://twitter.com/b0rk/status/1513903221466664962">on twitter</a> about newer
+command line tools, like <code>ripgrep</code> and <code>fd</code> and <code>fzf</code> and <code>exa</code> and <code>bat</code>.</p>
+<p>I got a bunch of replies with tools I hadn&rsquo;t heard of, so I thought I&rsquo;d make a
+list here. A lot of people also pointed at the <a href="https://github.com/ibraheemdev/modern-unix">modern-unix</a> list.</p>
+<h3 id="replacements-for-standard-tools" class="post-heading">
+    <a href="#replacements-for-standard-tools">
+      replacements for standard tools
+    </a>
+</h3>
+<ul>
+<li><a href="https://github.com/BurntSushi/ripgrep/">ripgrep</a>, <a href="https://github.com/ggreer/the_silver_searcher">ag</a>, <a href="https://github.com/beyondgrep/ack3">ack</a> (grep)</li>
+<li><a href="https://github.com/ogham/exa">exa</a>, <a href="https://github.com/Peltoche/lsd">lsd</a> (ls)</li>
+<li><a href="https://mosh.org/">mosh</a> (ssh)</li>
+<li><a href="https://github.com/sharkdp/bat">bat</a> (cat)</li>
+<li><a href="https://github.com/dandavison/delta">delta</a> (a pager for git)</li>
+<li><a href="https://github.com/sharkdp/fd">fd</a> (find)</li>
+<li><a href="https://www.nlnetlabs.nl/projects/ldns/about/">drill</a>, <a href="https://github.com/ogham/dog">dog</a> (dig)</li>
+<li><a href="https://github.com/muesli/duf">duf</a> (df)</li>
+<li><a href="https://github.com/bootandy/dust">dust</a>, ncdu (du)</li>
+<li><a href="https://www.pgcli.com/">pgcli</a> (psql)</li>
+<li><a href="https://github.com/ClementTsang/bottom">btm</a>, <a href="https://github.com/aristocratos/btop">btop</a>, <a href="https://github.com/nicolargo/glances">glances</a>, <a href="https://github.com/aksakalli/gtop">gtop</a>, <a href="https://github.com/bvaisvil/zenith">zenith</a> (top)</li>
+<li><a href="https://tldr.sh/">tldr</a> (man, sort of)</li>
+<li><a href="https://github.com/chmln/sd">sd</a> (sed)</li>
+<li><a href="https://github.com/Wilfred/difftastic">difftastic</a> (diff)</li>
+<li>mtr (traceroute)</li>
+<li><a href="https://plocate.sesse.net/">plocate</a> (locate)</li>
+<li>xxd, <a href="https://github.com/sharkdp/hexyl">hexyl</a> (hexdump)</li>
+</ul>
+<h3 id="new-inventions" class="post-heading">
+    <a href="#new-inventions">
+      new inventions
+    </a>
+</h3>
+<p>Here are some tools that are not exactly replacements for standard tools:</p>
+<ul>
+<li><a href="https://github.com/rupa/z">z</a>, <a href="https://github.com/clvv/fasd">fasd</a>, <a href="https://github.com/wting/autojump">autojump</a>, <a href="https://github.com/ajeetdsouza/zoxide">zoxide</a> (tools to make it easier to find files / change directories)</li>
+<li><a href="https://github.com/Canop/broot">broot</a>, <a href="https://github.com/jarun/nnn">nnn</a>, <a href="https://github.com/ranger/ranger">ranger</a> (file manager)</li>
+<li><a href="https://github.com/direnv/direnv">direnv</a> (load environment variables depending on the current directory)</li>
+<li><a href="https://github.com/junegunn/fzf">fzf</a>, <a href="https://github.com/peco/peco">peco</a> (&ldquo;fuzzy finder&rdquo;)</li>
+<li><a href="https://github.com/schollz/croc">croc</a> and <a href="https://github.com/magic-wormhole/magic-wormhole">magic-wormhole</a> (send files from one computer to another)</li>
+<li><a href="https://github.com/sharkdp/hyperfine">hyperfine</a> (benchmarking)</li>
+<li><a href="https://httpie.io/">httpie</a>, <a href="https://github.com/rs/curlie">curlie</a>, <a href="https://github.com/ducaale/xh">xh</a> (for making HTTP requests)</li>
+<li><a href="https://github.com/eradman/entr">entr</a> (run arbitrary commands when files change)</li>
+<li><a href="https://github.com/asdf-vm/asdf">asdf</a> (version manager for multiple languages)</li>
+<li><a href="https://github.com/jonas/tig">tig</a>, <a href="https://github.com/jesseduffield/lazygit">lazygit</a> (interactive interfaces for git)</li>
+<li><a href="https://github.com/jesseduffield/lazydocker">lazydocker</a> (interactive interface for docker)</li>
+<li><a href="https://github.com/theryangeary/choose">choose</a> (the basics of awk/cut)</li>
+<li><a href="https://github.com/bcicen/ctop">ctop</a> (top for containers)</li>
+<li><a href="https://github.com/nvbn/thefuck">fuck</a> (autocorrect command line errors)</li>
+<li><a href="https://tmate.io/">tmate</a> (share your terminal with a friend)</li>
+<li><a href="https://github.com/tstack/lnav">lnav</a>, <a href="https://github.com/rcoh/angle-grinder">angle-grinder</a> (tools for managing logs)</li>
+<li><a href="https://github.com/visit1985/mdp">mdp</a>, <a href="https://github.com/charmbracelet/glow">glow</a> (ways to display markdown in the terminal)</li>
+<li>pbcopy/pbpaste (for clipboard &lt;&gt; stdin/stdout) maybe aren&rsquo;t &ldquo;new&rdquo; but were mentioned a lot. You can <a href="https://stackoverflow.com/questions/5130968/how-can-i-copy-the-output-of-a-command-directly-into-my-clipboard/41843618#41843618">use xclip</a> to do the same thing on Linux.</li>
+<li><a href="https://github.com/ellie/atuin">atuin</a> (extremely fancy shell history)</li>
+</ul>
+<p><strong>JSON/YAML/CSV things:</strong></p>
+<ul>
+<li><a href="https://stedolan.github.io/jq/">jq</a> (a great JSON-wrangling tool)</li>
+<li><a href="https://github.com/kellyjonbrazil/jc">jc</a> (convert various tools&rsquo; output into JSON)</li>
+<li><a href="https://github.com/jpmens/jo">jo</a> (create JSON objects)</li>
+<li><a href="https://github.com/mikefarah/yq">yq</a>  (like <code>jq</code>, but for YAML). there&rsquo;s also <a href="https://github.com/kislyuk/yq">another yq</a></li>
+<li><a href="https://github.com/wader/fq">fq</a> (like <code>jq</code>, but for binary)</li>
+<li><a href="https://github.com/mgdm/htmlq">htmlq</a> (like <code>jq</code>, but for HTML)</li>
+<li><a href="https://github.com/antonmedv/fx">fx</a> (interactive json tool)</li>
+<li><a href="https://github.com/PaulJuliusMartinez/jless">jless</a> (json pager)</li>
+<li><a href="https://github.com/BurntSushi/xsv">xsv</a> (a command line tool for csv files, from burntsushi)</li>
+<li><a href="https://www.visidata.org/">visidata</a> (&ldquo;an interactive multitool for tabular data&rdquo;)</li>
+<li><a href="https://github.com/johnkerl/miller">miller</a> (&ldquo;like awk/sed/cut/join/sort for CSV/TSV/JSON/JSON lines&rdquo;)</li>
+</ul>
+<p><strong>grep things:</strong></p>
+<ul>
+<li><a href="https://pdfgrep.org/">pdfgrep</a> (grep for PDF)</li>
+<li><a href="https://github.com/tomnomnom/gron">gron</a> (make JSON greppable)</li>
+<li><a href="https://github.com/phiresky/ripgrep-all">ripgrep-all</a> (ripgrep, but also PDF, zip, ebooks, etc)</li>
+</ul>
+<h3 id="less-new-tools" class="post-heading">
+    <a href="#less-new-tools">
+      less-new tools
+    </a>
+</h3>
+<p>Here are a few of not-so-new tools folks mentioned aren&rsquo;t that well known:</p>
+<ul>
+<li>pv (&ldquo;pipe viewer&rdquo;, gives you a progress bar for a pipe)</li>
+<li>vidir (from <a href="https://joeyh.name/code/moreutils">moreutils</a>, lets you batch rename/delete files in vim)</li>
+<li>sponge, ts, parallel (also from moreutils)</li>
+</ul>
+<h3 id="some-of-my-favourites" class="post-heading">
+    <a href="#some-of-my-favourites">
+      some of my favourites
+    </a>
+</h3>
+<p>My favourites of these that I use already are <code>entr</code>, <code>ripgrep</code>, <code>git-delta</code>,
+<code>httpie</code>, <code>plocate</code>, and <code>jq</code>.</p>
+<p>I&rsquo;m interested in trying out <code>direnv</code>, <code>btm</code>, <code>z</code>, <code>xsv</code>, and <code>duf</code>, but I
+think the most exciting tool I learned about is <code>vidir</code>.</p>
+
+</main>
+
+<footer>
+
+<style type="text/css">
+  #mc_embed_signup{background:#fff; clear:left; font:14px Helvetica,Arial,sans-serif; display: inline;}
+  #mc_embed_signup  {
+    display: inline;
+  }
+  #mc_embed_signup input.button {
+    background: #ff5e00;
+    display: inline;
+    color: white;
+    padding: 6px 12px;
+  }
+</style>
+<div class="sharing">
+
+<style>
+    .form-inline {
+        display:flex; flex-flow: row wrap; justify-content: center;
+    }
+    .form-inline input, .form-inline span {
+        padding: 10px;
+    }
+    .form-inline input {
+        display:inline;
+        max-width:30%; 
+        margin: 0 10px 0 0; 
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 10px;
+    }
+    button {
+        background-color: #f50;
+        box-shadow: none;
+        border: 0;
+        border-radius: 5px;
+        color: white;
+        padding: 5px 10px;
+    }
+    @media (max-width: 800px) {
+        .form-inline input {
+            margin: 10px 0;
+            max-width:100% !important;
+        }
+        .form-inline {
+            flex-direction: column;
+            align-items: stretch;
+        }
+    }
+</style>
+
+<div align="center">
+    <form class="form-inline" action="https://app.convertkit.com/forms/1052396/subscriptions" method="post" data-uid="8884355abb" data-format="inline" data-version="5">
+        <span> Want a weekly digest of this blog?</span>
+        <input name="email_address" type="text" placeholder="Email address" /> 
+        <button type="submit" data-element="submit">Subscribe</button>
+    </form>
+</div>
+
+
+</div>
+
+<p class="meta">
+  
+    <a class="basic-alignment left" href="https://jvns.ca/blog/2022/03/23/a-toy-version-of-tls/" title="Previous Post: Implementing a toy version of TLS 1.3">Implementing a toy version of TLS 1.3</a>
+  
+  
+    <a class="basic-alignment right" href="https://jvns.ca/blog/2022/04/26/new-zine--how-dns-works-/" title="Next Post: New zine: How DNS Works!">New zine: How DNS Works!</a>
+  
+</p>
+</footer>
+
+</article>
+</div>
+
+</div>
+</div>
+<nav role="navigation" class="footer-nav"> <a href="/">Archives</a>
+</nav>
+<footer role="contentinfo"><span class="credit">&copy; Julia Evans. </span>
+  <span>If you like this, you may like <a href="https://web.archive.org/web/20181228051203/http://www.uliaea.ca/">Ulia Ea</a> or, more seriously, this list of <a href="https://jvns.ca/blogroll">blogs I love</a> or some <a href="https://jvns.ca/bookshelf">books I've read</a>. <br> 
+<p class="rc-scout__text"><i class="rc-scout__logo"></i>
+You might also like the <a class="rc-scout__link" href="https://www.recurse.com/scout/click?t=546ea46360584b522270b8c3e5d830f8">Recurse Center</a>, my very favorite programming community <a href="/categories/hackerschool/">(my posts about it)</a></p>
+</span>
+<style class="rc-scout__style" type="text/css">.rc-scout{display:block;padding:0;border:0;margin:0;}.rc-scout__text{display:block;padding:0;border:0;margin:0;height:100%;font-size:100%;}.rc-scout__logo{display:inline-block;padding:0;border:0;margin:0;width:0.85em;height:0.85em;background:no-repeat center url('data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2012%2015%22%3E%3Crect%20x%3D%220%22%20y%3D%220%22%20width%3D%2212%22%20height%3D%2210%22%20fill%3D%22%23000%22%3E%3C%2Frect%3E%3Crect%20x%3D%221%22%20y%3D%221%22%20width%3D%2210%22%20height%3D%228%22%20fill%3D%22%23fff%22%3E%3C%2Frect%3E%3Crect%20x%3D%222%22%20y%3D%222%22%20width%3D%228%22%20height%3D%226%22%20fill%3D%22%23000%22%3E%3C%2Frect%3E%3Crect%20x%3D%222%22%20y%3D%223%22%20width%3D%221%22%20height%3D%221%22%20fill%3D%22%2361ae24%22%3E%3C%2Frect%3E%3Crect%20x%3D%224%22%20y%3D%223%22%20width%3D%221%22%20height%3D%221%22%20fill%3D%22%2361ae24%22%3E%3C%2Frect%3E%3Crect%20x%3D%226%22%20y%3D%223%22%20width%3D%221%22%20height%3D%221%22%20fill%3D%22%2361ae24%22%3E%3C%2Frect%3E%3Crect%20x%3D%223%22%20y%3D%225%22%20width%3D%222%22%20height%3D%221%22%20fill%3D%22%2361ae24%22%3E%3C%2Frect%3E%3Crect%20x%3D%226%22%20y%3D%225%22%20width%3D%222%22%20height%3D%221%22%20fill%3D%22%2361ae24%22%3E%3C%2Frect%3E%3Crect%20x%3D%224%22%20y%3D%229%22%20width%3D%224%22%20height%3D%223%22%20fill%3D%22%23000%22%3E%3C%2Frect%3E%3Crect%20x%3D%221%22%20y%3D%2211%22%20width%3D%2210%22%20height%3D%224%22%20fill%3D%22%23000%22%3E%3C%2Frect%3E%3Crect%20x%3D%220%22%20y%3D%2212%22%20width%3D%2212%22%20height%3D%223%22%20fill%3D%22%23000%22%3E%3C%2Frect%3E%3Crect%20x%3D%222%22%20y%3D%2213%22%20width%3D%221%22%20height%3D%221%22%20fill%3D%22%23fff%22%3E%3C%2Frect%3E%3Crect%20x%3D%223%22%20y%3D%2212%22%20width%3D%221%22%20height%3D%221%22%20fill%3D%22%23fff%22%3E%3C%2Frect%3E%3Crect%20x%3D%224%22%20y%3D%2213%22%20width%3D%221%22%20height%3D%221%22%20fill%3D%22%23fff%22%3E%3C%2Frect%3E%3Crect%20x%3D%225%22%20y%3D%2212%22%20width%3D%221%22%20height%3D%221%22%20fill%3D%22%23fff%22%3E%3C%2Frect%3E%3Crect%20x%3D%226%22%20y%3D%2213%22%20width%3D%221%22%20height%3D%221%22%20fill%3D%22%23fff%22%3E%3C%2Frect%3E%3Crect%20x%3D%227%22%20y%3D%2212%22%20width%3D%221%22%20height%3D%221%22%20fill%3D%22%23fff%22%3E%3C%2Frect%3E%3Crect%20x%3D%228%22%20y%3D%2213%22%20width%3D%221%22%20height%3D%221%22%20fill%3D%22%23fff%22%3E%3C%2Frect%3E%3Crect%20x%3D%229%22%20y%3D%2212%22%20width%3D%221%22%20height%3D%221%22%20fill%3D%22%23fff%22%3E%3C%2Frect%3E%3C%2Fsvg%3E');}.rc-scout__link:link,.rc-scout__link:visited{color:#61ae24;text-decoration:underline;}.rc-scout__link:hover,.rc-scout__link:active{color:#4e8b1d;}</style>
+</footer>
+<script type="text/rocketscript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+</div>
+</body>
+</html>
+

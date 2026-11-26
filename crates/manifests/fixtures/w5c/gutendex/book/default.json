@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "gutendex",
+  "op": "book",
+  "recordedAt": "2026-11-25T11:55:46Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://gutendex.com/books/84/",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ],
+          [
+            "last-modified",
+            "Wed, 25 Nov 2026 11:55:45 GMT"
+          ]
+        ],
+        "bodyText": "{\"id\":84,\"title\":\"Frankenstein; or, The modern Prometheus\",\"authors\":[{\"name\":\"Shelley, Mary Wollstonecraft\",\"birth_year\":1797,\"death_year\":1851}],\"summaries\":[\"\\\"Frankenstein; Or, The Modern Prometheus\\\" by Mary Wollstonecraft Shelley is a Gothic novel published in 1818. It tells the story of Victor Frankenstein, a young scientist who creates a living creature from assembled body parts in an unorthodox experiment. When the creature awakens, Victor flees in horror, abandoning his creation. The conscious being must navigate a world that fears him, learning language and seeking connection, only to face repeated rejection. Embittered and alone, the creature confronts his creator with a desperate request that will set both on a dark path of vengeance and tragedy. (This is an automatically generated summary.)\"],\"editors\":[],\"translators\":[],\"subjects\":[\"Frankenstein's monster (Fictitious character) -- Fiction\",\"Frankenstein, Victor (Fictitious character) -- Fiction\",\"Gothic fiction\",\"Horror tales\",\"Monsters -- Fiction\",\"Science fiction\",\"Scientists -- Fiction\"],\"bookshelves\":[\"Category: British Literature\",\"Category: Classics of Literature\",\"Category: Novels\",\"Category: Science-Fiction & Fantasy\",\"Gothic Fiction\",\"Movie Books\",\"Precursors of Science Fiction\",\"Science Fiction by Women\"],\"languages\":[\"en\"],\"copyright\":false,\"media_type\":\"Text\",\"formats\":{\"text/html\":\"https://www.gutenberg.org/ebooks/84.html.images\",\"application/epub+zip\":\"https://www.gutenberg.org/ebooks/84.epub3.images\",\"application/x-mobipocket-ebook\":\"https://www.gutenberg.org/ebooks/84.kf8.images\",\"application/rdf+xml\":\"https://www.gutenberg.org/ebooks/84.rdf\",\"image/jpeg\":\"https://www.gutenberg.org/cache/epub/84/pg84.cover.medium.jpg\",\"application/octet-stream\":\"https://www.gutenberg.org/cache/epub/84/pg84-h.zip\",\"text/plain; charset=utf-8\":\"https://www.gutenberg.org/ebooks/84.txt.utf-8\"},\"download_count\":182729}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

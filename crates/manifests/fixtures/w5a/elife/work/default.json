@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "elife",
+  "op": "work",
+  "recordedAt": "2026-11-25T12:18:13Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.elifesciences.org/articles/55632/versions",
+        "headersSubset": {
+          "accept": "application/vnd.elife.article-history+json; version=2"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/vnd.elife.article-history+json; version=2"
+          ]
+        ],
+        "bodyText": "{\"received\": \"2020-01-30\", \"accepted\": \"2020-06-12\", \"versions\": [{\"status\": \"vor\", \"id\": \"55632\", \"version\": 1, \"type\": \"tools-resources\", \"doi\": \"10.7554/eLife.55632\", \"authorLine\": \"Maria Luisa Saggio, Dakota Crisp ... William C Stacey\", \"title\": \"A taxonomy of seizure dynamotypes\", \"published\": \"2020-07-21T00:00:00Z\", \"versionDate\": \"2020-07-21T00:00:00Z\", \"volume\": 9, \"elocationId\": \"e55632\", \"pdf\": \"https://cdn.elifesciences.org/articles/55632/elife-55632-v1.pdf\", \"subjects\": [{\"id\": \"computational-systems-biology\", \"name\": \"Computational and Systems Biology\"}, {\"id\": \"neuroscience\", \"name\": \"Neuroscience\"}], \"researchOrganisms\": [\"Human\"], \"copyright\": {\"license\": \"CC-BY-4.0\", \"holder\": \"Saggio et al.\", \"statement\": \"This article is distributed under the terms of the <a href=\\\"http://creativecommons.org/licenses/by/4.0/\\\">Creative Commons Attribution License</a>, which permits unrestricted use and redistribution provided that the original author and source are credited.\"}, \"impactStatement\": \"Taxonomy of seizure dynamics (TSD) provides a rigorous method for classifying and quantifying seizures and a principled framework for understanding seizure initiation and propagation.\", \"stage\": \"published\", \"statusDate\": \"2020-07-21T00:00:00Z\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "wikibooks",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:12:54Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://en.wikibooks.org/w/api.php?action=query&list=search&srsearch=calculus&srlimit=3&format=json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "cache-control",
+            "private, must-revalidate, max-age=0"
+          ],
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"batchcomplete\":\"\",\"continue\":{\"sroffset\":3,\"continue\":\"-||\"},\"query\":{\"searchinfo\":{\"totalhits\":1195},\"search\":[{\"ns\":0,\"title\":\"Calculus\",\"pageid\":575,\"size\":1539,\"wordcount\":647,\"snippet\":\"Welcome to the Wikibook of <span class=\\\"searchmatch\\\">Calculus</span> This wikibook aims to be a high quality <span class=\\\"searchmatch\\\">calculus</span> textbook through which users can master the discipline. Standard\",\"timestamp\":\"2024-11-05T22:00:05Z\"},{\"ns\":0,\"title\":\"Calculus/Multivariable Calculus\",\"pageid\":27626,\"size\":3674,\"wordcount\":138,\"snippet\":\"Surfaces in Space 7.3 Vector Functions 7.4 Introduction to multivariable <span class=\\\"searchmatch\\\">calculus</span> 7.5 Limits and Continuity 7.6 Partial Derivatives 7.7 The chain rule and\",\"timestamp\":\"2022-04-15T17:28:26Z\"},{\"ns\":0,\"title\":\"Calculus/Contributing\",\"pageid\":18130,\"size\":7208,\"wordcount\":1010,\"snippet\":\"Notes on contributing to the <span class=\\\"searchmatch\\\">Calculus</span> textbook. This is the Wikibooks:Local manuals of style for the <span class=\\\"searchmatch\\\">Calculus</span> textbook. The guidelines given below are\",\"timestamp\":\"2019-09-02T15:21:44Z\"}]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

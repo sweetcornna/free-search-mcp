@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "open_food_facts",
+  "op": "product",
+  "recordedAt": "2026-11-25T12:12:19Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://world.openfoodfacts.org/api/v2/product/3017620422003.json?fields=code,product_name,brands,nutriscore_grade,ecoscore_grade,nova_group,categories,ingredients_text,quantity,nutriments",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"code\":\"3017620422003\",\"product\":{\"brands\":\"Ferrero, Nutella\",\"categories\":\"Desserts, Cocoa and hazelnuts spreads, Confectionary based spreads\",\"code\":\"3017620422003\",\"ecoscore_grade\":\"f\",\"ingredients_text\":\"sugar, palm oil\",\"nova_group\":3,\"nutriments\":{\"added-sugars\":52.13,\"added-sugars_100g\":52.13,\"added-sugars_unit\":\"g\",\"added-sugars_value\":52.13,\"carbohydrates\":57.5,\"carbohydrates_100g\":57.5,\"carbohydrates_unit\":\"g\",\"carbohydrates_value\":57.5,\"energy\":2252,\"energy-kcal\":539,\"energy-kcal_100g\":539,\"energy-kcal_unit\":\"kcal\",\"energy-kcal_value\":539,\"energy-kj\":2252,\"energy-kj_100g\":2252,\"energy-kj_unit\":\"kJ\",\"energy-kj_value\":2252,\"energy_100g\":2252,\"energy_unit\":\"kJ\",\"energy_value\":2252,\"fat\":30.9,\"fat_100g\":30.9,\"fat_unit\":\"g\",\"fat_value\":30.9,\"fiber\":0,\"fiber_100g\":0,\"fiber_unit\":\"g\",\"fiber_value\":0,\"fruits-vegetables-legumes-estimate-from-ingredients_100g\":0,\"fruits-vegetables-nuts-estimate-from-ingredients_100g\":0,\"nova-group\":4,\"nova-group_100g\":4,\"nova-group_serving\":4,\"nova-group_unit\":\"\",\"nova-group_value\":4,\"proteins\":6.3,\"proteins_100g\":6.3,\"proteins_unit\":\"g\",\"proteins_value\":6.3,\"salt\":0.107,\"salt_100g\":0.107,\"salt_unit\":\"g\",\"salt_value\":0.107,\"saturated-fat\":10.6,\"saturated-fat_100g\":10.6,\"saturated-fat_unit\":\"g\",\"saturated-fat_value\":10.6,\"sodium\":0.0428,\"sodium_100g\":0.0428,\"sodium_modifier\":\"~\",\"sodium_unit\":\"g\",\"sodium_value\":0.0428,\"sugars\":56.3,\"sugars_100g\":56.3,\"sugars_unit\":\"g\",\"sugars_value\":56.3},\"nutriments_estimated\":{\"alcohol_100g\":0,\"beta-carotene_100g\":0,\"butyric-acid_100g\":0,\"calcium_100g\":0.002821743,\"capric-acid_100g\":0,\"caproic-acid_100g\":0,\"caprylic-acid_100g\":0,\"cholesterol_100g\":0,\"copper_100g\":4.20585e-06,\"crude-ash_100g\":0.018355153,\"docosahexaenoic-acid_100g\":0,\"eicosapentaenoic-acid_100g\":0,\"fructose_100g\":0,\"galactose_100g\":0,\"glucose_100g\":0,\"iodine_100g\":1.5,\"iron_100g\":6.12349e-05,\"lactose_100g\":0,\"lauric-acid_100g\":0.02353,\"magnesium_100g\":0.001261755,\"maltose_100g\":0,\"manganese_100g\":4.994085e-06,\"monounsaturated-fat_100g\":8.7061,\"myristic-acid_100g\":0.2353,\"palmitic-acid_100g\":10.23555,\"pantothenic-acid_100g\":0,\"phosphorus_100g\":0,\"phylloquinone_100g\":1.8824e-06,\"polyols_100g\":0,\"polyunsaturated-fat_100g\":2.18829,\"potassium_100g\":0.01032345,\"selenium_100g\":5.58825e-06,\"starch_100g\":0,\"stearic-acid_100g\":1.01179,\"sucrose_100g\":76.31706,\"vitamin-a_100g\":0,\"vitamin-b12_100g\":0,\"vitamin-b1_100g\":0,\"vitamin-b2_100g\":1.45293e-05,\"vitamin-b6_100g\":0,\"vitamin-b9_100g\":0,\"vitamin-c_100g\":0,\"vitamin-d_100g\":0,\"vitamin-e_100g\":0.00374127,\"vitamin-pp_100g\":0,\"water_100g\":0.13,\"zinc_100g\":1.5294e-05},\"nutriscore_grade\":\"e\",\"nutrition_data\":\"on\",\"nutrition_data_prepared_per\":\"100g\",\"product_name\":\"Nutella\",\"product_quantity\":400,\"product_quantity_unit\":\"g\",\"quantity\":\"400 g e\"},\"status\":1,\"status_verbose\":\"product found\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

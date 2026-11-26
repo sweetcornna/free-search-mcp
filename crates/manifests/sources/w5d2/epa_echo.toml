@@ -1,0 +1,96 @@
+id = "epa_echo"
+name = "US EPA ECHO (Enforcement & Compliance History)"
+summary = "US Environmental Protection Agency facility search and detailed environmental compliance reports across CAA, CWA, RCRA, and TRI programs."
+aliases = ["epa", "echo", "epa facilities", "environmental compliance"]
+home_url = "https://echo.epa.gov"
+tier = 1
+scopes = ["gov", "dataset"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 12000, cache_ttl_s = 43200 }
+
+[op.search]
+summary = "Search EPA-regulated facilities by name and optional US state (two-step QueryID flow)."
+method = "GET"
+url = "https://echodata.epa.gov/echo/echo_rest_services.get_qid"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { output = "JSON", qid = "{pre}", qcolumns = "1,2,3,4,5,6,7,8,23,24,25,30,31" }
+paginate = { style = "page", param = "pageno", start = 1, max_pages = 3 }
+probe = { params = { query = "TESLA", state = "CA", limit = 3 }, min_results = 2, fixture = "fixtures/w5d2/epa_echo/search/default.json" }
+
+[[op.search.pre]]
+method = "GET"
+url = "https://echodata.epa.gov/echo/echo_rest_services.get_facilities"
+headers = { Accept = "application/json" }
+const_query = { output = "JSON", p_fn = "{query}", p_st = "{state}", responseset = "{limit}" }
+response = "json"
+bind = "if .Results.Error then error(.Results.Error.ErrorMessage // (.Results.Error | tostring)) else .Results.QueryID end"
+on_empty = "empty"
+
+[op.search.params]
+query = { type = "string", required = true, in = "none", doc = "Facility name substring, e.g. TESLA" }
+state = { type = "string", default = "", in = "none", doc = "Optional two-letter US state abbreviation, e.g. CA" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "none", doc = "Facilities per page (responseset)" }
+page = { type = "int", default = 1, min = 1, to = "pageno", doc = "1-based results page number" }
+
+[op.search.map]
+items = "(.Results.Facilities // [])[]"
+total = "(.Results.QueryRows // null) | to_int"
+error = "if .Results.Error then (.Results.Error.ErrorMessage // (.Results.Error | tostring)) else null end"
+record = '''{
+  registryId: (.RegistryID // null),
+  name: (.FacName // ""),
+  street: (.FacStreet // null),
+  city: (.FacCity // null),
+  state: (.FacState // null),
+  zip: (.FacZip // null),
+  county: (.FacCounty // null),
+  rcraIds: (.RCRAIDs // null),
+  npdesIds: (.NPDESIDs // null),
+  ghgIds: (.GHGIDs // null),
+  url: ("https://echo.epa.gov/detailed-facility-report?fid=" + (.RegistryID // ""))
+}'''
+hit = '''{
+  title: (.FacName // .RegistryID // "EPA Facility"),
+  url: ("https://echo.epa.gov/detailed-facility-report?fid=" + (.RegistryID // "")),
+  snippet: (
+    [
+      ([.FacStreet, .FacCity, .FacState, .FacZip] | map(select(. != null and . != "")) | join(", ") | if length > 0 then . else null end),
+      (if .RegistryID then ("FRS " + .RegistryID) else null end),
+      (if .RCRAIDs then ("RCRA " + .RCRAIDs) else null end)
+    ] | map(select(. != null)) | join(" · ")
+  ),
+  date: null,
+  dateSource: null
+}'''
+
+[op.facility]
+summary = "Fetch Detailed Facility Report (DFR) permits and compliance summary by EPA FRS RegistryID."
+method = "GET"
+url = "https://echodata.epa.gov/echo/dfr_rest_services.get_dfr"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { output = "JSON" }
+probe = { params = { registry_id = "110070414218" }, min_results = 1, fixture = "fixtures/w5d2/epa_echo/facility/default.json" }
+
+[op.facility.params]
+registry_id = { type = "string", required = true, to = "p_id", doc = "EPA FRS RegistryID, e.g. 110070414218" }
+
+[op.facility.map]
+items = ".Results"
+error = "if .Results.Error then (.Results.Error.ErrorMessage // (.Results.Error | tostring)) else null end"
+record = '''{
+  registryId: (.RegistryID // null),
+  facilityName: (.Permits[0]?.FacilityName // null),
+  city: (.Permits[0]?.FacilityCity // null),
+  state: (.Permits[0]?.FacilityState // null),
+  latitude: ((.Permits[0]?.Latitude // null) | to_num),
+  longitude: ((.Permits[0]?.Longitude // null) | to_num),
+  permits: [(.Permits // [])[] | {system: .EPASystem, statute: (if (.Statute // "") != "" then .Statute else null end), sourceId: .SourceID}],
+  complianceSummary: [(.ComplianceSummary.Source // [])[] | {statute: .Statute, sourceId: .SourceID, currentSnc: .CurrentSNC, currentAsOf: (if (.CurrentAsOf // "" | test("^[0-9]{2}/[0-9]{2}/[0-9]{4}$")) then (.CurrentAsOf | capture("^(?<m>[0-9]{2})/(?<d>[0-9]{2})/(?<y>[0-9]{4})$") | "\(.y)-\(.m)-\(.d)") else ((.CurrentAsOf // null) | parse_date) end), qtrsInNc: (.QtrsInNC | to_int)}],
+  url: ("https://echo.epa.gov/detailed-facility-report?fid=" + (.RegistryID // ""))
+}'''

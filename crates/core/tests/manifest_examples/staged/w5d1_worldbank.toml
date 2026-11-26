@@ -1,0 +1,111 @@
+# W0a test vector: copy of crates/manifests/staging/w5d1/worldbank.toml (2026-11-25), verbatim.
+id = "worldbank"
+name = "World Bank Documents & Indicators"
+summary = "World Bank Documents & Reports full-text archive (WDS v3) and World Development Indicators (WDI v2) lookup."
+aliases = ["wb", "world bank", "wds", "worldbank docs"]
+home_url = "https://documents.worldbank.org"
+tier = 1
+scopes = ["finance", "dataset"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 3.0, burst = 6, concurrency = 4, timeout_ms = 8000, cache_ttl_s = 21600 }
+
+[op.search]
+summary = "Search World Bank Documents & Reports (economic updates, policy papers, country briefs)."
+method = "GET"
+url = "https://search.worldbank.org/api/v3/wds"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "json", fl = "id,docdt,display_title,pdfurl,txturl,url,count,docty,owner,abstracts" }
+paginate = { style = "offset", param = "os", start = 0, max_pages = 3 }
+probe = { params = { query = "inflation", limit = 3 }, min_results = 2, fixture = "fixtures/w5d1/worldbank/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "qterm", doc = "Full-text search terms" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "rows", doc = "Max results" }
+offset = { type = "int", min = 0, to = "os", doc = "Result offset" }
+country = { type = "string", to = "count_exact", doc = "Exact country name filter e.g. Algeria" }
+doctype = { type = "string", to = "docty_exact", doc = "Exact document type filter" }
+
+[op.search.map]
+items = '.documents | to_entries[] | select(.key != "facets" and (.value | type == "object") and ((.value.display_title // "") != "")) | .value'
+total = ".total"
+record = '''{
+  id: (.id // ""),
+  title: (.display_title // ""),
+  docType: (.docty // null),
+  country: (.count // null),
+  owner: (.owner // null),
+  date: (if .docdt then (.docdt[0:10]) else null end),
+  abstract: (.abstracts["cdata!"] // null),
+  url: ((.url // .pdfurl // .txturl // "https://documents.worldbank.org") | sub("^http://"; "https://")),
+  pdfUrl: (if .pdfurl then (.pdfurl | sub("^http://"; "https://")) else null end)
+}'''
+hit = '''{
+  title: (.display_title // ""),
+  url: ((.url // .pdfurl // .txturl // "https://documents.worldbank.org") | sub("^http://"; "https://")),
+  snippet: (([(.docty // empty), (.count // empty)] | join(" · ")) as $head | (.abstracts["cdata!"] // "") as $abs | if ($head != "" and $abs != "") then ($head + " — " + $abs) elif $abs != "" then $abs else $head end),
+  date: (if .docdt then (.docdt[0:10]) else null end),
+  dateSource: (if .docdt then "api" else null end)
+}'''
+
+[op.document]
+summary = "Fetch a single World Bank document record by numeric WDS document ID."
+method = "GET"
+url = "https://search.worldbank.org/api/v3/wds"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "json", fl = "id,docdt,display_title,pdfurl,txturl,url,count,docty,owner,abstracts,authr,lang" }
+probe = { params = { id = "735811" }, min_results = 1, fixture = "fixtures/w5d1/worldbank/document/default.json" }
+
+[op.document.params]
+id = { type = "string", required = true, to = "id", doc = "Numeric World Bank WDS document ID e.g. 735811" }
+
+[op.document.map]
+items = '.documents | to_entries[] | select(.key != "facets" and (.value | type == "object")) | .value'
+record = '''{
+  id: (.id // ""),
+  title: (.display_title // ""),
+  authors: [(.authors // {}) | to_entries[] | .value.author // empty],
+  docType: (.docty // null),
+  country: (.count // null),
+  owner: (.owner // null),
+  lang: (.lang // null),
+  date: (if .docdt then (.docdt[0:10]) else null end),
+  abstract: (.abstracts["cdata!"] // null),
+  url: ((.url // .pdfurl // .txturl // "https://documents.worldbank.org") | sub("^http://"; "https://")),
+  pdfUrl: (if .pdfurl then (.pdfurl | sub("^http://"; "https://")) else null end)
+}'''
+
+[op.indicator]
+summary = "Look up any World Development Indicator (WDI v2) time series by ISO-3 country code and indicator code."
+method = "GET"
+url = "https://api.worldbank.org/v2/country/{country}/indicator/{indicator}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "json" }
+probe = { params = { country = "USA", indicator = "NY.GDP.MKTP.CD", limit = 3 }, min_results = 2, fixture = "fixtures/w5d1/worldbank/indicator/default.json" }
+
+[op.indicator.params]
+country = { type = "string", required = true, in = "path", doc = "ISO-3 country code e.g. USA, CHN, DEU, or WLD" }
+indicator = { type = "string", required = true, in = "path", doc = "WDI indicator code e.g. NY.GDP.MKTP.CD, SP.POP.TOTL" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "per_page", doc = "Max observations" }
+date = { type = "string", to = "date", doc = "Year or range e.g. 2020:2025" }
+
+[op.indicator.map]
+items = "(.[1] // [])[]"
+total = ".[0].total"
+error = "if (.[0].message? | type == \"array\" and length > 0) then .[0].message[0].value else null end"
+record = '''{
+  indicatorId: .indicator.id,
+  indicatorName: .indicator.value,
+  countryCode: (.countryiso3code // .country.id),
+  countryName: .country.value,
+  year: .date,
+  value: .value,
+  unit: (if (.unit // "") == "" then null else .unit end)
+}'''

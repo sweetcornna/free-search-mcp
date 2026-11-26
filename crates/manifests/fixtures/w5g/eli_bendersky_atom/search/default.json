@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "source": "eli_bendersky_atom",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:13:44Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://eli.thegreenplace.net/feeds/all.atom.xml",
+        "headersSubset": {
+          "accept": "application/atom+xml, application/xml, text/xml"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "last-modified",
+            "Sat, 21 Nov 2026 22:27:50 GMT"
+          ],
+          [
+            "etag",
+            "\"1477-660d0def513bf\""
+          ],
+          [
+            "cache-control",
+            "max-age=600"
+          ],
+          [
+            "content-type",
+            "application/xml"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<feed xmlns=\"http://www.w3.org/2005/Atom\"><title>Eli Bendersky's website</title><link href=\"https://eli.thegreenplace.net/\" rel=\"alternate\"/><link href=\"https://eli.thegreenplace.net/feeds/all.atom.xml\" rel=\"self\"/><id>https://eli.thegreenplace.net/</id><updated>2026-11-21T22:27:45.715273-08:00</updated><entry><title>Notes on the discrete Fourier transform (DFT)</title><link href=\"https://eli.thegreenplace.net/2026/notes-on-the-discrete-fourier-transform-dft/\" rel=\"alternate\"/><published>2026-11-21T14:26:00-08:00</published><updated>2026-11-21T22:27:45.715273-08:00</updated><author><name>Eli Bendersky</name></author><id>tag:eli.thegreenplace.net,2026-11-21:/2026/notes-on-the-discrete-fourier-transform-dft/</id><summary type=\"html\">&lt;p&gt;In the &lt;a class=\"reference external\" href=\"https://eli.thegreenplace.net/2026/notes-on-discrete-time-fourier-series-and-transform/\"&gt;previous post on this\ntopic&lt;/a&gt;,\nwe’ve seen how the Discrete-Time Fourier Series (DTFS) and transform\n(DTFT) are used to analyze infinite-duration periodic and non-periodic\ndiscrete signals. Now, it’s time to turn to realistic digital signal\nprocessing where signals are not only discrete, but also &lt;em&gt;finite in …&lt;/em&gt;&lt;/p&gt;</summary><category term=\"misc\"/><category term=\"Math\"/></entry><entry><title>Monads in Lean</title><link href=\"https://eli.thegreenplace.net/2026/monads-in-lean/\" rel=\"alternate\"/><published>2026-11-10T19:25:00-08:00</published><updated>2026-11-11T03:26:16.381058-08:00</updated><author><name>Eli Bendersky</name></author><id>tag:eli.thegreenplace.net,2026-11-10:/2026/monads-in-lean/</id><summary type=\"html\">&lt;p&gt;This post demonstrates how to use monads in the Lean programming language\n(Lean 4, to be specific). If you're not familiar with Lean, this part of the\nlanguage is very similar to other functional programming languages, like\nHaskell or OCaml.&lt;/p&gt;\n&lt;div class=\"section\" id=\"motivating-example-evaluating-expressions\"&gt;\n&lt;h2&gt;Motivating example - evaluating expressions&lt;/h2&gt;\n&lt;p&gt;Suppose we want to write a …&lt;/p&gt;&lt;/div&gt;</summary><category term=\"misc\"/><category term=\"Lean\"/><category term=\"Functional programming\"/></entry><entry><title>Notes on the complex roots of unity</title><link href=\"https://eli.thegreenplace.net/2026/notes-on-the-complex-roots-of-unity/\" rel=\"alternate\"/><published>2026-10-17T18:18:00-07:00</published><updated>2026-10-18T01:18:06.134012-07:00</updated><author><name>Eli Bendersky</name></author><id>tag:eli.thegreenplace.net,2026-10-17:/2026/notes-on-the-complex-roots-of-unity/</id><summary type=\"html\">&lt;link rel=\"stylesheet\" href=\"https://eli.thegreenplace.net/demos/rootsunity/rootsunity.css\"&gt;&lt;p&gt;One of the most wonderful aspects of math is how deep we can get by\nstudying seemingly trivial questions. Consider the roots of unity, where\n&amp;quot;unity&amp;quot; simply means the number 1.&lt;/p&gt;\n&lt;div class=\"section\" id=\"basics-roots-of-unity-for-real-numbers\"&gt;\n&lt;h2&gt;Basics: roots of unity for real numbers&lt;/h2&gt;\n&lt;p&gt;Studying the roots of unity usually begins in middle school: what is …&lt;/p&gt;&lt;/div&gt;</summary><category term=\"misc\"/><category term=\"Math\"/></entry><entry><title>Monte-Carlo simulations</title><link href=\"https://eli.thegreenplace.net/2026/monte-carlo-simulations/\" rel=\"alternate\"/><published>2026-10-07T19:34:00-07:00</published><updated>2026-10-08T02:35:03.997683-07:00</updated><author><name>Eli Bendersky</name></author><id>tag:eli.thegreenplace.net,2026-10-07:/2026/monte-carlo-simulations/</id><summary type=\"html\">&lt;p&gt;Monte Carlo simulations (or &lt;em&gt;methods&lt;/em&gt;) is the technique of applying\nrandomness and the &lt;a class=\"reference external\" href=\"https://en.wikipedia.org/wiki/Law_of_large_numbers\"&gt;Law of large numbers&lt;/a&gt;\nto the solution of various scientific and engineering problems. One of its\nfirst documented uses was by Stanislaw Ulam and John von Neumann for nuclear\nweapon simulations after WWII &lt;a class=\"footnote-reference\" href=\"#footnote-1\" id=\"footnote-reference-1\"&gt;[1]&lt;/a&gt;.&lt;/p&gt;\n&lt;p&gt;In this post …&lt;/p&gt;</summary><category term=\"misc\"/><category term=\"Math\"/><category term=\"Science\"/><category term=\"Rust\"/><category term=\"Python\"/></entry><entry><title>Summary of reading: July - September 2026</title><link href=\"https://eli.thegreenplace.net/2026/summary-of-reading-july-september-2026/\" rel=\"alternate\"/><published>2026-09-30T17:05:00-07:00</published><updated>2026-10-01T12:38:41.710658-07:00</updated><author><name>Eli Bendersky</name></author><id>tag:eli.thegreenplace.net,2026-09-30:/2026/summary-of-reading-july-september-2026/</id><summary type=\"html\">&lt;ul class=\"simple\"&gt;\n&lt;li&gt;&amp;quot;Wuthering Heights&amp;quot; by Emily Brontë - good writing, but the protagonists are\nquite something. There's barely a likable character in the whole story - they\nare all either crazy, evil, stupid or a combination of these. It's also\nremarkable to consider how small the world of some people in those times was …&lt;/li&gt;&lt;/ul&gt;</summary><category term=\"misc\"/><category term=\"Book reviews\"/></entry></feed>",
+        "bodyB64": null
+      }
+    }
+  ]
+}

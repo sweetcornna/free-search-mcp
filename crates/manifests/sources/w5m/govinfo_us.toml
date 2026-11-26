@@ -1,0 +1,115 @@
+id = "govinfo_us"
+name = "US GovInfo Official Publications API"
+summary = "Official US Government Publishing Office API for US Code, Congressional bills, Federal Register, court opinions, and budget publications (requires free api.data.gov key)."
+aliases = ["govinfo", "gpo", "uscode", "us government publications"]
+home_url = "https://api.govinfo.gov/docs/"
+tier = 3
+scopes = ["gov", "gov.law"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 0.25, burst = 3, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 21600, host_bucket = "api_data_gov" }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_DATA_GOV_API_KEY"
+in = "header"
+name = "X-Api-Key"
+format = "{key}"
+route_requires_key = true
+
+[op.search]
+summary = "Full-text search across GovInfo official US government publication collections via POST JSON."
+method = "POST"
+url = "https://api.govinfo.gov/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+body = { kind = "json", jaq = '''{
+  query: $p.query,
+  pageSize: ($p.limit // 10),
+  offsetMark: ($p.cursor // "*")
+}''' }
+paginate = { style = "cursor", param = "offsetMark", max_pages = 3 }
+probe = { params = { query = "collection:(USCODE) AND privacy", limit = 3 }, min_results = 2, fixture = "fixtures/w5m/govinfo_us/search/default.json" }
+examples = ["source.call('govinfo_us.search', { query: 'collection:(USCODE) AND privacy', limit: 5 })"]
+
+[op.search.params]
+query = { type = "string", required = true, in = "body", doc = "GovInfo query supporting collection:(USCODE|BILLS|CFR|FR|USCOURTS)" }
+limit = { type = "int", default = 10, min = 1, max = 100, in = "body", doc = "Results per page" }
+cursor = { type = "string", default = "*", in = "body", doc = "Pagination offsetMark cursor ('*' for first page)" }
+
+[op.search.map]
+items = "(.results // [])[]"
+next_cursor = ".offsetMark"
+total = ".count"
+error = 'if .error then (.error.message // .error.code // (.error | tostring)) else null end'
+record = '''{
+  packageId: .packageId,
+  collection: (.collection // .collectionCode // null),
+  docClass: (.docClass // null),
+  title: ((.title // "") | strip_tags),
+  congress: (.congress // null),
+  publishDate: ((.publishdate // .dateIssued) | parse_date),
+  lastModified: (.lastModified // null),
+  pdfUrl: (.download.pdf // .download.pdfLink // null),
+  xmlUrl: (.download.xml // .download.xmlLink // null),
+  url: ("https://www.govinfo.gov/app/details/" + .packageId)
+}'''
+hit = '''{
+  title: ((.title // .packageId) | strip_tags),
+  url: ("https://www.govinfo.gov/app/details/" + .packageId),
+  snippet: ((.collection // .docClass // "GovInfo") + " · " + .packageId),
+  date: ((.publishdate // .dateIssued) | parse_date),
+  dateSource: "api"
+}'''
+
+[op.collections]
+summary = "List all official GovInfo publication collections with package and granule counts."
+method = "GET"
+url = "https://api.govinfo.gov/collections"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = {}, min_results = 3, fixture = "fixtures/w5m/govinfo_us/collections/default.json" }
+examples = ["source.call('govinfo_us.collections', {})"]
+
+[op.collections.map]
+items = "(.collections // [])[]"
+error = "@ref:op.search.map.error"
+record = '''{
+  collectionCode: .collectionCode,
+  collectionName: (.collectionName // ""),
+  packageCount: (.packageCount // 0),
+  granuleCount: (.granuleCount // null),
+  url: ("https://www.govinfo.gov/app/collection/" + .collectionCode)
+}'''
+
+[op.package]
+summary = "Fetch full metadata summary and PDF/XML download links for a GovInfo package by packageId."
+method = "GET"
+url = "https://api.govinfo.gov/packages/{package_id}/summary"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { package_id = "USCODE-2022-title42" }, min_results = 1, fixture = "fixtures/w5m/govinfo_us/package/default.json" }
+examples = ["source.call('govinfo_us.package', { package_id: 'USCODE-2022-title42' })"]
+
+[op.package.params]
+package_id = { type = "string", required = true, in = "path", doc = "GovInfo package ID e.g. USCODE-2022-title42, CREC-2024-10-10" }
+
+[op.package.map]
+items = "."
+error = "@ref:op.search.map.error"
+record = '''{
+  packageId: .packageId,
+  title: (.title // ""),
+  collectionCode: (.collectionCode // null),
+  collectionName: (.collectionName // null),
+  category: (.category // null),
+  dateIssued: (.dateIssued // null),
+  detailsUrl: (.detailsLink // ("https://www.govinfo.gov/app/details/" + .packageId)),
+  pdfLink: (.download.pdfLink // null),
+  xmlLink: (.download.xmlLink // null),
+  modsLink: (.download.modsLink // null)
+}'''

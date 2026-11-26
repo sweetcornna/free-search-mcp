@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "source": "eartharxiv",
+  "op": "work",
+  "recordedAt": "2026-11-25T15:04:29Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.crossref.org/works/10.31223/x5q23r",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "date",
+            "Wed, 25 Nov 2026 15:04:29 GMT"
+          ],
+          [
+            "content-type",
+            "application/json"
+          ],
+          [
+            "access-control-expose-headers",
+            "Link"
+          ],
+          [
+            "access-control-allow-headers",
+            "X-Requested-With, Accept, Accept-Encoding, Accept-Charset, Accept-Language, Accept-Ranges, Cache-Control"
+          ],
+          [
+            "access-control-allow-origin",
+            "*"
+          ],
+          [
+            "vary",
+            "Accept-Encoding"
+          ],
+          [
+            "server",
+            "Jetty(9.4.40.v20210413)"
+          ],
+          [
+            "x-rate-limit-limit",
+            "5"
+          ],
+          [
+            "x-rate-limit-interval",
+            "1s"
+          ],
+          [
+            "x-concurrency-limit",
+            "1"
+          ],
+          [
+            "x-api-pool",
+            "public-single"
+          ],
+          [
+            "permissions-policy",
+            "interest-cohort=()"
+          ],
+          [
+            "strict-transport-security",
+            "max-age=31536000;"
+          ]
+        ],
+        "bodyText": "{\"status\":\"ok\",\"message-type\":\"work\",\"message-version\":\"1.0.0\",\"message\":{\"indexed\":{\"date-parts\":[[2026,11,25]],\"date-time\":\"2026-11-25T03:15:49Z\",\"timestamp\":1795576549156,\"version\":\"4.11.0\"},\"posted\":{\"date-parts\":[[2026,11,25]]},\"group-title\":\"Climate\",\"reference-count\":0,\"publisher\":\"California Digital Library (CDL)\",\"license\":[{\"start\":{\"date-parts\":[[2026,11,25]],\"date-time\":\"2026-11-25T00:00:00Z\",\"timestamp\":1795564800000},\"content-version\":\"unspecified\",\"delay-in-days\":0,\"URL\":\"https:\\/\\/creativecommons.org\\/licenses\\/by\\/4.0\\/legalcode\"}],\"content-domain\":{\"domain\":[],\"crossmark-restriction\":false},\"short-container-title\":[],\"accepted\":{\"date-parts\":[[2026,11,25]]},\"abstract\":\"<jats:p>Replacing irrigated farmland and riverine woodland with paved surfaces has intensified the surface urban heat island (SUHI) across Lahore, Pakistan, increasing heat exposure during pre-monsoon summer months (Nasar-U-Minallah et al., 2023; Shah et al., 2026). Most satellite thermal studies of Lahore track historical warming without turning pixel-level temperature patterns into priority planting maps or checking whether proposed trees fit local soils, groundwater decline, and forest regulations. In this study, Landsat 9 Collection 2 Level-2 thermal (TIRS-2) and optical (OLI-2) imagery from June 15, 2026 (LC09_L2SP_149038_20260615_20260617_02_T1; 30 m resolution; WGS 1984 UTM Zone 43N \\/ EPSG:32643) was processed in ArcGIS Pro to map Land Surface Temperature (LST), the Urban Thermal Field Variance Index (UTFVI), and a five-class Urban Forestry Priority Zoning raster across the full WRS-2 Path 149 \\/ Row 038 Lahore-Ravi alluvial plain (34,089.30 km\\u00b2; 37,876,999 valid pixels). Cleaned scene-wide LST averaged 38.43 \\u00b0C (standard deviation 8.75 \\u00b0C), separating built-up cores exceeding 47 \\u00b0C from cooler refugia over the Ravi River (27.57 \\u00b0C sampled pixel, &amp;gt;19 \\u00b0C cooler) and Shahdara Reserve Forest (33.99 \\u00b0C sampled interior pixel, &amp;gt;13 \\u00b0C cooler, with canopy cores at \\u226432 \\u00b0C). A calibration check of the raster equations identified two scaling sensitivities that are reported transparently: computing NDVI on unscaled Landsat Collection 2 surface reflectance digital numbers compresses canopy NDVI toward 0.14-0.20 (explaining why Shahdara Reserve Forest initially registered 0.144 before temperature-assisted correction restored it to the protected green class), and evaluating UTFVI with a degrees-Celsius mean denominator (38.4263 \\u00b0C) instead of Kelvin (311.5763 K) amplifies positive UTFVI ratios by 8.11 times. Across the full analyzed scene, 3,015.58 km\\u00b2 (8.85%) fall in Priority 1 (Critical Planting Zone, LST &amp;gt; 47 \\u00b0C) and 8,222.77 km\\u00b2 (24.12%) in Priority 2 (High Planting Need, 42-47 \\u00b0C), while 10,486.34 km\\u00b2 (30.76%) represent existing cool green cover requiring protection. Linking these spatial zones with Lahore's hot semi-arid (BSh) climate normals, alkaline calcareous soils (pH 7.2-8.4), declining groundwater levels (0.78-1.0 m\\/year), and high particulate loads yields a tiered native urban forestry strategy built around Azadirachta indica, Pongamia pinnata, and Cassia fistula, expanded with Terminalia arjuna, Ficus religiosa, Ficus benghalensis, Ficus virens, Syzygium cumini, Vachellia nilotica, and mixed-stand Dalbergia sissoo, paired with phased replacement of maladapted or invasive exotics (Broussonetia papyrifera, Eucalyptus camaldulensis, Prosopis juliflora, and monoculture Conocarpus erectus) in line with Lahore's 2024 Green Master Plan and Punjab's 2025 Forest Act amendments.<\\/jats:p>\",\"DOI\":\"10.31223\\/x5q23r\",\"type\":\"posted-content\",\"created\":{\"date-parts\":[[2026,11,25]],\"date-time\":\"2026-11-25T03:06:31Z\",\"timestamp\":1795575991000},\"source\":\"Crossref\",\"is-referenced-by-count\":0,\"title\":[\"Mitigating Lahore's Urban Heat Island: Satellite Derived Thermal Stress Assessment, Priority Urban Forestry Zoning, and Climate Adaptive Species Planning\"],\"prefix\":\"10.31223\",\"author\":[{\"ORCID\":\"https:\\/\\/orcid.org\\/0009-0005-4014-9584\",\"authenticated-orcid\":false,\"given\":\"Abderrazak\",\"family\":\"Douga\",\"sequence\":\"first\",\"affiliation\":[],\"role\":[{\"vocabulary\":\"crossref\",\"role\":\"author\"}]}],\"member\":\"29705\",\"container-title\":[],\"original-title\":[],\"link\":[{\"URL\":\"https:\\/\\/eartharxiv.org\\/repository\\/object\\/16320\\/download\\/28200\\/\",\"content-type\":\"application\\/pdf\",\"content-version\":\"vor\",\"intended-application\":\"text-mining\"}],\"deposited\":{\"date-parts\":[[2026,11,25]],\"date-time\":\"2026-11-25T03:06:31Z\",\"timestamp\":1795575991000},\"score\":1,\"resource\":{\"primary\":{\"URL\":\"https:\\/\\/eartharxiv.org\\/repository\\/view\\/16320\\/\"}},\"subtitle\":[],\"short-title\":[],\"issued\":{\"date-parts\":[[2026,11,25]]},\"references-count\":0,\"URL\":\"https:\\/\\/doi.org\\/10.31223\\/x5q23r\",\"relation\":{},\"subject\":[],\"published\":{\"date-parts\":[[2026,11,25]]},\"subtype\":\"preprint\"}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

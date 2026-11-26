@@ -1,143 +1,102 @@
-# Install and wire into clients
+# Install and Wire Into Clients
 
-There are four ways to install, listed in the order most people should try
-them. All four run the same server, and none of them asks for an API key.
+`free-search-mcp` 1.0 ships as a single Rust binary (`free-search-mcp`, with
+`search-mcp` symlink/alias) targeting **macOS and Linux** (Windows is P1).
+Every install route runs the same keyless 3-tool server (`search`, `exec`, and
+`ask`) under server key **`"search"`**.
 
-## 1. The plugin (Claude Code and Codex)
+## 1. Tri-Client Plugins (Recommended)
+
+The plugin pins the server version to `1.0.0` and bundles the `search` MCP
+server, both on-demand skills (`verified-research` and `scholar-research`),
+the `quick-search` agent, and Antigravity standing rules.
+
+### Claude Code
+
+Inside a session:
 
 ```text
 /plugin marketplace add sweetcornna/free-search-mcp
 /plugin install free-search@free-search-mcp
 ```
 
-Outside the TUI the same two steps are:
+From the shell:
 
 ```bash
 claude plugin marketplace add sweetcornna/free-search-mcp
 claude plugin install free-search@free-search-mcp -s user
 ```
 
-In Codex:
+### Codex
 
 ```bash
 codex plugin marketplace add sweetcornna/free-search-mcp
 codex plugin add free-search@free-search-mcp
 ```
 
-A `[mcp_servers.search]` entry already in `~/.codex/config.toml` silently
-shadows the plugin's server of the same name, so run `codex mcp remove search`
-first. Codex reads the same marketplace file and the plugin's `.mcp.json`, so
-it starts the same pinned server.
+If `~/.codex/config.toml` has an older `[mcp_servers.search]` entry, it
+silently shadows the plugin's server — run `codex mcp remove search` first.
+See [CODEX_SEARCH.md](CODEX_SEARCH.md) for setting `tool_timeout_sec = 150`
+and copying `plugins/free-search/codex/agents/quick_search.toml` into
+`~/.codex/agents/`.
 
-The marketplace is this repo (`.claude-plugin/marketplace.json`), and the
-plugin is `plugins/free-search`. It contains three things. The MCP server and
-the skill load in both hosts: Codex lists the skill as
-`free-search:verified-research` (checked with Codex CLI 0.154). The agent file
-is in Claude Code's format, and Codex gets the same agent another way (see
-[DELEGATION.md](DELEGATION.md)).
+### Antigravity (`agy`)
 
-- The stdio MCP server `search`, started as
-  `uvx free-search-mcp==<plugin version>`. Because of that pin the plugin
-  version matches the package version: plugin `X.Y.Z` runs package `X.Y.Z`,
-  and `/plugin update free-search` is what moves you to a newer server.
-- One skill, `verified-research`. Search snippets are only leads, yet agents
-  tend to answer from them: they quote a prize, a deadline or a version out of
-  a snippet without opening the page or checking what year the page is from.
-  The skill is the workflow for that case: open the primary page, read its date
-  against today's, corroborate, and say what could not be verified.
-- One agent, `free-search:quick-search`
-  (`plugins/free-search/agents/quick-search.md`). It takes one question, makes
-  one `research` call that searches and reads the top pages, and replies with
-  an answer of one to three sentences, up to five source lines that each carry
-  the page's date, and a "Not verified" line when something could not be
-  confirmed. The pages it read stay out of the main conversation. Claude
-  delegates to it from its description, or you can @-mention it or ask to "use
-  the quick-search agent". It is built to return fast: it runs on `haiku`,
-  stops after at most 6 turns, sees four tools (`research`, `search`, `fetch`,
-  `read_doc`) and loads neither the skill nor your `CLAUDE.md`. The same tool
-  list makes it read-only, with no shell, no file tools, no `download` and no
-  other MCP server. It treats text on fetched pages as evidence and does not
-  follow instructions found in it, and it never asks for an API key. A nested
-  Claude Code session that delegated one version lookup to it finished in 25 s
-  and cost $0.09 (2026-09-21). For facts someone will act on, run the
-  `verified-research` skill in the main conversation instead.
+```bash
+agy plugin install https://github.com/sweetcornna/free-search-mcp/tree/main/plugins/free-search
+# or from a local clone:
+agy plugin install ./plugins/free-search
+```
 
-The cost: there are no hooks, and nothing runs unless the agent calls it.
-`claude plugin details` projects about 340 tokens added to every session, about
-210 for the skill's description and about 130 for the agent's, so that Claude
-knows both exist. The skill's body (about 2.1k tokens) loads only when a
-lookup needs verifying, and the agent's prompt (about 560) only when it is
-spawned. The MCP tool definitions cost the same on any install path.
+Antigravity ingests `plugin.json`, `mcp_config.json`, `rules/AGENTS.md`,
+`skills/{verified-research,scholar-research}/SKILL.md`, and
+`agents/quick-search.md`. See [ANTIGRAVITY_SEARCH.md](ANTIGRAVITY_SEARCH.md).
 
-Configuration lives in the same place as for any other install
-(`~/.config/search-mcp/.env`). Chromium for the browser-rendered engines is the
-one optional follow-up:
-`uvx --from free-search-mcp playwright install chromium`.
+### Hermes Agent (Agent Plugins v1)
 
-## 2. Claude Desktop: the one-click bundle
+```bash
+hermes plugins install sweetcornna/free-search-mcp/plugins/free-search --enable
+```
 
-From 0.12.0, every [GitHub Release](https://github.com/sweetcornna/free-search-mcp/releases)
-carries `free-search-mcp-<version>.mcpb`. Download it and double-click it, or
-open it from Claude Desktop's Settings, under Extensions. Claude Desktop runs
-the pinned package through `uv` and shows a settings form with three optional
-fields: proxy, region and cache directory. The form has no API-key field
-because the server does not use one.
+---
 
-To edit the JSON by hand, see
-[Wire into Claude Desktop](#wire-into-claude-desktop).
+## 2. Claude Desktop: One-Click Binary Bundle (`.mcpb`)
+
+Each [GitHub Release](https://github.com/sweetcornna/free-search-mcp/releases)
+attaches platform-specific `.mcpb` bundles (`free-search-mcp-1.0.0-<platform>.mcpb`)
+using `"type": "binary"`. Double-click the bundle or install it via **Settings
+→ Extensions**. It embeds the native `free-search-mcp` binary directly (no
+Python or `uv` needed) and shows three optional settings: proxy, region, and
+cache directory. Empty or unfilled placeholders are stripped automatically by
+the binary.
+
+---
 
 ## 3. MCP Registry
 
-From 0.12.0 the release workflow publishes the server to the official MCP
-Registry as `io.github.sweetcornna/free-search-mcp`. A client or gateway that installs
-from the registry resolves that name to the PyPI package `free-search-mcp`,
-run with `uvx` over stdio. The entry declares only the optional proxy, region
-and cache-directory variables.
+`free-search-mcp` is published to the official MCP Registry as
+`io.github.sweetcornna/free-search-mcp`, resolving to the `maturin` binary
+wheel on PyPI run via `uvx free-search-mcp` over stdio.
 
-## 4. Alternatives: uvx, a source checkout, Docker
+---
 
-uvx, registered by hand, runs the same published package as the plugin. It
-resolves to whatever PyPI holds at first launch, nothing tells you when a newer
-version exists, and you do not get the skill. The quick-search agent is one
-command away, as [DELEGATION.md](DELEGATION.md) shows:
+## 4. Standalone Binary, `uvx`, Source Checkout & Docker
+
+### Prebuilt wheel via `uvx` (zero build)
+
+`pyproject.toml` packages the Rust binary with `maturin` (`bindings = "bin"`),
+so `uvx` downloads and executes the native binary directly:
 
 ```bash
 claude mcp add search -s user -- uvx free-search-mcp   # Claude Code
 codex mcp add search -- uvx free-search-mcp            # Codex
-uvx free-search-mcp                                    # or run the stdio server directly
+agy mcp add search uvx free-search-mcp                 # Antigravity
+uvx free-search-mcp --help                             # Run directly
 ```
 
-For any other MCP client, point it at the command `uvx free-search-mcp`
-(stdio).
+### Build & install `~/.local/bin/free-search-mcp` (+ `search-mcp` alias)
 
-A source checkout takes one command. Use it for working on the code, or on a
-machine where you want Chromium with its OS deps, a smoke test and client
-registration in one step:
-
-```bash
-curl -LsSf https://raw.githubusercontent.com/sweetcornna/free-search-mcp/main/scripts/install.sh | bash -s -- --client claude-code
-```
-
-The remote installer clones or updates
-`~/.local/share/free-search-mcp`, installs `uv` if needed, syncs dependencies,
-installs Chromium, smoke-tests the MCP server, then registers it with the
-requested client:
-
-```bash
---client claude-code      # Claude Code user-scope config
---client claude-desktop   # claude_desktop_config.json
---client codex            # Codex config
---client generic          # print portable MCP JSON for other agents
---client add-mcp          # delegate to npx add-mcp
---client both             # Claude Code + Claude Desktop
---client all              # Claude Code + Claude Desktop + Codex
---client none             # install only, no client config changes
-```
-
-For Codex, Cursor, Cline, Continue, Zed and generic agent guidance, see
-[docs/AGENT_USAGE.md](AGENT_USAGE.md).
-
-To work from a local checkout:
+From a source checkout (requires Rust 1.98 per `rust-toolchain.toml`):
 
 ```bash
 git clone https://github.com/sweetcornna/free-search-mcp.git
@@ -145,115 +104,81 @@ cd free-search-mcp
 ./scripts/install.sh --client none
 ```
 
-To do the same steps by hand:
+Or one-line remote install:
 
 ```bash
-uv sync
-uv run playwright install chromium
-cp .env.example .env        # optional: customize engines/limits
+curl -LsSf https://raw.githubusercontent.com/sweetcornna/free-search-mcp/main/scripts/install.sh \
+  | bash -s -- --client claude-code
 ```
 
-Run as a stand-alone server (stdio transport):
+Supported `--client` flags: `none` (default), `claude-code`, `claude-desktop`,
+`codex`, `antigravity`, `generic`, `add-mcp`, `both`, `all`.
 
-```bash
-uv run search-mcp
-```
+`scripts/install.sh` installs `~/.local/bin/free-search-mcp` via atomic rename
+(safely replacing any older `uv` symlink instead of overwriting through it) and
+creates `~/.local/bin/search-mcp -> free-search-mcp`.
 
-Or serve it over HTTP. MCP revision `2026-07-28` removed protocol-level
-sessions, so the HTTP endpoint is stateless: it needs no sticky routing, and
-any replica can answer any request:
-
-```bash
-uv run search-mcp --transport streamable-http --port 8000   # → http://127.0.0.1:8000/mcp
-```
-
-> The HTTP endpoint has **no authentication** and will fetch arbitrary URLs on
-> behalf of whoever reaches it. It binds `127.0.0.1` by default; if you change
-> `--host`, put an authenticating reverse proxy in front. A DNS-rebinding guard
-> rejects unknown `Origin`/`Host` headers; add trusted browser origins with
-> `SEARCH_MCP_HTTP_ALLOWED_ORIGINS`. This is a separate process and port from
-> the local settings page (`search-mcp-admin`, port 8765), which stays
-> loopback-only because it writes your proxy credentials and any keys you chose
-> to add.
-
-Docker runs the server containerized over stdio:
+### Distroless Docker (~25 MB)
 
 ```bash
 docker compose build
-docker compose run --rm search-mcp     # attaches stdio for MCP
+docker compose run --rm search-mcp        # attaches stdio for MCP
 ```
 
-## Wire into Claude Code
-
-There are three paths, and they are not interchangeable. The first two run a
-published release and the third runs your working tree, so choose by what you
-are doing.
-
-To use the server, install the plugin. It is one install, Claude Code handles
-updates, the server is pinned to the version you installed, and the
-`verified-research` skill and the `free-search:quick-search` agent come with
-it:
-
-```text
-/plugin marketplace add sweetcornna/free-search-mcp
-/plugin install free-search@free-search-mcp
-```
-
-To use it without the plugin, register it as a plain MCP server. This runs the
-same published package, but it resolves to whatever PyPI holds at first launch,
-and nothing tells you when a newer version exists:
+Or directly:
 
 ```bash
-claude mcp add search -s user -- uvx free-search-mcp
+docker build -t free-search-mcp .
+docker run -i --rm free-search-mcp
 ```
 
-To work on the server, use the project-scoped `.mcp.json` this repo ships.
-Running `claude` inside the checkout auto-detects a `search` server started
-with `uv run search-mcp`, which is the code in front of you. The file exists
-because neither the plugin nor the `uvx` line can show you your own edits. To
-reach a checkout from outside it:
+### Streamable HTTP transport
 
 ```bash
-claude mcp add search -s user -- uv --directory /absolute/path/to/free-search-mcp run search-mcp
+free-search-mcp --transport streamable-http --host 127.0.0.1 --port 8000
+# Serves http://127.0.0.1:8000/mcp and POST/GET http://127.0.0.1:8000/v1/ask
 ```
 
-The plugin and the checkout coexist without a name clash, because Claude Code
-exposes the plugin's server as `plugin:free-search:search`. Inside this repo
-you can have both and still tell which one answered.
+> **Security**: Streamable HTTP binds `127.0.0.1` by default, rejects unknown
+> `Origin`/`Host` headers (DNS-rebinding guard), and never adds wildcard hosts
+> (`0.0.0.0`) to `allowed_hosts`. If you expose it beyond loopback, set
+> `SEARCH_MCP_HTTP_TOKEN` (Bearer auth) and `SEARCH_MCP_HTTP_ALLOWED_ORIGINS`
+> or place an authenticating reverse proxy in front.
 
-## Wire into Codex
+---
 
-The plugin gives you the server, pinned to the plugin's version, and the
-`verified-research` skill (for the quick-search agent in Codex, see
-[DELEGATION.md](DELEGATION.md)):
+## 5. Manual Client Configurations (Server Key `"search"`)
 
-```bash
-codex plugin marketplace add sweetcornna/free-search-mcp
-codex plugin add free-search@free-search-mcp
+### Claude Code (working inside a source checkout)
+
+This repo ships a project-level `.mcp.json` using
+`cargo run --quiet --locked -p fsm-server --bin free-search-mcp`, so running
+`claude` inside the checkout tests your local working tree while coexisting
+cleanly with the installed plugin (`plugin:free-search:search`).
+
+### Codex (`~/.codex/config.toml`)
+
+```toml
+[mcp_servers.search]
+command = "/Users/<user>/.local/bin/free-search-mcp"
+args = []
+tool_timeout_sec = 150
 ```
 
-Check `~/.codex/config.toml` afterwards. A `[mcp_servers.search]` block left
-over from an earlier `codex mcp add search …` silently shadows the plugin's
-server of the same name: Codex starts the old command and says nothing.
-`codex mcp remove search` clears it.
+### Antigravity (`~/.gemini/config/mcp_config.json`)
 
-Without the plugin, use a plain MCP registration:
-
-```bash
-codex mcp add search -- uvx free-search-mcp
-codex mcp list
+```json
+{
+  "mcpServers": {
+    "search": {
+      "command": "/Users/<user>/.local/bin/free-search-mcp",
+      "args": []
+    }
+  }
+}
 ```
 
-(For a source checkout, swap the command for
-`uv --directory /absolute/path/to/free-search-mcp run search-mcp`.)
-
-## Wire into Claude Desktop
-
-The one-click route is the `.mcpb` bundle attached to each release; see
-[Claude Desktop under Install](#2-claude-desktop-the-one-click-bundle). To
-wire it by hand, add this to
-`~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or
-the equivalent on your platform:
+### Claude Desktop, Cursor, Cline, Continue & Zed
 
 ```json
 {
@@ -266,42 +191,23 @@ the equivalent on your platform:
 }
 ```
 
-(Source checkout: `"command": "uv", "args": ["--directory",
-"/absolute/path/to/free-search-mcp", "run", "search-mcp"]`.)
+*(Or replace `"command"` with `"/Users/<user>/.local/bin/free-search-mcp"` and
+`"args": []` for a locally built binary.)*
 
-Restart Claude Desktop. The eleven tools above will appear in the tool
-drawer.
+---
 
-## Wire into other clients
+## 6. Post-Install Checks & Notes
 
-The server speaks plain MCP over stdio (or streamable-http, see above). It
-implements protocol revision `2026-07-28` and serves every earlier revision
-from the same process, so both new and older clients work unchanged:
-
-- Claude Code and Codex: the plugin (above), or
-  `claude mcp add search -s user -- uvx free-search-mcp` /
-  `codex mcp add search -- uvx free-search-mcp`
-- Cursor / Continue / Cline / Zed (use the JSON snippet above)
-- Anything that installs from the MCP Registry:
-  `io.github.sweetcornna/free-search-mcp`
-- Custom Python / TypeScript clients via the official MCP SDK
-
-For agent-specific operating rules, tool-selection guidance, and a reusable
-system-prompt snippet, see [docs/AGENT_USAGE.md](AGENT_USAGE.md).
-
-## Installer choice
-
-The plugin is the recommended path because what you installed and what you run
-cannot drift. The server is pinned to the plugin's version, upgrading is
-`/plugin update` (the other paths re-run `claude mcp add`), and it is the only
-path that also delivers the `verified-research` skill and, in Claude Code, the
-`quick-search` agent.
-The `.mcpb` bundle applies the same idea to Claude Desktop: it is a pinned
-package with a settings form, and there is no JSON to edit. The MCP Registry
-entry is for clients and gateways that install by registry name.
-Running `uvx free-search-mcp` by hand is the fastest way to try the server in
-any other client: HTTP engines work immediately, and Chromium is a single
-optional follow-up command. `scripts/install.sh` is the full bootstrap for
-people who want a source checkout, Chromium with OS deps, a smoke test and
-client registration in one step. Generic MCP installers are useful too:
-`add-mcp` can write config for many clients at once.
+- **Verify**: Run `free-search-mcp doctor` (checks network, Clash/Fake-IP TUN
+  detection, SQLite cache) and `free-search-mcp sources` (lists all registered
+  sources).
+- **Retraction Watch initial sync (~70 MB)**: On the first scholarly call, the
+  server lazily downloads Crossref's ~70 MB Retraction Watch CSV (CC0 1.0),
+  indexes it into `~/.cache/search-mcp/search-mcp.sqlite` (~8–12 MB), deletes
+  the CSV, and refreshes via `ETag` every 7 days. Disable with
+  `SEARCH_MCP_OFFLINE_SYNC=false`.
+- **Coexistence with v0.18.x**: 1.0 writes to
+  `~/.cache/search-mcp/search-mcp.sqlite` and leaves legacy `cache.sqlite`
+  untouched.
+- **No Chromium needed in 1.0**: Browser rendering is deferred to P1; all 1.0
+  engines and fetchers use the native Rust HTTP + TLS impersonation stack.

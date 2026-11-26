@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "moedict_zh",
+  "op": "lookup",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.moedict.tw/uni/%E8%90%8C",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\n  \"title\": \"萌\",\n  \"heteronyms\": [\n    {\n      \"bopomofo\": \"ㄇㄥˊ\",\n      \"definitions\": [\n        {\n          \"def\": \"草木初生的芽。\",\n          \"quote\": [\n            \"《說文解字．艸部》：「萌，艸芽也。」\",\n            \"唐．韓愈、劉師服、侯喜、軒轅彌明〈石鼎聯句〉：「秋瓜未落蒂，凍芋強抽萌。」\"\n          ],\n          \"type\": \"名\"\n        },\n        {\n          \"def\": \"事物發生的開端或徵兆。\",\n          \"quote\": [\n            \"《韓非子．說林上》：「聖人見微以知萌，見端以知末。」\",\n            \"漢．蔡邕〈對詔問灾異八事〉：「以杜漸防萌，則其救也。」\"\n          ],\n          \"type\": \"名\"\n        },\n        {\n          \"example\": [\n            \"如：「萌黎」、「萌隸」。\"\n          ],\n          \"def\": \"人民。\",\n          \"link\": [\n            \"通「氓」。\"\n          ],\n          \"type\": \"名\"\n        },\n        {\n          \"def\": \"姓。如五代時蜀有萌慮。\",\n          \"type\": \"名\"\n        },\n        {\n          \"example\": [\n            \"如：「萌芽」。\"\n          ],\n          \"def\": \"發芽。\",\n          \"quote\": [\n            \"《楚辭．王逸．九思．傷時》：「明風習習兮龢暖，百草萌兮華榮。」\"\n          ],\n          \"type\": \"動\"\n        },\n        {\n          \"example\": [\n            \"如：「故態復萌」。\"\n          ],\n          \"def\": \"發生。\",\n          \"quote\": [\n            \"《管子．牧民》：「惟有道者，能備患於未形也，故禍不萌。」\",\n            \"《三國演義》第一回：「若萌異心，必獲惡報。」\"\n          ],\n          \"type\": \"動\"\n        }\n      ],\n      \"pinyin\": \"méng\",\n      \"bopomofo2\": \"méng\"\n    }\n  ],\n  \"radical\": \"艸\",\n  \"stroke_count\": 12,\n  \"non_radical_stroke_count\": 8\n}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "fred",
+  "op": "observations",
+  "recordedAt": "2026-11-25T12:13:33Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.stlouisfed.org/fred/series/observations?file_type=json&series_id=GDP&limit=3&sort_order=desc",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"realtime_start\": \"2026-11-25\", \"realtime_end\": \"2026-11-25\", \"observation_start\": \"1776-07-04\", \"observation_end\": \"9999-12-31\", \"units\": \"lin\", \"output_type\": 1, \"file_type\": \"json\", \"order_by\": \"observation_date\", \"sort_order\": \"desc\", \"count\": 318, \"offset\": 0, \"limit\": 3, \"observations\": [{\"realtime_start\": \"2026-11-25\", \"realtime_end\": \"2026-11-25\", \"date\": \"2026-07-01\", \"value\": \"30769.700\"}, {\"realtime_start\": \"2026-11-25\", \"realtime_end\": \"2026-11-25\", \"date\": \"2026-04-01\", \"value\": \"30412.450\"}, {\"realtime_start\": \"2026-11-25\", \"realtime_end\": \"2026-11-25\", \"date\": \"2026-01-01\", \"value\": \"30088.120\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

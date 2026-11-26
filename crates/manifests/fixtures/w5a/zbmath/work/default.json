@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "zbmath",
+  "op": "work",
+  "recordedAt": "2026-11-25T12:13:51Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.zbmath.org/v1/document/2675811",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"result\":{\"biographic_references\":[],\"contributors\":{\"authors\":[{\"aliases\":[],\"checked\":\"1\",\"codes\":[\"riemann.bernhard\"],\"name\":\"Riemann, B.\"}],\"author_references\":[],\"editors\":[{\"aliases\":[],\"checked\":\"1\",\"codes\":[\"laugel.leonce\"],\"name\":\"Laugel, L.\"}]},\"database\":\"JFM\",\"datestamp\":\"0001-01-01T00:00:00Z\",\"document_type\":{\"code\":\"b\",\"description\":\"book / book article\"},\"editorial_contributions\":[],\"id\":2675811,\"identifier\":\"27.0155.06\",\"keywords\":[\"Riemann's zeta-function\",\"Riemann Hypothesis\",\"prime numbers\"],\"language\":{\"languages\":[\"French\"],\"addition\":[null]},\"license\":[],\"links\":[],\"msc\":[{\"code\":\"11M06\",\"scheme\":\"msc2020\",\"text\":\"\\\\(\\\\zeta (s)\\\\) and \\\\(L(s, \\\\chi)\\\\)\"},{\"code\":\"11M26\",\"scheme\":\"msc2020\",\"text\":\"Nonreal zeros of \\\\(\\\\zeta (s)\\\\) and \\\\(L(s, \\\\chi)\\\\); Riemann and other hypotheses\"},{\"code\":\"11N05\",\"scheme\":\"msc2020\",\"text\":\"Distribution of primes\"}],\"references\":[],\"source\":{\"book\":[{\"book_id\":2675811,\"isbn\":[],\"publisher\":null,\"year\":null}],\"pages\":null,\"series\":[],\"source\":\"Paris (1895).\"},\"states\":[[\"s\",\"item with single author\"],[\"c\",\"is cited\"]],\"title\":{\"addition\":null,\"original\":\"Sur le nombre des nombres premiers inférieurs à une grandeur donnée. Traduit par L. Laugel.\",\"subtitle\":null,\"title\":\"On the number of primes below a given quantity\"},\"year\":\"1895\",\"zbmath_url\":\"https://zbmath.org/2675811\"},\"status\":{\"execution\":\"successful request\",\"execution_bool\":true,\"internal_code\":\"ok\",\"last_id\":null,\"nr_total_results\":1,\"nr_request_results\":1,\"query_execution_time_in_seconds\":0.03812265396118164,\"status_code\":200,\"time_stamp\":\"2026-11-25T12:13:43Z\"}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

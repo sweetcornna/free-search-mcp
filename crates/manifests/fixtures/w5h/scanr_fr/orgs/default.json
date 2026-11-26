@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "source": "scanr_fr",
+  "op": "orgs",
+  "recordedAt": "2026-11-25T15:04:38Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://scanr.enseignementsup-recherche.gouv.fr/api/scanr-organizations/_search",
+        "headersSubset": {
+          "accept": "application/json",
+          "content-type": "application/json"
+        },
+        "bodySha256": "2493661ee66ebbe224eef395a480a22898e07650cb616126bbac72857be0f2d8"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"took\":5,\"timed_out\":false,\"_shards\":{\"total\":1,\"successful\":1,\"skipped\":0,\"failed\":0},\"hits\":{\"total\":{\"value\":31,\"relation\":\"eq\"},\"max_score\":8.760569,\"hits\":[{\"_index\":\"scanr-organizations-20261023\",\"_id\":\"lgwFgqEBqyWrHIpD9mtm\",\"_score\":8.760569,\"_source\":{\"id\":\"200619366D\",\"status\":\"active\",\"label\":{\"fr\":\"GEORGIATECH-CNRS\",\"default\":\"GEORGIATECH-CNRS\"},\"kind\":[\"Structure de recherche\"],\"externalIds\":[{\"id\":\"200619366D\",\"type\":\"rnsr\"},{\"id\":\"IRL 2958\",\"type\":\"label_numero\"},{\"id\":\"UMI 2958\",\"type\":\"label_numero\"}],\"address\":[{\"main\":true,\"address\":\"GEORGIA TECH LORRAINE, 2 rue Marconi, 57070, METZ\",\"address_detected\":\"Georgia Tech Lorraine 2 Rue Marconi 57070\",\"city\":\"Metz\",\"postcode\":\"57000\",\"iso3\":\"FRA\",\"country\":\"France\",\"region\":\"Grand Est\"}],\"links\":[{\"type\":\"main\",\"url\":\"http://www.umi2958.eu\"}]}},{\"_index\":\"scanr-organizations-20261023\",\"_id\":\"kycGgqEBKoUeHyRCQUI1\",\"_score\":8.760569,\"_source\":{\"id\":\"200422442F\",\"status\":\"active\",\"label\":{\"fr\":\"CNRS Images\",\"default\":\"CNRS Images\"},\"acronym\":{\"fr\":\"CNRS Images\",\"default\":\"CNRS Images\"},\"kind\":[\"Structure de recherche\"],\"externalIds\":[{\"id\":\"200422442F\",\"type\":\"rnsr\"},{\"id\":\"UAR 2841\",\"type\":\"label_numero\"}],\"address\":[{\"main\":true,\"address\":\"CNRS, Pavillon de la Communication, 1 place Aristide Briand, 92190, MEUDON\",\"address_detected\":\"Cnrs Pavillon De La Communication 1 Place Aristide Briand 92190\",\"city\":\"Meudon\",\"postcode\":\"92000\",\"iso3\":\"FRA\",\"country\":\"France\",\"region\":\"Île-de-France\"}],\"links\":[{\"type\":\"main\",\"url\":\"http://www.cnrs.fr/cnrs-images/\"}]}},{\"_index\":\"scanr-organizations-20261023\",\"_id\":\"9ycHgqEBKoUeHyRCLlye\",\"_score\":7.7379894,\"_source\":{\"id\":\"202023665R\",\"status\":\"active\",\"label\":{\"fr\":\"Histoire CNRS - Comité pour l'histoire du CNRS\",\"default\":\"Histoire CNRS - Comité pour l'histoire du CNRS\"},\"kind\":[\"Structure de recherche\"],\"externalIds\":[{\"id\":\"202023665R\",\"type\":\"rnsr\"},{\"id\":\"050768247\",\"type\":\"idref\"},{\"id\":\"MOY 1676\",\"type\":\"label_numero\"}],\"address\":[{\"main\":true,\"address\":\"1 place Aristide Briand, 92195, MEUDON CEDEX\",\"address_detected\":\"1 Place Aristide Briand 92195\",\"city\":\"Meudon\",\"postcode\":\"92000\",\"iso3\":\"FRA\",\"country\":\"France\",\"region\":\"Île-de-France\"}]}}]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

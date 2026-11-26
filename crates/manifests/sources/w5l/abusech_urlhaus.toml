@@ -1,0 +1,119 @@
+id = "abusech_urlhaus"
+name = "abuse.ch URLhaus Malware Intel"
+summary = "Malware distribution URL, malicious host, and payload SHA-256 threat intelligence via abuse.ch URLhaus API v1 (requires free Auth-Key)."
+aliases = ["urlhaus", "abuse.ch", "malware urls"]
+home_url = "https://urlhaus.abuse.ch"
+tier = 3
+scopes = ["security"]
+caps = ["lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 2.0, burst = 4, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 3600 }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_URLHAUS_API_KEY"
+in = "header"
+name = "Auth-Key"
+format = "{key}"
+route_requires_key = true
+
+[op.host]
+summary = "Look up malware distribution history and associated URLs for a domain or IPv4 host."
+method = "POST"
+url = "https://urlhaus-api.abuse.ch/v1/host/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+body = { kind = "form", jaq = '''{ host: $p.host }''' }
+probe = { params = { host = "vektorex.com" }, min_results = 1, fixture = "fixtures/w5l/abusech_urlhaus/host/default.json" }
+examples = [
+  'source.call("abusech_urlhaus.host", { host: "vektorex.com" })',
+]
+
+[op.host.params]
+host = { type = "string", required = true, in = "body", doc = "Domain name or IPv4 address" }
+
+[op.host.map]
+items = "if .query_status == \"ok\" then . else empty end"
+error = "if .error then (.error | tostring) elif (.query_status != null and .query_status != \"ok\" and .query_status != \"no_results\") then (.query_status | tostring) else null end"
+record = '''{
+  host: (.host // ""),
+  queryStatus: (.query_status // ""),
+  firstSeen: (if (.firstseen | type) == "string" then (.firstseen | sub(" UTC$"; "Z") | sub(" "; "T")) else null end),
+  urlCount: (.url_count // 0),
+  urlhausReference: (.urlhaus_reference // ""),
+  urls: [(.urls // [])[:20][] | {
+    id,
+    url,
+    status: .url_status,
+    threat,
+    dateAdded: (if (.date_added | type) == "string" then (.date_added | sub(" UTC$"; "Z") | sub(" "; "T")) else null end),
+    tags: (.tags // []),
+    reference: .urlhaus_reference
+  }]
+}'''
+
+[op.url]
+summary = "Look up threat status, blacklists, tags, and payloads for an exact URL on URLhaus."
+method = "POST"
+url = "https://urlhaus-api.abuse.ch/v1/url/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+body = { kind = "form", jaq = '''{ url: $p.url }''' }
+probe = { params = { url = "http://vektorex.com/evil/payload.exe" }, min_results = 1, fixture = "fixtures/w5l/abusech_urlhaus/url/default.json" }
+examples = [
+  'source.call("abusech_urlhaus.url", { url: "http://vektorex.com/evil/payload.exe" })',
+]
+
+[op.url.params]
+url = { type = "string", required = true, in = "body", doc = "Exact URL to look up in URLhaus" }
+
+[op.url.map]
+items = "if .query_status == \"ok\" then . else empty end"
+error = "@ref:op.host.map.error"
+record = '''{
+  id: (.id // null),
+  url: (.url // ""),
+  host: (.host // ""),
+  status: (.url_status // null),
+  threat: (.threat // null),
+  dateAdded: (if (.date_added | type) == "string" then (.date_added | sub(" UTC$"; "Z") | sub(" "; "T")) else null end),
+  lastOnline: (if (.last_online | type) == "string" then (.last_online | sub(" UTC$"; "Z") | sub(" "; "T")) else null end),
+  reporter: (.reporter // null),
+  tags: (.tags // []),
+  blacklists: (.blacklists // {}),
+  payloads: [(.payloads // [])[] | { filename, fileType: .file_type, fileSize: (.file_size | to_int), sha256: .sha256_hash, md5: .md5_hash }],
+  urlhausReference: (.urlhaus_reference // "")
+}'''
+
+[op.payload]
+summary = "Look up malware payload metadata and distributing URLs by SHA-256 hash."
+method = "POST"
+url = "https://urlhaus-api.abuse.ch/v1/payload/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+body = { kind = "form", jaq = '''{ sha256_hash: $p.sha256 }''' }
+probe = { params = { sha256 = "275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f" }, min_results = 1, fixture = "fixtures/w5l/abusech_urlhaus/payload/default.json" }
+examples = [
+  'source.call("abusech_urlhaus.payload", { sha256: "275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f" })',
+]
+
+[op.payload.params]
+sha256 = { type = "string", required = true, in = "body", doc = "64-character hex SHA-256 payload digest" }
+
+[op.payload.map]
+items = "if .query_status == \"ok\" then . else empty end"
+error = "@ref:op.host.map.error"
+record = '''{
+  sha256: (.sha256_hash // ""),
+  md5: (.md5_hash // null),
+  fileType: (.file_type // null),
+  fileSize: (.file_size | to_int),
+  signature: (.signature // null),
+  firstSeen: (if (.first_seen | type) == "string" then (.first_seen | sub(" UTC$"; "Z") | sub(" "; "T")) else null end),
+  urlCount: (.url_count | to_int),
+  urls: [(.urls // [])[:20][] | { id, url, status: .url_status, threat, dateAdded: (if (.date_added | type) == "string" then (.date_added | sub(" UTC$"; "Z") | sub(" "; "T")) else null end), reference: .urlhaus_reference }]
+}'''

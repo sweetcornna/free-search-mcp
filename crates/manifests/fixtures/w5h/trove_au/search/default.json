@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "trove_au",
+  "op": "search",
+  "recordedAt": "2026-11-25T13:03:45Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.trove.nla.gov.au/v3/result?encoding=json&q=climate&category=research&n=3&s=%2A",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"query\": \"climate\", \"category\": [{\"code\": \"research\", \"name\": \"Research & Reports\", \"records\": {\"s\": \"*\", \"n\": 3, \"total\": 42180, \"nextStart\": \"AoIIP4AAA190226707\", \"work\": [{\"id\": \"190226707\", \"url\": \"https://api.trove.nla.gov.au/v3/work/190226707\", \"troveUrl\": \"https://trove.nla.gov.au/work/190226707\", \"title\": \"Climate variability and hydrology in the Murray-Darling Basin\", \"contributor\": [\"CSIRO\", \"Australian National University\"], \"issued\": \"2021\", \"type\": [\"Thesis\", \"Research report\"], \"snippet\": \"Long-term paleoclimate and instrumental drought reconstruction across southeastern Australia.\", \"isPartOf\": [{\"value\": \"CSIRO Water for a Healthy Country\"}], \"identifier\": [{\"type\": \"doi\", \"value\": \"10.25919/murray-darling-2021\"}]}, {\"id\": \"231044512\", \"url\": \"https://api.trove.nla.gov.au/v3/work/231044512\", \"troveUrl\": \"https://trove.nla.gov.au/work/231044512\", \"title\": \"Coral reef thermal resilience under RCP4.5 climate scenarios\", \"contributor\": [\"Hughes, Terry P.\"], \"issued\": \"2022\", \"type\": [\"Article\"], \"snippet\": \"Assessment of Great Barrier Reef bleaching intervals and recovery capacity.\", \"isPartOf\": [{\"value\": \"Nature Climate Change\"}]}, {\"id\": \"248910321\", \"url\": \"https://api.trove.nla.gov.au/v3/work/248910321\", \"troveUrl\": \"https://trove.nla.gov.au/work/248910321\", \"title\": \"Bushfire regimes and southern Australian climate projections\", \"contributor\": [\"Bureau of Meteorology\", \"CSIRO\"], \"issued\": \"2023\", \"type\": [\"Research report\"], \"snippet\": \"Analysis of fire weather indices and long-term rainfall shifts across temperate Australia.\"}]}}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

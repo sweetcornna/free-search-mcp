@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "stackexchange",
+  "op": "search",
+  "recordedAt": "2026-11-25T11:53:58Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.stackexchange.com/2.3/search/advanced?order=desc&q=rust+async&site=stackoverflow&sort=relevance&pagesize=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"items\":[{\"tags\":[\"python\",\"rust\",\"python-3.8\",\"pyo3\"],\"owner\":{\"account_id\":17352363,\"reputation\":744,\"user_id\":12570573,\"user_type\":\"registered\",\"profile_image\":\"https://i.sstatic.net/w3TcQ.jpg?s=256\",\"display_name\":\"DumTux\",\"link\":\"https://stackoverflow.com/users/12570573/dumtux\"},\"is_answered\":true,\"view_count\":3079,\"accepted_answer_id\":62623499,\"answer_count\":3,\"score\":5,\"last_activity_date\":1700764601,\"creation_date\":1593331675,\"question_id\":62619870,\"content_license\":\"CC BY-SA 4.0\",\"link\":\"https://stackoverflow.com/questions/62619870/how-to-call-rust-async-method-from-python\",\"title\":\"How to call Rust async method from Python?\"},{\"tags\":[\"rust\",\"rust-cargo\"],\"owner\":{\"account_id\":16267449,\"reputation\":229,\"user_id\":16788788,\"user_type\":\"registered\",\"profile_image\":\"https://www.gravatar.com/avatar/c2cd0baafe6ca8a32eaa0af74e5f097f?s=256&d=identicon&r=PG&f=y&so-version=2\",\"display_name\":\"CSRd\",\"link\":\"https://stackoverflow.com/users/16788788/csrd\"},\"is_answered\":true,\"view_count\":240,\"accepted_answer_id\":78456947,\"answer_count\":1,\"score\":-1,\"last_activity_date\":1715317847,\"creation_date\":1715275199,\"last_edit_date\":1715317847,\"question_id\":78456032,\"content_license\":\"CC BY-SA 4.0\",\"link\":\"https://stackoverflow.com/questions/78456032/rust-async-await-state-machine-get-intermediate-representation\",\"title\":\"Rust Async Await state machine get intermediate representation\"},{\"tags\":[\"asynchronous\",\"rust\"],\"owner\":{\"account_id\":12203668,\"reputation\":2129,\"user_id\":11589183,\"user_type\":\"registered\",\"profile_image\":\"https://www.gravatar.com/avatar/fda3a263d4efabd40fb5479e7d0f91a7?s=256&d=identicon&r=PG\",\"display_name\":\"Yoskutik\",\"link\":\"https://stackoverflow.com/users/11589183/yoskutik\"},\"is_answered\":true,\"view_count\":376,\"accepted_answer_id\":72847593,\"answer_count\":1,\"score\":0,\"last_activity_date\":1656885606,\"creation_date\":1656858916,\"question_id\":72847347,\"content_license\":\"CC BY-SA 4.0\",\"link\":\"https://stackoverflow.com/questions/72847347/rust-async-is-not-concurent\",\"title\":\"Rust: async is not concurent\"}],\"has_more\":true,\"quota_max\":300,\"quota_remaining\":295}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

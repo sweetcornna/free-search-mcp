@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "nci_gdc",
+  "op": "project",
+  "recordedAt": "2026-11-25T13:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.gdc.cancer.gov/projects/TCGA-BRCA?fields=project_id%2Cname%2Cprimary_site%2Cdisease_type%2Cprogram.name%2Csummary.case_count%2Csummary.file_count&format=JSON",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"data\": {\"summary\": {\"file_count\": 71423, \"case_count\": 1098}, \"primary_site\": [\"Breast\"], \"project_id\": \"TCGA-BRCA\", \"disease_type\": [\"Cystic, Mucinous and Serous Neoplasms\", \"Adenomas and Adenocarcinomas\", \"Fibroepithelial Neoplasms\", \"Basal Cell Neoplasms\", \"Ductal and Lobular Neoplasms\", \"Epithelial Neoplasms, NOS\", \"Squamous Cell Neoplasms\", \"Complex Epithelial Neoplasms\", \"Adnexal and Skin Appendage Neoplasms\"], \"name\": \"Breast Invasive Carcinoma\", \"program\": {\"name\": \"TCGA\"}}, \"warnings\": {}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

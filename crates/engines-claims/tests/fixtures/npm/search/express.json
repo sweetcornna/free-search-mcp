@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "source": "npm",
+  "op": "search",
+  "recordedAt": "2026-11-25T10:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://registry.npmjs.org/-/v1/search?text=express&size=5",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          ["content-type", "application/json"]
+        ],
+        "bodyText": "{\"objects\":[{\"package\":{\"name\":\"express\",\"version\":\"5.2.1\",\"date\":\"2025-12-01T20:00:00.000Z\",\"description\":\"Fast, unopinionated, minimalist web framework\",\"links\":{\"homepage\":\"https://expressjs.com/\"}}},{\"package\":{\"name\":\"broken\"}}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

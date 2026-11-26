@@ -1,0 +1,242 @@
+[
+  {
+    "id": "01_news_lwn",
+    "category": "news",
+    "url": "https://lwn.net/Articles/967180/",
+    "file": "01_news_lwn.html",
+    "content_type": "text/html; charset=utf-8",
+    "bytes": 6584
+  },
+  {
+    "id": "02_news_ars",
+    "category": "news",
+    "url": "https://arstechnica.com/security/2024/03/backdoor-found-in-widely-used-linux-utility-breaks-encrypted-ssh-connections/",
+    "file": "02_news_ars.html",
+    "content_type": "text/html; charset=UTF-8",
+    "bytes": 164329
+  },
+  {
+    "id": "03_news_bbc",
+    "category": "news",
+    "url": "https://www.bbc.com/news/science-environment-62122859",
+    "file": "03_news_bbc.html",
+    "content_type": "text/html; charset=utf-8",
+    "bytes": 320459
+  },
+  {
+    "id": "04_news_phoronix",
+    "category": "news",
+    "url": "https://www.phoronix.com/news/Linux-6.12-Released",
+    "file": "04_news_phoronix.html",
+    "content_type": "text/html; charset=UTF-8",
+    "bytes": 79650
+  },
+  {
+    "id": "05_news_debian",
+    "category": "news",
+    "url": "https://www.debian.org/News/2023/20230610",
+    "file": "05_news_debian.html",
+    "content_type": "text/html",
+    "bytes": 20234
+  },
+  {
+    "id": "06_news_register",
+    "category": "news",
+    "url": "https://www.theregister.com/security/2024/03/29/malicious-backdoor-spotted-in-linux-compression-library-xz/702870",
+    "file": "06_news_register.html",
+    "content_type": "text/html; charset=UTF-8",
+    "bytes": 188112
+  },
+  {
+    "id": "07_docs_rustbook",
+    "category": "docs",
+    "url": "https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html",
+    "file": "07_docs_rustbook.html",
+    "content_type": "text/html",
+    "bytes": 55998
+  },
+  {
+    "id": "08_docs_python",
+    "category": "docs",
+    "url": "https://docs.python.org/3/tutorial/controlflow.html",
+    "file": "08_docs_python.html",
+    "content_type": "text/html",
+    "bytes": 140178
+  },
+  {
+    "id": "09_docs_mdn",
+    "category": "docs",
+    "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview",
+    "file": "09_docs_mdn.html",
+    "content_type": "text/html",
+    "bytes": 228386
+  },
+  {
+    "id": "10_docs_sqlite",
+    "category": "docs",
+    "url": "https://www.sqlite.org/wal.html",
+    "file": "10_docs_sqlite.html",
+    "content_type": "text/html; charset=utf-8",
+    "bytes": 42143
+  },
+  {
+    "id": "11_docs_go",
+    "category": "docs",
+    "url": "https://go.dev/doc/effective_go",
+    "file": "11_docs_go.html",
+    "content_type": "text/html; charset=utf-8",
+    "bytes": 142916
+  },
+  {
+    "id": "12_docs_wikipedia",
+    "category": "docs",
+    "url": "https://en.wikipedia.org/wiki/Rust_(programming_language)",
+    "file": "12_docs_wikipedia.html",
+    "content_type": "text/html; charset=UTF-8",
+    "bytes": 1065457
+  },
+  {
+    "id": "13_blog_rust",
+    "category": "blog",
+    "url": "https://blog.rust-lang.org/2024/09/05/Rust-1.81.0/",
+    "file": "13_blog_rust.html",
+    "content_type": "text/html; charset=utf-8",
+    "bytes": 20659
+  },
+  {
+    "id": "14_blog_matklad",
+    "category": "blog",
+    "url": "https://matklad.github.io/2021/02/06/ARCHITECTURE.md.html",
+    "file": "14_blog_matklad.html",
+    "content_type": "text/html; charset=utf-8",
+    "bytes": 7674
+  },
+  {
+    "id": "15_blog_jvns",
+    "category": "blog",
+    "url": "https://jvns.ca/blog/2022/04/12/a-list-of-new-ish--command-line-tools/",
+    "file": "15_blog_jvns.html",
+    "content_type": "text/html; charset=UTF-8",
+    "bytes": 17443
+  },
+  {
+    "id": "16_blog_burntsushi",
+    "category": "blog",
+    "url": "https://burntsushi.net/ripgrep/",
+    "file": "16_blog_burntsushi.html",
+    "content_type": "text/html; charset=utf-8",
+    "bytes": 164897
+  },
+  {
+    "id": "17_blog_withoutboats",
+    "category": "blog",
+    "url": "https://without.boats/blog/pin/",
+    "file": "17_blog_withoutboats.html",
+    "content_type": "text/html; charset=utf-8",
+    "bytes": 39464
+  },
+  {
+    "id": "18_blog_simonw",
+    "category": "blog",
+    "url": "https://simonwillison.net/2024/Mar/22/claude-and-chatgpt-case-study/",
+    "file": "18_blog_simonw.html",
+    "content_type": "text/html; charset=utf-8",
+    "bytes": 30528
+  },
+  {
+    "id": "19_forum_hn",
+    "category": "forum",
+    "url": "https://news.ycombinator.com/item?id=8863",
+    "file": "19_forum_hn.html",
+    "content_type": "text/html; charset=utf-8",
+    "bytes": 99722
+  },
+  {
+    "id": "20_forum_osssec",
+    "category": "forum",
+    "url": "https://www.openwall.com/lists/oss-security/2024/03/29/4",
+    "file": "20_forum_osssec.html",
+    "content_type": "text/html; charset=utf-8",
+    "bytes": 18577
+  },
+  {
+    "id": "21_forum_github",
+    "category": "forum",
+    "url": "https://github.com/BurntSushi/ripgrep/issues/1",
+    "file": "21_forum_github.html",
+    "content_type": "text/html; charset=utf-8",
+    "bytes": 441328
+  },
+  {
+    "id": "22_forum_serde",
+    "category": "forum",
+    "url": "https://github.com/serde-rs/serde/issues/1",
+    "file": "22_forum_serde.html",
+    "content_type": "text/html; charset=utf-8",
+    "bytes": 253841
+  },
+  {
+    "id": "23_forum_sqlite",
+    "category": "forum",
+    "url": "https://lists.gnu.org/archive/html/bug-bash/2024-03/msg00001.html",
+    "file": "23_forum_sqlite.html",
+    "content_type": "text/html",
+    "bytes": 5028
+  },
+  {
+    "id": "24_forum_lobsters",
+    "category": "forum",
+    "url": "https://lists.gnu.org/archive/html/info-gnu/2024-03/msg00001.html",
+    "file": "24_forum_lobsters.html",
+    "content_type": "text/html",
+    "bytes": 7586
+  },
+  {
+    "id": "25_cjk_zh_wiki",
+    "category": "cjk",
+    "url": "https://zh.wikipedia.org/wiki/Rust_(%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80)",
+    "file": "25_cjk_zh_wiki.html",
+    "content_type": "text/html; charset=UTF-8",
+    "bytes": 300229
+  },
+  {
+    "id": "26_cjk_ja_wiki",
+    "category": "cjk",
+    "url": "https://ja.wikipedia.org/wiki/Rust_(%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9F%E3%83%B3%E3%82%B0%E8%A8%80%E8%AA%9E)",
+    "file": "26_cjk_ja_wiki.html",
+    "content_type": "text/html; charset=UTF-8",
+    "bytes": 559529
+  },
+  {
+    "id": "27_cjk_ko_wiki",
+    "category": "cjk",
+    "url": "https://ko.wikipedia.org/wiki/%EB%9F%AC%EC%8A%A4%ED%8A%B8_(%ED%94%84%EB%A1%9C%EA%B7%B8%EB%9E%98%EB%B0%8D_%EC%96%B8%EC%96%B4)",
+    "file": "27_cjk_ko_wiki.html",
+    "content_type": "text/html; charset=UTF-8",
+    "bytes": 1073520
+  },
+  {
+    "id": "28_cjk_zh_ruanyifeng",
+    "category": "cjk",
+    "url": "https://www.ruanyifeng.com/blog/2020/08/rsync.html",
+    "file": "28_cjk_zh_ruanyifeng.html",
+    "content_type": "text/html",
+    "bytes": 87949
+  },
+  {
+    "id": "29_cjk_zh_pydocs",
+    "category": "cjk",
+    "url": "https://docs.python.org/zh-cn/3/tutorial/controlflow.html",
+    "file": "29_cjk_zh_pydocs.html",
+    "content_type": "text/html",
+    "bytes": 140066
+  },
+  {
+    "id": "30_cjk_ja_pydocs",
+    "category": "cjk",
+    "url": "https://docs.python.org/ja/3/tutorial/controlflow.html",
+    "file": "30_cjk_ja_pydocs.html",
+    "content_type": "text/html",
+    "bytes": 153422
+  }
+]

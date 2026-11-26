@@ -1,0 +1,43 @@
+id = "icore_ranks"
+name = "ICORE Conference Portal"
+summary = "CORE/ICORE computer science conference ranking tiers (A*, A, B, C)."
+aliases = ["core ranks", "cs conferences", "icore"]
+home_url = "https://portal.core.edu.au/conf-ranks/"
+tier = 2
+scopes = ["academic.cs"]
+caps = ["venue"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 2.0, burst = 4, concurrency = 2, timeout_ms = 6000, cache_ttl_s = 604800 }
+
+[op.rank]
+summary = "Look up ICORE conference rank by acronym or title."
+method = "GET"
+url = "https://portal.core.edu.au/conf-ranks/"
+headers = { Accept = "text/html" }
+response = "html"
+returns = "records"
+const_query = { by = "all", sort = "atitle", page = "1" }
+probe = { params = { query = "ICML" }, min_results = 1, fixture = "fixtures/w5b/icore_ranks/rank/default.json" }
+
+[op.rank.params]
+query = { type = "string", required = true, to = "search", doc = "Conference acronym or name (e.g. ICML, NeurIPS)" }
+edition = { type = "string", default = "ICORE2026", to = "source", doc = "Ranking edition (ICORE2026, CORE2023, CORE2021, etc.)" }
+
+[op.rank.html]
+items_css = "table tr.evenrow, table tr.oddrow"
+fields = { name = "td:nth-child(1) | text", acronym = "td:nth-child(2) | text", edition = "td:nth-child(3) | text", icoreRank = "td:nth-child(4) | text", dblpUrl = "td:nth-child(6) a | attr(href)" }
+wall_markers = ["Access Denied"]
+
+[op.rank.map]
+items = ".[]"
+record = '''{
+  name: ((.name // "") | collapse_ws),
+  acronym: ((.acronym // null) | collapse_ws),
+  edition: ((.edition // null) | collapse_ws),
+  issn: [],
+  publisher: null,
+  icoreRank: ((.icoreRank // null) | collapse_ws),
+  dblpUrl: (.dblpUrl // null),
+  sources: ["icore_ranks"]
+}'''

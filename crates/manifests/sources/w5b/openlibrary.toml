@@ -1,0 +1,102 @@
+id = "openlibrary"
+name = "Open Library"
+summary = "Internet Archive open catalog of 30M+ books, editions, authors, and ISBN metadata."
+aliases = ["open library", "isbn", "books"]
+home_url = "https://openlibrary.org"
+tier = 1
+scopes = ["academic.books", "reference"]
+caps = ["search", "lookup", "book"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 3.0, burst = 6, concurrency = 3, timeout_ms = 6000, cache_ttl_s = 43200 }
+
+[op.search]
+summary = "Search Open Library books by title, author, or subject."
+method = "GET"
+url = "https://openlibrary.org/search.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+const_query = { fields = "title,key,author_name,first_publish_year,edition_count,isbn,publisher,language" }
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "rust programming", limit = 3 }, min_results = 2, fixture = "fixtures/w5b/openlibrary/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Book title, author, or keywords" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Maximum books per page" }
+page = { type = "int", min = 1, to = "page", doc = "1-based page number" }
+sort = { type = "string", enum = ["new", "old", "rating", "editions"], to = "sort", doc = "Optional sort order" }
+
+[op.search.map]
+items = ".docs[]"
+total = ".numFound"
+error = 'if type == "object" and (.error // null) != null then (.error | tostring) else null end'
+work = '''{
+  title: ((.title // "") | collapse_ws),
+  authors: (reduce (.author_name // [])[] as $a ([]; ($a | collapse_ws) as $n | if ($n == "" or (index($n) != null)) then . else . + [$n] end) | map({name: .})),
+  year: (.first_publish_year | to_int),
+  publishedDate: (if .first_publish_year != null then (.first_publish_year | tostring | parse_date) else null end),
+  venue: ((.publisher // [])[0] // null),
+  workType: "book",
+  ids: {},
+  retracted: false,
+  versions: [],
+  url: ("https://openlibrary.org" + (.key // "")),
+  sources: ["openlibrary"]
+}'''
+
+[op.isbn]
+summary = "Look up book bibliographic metadata by ISBN-10 or ISBN-13."
+method = "GET"
+url = "https://openlibrary.org/api/books"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "json", jscmd = "data" }
+probe = { params = { isbn = "0521865719" }, min_results = 1, fixture = "fixtures/w5b/openlibrary/isbn/default.json" }
+
+[op.isbn.params]
+isbn = { type = "string", required = true, to = "bibkeys", template = "ISBN:{isbn}", doc = "ISBN-10 or ISBN-13 without hyphens" }
+
+[op.isbn.map]
+items = "to_entries[].value"
+record = '''{
+  key: (.key // ""),
+  title: ((.title // "") | collapse_ws),
+  authors: [(.authors // [])[] | (.name | collapse_ws)],
+  publishers: [(.publishers // [])[] | (.name | collapse_ws)],
+  publishDate: ((.publish_date // null) | parse_date),
+  pages: (.number_of_pages | to_int),
+  isbn10: (.identifiers.isbn_10 // []),
+  isbn13: (.identifiers.isbn_13 // []),
+  lccn: (.identifiers.lccn // []),
+  oclc: (.identifiers.oclc // []),
+  subjects: [(.subjects // [])[0:8][] | .name],
+  url: ((.url // ("https://openlibrary.org" + (.key // ""))) | sub("^http://"; "https://"))
+}'''
+
+[op.work]
+summary = "Fetch full work metadata and subjects from Open Library by work OLID (e.g. OL19080231W)."
+method = "GET"
+url = "https://openlibrary.org/works/{olid}.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { olid = "OL19080231W" }, min_results = 1, fixture = "fixtures/w5b/openlibrary/work/default.json" }
+
+[op.work.params]
+olid = { type = "string", required = true, in = "path", doc = "Open Library work ID without /works/ prefix (e.g. OL19080231W)" }
+
+[op.work.map]
+items = "."
+error = 'if type == "object" and (.error // null) != null then (.error | tostring) else null end'
+record = '''{
+  key: (.key // ""),
+  title: ((.title // "") | collapse_ws),
+  description: (if (.description | type) == "string" then (.description | collapse_ws) elif (.description | type) == "object" then ((.description.value // null) | collapse_ws) else null end),
+  subjects: ((.subjects // [])[0:15]),
+  authorKeys: [(.authors // [])[] | (.author.key // empty)],
+  created: ((.created.value // null) | parse_date),
+  lastModified: ((.last_modified.value // null) | parse_date),
+  url: ("https://openlibrary.org" + (.key // ""))
+}'''

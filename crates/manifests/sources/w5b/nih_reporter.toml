@@ -1,0 +1,80 @@
+id = "nih_reporter"
+name = "NIH RePORTER v2"
+summary = "US NIH, CDC, AHRQ, FDA, HRSA, and VA funded biomedical research grants and projects."
+aliases = ["nih grants", "reporter", "nih"]
+home_url = "https://reporter.nih.gov"
+tier = 1
+scopes = ["academic.grants", "academic.biomed"]
+caps = ["search", "lookup", "grant"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 86400 }
+
+[op.search]
+summary = "Search NIH-funded grant projects via POST JSON."
+method = "POST"
+url = "https://api.reporter.nih.gov/v2/projects/search"
+headers = { Accept = "application/json", "Content-Type" = "application/json" }
+response = "json"
+returns = "records"
+body = { kind = "json", jaq = '''{
+  criteria: { advanced_text_search: { operator: "and", search_field: "all", search_text: $p.query } },
+  include_fields: ["ProjectNum", "ProjectTitle", "PrincipalInvestigators", "Organization", "AwardAmount", "ProjectStartDate", "ProjectEndDate", "ProjectDetailUrl", "AbstractText", "FiscalYear", "AgencyCode"],
+  limit: ($p.limit // 10),
+  offset: ($p.offset // 0)
+}''' }
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "crispr", limit = 3 }, min_results = 2, fixture = "fixtures/w5b/nih_reporter/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, in = "body", doc = "Grant search terms" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "body", doc = "Maximum results per page" }
+offset = { type = "int", default = 0, min = 0, in = "body", doc = "Result offset" }
+
+[op.search.map]
+items = ".results[]"
+total = ".meta.total"
+record = '''{
+  id: (.project_num // ""),
+  title: ((.project_title // "") | collapse_ws),
+  funder: (.agency_code // "NIH"),
+  pi: ((([(.principal_investigators // [])[] | select(.is_contact_pi == true) | .full_name][0]) // .principal_investigators[0].full_name // null) | collapse_ws),
+  org: ((.organization.org_name // null) | collapse_ws),
+  amount: (.award_amount | to_num),
+  currency: "USD",
+  fiscalYear: (.fiscal_year | to_int),
+  startDate: ((.project_start_date // null) | parse_date),
+  endDate: ((.project_end_date // null) | parse_date),
+  abstractText: ((.abstract_text // null) | collapse_ws),
+  url: (.project_detail_url // "https://reporter.nih.gov"),
+  source: "nih_reporter"
+}'''
+hit = '''((.project_start_date // null) | parse_date) as $d | {
+  title: ((.project_title // .project_num // "") | collapse_ws),
+  url: (.project_detail_url // "https://reporter.nih.gov"),
+  snippet: ((((.project_num // "") + " · " + (.organization.org_name // "") + (if .award_amount != null then (" · $" + (.award_amount | tostring)) else "" end) + (if (.abstract_text // "") != "" then (" — " + (.abstract_text | collapse_ws)) else "" end)) | collapse_ws)[0:280]),
+  date: $d,
+  dateSource: (if $d != null then "api" else null end)
+}'''
+
+[op.project]
+summary = "Look up a specific NIH grant by project number."
+method = "POST"
+url = "https://api.reporter.nih.gov/v2/projects/search"
+headers = { Accept = "application/json", "Content-Type" = "application/json" }
+response = "json"
+returns = "records"
+body = { kind = "json", jaq = '''{
+  criteria: { project_nums: [$p.project_num] },
+  include_fields: ["ProjectNum", "ProjectTitle", "PrincipalInvestigators", "Organization", "AwardAmount", "ProjectStartDate", "ProjectEndDate", "ProjectDetailUrl", "AbstractText", "FiscalYear", "AgencyCode"],
+  limit: 1,
+  offset: 0
+}''' }
+probe = { params = { project_num = "5R01AI187493-03" }, min_results = 1, fixture = "fixtures/w5b/nih_reporter/project/default.json" }
+
+[op.project.params]
+project_num = { type = "string", required = true, in = "body", doc = "NIH project number (e.g. 5R01AI187493-03)" }
+
+[op.project.map]
+items = ".results[]"
+record = "@ref:op.search.map.record"

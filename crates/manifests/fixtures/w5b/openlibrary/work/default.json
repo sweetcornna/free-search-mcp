@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "openlibrary",
+  "op": "work",
+  "recordedAt": "2026-11-25T15:12:24Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://openlibrary.org/works/OL19080231W.json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"subjects\": [\"Rust (Computer programming language)\", \"Computer programming\", \"Programming languages (electronic computers)\"], \"key\": \"/works/OL19080231W\", \"title\": \"The Rust Programming Language\", \"authors\": [{\"type\": {\"key\": \"/type/author_role\"}, \"author\": {\"key\": \"/authors/OL7467124A\"}}, {\"type\": {\"key\": \"/type/author_role\"}, \"author\": {\"key\": \"/authors/OL7467125A\"}}, {\"type\": {\"key\": \"/type/author_role\"}, \"author\": {\"key\": \"/authors/OL1438683A\"}}], \"type\": {\"key\": \"/type/work\"}, \"covers\": [8508621], \"latest_revision\": 6, \"revision\": 6, \"created\": {\"type\": \"/type/datetime\", \"value\": \"2019-02-27T00:36:21.984212\"}, \"last_modified\": {\"type\": \"/type/datetime\", \"value\": \"2025-07-07T14:10:03.856445\"}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

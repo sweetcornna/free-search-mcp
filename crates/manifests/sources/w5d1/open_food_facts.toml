@@ -1,0 +1,82 @@
+id = "open_food_facts"
+name = "Open Food Facts"
+summary = "Open crowdsourced database of food products, barcodes, nutrition facts, Nutri-Score, and ingredients."
+aliases = ["off", "openfoodfacts", "food barcode", "nutrition"]
+home_url = "https://world.openfoodfacts.org"
+tier = 1
+scopes = ["reference", "dataset"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 0.15, burst = 1, concurrency = 1, timeout_ms = 8000, cache_ttl_s = 86400 }
+
+[op.search]
+summary = "Search Open Food Facts products by name, brand, or ingredient via Search-a-licious."
+method = "GET"
+url = "https://search.openfoodfacts.org/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { fields = "code,product_name,brands,nutriscore_grade,ecoscore_grade,categories_tags,quantity" }
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "olive oil", limit = 3 }, min_results = 2, fixture = "fixtures/w5d1/open_food_facts/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Food product keywords e.g. olive oil, nutella, oat milk" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "page_size", doc = "Page size" }
+page = { type = "int", min = 1, to = "page", doc = "Page number" }
+
+[op.search.map]
+items = "(.hits // [])[]"
+total = ".count"
+error = 'if (.detail? | type == "array" and length > 0) then (.detail[0].msg // (.detail[0] | tostring)) elif (.detail? | type == "string" and length > 0) then .detail else null end'
+record = '''{
+  barcode: (.code // ""),
+  name: (.product_name // ""),
+  brands: (if (.brands | type == "array") then (.brands | map(sub("^xx:"; "")) | join(", ")) else (.brands // null) end),
+  quantity: (.quantity // null),
+  categories: (.categories_tags // []),
+  nutriscore: (if (.nutriscore_grade == "unknown" or .nutriscore_grade == "not-applicable") then null else (.nutriscore_grade // null) end),
+  ecoscore: (if (.ecoscore_grade == "unknown" or .ecoscore_grade == "not-applicable") then null else (.ecoscore_grade // null) end),
+  url: ("https://world.openfoodfacts.org/product/" + (.code // ""))
+}'''
+hit = '''{
+  title: (.product_name // .code // ""),
+  url: ("https://world.openfoodfacts.org/product/" + (.code // "")),
+  snippet: ([(if (.brands | type == "array") then (.brands | map(sub("^xx:"; "")) | join(", ")) else (.brands // empty) end), (if (.nutriscore_grade and .nutriscore_grade != "unknown" and .nutriscore_grade != "not-applicable") then ("Nutri-Score: " + .nutriscore_grade) else empty end), (.quantity // empty)] | map(select(. != "")) | join(" · "))
+}'''
+
+[op.product]
+summary = "Look up full product nutrition, ingredients, NOVA group, and Nutri-Score by EAN/UPC barcode."
+method = "GET"
+url = "https://world.openfoodfacts.org/api/v2/product/{barcode}.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { fields = "code,product_name,brands,nutriscore_grade,ecoscore_grade,nova_group,categories,ingredients_text,quantity,nutriments" }
+probe = { params = { barcode = "3017620422003" }, min_results = 1, fixture = "fixtures/w5d1/open_food_facts/product/default.json" }
+
+[op.product.params]
+barcode = { type = "string", required = true, in = "path", doc = "EAN/UPC barcode digits e.g. 3017620422003" }
+
+[op.product.map]
+items = "if .status == 1 then .product else empty end"
+error = "if .status == 0 then (.status_verbose // \"Product not found\") else null end"
+record = '''{
+  barcode: (.code // ""),
+  name: (.product_name // ""),
+  brands: (.brands // null),
+  quantity: (.quantity // null),
+  categories: (.categories // null),
+  ingredients: (.ingredients_text // null),
+  nutriscore: (if (.nutriscore_grade == "unknown" or .nutriscore_grade == "not-applicable") then null else (.nutriscore_grade // null) end),
+  ecoscore: (if (.ecoscore_grade == "unknown" or .ecoscore_grade == "not-applicable") then null else (.ecoscore_grade // null) end),
+  novaGroup: (.nova_group // null),
+  energyKcal100g: (.nutriments["energy-kcal_100g"] // null),
+  fat100g: (.nutriments.fat_100g // null),
+  carbohydrates100g: (.nutriments.carbohydrates_100g // null),
+  sugars100g: (.nutriments.sugars_100g // null),
+  proteins100g: (.nutriments.proteins_100g // null),
+  salt100g: (.nutriments.salt_100g // null),
+  url: ("https://world.openfoodfacts.org/product/" + (.code // ""))
+}'''

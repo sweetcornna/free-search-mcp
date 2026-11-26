@@ -1,0 +1,56 @@
+protocol = "eprints"
+
+[[instance]]
+id = "eprints_soton"
+name = "ePrints Soton (University of Southampton)"
+summary = "University of Southampton institutional repository covering engineering, photonics, oceanography, computer science, and humanities."
+aliases = ["eprints soton", "southampton eprints"]
+base_url = "https://eprints.soton.ac.uk"
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["search", "lookup", "fulltext", "thesis"]
+tier = 1
+probe = { op = "search", params = { query = "heliosheath", limit = 4 }, min_results = 2 }
+
+[[instance]]
+id = "eprints_lmu"
+name = "Open Access LMU (LMU Munich)"
+summary = "Ludwig-Maximilians-Universität München EPrints repository of open-access scholarly articles and doctoral dissertations."
+aliases = ["open access lmu", "lmu munich", "epub lmu"]
+base_url = "https://epub.ub.uni-muenchen.de"
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["search", "lookup", "fulltext", "thesis"]
+tier = 2
+probe = { op = "search", params = { query = "quantum optics cavity", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "eprints_utas"
+name = "University of Tasmania Open Access Repository"
+summary = "University of Tasmania EPrints repository covering Antarctic and marine science, ecology, chemistry, health, and humanities."
+aliases = ["utas eprints", "university of tasmania repository"]
+base_url = "https://eprints.utas.edu.au"
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["search", "lookup", "fulltext", "thesis"]
+tier = 2
+probe = { op = "search", params = { query = "spiropyran", limit = 2 }, min_results = 2 }
+
+[[instance]]
+id = "eprints_usm"
+name = "USM Research Repository (Universiti Sains Malaysia)"
+summary = "Universiti Sains Malaysia open-access EPrints repository of STEM, materials science, medical research, and postgraduate theses."
+aliases = ["usm eprints", "universiti sains malaysia"]
+base_url = "https://eprints.usm.my"
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["search", "lookup", "fulltext", "thesis"]
+tier = 2
+probe = { op = "search", params = { query = "titania chitosan photocatalytic degradation", limit = 5 }, min_results = 2 }
+
+[[instance]]
+id = "etheses_bham"
+name = "UBIRA eTheses (University of Birmingham)"
+summary = "University of Birmingham dedicated open-access repository of doctoral and research theses across science, medicine, and arts."
+aliases = ["birmingham etheses", "ubira etheses"]
+base_url = "https://etheses.bham.ac.uk"
+scopes = ["academic", "academic.theses", "academic.openaccess"]
+caps = ["search", "lookup", "fulltext", "thesis"]
+tier = 2
+probe = { op = "search", params = { query = "spiropyran maleimide", limit = 4 }, min_results = 2 }

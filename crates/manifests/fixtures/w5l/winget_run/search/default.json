@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "winget_run",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:56:51Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.winget.run/v2/packages?query=ripgrep&take=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"Packages\":[{\"Id\":\"BurntSushi.ripgrep.GNU\",\"Versions\":[\"13.0.0\"],\"Latest\":{\"Name\":\"RipGrep GNU\",\"Publisher\":\"BurntSushi\",\"Tags\":[\"regex\"],\"Description\":\"ripgrep is a line-oriented search tool that recursively searches the current directory for a regex pattern.\\nBy default, ripgrep will respect gitignore rules and automatically skip hidden files/directories and binary files.\",\"Homepage\":\"https://github.com/BurntSushi/ripgrep\",\"License\":\"MIT and Unlicense\",\"LicenseUrl\":null},\"Featured\":false,\"IconUrl\":null,\"Banner\":null,\"Logo\":null,\"UpdatedAt\":\"2023-03-16T14:34:16.581027\",\"CreatedAt\":\"2023-03-16T14:34:16.581027\",\"createdAt\":\"2023-03-16T14:49:20.747Z\",\"updatedAt\":\"2023-03-16T14:49:20.747Z\",\"SearchScore\":10.454545454545453},{\"Id\":\"BurntSushi.ripgrep.MSVC\",\"Versions\":[\"13.0.0\"],\"Latest\":{\"Name\":\"RipGrep MSVC\",\"Publisher\":\"BurntSushi\",\"Tags\":[\"regex\"],\"Description\":\"ripgrep is a line-oriented search tool that recursively searches the current directory for a regex pattern.\\nBy default, ripgrep will respect gitignore rules and automatically skip hidden files/directories and binary files.\",\"Homepage\":\"https://github.com/BurntSushi/ripgrep\",\"License\":\"MIT and Unlicense\",\"LicenseUrl\":null},\"Featured\":false,\"IconUrl\":null,\"Banner\":null,\"Logo\":null,\"UpdatedAt\":\"2023-03-16T14:34:16.583676\",\"CreatedAt\":\"2023-03-16T14:34:16.583676\",\"createdAt\":\"2023-03-16T14:49:20.771Z\",\"updatedAt\":\"2023-03-16T14:49:20.771Z\",\"SearchScore\":10.285714285714285}],\"Total\":2}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "source": "arxiv",
+  "op": "search",
+  "recordedAt": "2026-11-25T15:35:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://export.arxiv.org/api/query?sortOrder=descending&max_results=3&search_query=all%3A%22attention+is+all+you+need%22+OR+%28all%3Aattention+AND+all%3Aneed%29&sortBy=relevance",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "server",
+            "Google Frontend"
+          ],
+          [
+            "x-cloud-trace-context",
+            "ff2e9090d6066607b6268a1550e16265"
+          ],
+          [
+            "via",
+            "1.1 google, 1.1 varnish, 1.1 varnish, 1.1 varnish"
+          ],
+          [
+            "content-type",
+            "application/atom+xml; charset=utf-8"
+          ],
+          [
+            "accept-ranges",
+            "bytes"
+          ],
+          [
+            "age",
+            "0"
+          ],
+          [
+            "date",
+            "Wed, 25 Nov 2026 15:35:00 GMT"
+          ],
+          [
+            "x-served-by",
+            "cache-lga-kjfk8660045-LGA, cache-lga-kjfk8660045-LGA, cache-lga-kjfk8660045-LGA, cache-bur-kbur8200030-BUR"
+          ],
+          [
+            "x-cache",
+            "MISS, MISS, MISS"
+          ],
+          [
+            "x-cache-hits",
+            "0, 0, 0"
+          ],
+          [
+            "x-timer",
+            "S1795620900.683705,VS0,VE327"
+          ],
+          [
+            "strict-transport-security",
+            "max-age=300"
+          ],
+          [
+            "content-length",
+            "7483"
+          ]
+        ],
+        "bodyText": "<?xml version='1.0' encoding='UTF-8'?>\n<feed xmlns:opensearch=\"http://a9.com/-/spec/opensearch/1.1/\" xmlns:arxiv=\"http://arxiv.org/schemas/atom\" xmlns=\"http://www.w3.org/2005/Atom\">\n  <id>https://arxiv.org/api/lpGOlIfk7vNTuPu2Rbq2+FVXtbg</id>\n  <title>arXiv Query: search_query=all:\"attention is all you need\" OR (all:attention AND all:need)&amp;id_list=&amp;start=0&amp;max_results=3</title>\n  <updated>2026-11-25T15:34:59Z</updated>\n  <link href=\"https://arxiv.org/api/query?search_query=all:%22attention+is+all+you+need%22+OR+(all:attention+AND+all:need)&amp;start=0&amp;max_results=3&amp;id_list=\" type=\"application/atom+xml\"/>\n  <opensearch:itemsPerPage>3</opensearch:itemsPerPage>\n  <opensearch:totalResults>8420</opensearch:totalResults>\n  <opensearch:startIndex>0</opensearch:startIndex>\n  <entry>\n    <id>http://arxiv.org/abs/2604.21816v1</id>\n    <title>Tool Attention Is All You Need: Dynamic Tool Gating and Lazy Schema Loading for Eliminating the MCP/Tools Tax in Scalable Agentic Workflows</title>\n    <updated>2026-04-23T16:10:00Z</updated>\n    <link href=\"https://arxiv.org/abs/2604.21816v1\" rel=\"alternate\" type=\"text/html\"/>\n    <link href=\"https://arxiv.org/pdf/2604.21816v1\" rel=\"related\" type=\"application/pdf\" title=\"pdf\"/>\n    <summary>The Model Context Protocol (MCP) has become a common interface for connecting large language model (LLM) agents to external tools, but its reliance on stateless, eager schema injection imposes a hidden per-turn overhead the MCP Tax or Tools Tax that practitioner reports place between roughly 10k and 60k tokens in typical multi-server deployments. This payload inflates the key-value cache, is associated with reasoning degradation as context utilization approaches published fracture points around 70%, and turns token budgets into a recurring operational cost. We introduce Tool Attention, a middleware-layer mechanism that generalizes the \"Attention Is All You Need\" paradigm from self-attention over tokens to gated attention over tools. Tool Attention combines (i) an Intent Schema Overlap (ISO) score from sentence embeddings, (ii) a state-aware gating function enforcing preconditions and access scopes, and (iii) a two-phase lazy schema loader that keeps a compact summary pool in context and promotes full JSON schemas only for top-k gated tools. We evaluate on a simulated 120-tool, six-server benchmark whose per-server token counts are calibrated to public audits of real MCP deployments. In this simulation, Tool Attention directly reduces measured per-turn tool tokens by 95.0% (47.3k -&gt; 2.4k) and raises effective context utilization (a token-ratio quantity) from 24% to 91%. End-to-end figures for task success, latency, cost, and reasoning quality are reported as projections derived from the measured token counts combined with published deployment telemetry; they are not measured on live LLM agents, and we mark projected values explicitly throughout. Taken together, the results support a simple thesis: protocol-level efficiency, not raw context length, is a binding constraint on scalable gentic systems. The code for this work is accessible at https://github.com/asadani/tool-attention</summary>\n    <category term=\"cs.AI\" scheme=\"http://arxiv.org/schemas/atom\"/>\n    <published>2026-04-23T16:10:00Z</published>\n    <arxiv:comment>21 pages</arxiv:comment>\n    <arxiv:primary_category term=\"cs.AI\"/>\n    <author>\n      <name>Anuj Sadani</name>\n    </author>\n    <author>\n      <name>Deepak Kumar</name>\n    </author>\n  </entry>\n  <entry>\n    <id>http://arxiv.org/abs/2306.01926v1</id>\n    <title>RITA: Group Attention is All You Need for Timeseries Analytics</title>\n    <updated>2023-06-02T21:45:13Z</updated>\n    <link href=\"https://arxiv.org/abs/2306.01926v1\" rel=\"alternate\" type=\"text/html\"/>\n    <link href=\"https://arxiv.org/pdf/2306.01926v1\" rel=\"related\" type=\"application/pdf\" title=\"pdf\"/>\n    <summary>Timeseries analytics is of great importance in many real-world applications. Recently, the Transformer model, popular in natural language processing, has been leveraged to learn high quality feature embeddings from timeseries, core to the performance of various timeseries analytics tasks. However, the quadratic time and space complexities limit Transformers' scalability, especially for long timeseries. To address these issues, we develop a timeseries analytics tool, RITA, which uses a novel attention mechanism, named group attention, to address this scalability issue. Group attention dynamically clusters the objects based on their similarity into a small number of groups and approximately computes the attention at the coarse group granularity. It thus significantly reduces the time and space complexity, yet provides a theoretical guarantee on the quality of the computed attention. The dynamic scheduler of RITA continuously adapts the number of groups and the batch size in the training process, ensuring group attention always uses the fewest groups needed to meet the approximation quality requirement. Extensive experiments on various timeseries datasets and analytics tasks demonstrate that RITA outperforms the state-of-the-art in accuracy and is significantly faster -- with speedups of up to 63X.</summary>\n    <category term=\"cs.LG\" scheme=\"http://arxiv.org/schemas/atom\"/>\n    <category term=\"cs.AI\" scheme=\"http://arxiv.org/schemas/atom\"/>\n    <category term=\"cs.DB\" scheme=\"http://arxiv.org/schemas/atom\"/>\n    <published>2023-06-02T21:45:13Z</published>\n    <arxiv:primary_category term=\"cs.LG\"/>\n    <author>\n      <name>Jiaming Liang</name>\n    </author>\n    <author>\n      <name>Lei Cao</name>\n    </author>\n    <author>\n      <name>Samuel Madden</name>\n    </author>\n    <author>\n      <name>Zachary Ives</name>\n    </author>\n    <author>\n      <name>Guoliang Li</name>\n    </author>\n  </entry>\n  <entry>\n    <id>http://arxiv.org/abs/1910.14537v3</id>\n    <title>Attention Is All You Need for Chinese Word Segmentation</title>\n    <updated>2020-10-06T06:38:42Z</updated>\n    <link href=\"https://arxiv.org/abs/1910.14537v3\" rel=\"alternate\" type=\"text/html\"/>\n    <link href=\"https://arxiv.org/pdf/1910.14537v3\" rel=\"related\" type=\"application/pdf\" title=\"pdf\"/>\n    <summary>Taking greedy decoding algorithm as it should be, this work focuses on further strengthening the model itself for Chinese word segmentation (CWS), which results in an even more fast and more accurate CWS model. Our model consists of an attention only stacked encoder and a light enough decoder for the greedy segmentation plus two highway connections for smoother training, in which the encoder is composed of a newly proposed Transformer variant, Gaussian-masked Directional (GD) Transformer, and a biaffine attention scorer. With the effective encoder design, our model only needs to take unigram features for scoring. Our model is evaluated on SIGHAN Bakeoff benchmark datasets. The experimental results show that with the highest segmentation speed, the proposed model achieves new state-of-the-art or comparable performance against strong baselines in terms of strict closed test setting.</summary>\n    <category term=\"cs.CL\" scheme=\"http://arxiv.org/schemas/atom\"/>\n    <published>2019-10-31T15:32:19Z</published>\n    <arxiv:comment>11 pages, to appear in EMNLP 2020 as a long paper</arxiv:comment>\n    <arxiv:primary_category term=\"cs.CL\"/>\n    <author>\n      <name>Sufeng Duan</name>\n    </author>\n    <author>\n      <name>Hai Zhao</name>\n    </author>\n  </entry>\n</feed>\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

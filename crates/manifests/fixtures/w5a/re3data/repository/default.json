@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "source": "re3data",
+  "op": "repository",
+  "recordedAt": "2026-11-25T12:15:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.re3data.org/api/v1/repository/r3d100013383",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/xml; charset=UTF-8"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"utf-8\"?><r3d:re3data xmlns:r3d=\"http://www.re3data.org/schema/2-2\"><r3d:repository><r3d:re3data.orgIdentifier>r3d100013383</r3d:re3data.orgIdentifier><r3d:repositoryIdentifier>https://doi.org/10.17616/R31NJMTJ</r3d:repositoryIdentifier><r3d:repositoryName language=\"eng\">IsoArcH</r3d:repositoryName><r3d:repositoryURL>https://isoarch.eu/</r3d:repositoryURL><r3d:description language=\"eng\">IsoArcH is an open-access collaborative isotope database for bioarchaeological and paleoclimate research.</r3d:description><r3d:type>disciplinary</r3d:type><r3d:subject subjectScheme=\"DFG\">314 Geology and Palaeontology</r3d:subject><r3d:pidSystem>DOI</r3d:pidSystem><r3d:databaseLicense><r3d:databaseLicenseName>CC</r3d:databaseLicenseName></r3d:databaseLicense><r3d:dataLicense><r3d:dataLicenseName>CC</r3d:dataLicenseName></r3d:dataLicense><r3d:institution><r3d:institutionName language=\"eng\">IsoArcH Association</r3d:institutionName></r3d:institution><r3d:api apiType=\"REST\">https://isoarch.eu/api/</r3d:api></r3d:repository></r3d:re3data>",
+        "bodyB64": null
+      }
+    }
+  ]
+}

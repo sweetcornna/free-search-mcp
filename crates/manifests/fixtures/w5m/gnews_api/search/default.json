@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "gnews_api",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://gnews.io/api/v4/search?q=renewable+energy&lang=en&max=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"totalArticles\":12450,\"articles\":[{\"id\":\"8e4c1a9f2d7b3a100001\",\"title\":\"Offshore wind capacity crosses new milestone across North Sea grids\",\"description\":\"European grid operators reported record offshore wind generation following new interconnector links.\",\"content\":\"European grid operators reported record offshore wind generation following new interconnector links... [1200 chars]\",\"url\":\"https://www.reuters.com/business/energy/north-sea-offshore-wind-milestone-2026/\",\"image\":\"https://www.reuters.com/resizer/north-sea-wind.jpg\",\"publishedAt\":\"2026-11-24T10:20:00Z\",\"lang\":\"en\",\"source\":{\"id\":\"src-reuters\",\"name\":\"Reuters\",\"url\":\"https://www.reuters.com\",\"country\":\"gb\"}},{\"id\":\"8e4c1a9f2d7b3a100002\",\"title\":\"Grid-scale sodium-ion batteries enter commercial utility tenders\",\"description\":\"Lower raw-material costs are bringing sodium-ion storage into stationary renewable microgrids.\",\"content\":\"Lower raw-material costs are bringing sodium-ion storage into stationary renewable microgrids... [980 chars]\",\"url\":\"https://www.ft.com/content/sodium-ion-grid-tenders-2026\",\"image\":\"https://www.ft.com/assets/sodium-battery.jpg\",\"publishedAt\":\"2026-11-23T15:05:00Z\",\"lang\":\"en\",\"source\":{\"id\":\"src-ft\",\"name\":\"Financial Times\",\"url\":\"https://www.ft.com\",\"country\":\"gb\"}},{\"id\":\"8e4c1a9f2d7b3a100003\",\"title\":\"Solar microinverters gain standardized cybersecurity certification\",\"description\":\"Energy regulators publish updated firmware verification guidelines for distributed solar inverters.\",\"content\":\"Energy regulators publish updated firmware verification guidelines for distributed solar inverters... [840 chars]\",\"url\":\"https://www.bbc.com/news/articles/solar-inverter-security-2026\",\"image\":null,\"publishedAt\":\"2026-11-22T09:12:00Z\",\"lang\":\"en\",\"source\":{\"id\":\"src-bbc\",\"name\":\"BBC News\",\"url\":\"https://www.bbc.com\",\"country\":\"gb\"}}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,82 @@
+id = "devdocs_catalog"
+name = "DevDocs Developer Docs Catalog"
+summary = "Unified catalog of 850+ language and framework documentation sets plus per-docset symbol indices from DevDocs.io."
+aliases = ["devdocs", "devdocs.io", "developer docs"]
+home_url = "https://devdocs.io"
+tier = 1
+scopes = ["docs"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 2, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 86400 }
+
+[op.search]
+summary = "Search the 850+ DevDocs developer documentation sets by name, slug, or type (client-side filter over docs.json)."
+method = "GET"
+url = "https://devdocs.io/docs.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { query = "python", limit = 3 }, min_results = 2, fixture = "fixtures/w5l/devdocs_catalog/search/default.json" }
+examples = [
+  'source.call("devdocs_catalog.search", { query: "python", limit: 5 })',
+  'source.call("devdocs_catalog.search", { query: "rust", limit: 5 })',
+]
+
+[op.search.params]
+query = { type = "string", required = true, in = "none", doc = "Case-insensitive substring matched against docset name, slug, or type" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "none", doc = "Maximum matching docsets to return" }
+
+[op.search.map]
+items = '''[.[] | select((((.name // "") + " " + (.slug // "") + " " + (.type // "")) | ascii_downcase) | contains(($p.query // "") | ascii_downcase))][0:($p.limit // 10)][]'''
+record = '''{
+  name: (.name // ""),
+  slug: (.slug // ""),
+  type: (.type // ""),
+  version: (.version // ""),
+  release: (.release // ""),
+  mtime: (.mtime // null),
+  updatedAt: (.mtime | epoch_to_iso),
+  dbSize: (.db_size // null),
+  homeUrl: (.links.home // null),
+  codeUrl: (.links.code // null),
+  indexUrl: ("https://documents.devdocs.io/" + (.slug // "") + "/index.json"),
+  url: ("https://devdocs.io/" + (.slug // "") + "/")
+}'''
+hit = '''{
+  title: ((.name // "") + (if (.version // "") != "" then " " + .version else "" end)),
+  url: ("https://devdocs.io/" + (.slug // "") + "/"),
+  snippet: (
+    [
+      ("slug: " + (.slug // "")),
+      (if (.release // "") != "" then ("release " + .release) else null end),
+      (if (.links.home // "") != "" then .links.home else null end)
+    ] | map(select(. != null)) | join(" · ")
+  ),
+  date: (.mtime | parse_date),
+  dateSource: "api"
+}'''
+
+[op.docset_index]
+summary = "Fetch the symbol and page entry index for a specific DevDocs docset slug (e.g. jq, http, rust)."
+method = "GET"
+url = "https://documents.devdocs.io/{slug}/index.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { slug = "jq" }, min_results = 10, fixture = "fixtures/w5l/devdocs_catalog/docset_index/default.json" }
+examples = [
+  'source.call("devdocs_catalog.docset_index", { slug: "jq" })',
+]
+
+[op.docset_index.params]
+slug = { type = "string", required = true, in = "path", doc = "DevDocs docset slug from devdocs_catalog.search (e.g. jq, http, rust)" }
+
+[op.docset_index.map]
+items = "(.entries // [])[]"
+record = '''{
+  name: (.name // ""),
+  path: (.path // ""),
+  type: (.type // ""),
+  url: ("https://devdocs.io/" + ($p.slug // "") + "/" + (.path // ""))
+}'''

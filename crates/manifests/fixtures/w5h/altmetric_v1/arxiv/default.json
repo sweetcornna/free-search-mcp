@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "altmetric_v1",
+  "op": "arxiv",
+  "recordedAt": "2026-11-25T13:03:45Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.altmetric.com/v1/arxiv/1706.03762",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"title\": \"Attention Is All You Need\", \"arxiv_id\": \"1706.03762\", \"altmetric_id\": 21109241, \"score\": 412.8, \"cited_by_posts_count\": 690, \"cited_by_msm_count\": 12, \"cited_by_feeds_count\": 28, \"cited_by_policies_count\": 5, \"cited_by_patents_count\": 14, \"cited_by_wikipedia_count\": 19, \"cited_by_tweeters_count\": 520, \"readers\": {\"mendeley\": 14200}, \"url\": \"https://arxiv.org/abs/1706.03762\", \"details_url\": \"https://www.altmetric.com/details.php?citation_id=21109241\", \"published_on\": 1497225600, \"authors\": [\"Ashish Vaswani\", \"Noam Shazeer\", \"Niki Parmar\"]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

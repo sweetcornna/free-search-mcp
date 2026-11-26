@@ -1,0 +1,103 @@
+# W0a test vector: copy of crates/manifests/staging/w5c/hackernews.toml (2026-11-25), A1 §F.4: op.item map.items "[.]" -> "." (§B.5).
+id = "hackernews"
+name = "Hacker News (Algolia)"
+summary = "Hacker News stories, Ask/Show HN posts, and discussion threads via the keyless Algolia API."
+aliases = ["hn", "ycombinator", "algolia hn"]
+home_url = "https://news.ycombinator.com"
+tier = 1
+scopes = ["forum", "news"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 5.0, burst = 10, concurrency = 4, timeout_ms = 5000, cache_ttl_s = 3600 }
+
+[op.search]
+summary = "Search Hacker News stories by relevance via Algolia."
+method = "GET"
+url = "https://hn.algolia.com/api/v1/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { tags = "story" }
+paginate = { style = "page", param = "page", start = 0, max_pages = 3 }
+probe = { params = { query = "rust", limit = 3 }, min_results = 2, fixture = "fixtures/w5c/hackernews/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "query", doc = "Search terms" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "hitsPerPage", doc = "Hits per page" }
+page = { type = "int", min = 0, to = "page", doc = "Zero-based page index" }
+
+[op.search.map]
+items = ".hits[]"
+total = ".nbHits"
+record = '''{
+  id: .objectID,
+  title: (.title // .story_title // ""),
+  url: (if (.url | type) == "string" and (.url | startswith("http")) then .url else ("https://news.ycombinator.com/item?id=" + (.objectID // "")) end),
+  discussionUrl: ("https://news.ycombinator.com/item?id=" + (.objectID // "")),
+  author: .author,
+  points: .points,
+  numComments: .num_comments,
+  createdAt: .created_at
+}'''
+hit = '''{
+  title: (.title // .story_title // ""),
+  url: (if (.url | type) == "string" and (.url | startswith("http")) then .url else ("https://news.ycombinator.com/item?id=" + (.objectID // "")) end),
+  snippet: ([
+    (if (.points | type) == "number" and .points > 0 then "\(.points) points" else empty end),
+    (if (.num_comments | type) == "number" and .num_comments > 0 then "\(.num_comments) comments" else empty end),
+    (if (.author | type) == "string" and (.author | length) > 0 then "by \(.author)" else empty end),
+    (if (.url | type) == "string" and (.url | startswith("http")) and ((.objectID | type) == "string") then "discussion: https://news.ycombinator.com/item?id=\(.objectID)" else empty end)
+  ] | join(" · ")),
+  date: (if (.created_at | type) == "string" and (.created_at | length) >= 10 then .created_at[0:10] else null end),
+  dateSource: "api"
+}'''
+
+[op.recent]
+summary = "Search Hacker News stories ordered by newest first."
+method = "GET"
+url = "https://hn.algolia.com/api/v1/search_by_date"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { tags = "story" }
+paginate = { style = "page", param = "page", start = 0, max_pages = 3 }
+probe = { params = { query = "rust", limit = 3 }, min_results = 2, fixture = "fixtures/w5c/hackernews/recent/default.json" }
+
+[op.recent.params]
+query = { type = "string", required = true, to = "query", doc = "Search terms" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "hitsPerPage", doc = "Hits per page" }
+page = { type = "int", min = 0, to = "page", doc = "Zero-based page index" }
+
+[op.recent.map]
+items = ".hits[]"
+total = ".nbHits"
+record = "@ref:op.search.map.record"
+hit = "@ref:op.search.map.hit"
+
+[op.item]
+summary = "Fetch a Hacker News story or comment tree by numeric item ID."
+method = "GET"
+url = "https://hn.algolia.com/api/v1/items/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "8863" }, min_results = 1, fixture = "fixtures/w5c/hackernews/item/default.json" }
+
+[op.item.params]
+id = { type = "string", required = true, in = "path", doc = "Numeric HN item ID" }
+
+[op.item.map]
+items = "."
+record = '''{
+  id: (.id | tostring),
+  type: .type,
+  title: (.title // ""),
+  url: (.url // ("https://news.ycombinator.com/item?id=" + (.id | tostring))),
+  author: .author,
+  points: .points,
+  createdAt: .created_at,
+  text: .text,
+  childCount: ((.children // []) | length),
+  topComments: [(.children // [])[0:10][] | { id: (.id | tostring), author, createdAt: .created_at, text: (.text // "" | strip_tags) }]
+}'''

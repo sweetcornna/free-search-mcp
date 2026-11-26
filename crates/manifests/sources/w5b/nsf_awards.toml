@@ -1,0 +1,69 @@
+id = "nsf_awards"
+name = "NSF Award Search"
+summary = "US National Science Foundation research awards, abstracts, funding amounts, and PIs."
+aliases = ["nsf", "nsf grants"]
+home_url = "https://www.nsf.gov/awardsearch/"
+tier = 1
+scopes = ["academic.grants", "academic"]
+caps = ["search", "lookup", "grant"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 86400 }
+
+[op.search]
+summary = "Search NSF awards by keyword."
+method = "GET"
+url = "https://api.nsf.gov/services/v1/awards.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { printFields = "id,title,agency,awardeeName,piFirstName,piLastName,fundsObligatedAmt,startDate,expDate,date,abstractText" }
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "crispr", limit = 3 }, min_results = 2, fixture = "fixtures/w5b/nsf_awards/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "keyword", doc = "Keyword search terms" }
+limit = { type = "int", default = 10, min = 1, max = 25, to = "rpp", doc = "Results per page (max 25)" }
+offset = { type = "int", min = 0, to = "offset", doc = "0-based record offset" }
+
+[op.search.map]
+items = ".response.award[]"
+total = ".response.metadata.totalCount"
+error = 'if type == "object" and (.response.serviceNotification // null) != null then (.response.serviceNotification | arr | map(.notificationMessage // tostring) | join("; ")) else null end'
+record = '''{
+  id: (.id // "" | tostring),
+  title: ((.title // "") | strip_tags),
+  funder: (.agency // "NSF"),
+  pi: (if (.pdPIName // "") != "" then (.pdPIName | collapse_ws) elif ((.piFirstName // "") != "" or (.piLastName // "") != "") then (((.piFirstName // "") + " " + (.piLastName // "")) | collapse_ws) else null end),
+  org: ((.awardeeName // .awardee // null) | collapse_ws),
+  amount: ((.fundsObligatedAmt | to_num) // (.estimatedTotalAmt | to_num)),
+  currency: "USD",
+  startDate: (if (.startDate | type) == "string" and (.startDate | split("/") | length) == 3 then (.startDate | split("/") | "\(.[2])-\(if (.[0]|length)==1 then "0"+.[0] else .[0] end)-\(if (.[1]|length)==1 then "0"+.[1] else .[1] end)" | parse_date) else (.startDate | parse_date) end),
+  endDate: (if (.expDate | type) == "string" and (.expDate | split("/") | length) == 3 then (.expDate | split("/") | "\(.[2])-\(if (.[0]|length)==1 then "0"+.[0] else .[0] end)-\(if (.[1]|length)==1 then "0"+.[1] else .[1] end)" | parse_date) else (.expDate | parse_date) end),
+  url: ("https://www.nsf.gov/awardsearch/showAward?AWD_ID=" + (.id // "" | tostring)),
+  source: "nsf_awards"
+}'''
+hit = '''(if (.date | type) == "string" and (.date | split("/") | length) == 3 then (.date | split("/") | "\(.[2])-\(if (.[0]|length)==1 then "0"+.[0] else .[0] end)-\(if (.[1]|length)==1 then "0"+.[1] else .[1] end)" | parse_date) elif (.startDate | type) == "string" and (.startDate | split("/") | length) == 3 then (.startDate | split("/") | "\(.[2])-\(if (.[0]|length)==1 then "0"+.[0] else .[0] end)-\(if (.[1]|length)==1 then "0"+.[1] else .[1] end)" | parse_date) else ((.date // .startDate) | parse_date) end) as $d | {
+  title: ((.title // "") | strip_tags),
+  url: ("https://www.nsf.gov/awardsearch/showAward?AWD_ID=" + (.id // "" | tostring)),
+  snippet: (("NSF #" + (.id // "" | tostring) + " · " + (.awardeeName // "") + (if .fundsObligatedAmt != null then (" · $" + (.fundsObligatedAmt | tostring)) else "" end)) | collapse_ws),
+  date: $d,
+  dateSource: (if $d != null then "api" else null end)
+}'''
+
+[op.award]
+summary = "Fetch a single NSF award record by award ID."
+method = "GET"
+url = "https://api.nsf.gov/services/v1/awards/{id}.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "2621509" }, min_results = 1, fixture = "fixtures/w5b/nsf_awards/award/default.json" }
+
+[op.award.params]
+id = { type = "string", required = true, in = "path", doc = "7-digit NSF award ID (e.g. 2621509)" }
+
+[op.award.map]
+items = ".response.award[]"
+error = 'if type == "object" and (.response.serviceNotification // null) != null then (.response.serviceNotification | arr | map(.notificationMessage // tostring) | join("; ")) else null end'
+record = "@ref:op.search.map.record"

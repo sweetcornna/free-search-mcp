@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "alphaxiv_mcp",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.alphaxiv.org/search/v2/paper/fast?includePrivate=false&q=attention+is+all+you+need",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ],
+          [
+            "cache-control",
+            "no-store"
+          ]
+        ],
+        "bodyText": "[{\"link\":\"/abs/1706.03762\",\"paperId\":\"1706.03762\",\"title\":\"Attention Is All You Need\",\"snippet\":\"Jun 13, 2017 • The dominant sequence transduction models are based on complex recurrent or\\nconvolutional neural networks in an encoder-decoder configuration. The best\\nperforming models also connect the encoder and d\"},{\"link\":\"/abs/2512.11254\",\"paperId\":\"2512.11254\",\"title\":\"FAIR: Focused Attention Is All You Need for Generative Recommendation\",\"snippet\":\"Dec 12, 2025 • Recently, transformer-based generative recommendation has garnered significant attention for user behavior modeling. However, it often requires discretizing items into multi-code representations (e.g.\"},{\"link\":\"/abs/2604.07092\",\"paperId\":\"2604.07092\",\"title\":\"Location Is All You Need: Continuous Spatiotemporal Neural Representations of Earth Observation Data\",\"snippet\":\"Apr 8, 2026 • In this work, we present LIANet (Location Is All You Need Network), a coordinate-based neural representation that models multi-temporal spaceborne Earth observation (EO) data for a given region of int\"},{\"link\":\"/abs/2608.26142\",\"paperId\":\"2608.26142\",\"title\":\"Position Is All You Need: A Free Lunch Token Compression Strategy for MLLM-based Referring Expression Segmentation\",\"snippet\":\"Jun 26, 2026 • Referring Expression Segmentation (RES) aims to generate pixel-wise segmentation masks from complex and implicit textual queries. While recent advances in Multimodal Large Language Models (MLLMs) have\"},{\"link\":\"/abs/2606.02332\",\"paperId\":\"2606.02332\",\"title\":\"Forget Attention: Importance-Aware Attention Is All You Need\",\"snippet\":\"Jun 1, 2026 • Attention retrieves content precisely, but its scores depend only on query--key products, leaving order and recency to positional encodings. Conversely, state-space models (SSMs) such as Mamba-3 track\"},{\"link\":\"/abs/2501.06425\",\"paperId\":\"2501.06425\",\"title\":\"Tensor Product Attention Is All You Need\",\"snippet\":\"Jan 11, 2025 • Scaling language models to handle longer input sequences typically necessitates large key-value (KV) caches, resulting in substantial memory overhead during inference. In this paper, we propose Tensor\"},{\"link\":\"/abs/2102.05095\",\"paperId\":\"2102.05095\",\"title\":\"Is Space-Time Attention All You Need for Video Understanding?\",\"snippet\":\"Feb 9, 2021 • We present a convolution-free approach to video classification built\\nexclusively on self-attention over space and time. Our method, named\\n\\\"TimeSformer,\\\" adapts the standard Transformer architecture to\"},{\"link\":\"/abs/1802.06070\",\"paperId\":\"1802.06070\",\"title\":\"Diversity is All You Need: Learning Skills without a Reward Function\",\"snippet\":\"Feb 20, 2018 • Intelligent creatures can explore their environments and learn useful skills\\nwithout supervision. In this paper, we propose DIAYN ('Diversity is All You\\nNeed'), a method for learning useful skills wit\"}]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

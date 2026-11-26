@@ -1,0 +1,35 @@
+[package]
+name = "fsm-core"
+description = "Core contracts: wire/result types, Source/NetClient/facade traits, Config, SCOPES, manifest schema, text/url/date utilities."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+async-trait.workspace = true
+bytes.workspace = true
+tokio.workspace = true
+tokio-util.workspace = true
+schemars.workspace = true
+regex.workspace = true
+url.workspace = true
+percent-encoding.workspace = true
+jiff.workspace = true
+toml.workspace = true
+base64.workspace = true
+unicode-normalization.workspace = true
+sha2.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+proptest.workspace = true
+postcard.workspace = true
+tokio = { workspace = true, features = ["test-util"] }

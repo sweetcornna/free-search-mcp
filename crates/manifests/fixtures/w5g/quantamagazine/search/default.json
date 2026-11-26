@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "quantamagazine",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:13:17Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.quantamagazine.org/wp-json/wp/v2/search?search=quantum&per_page=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ],
+          [
+            "last-modified",
+            "Wed, 25 Nov 2026 11:51:01 GMT"
+          ]
+        ],
+        "bodyText": "[{\"id\":168674,\"title\":\"A Strange Quantum Theorem Has Killed Einstein\\u2019s Reality\",\"url\":\"https:\\/\\/www.quantamagazine.org\\/a-strange-quantum-theorem-has-killed-einsteins-reality-20261106\\/\",\"type\":\"post\",\"subtype\":\"post\",\"_links\":{\"self\":[{\"embeddable\":true,\"href\":\"https:\\/\\/www.quantamagazine.org\\/wp-json\\/wp\\/v2\\/posts\\/168674\",\"targetHints\":{\"allow\":[\"GET\"]}}],\"about\":[{\"href\":\"https:\\/\\/www.quantamagazine.org\\/wp-json\\/wp\\/v2\\/types\\/post\"}],\"collection\":[{\"href\":\"https:\\/\\/www.quantamagazine.org\\/wp-json\\/wp\\/v2\\/search\"}]}},{\"id\":167361,\"title\":\"Biology Might Not Be Quantum, but Its Math Is Quantumlike\",\"url\":\"https:\\/\\/www.quantamagazine.org\\/biology-might-not-be-quantum-but-its-math-is-quantumlike-20260923\\/\",\"type\":\"post\",\"subtype\":\"post\",\"_links\":{\"self\":[{\"embeddable\":true,\"href\":\"https:\\/\\/www.quantamagazine.org\\/wp-json\\/wp\\/v2\\/posts\\/167361\",\"targetHints\":{\"allow\":[\"GET\"]}}],\"about\":[{\"href\":\"https:\\/\\/www.quantamagazine.org\\/wp-json\\/wp\\/v2\\/types\\/post\"}],\"collection\":[{\"href\":\"https:\\/\\/www.quantamagazine.org\\/wp-json\\/wp\\/v2\\/search\"}]}},{\"id\":167125,\"title\":\"Where Does the Quantum World End and Ours Begin?\",\"url\":\"https:\\/\\/www.quantamagazine.org\\/where-does-the-quantum-world-end-and-ours-begin-20260917\\/\",\"type\":\"post\",\"subtype\":\"post\",\"_links\":{\"self\":[{\"embeddable\":true,\"href\":\"https:\\/\\/www.quantamagazine.org\\/wp-json\\/wp\\/v2\\/posts\\/167125\",\"targetHints\":{\"allow\":[\"GET\"]}}],\"about\":[{\"href\":\"https:\\/\\/www.quantamagazine.org\\/wp-json\\/wp\\/v2\\/types\\/post\"}],\"collection\":[{\"href\":\"https:\\/\\/www.quantamagazine.org\\/wp-json\\/wp\\/v2\\/search\"}]}}]\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

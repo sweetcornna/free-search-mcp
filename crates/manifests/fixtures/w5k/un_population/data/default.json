@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "un_population",
+  "op": "data",
+  "recordedAt": "2026-11-25T14:20:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://population.un.org/dataportalapi/api/v1/data/indicators/49/locations/900/start/2020/end/2022?format=json&pageNumber=1&pageSize=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"pageNumber\":1,\"pageSize\":3,\"previousPage\":null,\"nextPage\":null,\"pages\":1,\"total\":3,\"data\":[{\"locationId\":900,\"location\":\"World\",\"iso3\":null,\"iso2\":null,\"indicatorId\":49,\"indicator\":\"Total population by sex\",\"indicatorDisplayName\":\"Total population\",\"sexId\":3,\"sex\":\"Both sexes\",\"ageId\":188,\"ageLabel\":\"Total\",\"variantId\":4,\"variant\":\"Median\",\"timeId\":71,\"timeLabel\":\"2020\",\"value\":7887001292,\"unit\":\"persons\"},{\"locationId\":900,\"location\":\"World\",\"iso3\":null,\"iso2\":null,\"indicatorId\":49,\"indicator\":\"Total population by sex\",\"indicatorDisplayName\":\"Total population\",\"sexId\":3,\"sex\":\"Both sexes\",\"ageId\":188,\"ageLabel\":\"Total\",\"variantId\":4,\"variant\":\"Median\",\"timeId\":72,\"timeLabel\":\"2021\",\"value\":7954448391,\"unit\":\"persons\"},{\"locationId\":900,\"location\":\"World\",\"iso3\":null,\"iso2\":null,\"indicatorId\":49,\"indicator\":\"Total population by sex\",\"indicatorDisplayName\":\"Total population\",\"sexId\":3,\"sex\":\"Both sexes\",\"ageId\":188,\"ageLabel\":\"Total\",\"variantId\":4,\"variant\":\"Median\",\"timeId\":73,\"timeLabel\":\"2022\",\"value\":8021407192,\"unit\":\"persons\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

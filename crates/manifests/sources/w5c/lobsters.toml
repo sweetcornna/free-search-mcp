@@ -1,0 +1,128 @@
+id = "lobsters"
+name = "Lobsters"
+summary = "Computing-focused link aggregation community (lobste.rs) with SSR search, hottest feed, and story lookup."
+aliases = ["lobste.rs", "lobsters tech"]
+home_url = "https://lobste.rs"
+tier = 1
+scopes = ["forum", "code"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 2, concurrency = 1, timeout_ms = 8000, cache_ttl_s = 3600 }
+
+[op.search]
+summary = "Search Lobsters stories via SSR HTML search."
+method = "GET"
+url = "https://lobste.rs/search"
+headers = { Accept = "text/html" }
+response = "html"
+returns = "records"
+const_query = { what = "stories" }
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "rust" }, min_results = 3, fixture = "fixtures/w5c/lobsters/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Search query" }
+order = { type = "string", default = "relevance", enum = ["relevance", "newest", "score"], to = "order", doc = "Sort order" }
+page = { type = "int", min = 1, to = "page", doc = "1-based page number" }
+
+[op.search.html]
+items_css = "li.story"
+fields = { title = "h2.link a.u-url | text", url = "h2.link a.u-url | attr(href)", score = "div.voters a.upvoter | text", author = "a.u-author | text", domain = "a.domain | text", date = "time | attr(datetime)", tags = "ul.tags a.tag | texts", commentCount = "a.mobile_comments span | text", commentsUrl = "span.comments_label a | attr(href)" }
+wall_markers = ["Too Many Requests", "Access Denied"]
+
+[op.search.map]
+items = ".[]"
+record = '''{
+  title: ((.title // "") | collapse_ws),
+  url: ((.url // "") | resolve_url("https://lobste.rs") // ""),
+  score: (.score | to_int),
+  commentCount: (.commentCount | to_int),
+  author: .author,
+  domain: .domain,
+  tags: (.tags // []),
+  date: (.date | parse_date),
+  commentsUrl: ((.commentsUrl // "") | resolve_url("https://lobste.rs"))
+}'''
+hit = '''
+(.date | parse_date) as $dt |
+(.commentCount | to_int) as $cc |
+{
+  title: ((.title // "") | collapse_ws),
+  url: ((.url // "") | resolve_url("https://lobste.rs") // ""),
+  snippet: ([
+    (if (.score | type) == "string" and (.score | length) > 0 then "\(.score) points" else empty end),
+    (if $cc != null and $cc > 0 then "\($cc) comments" else empty end),
+    (if (.author | type) == "string" and (.author | length) > 0 then "via \(.author)" else empty end),
+    (if (.domain | type) == "string" and (.domain | length) > 0 then .domain else empty end),
+    (if ((.tags // []) | length) > 0 then ([(.tags // [])[] | "[\(.)]"] | join(" ")) else empty end),
+    (if (.commentsUrl | type) == "string" and (.commentsUrl | length) > 0 then "discussion: \((.commentsUrl | resolve_url("https://lobste.rs")) // .commentsUrl)" else empty end)
+  ] | join(" · ")),
+  date: $dt,
+  dateSource: (if $dt != null then "html" else null end)
+}'''
+
+[op.hottest]
+summary = "Fetch current hottest stories from Lobsters JSON feed."
+method = "GET"
+url = "https://lobste.rs/hottest.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = {}, min_results = 5, fixture = "fixtures/w5c/lobsters/hottest/default.json" }
+
+[op.hottest.map]
+items = ".[]"
+record = '''{
+  shortId: .short_id,
+  title: (.title // ""),
+  url: (if (.url | type) == "string" and (.url | length) > 0 then .url else .comments_url end),
+  commentsUrl: .comments_url,
+  score: .score,
+  commentCount: .comment_count,
+  submitter: .submitter_user,
+  tags: (.tags // []),
+  createdAt: .created_at
+}'''
+hit = '''
+(.created_at | parse_date) as $dt |
+{
+  title: (.title // ""),
+  url: (if (.url | type) == "string" and (.url | length) > 0 then .url else (.comments_url // "") end),
+  snippet: ([
+    (if (.score | type) == "number" then "\(.score) points" else empty end),
+    (if (.comment_count | type) == "number" then "\(.comment_count) comments" else empty end),
+    (if (.submitter_user | type) == "string" then "via \(.submitter_user)" else empty end),
+    (if ((.tags // []) | length) > 0 then ([(.tags // [])[] | "[\(.)]"] | join(" ")) else empty end)
+  ] | join(" · ")),
+  date: $dt,
+  dateSource: (if $dt != null then "api" else null end)
+}'''
+
+[op.story]
+summary = "Fetch a single Lobsters story and its comments by short ID."
+method = "GET"
+url = "https://lobste.rs/s/{id}.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "em9zdb" }, min_results = 1, fixture = "fixtures/w5c/lobsters/story/default.json" }
+
+[op.story.params]
+id = { type = "string", required = true, in = "path", doc = "Lobsters short story ID e.g. em9zdb" }
+
+[op.story.map]
+items = "."
+record = '''{
+  shortId: .short_id,
+  title: (.title // ""),
+  url: (if (.url | type) == "string" and (.url | length) > 0 then .url else .comments_url end),
+  commentsUrl: .comments_url,
+  score: .score,
+  commentCount: .comment_count,
+  submitter: .submitter_user,
+  tags: (.tags // []),
+  createdAt: .created_at,
+  description: (.description_plain // ""),
+  comments: [(.comments // [])[0:10][] | { shortId: .short_id, user: .commenting_user, score, createdAt: .created_at, comment: (.comment_plain // "") }]
+}'''

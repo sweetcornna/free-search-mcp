@@ -1,0 +1,107 @@
+id = "doaj"
+name = "DOAJ (Directory of Open Access Journals)"
+summary = "Community-curated directory of 10M+ open-access scholarly articles and 20k+ vetted open-access journals."
+aliases = ["doaj.org", "directory of open access journals"]
+home_url = "https://doaj.org"
+tier = 1
+scopes = ["academic", "academic.openaccess"]
+caps = ["search", "lookup", "venue", "integrity"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 21600, host_bucket = "doaj.org" }
+
+[op.search]
+summary = "Search open-access articles indexed in DOAJ."
+method = "GET"
+url = "https://doaj.org/api/search/articles/{query}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+query_jaq = '''[if ($p.sort // null) == null and $cfg.freshness != null then ["sort", "created_date:desc"] else empty end]'''
+probe = { params = { query = "machine learning", limit = 3 }, min_results = 2, fixture = "fixtures/seed/doaj/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, in = "path", encode = "segment", doc = "DOAJ article search query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "pageSize", doc = "Maximum articles to return" }
+page = { type = "int", min = 1, to = "page", doc = "1-based page number" }
+sort = { type = "string", to = "sort", doc = "Optional sort clause, e.g. created_date:desc" }
+
+[op.search.map]
+items = "(.results // [])[] | select((.bibjson.title // \"\") != \"\")"
+total = ".total // null"
+error = "if .error then .error else null end"
+work = '''(
+  (.bibjson // {}) as $b |
+  ((([($b.identifier // [])[] | select((.type // "" | ascii_downcase) == "doi") | .id][0]) // null) | doi_norm) as $doi |
+  (([($b.link // [])[] | select(.type == "fulltext" and ((.url // "") | startswith("http"))) | .url][0]) // null) as $ft |
+  ($b.year | to_int) as $yr |
+  ($b.month | to_int) as $mo |
+  (
+    if $yr == null then null
+    elif $mo != null and $mo >= 1 and $mo <= 12 then
+      (($yr | tostring) + "-" + (if $mo < 10 then ("0" + ($mo | tostring)) else ($mo | tostring) end))
+    else ($yr | tostring)
+    end
+  ) as $pub_date |
+  ($ft // (if $doi != null then ("https://doi.org/" + $doi) elif (.id // "") != "" then ("https://doaj.org/article/" + .id) else "" end)) as $best_url |
+  {
+    title: (($b.title // "") | strip_tags | collapse_ws),
+    authors: [($b.author // [])[] | {
+      name: ((.name // "") | collapse_ws),
+      orcid: (if (.orcid_id // "") != "" then (.orcid_id | sub("^https?://orcid\\.org/"; "")) else null end),
+      affiliation: ((.affiliation // null) | if type == "string" then collapse_ws else null end)
+    } | select(.name != "")],
+    year: $yr,
+    publishedDate: $pub_date,
+    venue: ($b.journal.title // null),
+    workType: "article",
+    ids: {
+      doi: $doi
+    },
+    abstractText: (if ($b.abstract // "") != "" then ($b.abstract | strip_tags | collapse_ws) else null end),
+    oa: {
+      status: "gold",
+      url: (if $best_url != "" then $best_url else null end),
+      pdfUrl: (if ($ft // "") | test("\\.pdf($|\\?)"; "i") then $ft else null end),
+      license: ($b.license[0]?.type // $b.journal.license[0]?.type // null)
+    },
+    retracted: false,
+    versions: [],
+    url: $best_url,
+    sources: ["doaj"]
+  }
+)'''
+
+[op.journals]
+summary = "Search DOAJ-vetted open-access journals by ISSN or title (returns M13 VenueProfile records)."
+method = "GET"
+url = "https://doaj.org/api/search/journals/{query}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "issn:1932-6203", limit = 3 }, min_results = 1, fixture = "fixtures/seed/doaj/journals/default.json" }
+
+[op.journals.params]
+query = { type = "string", required = true, in = "path", encode = "segment", doc = "Journal search query or issn:<ISSN>, e.g. issn:1932-6203" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "pageSize", doc = "Maximum journals to return" }
+page = { type = "int", min = 1, to = "page", doc = "1-based page number" }
+
+[op.journals.map]
+items = "(.results // [])[] | select((.bibjson.title // \"\") != \"\")"
+total = ".total // null"
+error = "if .error then .error else null end"
+record = '''(
+  (.bibjson // {}) as $b |
+  {
+    name: (($b.title // "") | collapse_ws),
+    issn: ([$b.pissn, $b.eissn] | map(select(type == "string" and length > 0))),
+    publisher: ($b.publisher.name // null),
+    doajVetted: true,
+    homepage: ($b.ref.journal // null),
+    hasApc: ($b.apc.has_apc // null),
+    subjects: [($b.subject // [])[] | .term | select(type == "string" and length > 0)],
+    sources: ["doaj"]
+  }
+)'''

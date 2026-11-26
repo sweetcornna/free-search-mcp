@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "source": "ntu_ir_tw",
+  "op": "identify",
+  "recordedAt": "2026-11-25T12:44:32Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://scholars.lib.ntu.edu.tw/server/oai/request?verb=Identify",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-language",
+            "en,zh"
+          ],
+          [
+            "content-type",
+            "text/xml;charset=UTF-8"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><?xml-stylesheet type=\"text/xsl\" href=\"static/style.xsl\"?><OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd\"><responseDate>2026-11-25T12:44:32Z</responseDate><request verb=\"Identify\">https://scholars.lib.ntu.edu.tw/server/oai/request</request><Identify><repositoryName>國立臺灣大學圖書館 NTU SCHOLARS 臺大學術典藏</repositoryName><baseURL>https://scholars.lib.ntu.edu.tw/server/oai/request</baseURL><protocolVersion>2.0</protocolVersion><adminEmail>libsys6@gmail.com</adminEmail><earliestDatestamp>1996-07-31T16:00:00Z</earliestDatestamp><deletedRecord>transient</deletedRecord><granularity>YYYY-MM-DDThh:mm:ssZ</granularity><description><oai-identifier xmlns=\"http://www.openarchives.org/OAI/2.0/oai-identifier\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/oai-identifier http://www.openarchives.org/OAI/2.0/oai-identifier.xsd\">\n<scheme>oai</scheme>\n<repositoryIdentifier>scholars.lib.ntu.edu.tw</repositoryIdentifier>\n<delimiter>:</delimiter>\n<sampleIdentifier>oai:scholars.lib.ntu.edu.tw:123456789/1234</sampleIdentifier>\n</oai-identifier></description><description><Service xmlns=\"https://www.openaire.eu/cerif-profile/1.1/\" id=\"123456789/0\">\n\t<Compatibility xmlns=\"https://www.openaire.eu/cerif-profile/vocab/OpenAIRE_Service_Compatibility\">https://www.openaire.eu/cerif-profile/vocab/OpenAIRE_Service_Compatibility#1.1</Compatibility>\n\t<Name xml:lang=\"en\">國立臺灣大學圖書館 NTU SCHOLARS 臺大學術典藏</Name>\n\t<Description xml:lang=\"en\">An example CRIS that complies with the OpenAIRE Guidelines for CRIS Managers v.1.1.</Description>\n\t<WebsiteURL>https://scholars.lib.ntu.edu.tw</WebsiteURL>\n\t<OAIPMHBaseURL>https://scholars.lib.ntu.edu.tw/server/oai/openairecris</OAIPMHBaseURL>\n</Service></description></Identify></OAI-PMH>",
+        "bodyB64": null
+      }
+    }
+  ]
+}

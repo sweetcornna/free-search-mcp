@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "dbpedia_sparql",
+  "op": "query",
+  "recordedAt": "2026-11-25T12:18:25Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://dbpedia.org/sparql?query=SELECT+%3Fs+%3Flabel+WHERE+%7B+%3Fs+a+%3Chttp%3A%2F%2Fdbpedia.org%2Fontology%2FCountry%3E+%3B+%3Chttp%3A%2F%2Fwww.w3.org%2F2000%2F01%2Frdf-schema%23label%3E+%3Flabel+.+FILTER%28LANG%28%3Flabel%29+%3D+%22en%22%29+%7D+LIMIT+3",
+        "headersSubset": {
+          "accept": "application/sparql-results+json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/sparql-results+json"
+          ],
+          [
+            "cache-control",
+            "max-age=2592000"
+          ]
+        ],
+        "bodyText": "\n{ \"head\": { \"link\": [], \"vars\": [\"s\", \"label\"] },\n  \"results\": { \"distinct\": false, \"ordered\": true, \"bindings\": [\n    { \"s\": { \"type\": \"uri\", \"value\": \"http://dbpedia.org/resource/Independent_State_of_Raqqa\" }\t, \"label\": { \"type\": \"literal\", \"xml:lang\": \"en\", \"value\": \"Independent State of Raqqa\" }},\n    { \"s\": { \"type\": \"uri\", \"value\": \"http://dbpedia.org/resource/Independent_State_of_Raqqa\" }\t, \"label\": { \"type\": \"literal\", \"xml:lang\": \"en\", \"value\": \"Independent State of Raqqa\" }},\n    { \"s\": { \"type\": \"uri\", \"value\": \"http://dbpedia.org/resource/Pappenheim_(state)\" }\t, \"label\": { \"type\": \"literal\", \"xml:lang\": \"en\", \"value\": \"Pappenheim (state)\" }} ] } }",
+        "bodyB64": null
+      }
+    }
+  ]
+}

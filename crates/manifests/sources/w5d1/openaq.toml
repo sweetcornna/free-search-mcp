@@ -1,0 +1,102 @@
+id = "openaq"
+name = "OpenAQ v3 Air Quality"
+summary = "Global air quality monitoring stations and latest PM2.5, PM10, NO2, and O3 sensor telemetry."
+aliases = ["air quality", "pm25", "aqi", "openaq v3"]
+home_url = "https://openaq.org"
+tier = 3
+scopes = ["dataset", "reference.geo"]
+caps = ["lookup", "dataset"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 1800 }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_OPENAQ_API_KEY"
+in = "header"
+name = "X-API-Key"
+route_requires_key = true
+
+[op.locations]
+summary = "List air-quality monitoring locations filtered by country ISO code, coordinates, or parameter ID."
+method = "GET"
+url = "https://api.openaq.org/v3/locations"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { iso = "US", limit = 3 }, min_results = 2, fixture = "fixtures/w5d1/openaq/locations/default.json" }
+
+[op.locations.params]
+iso = { type = "string", to = "iso", doc = "ISO-2 country code e.g. US, DE, IN" }
+coordinates = { type = "string", to = "coordinates", doc = "WGS84 lat,lon pair e.g. 38.9072,-77.0369" }
+radius = { type = "int", min = 1, max = 25000, to = "radius", doc = "Search radius in meters (requires coordinates)" }
+parameters_id = { type = "int", to = "parameters_id", doc = "Pollutant parameter ID e.g. 2 for pm25, 1 for pm10" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Max locations" }
+page = { type = "int", min = 1, to = "page", doc = "Page number" }
+
+[op.locations.map]
+items = "(.results // [])[]"
+total = "(.meta.found | to_int)"
+error = 'if (.message // "") != "" then .message elif (.detail? | type == "array" and length > 0) then (.detail[0].msg // (.detail[0] | tostring)) elif (.detail? | type == "string" and length > 0) then .detail else null end'
+record = '''{
+  id: .id,
+  name: .name,
+  locality: (.locality // null),
+  countryCode: (.country.code // null),
+  countryName: (.country.name // null),
+  provider: (.provider.name // null),
+  isMonitor: .isMonitor,
+  lat: (.coordinates.latitude // null),
+  lon: (.coordinates.longitude // null),
+  parameters: [(.sensors // [])[] | {sensorId: .id, name: .parameter.name, displayName: .parameter.displayName, units: .parameter.units}],
+  lastUpdated: (.datetimeLast.utc // null),
+  url: ("https://explore.openaq.org/locations/" + (.id | tostring))
+}'''
+
+[op.location]
+summary = "Fetch full metadata and sensor list for a single OpenAQ v3 location by numeric ID."
+method = "GET"
+url = "https://api.openaq.org/v3/locations/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = 2178 }, min_results = 1, fixture = "fixtures/w5d1/openaq/location/default.json" }
+
+[op.location.params]
+id = { type = "int", required = true, in = "path", doc = "OpenAQ location ID e.g. 2178" }
+
+[op.location.map]
+items = "(.results // [])[]"
+error = "@ref:op.locations.map.error"
+record = "@ref:op.locations.map.record"
+
+[op.latest]
+summary = "Fetch the latest air-quality measurements across all sensors at an OpenAQ v3 location."
+method = "GET"
+url = "https://api.openaq.org/v3/locations/{id}/latest"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { id = 2178, limit = 5 }, min_results = 2, fixture = "fixtures/w5d1/openaq/latest/default.json" }
+
+[op.latest.params]
+id = { type = "int", required = true, in = "path", doc = "OpenAQ location ID e.g. 2178" }
+limit = { type = "int", default = 20, min = 1, max = 100, to = "limit", doc = "Max sensor readings" }
+page = { type = "int", min = 1, to = "page", doc = "Page number" }
+datetime_min = { type = "string", to = "datetime_min", doc = "Minimum ISO datetime e.g. 2026-11-01" }
+
+[op.latest.map]
+items = "(.results // [])[]"
+total = "(.meta.found | to_int)"
+error = "@ref:op.locations.map.error"
+record = '''{
+  locationsId: .locationsId,
+  sensorsId: .sensorsId,
+  value: .value,
+  datetimeUtc: (.datetime.utc // null),
+  datetimeLocal: (.datetime.local // null),
+  lat: (.coordinates.latitude // null),
+  lon: (.coordinates.longitude // null)
+}'''

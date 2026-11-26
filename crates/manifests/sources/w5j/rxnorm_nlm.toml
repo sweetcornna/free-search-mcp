@@ -1,0 +1,90 @@
+id = "rxnorm_nlm"
+name = "NLM RxNorm Clinical Drug API"
+summary = "US National Library of Medicine normalized clinical drug nomenclature, RxCUI identifiers, ingredients, and dose forms."
+aliases = ["rxnorm", "rxnav", "rxcui", "nlm drugs"]
+home_url = "https://lhncbc.nlm.nih.gov/RxNav/"
+tier = 1
+scopes = ["academic.biomed", "reference"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 10.0, burst = 15, concurrency = 4, timeout_ms = 6000, cache_ttl_s = 86400, host_bucket = "rxnav.nlm.nih.gov" }
+
+[op.search]
+summary = "Search RxNorm clinical drugs and branded products by ingredient or drug name."
+method = "GET"
+url = "https://rxnav.nlm.nih.gov/REST/drugs.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { query = "metformin" }, min_results = 3, fixture = "fixtures/w5j/rxnorm_nlm/search/default.json" }
+examples = ["source.call('rxnorm_nlm.search', { query: 'metformin' })"]
+
+[op.search.params]
+query = { type = "string", required = true, to = "name", doc = "Drug ingredient, generic, or brand name" }
+
+[op.search.map]
+items = "(.drugGroup.conceptGroup // [])[] | (.conceptProperties // [])[]"
+record = '''{
+  rxcui: (.rxcui // ""),
+  name: (.name // ""),
+  synonym: (if (.synonym // "") != "" then .synonym else null end),
+  tty: (.tty // null),
+  language: (.language // null),
+  umlscui: (if (.umlscui // "") != "" then .umlscui else null end),
+  url: ("https://mor.nlm.nih.gov/RxNav/search?searchBy=RXCUI&searchTerm=" + (.rxcui // ""))
+}'''
+hit = '''{
+  title: (.name // ""),
+  url: ("https://mor.nlm.nih.gov/RxNav/search?searchBy=RXCUI&searchTerm=" + (.rxcui // "")),
+  snippet: ([
+    (if (.rxcui // "") != "" then "RxCUI: \(.rxcui)" else empty end),
+    (if (.tty // "") != "" then "TTY: \(.tty)" else empty end),
+    (if (.synonym // "") != "" then .synonym else empty end)
+  ] | join(" · ")),
+  date: null,
+  dateSource: "api"
+}'''
+
+[op.approximate]
+summary = "Fuzzy approximate-term lookup returning ranked candidate RxCUIs for a drug string."
+method = "GET"
+url = "https://rxnav.nlm.nih.gov/REST/approximateTerm.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { query = "metformin", limit = 3 }, min_results = 1, fixture = "fixtures/w5j/rxnorm_nlm/approximate/default.json" }
+examples = ["source.call('rxnorm_nlm.approximate', { query: 'metformin', limit: 5 })"]
+
+[op.approximate.params]
+query = { type = "string", required = true, to = "term", doc = "Approximate drug name or phrase" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "maxEntries", doc = "Maximum ranked candidate groups" }
+
+[op.approximate.map]
+items = "(.approximateGroup.candidate // [])[]"
+record = '''{
+  rxcui: (.rxcui // ""),
+  rxaui: (.rxaui // null),
+  name: (.name // null),
+  source: (.source // null),
+  rank: (.rank | to_int),
+  score: (.score | to_num),
+  url: ("https://mor.nlm.nih.gov/RxNav/search?searchBy=RXCUI&searchTerm=" + (.rxcui // ""))
+}'''
+
+[op.properties]
+summary = "Fetch canonical RxNorm concept properties for an exact RxCUI identifier."
+method = "GET"
+url = "https://rxnav.nlm.nih.gov/REST/rxcui/{rxcui}/properties.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { rxcui = "6809" }, min_results = 1, fixture = "fixtures/w5j/rxnorm_nlm/properties/default.json" }
+examples = ["source.call('rxnorm_nlm.properties', { rxcui: '6809' })"]
+
+[op.properties.params]
+rxcui = { type = "string", required = true, in = "path", doc = "RxNorm concept unique identifier (e.g. 6809)" }
+
+[op.properties.map]
+items = ".properties"
+record = "@ref:op.search.map.record"

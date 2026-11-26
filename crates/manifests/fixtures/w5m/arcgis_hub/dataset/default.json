@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "arcgis_hub",
+  "op": "dataset",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://hub.arcgis.com/api/v3/datasets/01cc44421fc04f609b31100ca10f9c97",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"data\":{\"id\":\"01cc44421fc04f609b31100ca10f9c97\",\"type\":\"dataset\",\"attributes\":{\"errors\":[],\"access\":\"public\",\"additionalResources\":[],\"collection\":[\"Document\"],\"categories\":[\"Transportation\",\"Transit\"],\"commentsEnabled\":true,\"composeStatus\":{\"lastSuccessAt\":1746199074634,\"retries\":0,\"pass\":true,\"lastRetriedAt\":1746199074635},\"composedAt\":1746199074634,\"content\":\"Image\",\"created\":1746198874000,\"description\":\"<span style='font-family:&quot;Avenir Next W01&quot;, &quot;Avenir Next W00&quot;, &quot;Avenir Next&quot;, Avenir, &quot;Helvetica Neue&quot;, sans-serif; font-size:16px;'>This is the current Transit logo for application development.</span>\",\"downloadable\":true,\"enrichCoverage\":\"unknown\",\"enrichQuality\":69,\"extent\":null,\"groupIds\":[],\"hasApi\":false,\"hubType\":\"Image\",\"id\":\"01cc44421fc04f609b31100ca10f9c97\",\"itemId\":\"01cc44421fc04f609b31100ca10f9c97\",\"itemModified\":1746199074000,\"itemExtent\":[],\"layer\":null,\"layers\":null,\"licenseInfo\":\"<span style='font-family:&quot;Avenir Next W01&quot;, &quot;Avenir Next W00&quot;, &quot;Avenir Next&quot;, Avenir, &quot;Helvetica Neue&quot;, sans-serif; font-size:16px;'>The data is provided &quot;as is&quot;. Harris County makes no warranties, express or implied, including without limitation, any implied warranties or merchantability and/or fitness for a particular purpose, regarding the accuracy, completeness, value, quality, validity, merchantability, suitability, and condition, of the data. User's of the data are hereby notified that current public primary information sources should be consulted for verification of the data and information contained herein. Use of Harris County System data without consulting official public records for verification is done exclusively at the risk of the party making such use.</span>\",\"metadata\":null,\"modified\":1746199074000,\"modifiedProvenance\":\"item.modified\",\"name\":\"Transit Logo\",\"openData\":false,\"orgId\":\"GtNPpPrhcOMhYgh4\",\"orgName\":\"Harris County CSD\",\"organization\":\"Harris County CSD\",\"orgExtent\":{\"ymin\":3409340.18587935,\"xmin\":-10705429.42874719,\"ymax\":3537874.4502969077,\"xmax\":-10520882.69412484,\"spatialReference\":{\"wkid\":102100}},\"orgContactEmail\":\"mailto:paul.suckow@harriscountytx.gov&subject=hchcd_arcgis_online\",\"owner\":\"CSD_Admin\",\"region\":\"US\",\"searchDescription\":\"This is the current Transit logo for application development.\",\"server\":null,\"size\":19430,\"slug\":\"HCCSD::transit-logo\",\"source\":\"Harris County CSD\",\"sourceProvenance\":\"org.name\",\"structuredLicense\":{\"text\":\"The data is provided \\\"as is\\\". Harris County makes no warranties, express or implied, including without limitation, any implied warranties or merchantability and/or fitness for a particular purpose, regarding the accuracy, completeness, value, quality, validity, merchantability, suitability, and condition, of the data. User's of the data are hereby notified that current public primary information sources should be consulted for verification of the data and information contained herein. Use of Harris County System data without consulting official public records for verification is done exclusively at the risk of the party making such use.\",\"type\":\"custom\"},\"license\":\"custom\",\"tags\":[\"Harris County Transit\",\"Transit\",\"Harris County Housing and Community Development\",\"HCHCD\",\"HCT\",\"logo\"],\"thumbnail\":null,\"thumbnailUrl\":null,\"type\":\"Image\",\"typeCategories\":[\"Document\"],\"typeKeywords\":[\"Data\",\"gif\",\"Image\"],\"validExtent\":true,\"boundary\":null,\"snippet\":\"This is the current Transit logo.\",\"culture\":\"en-us\"},\"links\":{\"self\":\"https://hub.arcgis.com/api/v3/datasets/01cc44421fc04f609b31100ca10f9c97\",\"rawEs\":\"https://hub.arcgis.com/api/es/datasets/01cc44421fc04f609b31100ca10f9c97\",\"itemPage\":\"https://www.arcgis.com/home/item.html?id=01cc44421fc04f609b31100ca10f9c97\",\"esriRest\":\"https://www.arcgis.com/sharing/content/items/01cc44421fc04f609b31100ca10f9c97?f=json\"},\"meta\":{\"highlights\":{},\"matchedFields\":[]}},\"meta\":{\"apiRoot\":\"https://hub.arcgis.com/api/v3/\",\"resourceRoot\":\"https://hub.arcgis.com/api/v3/datasets\",\"request\":\"https://hub.arcgis.com/api/v3/datasets/01cc44421fc04f609b31100ca10f9c97\"}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

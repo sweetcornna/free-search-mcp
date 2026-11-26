@@ -1,0 +1,83 @@
+protocol = "mediawiki"
+
+[[instance]]
+id = "wiktionary"
+name = "Wiktionary (English)"
+summary = "Multilingual lexical dictionary with definitions, etymology, IPA pronunciation, and translations."
+aliases = ["wiktionary.org", "en.wiktionary", "etymology wiki"]
+base_url = "https://en.wiktionary.org/w/api.php"
+scopes = ["reference"]
+caps = ["search", "lookup"]
+tier = 1
+limits = { rps = 2.0, burst = 5, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 21600, host_bucket = "wikimedia.org" }
+probe = { op = "search", params = { query = "algorithm", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "wikisource"
+name = "Wikisource (English)"
+summary = "Open library of public-domain primary historical, legal, literary, and scientific source texts."
+aliases = ["wikisource.org", "en.wikisource", "primary texts"]
+base_url = "https://en.wikisource.org/w/api.php"
+scopes = ["reference", "academic.humanities"]
+caps = ["search", "lookup", "fulltext"]
+tier = 1
+limits = { rps = 2.0, burst = 5, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 21600, host_bucket = "wikimedia.org" }
+probe = { op = "search", params = { query = "constitution", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "wikibooks"
+name = "Wikibooks (English)"
+summary = "Open-content textbooks, annotated technical manuals, and educational study guides."
+aliases = ["wikibooks.org", "en.wikibooks", "open textbooks"]
+base_url = "https://en.wikibooks.org/w/api.php"
+scopes = ["reference", "docs"]
+caps = ["search", "lookup", "book"]
+tier = 1
+limits = { rps = 2.0, burst = 5, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 21600, host_bucket = "wikimedia.org" }
+probe = { op = "search", params = { query = "calculus", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "wikispecies"
+name = "Wikispecies"
+summary = "Open biological taxonomy directory covering animals, plants, fungi, bacteria, archaea, and viruses."
+aliases = ["species.wikimedia", "taxonomy wiki"]
+base_url = "https://species.wikimedia.org/w/api.php"
+scopes = ["reference", "academic.biomed"]
+caps = ["search", "lookup"]
+tier = 1
+limits = { rps = 2.0, burst = 5, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 21600, host_bucket = "wikimedia.org" }
+probe = { op = "search", params = { query = "Homo sapiens", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "wikinews"
+name = "Wikinews (English)"
+summary = "Creative Commons open-licensed news archive and community-reported current events."
+aliases = ["wikinews.org", "en.wikinews"]
+base_url = "https://en.wikinews.org/w/api.php"
+scopes = ["news"]
+caps = ["search", "lookup"]
+tier = 2
+limits = { rps = 2.0, burst = 5, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 21600, host_bucket = "wikimedia.org" }
+probe = { op = "search", params = { query = "climate", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "archwiki"
+name = "ArchWiki"
+summary = "Authoritative Linux systems administration, kernel, systemd, networking, and hardware troubleshooting documentation."
+aliases = ["arch linux wiki", "wiki.archlinux.org"]
+base_url = "https://wiki.archlinux.org/api.php"
+scopes = ["docs", "code"]
+caps = ["search", "lookup"]
+tier = 1
+probe = { op = "search", params = { query = "systemd", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "osm_wiki"
+name = "OpenStreetMap Wiki"
+summary = "Official OpenStreetMap tagging schemas, geospatial feature definitions, and mapping conventions."
+aliases = ["openstreetmap wiki", "osm tags"]
+base_url = "https://wiki.openstreetmap.org/w/api.php"
+scopes = ["reference.geo", "docs"]
+caps = ["search", "lookup"]
+tier = 1
+probe = { op = "search", params = { query = "highway", limit = 3 }, min_results = 2 }

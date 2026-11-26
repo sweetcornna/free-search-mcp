@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "govuk",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:12:46Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.gov.uk/api/search.json?count=3&fields=title%2Clink%2Cdescription%2Cpublic_timestamp%2Cformat%2Corganisations&q=passport",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ],
+          [
+            "cache-control",
+            "public, max-age=300"
+          ]
+        ],
+        "bodyText": "{\"results\":[{\"title\":\"Renew or replace your adult passport\",\"link\":\"/renew-adult-passport\",\"description\":\"How to apply, how long it takes, how much it costs, track your application, unexpired visas, replacing a damaged passport.\",\"public_timestamp\":\"2015-01-12T00:01:07Z\",\"format\":\"guide\",\"organisations\":[{\"organisation_type\":\"sub_organisation\",\"organisation_state\":\"live\",\"superseding_organisations\":[],\"acronym\":\"HM Passport Office\",\"content_id\":\"3a96a1e0-21e3-4aae-8e84-f90860ed3dbf\",\"link\":\"/government/organisations/hm-passport-office\",\"parent_organisations\":[\"home-office\"],\"superseded_organisations\":[\"identity-and-passport-service\"],\"analytics_identifier\":\"EA66\",\"title\":\"HM Passport Office\",\"organisation_crest\":\"ho\",\"organisation_brand\":\"home-office\",\"child_organisations\":[],\"logo_formatted_title\":\"HM Passport<br/>Office\",\"slug\":\"hm-passport-office\",\"public_timestamp\":\"2024-07-17T16:06:02Z\"}],\"index\":\"govuk\",\"es_score\":3000000.8,\"_id\":\"/renew-adult-passport\",\"elasticsearch_type\":\"edition\",\"document_type\":\"edition\"},{\"title\":\"Apply online for a UK passport\",\"link\":\"/apply-renew-passport\",\"description\":\"You can apply for, update, renew or replace a passport online.\",\"public_timestamp\":\"2017-12-01T13:13:43Z\",\"format\":\"transaction\",\"organisations\":[{\"organisation_type\":\"sub_organisation\",\"organisation_state\":\"live\",\"superseding_organisations\":[],\"acronym\":\"HM Passport Office\",\"content_id\":\"3a96a1e0-21e3-4aae-8e84-f90860ed3dbf\",\"link\":\"/government/organisations/hm-passport-office\",\"parent_organisations\":[\"home-office\"],\"superseded_organisations\":[\"identity-and-passport-service\"],\"analytics_identifier\":\"EA66\",\"title\":\"HM Passport Office\",\"organisation_crest\":\"ho\",\"organisation_brand\":\"home-office\",\"child_organisations\":[],\"logo_formatted_title\":\"HM Passport<br/>Office\",\"slug\":\"hm-passport-office\",\"public_timestamp\":\"2024-07-17T16:06:02Z\"}],\"index\":\"govuk\",\"es_score\":2000004.5,\"_id\":\"/apply-renew-passport\",\"elasticsearch_type\":\"edition\",\"document_type\":\"edition\"},{\"title\":\"Track your passport application\",\"link\":\"/track-passport-application\",\"description\":\"Check the status of your passport after applying for a new passport or to renew or replace an existing passport\",\"public_timestamp\":\"2015-09-22T16:20:34Z\",\"format\":\"answer\",\"organisations\":[{\"organisation_type\":\"sub_organisation\",\"organisation_state\":\"live\",\"superseding_organisations\":[],\"acronym\":\"HM Passport Office\",\"content_id\":\"3a96a1e0-21e3-4aae-8e84-f90860ed3dbf\",\"link\":\"/government/organisations/hm-passport-office\",\"parent_organisations\":[\"home-office\"],\"superseded_organisations\":[\"identity-and-passport-service\"],\"analytics_identifier\":\"EA66\",\"title\":\"HM Passport Office\",\"organisation_crest\":\"ho\",\"organisation_brand\":\"home-office\",\"child_organisations\":[],\"logo_formatted_title\":\"HM Passport<br/>Office\",\"slug\":\"hm-passport-office\",\"public_timestamp\":\"2024-07-17T16:06:02Z\"}],\"index\":\"govuk\",\"es_score\":1000000.94,\"_id\":\"/track-passport-application\",\"elasticsearch_type\":\"edition\",\"document_type\":\"edition\"}],\"total\":7979,\"start\":0,\"aggregates\":{},\"suggested_queries\":[],\"suggested_autocomplete\":[],\"es_cluster\":\"A\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+---
+source: crates/surface/tests/snapshots.rs
+expression: bad_fts
+---
+_No results: your search syntax looks invalid. Your query has an unterminated quote. FTS5 phrases need matching double quotes, e.g. `"exact phrase"`._

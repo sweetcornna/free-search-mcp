@@ -1,0 +1,73 @@
+protocol = "sru"
+
+[[instance]]
+id = "loc_sru"
+name = "Library of Congress Catalog (SRU)"
+summary = "US Library of Congress bibliographic SRU/CQL catalog covering books, serials, government documents, and scholarly monographs."
+aliases = ["loc", "library of congress", "lcdb"]
+base_url = "https://lx2.loc.gov/sru/lcdb"
+scopes = ["academic", "academic.books", "reference"]
+caps = ["search", "lookup", "book"]
+tier = 1
+default_params = { version = "1.1", recordSchema = "dc" }
+probe = { op = "search", params = { query = "dc.title=neural", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "dnb_sru"
+name = "Deutsche Nationalbibliothek (DNB SRU)"
+summary = "German National Library SRU/CQL catalog indexing German-language books, academic monographs, and doctoral dissertations."
+aliases = ["dnb", "german national library", "deutsche nationalbibliothek"]
+base_url = "https://services.dnb.de/sru/dnb"
+scopes = ["academic", "academic.books", "academic.theses", "reference"]
+caps = ["search", "lookup", "book", "thesis"]
+tier = 1
+default_params = { version = "1.1", recordSchema = "oai_dc" }
+probe = { op = "search", params = { query = "TIT=neural", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "bnf_sru"
+name = "Bibliothèque nationale de France (BnF SRU)"
+summary = "French National Library SRU/CQL general catalog of books, manuscripts, periodicals, and francophone scholarly publications."
+aliases = ["bnf", "bibliotheque nationale de france", "french national library"]
+base_url = "https://catalogue.bnf.fr/api/SRU"
+scopes = ["academic", "academic.books", "academic.humanities", "reference"]
+caps = ["search", "lookup", "book"]
+tier = 1
+default_params = { version = "1.2", recordSchema = "dublincore" }
+probe = { op = "search", params = { query = 'bib.title all "neural"', limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "ndl_sru"
+name = "National Diet Library of Japan (NDL SRU)"
+summary = "National Diet Library of Japan SRU/CQL union catalog of 40M+ Japanese books, periodicals, and doctoral dissertations."
+aliases = ["ndl", "ndl search", "national diet library", "国立国会図書館"]
+base_url = "https://ndlsearch.ndl.go.jp/api/sru"
+scopes = ["academic", "academic.books", "academic.theses", "reference"]
+caps = ["search", "lookup", "book", "thesis"]
+tier = 1
+default_params = { version = "1.2", recordSchema = "dcndl" }
+probe = { op = "search", params = { query = 'title="transformer"', limit = 2 }, min_results = 2 }
+
+[[instance]]
+id = "k10plus_sru"
+name = "K10plus Union Catalog (SRU)"
+summary = "German academic library union catalog (GBV and SWB) covering 200M+ university and research library holdings."
+aliases = ["k10plus", "gbv", "swb", "german union catalog"]
+base_url = "https://sru.k10plus.de/opac-de-627"
+scopes = ["academic", "academic.books", "reference"]
+caps = ["search", "lookup", "book"]
+tier = 1
+default_params = { version = "1.1", recordSchema = "dc" }
+probe = { op = "search", params = { query = "pica.tit=neural", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "anu_sru"
+name = "Australian National University Library (SRU)"
+summary = "Australian National University Alma SRU bibliographic catalog strong in Oceania, Asia-Pacific studies, humanities, and STEM."
+aliases = ["anu library", "australian national university"]
+base_url = "https://anu.alma.exlibrisgroup.com/view/sru/61ANU_INST"
+scopes = ["academic", "academic.books", "reference"]
+caps = ["search", "lookup", "book"]
+tier = 2
+default_params = { version = "1.2", recordSchema = "dc" }
+probe = { op = "search", params = { query = "alma.title=australia", limit = 3 }, min_results = 2 }

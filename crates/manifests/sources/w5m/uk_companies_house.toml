@@ -1,0 +1,88 @@
+id = "uk_companies_house"
+name = "UK Companies House Public Data API"
+summary = "Official UK corporate registry search and company profile lookup including status, incorporation date, SIC codes, and registered office (requires free API key encoded as Basic token)."
+aliases = ["companies house", "uk companies", "ch uk"]
+home_url = "https://developer.company-information.service.gov.uk"
+tier = 3
+scopes = ["finance"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.5, burst = 5, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 21600 }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_UK_COMPANIES_HOUSE_TOKEN"
+in = "header"
+name = "Authorization"
+format = "Basic {key}"
+route_requires_key = true
+
+[op.search]
+summary = "Search UK registered companies by name or registration number."
+method = "GET"
+url = "https://api.company-information.service.gov.uk/search/companies"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "start_index", start = 0, max_pages = 3 }
+probe = { params = { query = "barclays", limit = 3 }, min_results = 2, fixture = "fixtures/w5m/uk_companies_house/search/default.json" }
+examples = ["source.call('uk_companies_house.search', { query: 'barclays', limit: 5 })"]
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Company name or number search query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "items_per_page", doc = "Companies per page" }
+offset = { type = "int", default = 0, min = 0, to = "start_index", doc = "0-based pagination offset" }
+
+[op.search.map]
+items = "(.items // [])[]"
+total = ".total_results"
+error = 'if .error then .error elif .errors then ([.errors[] | (.error // tostring)] | join("; ")) else null end'
+record = '''{
+  companyNumber: .company_number,
+  title: (.title // ""),
+  companyStatus: (.company_status // null),
+  companyType: (.company_type // null),
+  dateOfCreation: (.date_of_creation // null),
+  dateOfCessation: (.date_of_cessation // null),
+  addressSnippet: (.address_snippet // null),
+  description: (.description // null),
+  url: ("https://find-and-update.company-information.service.gov.uk/company/" + .company_number)
+}'''
+hit = '''{
+  title: ((.title // "") + " (" + .company_number + ")"),
+  url: ("https://find-and-update.company-information.service.gov.uk/company/" + .company_number),
+  snippet: ((.company_status // "") + " · " + (.company_type // "") + (if .address_snippet then (" · " + .address_snippet) else "" end)),
+  date: (.date_of_creation | parse_date),
+  dateSource: "api"
+}'''
+
+[op.company]
+summary = "Fetch full UK company profile including jurisdiction, SIC codes, registered office, and filing status by company number."
+method = "GET"
+url = "https://api.company-information.service.gov.uk/company/{company_number}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { company_number = "01026167" }, min_results = 1, fixture = "fixtures/w5m/uk_companies_house/company/default.json" }
+examples = ["source.call('uk_companies_house.company', { company_number: '01026167' })"]
+
+[op.company.params]
+company_number = { type = "string", required = true, in = "path", doc = "8-character UK company registration number e.g. 01026167" }
+
+[op.company.map]
+items = "."
+error = "@ref:op.search.map.error"
+record = '''{
+  companyNumber: .company_number,
+  companyName: (.company_name // ""),
+  companyStatus: (.company_status // null),
+  companyType: (.type // .company_type // null),
+  jurisdiction: (.jurisdiction // null),
+  dateOfCreation: (.date_of_creation // null),
+  sicCodes: (.sic_codes // []),
+  registeredOfficeAddress: (.registered_office_address // null),
+  accountsOverdue: .accounts.overdue,
+  accountsNextDue: (.accounts.next_due // null),
+  url: ("https://find-and-update.company-information.service.gov.uk/company/" + .company_number)
+}'''

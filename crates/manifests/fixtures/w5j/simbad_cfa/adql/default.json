@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "simbad_cfa",
+  "op": "adql",
+  "recordedAt": "2026-11-25T13:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://simbad.cfa.harvard.edu/simbad/sim-tap/sync?query=SELECT+TOP+2+main_id%2C+otype%2C+ra%2C+dec+FROM+basic+WHERE+main_id+%3D+%27M++31%27&MAXREC=2&format=json&lang=adql&request=doQuery",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json;charset=UTF-8"
+          ]
+        ],
+        "bodyText": "{\"metadata\":[{\"name\":\"main_id\",\"description\":\"Main identifier for an object\",\"datatype\":\"CHAR\",\"arraysize\":\"*\",\"ucd\":\"meta.id;meta.main\",\"utype\":\"mango:MangoObject.identifier\"},{\"name\":\"otype\",\"description\":\"Object type\",\"datatype\":\"CHAR\",\"arraysize\":\"*\",\"ucd\":\"src.class\",\"utype\":\"mango:Label.text[CT.vocabulary=https://www.ivoa.net/rdf/uat#classification]\"},{\"name\":\"ra\",\"description\":\"Right ascension\",\"datatype\":\"DOUBLE\",\"unit\":\"deg\",\"ucd\":\"pos.eq.ra;meta.main\",\"utype\":\"mango:EpochPosition.longitude[CS.spaceSys=ICRS CT.epoch=J2000]\"},{\"name\":\"dec\",\"description\":\"Declination\",\"datatype\":\"DOUBLE\",\"unit\":\"deg\",\"ucd\":\"pos.eq.dec;meta.main\",\"utype\":\"mango:EpochPosition.latitude[CS.spaceSys=ICRS CT.epoch=J2000]\"}],\"data\":[[\"M  31\",\"AGN\",10.684708333333333,41.268750000000004]]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

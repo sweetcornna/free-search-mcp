@@ -1,0 +1,77 @@
+id = "gutendex"
+name = "Gutendex (Project Gutenberg)"
+summary = "Search 75k+ public-domain Project Gutenberg ebooks with direct EPUB, HTML, and plain-text download URLs."
+aliases = ["project gutenberg", "gutenberg", "gutenberg books"]
+home_url = "https://gutendex.com"
+tier = 2
+scopes = ["academic.books", "reference"]
+caps = ["search", "lookup", "book"]
+transport = "chrome"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 2, concurrency = 2, timeout_ms = 12000, cache_ttl_s = 86400 }
+
+[op.search]
+summary = "Search Project Gutenberg public-domain books by title, author, topic, or language."
+method = "GET"
+url = "https://gutendex.com/books/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "frankenstein" }, min_results = 2, fixture = "fixtures/w5c/gutendex/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "search", doc = "Title or author keywords" }
+topic = { type = "string", to = "topic", doc = "Bookshelf or subject substring" }
+languages = { type = "string", to = "languages", doc = "Comma-separated ISO-639-1 codes e.g. en,fr" }
+limit = { type = "int", default = 10, min = 1, max = 32, in = "none", doc = "Max books to return from page" }
+page = { type = "int", min = 1, to = "page", doc = "1-based page number" }
+
+[op.search.map]
+items = ".results[0:($p.limit // 10)][]"
+total = ".count"
+error = "if (.detail | type) == \"string\" and (.detail | length) > 0 then .detail else null end"
+record = '''{
+  id: .id,
+  title: (.title // ""),
+  authors: [(.authors // [])[] | .name],
+  languages: (.languages // []),
+  subjects: (.subjects // []),
+  mediaType: .media_type,
+  downloadCount: .download_count,
+  url: ("https://www.gutenberg.org/ebooks/" + (.id | tostring)),
+  textUrl: (.formats["text/plain; charset=utf-8"] // .formats["text/plain; charset=us-ascii"] // .formats["text/plain"] // null),
+  epubUrl: (.formats["application/epub+zip"] // null),
+  htmlUrl: (.formats["text/html"] // null),
+  summary: ((.summaries // [])[0] // null)
+}'''
+hit = '''{
+  title: (.title // ""),
+  url: ("https://www.gutenberg.org/ebooks/" + (.id | tostring)),
+  snippet: ([
+    (if ((.authors // []) | length) > 0 then ([(.authors // [])[] | .name] | join("; ")) else empty end),
+    (if ((.languages // []) | length) > 0 then ("lang: " + ((.languages // []) | join(","))) else empty end),
+    (if (.download_count | type) == "number" then "\(.download_count) downloads" else empty end),
+    (((.summaries // [])[0] // "") | gsub("\\s+"; " ") | if length > 180 then .[0:180] + "..." else . end | select(length > 0))
+  ] | join(" · ")),
+  date: null,
+  dateSource: null
+}'''
+
+[op.book]
+summary = "Look up a Project Gutenberg book by exact Gutenberg numeric ID."
+method = "GET"
+url = "https://gutendex.com/books/{id}/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "84" }, min_results = 1, fixture = "fixtures/w5c/gutendex/book/default.json" }
+
+[op.book.params]
+id = { type = "string", required = true, in = "path", doc = "Numeric Project Gutenberg book ID e.g. 84" }
+
+[op.book.map]
+items = "."
+error = "@ref:op.search.map.error"
+record = "@ref:op.search.map.record"
+hit = "@ref:op.search.map.hit"

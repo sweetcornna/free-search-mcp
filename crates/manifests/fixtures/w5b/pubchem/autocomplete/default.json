@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "pubchem",
+  "op": "autocomplete",
+  "recordedAt": "2026-11-25T11:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://pubchem.ncbi.nlm.nih.gov/rest/autocomplete/compound/aspirin/json?limit=5",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "cache-control",
+            "private"
+          ],
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\n    \"status\": {\n        \"code\": 0\n    },\n    \"total\": 5,\n    \"dictionary_terms\": {\n        \"compound\": [\n            \"aspirin\",\n            \"NO-aspirin\",\n            \"Aspirin DL-lysine\",\n            \"Aspirin aluminum\",\n            \"Aspirin anhydride\"\n        ]\n    }\n}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

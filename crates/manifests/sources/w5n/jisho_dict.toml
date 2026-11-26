@@ -1,0 +1,48 @@
+id = "jisho_dict"
+name = "Jisho Japanese-English Dictionary API"
+summary = "Keyless Japanese-English dictionary (JMdict/EDICT) with kanji forms, kana readings, JLPT levels, and English senses."
+aliases = ["jisho", "jmdict", "japanese dictionary"]
+home_url = "https://jisho.org"
+tier = 1
+scopes = ["reference"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.5, burst = 4, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 604800 }
+
+[op.search]
+summary = "Look up Japanese words, kanji, romaji, or English glosses in Jisho."
+method = "GET"
+url = "https://jisho.org/api/v1/search/words"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+examples = ['source.call("jisho_dict.search", { query: "sakura", page: 1 })']
+probe = { params = { query = "sakura", page = 1 }, min_results = 2, fixture = "fixtures/w5n/jisho_dict/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "keyword", doc = "Japanese word, kanji, kana, romaji, English term, or Jisho tag (e.g. #jlpt-n3)" }
+page = { type = "int", default = 1, min = 1, doc = "Result page number (1-based)" }
+
+[op.search.map]
+items = "(.data // [])[]"
+error = "if (.meta.status | type) == \"number\" and .meta.status >= 400 then (\"Jisho HTTP \" + (.meta.status | tostring)) else null end"
+record = '''{
+  slug: .slug,
+  isCommon: (.is_common // false),
+  jlpt: (.jlpt // []),
+  tags: (.tags // []),
+  japanese: [(.japanese // [])[] | {word: (.word // null), reading: (.reading // null)}],
+  senses: [(.senses // [])[] | {definitions: (.english_definitions // []), partsOfSpeech: (.parts_of_speech // []), tags: (.tags // [])}],
+  url: ("https://jisho.org/word/" + (.slug // ""))
+}'''
+hit = '''{
+  title: ((.japanese[0].word // .slug // "") + (if (.japanese[0].reading | type) == "string" and (.japanese[0].reading | length) > 0 then (" (" + .japanese[0].reading + ")") else "" end)),
+  url: ("https://jisho.org/word/" + (.slug // "")),
+  snippet: ([
+    (if ((.jlpt // []) | length) > 0 then ((.jlpt // []) | join(", ")) else empty end),
+    (if .is_common then "common" else empty end),
+    (([(.senses // [])[0:3][] | ((.english_definitions // []) | join("; "))] | join(" / ")) | select(length > 0))
+  ] | join(" · "))
+}'''

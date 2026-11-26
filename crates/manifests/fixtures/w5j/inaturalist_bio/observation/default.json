@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "source": "inaturalist_bio",
+  "op": "observation",
+  "recordedAt": "2026-11-25T13:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.inaturalist.org/v2/observations/dceeba89-2a9d-4f29-b5ed-044e9c9ba124?fields=%28id%3A%21t%2Cuuid%3A%21t%2Cspecies_guess%3A%21t%2Cobserved_on%3A%21t%2Cplace_guess%3A%21t%2Cquality_grade%3A%21t%2Curi%3A%21t%2Cdescription%3A%21t%2Clicense_code%3A%21t%2Ctaxon%3A%28id%3A%21t%2Cname%3A%21t%2Cpreferred_common_name%3A%21t%2Crank%3A%21t%29%2Cgeojson%3A%21t%29",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ],
+          [
+            "cache-control",
+            "private, no-cache, no-store, must-revalidate"
+          ],
+          [
+            "etag",
+            "W/\"203-12nSA8MPwX+mqVvpPYJ9B6dzURI\""
+          ]
+        ],
+        "bodyText": "{\"total_results\":1,\"page\":1,\"per_page\":1,\"results\":[{\"uuid\":\"dceeba89-2a9d-4f29-b5ed-044e9c9ba124\",\"id\":416876895,\"species_guess\":\"Red Fox\",\"observed_on\":\"2026-11-25\",\"place_guess\":\"Ruby St, Burwood East, VIC, AU\",\"quality_grade\":\"research\",\"uri\":\"https://www.inaturalist.org/observations/416876895\",\"description\":null,\"license_code\":\"cc-by-nc\",\"taxon\":{\"id\":42069,\"name\":\"Vulpes vulpes\",\"preferred_common_name\":\"Red Fox\",\"rank\":\"species\"},\"geojson\":{\"coordinates\":[145.1571799145,-37.8522457039],\"type\":\"Point\"}}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,82 @@
+id = "pubchem"
+name = "PubChem PUG REST"
+summary = "US NCBI database of 118M+ chemical compounds, IUPAC names, SMILES, InChIKeys, and properties."
+aliases = ["ncbi pubchem", "chemical compounds", "smiles"]
+home_url = "https://pubchem.ncbi.nlm.nih.gov"
+tier = 1
+scopes = ["academic.biomed", "reference"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 4.0, burst = 8, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 86400 }
+
+[op.search]
+summary = "Look up PubChem chemical compound properties by compound name."
+method = "GET"
+url = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{query}/property/MolecularFormula,MolecularWeight,ConnectivitySMILES,IUPACName,InChIKey,Title/JSON"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { query = "aspirin" }, min_results = 1, fixture = "fixtures/w5b/pubchem/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, in = "path", doc = "Compound name or synonym (e.g. aspirin, caffeine)" }
+
+[op.search.map]
+items = ".PropertyTable.Properties[]"
+error = 'if type == "object" and .Fault then (.Fault.Message // .Fault.Code) else null end'
+record = '''{
+  cid: (.CID | to_int),
+  title: ((.Title // "") | collapse_ws),
+  formula: (.MolecularFormula // null),
+  molecularWeight: (.MolecularWeight | to_num),
+  smiles: (.ConnectivitySMILES // .CanonicalSMILES // null),
+  iupacName: (.IUPACName // null),
+  inchiKey: (.InChIKey // null),
+  url: ("https://pubchem.ncbi.nlm.nih.gov/compound/" + (.CID | tostring))
+}'''
+hit = '''{
+  title: (if (.Title // "") != "" then ((.Title | collapse_ws) + " (CID " + (.CID | tostring) + ")") else ("CID " + (.CID | tostring)) end),
+  url: ("https://pubchem.ncbi.nlm.nih.gov/compound/" + (.CID | tostring)),
+  snippet: ((((.MolecularFormula // "") + (if .MolecularWeight != null then (" · MW " + (.MolecularWeight | tostring)) else "" end) + (if .IUPACName != null then (" · " + .IUPACName) else "" end)) | gsub("^ · "; "")) | collapse_ws),
+  date: null,
+  dateSource: null
+}'''
+
+[op.cid]
+summary = "Fetch PubChem chemical properties by exact numeric PubChem Compound ID (CID)."
+method = "GET"
+url = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/{cid}/property/MolecularFormula,MolecularWeight,ConnectivitySMILES,IUPACName,InChIKey,Title/JSON"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { cid = "2244" }, min_results = 1, fixture = "fixtures/w5b/pubchem/cid/default.json" }
+
+[op.cid.params]
+cid = { type = "string", required = true, in = "path", doc = "Numeric PubChem CID (e.g. 2244)" }
+
+[op.cid.map]
+items = ".PropertyTable.Properties[]"
+error = 'if type == "object" and .Fault then (.Fault.Message // .Fault.Code) else null end'
+record = "@ref:op.search.map.record"
+
+[op.autocomplete]
+summary = "Prefix autocomplete for PubChem compound names."
+method = "GET"
+url = "https://pubchem.ncbi.nlm.nih.gov/rest/autocomplete/compound/{query}/json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { query = "aspirin", limit = 5 }, min_results = 2, fixture = "fixtures/w5b/pubchem/autocomplete/default.json" }
+
+[op.autocomplete.params]
+query = { type = "string", required = true, in = "path", doc = "Compound name prefix (e.g. aspirin)" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Maximum matching names" }
+
+[op.autocomplete.map]
+items = ".dictionary_terms.compound[]"
+error = 'if type == "object" and .Fault then (.Fault.Message // .Fault.Code) else null end'
+record = '''{
+  name: .,
+  url: ("https://pubchem.ncbi.nlm.nih.gov/#query=" + (. | @uri))
+}'''

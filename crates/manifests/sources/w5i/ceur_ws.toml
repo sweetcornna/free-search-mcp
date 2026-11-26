@@ -1,0 +1,54 @@
+id = "ceur_ws"
+name = "CEUR Workshop Proceedings"
+summary = "3,800+ free open-access computer science and AI workshop proceedings volumes with direct open-access PDFs."
+aliases = ["ceur", "ceur-ws", "ceur-ws.org"]
+home_url = "https://ceur-ws.org"
+tier = 2
+scopes = ["academic", "academic.cs", "academic.openaccess"]
+caps = ["lookup", "fulltext"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 86400, host_bucket = "ceur-ws.org" }
+
+[op.volume]
+summary = "List papers and direct PDF links in a CEUR Workshop Proceedings volume by volume number."
+method = "GET"
+url = "https://ceur-ws.org/Vol-{vol}/"
+headers = { Accept = "text/html" }
+response = "html"
+returns = "works"
+probe = { params = { vol = 3600 }, min_results = 2, fixture = "fixtures/w5i/ceur_ws/volume/default.json" }
+examples = ['source.call("ceur_ws.volume", {vol: 3600})']
+
+[op.volume.params]
+vol = { type = "int", required = true, min = 1, in = "path", doc = "CEUR-WS volume number (e.g. 3600)" }
+
+[op.volume.html]
+items_css = ".CEURTOC li"
+fields = { title = ".CEURTITLE | text", pdf = 'a[href$=".pdf"] | attr(href)', authors = ".CEURAUTHOR | texts" }
+wall_markers = ["Access Denied"]
+
+[op.volume.map]
+items = '''[.[] | select((.title // "") != "")] | .[]'''
+work = '''(
+  ("https://ceur-ws.org/Vol-" + (($p.vol // "") | tostring) + "/") as $base |
+  ((.pdf | resolve_url($base)) // $base) as $pdfUrl |
+  {
+    title: ((.title // "") | collapse_ws // ""),
+    authors: [(.authors | arr)[] | split(",")[] | collapse_ws | select(. != null and . != "") | {name: .}],
+    year: null,
+    publishedDate: null,
+    venue: ("CEUR-WS Vol-" + (($p.vol // "") | tostring)),
+    workType: "proceedings-article",
+    ids: {},
+    oa: {
+      status: "diamond",
+      url: $base,
+      pdfUrl: $pdfUrl
+    },
+    retracted: false,
+    versions: [],
+    url: $pdfUrl,
+    sources: ["ceur_ws"]
+  }
+)'''

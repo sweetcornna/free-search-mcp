@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "wikidata_scholarly",
+  "op": "query",
+  "recordedAt": "2026-11-25T12:18:23Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://query-scholarly.wikidata.org/sparql?query=SELECT+%3Fitem+WHERE+%7B+%3Fitem+%3Chttp%3A%2F%2Fwww.wikidata.org%2Fprop%2Fdirect%2FP356%3E+%2210.1038%2FNATURE12373%22+%7D+LIMIT+3",
+        "headersSubset": {
+          "accept": "application/sparql-results+json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/sparql-results+json;charset=utf-8"
+          ],
+          [
+            "cache-control",
+            "public, max-age=300"
+          ]
+        ],
+        "bodyText": "{\n  \"head\" : {\n    \"vars\" : [ \"item\" ]\n  },\n  \"results\" : {\n    \"bindings\" : [ {\n      \"item\" : {\n        \"type\" : \"uri\",\n        \"value\" : \"http://www.wikidata.org/entity/Q34460861\"\n      }\n    } ]\n  }\n}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

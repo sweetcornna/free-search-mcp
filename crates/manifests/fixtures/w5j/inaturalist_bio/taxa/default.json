@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "source": "inaturalist_bio",
+  "op": "taxa",
+  "recordedAt": "2026-11-25T13:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.inaturalist.org/v2/taxa?q=Vulpes+vulpes&per_page=3&page=1&fields=%28id%3A%21t%2Cname%3A%21t%2Crank%3A%21t%2Cpreferred_common_name%3A%21t%2Cobservations_count%3A%21t%2Cwikipedia_url%3A%21t%2Ciconic_taxon_name%3A%21t%29",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ],
+          [
+            "cache-control",
+            "public, max-age=300"
+          ],
+          [
+            "etag",
+            "W/\"281-ZMBqcpOz4E8RDhVflWIz95TJ4AU\""
+          ]
+        ],
+        "bodyText": "{\"total_results\":94,\"page\":1,\"per_page\":3,\"results\":[{\"id\":42054,\"name\":\"Vulpes\",\"rank\":\"genus\",\"preferred_common_name\":\"Typical Foxes\",\"observations_count\":174255,\"wikipedia_url\":\"http://en.wikipedia.org/wiki/Vulpes\",\"iconic_taxon_name\":\"Mammalia\"},{\"id\":42069,\"name\":\"Vulpes vulpes\",\"rank\":\"species\",\"preferred_common_name\":\"Red Fox\",\"observations_count\":163723,\"wikipedia_url\":\"http://en.wikipedia.org/wiki/Red_fox\",\"iconic_taxon_name\":\"Mammalia\"},{\"id\":1081616,\"name\":\"Vulpes vulpes crucigera\",\"rank\":\"subspecies\",\"preferred_common_name\":\"European Red Fox\",\"observations_count\":3647,\"wikipedia_url\":null,\"iconic_taxon_name\":\"Mammalia\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

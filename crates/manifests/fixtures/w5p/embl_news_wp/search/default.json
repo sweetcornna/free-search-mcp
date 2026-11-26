@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "embl_news_wp",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:44:39Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.embl.org/news/wp-json/wp/v2/search?search=genome&per_page=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ]
+        ],
+        "bodyText": "[{\"id\":85089,\"title\":\"When the genome speaks\\u00a0\",\"url\":\"https:\\/\\/www.embl.org\\/news\\/science-technology\\/when-the-genome-speaks\\/\",\"type\":\"post\",\"subtype\":\"post\",\"_links\":{\"self\":[{\"embeddable\":true,\"href\":\"https:\\/\\/www.embl.org\\/news\\/wp-json\\/wp\\/v2\\/posts\\/85089\",\"targetHints\":{\"allow\":[\"GET\"]}}],\"about\":[{\"href\":\"https:\\/\\/www.embl.org\\/news\\/wp-json\\/wp\\/v2\\/types\\/post\"}],\"collection\":[{\"href\":\"https:\\/\\/www.embl.org\\/news\\/wp-json\\/wp\\/v2\\/search\"}]}},{\"id\":83219,\"title\":\"How embryos switch on their genome\",\"url\":\"https:\\/\\/www.embl.org\\/news\\/science-technology\\/how-embryos-switch-on-their-genome\\/\",\"type\":\"post\",\"subtype\":\"post\",\"_links\":{\"self\":[{\"embeddable\":true,\"href\":\"https:\\/\\/www.embl.org\\/news\\/wp-json\\/wp\\/v2\\/posts\\/83219\",\"targetHints\":{\"allow\":[\"GET\"]}}],\"about\":[{\"href\":\"https:\\/\\/www.embl.org\\/news\\/wp-json\\/wp\\/v2\\/types\\/post\"}],\"collection\":[{\"href\":\"https:\\/\\/www.embl.org\\/news\\/wp-json\\/wp\\/v2\\/search\"}]}},{\"id\":81751,\"title\":\"AlphaGenome Variant Impact scores integrated into Ensembl VEP\",\"url\":\"https:\\/\\/www.embl.org\\/news\\/updates-from-data-resources\\/ensembl-vep-integrates-alphagenome-variant-impact-score\\/\",\"type\":\"post\",\"subtype\":\"post\",\"_links\":{\"self\":[{\"embeddable\":true,\"href\":\"https:\\/\\/www.embl.org\\/news\\/wp-json\\/wp\\/v2\\/posts\\/81751\",\"targetHints\":{\"allow\":[\"GET\"]}}],\"about\":[{\"href\":\"https:\\/\\/www.embl.org\\/news\\/wp-json\\/wp\\/v2\\/types\\/post\"}],\"collection\":[{\"href\":\"https:\\/\\/www.embl.org\\/news\\/wp-json\\/wp\\/v2\\/search\"}]}}]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

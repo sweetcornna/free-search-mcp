@@ -1,0 +1,65 @@
+id = "zenodo"
+name = "Zenodo (CERN)"
+summary = "CERN open multidisciplinary repository of datasets, software, preprints, and publications with DOIs."
+aliases = ["cern zenodo", "invenio zenodo"]
+home_url = "https://zenodo.org"
+tier = 1
+scopes = ["dataset", "academic", "academic.openaccess"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 0.5, burst = 3, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 21600 }
+
+[op.search]
+summary = "Search Zenodo datasets, software, publications, and preprints."
+method = "GET"
+url = "https://zenodo.org/api/records"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "climate", limit = 3 }, min_results = 2, fixture = "fixtures/w5b/zenodo/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Search query (Elastic syntax supported)" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "size", doc = "Results per page" }
+page = { type = "int", min = 1, to = "page", doc = "1-based page number" }
+sort = { type = "string", default = "bestmatch", enum = ["bestmatch", "mostrecent"], to = "sort", doc = "Sort order" }
+type = { type = "string", enum = ["publication", "dataset", "software", "poster", "presentation", "image", "video"], to = "type", doc = "Optional resource type filter" }
+
+[op.search.map]
+items = ".hits.hits[]"
+total = ".hits.total"
+error = 'if type == "object" and ((.status | to_int) // 200) >= 400 and (.message // null) != null then .message else null end'
+work = '''{
+  title: ((.metadata.title // "") | strip_tags),
+  authors: [(.metadata.creators // [])[] | {name: ((.name // "") | collapse_ws), orcid: (.orcid // null), affiliation: (.affiliation // null)}],
+  year: ((.metadata.publication_date // "")[0:4] | to_int),
+  publishedDate: ((.metadata.publication_date // null) | parse_date),
+  venue: "Zenodo",
+  workType: (.metadata.resource_type.type // "dataset"),
+  ids: { doi: ((.doi // .metadata.doi // null) | doi_norm) },
+  abstractText: ((.metadata.description // null) | strip_tags),
+  oa: { status: (.metadata.access_right // "open"), url: (.links.self_html // .links.html // .doi_url // null), pdfUrl: (if (.metadata.access_right // "open") == "open" then (([(.files // [])[] | select((.key // "" | ascii_downcase | endswith(".pdf"))) | .links.self][0]) // null) else null end), license: (.metadata.license.id // null) },
+  retracted: false,
+  versions: [],
+  url: (.links.self_html // .links.html // .doi_url // ("https://zenodo.org/records/" + (.id | tostring))),
+  sources: ["zenodo"]
+}'''
+
+[op.record]
+summary = "Fetch a Zenodo record by numeric record ID."
+method = "GET"
+url = "https://zenodo.org/api/records/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+probe = { params = { id = "24485086" }, min_results = 1, fixture = "fixtures/w5b/zenodo/record/default.json" }
+
+[op.record.params]
+id = { type = "string", required = true, in = "path", doc = "Numeric Zenodo record ID (e.g. 24485086)" }
+
+[op.record.map]
+items = "."
+error = 'if type == "object" and ((.status | to_int) // 200) >= 400 and (.message // null) != null then .message else null end'
+work = "@ref:op.search.map.work"

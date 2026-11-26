@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "courtlistener",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:14:49Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.courtlistener.com/api/rest/v4/search/?q=fair+use&type=o",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"count\": 48120, \"next\": \"https://www.courtlistener.com/api/rest/v4/search/?cursor=cD0yMDIzLTA1LTE4&q=fair+use&type=o\", \"previous\": null, \"results\": [{\"absolute_url\": \"/opinion/9367891/andy-warhol-foundation-for-the-visual-arts-inc-v-goldsmith/\", \"caseName\": \"Andy Warhol Foundation for the Visual Arts, Inc. v. Goldsmith\", \"caseNameFull\": \"Andy Warhol Foundation for the Visual Arts, Inc. v. Lynn Goldsmith, et al.\", \"citation\": [\"598 U.S. 508\", \"143 S. Ct. 1258\"], \"cluster_id\": 9367891, \"court\": \"Supreme Court of the United States\", \"court_id\": \"scotus\", \"dateFiled\": \"2023-05-18\", \"docketNumber\": \"21-869\", \"status\": \"Published\", \"opinions\": [{\"id\": 9834512, \"snippet\": \"The purpose and character of AWF's commercial licensing of Orange Prince does not favor a fair use defense under 17 U.S.C. 107.\", \"type\": \"020lead\"}]}, {\"absolute_url\": \"/opinion/4894761/google-llc-v-oracle-america-inc/\", \"caseName\": \"Google LLC v. Oracle America, Inc.\", \"caseNameFull\": \"Google LLC v. Oracle America, Inc.\", \"citation\": [\"593 U.S. 1\", \"141 S. Ct. 1183\"], \"cluster_id\": 4894761, \"court\": \"Supreme Court of the United States\", \"court_id\": \"scotus\", \"dateFiled\": \"2021-04-05\", \"docketNumber\": \"18-956\", \"status\": \"Published\", \"opinions\": [{\"id\": 5361240, \"snippet\": \"Google's copying of the Java SE API declaring code was a fair use of that material as a matter of law.\", \"type\": \"020lead\"}]}, {\"absolute_url\": \"/opinion/117830/campbell-v-acuff-rose-music-inc/\", \"caseName\": \"Campbell v. Acuff-Rose Music, Inc.\", \"caseNameFull\": \"Luther R. Campbell aka Luke Skyywalker, et al. v. Acuff-Rose Music, Inc.\", \"citation\": [\"510 U.S. 569\", \"114 S. Ct. 1164\"], \"cluster_id\": 117830, \"court\": \"Supreme Court of the United States\", \"court_id\": \"scotus\", \"dateFiled\": \"1994-03-07\", \"docketNumber\": \"92-1292\", \"status\": \"Published\", \"opinions\": [{\"id\": 117830, \"snippet\": \"Commercial parody may qualify as fair use under Section 107 of the Copyright Act depending on transformative purpose.\", \"type\": \"020lead\"}]}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

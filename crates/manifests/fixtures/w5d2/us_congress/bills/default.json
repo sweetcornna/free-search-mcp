@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "us_congress",
+  "op": "bills",
+  "recordedAt": "2026-11-25T12:14:49Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.congress.gov/v3/bill?format=json&limit=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"bills\": [{\"congress\": 118, \"latestAction\": {\"actionDate\": \"2024-05-15\", \"text\": \"Referred to the House Committee on Energy and Commerce.\"}, \"number\": \"1\", \"originChamber\": \"House\", \"originChamberCode\": \"H\", \"title\": \"Lower Energy Costs Act\", \"type\": \"HR\", \"updateDate\": \"2024-05-16T10:15:30Z\", \"url\": \"https://api.congress.gov/v3/bill/118/hr/1?format=json\"}, {\"congress\": 118, \"latestAction\": {\"actionDate\": \"2024-04-24\", \"text\": \"Became Public Law No: 118-50.\"}, \"number\": \"815\", \"originChamber\": \"House\", \"originChamberCode\": \"H\", \"title\": \"Making emergency supplemental appropriations for the fiscal year ending September 30, 2024\", \"type\": \"HR\", \"updateDate\": \"2024-04-25T12:00:00Z\", \"url\": \"https://api.congress.gov/v3/bill/118/hr/815?format=json\"}, {\"congress\": 118, \"latestAction\": {\"actionDate\": \"2024-03-10\", \"text\": \"Read twice and referred to the Committee on Commerce, Science, and Transportation.\"}, \"number\": \"2714\", \"originChamber\": \"Senate\", \"originChamberCode\": \"S\", \"title\": \"CREATE AI Act of 2023\", \"type\": \"S\", \"updateDate\": \"2024-03-11T09:00:00Z\", \"url\": \"https://api.congress.gov/v3/bill/118/s/2714?format=json\"}], \"pagination\": {\"count\": 15420, \"next\": \"https://api.congress.gov/v3/bill?offset=3&limit=3&format=json\"}, \"request\": {\"contentType\": \"application/json\", \"format\": \"json\"}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

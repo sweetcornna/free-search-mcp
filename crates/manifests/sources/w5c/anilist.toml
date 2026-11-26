@@ -1,0 +1,130 @@
+id = "anilist"
+name = "AniList"
+summary = "Open GraphQL database of anime and manga metadata, scores, genres, episodes, and studios."
+aliases = ["anilist graphql", "anime", "manga", "アニメ", "マンガ"]
+home_url = "https://anilist.co"
+tier = 1
+scopes = ["media"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 0.5, burst = 3, concurrency = 2, timeout_ms = 6000, cache_ttl_s = 43200 }
+
+[op.search]
+summary = "Search anime or manga titles on AniList via GraphQL."
+method = "POST"
+url = "https://graphql.anilist.co"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+body = { kind = "graphql", query = "query ($search: String, $type: MediaType, $perPage: Int, $page: Int) { Page(page: $page, perPage: $perPage) { pageInfo { currentPage hasNextPage total } media(search: $search, type: $type) { id title { romaji english native } format status episodes chapters seasonYear startDate { year month day } averageScore genres siteUrl description(asHtml: false) } } }", variables_jaq = '''{
+  page: ($p.page // 1),
+  perPage: ($p.limit // 10),
+  search: $p.query,
+  type: ($p.media_type // "ANIME")
+}''' }
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "cowboy bebop", limit = 3 }, min_results = 2, fixture = "fixtures/w5c/anilist/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, in = "body", doc = "Anime or manga title search" }
+media_type = { type = "string", default = "ANIME", enum = ["ANIME", "MANGA"], in = "body", doc = "Media type: ANIME or MANGA" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "body", doc = "Items per page" }
+page = { type = "int", default = 1, min = 1, in = "body", doc = "1-based page number" }
+
+[op.search.map]
+items = ".data.Page.media[]"
+total = ".data.Page.pageInfo.total"
+error = "if (.errors | type) == \"array\" and (.errors | length) > 0 then .errors[0].message else null end"
+record = '''
+(
+  if (.startDate.year | type) == "number" then
+    (.startDate.year | tostring)
+    + (if (.startDate.month | type) == "number" then "-" + (if .startDate.month < 10 then "0" + (.startDate.month | tostring) else (.startDate.month | tostring) end) else "" end)
+    + (if (.startDate.month | type) == "number" and (.startDate.day | type) == "number" then "-" + (if .startDate.day < 10 then "0" + (.startDate.day | tostring) else (.startDate.day | tostring) end) else "" end)
+  elif (.seasonYear | type) == "number" then (.seasonYear | tostring)
+  else null end
+) as $sd |
+{
+  id: .id,
+  title: (.title.english // .title.romaji // .title.native // ""),
+  romajiTitle: .title.romaji,
+  nativeTitle: .title.native,
+  format: .format,
+  status: .status,
+  episodes: .episodes,
+  chapters: .chapters,
+  seasonYear: .seasonYear,
+  startDate: $sd,
+  averageScore: .averageScore,
+  genres: (.genres // []),
+  url: .siteUrl,
+  description: ((.description // "") | strip_tags)
+}'''
+hit = '''
+((.description // "") | strip_tags) as $desc |
+(
+  if (.startDate.year | type) == "number" then
+    (.startDate.year | tostring)
+    + (if (.startDate.month | type) == "number" then "-" + (if .startDate.month < 10 then "0" + (.startDate.month | tostring) else (.startDate.month | tostring) end) else "" end)
+    + (if (.startDate.month | type) == "number" and (.startDate.day | type) == "number" then "-" + (if .startDate.day < 10 then "0" + (.startDate.day | tostring) else (.startDate.day | tostring) end) else "" end)
+  elif (.seasonYear | type) == "number" then (.seasonYear | tostring)
+  else null end
+) as $dt |
+{
+  title: (.title.english // .title.romaji // .title.native // ""),
+  url: (.siteUrl // ("https://anilist.co/" + (if ($p.media_type // "ANIME") == "MANGA" then "manga" else "anime" end) + "/" + (.id | tostring))),
+  snippet: ([
+    (if .format then .format else empty end),
+    (if $dt != null then $dt[0:4] else empty end),
+    (if .averageScore then "score \(.averageScore)/100" else empty end),
+    (if ((.genres // []) | length) > 0 then ((.genres // []) | join(", ")) else empty end),
+    ($desc | if length > 180 then .[0:180] + "..." else . end | select(length > 0))
+  ] | join(" · ")),
+  date: $dt,
+  dateSource: (if $dt != null then "api" else null end)
+}'''
+
+[op.media]
+summary = "Look up an AniList anime or manga record by numeric ID."
+method = "POST"
+url = "https://graphql.anilist.co"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+body = { kind = "graphql", query = "query ($id: Int) { Media(id: $id) { id title { romaji english native } type format status episodes chapters seasonYear startDate { year month day } averageScore genres siteUrl description(asHtml: false) studios(isMain: true) { nodes { name } } } }", variables_jaq = '''{ id: $p.id }''' }
+probe = { params = { id = 1 }, min_results = 1, fixture = "fixtures/w5c/anilist/media/default.json" }
+
+[op.media.params]
+id = { type = "int", required = true, in = "body", doc = "AniList numeric media ID" }
+
+[op.media.map]
+items = ".data.Media"
+error = "@ref:op.search.map.error"
+record = '''
+(
+  if (.startDate.year | type) == "number" then
+    (.startDate.year | tostring)
+    + (if (.startDate.month | type) == "number" then "-" + (if .startDate.month < 10 then "0" + (.startDate.month | tostring) else (.startDate.month | tostring) end) else "" end)
+    + (if (.startDate.month | type) == "number" and (.startDate.day | type) == "number" then "-" + (if .startDate.day < 10 then "0" + (.startDate.day | tostring) else (.startDate.day | tostring) end) else "" end)
+  elif (.seasonYear | type) == "number" then (.seasonYear | tostring)
+  else null end
+) as $sd |
+{
+  id: .id,
+  type: .type,
+  title: (.title.english // .title.romaji // .title.native // ""),
+  romajiTitle: .title.romaji,
+  nativeTitle: .title.native,
+  format: .format,
+  status: .status,
+  episodes: .episodes,
+  chapters: .chapters,
+  seasonYear: .seasonYear,
+  startDate: $sd,
+  averageScore: .averageScore,
+  genres: (.genres // []),
+  studios: [(.studios.nodes // [])[] | .name],
+  url: .siteUrl,
+  description: ((.description // "") | strip_tags)
+}'''

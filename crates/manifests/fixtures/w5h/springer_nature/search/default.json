@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "springer_nature",
+  "op": "search",
+  "recordedAt": "2026-11-25T13:03:45Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.springernature.com/meta/v2/json?q=transformer&p=3&s=1",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"apiMessage\": \"This JSON was provided by Springer Nature\", \"query\": \"transformer\", \"result\": [{\"total\": \"48210\", \"start\": \"1\", \"pageLength\": \"3\", \"recordsDisplayed\": \"3\"}], \"records\": [{\"contentType\": \"Article\", \"identifier\": \"doi:10.1038/s41598-020-79929-0\", \"title\": \"Transformer architectures for scientific sequence modeling\", \"creators\": [{\"ORCID\": \"0000-0002-0166-8163\", \"creator\": \"Janssen, Lieneke K.\"}, {\"creator\": \"Mahner, Florian P.\"}], \"publicationName\": \"Scientific Reports\", \"openaccess\": \"true\", \"doi\": \"10.1038/s41598-020-79929-0\", \"publicationDate\": \"2020-12-18\", \"abstract\": \"Self-attention transformer architectures enable long-range dependency modeling across biological and physical sequences.\", \"url\": [{\"format\": \"html\", \"platform\": \"web\", \"value\": \"https://www.nature.com/articles/s41598-020-79929-0\"}, {\"format\": \"pdf\", \"platform\": \"web\", \"value\": \"https://www.nature.com/articles/s41598-020-79929-0.pdf\"}]}, {\"contentType\": \"Article\", \"identifier\": \"doi:10.1007/s10994-022-06142-3\", \"title\": \"Efficient linear-time attention transformers for structured graphs\", \"creators\": [{\"creator\": \"Chen, Wei\"}, {\"creator\": \"Patel, Priya\"}], \"publicationName\": \"Machine Learning\", \"openaccess\": \"false\", \"doi\": \"10.1007/s10994-022-06142-3\", \"publicationDate\": \"2022-05-10\", \"abstract\": \"We analyze kernelized self-attention approximations on large sparse graphs with linear time complexity.\", \"url\": [{\"format\": \"html\", \"platform\": \"web\", \"value\": \"https://link.springer.com/article/10.1007/s10994-022-06142-3\"}]}, {\"contentType\": \"Chapter\", \"identifier\": \"doi:10.1007/978-3-031-20047-2_12\", \"title\": \"Vision Transformers for Multi-Modal Remote Sensing\", \"creators\": [{\"creator\": \"Keller, Lukas\"}], \"publicationName\": \"Lecture Notes in Computer Science\", \"openaccess\": \"true\", \"doi\": \"10.1007/978-3-031-20047-2_12\", \"publicationDate\": \"2022-10-20\", \"abstract\": \"Hierarchical vision transformers combine optical and radar satellite imagery for land-cover mapping.\", \"url\": [{\"format\": \"html\", \"platform\": \"web\", \"value\": \"https://link.springer.com/chapter/10.1007/978-3-031-20047-2_12\"}]}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

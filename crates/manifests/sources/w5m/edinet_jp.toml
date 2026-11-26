@@ -1,0 +1,56 @@
+id = "edinet_jp"
+name = "Japan FSA EDINET Disclosure API v2"
+summary = "Official Japan Financial Services Agency EDINET corporate disclosure list (annual securities reports, quarterly filings, XBRL/PDF flags) by filing date (requires free Subscription-Key)."
+aliases = ["edinet", "fsa edinet", "jp filings", "有価証券報告書"]
+home_url = "https://disclosure2.edinet-fsa.go.jp"
+tier = 3
+scopes = ["finance"]
+caps = ["lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 21600 }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_EDINET_API_KEY"
+in = "query"
+name = "Subscription-Key"
+format = "{key}"
+route_requires_key = true
+
+[op.documents]
+summary = "List Japanese listed company statutory filings submitted to EDINET on a given date (YYYY-MM-DD)."
+method = "GET"
+url = "https://api.edinet-fsa.go.jp/api/v2/documents.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { type = "2" }
+probe = { params = { date = "2026-06-25" }, min_results = 2, fixture = "fixtures/w5m/edinet_jp/documents/default.json" }
+examples = ["source.call('edinet_jp.documents', { date: '2026-06-25' })"]
+
+[op.documents.params]
+date = { type = "string", required = true, to = "date", doc = "Submission date in YYYY-MM-DD format (up to 10 years history)" }
+
+[op.documents.map]
+items = "(.results // [])[]"
+total = '(.metadata.resultset.count // (if (.metadata.resultset | type) == "number" then .metadata.resultset else null end) // .resultSetCount // null)'
+error = 'if (.StatusCode // .statusCode // 200) >= 400 then (.message // "EDINET authentication error") elif ((.metadata.status // .status // "200") | tostring) != "200" then (.metadata.message // .message // "EDINET error") else null end'
+record = '''{
+  docId: .docID,
+  edinetCode: (.edinetCode // null),
+  secCode: (.secCode // null),
+  jcn: (.JCN // null),
+  filerName: (.filerName // ""),
+  docTypeCode: (.docTypeCode // null),
+  formCode: (.formCode // null),
+  docDescription: (.docDescription // ""),
+  periodStart: (.periodStart // null),
+  periodEnd: (.periodEnd // null),
+  submitDateTime: (.submitDateTime // null),
+  pdfAvailable: (.pdfFlag == "1"),
+  xbrlAvailable: (.xbrlFlag == "1"),
+  csvAvailable: (.csvFlag == "1"),
+  englishDoc: (.englishDocFlag == "1"),
+  url: ("https://disclosure2.edinet-fsa.go.jp/WZEK0040.aspx?" + .docID)
+}'''

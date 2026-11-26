@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "source": "erddap_ioos",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:19:05Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://erddap.ioos.us/erddap/opensearch1.1/description.xml",
+        "headersSubset": {
+          "accept": "application/opensearchdescription+xml, application/xml"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/opensearchdescription+xml;charset=UTF-8"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<OpenSearchDescription xmlns=\"http://a9.com/-/spec/opensearch/1.1/\">\n  <ShortName>ERDDAP</ShortName>\n  <Description>The ERDDAP at Integrated Ocean Observing System (IOOS) is a data server that gives you a simple, consistent way to download subsets of scientific datasets in common file formats and make graphs and maps.</Description>\n  <Url type=\"application/atom+xml\"\n       template=\"https://erddap.ioos.us/erddap/opensearch1.1/search?searchTerms={searchTerms}&#x26;page={startPage?}&#x26;itemsPerPage={count?}&#x26;format=atom\"/>\n  <Url type=\"application/rss+xml\"\n       template=\"https://erddap.ioos.us/erddap/opensearch1.1/search?searchTerms={searchTerms}&#x26;page={startPage?}&#x26;itemsPerPage={count?}&#x26;format=rss\"/>\n  <Contact>mathew.biddle@noaa.gov</Contact>\n  <Tags>atmosphere biology biosphere earth environment ocean science</Tags>\n  <LongName>ERDDAP</LongName>\n  <Image height=\"56\" width=\"55\">https://erddap.ioos.us/erddap/images/nlogo.gif</Image>\n  <Image height=\"313\" width=\"313\">https://erddap.ioos.us/erddap/images/noaa_simple.gif</Image>\n  <Image height=\"20\" width=\"20\">https://erddap.ioos.us/erddap/images/noaa20.gif</Image>\n  <Query role=\"example\" searchTerms=\"datasetID\" />\n  <Developer>erd.data at noaa.gov</Developer>\n  <Attribution>Integrated Ocean Observing System (IOOS)</Attribution>\n  <SyndicationRight>private</SyndicationRight>\n  <AdultContent>false</AdultContent>\n  <Language>en-US</Language>\n  <InputEncoding>UTF-8</InputEncoding>\n  <OutputEncoding>UTF-8</OutputEncoding>\n</OpenSearchDescription>\n",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://erddap.ioos.us/erddap/opensearch1.1/search?searchTerms=temperature&page=1&itemsPerPage=3&format=atom",
+        "headersSubset": {
+          "accept": "application/atom+xml, application/xml"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/atom+xml;charset=UTF-8"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<feed xmlns=\"https://www.w3.org/2005/Atom\" \n      xmlns:opensearch=\"http://a9.com/-/spec/opensearch/1.1/\">\n  <title>ERDDAP Search: temperature</title> \n  <link href=\"https&#x3a;&#x2f;&#x2f;erddap&#x2e;ioos&#x2e;us&#x2f;erddap&#x2f;opensearch1&#x2e;1&#x2f;search&#x3f;searchTerms&#x3d;temperature&#x26;page&#x3d;1&#x26;itemsPerPage&#x3d;3&#x26;format&#x3d;atom\"/>\n  <updated>2026-11-25T12:09:07Z</updated>\n  <author> \n    <name>Mathew Biddle</name>\n    <email>mathew.biddle@noaa.gov</email>\n  </author> \n  <id>https&#x3a;&#x2f;&#x2f;erddap&#x2e;ioos&#x2e;us&#x2f;erddap&#x2f;opensearch1&#x2e;1&#x2f;search&#x3f;searchTerms&#x3d;temperature&#x26;page&#x3d;1&#x26;itemsPerPage&#x3d;3&#x26;format&#x3d;atom</id>\n  <opensearch:totalResults>3</opensearch:totalResults>\n  <opensearch:startIndex>1</opensearch:startIndex>\n  <opensearch:itemsPerPage>3</opensearch:itemsPerPage>\n  <opensearch:Query role=\"request\" searchTerms=\"temperature\" startPage=\"1\" />\n  <link rel=\"first\" href=\"https://erddap.ioos.us/erddap/opensearch1.1/search?searchTerms=temperature&amp;format=atom&amp;itemsPerPage=3&amp;page=1\" type=\"application/atom+xml\"/>\n  <link rel=\"self\" href=\"https://erddap.ioos.us/erddap/opensearch1.1/search?searchTerms=temperature&amp;format=atom&amp;itemsPerPage=3&amp;page=1\" type=\"application/atom+xml\"/>\n  <link rel=\"last\" href=\"https://erddap.ioos.us/erddap/opensearch1.1/search?searchTerms=temperature&amp;format=atom&amp;itemsPerPage=3&amp;page=1\" type=\"application/atom+xml\"/>\n  <entry>\n    <title>IOOS Regional Association processed asset inventory since 2019-01-01.</title>\n    <link href=\"https://erddap.ioos.us/erddap/tabledap/processed_asset_inventory.html\"/>\n    <id>https://erddap.ioos.us/erddap/tabledap/processed_asset_inventory.html</id>\n    <updated>2026-11-23T16:41:24Z</updated>\n    <content type=\"text\">\nThe Observing Asset Inventory requirements can be found on the bottom of page 4 of the Cooperative Agreement Progress Report Guidance document. The inventories cover the entire calendar year (CY), for the year they are reporting (eg. for 2020 the period of time is Jan 1 2020 - Dec 31 2020).\n\ncdm_data_type = Other\nVARIABLES:\nYear (Year of the inventory in YYYY format)\nRA\nlatitude (degrees_north)\nlongitude (degrees_east)\nstation_long_name\nPlatform\nOperational\nstation_deployment\nRA_Funded\nWater_temp\nSalinity\nWtr_press\nDew_pt\nRel_hum\nAir_temp\nWinds\nAir_press\nPrecip (Precipitation)\nSolar_radn\nVisibility\nWater_level\nWaves\nCurrents\nTurbidity\nDO\n... (12 more variables)\n    </content>\n  </entry>\n  <entry>\n    <title>IOOS By The Numbers</title>\n    <link href=\"https://erddap.ioos.us/erddap/tabledap/by_the_numbers.html\"/>\n    <id>https://erddap.ioos.us/erddap/tabledap/by_the_numbers.html</id>\n    <updated>2026-11-18T18:25:57Z</updated>\n    <content type=\"text\">\nU.S. IOOS® is a vital tool for tracking, predicting, managing, and adapting to changes in our ocean, coastal and Great Lakes environment.  &quot;IOOS by the Numbers&quot; is was developed as a graphical representation of IOOS  -- a system of includes our partnerships, research and observing components, and data management capabilities. This figure is an annually updated collection of numbers that show the breadth of the IOOS Program as it is growing and evolving.  These data were obtained from multiple sources in July 2022. The original source for each value is identified below. Links to each federal partner or regional association are provided.\n\ncdm_data_type = Other\nVARIABLES:\ntime (Date UTC, seconds since 1970-01-01T00:00:00Z)\nFederal_Partners (count)\nRegional_Associations (count)\nHF_Radar_Stations (count)\nNGDAC_Glider_Days (count)\nNational_Platforms (count)\nRegional_Platforms (count)\nATN_Deployments (count)\nMBON_Projects (count)\nOTT_Projects (count)\nHAB_Pilot_Projects (count)\nQARTOD_Manuals (count)\nIOOS_Core_Variables (count)\nMetadata_Records (count)\nIOOS (count)\nCOMT_Projects (count)\n    </content>\n  </entry>\n  <entry>\n    <title>IOOS Regional Association raw asset inventory since 2020-01-01.</title>\n    <link href=\"https://erddap.ioos.us/erddap/tabledap/raw_asset_inventory.html\"/>\n    <id>https://erddap.ioos.us/erddap/tabledap/raw_asset_inventory.html</id>\n    <updated>2026-11-23T16:41:24Z</updated>\n    <content type=\"text\">\nThe Observing Asset Inventory requirements can be found on the bottom of page 4 of the Cooperative Agreement Progress Report Guidance document. The inventories cover the entire calendar year (CY), for the year they are reporting (eg. for 2020 the period of time is Jan 1 2020 - Dec 31 2020).\n\ncdm_data_type = Other\nVARIABLES:\nYear (Year of the inventory in YYYY format)\nRA (Regional Association)\nStation_ID (Station Identifier)\nWMO_ID_or_NWS_CMAN_ID\nStation_Long_Name\nStation_Description\nlatitude (degrees_north)\nlongitude (degrees_east)\nPlatform_Type\nStation_Deployment (Station Deployment (mm/yyyy, yyyy, &lt; 5 yr, &gt; 5 yr))\nCurrently_Operational (Currently Operational? (Y, N, O, U))\nPlatform_Funder (Platform Funder/Sponsor)\nRA_Funded (RA Funding Involvement (Yf, Yp, N))\nPlatform_Operator (Platform Operator/Owner)\nOperator_Sector\nPlatform_Maintainer\nData_Manager\nVariable_Names (Variable Names + Water Column Depth Of Measurement In Meters [CF Name (# M, # M) Or CF Name (mult) Or CF Name (# Depths)].)\nAdditional_notes\nfile\ncrs (Coordinate reference system information)\n    </content>\n  </entry>\n</feed>\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

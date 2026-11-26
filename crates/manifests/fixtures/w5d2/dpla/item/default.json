@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "dpla",
+  "op": "item",
+  "recordedAt": "2026-11-25T12:14:49Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.dp.la/v2/items/58923a1a8c20579e01331c265bf86961",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"count\": 1, \"docs\": [{\"id\": \"58923a1a8c20579e01331c265bf86961\", \"isShownAt\": \"https://digitalcollections.nypl.org/items/510d47de-3543-a3d9-e040-e00a18064a99\", \"object\": \"https://images.nypl.org/index.php?id=427043&t=w\", \"dataProvider\": \"New York Public Library\", \"provider\": {\"name\": \"New York Public Library\"}, \"sourceResource\": {\"title\": [\"Map of the Union Pacific Railroad and connections\"], \"creator\": [\"Colton, G. W.\"], \"date\": [{\"displayDate\": \"1869\", \"begin\": \"1869\", \"end\": \"1869\"}], \"description\": [\"Railroad route map across the western United States.\"], \"subject\": [{\"name\": \"Railroads--United States--Maps\"}], \"rights\": [\"Public Domain\"], \"type\": [\"image\"]}}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "gdelt",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:20:38Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.gdeltproject.org/api/v2/doc/doc?mode=ArtList&format=json&sort=hybridrel&query=climate&maxrecords=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"articles\": [ { \"url\": \"http://world.people.com.cn/n1/2026/1002/c1002-40808849.html\", \"url_mobile\": \"\", \"title\": \"多方共商气候适应型社会建设 -- 国际 -- 人民网\", \"seendate\": \"20261002T024500Z\", \"socialimage\": \"\", \"domain\": \"world.people.com.cn\", \"language\": \"Chinese\", \"sourcecountry\": \"China\" },{ \"url\": \"https://n.yam.com/Article/20261002246765\", \"url_mobile\": \"\", \"title\": \"邁向淨零共創未來 ！ 第六屆臺灣氣候行動博覽會高雄盛大開幕\", \"seendate\": \"20261002T083000Z\", \"socialimage\": \"https://ni.yam.com/20261002/365866abf65a00f52e-609ea4e5f96788e8.jpg\", \"domain\": \"n.yam.com\", \"language\": \"Chinese\", \"sourcecountry\": \"Taiwan\" },{ \"url\": \"https://n.yam.com/Article/20261002559295\", \"url_mobile\": \"\", \"title\": \" 「 第六屆臺灣氣候行動博覽會 TAIWAN COP6 」 於高雄科工館盛大登場\", \"seendate\": \"20261002T083000Z\", \"socialimage\": \"https://ni.yam.com/20261002/224046abf64ae10ccf-609ea4e5f96788e8.jpg\", \"domain\": \"n.yam.com\", \"language\": \"Chinese\", \"sourcecountry\": \"Taiwan\" }] }",
+        "bodyB64": null
+      }
+    }
+  ]
+}

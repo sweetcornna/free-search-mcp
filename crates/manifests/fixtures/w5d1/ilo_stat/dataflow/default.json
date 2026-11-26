@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "ilo_stat",
+  "op": "dataflow",
+  "recordedAt": "2026-11-25T12:12:19Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://sdmx.ilo.org/rest/dataflow/ILO/DF_UNE_DEAP_SEX_AGE_RT",
+        "headersSubset": {
+          "accept": "application/vnd.sdmx.structure+json;version=1.0"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/vnd.sdmx.structure+json; charset=utf-8; version=1.0"
+          ]
+        ],
+        "bodyText": "{\"data\":{\"dataflows\":[{\"id\":\"DF_UNE_DEAP_SEX_AGE_RT\",\"version\":\"1.0\",\"agencyID\":\"ILO\",\"isExternalReference\":false,\"isFinal\":true,\"name\":\"Unemployment rate by sex and age\",\"names\":{\"en\":\"Unemployment rate by sex and age\"},\"description\":\"<strong>With the aim of promoting international comparability, statistics presented on ILOSTAT are based on standard international definitions wherever feasible and may differ from official national figures. </strong>This series is based on the 13th ICLS definitions. For time series comparability, it includes countries that have implemented the 19th ICLS standards, for which data are also available in the Work Statistics -- 19th ICLS (WORK) database. The unemployment rate conveys the number of persons who are unemployed as a percent of the labour force (i.e., the employed plus the unemployed). The unemployed comprise all persons of working age who were: a) without work during the reference period, i.e. were not in paid employment or self-employment; b) currently available for work, i.e. were available for paid employment or self-employment during the reference period; and c) seeking work, i.e. had taken specific steps in a specified recent period to seek paid employment or self-employment. For more information, refer to the <a href = \\\"https://ilostat.ilo.org/databases/lfs/description/\\\">Labour Force Statistics (LFS and STLFS) database description</a>.\",\"descriptions\":{\"en\":\"<strong>With the aim of promoting international comparability, statistics presented on ILOSTAT are based on standard international definitions wherever feasible and may differ from official national figures. </strong>This series is based on the 13th ICLS definitions. For time series comparability, it includes countries that have implemented the 19th ICLS standards, for which data are also available in the Work Statistics -- 19th ICLS (WORK) database. The unemployment rate conveys the number of persons who are unemployed as a percent of the labour force (i.e., the employed plus the unemployed). The unemployed comprise all persons of working age who were: a) without work during the reference period, i.e. were not in paid employment or self-employment; b) currently available for work, i.e. were available for paid employment or self-employment during the reference period; and c) seeking work, i.e. had taken specific steps in a specified recent period to seek paid employment or self-employment. For more information, refer to the <a href = \\\"https://ilostat.ilo.org/databases/lfs/description/\\\">Labour Force Statistics (LFS and STLFS) database description</a>.\"},\"annotations\":[{\"title\":\"22/11/2026 07:54:31\",\"type\":\"LAST_UPDATE\"},{\"title\":\"AGE\",\"type\":\"LAYOUT_COLUMN\"},{\"title\":\"REF_AREA,SEX,TIME_PERIOD\",\"type\":\"LAYOUT_ROW\"},{\"title\":\"FREQ=A,endPeriod=2027-12-31,AGE=AGE_YTHADULT_YGE15+AGE_YTHADULT_Y15-64+AGE_YTHADULT_Y15-24+AGE_YTHADULT_YGE25,SEX=SEX_T,LASTNOBSERVATIONS=1\",\"type\":\"DEFAULT\"},{\"title\":\"366500\",\"type\":\"ORDER\"},{\"title\":\"633500\",\"type\":\"SEARCH_WEIGHT\"}],\"structure\":\"urn:sdmx:org.sdmx.infomodel.datastructure.DataStructure=ILO:UNE_DEAP_SEX_AGE_RT(1.0)\"}]},\"meta\":{\"schema\":\"https://raw.githubusercontent.com/sdmx-twg/sdmx-json/develop/structure-message/tools/schemas/1.0/sdmx-json-structure-schema.json\",\"contentLanguages\":[\"en\"],\"id\":\"IDREF111\",\"prepared\":\"2026-11-25T12:12:29Z\",\"test\":false,\"sender\":{\"id\":\"Unknown\"},\"receiver\":[{\"id\":\"Unknown\"}]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+---
+source: crates/surface/tests/snapshots.rs
+expression: shrunk
+---
+{"source":"nvd","hostApiCount":35,"items":[{"id":"CVE-2026-0001","description":"Vulnerability description #1: buffer bou…"},{"id":"CVE-2026-0002","description":"Vulnerability description #2: buffer bou…"},{"id":"CVE-2026-0003","description":"Vulnerability description #3: buffer bou…"},{"id":"CVE-2026-0004","description":"Vulnerability description #4: buffer bou…"},{"id":"CVE-2026-0005","description":"Vulnerability description #5: buffer bou…"},{"id":"CVE-2026-0006","description":"Vulnerability description #6: buffer bou…"},"…(+6 more)"]}

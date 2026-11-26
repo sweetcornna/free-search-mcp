@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "wikinews",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:13:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://en.wikinews.org/w/api.php?action=query&list=search&srsearch=climate&srlimit=3&format=json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "cache-control",
+            "private, must-revalidate, max-age=0"
+          ],
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"batchcomplete\":\"\",\"continue\":{\"sroffset\":3,\"continue\":\"-||\"},\"query\":{\"searchinfo\":{\"totalhits\":465},\"search\":[{\"ns\":0,\"title\":\"Copenhagen climate conference opens\",\"pageid\":145486,\"size\":7951,\"wordcount\":904,\"snippet\":\"Nations <span class=\\\"searchmatch\\\">Climate</span> Change Conference (COP15) has opened on Monday with calls for urgent action to curb <span class=\\\"searchmatch\\\">climate</span> change and global warming. The largest <span class=\\\"searchmatch\\\">climate</span> conference\",\"timestamp\":\"2024-12-18T10:56:55Z\"},{\"ns\":0,\"title\":\"Second round of Bonn UN Climate Change negotiations continue\",\"pageid\":189131,\"size\":3380,\"wordcount\":451,\"snippet\":\"criticised the outgoing head of the U.N.&#039;s <span class=\\\"searchmatch\\\">climate</span> secretariat, Yvo de Boer, and the European Union&#039;s <span class=\\\"searchmatch\\\">climate</span> commissioner Connie Hedegaard for their scepticism\",\"timestamp\":\"2024-12-19T02:46:23Z\"},{\"ns\":0,\"title\":\"World climate conference in Nairobi\",\"pageid\":54292,\"size\":2744,\"wordcount\":338,\"snippet\":\"Monday, November 13, 2006 \\u00a0 <span class=\\\"searchmatch\\\">Climate</span> change Related articles Australian Greens choose Queensland Senator Larissa Waters as new leader Lancet release yearly\",\"timestamp\":\"2024-12-19T05:35:11Z\"}]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

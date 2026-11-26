@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "epo_ops",
+  "op": "publication",
+  "recordedAt": "2026-11-25T12:14:49Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://ops.epo.org/3.2/rest-services/published-data/publication/epodoc/EP1000000.A1/biblio",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"ops:world-patent-data\": {\"exchange-documents\": {\"exchange-document\": {\"@country\": \"EP\", \"@doc-number\": \"1000000\", \"@kind\": \"A1\", \"@family-id\": \"19768124\", \"bibliographic-data\": {\"publication-reference\": {\"document-id\": [{\"@document-id-type\": \"docdb\", \"country\": {\"$\": \"EP\"}, \"doc-number\": {\"$\": \"1000000\"}, \"kind\": {\"$\": \"A1\"}, \"date\": {\"$\": \"20000517\"}}]}, \"invention-title\": [{\"@lang\": \"en\", \"$\": \"Apparatus for manufacturing green bricks for the brick manufacturing industry\"}, {\"@lang\": \"de\", \"$\": \"Vorrichtung zur Herstellung von Formlingen für die Ziegelindustrie\"}], \"parties\": {\"applicants\": {\"applicant\": [{\"@data-format\": \"epodoc\", \"applicant-name\": {\"name\": {\"$\": \"BOER BEHEER NIJMEGEN BV DE [NL]\"}}}]}, \"inventors\": {\"inventor\": [{\"@data-format\": \"epodoc\", \"inventor-name\": {\"name\": {\"$\": \"KOSMAN WILHELMUS JACOBUS MARIA [NL]\"}}}]}}}, \"abstract\": [{\"@lang\": \"en\", \"p\": {\"$\": \"The invention relates to an apparatus for manufacturing green bricks from clay for the brick manufacturing industry.\"}}]}}}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "met_museum",
+  "op": "object",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://collectionapi.metmuseum.org/public/collection/v1/objects/436524",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"objectID\":436524,\"isHighlight\":false,\"accessionNumber\":\"49.41\",\"accessionYear\":\"1949\",\"isPublicDomain\":true,\"primaryImage\":\"https://images.metmuseum.org/CRDImages/ep/original/DP-41223-001.jpg\",\"primaryImageSmall\":\"https://images.metmuseum.org/CRDImages/ep/web-large/DP-41223-001.jpg\",\"additionalImages\":[],\"constituents\":[{\"constituentID\":161947,\"role\":\"Artist\",\"name\":\"Vincent van Gogh\",\"constituentULAN_URL\":\"http://vocab.getty.edu/page/ulan/500115588\",\"constituentWikidata_URL\":\"https://www.wikidata.org/wiki/Q5582\",\"gender\":\"\"}],\"department\":\"European Paintings\",\"objectName\":\"Painting\",\"title\":\"Sunflowers\",\"culture\":\"\",\"period\":\"\",\"dynasty\":\"\",\"reign\":\"\",\"portfolio\":\"\",\"artistRole\":\"Artist\",\"artistPrefix\":\"\",\"artistDisplayName\":\"Vincent van Gogh\",\"artistDisplayBio\":\"Dutch, Zundert 1853–1890 Auvers-sur-Oise\",\"artistSuffix\":\"\",\"artistAlphaSort\":\"Gogh, Vincent van\",\"artistNationality\":\"Dutch\",\"artistBeginDate\":\"1853\",\"artistEndDate\":\"1890\",\"artistGender\":\"\",\"artistWikidata_URL\":\"https://www.wikidata.org/wiki/Q5582\",\"artistULAN_URL\":\"http://vocab.getty.edu/page/ulan/500115588\",\"objectDate\":\"1887\",\"objectBeginDate\":1887,\"objectEndDate\":1887,\"medium\":\"Oil on canvas\",\"dimensions\":\"17 x 24 in. (43.2 x 61 cm)\",\"measurements\":[{\"elementName\":\"Overall\",\"elementDescription\":null,\"elementMeasurements\":{\"Height\":43.2,\"Width\":61}},{\"elementName\":\"Framed\",\"elementDescription\":null,\"elementMeasurements\":{\"Depth\":6.35,\"Height\":66.6751,\"Width\":85.0902}}],\"creditLine\":\"Rogers Fund, 1949\",\"geographyType\":\"\",\"city\":\"\",\"state\":\"\",\"county\":\"\",\"country\":\"\",\"region\":\"\",\"subregion\":\"\",\"locale\":\"\",\"locus\":\"\",\"excavation\":\"\",\"river\":\"\",\"classification\":\"Paintings\",\"rightsAndReproduction\":\"\",\"linkResource\":\"\",\"metadataDate\":\"2026-11-06T04:53:14.23Z\",\"repository\":\"Metropolitan Museum of Art, New York, NY\",\"objectURL\":\"https://www.metmuseum.org/art/collection/search/436524\",\"tags\":[{\"term\":\"Sunflowers\",\"AAT_URL\":\"http://vocab.getty.edu/page/aat/300404749\",\"Wikidata_URL\":\"https://www.wikidata.org/wiki/Q171497\"},{\"term\":\"Still Life\",\"AAT_URL\":\"http://vocab.getty.edu/page/aat/300015638\",\"Wikidata_URL\":\"https://www.wikidata.org/wiki/Q170571\"}],\"objectWikidata_URL\":\"https://www.wikidata.org/wiki/Q9213165\",\"isTimelineWork\":false,\"GalleryNumber\":\"825\"}\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

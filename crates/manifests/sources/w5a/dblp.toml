@@ -1,0 +1,132 @@
+id = "dblp"
+name = "DBLP Computer Science Bibliography"
+summary = "Curated computer-science bibliography (7M+ publications, authors, and venues via DBLP SPARQL)."
+aliases = ["dblp.org", "dblp computer science", "dblp bibliography", "cs bibliography"]
+home_url = "https://dblp.org"
+tier = 1
+scopes = ["academic", "academic.cs"]
+caps = ["search", "lookup", "author", "venue"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 15000, cache_ttl_s = 43200, host_bucket = "sparql.dblp.org" }
+
+[op.search]
+summary = "Search DBLP CS publications by title substring via official SPARQL endpoint."
+method = "POST"
+url = "https://sparql.dblp.org/sparql"
+headers = { Accept = "application/sparql-results+json", Content-Type = "application/sparql-query" }
+response = "json"
+returns = "works"
+body = { kind = "sparql", jaq = '''"PREFIX dblp: <https://dblp.org/rdf/schema#>\nSELECT ?publ ?title ?year ?venue ?doi ?ee (GROUP_CONCAT(DISTINCT ?authorName; SEPARATOR=\"; \") AS ?authors) WHERE {\n  { SELECT ?publ ?title WHERE { ?publ a dblp:Publication ; dblp:title ?title . FILTER(CONTAINS(LCASE(?title), \"" + ($p.query | ascii_downcase | gsub("[\"\\\\\\r\\n]"; " ")) + "\")) } LIMIT " + (($p.limit // 10) | tostring) + (if $p.offset != null then (" OFFSET " + ($p.offset | tostring)) else "" end) + " }\n  OPTIONAL { ?publ dblp:yearOfPublication ?year }\n  OPTIONAL { ?publ dblp:publishedIn ?venue }\n  OPTIONAL { ?publ dblp:doi ?doi }\n  OPTIONAL { ?publ dblp:primaryElectronicEdition ?ee }\n  OPTIONAL { ?publ dblp:authoredBy/dblp:primaryCreatorName ?authorName }\n} GROUP BY ?publ ?title ?year ?venue ?doi ?ee"''' }
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "reciprocal rank fusion", limit = 3 }, min_results = 2, fixture = "fixtures/w5a/dblp/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, in = "body", doc = "Title search substring" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "body", doc = "Max results" }
+offset = { type = "int", min = 0, in = "body", doc = "Result offset" }
+
+[op.search.map]
+items = ".results.bindings[]"
+error = '''if .error != null then (.error | tostring) else null end'''
+work = '''{
+  title: ((.title.value // "") | unescape_html | collapse_ws | sub("\\.$"; "")),
+  authors: (if (.authors.value // "") != "" then [(.authors.value | split("; "))[] | collapse_ws | select(length > 0) | {name: .}] else [] end),
+  year: (.year.value? | to_int),
+  venue: ((.venue.value // null) | if type == "string" then collapse_ws else null end),
+  workType: (if ((.publ.value // "") | test("/rec/conf/")) then "proceedings-article" elif ((.publ.value // "") | test("/rec/books/")) then "book" else "article" end),
+  ids: {
+    doi: ((.doi.value // null) | doi_norm),
+    dblp: ((.publ.value // null) | if type == "string" then sub("^https?://dblp\\.org/rec/"; "") else null end)
+  },
+  retracted: false,
+  versions: [],
+  url: (.ee.value // .doi.value // .publ.value // ""),
+  sources: ["dblp"]
+}'''
+
+[op.work]
+summary = "Look up a DBLP publication case-insensitively by DOI via SPARQL."
+method = "POST"
+url = "https://sparql.dblp.org/sparql"
+headers = { Accept = "application/sparql-results+json", Content-Type = "application/sparql-query" }
+response = "json"
+returns = "works"
+body = { kind = "sparql", jaq = '''"PREFIX dblp: <https://dblp.org/rdf/schema#>\nSELECT ?publ ?title ?year ?venue ?doi ?ee (GROUP_CONCAT(DISTINCT ?authorName; SEPARATOR=\"; \") AS ?authors) WHERE {\n  { SELECT ?publ ?doi WHERE { ?publ dblp:doi ?doi . FILTER(LCASE(STR(?doi)) = \"https://doi.org/" + ($p.doi | sub("^(?:https?://(?:dx\\.)?doi\\.org/|doi:\\s*)"; ""; "i") | gsub("[<>\"\\\\\\s]"; "") | ascii_downcase) + "\") } LIMIT 1 }\n  ?publ dblp:title ?title .\n  OPTIONAL { ?publ dblp:yearOfPublication ?year }\n  OPTIONAL { ?publ dblp:publishedIn ?venue }\n  OPTIONAL { ?publ dblp:primaryElectronicEdition ?ee }\n  OPTIONAL { ?publ dblp:authoredBy/dblp:primaryCreatorName ?authorName }\n} GROUP BY ?publ ?title ?year ?venue ?doi ?ee"''' }
+probe = { params = { doi = "10.1145/1571941.1572114" }, min_results = 1, fixture = "fixtures/w5a/dblp/work/default.json" }
+
+[op.work.params]
+doi = { type = "string", required = true, in = "body", doc = "DOI e.g. 10.1145/1571941.1572114" }
+
+[op.work.map]
+items = ".results.bindings[]"
+error = "@ref:op.search.map.error"
+work = "@ref:op.search.map.work"
+
+[op.record]
+summary = "Look up a DBLP publication directly by DBLP record key (works even when DOI is absent)."
+method = "POST"
+url = "https://sparql.dblp.org/sparql"
+headers = { Accept = "application/sparql-results+json", Content-Type = "application/sparql-query" }
+response = "json"
+returns = "works"
+body = { kind = "sparql", jaq = '''"PREFIX dblp: <https://dblp.org/rdf/schema#>\nSELECT ?publ ?title ?year ?venue ?doi ?ee (GROUP_CONCAT(DISTINCT ?authorName; SEPARATOR=\"; \") AS ?authors) WHERE {\n  VALUES ?publ { <https://dblp.org/rec/" + ($p.key | sub("^https?://dblp\\.org/rec/"; "") | gsub("[<>\"\\\\\\s]"; "")) + "> }\n  ?publ dblp:title ?title .\n  OPTIONAL { ?publ dblp:yearOfPublication ?year }\n  OPTIONAL { ?publ dblp:publishedIn ?venue }\n  OPTIONAL { ?publ dblp:doi ?doi }\n  OPTIONAL { ?publ dblp:primaryElectronicEdition ?ee }\n  OPTIONAL { ?publ dblp:authoredBy/dblp:primaryCreatorName ?authorName }\n} GROUP BY ?publ ?title ?year ?venue ?doi ?ee LIMIT 1"''' }
+probe = { params = { key = "conf/clef/FrobeHVP23" }, min_results = 1, fixture = "fixtures/w5a/dblp/record/default.json" }
+
+[op.record.params]
+key = { type = "string", required = true, in = "body", doc = "DBLP record key e.g. conf/clef/FrobeHVP23" }
+
+[op.record.map]
+items = ".results.bindings[]"
+error = "@ref:op.search.map.error"
+work = "@ref:op.search.map.work"
+
+[op.author]
+summary = "Search DBLP CS author profiles by name."
+method = "POST"
+url = "https://sparql.dblp.org/sparql"
+headers = { Accept = "application/sparql-results+json", Content-Type = "application/sparql-query" }
+response = "json"
+returns = "records"
+body = { kind = "sparql", jaq = '''"PREFIX dblp: <https://dblp.org/rdf/schema#>\nSELECT ?creator ?name ?orcid (GROUP_CONCAT(DISTINCT ?aff; SEPARATOR=\"; \") AS ?affiliations) (COUNT(DISTINCT ?p) AS ?worksCount) WHERE {\n  { SELECT ?creator ?name WHERE { ?creator a dblp:Creator ; dblp:primaryCreatorName ?name . FILTER(CONTAINS(LCASE(?name), \"" + ($p.query | ascii_downcase | gsub("[\"\\\\\\r\\n]"; " ")) + "\")) } LIMIT " + (($p.limit // 5) | tostring) + " }\n  OPTIONAL { ?creator dblp:orcid ?orcid }\n  OPTIONAL { ?creator dblp:primaryAffiliation ?aff }\n  OPTIONAL { ?p dblp:authoredBy ?creator }\n} GROUP BY ?creator ?name ?orcid"''' }
+probe = { params = { query = "geoffrey e. hinton", limit = 3 }, min_results = 1, fixture = "fixtures/w5a/dblp/author/default.json" }
+
+[op.author.params]
+query = { type = "string", required = true, in = "body", doc = "Author name substring" }
+limit = { type = "int", default = 5, min = 1, max = 20, in = "body", doc = "Max profiles" }
+
+[op.author.map]
+items = ".results.bindings[]"
+error = "@ref:op.search.map.error"
+record = '''{
+  name: ((.name.value // "") | collapse_ws),
+  orcid: ((.orcid.value // null) | if type == "string" then sub("^https?://orcid\\.org/"; "") else null end),
+  affiliations: (if (.affiliations.value // "") != "" then [(.affiliations.value | split("; "))[] | collapse_ws | select(length > 0)] else [] end),
+  worksCount: (.worksCount.value? | to_int),
+  topWorks: [],
+  sources: ["dblp"]
+}'''
+
+[op.venue]
+summary = "Search DBLP CS conferences and journals (streams) by title or ISSN."
+method = "POST"
+url = "https://sparql.dblp.org/sparql"
+headers = { Accept = "application/sparql-results+json", Content-Type = "application/sparql-query" }
+response = "json"
+returns = "records"
+body = { kind = "sparql", jaq = '''($p.query | ascii_downcase | gsub("[\"\\\\\\r\\n]"; " ") | collapse_ws) as $q | "PREFIX dblp: <https://dblp.org/rdf/schema#>\nSELECT ?stream ?title (GROUP_CONCAT(DISTINCT STR(?issn); SEPARATOR=\";\") AS ?issns) (COUNT(DISTINCT ?p) AS ?worksCount) WHERE {\n  { SELECT ?stream ?title WHERE { " + (if ($q | test("^[0-9]{4}-[0-9]{3}[0-9x]$")) then ("?stream a dblp:Stream ; dblp:streamTitle ?title ; dblp:issn ?i . FILTER(CONTAINS(LCASE(STR(?i)), \"" + $q + "\"))") else ("?stream a dblp:Stream ; dblp:streamTitle ?title . FILTER(CONTAINS(LCASE(?title), \"" + $q + "\"))") end) + " } LIMIT " + (($p.limit // 5) | tostring) + " }\n  OPTIONAL { ?stream dblp:issn ?issn }\n  OPTIONAL { ?p dblp:publishedInStream ?stream }\n} GROUP BY ?stream ?title"''' }
+probe = { params = { query = "neural information processing", limit = 3 }, min_results = 1, fixture = "fixtures/w5a/dblp/venue/default.json" }
+
+[op.venue.params]
+query = { type = "string", required = true, in = "body", doc = "Venue title substring or ISSN (e.g. 0004-3702)" }
+limit = { type = "int", default = 5, min = 1, max = 20, in = "body", doc = "Max venues" }
+
+[op.venue.map]
+items = ".results.bindings[]"
+error = "@ref:op.search.map.error"
+record = '''{
+  name: ((.title.value // "") | collapse_ws),
+  issn: (if (.issns.value // "") != "" then ([(.issns.value | split(";"))[] | sub("^(?:urn:issn:|https?://issn\\.org/resource/ISSN/)"; ""; "i") | select(length > 0)] | unique) else [] end),
+  worksCount: (.worksCount.value? | to_int),
+  sources: ["dblp"]
+}'''

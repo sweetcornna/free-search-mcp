@@ -1,0 +1,130 @@
+id = "stackexchange"
+name = "Stack Exchange"
+summary = "Q&A search and question lookup across Stack Overflow and 180+ Stack Exchange sites."
+aliases = ["stackoverflow", "stack overflow", "mathoverflow", "serverfault", "superuser"]
+home_url = "https://stackexchange.com"
+tier = 1
+scopes = ["forum", "code"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 2, timeout_ms = 5000, cache_ttl_s = 21600 }
+
+[auth]
+mode = "optional"
+env = "SEARCH_MCP_STACKEXCHANGE_KEY"
+in = "query"
+name = "key"
+route_requires_key = false
+
+[op.search]
+summary = "Search questions on Stack Overflow or any Stack Exchange site."
+method = "GET"
+url = "https://api.stackexchange.com/2.3/search/advanced"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { order = "desc" }
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "rust async", limit = 3 }, min_results = 2, fixture = "fixtures/w5c/stackexchange/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Search query" }
+site = { type = "string", default = "stackoverflow", to = "site", doc = "Stack Exchange site slug (e.g. stackoverflow, mathoverflow, serverfault)" }
+sort = { type = "string", default = "relevance", enum = ["relevance", "activity", "votes", "creation"], to = "sort", doc = "Sort order" }
+tagged = { type = "string", to = "tagged", doc = "Semicolon-delimited tags filter" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "pagesize", doc = "Results per page" }
+page = { type = "int", min = 1, to = "page", doc = "1-based page number" }
+
+[op.search.map]
+items = ".items[]"
+error = "if .error_id then (.error_message // .error_name // \"Stack Exchange API error\") else null end"
+record = '''{
+  questionId: .question_id,
+  title: ((.title // "") | unescape_html),
+  url: .link,
+  isAnswered: (.is_answered // false),
+  acceptedAnswerId: .accepted_answer_id,
+  score: .score,
+  answerCount: .answer_count,
+  viewCount: .view_count,
+  tags: (.tags // []),
+  author: (.owner.display_name | unescape_html),
+  creationDate: (.creation_date | epoch_to_iso)
+}'''
+hit = '''
+(.creation_date | parse_date) as $dt |
+{
+  title: ((.title // "") | unescape_html),
+  url: (.link // ""),
+  snippet: ([
+    (if .is_answered then "answered" else empty end),
+    (if (.score | type) == "number" then "score \(.score)" else empty end),
+    (if (.answer_count | type) == "number" then "answers \(.answer_count)" else empty end),
+    (if ((.tags // []) | length) > 0 then ([(.tags // [])[0:5][] | "[\(.)]"] | join(" ")) else empty end)
+  ] | join(" · ")),
+  date: $dt,
+  dateSource: (if $dt != null then "api" else null end)
+}'''
+
+[op.question]
+summary = "Fetch a question with body text by numeric question ID."
+method = "GET"
+url = "https://api.stackexchange.com/2.3/questions/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { filter = "withbody" }
+probe = { params = { id = "45600579" }, min_results = 1, fixture = "fixtures/w5c/stackexchange/question/default.json" }
+
+[op.question.params]
+id = { type = "string", required = true, in = "path", doc = "Numeric question ID" }
+site = { type = "string", default = "stackoverflow", to = "site", doc = "Stack Exchange site slug" }
+
+[op.question.map]
+items = ".items[]"
+error = "@ref:op.search.map.error"
+record = '''{
+  questionId: .question_id,
+  title: ((.title // "") | unescape_html),
+  url: .link,
+  isAnswered: (.is_answered // false),
+  acceptedAnswerId: .accepted_answer_id,
+  score: .score,
+  answerCount: .answer_count,
+  viewCount: .view_count,
+  tags: (.tags // []),
+  author: (.owner.display_name | unescape_html),
+  creationDate: (.creation_date | epoch_to_iso),
+  body: ((.body // "") | strip_tags)
+}'''
+
+[op.answers]
+summary = "Fetch top-voted answers with body text for a Stack Exchange question ID."
+method = "GET"
+url = "https://api.stackexchange.com/2.3/questions/{id}/answers"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { filter = "withbody", order = "desc", sort = "votes" }
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { id = "45600579", limit = 3 }, min_results = 1, fixture = "fixtures/w5c/stackexchange/answers/default.json" }
+
+[op.answers.params]
+id = { type = "string", required = true, in = "path", doc = "Numeric question ID" }
+site = { type = "string", default = "stackoverflow", to = "site", doc = "Stack Exchange site slug" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "pagesize", doc = "Answers per page" }
+page = { type = "int", min = 1, to = "page", doc = "1-based page number" }
+
+[op.answers.map]
+items = ".items[]"
+error = "@ref:op.search.map.error"
+record = '''{
+  answerId: .answer_id,
+  questionId: .question_id,
+  isAccepted: (.is_accepted // false),
+  score: .score,
+  author: (.owner.display_name | unescape_html),
+  creationDate: (.creation_date | epoch_to_iso),
+  body: ((.body // "") | strip_tags)
+}'''

@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "source": "la_referencia",
+  "op": "work",
+  "recordedAt": "2026-11-25T14:18:47Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://buscador.lareferencia.info/api/v1/record?field%5B%5D=id&field%5B%5D=title&field%5B%5D=authors&field%5B%5D=formats&field%5B%5D=urls&field%5B%5D=subjects&field%5B%5D=publishers&field%5B%5D=summary&field%5B%5D=publicationDates&id=CL_27437ae9e2e56ca1d1c59ca7333fe7c1",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "date",
+            "Wed, 25 Nov 2026 14:18:47 GMT"
+          ],
+          [
+            "content-type",
+            "application/json"
+          ],
+          [
+            "vary",
+            "Accept-Encoding"
+          ],
+          [
+            "expires",
+            "Thu, 19 Nov 1981 08:52:00 GMT"
+          ],
+          [
+            "cache-control",
+            "no-store, no-cache, must-revalidate"
+          ],
+          [
+            "pragma",
+            "no-cache"
+          ],
+          [
+            "content-security-policy-report-only",
+            "default-src 'self'; child-src 'none'; object-src 'none'; script-src http: https: 'nonce-vPbINeFIpSsLi6UXX7Ref3681Q7EvuE1ubyAZ7xNQZ8='; connect-src 'self' https://translate.googleapis.com; worker-src blob:; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; base-uri 'self';"
+          ],
+          [
+            "access-control-allow-origin",
+            "*"
+          ],
+          [
+            "origin-agent-cluster",
+            "?1"
+          ],
+          [
+            "x-dns-prefetch-control",
+            "off"
+          ],
+          [
+            "x-content-type-options",
+            "nosniff"
+          ],
+          [
+            "x-permitted-cross-domain-policies",
+            "none"
+          ],
+          [
+            "referrer-policy",
+            "strict-origin-when-cross-origin"
+          ],
+          [
+            "x-frame-options",
+            "SAMEORIGIN"
+          ],
+          [
+            "access-control-allow-methods",
+            "GET, POST, OPTIONS, PUT, DELETE"
+          ],
+          [
+            "access-control-allow-headers",
+            "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
+          ]
+        ],
+        "bodyText": "{\"resultCount\":1,\"records\":[{\"id\":\"CL_27437ae9e2e56ca1d1c59ca7333fe7c1\",\"title\":\"Extracellular signals, cell interactions and transcription factors involved in the induction of the neural crest cells\",\"authors\":{\"primary\":{\"AYBAR,MANUEL J.\":{\"role\":[\"author\"]}},\"secondary\":{\"GLAVIC,ALVARO\":{\"role\":[\"author\"]},\"MAYOR,ROBERTO\":{\"role\":[\"author\"]}},\"corporate\":[]},\"formats\":[\"article\"],\"urls\":[{\"url\":\"http:\\/\\/www.scielo.cl\\/scielo.php?script=sci_arttext&pid=S0716-97602002000200018\",\"desc\":\"http:\\/\\/www.scielo.cl\\/scielo.php?script=sci_arttext&pid=S0716-97602002000200018\"}],\"subjects\":[[\"neural crest\"],[\"induction\"],[\"BMPs\"],[\"Wnts\"],[\"FGF\"],[\"retinoic acid\"],[\"Notch, delta\"]],\"publishers\":[\"Sociedad de Biolog\\u00eda de Chile\"],\"summary\":[\"The neural crest is induced at the border between the neural plate and the epidermis. A complex set of signals is required for the specification of the crest cells between the epidermis and the neural plate. Here we discuss evidence supporting a model for neural crest induction in which different signals contribute in a sequential order. First, a gradient of bone morphogenic proteins (BMPs) is established in the ectoderm that results in segreggation into neural plate, neural folds and epidermis at increasing levels of BMP activity. Thus, the neural folds are induced at a precise threshold concentration of BMP, but this neural fold has an anterior character. In a second step, these anterior neural folds are transformed into prospective neural crest by posteriorizing signals due to fibroblast growth factor, Wnts and retinoic acid. Finally, the induced cells interact to complete neural crest induction by a process that requires Notch\\/Delta signaling. Once neural crest formation has been induced by this combination of extracellular and intracellular signals, a cascade of transcription factors is activated in these cells that culminates in the ultimate steps of neural crest differentiation\"],\"publicationDates\":[\"2002\"]}],\"status\":\"OK\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

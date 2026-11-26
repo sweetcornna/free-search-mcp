@@ -1,0 +1,68 @@
+id = "homebrew_formulae"
+name = "Homebrew Formulae & Casks"
+summary = "Official formulae.brew.sh JSON API for macOS/Linux Homebrew formula and cask metadata, versions, and dependencies."
+aliases = ["homebrew formulae", "brew", "brew formulae", "brew cask"]
+home_url = "https://formulae.brew.sh"
+tier = 1
+scopes = ["code"]
+caps = ["lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 5.0, burst = 10, concurrency = 4, timeout_ms = 5000, cache_ttl_s = 21600, host_bucket = "formulae.brew.sh" }
+
+[op.formula]
+summary = "Look up a Homebrew formula by exact name (e.g. ripgrep, jq, ffmpeg)."
+method = "GET"
+url = "https://formulae.brew.sh/api/formula/{name}.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { name = "ripgrep" }, min_results = 1, fixture = "fixtures/w5c/homebrew_formulae/formula/default.json" }
+
+[op.formula.params]
+name = { type = "string", required = true, in = "path", doc = "Exact Homebrew formula name" }
+
+[op.formula.map]
+items = "."
+record = '''{
+  name: .name,
+  fullName: .full_name,
+  tap: .tap,
+  version: .versions.stable,
+  desc: (.desc // ""),
+  license: .license,
+  homepage: .homepage,
+  aliases: (.aliases // []),
+  dependencies: (.dependencies // []),
+  deprecated: (.deprecated // false),
+  disabled: (.disabled // false),
+  url: ("https://formulae.brew.sh/formula/" + (.name // ""))
+}'''
+
+[op.cask]
+summary = "Look up a Homebrew macOS cask by exact token (e.g. firefox, visual-studio-code)."
+method = "GET"
+url = "https://formulae.brew.sh/api/cask/{token}.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { token = "firefox" }, min_results = 1, fixture = "fixtures/w5c/homebrew_formulae/cask/default.json" }
+
+[op.cask.params]
+token = { type = "string", required = true, in = "path", doc = "Exact Homebrew cask token" }
+
+[op.cask.map]
+items = "."
+record = '''{
+  token: .token,
+  names: (.name // []),
+  tap: .tap,
+  version: .version,
+  desc: (.desc // ""),
+  homepage: .homepage,
+  downloadUrl: .url,
+  autoUpdates: (.auto_updates // false),
+  deprecated: (.deprecated // false),
+  disabled: (.disabled // false),
+  url: ("https://formulae.brew.sh/cask/" + (.token // ""))
+}'''

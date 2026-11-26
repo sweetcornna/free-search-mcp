@@ -1,0 +1,129 @@
+id = "thesportsdb_free"
+name = "TheSportsDB Sports Teams & Events"
+summary = "Open global sports teams, leagues, players, and match events API using TheSportsDB public free tier key 123."
+aliases = ["thesportsdb", "sports", "football", "soccer", "teams"]
+home_url = "https://www.thesportsdb.com/free_sports_api"
+tier = 2
+scopes = ["reference"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 21600 }
+
+[op.search]
+summary = "Search sports teams by name on TheSportsDB (public key 123)."
+method = "GET"
+url = "https://www.thesportsdb.com/api/v1/json/123/searchteams.php"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+examples = ['source.call("thesportsdb_free.search", { query: "Arsenal" })']
+probe = { params = { query = "Arsenal" }, min_results = 1, fixture = "fixtures/w5n/thesportsdb_free/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "t", doc = "Team name (e.g. Arsenal)" }
+
+[op.search.map]
+items = "(.teams // [])[]"
+record = '''{
+  id: .idTeam,
+  name: (.strTeam // ""),
+  alternateName: (.strTeamAlternate // null),
+  sport: (.strSport // null),
+  league: (.strLeague // null),
+  country: (.strCountry // null),
+  formedYear: (.intFormedYear // null),
+  stadium: (.strStadium // null),
+  location: (.strLocation // null),
+  website: (.strWebsite // null),
+  badge: (.strBadge // null),
+  url: ("https://www.thesportsdb.com/team/" + (.idTeam | tostring))
+}'''
+hit = '''{
+  title: (.strTeam // "Sports Team"),
+  url: ("https://www.thesportsdb.com/team/" + (.idTeam | tostring)),
+  snippet: ([
+    (.strSport // empty),
+    (.strLeague // empty),
+    (.strCountry // empty),
+    (if (.intFormedYear | type) == "string" and (.intFormedYear | length) > 0 then ("Est. " + .intFormedYear) else empty end)
+  ] | join(" · "))
+}'''
+
+[op.events]
+summary = "Search sports fixtures and match events by title (e.g. Arsenal_vs_Chelsea)."
+method = "GET"
+url = "https://www.thesportsdb.com/api/v1/json/123/searchevents.php"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+examples = ['source.call("thesportsdb_free.events", { query: "Arsenal_vs_Chelsea" })']
+probe = { params = { query = "Arsenal_vs_Chelsea" }, min_results = 1, fixture = "fixtures/w5n/thesportsdb_free/events/default.json" }
+
+[op.events.params]
+query = { type = "string", required = true, to = "e", doc = "Event title query (use underscores between words)" }
+
+[op.events.map]
+items = "(.event // [])[]"
+record = '''{
+  id: .idEvent,
+  name: (.strEvent // ""),
+  sport: (.strSport // null),
+  league: (.strLeague // null),
+  season: (.strSeason // null),
+  homeTeam: (.strHomeTeam // null),
+  awayTeam: (.strAwayTeam // null),
+  homeScore: (.intHomeScore | to_int),
+  awayScore: (.intAwayScore | to_int),
+  dateEvent: (.dateEvent // null),
+  timestamp: (.strTimestamp // null),
+  venue: (.strVenue // null),
+  status: (.strStatus // null),
+  url: ("https://www.thesportsdb.com/event/" + (.idEvent | tostring))
+}'''
+
+[op.players]
+summary = "Search sports players by name on TheSportsDB."
+method = "GET"
+url = "https://www.thesportsdb.com/api/v1/json/123/searchplayers.php"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+examples = ['source.call("thesportsdb_free.players", { query: "Lionel_Messi" })']
+probe = { params = { query = "Lionel_Messi" }, min_results = 1, fixture = "fixtures/w5n/thesportsdb_free/players/default.json" }
+
+[op.players.params]
+query = { type = "string", required = true, to = "p", doc = "Player name (e.g. Lionel_Messi)" }
+
+[op.players.map]
+items = "(.player // [])[]"
+record = '''{
+  id: .idPlayer,
+  name: (.strPlayer // ""),
+  team: (.strTeam // null),
+  sport: (.strSport // null),
+  nationality: (.strNationality // null),
+  dateBorn: (.dateBorn // null),
+  position: (.strPosition // null),
+  status: (.strStatus // null),
+  url: ("https://www.thesportsdb.com/player/" + (.idPlayer | tostring))
+}'''
+
+[op.leagues]
+summary = "List available sports leagues on TheSportsDB free tier."
+method = "GET"
+url = "https://www.thesportsdb.com/api/v1/json/123/all_leagues.php"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+examples = ['source.call("thesportsdb_free.leagues", {})']
+probe = { params = {}, min_results = 5, fixture = "fixtures/w5n/thesportsdb_free/leagues/default.json" }
+
+[op.leagues.map]
+items = "(.leagues // [])[]"
+record = '''{
+  id: .idLeague,
+  name: (.strLeague // ""),
+  sport: (.strSport // null),
+  url: ("https://www.thesportsdb.com/league/" + (.idLeague | tostring))
+}'''

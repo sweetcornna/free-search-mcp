@@ -1,0 +1,94 @@
+id = "europeana"
+name = "Europeana Cultural Heritage API v2"
+summary = "50M+ digitized European artworks, books, manuscripts, photographs, and archival items (requires free Europeana API key)."
+aliases = ["europeana.eu", "european heritage"]
+home_url = "https://www.europeana.eu"
+tier = 3
+scopes = ["academic.humanities", "academic.books", "media", "reference"]
+caps = ["search", "lookup", "book"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 10000, cache_ttl_s = 43200 }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_EUROPEANA_API_KEY"
+in = "header"
+name = "X-Api-Key"
+format = "{key}"
+route_requires_key = true
+
+[op.search]
+summary = "Search Europeana cultural heritage items by keyword, media type, or reusability."
+method = "GET"
+url = "https://api.europeana.eu/record/v2/search.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "start", start = 1, max_pages = 3 }
+probe = { params = { query = "rembrandt", limit = 3 }, min_results = 2, fixture = "fixtures/w5d2/europeana/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "query", doc = "Search query, e.g. rembrandt" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "rows", doc = "Items per page" }
+start = { type = "int", min = 1, to = "start", doc = "1-based start offset" }
+qf = { type = "string", to = "qf", doc = "Optional facet filter, e.g. TYPE:TEXT or COUNTRY:france" }
+reusability = { type = "string", enum = ["open", "restricted", "permission"], to = "reusability", doc = "Rights reusability filter" }
+
+[op.search.map]
+items = "(.items // [])[]"
+total = ".totalResults"
+error = "if .success == false then (.error // .message // \"Europeana API error\") else null end"
+record = '''{
+  id: ((.id // "") | ltrimstr("/")),
+  title: ((.title[0] // "") | strip_tags // ""),
+  creators: (.dcCreator // []),
+  type: (.type // null),
+  dataProvider: (.dataProvider[0] // null),
+  country: (.country[0] // null),
+  year: ((.year[0] // null) | parse_date),
+  rights: (.rights[0] // null),
+  previewUrl: (.edmPreview[0] // null),
+  url: (.guid // ("https://www.europeana.eu/item/" + ((.id // "") | ltrimstr("/"))))
+}'''
+hit = '''{
+  title: ((.title[0] // .id // "Europeana Item") | strip_tags // "Europeana Item"),
+  url: (.guid // ("https://www.europeana.eu/item/" + ((.id // "") | ltrimstr("/")))),
+  snippet: (
+    [
+      .type,
+      (.dcCreator[0] // null),
+      (.dataProvider[0] // null),
+      (.country[0] // null)
+    ] | map(select(. != null)) | join(" · ")
+  ),
+  date: ((.year[0] // null) | parse_date),
+  dateSource: "api"
+}'''
+
+[op.record]
+summary = "Fetch full EDM metadata for a Europeana cultural heritage record by record ID."
+method = "GET"
+url = "https://api.europeana.eu/record/v2/{record_id}.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { record_id = "90402/SK_C_5" }, min_results = 1, fixture = "fixtures/w5d2/europeana/record/default.json" }
+
+[op.record.params]
+record_id = { type = "string", required = true, in = "path", encode = "raw", doc = "Europeana record ID without leading slash, e.g. 90402/SK_C_5" }
+
+[op.record.map]
+items = ".object"
+error = "if .success == false then (.error // .message // \"Europeana API error\") else null end"
+record = '''{
+  id: ((.about // "") | ltrimstr("/")),
+  type: (.type // null),
+  datasetName: (.edmDatasetName[0] // null),
+  title: (((.proxies[0]?.dcTitle // {}) | (.en[0] // .def[0] // (to_entries[0]?.value[0]) // "")) | strip_tags // ""),
+  creators: ((.proxies[0]?.dcCreator // {}) | (.def // .en // (to_entries[0]?.value) // [])),
+  description: (((.proxies[0]?.dcDescription // {}) | (.en[0] // .def[0] // (to_entries[0]?.value[0]) // null)) | strip_tags),
+  date: (((.proxies[0]?.dcDate // {}) | (.def[0] // .en[0] // (to_entries[0]?.value[0]) // null)) | parse_date),
+  rights: (.europeanaAggregation.edmRights.def[0] // .aggregations[0]?.edmRights // .proxies[0]?.dcRights.def[0] // .europeanaAggregation.dcRights.def[0] // null),
+  url: (.europeanaAggregation.edmLandingPage // ("https://www.europeana.eu/item/" + ((.about // "") | ltrimstr("/"))))
+}'''

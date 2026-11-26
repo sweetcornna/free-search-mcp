@@ -1,0 +1,74 @@
+# NOTE: Both replay fixtures under fixtures/w5a/re3data/{search,repository}/default.json
+# are synthetic (built from official re3data v2.2 XML schema & earlier live 200 responses)
+# because www.re3data.org experienced sustained TLS handshake timeouts during recording and review.
+# Re-record live via `xtask record re3data` once upstream TLS stabilizes.
+
+id = "re3data"
+name = "re3data (Registry of Research Data Repositories)"
+summary = "Global registry of 3,200+ research data repositories with API/OAI-PMH endpoints, PIDs, subjects, and licenses."
+aliases = ["re3data.org", "registry of research data repositories", "data repositories"]
+home_url = "https://www.re3data.org"
+tier = 1
+scopes = ["dataset", "academic"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 0.5, burst = 2, concurrency = 1, timeout_ms = 12000, cache_ttl_s = 86400, host_bucket = "www.re3data.org" }
+
+[op.search]
+summary = "Search re3data research data repositories via beta XML query API."
+method = "GET"
+url = "https://www.re3data.org/api/beta/repositories"
+response = "xml"
+returns = "records"
+probe = { params = { query = "paleoclimate" }, min_results = 2, fixture = "fixtures/w5a/re3data/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "query", doc = "Repository keyword or discipline" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "none", doc = "Max repositories" }
+
+[op.search.map]
+items = "(.list.repository | arr)[:($p.limit // 10)][]"
+error = '''if .error != null then (.error | xml_text) else null end'''
+record = '''{
+  id: (.id // ""),
+  name: ((.name // "") | collapse_ws),
+  doi: (.doi // null | doi_norm),
+  url: ("https://www.re3data.org/repository/" + (.id // "")),
+  apiUrl: (.link."@href" // ("https://www.re3data.org/api/v1/repository/" + (.id // "")))
+}'''
+hit = '''{
+  title: ((.name // "") | collapse_ws),
+  url: ("https://www.re3data.org/repository/" + (.id // "")),
+  snippet: ([(.id // ""), (.doi // "")] | map(select(length > 0)) | join(" · ")),
+  date: null,
+  dateSource: "xml"
+}'''
+
+[op.repository]
+summary = "Fetch detailed re3data XML metadata (homepage, description, APIs, PIDs, subjects, licenses, institutions) by repository ID."
+method = "GET"
+url = "https://www.re3data.org/api/v1/repository/{id}"
+response = "xml"
+returns = "records"
+probe = { params = { id = "r3d100013383" }, min_results = 1, fixture = "fixtures/w5a/re3data/repository/default.json" }
+
+[op.repository.params]
+id = { type = "string", required = true, in = "path", doc = "re3data repository ID e.g. r3d100013383" }
+
+[op.repository.map]
+items = ".re3data.repository | arr | .[]"
+error = "@ref:op.search.map.error"
+record = '''{
+  id: (."re3data.orgidentifier" | xml_text | collapse_ws),
+  name: (.repositoryname | xml_text | collapse_ws),
+  doi: (([(.repositoryidentifier | arr)[] | xml_text | doi_norm | select(. != null)][0]) // null),
+  url: (.repositoryurl | xml_text | collapse_ws),
+  description: ((.description | arr | .[0] | xml_text | collapse_ws) | if (. // "") != "" then . else null end),
+  types: [(.type | arr)[] | xml_text | collapse_ws | select(length > 0)],
+  subjects: [(.subject | arr)[] | xml_text | collapse_ws | select(length > 0)],
+  pidSystems: [(.pidsystem | arr)[] | xml_text | collapse_ws | select(length > 0)],
+  licenses: ([(.datalicense | arr)[] | (.datalicensename | xml_text | collapse_ws) | select(length > 0)] + [(.databaselicense | arr)[] | (.databaselicensename | xml_text | collapse_ws) | select(length > 0)] | unique),
+  institutions: [(.institution | arr)[] | (.institutionname | arr | .[0] | xml_text | collapse_ws) | select(length > 0)],
+  apis: [(.api | arr)[] | { type: (."@apitype" // null), url: (xml_text | collapse_ws) } | select(.url != "")]
+}'''

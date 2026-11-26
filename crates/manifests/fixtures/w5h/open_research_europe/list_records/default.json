@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "source": "open_research_europe",
+  "op": "list_records",
+  "recordedAt": "2026-11-25T15:09:54Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://ore.eu/oai?verb=ListRecords&metadataPrefix=oai_dc&set=ore%3ACAR",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/xml;charset=utf-8"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<?xml-stylesheet type=\"text/xsl\" href=\"https://ore.eu/lib/pkp/xml/oai2.xsl\" ?>\n<OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\"\n\txmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n\txsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/\n\t\thttp://www.openarchives.org/OAI/2.0/OAI-PMH.xsd\">\n\t<responseDate>2026-11-25T15:09:53Z</responseDate>\n\t<request verb=\"ListRecords\" metadataPrefix=\"oai_dc\" set=\"ore:CAR\">https://ore.eu/oai</request>\n\t<ListRecords>\n\t\t<record>\n\t\t\t<header>\n\t\t\t\t<identifier>oai:ore.eu:article/1202</identifier>\n\t\t\t\t<datestamp>2026-11-25T15:09:53Z</datestamp>\n\t\t\t\t<setSpec>ore:CAR</setSpec>\n\t\t\t\t<setSpec>driver</setSpec>\n\t\t\t</header>\n\t\t\t<metadata>\n<oai_dc:dc\n\txmlns:oai_dc=\"http://www.openarchives.org/OAI/2.0/oai_dc/\"\n\txmlns:dc=\"http://purl.org/dc/elements/1.1/\"\n\txmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n\txsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/oai_dc/\n\thttp://www.openarchives.org/OAI/2.0/oai_dc.xsd\">\n\t<dc:title xml:lang=\"en\">Case Report: Rare presentation of spinal meningioma in Kosovo</dc:title>\n\t<dc:creator xml:lang=\"en\">Hasimi, Flamur</dc:creator>\n\t<dc:creator xml:lang=\"en\">Ymeri, Fjolla</dc:creator>\n\t<dc:subject xml:lang=\"en\">spinal meningioma</dc:subject>\n\t<dc:subject xml:lang=\"en\">neurosurgical intervention</dc:subject>\n\t<dc:subject xml:lang=\"en\">intradural extramedullary tumor</dc:subject>\n\t<dc:subject xml:lang=\"en\">magnetic resonance imaging</dc:subject>\n\t<dc:subject xml:lang=\"en\">Clinical medicine</dc:subject>\n\t<dc:subject xml:lang=\"en\">Medical and health sciences</dc:subject>\n\t<dc:description xml:lang=\"en\">\n                This case report outlines the diagnosis and management of a spinal meningioma in an 18-year-old female presenting with progressive weakness in both lower limbs. Magnetic resonance imaging revealed an intradural extramedullary tumour compressing the spinal cord, subsequently confirmed as a meningioma. Urgent neurosurgical intervention was performed, involving total laminectomy at the TH6/7 vertebral level and meticulous tumour resection. Postoperatively, the patient demonstrated significant neurological improvement, with muscle strength increasing from 2/5 to 4/5. This case highlights the importance of prompt diagnosis, multidisciplinary management, and close postoperative monitoring in achieving favourable outcomes for spinal meningiomas.\n            </dc:description>\n\t<dc:publisher xml:lang=\"en\">F1000 Research Limited</dc:publisher>\n\t<dc:date>2026-01-05</dc:date>\n\t<dc:type>info:eu-repo/semantics/article</dc:type>\n\t<dc:type>info:eu-repo/semantics/publishedVersion</dc:type>\n\t<dc:format>application/pdf</dc:format>\n\t<dc:format>text/html</dc:format>\n\t<dc:identifier>https://ore.eu/article/view/1202</dc:identifier>\n\t<dc:identifier>10.12688/openreseurope.22197.1</dc:identifier>\n\t<dc:source xml:lang=\"en\">Open Research Europe; ; 7</dc:source>\n\t<dc:source>2732-5121</dc:source>\n\t<dc:language>en</dc:language>\n\t<dc:relation>https://ore.eu/article/view/1202/4109</dc:relation>\n\t<dc:relation>https://ore.eu/article/view/1202/4110</dc:relation>\n\t<dc:rights xml:lang=\"en\">Copyright (c) 2026 Flamur Hasimi (Corresponding Author, Co-Author); Fjolla Ymeri (Co-Author)</dc:rights>\n\t<dc:rights xml:lang=\"en\">https://creativecommons.org/licenses/by/4.0/</dc:rights>\n</oai_dc:dc>\n\t\t\t</metadata>\n\t\t</record>\n\t</ListRecords>\n</OAI-PMH>\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

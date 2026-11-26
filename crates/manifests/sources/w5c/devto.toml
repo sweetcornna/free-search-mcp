@@ -1,0 +1,85 @@
+id = "devto"
+name = "DEV Community (Dev.to)"
+summary = "Programming tutorials, release notes, and developer essays via the Forem REST API."
+aliases = ["dev.to", "forem"]
+home_url = "https://dev.to"
+tier = 1
+scopes = ["code", "forum"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 2.0, burst = 5, concurrency = 2, timeout_ms = 6000, cache_ttl_s = 7200 }
+
+[op.search]
+summary = "List Dev.to articles by single tag slug, username, or top window via Forem API."
+method = "GET"
+url = "https://dev.to/api/articles"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "rust", limit = 3 }, min_results = 2, fixture = "fixtures/w5c/devto/search/default.json" }
+
+[op.search.params]
+query = { type = "string", to = "tag", doc = "Single Forem tag slug without spaces e.g. rust, python, webdev" }
+username = { type = "string", to = "username", doc = "Filter by author username" }
+top = { type = "int", min = 1, max = 365, to = "top", doc = "Top articles from past N days" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "per_page", doc = "Articles per page" }
+page = { type = "int", min = 1, to = "page", doc = "1-based page number" }
+
+[op.search.map]
+items = ".[]"
+error = "if (type == \"object\") and .error then .error else null end"
+record = '''{
+  id: .id,
+  title: (.title // ""),
+  url: (.url // .canonical_url // ""),
+  description: (.description // ""),
+  author: (.user.name // .user.username // null),
+  username: (.user.username // null),
+  tags: (.tag_list // []),
+  reactions: (.public_reactions_count // 0),
+  comments: (.comments_count // 0),
+  readingTimeMinutes: .reading_time_minutes,
+  publishedAt: .published_at
+}'''
+hit = '''{
+  title: (.title // ""),
+  url: (.url // .canonical_url // ""),
+  snippet: ([
+    (if (.user.name | type) == "string" and (.user.name | length) > 0 then "by \(.user.name)" else empty end),
+    (if (.public_reactions_count | type) == "number" then "\(.public_reactions_count) reactions" else empty end),
+    (if (.reading_time_minutes | type) == "number" then "\(.reading_time_minutes) min read" else empty end),
+    (((.description // "") | strip_tags) | if length > 200 then .[0:200] + "..." else . end | select(length > 0))
+  ] | join(" · ")),
+  date: (.published_at | parse_date),
+  dateSource: (if (.published_at | parse_date) != null then "api" else null end)
+}'''
+
+[op.article]
+summary = "Fetch full Dev.to article metadata and Markdown body by numeric ID."
+method = "GET"
+url = "https://dev.to/api/articles/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "5114384" }, min_results = 1, fixture = "fixtures/w5c/devto/article/default.json" }
+
+[op.article.params]
+id = { type = "string", required = true, in = "path", doc = "Numeric Dev.to article ID" }
+
+[op.article.map]
+items = "."
+error = "@ref:op.search.map.error"
+record = '''{
+  id: .id,
+  title: (.title // ""),
+  url: (.url // .canonical_url // ""),
+  description: (.description // ""),
+  author: (.user.name // .user.username // null),
+  tags: (.tags // []),
+  reactions: (.public_reactions_count // 0),
+  comments: (.comments_count // 0),
+  publishedAt: .published_at,
+  bodyMarkdown: (.body_markdown // "")
+}'''

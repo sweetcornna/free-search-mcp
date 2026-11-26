@@ -4,69 +4,43 @@ on:
   push:
     branches: [main]
   pull_request:
-  # Lets release.yml reuse this exact job as its gate — the test matrix is
-  # defined ONCE, so releases can never be gated on a weaker check than PRs.
+  # Lets release.yml reuse this exact job set as its gate — releases can never
+  # run on a weaker check than PRs.
   workflow_call:
-  # Daily, for `sdk-canary` below: a dependency release breaks installs on the
-  # day it ships, not on the day someone next opens a PR.
-  schedule:
-    - cron: "17 5 * * *"
+
+env:
+  CARGO_TERM_COLOR: always
 
 jobs:
   test:
-    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11", "3.12", "3.13"]
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - name: Install pinned Rust toolchain (rust-toolchain.toml)
+        uses: dtolnay/rust-toolchain@master
         with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
-        run: uv sync --locked
-      - name: Lint
-        run: uv run ruff check .
-      # The offline suite needs no Chromium: browser paths are faked, and
-      # live-network tests are gated behind SEARCH_MCP_TEST_NETWORK=1.
-      - name: Test
-        run: uv run pytest -q
+          toolchain: "1.98.0"
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+      - name: Format check
+        if: matrix.os == 'ubuntu-latest'
+        run: cargo fmt --all -- --check
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - name: Workspace offline unit & replay tests
+        run: cargo test --workspace --locked
+      - name: Tri-client plugin manifest & version sync test
+        run: cargo test -p fsm-server --test plugin_manifests --locked
 
-  # `test` above runs the LOCKED dependency set. No real install does: `uvx
-  # free-search-mcp==X` — the plugin, the README one-liner, the MCP Registry
-  # entry — ignores uv.lock and resolves the newest versions pyproject.toml
-  # allows. That gap is how 0.11.0 shipped green and broken: the lock held
-  # mcp 2.0 while every user ran 2.2, which had changed what a tool error
-  # looks like on the wire.
-  sdk-canary:
+  deny:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          # What a fresh install resolves today. A hard gate, releases included.
-          - leg: range
-            allow-failure: false
-          # The newest SDK, ignoring our upper bound. Never blocks anything —
-          # it is the advance notice of what the next deliberate bump of the
-          # `mcp` pin in pyproject.toml will have to deal with.
-          - leg: next
-            allow-failure: true
-    continue-on-error: ${{ matrix.allow-failure }}
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - name: Check licenses, bans, and sources
+        uses: EmbarkStudios/cargo-deny-action@v2
         with:
-          python-version: "3.12"
-      - name: Resolve like a fresh install (newest versions in range, no lockfile)
-        run: uv sync --upgrade
-      - name: Lift the SDK past the declared upper bound
-        if: matrix.leg == 'next'
-        run: uv pip install --upgrade "mcp[cli]"
-      - name: Report the SDK under test
-        run: uv pip list | grep -i -E "^mcp"
-      # --no-sync: keep what the steps above installed; a plain `uv run` would
-      # put the `next` leg straight back inside the declared range.
-      - name: Test
-        run: uv run --no-sync pytest -q
+          command: check bans licenses sources

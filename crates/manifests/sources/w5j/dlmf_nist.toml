@@ -1,0 +1,81 @@
+id = "dlmf_nist"
+name = "NIST Digital Library of Mathematical Functions"
+summary = "Authoritative US NIST reference of special functions, mathematical identities, series, and asymptotic expansions (HTML+MathML)."
+aliases = ["dlmf", "abramowitz stegun", "special functions", "nist math"]
+home_url = "https://dlmf.nist.gov"
+tier = 2
+scopes = ["academic.math", "docs", "reference"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 86400, host_bucket = "dlmf.nist.gov" }
+
+[op.search]
+summary = "Search DLMF chapters and sections by special-function name or mathematical topic via HTML search."
+method = "GET"
+url = "https://dlmf.nist.gov/search/search"
+headers = { Accept = "text/html" }
+response = "html"
+returns = "records"
+probe = { params = { query = "Wright omega function" }, min_results = 2, fixture = "fixtures/w5j/dlmf_nist/search/default.json" }
+examples = ["source.call('dlmf_nist.search', { query: 'Wright omega function' })"]
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Special function, notation, or formula keywords" }
+
+[op.search.html]
+items_css = "h5.ltx_hittag"
+fields = { title = "a.ltx_ref | text", href = "a.ltx_ref | attr(href)", section = "span.ltx_tag_ref | text" }
+wall_markers = ["Access Denied", "Forbidden"]
+
+[op.search.map]
+items = ".[]"
+record = '''(
+  (.section | collapse_ws // "") as $sec |
+  (.title | collapse_ws // "") as $title |
+  ((.href | resolve_url("https://dlmf.nist.gov/search/search")) // "https://dlmf.nist.gov/") as $url |
+  {
+    section: (if ($sec | length) > 0 then $sec else null end),
+    title: $title,
+    url: $url
+  }
+)'''
+hit = '''(
+  (.section | collapse_ws // "") as $sec |
+  (.title | collapse_ws // "") as $title |
+  ((.href | resolve_url("https://dlmf.nist.gov/search/search")) // "https://dlmf.nist.gov/") as $url |
+  {
+    title: $title,
+    url: $url,
+    snippet: (if ($sec | length) > 0 then ("NIST DLMF §" + $sec) else "NIST Digital Library of Mathematical Functions" end),
+    date: null,
+    dateSource: "html"
+  }
+)'''
+
+[op.section]
+summary = "Fetch a DLMF chapter section page (e.g. chapter 1, section 1 -> dlmf.nist.gov/1.1) and extract its title and content."
+method = "GET"
+url = "https://dlmf.nist.gov/{chapter}.{section}"
+headers = { Accept = "text/html" }
+response = "html"
+returns = "records"
+probe = { params = { chapter = "1", section = "1" }, min_results = 1, fixture = "fixtures/w5j/dlmf_nist/section/default.json" }
+examples = ["source.call('dlmf_nist.section', { chapter: '1', section: '1' })", "source.call('dlmf_nist.section', { chapter: '5', section: '2' })"]
+
+[op.section.params]
+chapter = { type = "string", required = true, in = "path", doc = "DLMF chapter number (1..36)" }
+section = { type = "string", required = true, in = "path", doc = "DLMF section number within chapter" }
+
+[op.section.html]
+items_css = "section.ltx_section"
+fields = { title = "h1.ltx_title_section | text", permalink = "div.ltx_infocontent a.ltx_ref | attr(href)", excerpt = "div.ltx_para | text" }
+wall_markers = ["Access Denied", "Forbidden"]
+
+[op.section.map]
+items = ".[]"
+record = '''{
+  title: (.title | collapse_ws // ""),
+  url: ((.permalink | resolve_url("https://dlmf.nist.gov/")) // ("https://dlmf.nist.gov/" + ($p.chapter // "") + "." + ($p.section // ""))),
+  excerpt: (.excerpt | collapse_ws // "")
+}'''

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "uk_companies_house",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.company-information.service.gov.uk/search/companies?q=barclays&items_per_page=3&start_index=0",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"kind\":\"search#companies\",\"items_per_page\":3,\"start_index\":0,\"total_results\":214,\"items\":[{\"company_number\":\"01026167\",\"title\":\"BARCLAYS BANK PLC\",\"company_status\":\"active\",\"company_type\":\"plc\",\"kind\":\"searchresults#company\",\"date_of_creation\":\"1971-10-04\",\"address_snippet\":\"1 Churchill Place, London, E14 5HP\",\"description\":\"01026167 - Incorporated on 4 October 1971\",\"links\":{\"self\":\"/company/01026167\"}},{\"company_number\":\"00048839\",\"title\":\"BARCLAYS PLC\",\"company_status\":\"active\",\"company_type\":\"plc\",\"kind\":\"searchresults#company\",\"date_of_creation\":\"1896-07-20\",\"address_snippet\":\"1 Churchill Place, London, E14 5HP\",\"description\":\"00048839 - Incorporated on 20 July 1896\",\"links\":{\"self\":\"/company/00048839\"}},{\"company_number\":\"09740322\",\"title\":\"BARCLAYS BANK UK PLC\",\"company_status\":\"active\",\"company_type\":\"plc\",\"kind\":\"searchresults#company\",\"date_of_creation\":\"2015-08-19\",\"address_snippet\":\"1 Churchill Place, London, E14 5HP\",\"description\":\"09740322 - Incorporated on 19 August 2015\",\"links\":{\"self\":\"/company/09740322\"}}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

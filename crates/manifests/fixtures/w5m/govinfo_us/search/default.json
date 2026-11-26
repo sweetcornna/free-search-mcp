@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "source": "govinfo_us",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://api.govinfo.gov/search",
+        "headersSubset": {
+          "accept": "application/json",
+          "content-type": "application/json"
+        },
+        "bodySha256": "273957c30983f42acbffdd3f87a3168a813b69368ef7ea489a78adbc62c42b37"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"count\":412,\"offsetMark\":\"AoJ4/9s=\",\"results\":[{\"packageId\":\"USCODE-2023-title5\",\"collection\":\"USCODE\",\"docClass\":\"USCODE\",\"title\":\"United States Code, Title 5 - Government Organization and Employees (Privacy Act, 5 U.S.C. 552a)\",\"publishdate\":\"2024-01-03\",\"lastModified\":\"2025-07-18T14:20:00Z\",\"download\":{\"pdf\":\"https://www.govinfo.gov/content/pkg/USCODE-2023-title5/pdf/USCODE-2023-title5.pdf\",\"xml\":\"https://www.govinfo.gov/content/pkg/USCODE-2023-title5/xml/USCODE-2023-title5.xml\"}},{\"packageId\":\"USCODE-2023-title15\",\"collection\":\"USCODE\",\"docClass\":\"USCODE\",\"title\":\"United States Code, Title 15 - Commerce and Trade (Children's Online Privacy Protection)\",\"publishdate\":\"2024-01-03\",\"lastModified\":\"2025-07-18T14:25:00Z\",\"download\":{\"pdf\":\"https://www.govinfo.gov/content/pkg/USCODE-2023-title15/pdf/USCODE-2023-title15.pdf\",\"xml\":\"https://www.govinfo.gov/content/pkg/USCODE-2023-title15/xml/USCODE-2023-title15.xml\"}}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

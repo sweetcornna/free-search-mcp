@@ -1,0 +1,92 @@
+id = "openstates_law"
+name = "Open States US State Legislation API v3"
+summary = "Search bills, legislative sessions, subjects, and jurisdictions across all 50 US states, DC, and Puerto Rico (requires free Open States API key)."
+aliases = ["openstates", "state bills", "us state law"]
+home_url = "https://docs.openstates.org/api-v3/"
+tier = 3
+scopes = ["gov", "gov.law"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 21600 }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_OPENSTATES_API_KEY"
+in = "header"
+name = "X-API-KEY"
+format = "{key}"
+route_requires_key = true
+
+[op.search]
+summary = "Search US state legislative bills by keyword, jurisdiction, session, or subject."
+method = "GET"
+url = "https://v3.openstates.org/bills"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "data privacy", limit = 3 }, min_results = 2, fixture = "fixtures/w5m/openstates_law/search/default.json" }
+examples = ["source.call('openstates_law.search', { query: 'data privacy', jurisdiction: 'California', limit: 5 })"]
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Full-text bill search query" }
+jurisdiction = { type = "string", to = "jurisdiction", doc = "State name or OCD ID e.g. California, Texas" }
+session = { type = "string", to = "session", doc = "Legislative session identifier e.g. 20252026" }
+subject = { type = "string", to = "subject", doc = "Subject tag filter" }
+sort = { type = "string", enum = ["updated_desc", "updated_asc", "first_action_desc", "first_action_asc", "latest_action_desc", "latest_action_asc"], to = "sort", doc = "Sort order" }
+limit = { type = "int", default = 10, min = 1, max = 20, to = "per_page", doc = "Bills per page (max 20)" }
+page = { type = "int", default = 1, min = 1, to = "page", doc = "1-based page number" }
+
+[op.search.map]
+items = "(.results // [])[]"
+total = ".pagination.total_items"
+error = 'if .detail then (.detail | tostring) else null end'
+record = '''{
+  id: .id,
+  identifier: (.identifier // ""),
+  title: ((.title // "") | collapse_ws),
+  jurisdiction: (.jurisdiction.name // null),
+  jurisdictionId: (.jurisdiction.id // null),
+  session: (.session // null),
+  classification: (.classification // []),
+  subjects: (.subject // []),
+  latestActionDate: (.latest_action_date | parse_date),
+  latestActionDescription: (.latest_action_description // null),
+  url: (.openstates_url // ("https://openstates.org/search/?query=" + (.identifier // "")))
+}'''
+hit = '''{
+  title: (((.jurisdiction.name // "") + " " + (.identifier // "") + " — " + (.title // "")) | collapse_ws),
+  url: (.openstates_url // ("https://openstates.org/search/?query=" + (.identifier // ""))),
+  snippet: ("Session " + (.session // "") + (if .latest_action_description then (" · " + .latest_action_description) else "" end)),
+  date: ((.latest_action_date // .updated_at) | parse_date),
+  dateSource: "api"
+}'''
+
+[op.jurisdictions]
+summary = "List US state and territorial jurisdictions covered by Open States with OCD IDs."
+method = "GET"
+url = "https://v3.openstates.org/jurisdictions"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { classification = "state", limit = 3 }, min_results = 2, fixture = "fixtures/w5m/openstates_law/jurisdictions/default.json" }
+examples = ["source.call('openstates_law.jurisdictions', { classification: 'state', limit: 10 })"]
+
+[op.jurisdictions.params]
+classification = { type = "string", enum = ["state", "municipality", "country"], to = "classification", doc = "Jurisdiction classification" }
+limit = { type = "int", default = 20, min = 1, max = 52, to = "per_page", doc = "Jurisdictions per page" }
+page = { type = "int", default = 1, min = 1, to = "page", doc = "1-based page number" }
+
+[op.jurisdictions.map]
+items = "(.results // [])[]"
+total = ".pagination.total_items"
+error = "@ref:op.search.map.error"
+record = '''{
+  id: .id,
+  name: (.name // ""),
+  classification: (.classification // null),
+  divisionId: (.division_id // null),
+  url: (.url // null)
+}'''

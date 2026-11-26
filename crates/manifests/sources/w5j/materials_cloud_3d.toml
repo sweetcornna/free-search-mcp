@@ -1,0 +1,111 @@
+id = "materials_cloud_3d"
+name = "Materials Cloud 3D Crystals (OPTIMADE)"
+summary = "Curated open 3D inorganic crystal structures (MC3D PBEsol v2, derived from COD/ICSD/MPDS) with unit-cell vectors via OPTIMADE v1 API."
+aliases = ["mc3d", "materials cloud", "optimade", "cod", "crystallography"]
+home_url = "https://www.materialscloud.org/discover/mc3d/"
+tier = 1
+scopes = ["academic.physics", "dataset"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 3.0, burst = 6, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 86400, host_bucket = "optimade.materialscloud.org" }
+
+[op.search]
+summary = "Search Materials Cloud 3D crystal structures by reduced chemical formula via OPTIMADE."
+method = "GET"
+url = "https://optimade.materialscloud.org/main/mc3d-pbesol-v2/v1/structures"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { response_fields = "chemical_formula_reduced,chemical_formula_descriptive,elements,nelements,nsites,dimension_types,lattice_vectors,last_modified" }
+paginate = { style = "offset", param = "page_offset", start = 0, max_pages = 3 }
+probe = { params = { query = "O2Si", limit = 3 }, min_results = 2, fixture = "fixtures/w5j/materials_cloud_3d/search/default.json" }
+examples = ["source.call('materials_cloud_3d.search', { query: 'O2Si', limit: 5 })"]
+
+[op.search.params]
+query = { type = "string", required = true, to = "filter", template = "chemical_formula_reduced=\"{query}\"", doc = "Reduced chemical formula in alphabetical element order (e.g. O2Si, Fe2O3, GaAs)" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "page_limit", doc = "Maximum structures per page" }
+offset = { type = "int", default = 0, min = 0, to = "page_offset", doc = "0-based structure offset" }
+
+[op.search.map]
+items = "(.data // [])[]"
+total = ".meta.data_returned"
+error = "if (.errors | type) == \"array\" and (.errors | length) > 0 then (.errors[0].detail // .errors[0].title // \"OPTIMADE error\") else null end"
+record = '''{
+  id: (.id // ""),
+  formulaReduced: (.attributes.chemical_formula_reduced // ""),
+  formulaDescriptive: (.attributes.chemical_formula_descriptive // null),
+  elements: (.attributes.elements // []),
+  nelements: (.attributes.nelements // null),
+  nsites: (.attributes.nsites // null),
+  dimensionTypes: (.attributes.dimension_types // []),
+  latticeVectors: (.attributes.lattice_vectors // null),
+  lastModified: (.attributes.last_modified | parse_date),
+  url: ("https://optimade.materialscloud.org/main/mc3d-pbesol-v2/v1/structures/" + (.id // ""))
+}'''
+hit = '''{
+  title: ((.attributes.chemical_formula_descriptive // .attributes.chemical_formula_reduced // .id // "") + " (" + ((.attributes.nsites // 0) | tostring) + " sites)"),
+  url: ("https://optimade.materialscloud.org/main/mc3d-pbesol-v2/v1/structures/" + (.id // "")),
+  snippet: ([
+    (if ((.attributes.elements // []) | length) > 0 then ("Elements: " + (.attributes.elements | join(", "))) else empty end),
+    (if (.attributes.chemical_formula_reduced // "") != "" then ("Reduced: " + .attributes.chemical_formula_reduced) else empty end),
+    (if (.id // "") != "" then ("MC3D UUID: " + .id) else empty end)
+  ] | join(" · ")),
+  date: (.attributes.last_modified | parse_date),
+  dateSource: "api"
+}'''
+
+[op.filter]
+summary = "Query Materials Cloud 3D crystal structures using any OPTIMADE filter expression (e.g. elements HAS ALL \"Si\",\"O\")."
+method = "GET"
+url = "https://optimade.materialscloud.org/main/mc3d-pbesol-v2/v1/structures"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { response_fields = "chemical_formula_reduced,chemical_formula_descriptive,elements,nelements,nsites,dimension_types,lattice_vectors,last_modified" }
+paginate = { style = "offset", param = "page_offset", start = 0, max_pages = 3 }
+probe = { params = { filter = "elements HAS ALL \"Si\",\"O\"", limit = 3 }, min_results = 2, fixture = "fixtures/w5j/materials_cloud_3d/filter/default.json" }
+examples = ["source.call('materials_cloud_3d.filter', { filter: 'elements HAS ALL \"Si\",\"O\"', limit: 5 })"]
+
+[op.filter.params]
+filter = { type = "string", required = true, to = "filter", doc = "OPTIMADE filter grammar expression (e.g. elements HAS ALL \"Si\",\"O\")" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "page_limit", doc = "Maximum structures per page" }
+offset = { type = "int", default = 0, min = 0, to = "page_offset", doc = "0-based offset" }
+
+[op.filter.map]
+items = "(.data // [])[]"
+total = ".meta.data_returned"
+error = "@ref:op.search.map.error"
+record = "@ref:op.search.map.record"
+
+[op.structure]
+summary = "Fetch a single Materials Cloud 3D crystal structure including lattice vectors and site species by UUID."
+method = "GET"
+url = "https://optimade.materialscloud.org/main/mc3d-pbesol-v2/v1/structures/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { response_fields = "chemical_formula_reduced,chemical_formula_descriptive,chemical_formula_anonymous,elements,nelements,nsites,dimension_types,lattice_vectors,species_at_sites,last_modified" }
+probe = { params = { id = "296fcf6e-d90c-4347-b15d-cff700e0b0d3" }, min_results = 1, fixture = "fixtures/w5j/materials_cloud_3d/structure/default.json" }
+examples = ["source.call('materials_cloud_3d.structure', { id: '296fcf6e-d90c-4347-b15d-cff700e0b0d3' })"]
+
+[op.structure.params]
+id = { type = "string", required = true, in = "path", doc = "Materials Cloud 3D OPTIMADE structure UUID" }
+
+[op.structure.map]
+items = ".data"
+error = "@ref:op.search.map.error"
+record = '''{
+  id: (.id // ""),
+  formulaReduced: (.attributes.chemical_formula_reduced // ""),
+  formulaDescriptive: (.attributes.chemical_formula_descriptive // null),
+  formulaAnonymous: (.attributes.chemical_formula_anonymous // null),
+  elements: (.attributes.elements // []),
+  nelements: (.attributes.nelements // null),
+  nsites: (.attributes.nsites // null),
+  speciesAtSites: (.attributes.species_at_sites // []),
+  dimensionTypes: (.attributes.dimension_types // []),
+  latticeVectors: (.attributes.lattice_vectors // null),
+  lastModified: (.attributes.last_modified | parse_date),
+  url: ("https://optimade.materialscloud.org/main/mc3d-pbesol-v2/v1/structures/" + (.id // ""))
+}'''

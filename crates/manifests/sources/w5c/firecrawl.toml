@@ -1,0 +1,74 @@
+id = "firecrawl"
+name = "Firecrawl"
+summary = "Web search and clean JS-rendered Markdown page scraping via the Firecrawl v2 API."
+aliases = ["firecrawl search", "firecrawl scrape"]
+home_url = "https://www.firecrawl.dev"
+tier = 2
+scopes = ["web"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 0.2, burst = 2, concurrency = 2, timeout_ms = 15000, cache_ttl_s = 21600 }
+
+[auth]
+mode = "optional"
+env = "SEARCH_MCP_FIRECRAWL_API_KEY"
+in = "header"
+name = "Authorization"
+format = "Bearer {key}"
+route_requires_key = true
+
+[op.search]
+summary = "Search the web via Firecrawl v2 POST /v2/search."
+method = "POST"
+url = "https://api.firecrawl.dev/v2/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+body = { kind = "json", jaq = '''{ query: $p.query, limit: ($p.limit // 5) }''' }
+probe = { params = { query = "rust lang", limit = 2 }, min_results = 2, fixture = "fixtures/w5c/firecrawl/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, in = "body", doc = "Web search query" }
+limit = { type = "int", default = 5, min = 1, max = 20, in = "body", doc = "Max results" }
+
+[op.search.map]
+items = "(.data.web // .data // [])[]"
+error = "if .success == false then (.error // \"Firecrawl API error\") else null end"
+record = '''{
+  title: ((.title // "") | collapse_ws),
+  url: (.url // ""),
+  description: ((.description // "") | strip_tags)
+}'''
+hit = '''
+((.description // "") | strip_tags) as $desc |
+{
+  title: ((.title // .url // "") | collapse_ws),
+  url: (.url // ""),
+  snippet: (if ($desc | length) > 280 then $desc[0:280] + "..." else $desc end),
+  date: null,
+  dateSource: null
+}'''
+
+[op.scrape]
+summary = "Scrape a webpage into clean Markdown via Firecrawl v2 POST /v2/scrape."
+method = "POST"
+url = "https://api.firecrawl.dev/v2/scrape"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+body = { kind = "json", jaq = '''{ url: $p.url, formats: ["markdown"] }''' }
+probe = { params = { url = "https://example.com" }, min_results = 1, fixture = "fixtures/w5c/firecrawl/scrape/default.json" }
+
+[op.scrape.params]
+url = { type = "string", required = true, in = "body", doc = "Target URL to scrape" }
+
+[op.scrape.map]
+items = ".data"
+error = "@ref:op.search.map.error"
+record = '''{
+  url: (.metadata.sourceURL // .metadata.url // ""),
+  title: (.metadata.title // ""),
+  description: (.metadata.description // null),
+  markdown: (.markdown // "")
+}'''

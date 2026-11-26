@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "engrxiv_ops",
+  "op": "work",
+  "recordedAt": "2026-11-25T12:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://engrxiv.org/index.php/engrxiv/oai?metadataPrefix=oai_dc&verb=GetRecord&identifier=oai%3Aops.engrxiv.org%3Apreprint%2F1",
+        "headersSubset": {
+          "accept": "application/xml"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/xml;charset=UTF-8"
+          ],
+          [
+            "cache-control",
+            "no-transform"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<?xml-stylesheet type=\"text/xsl\" href=\"https://engrxiv.org/lib/pkp/xml/oai2.xsl\" ?>\n<OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\"\n\txmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n\txsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/\n\t\thttp://www.openarchives.org/OAI/2.0/OAI-PMH.xsd\">\n\t<responseDate>2026-11-25T12:42:17Z</responseDate>\n\t<request verb=\"GetRecord\" identifier=\"oai:ops.engrxiv.org:preprint/1\" metadataPrefix=\"oai_dc\">https://engrxiv.org/oai</request>\n\t<GetRecord>\n\t\t<record>\n\t\t\t<header>\n\t\t\t\t<identifier>oai:ops.engrxiv.org:preprint/1</identifier>\n\t\t\t\t<datestamp>2022-01-21T14:36:57Z</datestamp>\n\t\t\t\t<setSpec>engrxiv:PRE</setSpec>\n\t\t\t</header>\n\t\t\t<metadata>\n<oai_dc:dc\n\txmlns:oai_dc=\"http://www.openarchives.org/OAI/2.0/oai_dc/\"\n\txmlns:dc=\"http://purl.org/dc/elements/1.1/\"\n\txmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n\txsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/oai_dc/\n\thttp://www.openarchives.org/OAI/2.0/oai_dc.xsd\">\n\t<dc:title xml:lang=\"en-US\">Incorporation of liberal education into the engineering curriculum at a polytechnic</dc:title>\n\t<dc:creator>Berg, Devin R.</dc:creator>\n\t<dc:creator>Lee, Tina</dc:creator>\n\t<dc:subject xml:lang=\"en-US\">engineering education</dc:subject>\n\t<dc:subject xml:lang=\"en-US\">engineering ethics</dc:subject>\n\t<dc:subject xml:lang=\"en-US\">engrxiv</dc:subject>\n\t<dc:subject xml:lang=\"en-US\">liberal education</dc:subject>\n\t<dc:subject xml:lang=\"en-US\">Preprint</dc:subject>\n\t<dc:description xml:lang=\"en-US\">Traditional engineering education often falls short when it comes to the inclusion of issues related to social justice, ethics, and globalization. While engineering programs are required to include ethics content for accreditation, most seem to rely primarily on general education electives, providing only a high-level overview and including the bare minimum in the program core. This can lead to an inconsistent student experience and minimal exposure to topics which are critically important for achieving worldwide equity and operating responsibly in the engineering workplace. Given the role that engineers play in economic development, this is unacceptable. It is therefore the responsibility of engineering educators to find a better way to shape the future of the engineering profession. This paper outlines the early efforts at integrating the topics of ethics, social justice, and social responsibility more directly into the engineering curriculum. This is approached from the perspectives of pedagogy, curriculum development, and service learning opportunities.  It is within this context that the authors hope to influence students' awareness of and connection to social and environmental issues as well as the ethical frameworks they develop and carry with them into their professional careers. This paper centers around the creation and delivery of a new introductory engineering course combining liberal education topics and introductory engineering topics. This course also includes a substantial design project which incorporates a cultural engagement component through collaboration with international partners. The first offering of this new course revealed that, while some reservations persist, students found value in exploring what it means to be an engineer in a broader global context.</dc:description>\n\t<dc:publisher xml:lang=\"en-US\">Engineering Archive</dc:publisher>\n\t<dc:date>2016-07-27</dc:date>\n\t<dc:type>info:eu-repo/semantics/preprint</dc:type>\n\t<dc:type>info:eu-repo/semantics/publishedVersion</dc:type>\n\t<dc:format>application/pdf</dc:format>\n\t<dc:identifier>https://engrxiv.org/preprint/view/1</dc:identifier>\n\t<dc:identifier>10.31224/osf.io/xjpcm</dc:identifier>\n\t<dc:language>eng</dc:language>\n\t<dc:relation>https://engrxiv.org/preprint/view/1/1</dc:relation>\n\t<dc:relation>https://engrxiv.org/preprint/view/1/2</dc:relation>\n\t<dc:rights xml:lang=\"en-US\">https://creativecommons.org/publicdomain/zero/1.0/legalcode</dc:rights>\n</oai_dc:dc>\n\t\t\t</metadata>\n\t\t</record>\n\t</GetRecord>\n</OAI-PMH>\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,100 @@
+id = "flathub_apps"
+name = "Flathub Linux Desktop Apps API v2"
+summary = "Official Flathub v2 API for searching Linux Flatpak desktop applications and inspecting AppStream metadata."
+aliases = ["flathub", "flatpak", "linux apps"]
+home_url = "https://flathub.org"
+tier = 1
+scopes = ["code"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 3.0, burst = 6, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 21600 }
+
+[op.search]
+summary = "Search Linux Flatpak desktop applications via Flathub v2 POST /search."
+method = "POST"
+url = "https://flathub.org/api/v2/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+body = { kind = "json", jaq = '''{
+  query: $p.query,
+  hits_per_page: ($p.limit // 10),
+  page: ($p.page // 1)
+}''' }
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "vlc", limit = 3 }, min_results = 2, fixture = "fixtures/w5l/flathub_apps/search/default.json" }
+examples = [
+  'source.call("flathub_apps.search", { query: "vlc", limit: 5 })',
+]
+
+[op.search.params]
+query = { type = "string", required = true, in = "body", doc = "Application search query" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "body", doc = "Hits per page" }
+page = { type = "int", default = 1, min = 1, in = "body", doc = "1-based page number" }
+
+[op.search.map]
+items = "(.hits // [])[]"
+total = ".totalHits"
+error = "if .detail then (.detail | tostring) else null end"
+record = '''{
+  appId: (.app_id // ""),
+  name: (.name // ""),
+  summary: ((.summary // "") | collapse_ws // ""),
+  developerName: (.developer_name // null),
+  license: (.project_license // null),
+  categories: ((.main_categories | arr) + (.sub_categories | arr)),
+  isFreeLicense: (.is_free_license // null),
+  verified: (.verification_verified // false),
+  installsLastMonth: (.installs_last_month // 0),
+  updatedAt: (.updated_at | epoch_to_iso),
+  arches: (.arches // []),
+  url: ("https://flathub.org/apps/" + (.app_id // ""))
+}'''
+hit = '''{
+  title: ((.name // "") + (if (.app_id // "") != "" then " (" + .app_id + ")" else "" end)),
+  url: ("https://flathub.org/apps/" + (.app_id // "")),
+  snippet: (
+    [
+      (if (.summary // "") != "" then (.summary | collapse_ws // "") else null end),
+      (if (.developer_name // "") != "" then ("by " + .developer_name) else null end),
+      (if (.installs_last_month // 0) > 0 then (((.installs_last_month) | tostring) + " monthly installs") else null end)
+    ] | map(select(. != null)) | join(" · ")
+  )[0:280],
+  date: (.updated_at | parse_date),
+  dateSource: "api"
+}'''
+
+[op.app]
+summary = "Fetch full AppStream metadata, releases, license, and links for a Flathub app ID."
+method = "GET"
+url = "https://flathub.org/api/v2/appstream/{app_id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { app_id = "org.videolan.VLC" }, min_results = 1, fixture = "fixtures/w5l/flathub_apps/app/default.json" }
+examples = [
+  'source.call("flathub_apps.app", { app_id: "org.videolan.VLC" })',
+]
+
+[op.app.params]
+app_id = { type = "string", required = true, in = "path", doc = "Reverse-DNS Flatpak app ID (e.g. org.videolan.VLC)" }
+
+[op.app.map]
+items = "."
+error = "@ref:op.search.map.error"
+record = '''{
+  appId: (.id // ""),
+  name: (.name // ""),
+  summary: ((.summary // "") | collapse_ws // ""),
+  description: ((.description // "") | strip_tags // ""),
+  developerName: (.developer_name // null),
+  license: (.project_license // null),
+  categories: (.categories // []),
+  homepage: (.urls.homepage // null),
+  bugtracker: (.urls.bugtracker // null),
+  latestVersion: ((.releases // [])[0].version // null),
+  latestReleaseDate: (((.releases // [])[0].timestamp // null) | parse_date),
+  isEol: (.is_eol // false),
+  url: ("https://flathub.org/apps/" + (.id // ""))
+}'''

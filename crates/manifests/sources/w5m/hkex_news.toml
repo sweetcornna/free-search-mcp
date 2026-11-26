@@ -1,0 +1,75 @@
+id = "hkex_news"
+name = "HKEXnews Listed Company Filings"
+summary = "Keyless Hong Kong Stock Exchange (SEHK) regulatory disclosures, interim/annual results, and corporate announcements in English or Traditional Chinese."
+aliases = ["hkex", "hkexnews", "港交所", "披露易", "hk stocks"]
+home_url = "https://www1.hkexnews.hk/search/titlesearch.xhtml"
+tier = 1
+scopes = ["finance"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 3600 }
+
+[op.search]
+summary = "Search Hong Kong Stock Exchange listed company announcements by title keywords and optional date window."
+method = "GET"
+url = "https://www1.hkexnews.hk/search/titleSearchServlet.do"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { sortDir = "0", sortByOptions = "DateTime", category = "0", market = "SEHK", stockId = "-1", documentType = "-1", searchType = "0", t1code = "-2", t2Gcode = "-2", t2code = "-2" }
+probe = { params = { query = "results", limit = 3 }, min_results = 2, fixture = "fixtures/w5m/hkex_news/search/default.json" }
+examples = ["source.call('hkex_news.search', { query: 'interim results', lang: 'E', limit: 5 })"]
+
+[op.search.params]
+query = { type = "string", required = true, to = "title", doc = "Announcement title keywords e.g. results, dividend, annual report" }
+lang = { type = "string", default = "E", enum = ["E", "C"], to = "lang", doc = "Language: E (English) or C (Traditional Chinese)" }
+from_date = { type = "string", to = "fromDate", doc = "Optional start date YYYYMMDD" }
+to_date = { type = "string", to = "toDate", doc = "Optional end date YYYYMMDD" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "rowRange", doc = "Maximum rows returned" }
+
+[op.search.map]
+items = 'if (.result == null or .result == "null" or .result == "") then empty else (.result | fromjson | .[]?) end'
+total = ".recordCnt"
+record = '''{
+  newsId: .NEWS_ID,
+  stockCode: ((.STOCK_CODE // "") | gsub("<br/?>"; ", ") | strip_tags),
+  stockName: ((.STOCK_NAME // "") | gsub("<br/?>"; ", ") | strip_tags),
+  title: ((.TITLE // "") | strip_tags),
+  category: ((.LONG_TEXT // .SHORT_TEXT // "") | strip_tags),
+  dateTime: (.DATE_TIME // null),
+  date: ((.DATE_TIME // "") | split(" ")[0] | split("/") | if length == 3 then (.[2] + "-" + .[1] + "-" + .[0]) else null end | parse_date),
+  fileType: (.FILE_TYPE // null),
+  fileSize: (.FILE_INFO // null),
+  url: (.FILE_LINK | resolve_url("https://www1.hkexnews.hk"))
+}'''
+hit = '''{
+  title: (((.STOCK_CODE // "") | split("<br/>")[0] | strip_tags) + " " + ((.STOCK_NAME // "") | split("<br/>")[0] | strip_tags) + " — " + ((.TITLE // "") | strip_tags)),
+  url: (.FILE_LINK | resolve_url("https://www1.hkexnews.hk")),
+  snippet: (((.LONG_TEXT // .SHORT_TEXT // "") | strip_tags) + " (" + (.FILE_TYPE // "") + " " + (.FILE_INFO // "") + ")"),
+  date: ((.DATE_TIME // "") | split(" ")[0] | split("/") | if length == 3 then (.[2] + "-" + .[1] + "-" + .[0]) else null end | parse_date),
+  dateSource: "api"
+}'''
+
+[op.by_stock]
+summary = "List recent HKEXnews regulatory filings for a specific listed issuer by internal HKEX stockId (e.g. 7609 for 00700 Tencent)."
+method = "GET"
+url = "https://www1.hkexnews.hk/search/titleSearchServlet.do"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { sortDir = "0", sortByOptions = "DateTime", category = "0", market = "SEHK", documentType = "-1", title = "", searchType = "0", t1code = "-2", t2Gcode = "-2", t2code = "-2" }
+probe = { params = { stock_id = "7609", limit = 3 }, min_results = 1, fixture = "fixtures/w5m/hkex_news/by_stock/default.json" }
+examples = ["source.call('hkex_news.by_stock', { stock_id: '7609', lang: 'E', limit: 5 })"]
+
+[op.by_stock.params]
+stock_id = { type = "string", required = true, to = "stockId", doc = "HKEX internal stockId e.g. 7609 for 00700 Tencent" }
+lang = { type = "string", default = "E", enum = ["E", "C"], to = "lang", doc = "Language: E (English) or C (Traditional Chinese)" }
+from_date = { type = "string", to = "fromDate", doc = "Optional start date YYYYMMDD" }
+to_date = { type = "string", to = "toDate", doc = "Optional end date YYYYMMDD" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "rowRange", doc = "Maximum rows returned" }
+
+[op.by_stock.map]
+items = "@ref:op.search.map.items"
+total = ".recordCnt"
+record = "@ref:op.search.map.record"

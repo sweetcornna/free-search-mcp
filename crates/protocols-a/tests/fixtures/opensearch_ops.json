@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "source": "opensearch_ops",
+  "op": "all",
+  "recordedAt": "2026-11-25T12:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://cir.nii.ac.jp/opensearch/v2/all?q=rust&count=2&format=json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          ["content-type", "application/json; charset=utf-8"]
+        ],
+        "bodyText": "{\"opensearch:totalResults\":10,\"items\":[{\"@id\":\"https://cir.nii.ac.jp/crid/100001\",\"title\":\"Safe Systems Programming in Rust\",\"prism:publicationDate\":\"2025-04-01\",\"dc:description\":\"Memory safety without garbage collection.\"}]}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://example.org/opensearch.xml",
+        "headersSubset": {
+          "accept": "application/opensearchdescription+xml, application/xml"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          ["content-type", "application/opensearchdescription+xml"]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><OpenSearchDescription xmlns=\"http://a9.com/-/spec/opensearch/1.1/\"><ShortName>Example Catalog</ShortName><Description>Test catalog</Description><Url type=\"application/atom+xml\" template=\"https://example.org/feed.atom?q={searchTerms}&amp;n={count?}\"/></OpenSearchDescription>",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://example.org/feed.atom?q=climate&n=2",
+        "headersSubset": {
+          "accept": "application/atom+xml, application/xml"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          ["content-type", "application/atom+xml"]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><feed xmlns=\"http://www.w3.org/2005/Atom\"><entry><title>Climate Modeling 2026</title><link href=\"https://example.org/item/1\"/><summary>Global atmospheric models.</summary><updated>2026-10-01T00:00:00Z</updated></entry></feed>",
+        "bodyB64": null
+      }
+    }
+  ]
+}

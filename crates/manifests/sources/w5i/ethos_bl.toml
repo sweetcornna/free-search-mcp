@@ -1,0 +1,73 @@
+id = "ethos_bl"
+name = "British Library EThOS (UK Doctoral Theses)"
+summary = "UK national doctoral thesis repository (Hyrax 5.2 rebuild) exposing ResourceSync XML capability discovery and thesis records."
+aliases = ["ethos", "ethos.bl.uk", "british library theses"]
+home_url = "https://ethos.bl.uk"
+tier = 2
+scopes = ["academic", "academic.theses"]
+caps = ["lookup", "thesis"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 0.5, burst = 2, concurrency = 1, timeout_ms = 12000, cache_ttl_s = 86400, host_bucket = "ethos.bl.uk" }
+
+[op.capabilitylist]
+summary = "Discover EThOS ResourceSync XML endpoints (resourcelist and changelist)."
+method = "GET"
+url = "https://ethos.bl.uk/capabilitylist"
+headers = { Accept = "application/xml" }
+response = "xml"
+returns = "records"
+const_query = { locale = "en" }
+probe = { params = {}, min_results = 2, fixture = "fixtures/w5i/ethos_bl/capabilitylist/default.json" }
+examples = ['source.call("ethos_bl.capabilitylist", {})']
+
+[op.capabilitylist.map]
+items = ".urlset.url | arr | .[]"
+record = '''{
+  url: (.loc | xml_text),
+  capability: (.md."@capability" // "")
+}'''
+
+[op.thesis]
+summary = "Fetch metadata and abstract for a UK doctoral thesis by numeric EThOS ID from ethos.bl.uk."
+method = "GET"
+url = "https://ethos.bl.uk/concern/thesis_or_dissertations/{id}"
+headers = { Accept = "text/html" }
+response = "html"
+returns = "works"
+probe = { params = { id = "232786" }, min_results = 1, fixture = "fixtures/w5i/ethos_bl/thesis/default.json" }
+examples = ['source.call("ethos_bl.thesis", {id: "232786"})']
+
+[op.thesis.params]
+id = { type = "string", required = true, in = "path", doc = "Numeric EThOS thesis ID (e.g. 232786)" }
+
+[op.thesis.html]
+items_css = "html"
+fields = { title = 'meta[name="citation_title"] | attr(content)', authors = 'meta[name="citation_author"] | attrs(content)', date = 'meta[name="citation_publication_date"] | attr(content)', abstract = "p#ethos_abstract | text", institution = 'span[itemprop="inCurrentHeInsitution"] | text', access_url = 'li.attribute-referenced_by a | attr(href)' }
+wall_markers = ["Just a moment", "Access Denied", "Attention Required"]
+
+[op.thesis.map]
+items = ".[]"
+work = '''(
+  ("https://ethos.bl.uk/concern/thesis_or_dissertations/" + ($p.id // "")) as $url |
+  (.date | parse_date) as $dt |
+  (.institution | collapse_ws) as $inst |
+  {
+    title: ((.title // "") | unescape_html | collapse_ws // ""),
+    authors: [(.authors | arr)[] | unescape_html | collapse_ws | select(. != null and . != "") | {name: .}],
+    year: (($dt // "")[0:4] | to_int),
+    publishedDate: $dt,
+    venue: (if ($inst // "") != "" then $inst else "British Library EThOS" end),
+    workType: "dissertation",
+    ids: {},
+    abstractText: ((.abstract | unescape_html | collapse_ws) | if . == "" then null else . end),
+    oa: {
+      status: (if (.access_url // "") != "" then "green" else "unknown" end),
+      url: ((.access_url | resolve_url("https://ethos.bl.uk/")) // $url)
+    },
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["ethos_bl"]
+  }
+)'''

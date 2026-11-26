@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "usgs_earthquakes",
+  "op": "events",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&limit=3&minmagnitude=4.5",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"type\":\"FeatureCollection\",\"metadata\":{\"generated\":1795610895000,\"url\":\"https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&limit=3&minmagnitude=4.5\",\"title\":\"USGS Earthquakes\",\"status\":200,\"api\":\"2.8.4\",\"limit\":3,\"offset\":1},\"features\":[{\"type\":\"Feature\",\"properties\":{\"mag\":5,\"place\":\"67 km NNE of Luwuk, Indonesia\",\"time\":1795608492731,\"updated\":1795609540040,\"tz\":null,\"url\":\"https://earthquake.usgs.gov/earthquakes/eventpage/us6000udf2\",\"detail\":\"https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us6000udf2&format=geojson\",\"felt\":null,\"cdi\":null,\"mmi\":null,\"alert\":null,\"status\":\"reviewed\",\"tsunami\":0,\"sig\":385,\"net\":\"us\",\"code\":\"6000udf2\",\"ids\":\",us6000udf2,\",\"sources\":\",us,\",\"types\":\",origin,phase-data,\",\"nst\":73,\"dmin\":5.629,\"rms\":0.79,\"gap\":64,\"magType\":\"mb\",\"type\":\"earthquake\",\"title\":\"M 5.0 - 67 km NNE of Luwuk, Indonesia\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[123.0018,-0.3849,106.384]},\"id\":\"us6000udf2\"},\n{\"type\":\"Feature\",\"properties\":{\"mag\":5.3,\"place\":\"83 km ESE of Hengchun, Taiwan\",\"time\":1795596436394,\"updated\":1795597440040,\"tz\":null,\"url\":\"https://earthquake.usgs.gov/earthquakes/eventpage/us6000udef\",\"detail\":\"https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us6000udef&format=geojson\",\"felt\":null,\"cdi\":null,\"mmi\":null,\"alert\":null,\"status\":\"reviewed\",\"tsunami\":0,\"sig\":432,\"net\":\"us\",\"code\":\"6000udef\",\"ids\":\",us6000udef,\",\"sources\":\",us,\",\"types\":\",origin,phase-data,\",\"nst\":98,\"dmin\":1.078,\"rms\":1.06,\"gap\":57,\"magType\":\"mww\",\"type\":\"earthquake\",\"title\":\"M 5.3 - 83 km ESE of Hengchun, Taiwan\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[121.5241,21.8162,10]},\"id\":\"us6000udef\"},\n{\"type\":\"Feature\",\"properties\":{\"mag\":5.2,\"place\":\"175 km N of Hicks Bay, New Zealand\",\"time\":1795588448672,\"updated\":1795590191040,\"tz\":null,\"url\":\"https://earthquake.usgs.gov/earthquakes/eventpage/us6000ude3\",\"detail\":\"https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us6000ude3&format=geojson\",\"felt\":null,\"cdi\":null,\"mmi\":null,\"alert\":null,\"status\":\"reviewed\",\"tsunami\":0,\"sig\":416,\"net\":\"us\",\"code\":\"6000ude3\",\"ids\":\",us6000ude3,\",\"sources\":\",us,\",\"types\":\",origin,phase-data,\",\"nst\":43,\"dmin\":1.541,\"rms\":1.04,\"gap\":84,\"magType\":\"mww\",\"type\":\"earthquake\",\"title\":\"M 5.2 - 175 km N of Hicks Bay, New Zealand\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[178.3688,-36.0191,25.327]},\"id\":\"us6000ude3\"}],\"bbox\":[121.5241,-36.0191,10,178.3688,21.8162,106.384]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

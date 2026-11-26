@@ -1,0 +1,100 @@
+id = "ensembl_rest"
+name = "Ensembl Comparative Genomics REST API"
+summary = "EMBL-EBI vertebrate genomics lookup for gene symbols, Ensembl IDs, genomic coordinates, canonical transcripts, and VEP variant effect predictions."
+aliases = ["ensembl", "vep", "genomics", "ensg"]
+home_url = "https://rest.ensembl.org"
+tier = 1
+scopes = ["academic.biomed", "dataset"]
+caps = ["lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 10.0, burst = 15, concurrency = 4, timeout_ms = 10000, cache_ttl_s = 86400, host_bucket = "rest.ensembl.org" }
+
+[op.symbol]
+summary = "Look up an Ensembl gene by species and HGNC/official gene symbol."
+method = "GET"
+url = "https://rest.ensembl.org/lookup/symbol/{species}/{symbol}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { symbol = "BRCA1" }, min_results = 1, fixture = "fixtures/w5j/ensembl_rest/symbol/default.json" }
+examples = ["source.call('ensembl_rest.symbol', { symbol: 'BRCA1', species: 'homo_sapiens' })"]
+
+[op.symbol.params]
+symbol = { type = "string", required = true, in = "path", doc = "Gene symbol (e.g. BRCA1, TP53)" }
+species = { type = "string", default = "homo_sapiens", in = "path", doc = "Ensembl species name (e.g. homo_sapiens, mus_musculus)" }
+expand = { type = "int", default = 0, min = 0, max = 1, to = "expand", doc = "Set 1 to include transcripts and exons" }
+
+[op.symbol.map]
+items = "."
+error = "if type == \"object\" and (.error | type) == \"string\" then .error else null end"
+record = '''{
+  id: (.id // ""),
+  symbol: (.display_name // null),
+  description: (.description // ""),
+  species: (.species // null),
+  assembly: (.assembly_name // null),
+  chromosome: (.seq_region_name // null),
+  start: (.start // null),
+  end: (.end // null),
+  strand: (.strand // null),
+  biotype: (.biotype // null),
+  objectType: (.object_type // null),
+  canonicalTranscript: (.canonical_transcript // null),
+  url: ("https://www.ensembl.org/" + (.species // "Homo_sapiens") + "/Gene/Summary?g=" + (.id // ""))
+}'''
+
+[op.id]
+summary = "Look up an Ensembl gene, transcript, or translation by stable Ensembl ID."
+method = "GET"
+url = "https://rest.ensembl.org/lookup/id/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "ENSG00000012048" }, min_results = 1, fixture = "fixtures/w5j/ensembl_rest/id/default.json" }
+examples = ["source.call('ensembl_rest.id', { id: 'ENSG00000012048' })"]
+
+[op.id.params]
+id = { type = "string", required = true, in = "path", doc = "Ensembl stable ID (e.g. ENSG00000012048)" }
+expand = { type = "int", default = 0, min = 0, max = 1, to = "expand", doc = "Set 1 to expand child features" }
+
+[op.id.map]
+items = "."
+error = "@ref:op.symbol.map.error"
+record = "@ref:op.symbol.map.record"
+
+[op.vep]
+summary = "Predict functional consequences of a genetic variant in HGVS notation via Ensembl VEP."
+method = "GET"
+url = "https://rest.ensembl.org/vep/{species}/hgvs/{hgvs}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { hgvs = "ENST00000357654.9:c.5266dupC" }, min_results = 1, fixture = "fixtures/w5j/ensembl_rest/vep/default.json" }
+examples = ["source.call('ensembl_rest.vep', { hgvs: 'ENST00000357654.9:c.5266dupC' })"]
+
+[op.vep.params]
+hgvs = { type = "string", required = true, in = "path", encode = "raw", doc = "HGVS variant notation (e.g. ENST00000357654.9:c.5266dupC)" }
+species = { type = "string", default = "human", in = "path", doc = "Species name (default: human)" }
+
+[op.vep.map]
+items = ".[]"
+error = "@ref:op.symbol.map.error"
+record = '''{
+  id: (.id // .input // ""),
+  mostSevereConsequence: (.most_severe_consequence // null),
+  chromosome: (.seq_region_name // null),
+  start: (.start // null),
+  end: (.end // null),
+  strand: (.strand // null),
+  alleleString: (.allele_string // null),
+  transcriptConsequences: [(.transcript_consequences // [])[0:5][] | {
+    transcriptId: (.transcript_id // null),
+    geneId: (.gene_id // null),
+    geneSymbol: (.gene_symbol // null),
+    impact: (.impact // null),
+    biotype: (.biotype // null),
+    consequences: (.consequence_terms // []),
+    aminoAcids: (.amino_acids // null)
+  }]
+}'''

@@ -1,0 +1,99 @@
+id = "federalregister"
+name = "US Federal Register"
+summary = "Daily journal of US federal rules, proposed rules, notices, and presidential documents."
+aliases = ["fedreg", "cfr", "us rules", "executive orders"]
+home_url = "https://www.federalregister.gov"
+tier = 1
+scopes = ["gov", "gov.law"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "direct_claimant"
+limits = { rps = 3.0, burst = 6, concurrency = 4, timeout_ms = 8000, cache_ttl_s = 21600 }
+
+[claims]
+patterns = [
+  '(?i)federal register|executive order|final rule|proposed rule|\b\d+\s+cfr\b|\bcode of federal regulations\b|rulemaking|notice of proposed',
+  '联邦公报|行政令|美国.*(?:法规|规则)',
+]
+keywords = ["federal register", "executive order", "final rule", "proposed rule", "rulemaking"]
+max_per_search = 3
+
+[op.search]
+summary = "Search US Federal Register documents by keyword and document type."
+method = "GET"
+url = "https://www.federalregister.gov/api/v1/documents.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { order = "relevance" }
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "artificial intelligence", limit = 3 }, min_results = 2, fixture = "fixtures/w5d2/federalregister/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "conditions[term]", doc = "Search terms" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "per_page", doc = "Results per page" }
+page = { type = "int", min = 1, to = "page", doc = "Page number" }
+doc_type = { type = "string", enum = ["RULE", "PRORULE", "NOTICE", "PRESDOCU"], to = "conditions[type][]", doc = "Document type filter" }
+
+[op.search.map]
+items = ".results[]"
+total = ".count"
+error = "if .errors then (.errors | tostring) else null end"
+record = '''{
+  documentNumber: .document_number,
+  title: ((.title // "") | collapse_ws // ""),
+  type: (.type // null),
+  publicationDate: ((.publication_date // null) | parse_date),
+  agencies: [(.agencies // [])[] | .name | select(. != null)],
+  abstract: ((.abstract // null) | strip_tags),
+  url: (.html_url // ""),
+  pdfUrl: (.pdf_url // null)
+}'''
+hit = '''{
+  title: ((.title // "") | collapse_ws // ""),
+  url: (.html_url // "https://www.federalregister.gov"),
+  snippet: (
+    [
+      .type,
+      (if .publication_date then "published " + (.publication_date | parse_date // .publication_date) else null end),
+      (([(.agencies // [])[] | .name | select(. != null)] | .[0:3] | join(", ")) | if length > 0 then . else null end),
+      (((.abstract // .excerpts // null) | strip_tags) | if . and (length > 0) then (.[0:240] | collapse_ws) else null end)
+    ] | map(select(. != null)) | join(" · ")
+  ),
+  date: ((.publication_date // null) | parse_date),
+  dateSource: "api"
+}'''
+
+[op.document]
+summary = "Fetch full metadata for a single Federal Register document by document number."
+method = "GET"
+url = "https://www.federalregister.gov/api/v1/documents/{document_number}.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { document_number = "2023-24283" }, min_results = 1, fixture = "fixtures/w5d2/federalregister/document/default.json" }
+
+[op.document.params]
+document_number = { type = "string", required = true, in = "path", doc = "Federal Register document number, e.g. 2023-24283" }
+
+[op.document.map]
+items = "."
+error = "if .errors then (.errors | tostring) else null end"
+record = '''{
+  documentNumber: .document_number,
+  citation: (.citation // null),
+  title: ((.title // "") | collapse_ws // ""),
+  type: (.type // null),
+  subtype: (.subtype // null),
+  executiveOrderNumber: (.executive_order_number // null),
+  signingDate: ((.signing_date // null) | parse_date),
+  publicationDate: ((.publication_date // null) | parse_date),
+  effectiveOn: ((.effective_on // null) | parse_date),
+  agencies: [(.agencies // [])[] | .name | select(. != null)],
+  abstract: ((.abstract // null) | strip_tags),
+  cfrReferences: (.cfr_references // []),
+  docketIds: (.docket_ids // []),
+  url: (.html_url // ""),
+  bodyHtmlUrl: (.body_html_url // null),
+  pdfUrl: (.pdf_url // null)
+}'''

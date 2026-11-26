@@ -1,0 +1,12 @@
+---
+source: crates/surface/tests/snapshots.rs
+expression: out
+---
+# Reciprocal rank fusion outperforms condorcet and individual rank learning methods
+<https://doi.org/10.1145/1571941.1572114>
+Authors: Gordon V. Cormack, Charles L A Clarke, Stefan Buettcher
+_2009 · Proceedings of the 32nd international ACM SIGIR conference on Research and development in information retrieval · proceedings-article · cited by 783 (crossref)_
+IDs: doi:10.1145/1571941.1572114
+_sources: crossref_
+
+next: `scholar.fulltext(id)` · `scholar.graph(id)` · `scholar.cite(id)`.

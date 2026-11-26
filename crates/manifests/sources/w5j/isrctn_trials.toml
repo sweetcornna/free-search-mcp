@@ -1,0 +1,88 @@
+id = "isrctn_trials"
+name = "ISRCTN Clinical Study Registry"
+summary = "UK and international open clinical trial registry complementing ClinicalTrials.gov with European and Commonwealth trials."
+aliases = ["isrctn", "uk clinical trials", "bmc trials"]
+home_url = "https://www.isrctn.com"
+tier = 1
+scopes = ["academic", "academic.trial", "academic.biomed"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 4, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 21600, host_bucket = "www.isrctn.com" }
+
+[op.search]
+summary = "Search ISRCTN clinical trials by condition, intervention, or keyword via XML API."
+method = "GET"
+url = "https://www.isrctn.com/api/query/format/default"
+headers = { Accept = "application/xml" }
+response = "xml"
+returns = "records"
+probe = { params = { query = "diabetes", limit = 2 }, min_results = 2, fixture = "fixtures/w5j/isrctn_trials/search/default.json" }
+examples = ["source.call('isrctn_trials.search', { query: 'diabetes', limit: 5 })"]
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Condition, intervention, or trial search query" }
+limit = { type = "int", default = 5, min = 1, max = 50, to = "limit", doc = "Maximum trial records to return" }
+
+[op.search.map]
+items = ".alltrials.fulltrial | arr | .[]"
+total = ".alltrials.\"@totalcount\" | to_int"
+record = '''(
+  .trial as $t |
+  ($t."@publicidentifiercanonical" // ("ISRCTN" + ($t.isrctn | xml_text))) as $id |
+  ($t.trialdescription // {}) as $desc |
+  ([($t.conditions.condition | arr)[] | .description | xml_text | collapse_ws // "" | select(length > 0)]) as $conds |
+  ([($t.interventions.intervention | arr)[] | .interventiontype | xml_text | collapse_ws // "" | select(length > 0)]) as $ints |
+  ([($t.participants.recruitmentcountries.country | arr)[] | xml_text | collapse_ws // "" | select(length > 0)]) as $countries |
+  (($desc.plainenglishsummary | xml_text | collapse_ws) // "") as $plain |
+  {
+    isrctn: $id,
+    title: (($desc.title | xml_text | collapse_ws) // ""),
+    scientificTitle: (($desc.scientifictitle | xml_text | collapse_ws) // null),
+    studyDesign: (($t.trialdesign.primarystudydesign | xml_text | collapse_ws) // null),
+    conditions: $conds,
+    interventionTypes: $ints,
+    countries: $countries,
+    targetEnrolment: ($t.participants.targetenrolment | xml_text | to_int),
+    doi: ($t.externalrefs.doi | xml_text | doi_norm),
+    lastUpdated: ($t."@lastupdated" | parse_date),
+    plainEnglishSummary: (if ($plain | length) > 800 then ($plain[0:800] + "...") else $plain end),
+    url: ("https://www.isrctn.com/" + $id)
+  }
+)'''
+hit = '''(
+  .trial as $t |
+  ($t."@publicidentifiercanonical" // ("ISRCTN" + ($t.isrctn | xml_text))) as $id |
+  ($t.trialdescription // {}) as $desc |
+  ([($t.conditions.condition | arr)[] | .description | xml_text | collapse_ws // "" | select(length > 0)]) as $conds |
+  (($t.trialdesign.primarystudydesign | xml_text | collapse_ws) // "") as $design |
+  {
+    title: (($desc.title | xml_text | collapse_ws) // $id),
+    url: ("https://www.isrctn.com/" + $id),
+    snippet: ([
+      $id,
+      (if ($design | length) > 0 then $design else empty end),
+      (if ($conds | length) > 0 then ($conds | join(", ")) else empty end)
+    ] | join(" · ")),
+    date: ($t."@lastupdated" | parse_date),
+    dateSource: "xml"
+  }
+)'''
+
+[op.study]
+summary = "Fetch a full ISRCTN clinical study record by ISRCTN identifier."
+method = "GET"
+url = "https://www.isrctn.com/api/query/format/default"
+headers = { Accept = "application/xml" }
+response = "xml"
+returns = "records"
+const_query = { limit = 1 }
+probe = { params = { isrctn = "ISRCTN38111731" }, min_results = 1, fixture = "fixtures/w5j/isrctn_trials/study/default.json" }
+examples = ["source.call('isrctn_trials.study', { isrctn: 'ISRCTN38111731' })"]
+
+[op.study.params]
+isrctn = { type = "string", required = true, to = "q", doc = "ISRCTN identifier (e.g. ISRCTN38111731)" }
+
+[op.study.map]
+items = ".alltrials.fulltrial | arr | .[]"
+record = "@ref:op.search.map.record"

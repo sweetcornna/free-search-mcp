@@ -1,0 +1,70 @@
+id = "google_factcheck"
+name = "Google Fact Check Tools API"
+summary = "Search IFCN-certified ClaimReview fact checks, ratings, claimants, and publisher reviews worldwide (requires free Google API key)."
+aliases = ["factcheck", "claimreview", "google fact check"]
+home_url = "https://toolbox.google.com/factcheck/apis"
+tier = 3
+scopes = ["news"]
+caps = ["search"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 7200 }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_GOOGLE_FACTCHECK_API_KEY"
+in = "header"
+name = "X-Goog-Api-Key"
+format = "{key}"
+route_requires_key = true
+
+[op.search]
+summary = "Search fact-checked claims and ClaimReview ratings by keyword, language, or publisher domain."
+method = "GET"
+url = "https://factchecktools.googleapis.com/v1alpha1/claims:search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "token", param = "pageToken", max_pages = 3 }
+probe = { params = { query = "electric vehicle battery", language_code = "en", limit = 3 }, min_results = 2, fixture = "fixtures/w5m/google_factcheck/search/default.json" }
+examples = ["source.call('google_factcheck.search', { query: 'electric vehicle battery', language_code: 'en', limit: 5 })"]
+
+[op.search.params]
+query = { type = "string", required = true, to = "query", doc = "Claim keywords or phrase to check" }
+language_code = { type = "string", to = "languageCode", doc = "BCP-47 language code e.g. en, es, fr" }
+publisher_site = { type = "string", to = "reviewPublisherSiteFilter", doc = "Restrict to publisher domain e.g. politifact.com, snopes.com" }
+max_age_days = { type = "int", min = 1, to = "maxAgeDays", doc = "Maximum age of returned claims in days" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "pageSize", doc = "Maximum claims per page" }
+cursor = { type = "string", to = "pageToken", doc = "Pagination token from previous response" }
+
+[op.search.map]
+items = "(.claims // [])[]"
+next_cursor = ".nextPageToken"
+error = 'if .error then (.error.message // (.error | tostring)) else null end'
+record = '''{
+  claimText: ((.text // "") | strip_tags),
+  claimant: (.claimant // null),
+  claimDate: (.claimDate | parse_date),
+  rating: (.claimReview[0].textualRating // null),
+  reviewTitle: ((.claimReview[0].title // null) | strip_tags),
+  publisherName: (.claimReview[0].publisher.name // null),
+  publisherSite: (.claimReview[0].publisher.site // null),
+  reviewDate: (.claimReview[0].reviewDate | parse_date),
+  languageCode: (.claimReview[0].languageCode // null),
+  url: (.claimReview[0].url // ""),
+  reviews: [(.claimReview // [])[] | {
+    publisher: (.publisher.name // null),
+    site: (.publisher.site // null),
+    title: ((.title // null) | strip_tags),
+    rating: (.textualRating // null),
+    reviewDate: (.reviewDate | parse_date),
+    url: (.url // "")
+  }]
+}'''
+hit = '''{
+  title: ((if .claimReview[0].textualRating then ("[" + .claimReview[0].textualRating + "] ") else "" end) + ((.claimReview[0].title // .text // "") | strip_tags)),
+  url: (.claimReview[0].url // "https://toolbox.google.com/factcheck/explorer"),
+  snippet: ("Claim: " + ((.text // "") | strip_tags) + (if .claimant then (" (Claimant: " + .claimant + ")") else "" end) + (if .claimReview[0].publisher.name then (" — " + .claimReview[0].publisher.name) else "" end)),
+  date: ((.claimReview[0].reviewDate // .claimDate) | parse_date),
+  dateSource: "api"
+}'''

@@ -1,0 +1,135 @@
+id = "semanticscholar"
+name = "Semantic Scholar"
+summary = "AI2 scholarly graph with abstracts, citation and influential-citation counts, and open-access PDFs."
+aliases = ["s2", "semantic scholar"]
+home_url = "https://www.semanticscholar.org"
+tier = 3
+scopes = ["academic", "academic.index"]
+caps = ["search", "lookup", "graph", "fulltext"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 2, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 21600, host_bucket = "api.semanticscholar.org" }
+
+[auth]
+mode = "optional"
+env = "SEARCH_MCP_SEMANTICSCHOLAR_API_KEY"
+in = "header"
+name = "x-api-key"
+format = "{key}"
+route_requires_key = true
+
+[op.search]
+summary = "Search Semantic Scholar papers via Academic Graph v1."
+method = "GET"
+url = "https://api.semanticscholar.org/graph/v1/paper/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+const_query = { fields = "paperId,title,abstract,year,publicationDate,venue,citationCount,influentialCitationCount,isOpenAccess,openAccessPdf,externalIds,authors" }
+query_jaq = '''[if $cfg.freshness != null then ["sort", "publicationDate:desc"] else empty end]'''
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "attention is all you need", limit = 3 }, min_results = 2, fixture = "fixtures/seed/semanticscholar/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "query", doc = "Paper search query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Maximum papers to return" }
+offset = { type = "int", min = 0, to = "offset", doc = "Pagination offset" }
+year = { type = "string", to = "year", doc = "Optional publication year filter, e.g. 2020-2026" }
+
+[op.search.map]
+items = "(.data // [])[] | select((.title // \"\") != \"\")"
+total = ".total // null"
+error = "if .error then .error elif (.message != null and .data == null and .paperId == null) then .message else null end"
+work = '''(
+  (.externalIds.DOI | doi_norm) as $doi |
+  ($doi != null and ($doi | test("^10\\.(48550/arxiv\\.|1101/|21203/|2139/ssrn\\.|31219/|31234/|31235/|20944/|26434/|13140/)"))) as $is_preprint_doi |
+  (if (.openAccessPdf.url // "") != "" then .openAccessPdf.url else null end) as $oa_pdf |
+  (.citationCount | to_int) as $cites |
+  (.influentialCitationCount | to_int) as $inf |
+  {
+    title: ((.title // "") | collapse_ws),
+    authors: [(.authors // [])[] | { name: (.name // "") } | select(.name != "")],
+    year: (.year | to_int),
+    publishedDate: (.publicationDate | parse_date),
+    venue: (if (.venue // "") != "" then .venue else null end),
+    workType: (if $is_preprint_doi or ($doi == null and (.externalIds.ArXiv // "") != "") then "preprint" else "article" end),
+    ids: {
+      doi: $doi,
+      arxiv: (.externalIds.ArXiv // null),
+      pmid: (.externalIds.PubMed // null),
+      pmcid: (if (.externalIds.PubMedCentral // "") != "" then (if (.externalIds.PubMedCentral | startswith("PMC")) then .externalIds.PubMedCentral else ("PMC" + .externalIds.PubMedCentral) end) else null end),
+      s2: (.paperId // null),
+      dblp: (.externalIds.DBLP // null)
+    },
+    abstractText: (if (.abstract // "") != "" then (.abstract | collapse_ws) else null end),
+    citedBy: $cites,
+    citedBySource: (if $cites != null then "semanticscholar" else null end),
+    influentialCitations: $inf,
+    oa: (if (.isOpenAccess // false) or ($oa_pdf != null) then {
+      status: (if (.openAccessPdf.status // "") != "" then (.openAccessPdf.status | ascii_downcase) else "green" end),
+      url: $oa_pdf,
+      pdfUrl: $oa_pdf,
+      license: (.openAccessPdf.license // null)
+    } else null end),
+    retracted: false,
+    versions: [],
+    url: (if $oa_pdf != null then $oa_pdf elif $doi != null then ("https://doi.org/" + $doi) elif (.paperId // "") != "" then ("https://www.semanticscholar.org/paper/" + .paperId) else "" end),
+    sources: ["semanticscholar"]
+  }
+)'''
+
+[op.work]
+summary = "Fetch a single paper from Semantic Scholar by paperId, DOI:..., ARXIV:..., or PMID:...."
+method = "GET"
+url = "https://api.semanticscholar.org/graph/v1/paper/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+const_query = { fields = "paperId,title,abstract,year,publicationDate,venue,citationCount,influentialCitationCount,isOpenAccess,openAccessPdf,externalIds,authors" }
+probe = { params = { id = "ARXIV:1706.03762" }, min_results = 1, fixture = "fixtures/seed/semanticscholar/work/default.json" }
+
+[op.work.params]
+id = { type = "string", required = true, in = "path", encode = "raw", doc = "Semantic Scholar paperId or prefixed ID (DOI:..., ARXIV:..., PMID:...)" }
+
+[op.work.map]
+items = "."
+error = "@ref:op.search.map.error"
+work = "@ref:op.search.map.work"
+
+[op.citations]
+summary = "Fetch papers citing a Semantic Scholar paper."
+method = "GET"
+url = "https://api.semanticscholar.org/graph/v1/paper/{id}/citations"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+const_query = { fields = "paperId,title,year,publicationDate,venue,citationCount,influentialCitationCount,isOpenAccess,openAccessPdf,externalIds,authors" }
+probe = { params = { id = "ARXIV:1706.03762", limit = 3 }, min_results = 1, fixture = "fixtures/seed/semanticscholar/citations/default.json" }
+
+[op.citations.params]
+id = { type = "string", required = true, in = "path", encode = "raw", doc = "Paper identifier" }
+limit = { type = "int", default = 10, min = 1, max = 100, to = "limit", doc = "Maximum citing papers" }
+
+[op.citations.map]
+items = '''(.data // [])[] | .citingPaper | select(type == "object" and (.title // "") != "")'''
+error = "@ref:op.search.map.error"
+work = "@ref:op.search.map.work"
+
+[op.references]
+summary = "Fetch papers referenced by a Semantic Scholar paper."
+method = "GET"
+url = "https://api.semanticscholar.org/graph/v1/paper/{id}/references"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+const_query = { fields = "paperId,title,year,publicationDate,venue,citationCount,influentialCitationCount,isOpenAccess,openAccessPdf,externalIds,authors" }
+probe = { params = { id = "ARXIV:1706.03762", limit = 3 }, min_results = 1, fixture = "fixtures/seed/semanticscholar/references/default.json" }
+
+[op.references.params]
+id = { type = "string", required = true, in = "path", encode = "raw", doc = "Paper identifier" }
+limit = { type = "int", default = 10, min = 1, max = 100, to = "limit", doc = "Maximum referenced papers" }
+
+[op.references.map]
+items = '''(.data // [])[] | .citedPaper | select(type == "object" and (.title // "") != "")'''
+error = "@ref:op.search.map.error"
+work = "@ref:op.search.map.work"

@@ -1,0 +1,258 @@
+<!doctype html><html><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge"><title>Pin</title><meta name=viewport content="width=device-width,initial-scale=1"><script>const setTheme=e=>document.documentElement.className=e</script><link rel=stylesheet type=text/css media=screen href=https://without.boats/css/main.css><link rel=stylesheet type=text/css media=screen href=https://without.boats/css/syntax.css><link rel=alternate type=application/rss+xml title="RSS Feed" href=/index.xml></head><body><div class=content><header><div class=main><a href=https://without.boats/>Without boats, dreams dry up</a></div><nav><a href=/blog>Posts</a>
+<a href=/tags>Tags</a>
+<a class="theme-btn light" onclick='setTheme("light")'>Light Mode</a>
+<a class="theme-btn dark" onclick='setTheme("dark")'>Dark Mode</a></nav></header><main><article><div class=title><h1 class=title>Pin</h1><div class=meta><time>July 19, 2024</time></div></div><section class=body><p>The <code>Pin</code> type (and the concept of <em>pinning</em> in general) is a foundational building block on which
+the rest of the the Rust async ecosystem stands. Unfortunately, it has also been one of the least
+accessible and most misunderstood elements of async Rust. This post is meant to explain what <code>Pin</code>
+achieves, how it came to be, and what the current problem with <code>Pin</code> is.</p><p>There was an interesting <a href=https://www.modular.com/blog/mojo-vs-rust-is-mojo-faster-than-rust>post</a> a few months ago on the blog of the company Modular, which is
+developing a new language called Mojo. In a brief section discussing <code>Pin</code> in Rust, I found that it
+very succinctly captured the zeitgeist of the public discussion of the subject:</p><blockquote><p>In Rust, there is no concept of value identity. For a self-referential struct pointing to its own
+member, that data can become invalid if the object moves, as it&rsquo;ll be pointing to the old location
+in memory. This creates a complexity spike, particularly in parts of async Rust where futures need
+to be self-referential and store state, so you must wrap Self with Pin to guarantee it&rsquo;s not going
+to move. In Mojo, objects have an identity so referring to self.foo will always return the correct
+location in memory, without any additional complexity required for the programmer.</p></blockquote><p>Some aspects of these remarks confuse me. The term &ldquo;value identity&rdquo; is not defined anywhere in this
+post, nor can I find it elsewhere in Mojo&rsquo;s documentation, so I&rsquo;m not clear on how Modular claims
+that Mojo solves the problem that <code>Pin</code> is meant to solve. Despite this, I do think the criticism of
+<code>Pin</code>&rsquo;s usability is well stated: there is indeed a &ldquo;complexity spike&rdquo; when a user is forced to
+interact with it. The phrase I would use is actually a &ldquo;complexity cliff,&rdquo; as in the user suddenly
+finds themself thrown off a cliff into a sea of complex, unidiomatic APIs they don&rsquo;t understand.
+This is a problem and it would be very valuable to Rust users if the problem were solved.</p><p>As it happens, this little corner of Rust is my mess; adding <code>Pin</code> to Rust to support
+self-referential types was my idea. I have ideas of how this complexity spike could be resolved,
+which I will elaborate in a subsequent post. Before I can get there though I need to first try to
+explain, as efficiently as I know how, what <code>Pin</code> accomplishes, how it came to exist, and why it is
+currently difficult to use.</p><h1 id=requirements>Requirements</h1><p>To explain why <code>Pin</code> exists, we need to step back to the original development of async/await. The
+problem we were trying to solve was that in order to support references in async functions, we
+needed to be able to store those references inside of a <code>Future</code>. The problem was that those
+references might be <em>self-references</em>, meaning they point to other fields of the same object.</p><p>Consider this toy example:</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-rust data-lang=rust><span class=line><span class=cl><span class=k>async</span><span class=w> </span><span class=k>fn</span> <span class=nf>foo</span><span class=o>&lt;</span><span class=na>&#39;a</span><span class=o>&gt;</span><span class=p>(</span><span class=n>z</span>: <span class=kp>&amp;</span><span class=na>&#39;a</span> <span class=nc>mut</span><span class=w> </span><span class=kt>i32</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w> </span><span class=o>..</span><span class=p>.</span><span class=w> </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=k>async</span><span class=w> </span><span class=k>fn</span> <span class=nf>bar</span><span class=p>(</span><span class=n>x</span>: <span class=kt>i32</span><span class=p>,</span><span class=w> </span><span class=n>y</span>: <span class=kt>i32</span><span class=p>)</span><span class=w> </span>-&gt; <span class=kt>i32</span> <span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>let</span><span class=w> </span><span class=k>mut</span><span class=w> </span><span class=n>z</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>x</span><span class=w> </span><span class=o>+</span><span class=w> </span><span class=n>y</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=n>foo</span><span class=p>(</span><span class=o>&amp;</span><span class=k>mut</span><span class=w> </span><span class=n>z</span><span class=p>).</span><span class=k>await</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=n>z</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=p>}</span><span class=w>
+</span></span></span></code></pre></div><p>Both of these functions evaluate to an anonymous future type; the future type that an async function
+evaluates to has a state for each possible step at which it could pause: when it starts, every await
+point, and when it finishes.</p><p>For the purposes of our example, we will call the anonymous future that <code>foo</code> evaluates to
+<code>Foo&lt;'a></code> (the <code>'a</code> being the lifetime of the <code>z</code> argument) and the anonymous future that <code>bar</code>
+evaluates to <code>Bar</code>. Let&rsquo;s ask ourselves, what would the internal states of <code>Bar</code> be? Something like
+this:</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-rust data-lang=rust><span class=line><span class=cl><span class=k>enum</span> <span class=nc>Bar</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=c1>// When it starts, it contains only its arguments
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=w>    </span><span class=n>Start</span><span class=w> </span><span class=p>{</span><span class=w> </span><span class=n>x</span>: <span class=kt>i32</span><span class=p>,</span><span class=w> </span><span class=n>y</span>: <span class=kt>i32</span> <span class=p>},</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=c1>// At the first await, it must contain `z` and the `Foo` future
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=w>    </span><span class=c1>// that references `z`
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=w>    </span><span class=n>FirstAwait</span><span class=w> </span><span class=p>{</span><span class=w> </span><span class=n>z</span>: <span class=kt>i32</span><span class=p>,</span><span class=w> </span><span class=n>foo</span>: <span class=nc>Foo</span><span class=o>&lt;</span><span class=na>&#39;</span><span class=o>?&gt;</span><span class=w> </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=c1>// When its finished it needs no data
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=w>    </span><span class=n>Complete</span><span class=p>,</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=p>}</span><span class=w>
+</span></span></span></code></pre></div><p>Note the <code>'?</code> in for the lifetime of the <code>Foo&lt;'_></code> future: what lifetime could that be? It isn&rsquo;t a
+lifetime that outlives <code>Bar</code>, <code>Bar</code> has no lifetimes. The <code>Foo</code> object instead borrows the <code>z</code> field
+of <code>Bar</code>, which is stored along side it in the same struct. This is why these future types are said
+to be &ldquo;self-referential:&rdquo; they contain fields which reference other fields in themselves.</p><p>Here we must make a clarifying distinction: the goal of <code>Pin</code> is <em>not</em> to allow users to define
+their own self-referential type in safe Rust. Today, if you tried to define <code>Bar</code> by hand, there
+is really no safe way to construct its <code>FirstAwait</code> variant. Making this possible would be a worthy
+objective, but it is orthogonal to the goal of <code>Pin</code>. The goal of <code>Pin</code> is to make it safe to
+<em>manipulate</em> self-referential types generated by the compiler from an async function or implemented
+with unsafe code in a runtime like tokio.</p><p>However a self-referential type has been defined, once it exists it presents a problem. Imagine that
+<code>Bar</code> has been put into the <code>FirstAwait</code> state, so it contains references to its own <code>z</code> field. If
+you were to move <code>Bar</code>, those references would now dangle and point to dead memory, which may be
+re-used for a different value. Therefore, it is essential that once Bar could be put into the
+<code>FirstAwait</code> state, it is not moved again. Prior to the development of <code>Pin</code>, any object in Rust
+could be moved if you had ownership of it, or even if you had a mutable reference to it. So this was
+the problem that we needed to solve: we needed to express the requirement that from a certain point
+an object cannot be moved.</p><h2 id=non-solutions-move-constructors-and-offset-pointers>Non-solutions: move constructors and offset pointers</h2><p>Before we continue, I want to spend a moment to discuss two solutions to the problem which are
+often proposed but don&rsquo;t work (at least in Rust). These both take a rather different approach from
+the approach taken by <code>Pin</code>: instead of saying the value cannot be moved again, they try to make it
+so that self-referential values can be moved after all.</p><p>The first of these is the move constructor. The idea is that you would run some code whenever a
+value is moved, similar to the destructor that is run when the value is dropped. This code could
+then &ldquo;fix-up&rdquo; any self-referential pointers so that they now point to the new location. I&rsquo;ve
+discussed this in the past in my <a href=/blog/why-async-rust>post</a> about the history of async Rust, but this is
+not a viable solution because in Rust, those pointers could exist anywhere, not just &ldquo;inside&rdquo; the
+value being moved. For example, you could instead have a vector of pointers into your own state, and
+so the move constructor would need to be able to trace into that vector. It ultimately requires the
+same kind of runtime memory management as garbage collection, which wasn&rsquo;t viable for Rust.</p><p>The other reason move constructors don&rsquo;t work is that Rust very early on affirmed that it would
+never have move constructors, and a lot of unsafe code exists which assumes it is possible to move
+values by just copying their memory. Adding move constructors would be a breaking change for Rust.</p><p>The other non-solution that is sometimes proposed is the offset pointer. The idea in this case is
+that rather than compile self-references to normal references, they are compiled to offsets relative
+to the address of the self-referential object that contains them. This does not work because it is
+not possible to determine at compile time if a reference will be a self-reference or not: its
+possible for the same value to be both in different branches. For example, here&rsquo;s a modified version
+of <code>bar</code> from before:</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-rust data-lang=rust><span class=line><span class=cl><span class=k>async</span><span class=w> </span><span class=k>fn</span> <span class=nf>bar</span><span class=p>(</span><span class=n>x</span>: <span class=kt>i32</span><span class=p>,</span><span class=w> </span><span class=n>y</span>: <span class=kt>i32</span><span class=p>,</span><span class=w> </span><span class=k>mut</span><span class=w> </span><span class=n>z</span>: <span class=kp>&amp;</span><span class=nc>mut</span><span class=w> </span><span class=kt>i32</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>let</span><span class=w> </span><span class=k>mut</span><span class=w> </span><span class=n>z2</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>x</span><span class=w> </span><span class=o>+</span><span class=w> </span><span class=n>y</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>if</span><span class=w> </span><span class=n>random</span><span class=p>()</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>z</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=o>&amp;</span><span class=k>mut</span><span class=w> </span><span class=n>z2</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=n>foo</span><span class=p>(</span><span class=n>z</span><span class=p>).</span><span class=k>await</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=p>}</span><span class=w>
+</span></span></span></code></pre></div><p>By the time you call <code>foo</code>, <code>z</code> may be a pointer into the same object or it may be a pointer
+elsewhere. Its not possible to determine at compile time. You would need to compile references to
+some sort of enum of offset and reference; this was deemed unrealistic when we were working on
+async/await.</p><h2 id=the-pinned-typestate>The &ldquo;pinned typestate&rdquo;</h2><p>Having eliminated any option to make these objects movable, we therefore have a requirement that
+the object be <em>immovable</em>. But we need to clarify exactly what the requirements are, because people
+often make the wrong assumption about what is required.</p><p>Most importantly, these objects are not meant to be <em>always immovable</em>. Instead, they are meant to
+be freely moved for a certain period of their lifecycle, and at a certain point they should stop
+being moved from then on. That way, you can move a self-referential future around as you compose it
+with other futures until eventually you put it into the place it will live for as long as you poll
+it. So we needed a way to express that an object is no longer allowed to be moved; in other words,
+that it is &ldquo;pinned in place.&rdquo;</p><p>While we were experimenting with APIs for expressing this requirement, Ralf Jung was kind enough to
+formalize the idea. In Ralf&rsquo;s model, even before the work on async/await, objects could be in one of
+two &ldquo;typestates&rdquo;: they are &ldquo;owned,&rdquo; in which state they can be moved freely, or they are &ldquo;shared,&rdquo;
+in which state they cannot be moved for some lifetime (because they have references pointing to
+them). To support self-referential future types, Ralf&rsquo;s model gained a third typestate, which is
+called &ldquo;pinned.&rdquo;</p><p>Once an object enters the pinned typestate, it can never be moved again. More specifically, its
+memory cannot be invalidated without first executing its destructor. This definition also includes
+some other edge cases, like freeing memory without running the destructor, but the main way you
+invalidate an object&rsquo;s memory without the destructor running is by moving the object to a new
+location. The easiest way to understand the pinned typestate is to think of it as requiring that the
+object never is moved again.</p><p>Another fact about the pinned typestate is that for most types it is completely irrelevant. If the
+value of type can never contain any self-references, pinning it is useless. So for most types of
+objects, one would want types to be able to opt out of ever entering the pinned typestate so that
+you <em>can</em> move them again if you want.</p><p>There is a more detailed description of the pinned typestate in the formal model of Rust on Ralf&rsquo;s
+<a href=https://www.ralfj.de/blog/2018/04/05/a-formal-look-at-pinning.html>blog</a> for people who are interested. But having understood the requirements of pinning (first
+informally, and then formally by Ralf), we had the problem of finding the best way to represent an
+object entering the pinned typestate in the surface language of Rust. Ralf&rsquo;s model describes the
+semantics of the language, but doesn&rsquo;t specify a user-facing API or syntax. The solution that we
+ended up with was the <code>Pin</code> type, but it wasn&rsquo;t the first solution we tried.</p><h1 id=move><code>?Move</code></h1><p>Before we tried <code>Pin</code>, we tried a solution based on a new trait which we called <code>Move</code>. The idea was
+that most types would implement <code>Move</code>, and nothing about them would change, but any type that could
+contain self-references would not implement <code>Move</code>. For these types which don&rsquo;t implement <code>Move</code>,
+whenever you take a reference to a value of that type, that value enters the pinned typestate and no
+longer can be moved.</p><p>This definition is at the same time somewhat complex - people often assume <code>Move</code> controls moving at
+all, which wasn&rsquo;t the original proposal - and also in other ways somewhat intuitive - you can&rsquo;t
+possible store a self-reference in a value without taking a reference to that value to store, so
+tying the transition to the pinned typestate to the taking of a reference provides a straightforward
+guarantee of safety. And the check for this could be implemented automatically in the compiler: for
+types that don&rsquo;t implement <code>Move</code>, disallow moving values of those types after they&rsquo;ve been
+referenced in the same way you disallow moving values of non-<code>Copy</code> types after they&rsquo;ve been moved.
+This behavior was even implemented in a branch.</p><p>The design has one fundamental limitation, which is that sometimes you want to take a reference to
+a value that will later be self-referential without pinning it in place. For example, maybe you want
+to store it briefly in an <code>Option</code> and then use <code>Option::take</code> to take it away. This would probably
+be the most significant problem with this original <code>Move</code> trait, but we didn&rsquo;t even get to the point
+of really identifying that problem, because we discovered early on that adding <code>Move</code> would not be a
+backward compatible change.</p><p>I&rsquo;ve written about this <a href=/blog/changing-the-rules-of-rust>before</a>, but let me reiterate. There are two kinds of
+automatically implemented &ldquo;marker traits&rdquo; in Rust:</p><ol><li><strong>Auto traits:</strong> these are automatically implemented for types if all their fields implement
+them. Major examples include <code>Send</code> and <code>Sync</code>.</li><li><strong>?Traits:</strong> these are automatically implemented for types if all their fields implement them,
+and generic parameters are assumed to implement them as well unless they explicitly opt out. The
+only example of this is <code>?Sized</code>.</li></ol><p>We knew all along that we couldn&rsquo;t make <code>Move</code> an auto trait, because there are stable APIs that
+depend on the fact that you can always move out of a mutable reference. The classic example of this
+is <a href=https://doc.rust-lang.org/std/mem/fn.swap.html>mem::swap</a>, which swaps the location of two values of the same type. You can&rsquo;t allow
+swapping types that don&rsquo;t implement <code>Move</code>, but there&rsquo;s no <code>Move</code> bound on that API, and adding a
+new bound to it would be a breaking change.</p><p>Our assumption, therefore, was that we would need to add <code>Move</code> as a ?Trait: <code>?Move</code>. By default,
+all generics would be assumed to be <code>Move</code>, but if an API doesn&rsquo;t require the ability to move the
+parameter it can add a <code>T: ?Move</code> bound to the API. This was already not very appealing: a lot of
+APIs don&rsquo;t need the value to be movable and would presumably gain a <code>?Move</code> bound, making Rust
+documentation harder to understand across the board. But the whole plan went down with the fact that
+adding <code>Move</code> as a ?Trait was <em>also</em> not backward compatible.</p><p>The problem is with associated types: the place to add ?Trait bounds to associated types is at the
+trait&rsquo;s definition site. If the associated type of a trait does not have a ?Trait bound, all code
+which uses that trait is allowed to assume that the associated type implements that trait. Moreover,
+relaxing that bound on an existing trait would be a breaking change, because code is allowed to
+exist which relies on that bound</p><p>Here is an example using <code>IntoFuture</code>, which assumes that the associated future type has the
+behavior of a type that implements <code>Move</code>:</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-rust data-lang=rust><span class=line><span class=cl><span class=k>fn</span> <span class=nf>swap_into_future</span><span class=o>&lt;</span><span class=n>T</span>: <span class=nc>IntoFuture</span><span class=o>&gt;</span><span class=p>(</span><span class=n>into_f1</span>: <span class=nc>T</span><span class=p>,</span><span class=w> </span><span class=n>into_f2</span>: <span class=nc>T</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>let</span><span class=w> </span><span class=k>mut</span><span class=w> </span><span class=n>f1</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>into_f1</span><span class=p>.</span><span class=n>into_future</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>let</span><span class=w> </span><span class=k>mut</span><span class=w> </span><span class=n>f2</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>into_f2</span><span class=p>.</span><span class=n>into_future</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=c1>// This would become an error if you add
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=w>    </span><span class=c1>// `type IntoFuture: ?Move` to the trait:
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=w>    </span><span class=n>mem</span>::<span class=n>swap</span><span class=p>(</span><span class=o>&amp;</span><span class=k>mut</span><span class=w> </span><span class=n>f1</span><span class=p>,</span><span class=w> </span><span class=o>&amp;</span><span class=k>mut</span><span class=w> </span><span class=n>f2</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=p>}</span><span class=w>
+</span></span></span></code></pre></div><p>This problem is widespread, because many fundamental operators involve associated types. For
+example, you could not even have a mutable reference to a <code>?Move</code> type implement <code>DerefMut</code>, because
+the target of a pointer is an associated type:</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-rust data-lang=rust><span class=line><span class=cl><span class=k>fn</span> <span class=nf>swap_derefs</span><span class=o>&lt;</span><span class=n>T</span>: <span class=nc>DerefMut</span><span class=o>&lt;</span><span class=n>Target</span>: <span class=nb>Sized</span><span class=o>&gt;&gt;</span><span class=p>(</span><span class=k>mut</span><span class=w> </span><span class=n>r1</span>: <span class=nc>T</span><span class=p>,</span><span class=w> </span><span class=k>mut</span><span class=w> </span><span class=n>r2</span>: <span class=nc>T</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=c1>// This would become an error if you add
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=w>    </span><span class=c1>// `type Target: ?Move` to the trait:
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=w>    </span><span class=n>mem</span>::<span class=n>swap</span><span class=p>(</span><span class=o>&amp;</span><span class=k>mut</span><span class=w> </span><span class=o>*</span><span class=n>r1</span><span class=p>,</span><span class=w> </span><span class=o>&amp;</span><span class=k>mut</span><span class=w> </span><span class=o>*</span><span class=n>r2</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=p>}</span><span class=w>
+</span></span></span></code></pre></div><p>The same is true of the return type of a function, the item of an iterator, the value returned by
+the index operators, by the arithmetic operators, and so on. It is simply not backward compatible to
+add another new ?Trait, and an edition cannot be easily used to solve the problem, because it is
+necessary that the interfaces of traits remain the same so that two crates in different editions can
+be composed together.</p><h1 id=pin><code>Pin</code></h1><p>Given that limitation, we set out to solve the problem in a completely different direction. Instead
+of making the pinned typestate a property of the object&rsquo;s type which it enters whenever it is
+referenced, we designed a new category of reference which puts the object into the pinned typestate
+when the reference is created. This is represented with the <code>Pin</code> type.</p><p><code>Pin</code> is a wrapper type that can wrap any kind of pointer (both the built-in reference types and
+library-defined &ldquo;smart pointers&rdquo; like <code>Box</code>). It means that that pointer puts its target into the
+pinned typestate so it must never be moved again. To make the changes necessary as minimal as
+possible, we implemented this as a library API, rather than having immovability enforced by the
+compiler. This means that when code actually needs to mutate the object that is pinned, it must use
+an unsafe API get access to it and guarantee that the object is not moved through that ordinary
+mutable reference.</p><p>Since most types don&rsquo;t have a meaningful difference between the pinned typestate and normal, the
+<code>Unpin</code> auto trait was added. This allows getting a mutable reference from a pinned pointer without
+unsafe code if the type can&rsquo;t be self-referential. It&rsquo;s perfectly safe to move the object out of a
+<code>Pin</code> if it implements <code>Unpin</code>. This is a lot like <code>Move</code>, but by tying this behavior only to pinned
+pointers, we avoid the issue of backward compatibility as well as the original problem that you
+couldn&rsquo;t reference a <code>?Move</code> object without pinning it in place. Because pinning only applies to
+pinned pointers, ordinary unpinned references still work just fine with types that are not <code>Unpin</code>.</p><p>There are more details in the documentation for the <a href=https://doc.rust-lang.org/std/pin/struct.Pin.html>Pin</a> type and for the
+<a href=https://doc.rust-lang.org/std/pin/index.html>pin</a> module, which over the years have grown into a comprehensive and clear
+explanation of pinning as it exists in Rust today.</p><p>Of course, the biggest advantage of the <code>Pin</code> interface was that it was backward compatible to add.
+Because all of the APIs that can move referenced data like <code>swap</code> require a mutable reference, once
+you pin a object with <code>Pin</code> you can&rsquo;t call them on that object anymore. But because the new pinned
+typestate only applies to special pinned references, it doesn&rsquo;t require breaking changes to the
+rest of the Rust language. This is why we went forward with this design: it was possible to add
+without breaking any existing code and violating Rust&rsquo;s backward compatibility guarantees.</p><h2 id=the-problems-with-pin>The problems with <code>Pin</code></h2><p>Despite meeting our requirements in a backward compatible way, <code>Pin</code> has proven to have several
+problems in terms of usability. It is indeed a &ldquo;complexity spike&rdquo; when users have to deal with
+<code>Pin</code>. But what is the cause of this complexity?</p><p>One theory would be that the problem is that whereas the <code>Move</code> trait was to be enforced by the
+compiler, the <code>Pin</code> trait requires unsafe code to mutate objects while they&rsquo;re pinned. With the
+<code>Move</code> trait, this was automatically enabled by marking mutating APIs which don&rsquo;t move the object
+<code>?Move</code>. To some extent this is true, but we should be careful not to exaggerate it. For example,
+you can already assign to a pinned object using <a href=https://doc.rust-lang.org/std/pin/struct.Pin.html#method.set>Pin::set</a>, which is totally safe. And
+code which actually needs to mutate pinned objects is actually rare: in general, that&rsquo;s code
+generated by the compiler when it lowers your async function to a future, not code you write
+yourself.</p><p>Another theory (advanced by Yosh Wuyts <a href=https://lobste.rs/s/n2cpfi/ergonomic_self_referential_types_for#c_q2erme>here</a>) is that the reason <code>Pin</code> is difficult
+to use is that its &ldquo;conditional.&rdquo; This also does not strike me as the problem. Plenty of things in
+Rust and programming are &ldquo;conditional&rdquo; but are lauded as making programmers&rsquo; lives easier. For
+example, non-lexical lifetimes were all about making lifetimes end at different point in different
+branches of <em>a conditional</em>, and everyone sees this as making Rust easier to understand. Maybe there
+was some naming issue that has made it hard to understand the relationship between <code>Pin</code> (a type)
+and <code>Unpin</code> (a trait), but I don&rsquo;t think this is the heart of the problem.</p><p>In my opinion, the problem with <code>Pin</code> is that it was implemented as a pure library type, whereas the
+ordinary reference types have plenty of syntactic sugar and support as built-in types that are part
+of the language. A lot of nice features that references have disappear when you are dealing with
+pinned references. This makes the experience much worse, and more importantly breaks many users'
+mental models, because they&rsquo;ve built up an understanding of how references behave based on what the
+compiler accepts, and similar code stops being accepted once you are dealing with pinned references.</p><p>A very prominent example is the notion of &ldquo;reborrowing,&rdquo; which normal mutable references have but
+pinned references do not. Consider this: <code>&amp;mut T</code> does not implement <code>Copy</code>, and yet its perfectly
+permissible to pass it as an argument multiple times in a row, like so:</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-rust data-lang=rust><span class=line><span class=cl><span class=k>fn</span> <span class=nf>incr</span><span class=p>(</span><span class=n>x</span>: <span class=kp>&amp;</span><span class=nc>mut</span><span class=w> </span><span class=kt>i32</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=o>*</span><span class=n>x</span><span class=w> </span><span class=o>+=</span><span class=w> </span><span class=mi>1</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=k>fn</span> <span class=nf>incr_twice</span><span class=p>(</span><span class=n>x</span>: <span class=kp>&amp;</span><span class=nc>mut</span><span class=w> </span><span class=kt>i32</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=n>incr</span><span class=p>(</span><span class=n>x</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=n>incr</span><span class=p>(</span><span class=n>x</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=p>}</span><span class=w>
+</span></span></span></code></pre></div><p>It never occurs to most users to ask why this is allowed, but in fact it violates a basic rule of
+Rust: types which don&rsquo;t implement <code>Copy</code> can&rsquo;t be moved more than once. The reason is that there is
+an implicit coercion in the compiler called &ldquo;reborrowing,&rdquo; in which when mutable references are
+used, it will functionally insert a &ldquo;reborrow&rdquo; (as if you wrote <code>&amp;mut *x</code> instead of <code>x</code>), to borrow
+the reference again, instead of moving it.</p><p><code>Pin</code> does not have this affordance, because it is a normal library type that doesn&rsquo;t implement
+<code>Copy</code>. This means that when you use a <code>Pin&lt;&amp;mut T></code> more than once, you get an error about using
+the value after a move or sometimes an even more inscrutable error about lifetimes. Instead, you
+have to explicitly reborrow <code>Pin</code> using the <a href=https://doc.rust-lang.org/std/pin/struct.Pin.html#method.as_mut>Pin::as_mut</a> function. This difference is
+the cause of a lot of confusion when users try to use <code>Pin</code>.</p><p>I could go on and on. Consider the example of <code>set</code> mentioned above: that its safe to assign to
+<code>Pin</code>, but you need to use the <code>set</code> method. You can just assign to a mutable reference using a
+dereference and the assignment operator. But this is not true of <code>Pin</code>, you need to learn the
+special API. Many such special cases exist, and they are because <code>Pin</code> is a library type with no
+support in the language&rsquo;s syntax.</p><p>Undoubtedly the worst of problem in this category is the problem of &ldquo;pinned projections.&rdquo; A
+&ldquo;projection&rdquo; is the fancy programming language term for a field access: &ldquo;projecting&rdquo; from an
+object to a field of that object (I guess in the same sense that an awning might project out of a
+wall). The problem of pinned projections is that it is challenging to take a pinned reference to an
+object and get a pinned reference to a field of that object. There are third party crates like
+<a href=https://crates.io/crates/pin-project-lite>pin-project-lite</a> to solve this problem, but they require learning a complex new
+API involving macros, emphasizing the way that pinned references are much harder to use than
+ordinary references because they are a library type.</p><p>The worst part of this is a very unfortunate interaction between pinned projections and the <code>Drop</code>
+trait. The problem arises because <code>Drop::drop</code> takes a normal mutable reference. Consider this
+possibility: you have a type which has a field that is a self-referential field. You pin project to
+that field and poll it. Then, in the destructor, you move out of that field (because you now have
+an unpinned mutable reference), pin that future to the stack, and poll it there. You&rsquo;ve just
+violated the pinning guarantees.</p><p>The solution that crates like pin-project-lite use is to restrict your ability to define a
+destructor. This works alright in practice, but this very fact is additional complexity that has to
+be documented when explaining what precisely the pinning guarantees are. Unfortunately, <code>Drop</code> was
+stable before <code>Pin</code>, so we had to work around it.</p><h1 id=in-my-next-post>In my next post&mldr;</h1><p>Despite these problems of usability, <code>Pin</code> is my proudest accomplishment of my work on Rust. We
+enabled users to compile async functions which contain arbitrary references safely into
+self-referential objects; without this async/await would not have been nearly as usable a feature
+as it has been, because references are a fundamental part of how users write Rust. And we did so in
+a manner which was entirely backward compatible with the language that already existed. <code>Pin</code> is now
+a fundamental component of a thriving ecosystem for high-performance network services and other use
+cases of asynchronous programming.</p><p>But I do agree with the critics: <code>Pin</code> represents a complexity cliff and working with a pinned
+reference is much harder than working with an ordinary reference. That&rsquo;s why in a few days I will
+turn to the subject of how <code>Pin</code> could be improved. The key concept is the notion of <em>pinned
+places</em>.</p></section><div class=post-tags><nav class="nav tags"><div class=tags><a href=/tags/rust>rust</a>
+<a href=/tags/pinning>pinning</a></div></nav></div></article></main><footer><hr><a href=https://bsky.app/profile/without.boats>without.boats</a> on Bluesky | <a href=mailto:saoirse@without.boats>saoirse@without.boats</a> | <a href=/index.xml>RSS</a></footer></div></body></html>

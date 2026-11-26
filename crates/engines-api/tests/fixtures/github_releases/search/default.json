@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "source": "github_releases",
+  "op": "search",
+  "recordedAt": "2026-11-25T10:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.github.com/repos/astral-sh/uv/releases/latest",
+        "headersSubset": {
+          "accept": "application/vnd.github+json",
+          "x-github-api-version": "2022-11-28"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [["content-type", "application/json; charset=utf-8"]],
+        "bodyText": "{\"tag_name\":\"0.12.17\",\"name\":\"0.12.17\",\"html_url\":\"https://github.com/astral-sh/uv/releases/tag/0.12.17\",\"published_at\":\"2026-09-18T18:00:00Z\",\"prerelease\":false,\"body\":\"## Release Notes\\n- Reject unsupported Git archive paths (#21780)\\nd2b135cfb7a3582b9eb515756b9166bcb9521f4a\"}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.github.com/search/repositories?q=zod&per_page=3",
+        "headersSubset": {
+          "accept": "application/vnd.github+json",
+          "x-github-api-version": "2022-11-28"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [["content-type", "application/json; charset=utf-8"]],
+        "bodyText": "{\"items\":[{\"full_name\":\"TranscryptOrg/Transcrypt\",\"name\":\"Transcrypt\"},{\"full_name\":\"colinhacks/zod\",\"name\":\"zod\"}]}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.github.com/repos/colinhacks/zod/releases/latest",
+        "headersSubset": {
+          "accept": "application/vnd.github+json",
+          "x-github-api-version": "2022-11-28"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [["content-type", "application/json; charset=utf-8"]],
+        "bodyText": "{\"tag_name\":\"v3.24.2\",\"name\":\"v3.24.2\",\"html_url\":\"https://github.com/colinhacks/zod/releases/tag/v3.24.2\",\"published_at\":\"2026-08-12T10:00:00Z\",\"prerelease\":false,\"body\":\"Bug fixes.\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

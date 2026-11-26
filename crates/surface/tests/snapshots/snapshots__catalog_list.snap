@@ -1,0 +1,19 @@
+---
+source: crates/surface/tests/snapshots.rs
+expression: out
+---
+# Catalog: clinical trials api — 2 entries
+
+## 1. `clinicaltrials` (source)
+ClinicalTrials.gov v2 study search
+_auth: keyless · tier 1 · health: ok_
+- sig: `source.call("clinicaltrials.search", { query: string, limit?: int })`
+- example: `source.call("clinicaltrials.search", {"query":"crispr","limit":3})`
+
+## 2. `web.request` (api)
+Raw SSRF-checked HTTP request returning HttpResponse with `.body` text (never `.text`) and parsed `.json` when Content-Type is JSON. Example: const r = await web.request({url}); const d = r.json ?? JSON.parse(r.body);
+_auth: keyless · tier 1 · health: ok_
+- sig: `request(o: {url: string; method?: "GET"|"HEAD"|"POST"; headers?: Record<string,string>; query?: Record<string,string>; body?: any}): Promise<HttpResponse>; // .body text, .json parsed`
+- example: `const r = await web.request({url}); const d = r.json ?? JSON.parse(r.body);`
+
+next: `catalog.describe("<id>")` for full parameters, or paste an example into `exec`.

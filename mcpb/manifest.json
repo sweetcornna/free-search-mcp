@@ -2,9 +2,9 @@
   "manifest_version": "0.4",
   "name": "free-search-mcp",
   "display_name": "Free Search",
-  "version": "0.18.2",
-  "description": "Web search, page fetching and document reading with no API key and no signup.",
-  "long_description": "Multi-engine web search, page fetching and PDF/DOCX reading that runs on your own machine. Nothing to sign up for and no API key to paste: every default, fallback and category route uses keyless sources.\n\nSearch results carry the signals needed to judge them: when they were retrieved, how old a cached copy is, which results have a verifiable date, and what kind of site each one is. Engines that are blocked or answering off-topic are benched and reported, and their results are left out.\n\nAll three settings below are optional. Leave them empty unless your network needs a proxy.",
+  "version": "1.0.0",
+  "description": "Keyless Rust web, academic, and 500+ source search plus one-call ask, sandboxed JS exec, and doc reading.",
+  "long_description": "Single-binary Rust MCP server exposing exactly three keyless tools (`search`, `exec`, and `ask`) over 500+ web, academic, and specialist sources with no API key and no signup.\n\nUse `ask` for quick one-call lookups returning dated passages or a sourced answer with no code. Use `search` for multi-engine web/vertical search, local FTS5 cache lookup, or zero-network catalog discovery. Use `exec` (QuickJS-NG ES2020 sandbox) to fetch and clean pages, read PDFs/Office/EPUB/archives, traverse scholarly citation graphs, check Retraction Watch integrity, fetch lawful open-access full text, generate offline citations, and call specialist APIs.\n\nAll three settings below are optional. Leave them empty unless your network needs a proxy. The binary automatically ignores empty or unfilled placeholder values.",
   "author": {
     "name": "ymylive",
     "url": "https://github.com/sweetcornna"
@@ -18,11 +18,11 @@
   "support": "https://github.com/sweetcornna/free-search-mcp/issues",
   "icon": "icon.png",
   "server": {
-    "type": "uv",
-    "entry_point": "src/server.py",
+    "type": "binary",
+    "entry_point": "bin/free-search-mcp",
     "mcp_config": {
-      "command": "uv",
-      "args": ["run", "--directory", "${__dirname}", "src/server.py"],
+      "command": "${__dirname}/bin/free-search-mcp",
+      "args": [],
       "env": {
         "SEARCH_MCP_PROXY": "${user_config.proxy}",
         "SEARCH_MCP_REGION": "${user_config.region}",
@@ -31,24 +31,24 @@
     }
   },
   "tools": [
-    {"name": "search", "description": "Multi-engine web search: a ranked, deduplicated link list with freshness signals."},
-    {"name": "fetch", "description": "Fetch one URL as readable text, or describe a non-text resource."},
-    {"name": "fetch_batch", "description": "Fetch several URLs in parallel; one failure does not fail the batch."},
-    {"name": "read_doc", "description": "Read a PDF, DOCX or other document into Markdown, page by page."},
-    {"name": "research", "description": "Search and read the top results in one round trip."},
-    {"name": "paper_graph", "description": "Follow one paper's citations and check for retractions and corrections."},
-    {"name": "cache_search", "description": "Full-text search over pages already fetched into the local cache."},
-    {"name": "engines", "description": "List the available sources, grouped by what they index."},
-    {"name": "compare", "description": "Fetch 2-5 URLs and return per-URL excerpts for one question."},
-    {"name": "extract_structured", "description": "Pull JSON-LD, OpenGraph and microdata (dates, prices, events) from a page."},
-    {"name": "download", "description": "Save a file from a URL to a local, auto-expiring download directory."}
+    {
+      "name": "search",
+      "description": "Keyless multi-engine search over live verticals, local FTS5 cache, or the 500+ source & exec API catalog."
+    },
+    {
+      "name": "exec",
+      "description": "Run sandboxed ES2020 JS (QuickJS-NG) with web, scholar, doc, source, cache, catalog, and util Host APIs."
+    },
+    {
+      "name": "ask",
+      "description": "Quick one-call lookup: direct-answer sources or parallel search+read passages, or a sourced answer when an answer agent is configured."
+    }
   ],
-  "prompts_generated": true,
   "user_config": {
     "proxy": {
       "type": "string",
       "title": "Proxy (optional)",
-      "description": "Outbound proxy URL (http://, https:// or socks5://), only if your network blocks the search engines. Leave empty otherwise.",
+      "description": "Outbound proxy URL (http://, https://, socks5:// or socks5h://), only if your network blocks search engines. Leave empty otherwise.",
       "required": false,
       "sensitive": true
     },
@@ -61,16 +61,13 @@
     "cache_dir": {
       "type": "directory",
       "title": "Cache directory (optional)",
-      "description": "Where fetched pages and searches are cached. Leave empty for ~/.cache/search-mcp.",
+      "description": "Where fetched pages, searches, and Retraction Watch index are cached. Leave empty for ~/.cache/search-mcp.",
       "required": false
     }
   },
   "compatibility": {
-    "platforms": ["darwin", "linux", "win32"],
-    "runtimes": {
-      "python": ">=3.11"
-    }
+    "platforms": ["darwin", "linux"]
   },
-  "keywords": ["search", "web-search", "research", "fetch", "documents", "no-api-key"],
+  "keywords": ["search", "web-search", "scholar", "academic", "research", "documents", "no-api-key", "rust"],
   "license": "MIT"
 }

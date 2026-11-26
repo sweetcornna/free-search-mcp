@@ -1,0 +1,110 @@
+id = "materials_project"
+name = "Materials Project Summary API"
+summary = "150k+ inorganic crystal materials with DFT band gaps, formation energies, phase stability, elastic moduli, and symmetry (requires free API key)."
+aliases = ["mp", "materialsproject", "dft crystal", "band gap"]
+home_url = "https://next-gen.materialsproject.org"
+tier = 3
+scopes = ["academic.physics", "dataset"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 10.0, burst = 20, concurrency = 4, timeout_ms = 8000, cache_ttl_s = 86400, host_bucket = "api.materialsproject.org" }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_MATERIALS_PROJECT_API_KEY"
+in = "header"
+name = "X-API-KEY"
+format = "{key}"
+route_requires_key = true
+
+[op.search]
+summary = "Search Materials Project crystal summary documents by chemical formula."
+method = "GET"
+url = "https://api.materialsproject.org/materials/summary/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { _fields = "material_id,formula_pretty,chemsys,symmetry,band_gap,is_metal,formation_energy_per_atom,energy_above_hull,is_stable,volume,density,nsites,theoretical" }
+paginate = { style = "offset", param = "_skip", start = 0, max_pages = 3 }
+probe = { params = { query = "SiO2", limit = 2 }, min_results = 2, fixture = "fixtures/w5j/materials_project/search/default.json" }
+examples = ["source.call('materials_project.search', { query: 'SiO2', limit: 5 })"]
+
+[op.search.params]
+query = { type = "string", required = true, to = "formula", doc = "Chemical formula (e.g. SiO2, Fe2O3, LiCoO2)" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "_limit", doc = "Maximum materials to return" }
+offset = { type = "int", default = 0, min = 0, to = "_skip", doc = "0-based offset" }
+
+[op.search.map]
+items = "(.data // [])[]"
+total = ".meta.total_doc"
+error = "if (.errors | type) == \"array\" and (.errors | length) > 0 then (.errors[0].detail // .errors[0].message // \"Materials Project API error\") elif (.message | type) == \"string\" then .message else null end"
+record = '''{
+  materialId: (.material_id // ""),
+  formula: (.formula_pretty // ""),
+  chemsys: (.chemsys // null),
+  crystalSystem: (.symmetry.crystal_system // null),
+  spaceGroup: (.symmetry.symbol // null),
+  spaceGroupNumber: (.symmetry.number // null),
+  bandGapEv: .band_gap,
+  isMetal: .is_metal,
+  formationEnergyEvPerAtom: .formation_energy_per_atom,
+  energyAboveHullEvPerAtom: .energy_above_hull,
+  isStable: .is_stable,
+  volumeA3: .volume,
+  densityGCm3: .density,
+  nsites: .nsites,
+  theoretical: .theoretical,
+  url: ("https://next-gen.materialsproject.org/materials/" + (.material_id // ""))
+}'''
+hit = '''{
+  title: ((.material_id // "") + " — " + (.formula_pretty // "") + (if (.symmetry.symbol // "") != "" then (" (" + .symmetry.symbol + ")") else "" end)),
+  url: ("https://next-gen.materialsproject.org/materials/" + (.material_id // "")),
+  snippet: ([
+    (if (.symmetry.crystal_system // "") != "" then .symmetry.crystal_system else empty end),
+    (if (.band_gap | type) == "number" then "Eg=\(.band_gap) eV" else empty end),
+    (if (.energy_above_hull | type) == "number" then "Ehull=\(.energy_above_hull) eV/atom" else empty end),
+    (if .is_stable == true then "stable" elif .is_stable == false then "metastable" else empty end)
+  ] | join(" · ")),
+  date: null,
+  dateSource: "api"
+}'''
+
+[op.material]
+summary = "Fetch a Materials Project summary record including elastic moduli by material ID (e.g. mp-7000)."
+method = "GET"
+url = "https://api.materialsproject.org/materials/summary/{material_id}/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { _fields = "material_id,formula_pretty,chemsys,symmetry,band_gap,is_gap_direct,is_metal,formation_energy_per_atom,energy_above_hull,is_stable,volume,density,nsites,bulk_modulus,shear_modulus,theoretical" }
+probe = { params = { material_id = "mp-7000" }, min_results = 1, fixture = "fixtures/w5j/materials_project/material/default.json" }
+examples = ["source.call('materials_project.material', { material_id: 'mp-7000' })"]
+
+[op.material.params]
+material_id = { type = "string", required = true, in = "path", doc = "Materials Project ID (e.g. mp-7000)" }
+
+[op.material.map]
+items = "(.data // [])[]"
+error = "@ref:op.search.map.error"
+record = '''{
+  materialId: (.material_id // ""),
+  formula: (.formula_pretty // ""),
+  chemsys: (.chemsys // null),
+  crystalSystem: (.symmetry.crystal_system // null),
+  spaceGroup: (.symmetry.symbol // null),
+  spaceGroupNumber: (.symmetry.number // null),
+  bandGapEv: .band_gap,
+  isGapDirect: .is_gap_direct,
+  isMetal: .is_metal,
+  formationEnergyEvPerAtom: .formation_energy_per_atom,
+  energyAboveHullEvPerAtom: .energy_above_hull,
+  isStable: .is_stable,
+  volumeA3: .volume,
+  densityGCm3: .density,
+  nsites: .nsites,
+  bulkModulusGpa: (.bulk_modulus.vrh // null),
+  shearModulusGpa: (.shear_modulus.vrh // null),
+  theoretical: .theoretical,
+  url: ("https://next-gen.materialsproject.org/materials/" + (.material_id // ""))
+}'''

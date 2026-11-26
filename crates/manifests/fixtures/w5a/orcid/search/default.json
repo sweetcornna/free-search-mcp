@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "orcid",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:14:10Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://pub.orcid.org/v3.0/expanded-search/?q=family-name:Hinton+AND+given-names:Geoffrey&rows=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json;charset=UTF-8"
+          ]
+        ],
+        "bodyText": "{\"expanded-result\":[{\"orcid-id\":\"0000-0002-8063-7209\",\"given-names\":\"Geoffrey\",\"family-names\":\"Hinton\",\"credit-name\":null,\"other-name\":[],\"email\":[],\"institution-name\":[]}],\"num-found\":1}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

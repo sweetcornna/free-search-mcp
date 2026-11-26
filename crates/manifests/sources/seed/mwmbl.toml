@@ -1,0 +1,39 @@
+id = "mwmbl"
+name = "Mwmbl"
+summary = "Open-source non-profit small-web search index returning keyless web hits."
+aliases = ["mwmbl.org", "small web"]
+home_url = "https://mwmbl.org"
+tier = 2
+scopes = ["web"]
+caps = ["search"]
+transport = "plain"
+pool_role = "reserve"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 6000, cache_ttl_s = 3600, host_bucket = "api.mwmbl.org" }
+
+[op.search]
+summary = "Search the Mwmbl open-source web index."
+method = "GET"
+url = "https://api.mwmbl.org/api/v1/search/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "hits"
+probe = { params = { query = "python", limit = 3 }, min_results = 2, fixture = "fixtures/seed/mwmbl/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "s", doc = "Web search query" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "none", doc = "Maximum web hits to return" }
+
+[op.search.map]
+items = '''(if type == "array" then . else [] end)[:($p.limit // 10)][] | select((.url // "") != "")'''
+hit = '''(
+  ([(.title // [])[] | if type == "object" then (.value // "") elif type == "string" then . else "" end] | join("") | unescape_html | collapse_ws) as $t |
+  ([(.extract // [])[] | if type == "object" then (.value // "") elif type == "string" then . else "" end] | join("") | unescape_html | collapse_ws) as $sn |
+  {
+    title: (if $t != "" then $t else .url end),
+    url: .url,
+    snippet: $sn,
+    source: "mwmbl",
+    sources: ["mwmbl"],
+    kind: "web"
+  }
+)'''

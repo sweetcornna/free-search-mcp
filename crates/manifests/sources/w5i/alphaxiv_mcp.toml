@@ -1,0 +1,205 @@
+id = "alphaxiv_mcp"
+name = "alphaXiv Paper Search & Overviews API"
+summary = "arXiv paper search, structured AI overviews, community votes, GitHub links, and trending feeds via api.alphaxiv.org."
+aliases = ["alphaxiv", "api.alphaxiv.org"]
+home_url = "https://www.alphaxiv.org"
+tier = 2
+scopes = ["academic", "academic.preprint", "academic.cs"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 21600, host_bucket = "api.alphaxiv.org" }
+
+[auth]
+mode = "optional"
+env = "SEARCH_MCP_ALPHAXIV_API_KEY"
+in = "header"
+name = "Authorization"
+format = "Bearer {key}"
+route_requires_key = false
+
+[op.search]
+summary = "Fast search over alphaXiv / arXiv papers by title or keywords."
+method = "GET"
+url = "https://api.alphaxiv.org/search/v2/paper/fast"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+const_query = { includePrivate = "false" }
+probe = { params = { query = "attention is all you need" }, min_results = 2, fixture = "fixtures/w5i/alphaxiv_mcp/search/default.json" }
+examples = ['source.call("alphaxiv_mcp.search", {query: "attention is all you need"})']
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Paper title, arXiv ID, or topic keywords" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "none", doc = "Maximum matching papers to return" }
+
+[op.search.map]
+items = ".[0:($p.limit // 10)][]"
+error = '''if type == "object" and .error then (.error.message // (.error | tostring)) else null end'''
+work = '''(
+  (.paperId // "") as $aid |
+  ($aid | test("^([0-9]{4}\\.[0-9]{4,5}|[a-z-]+(\\.[A-Z]{2})?/[0-9]{7})(v[0-9]+)?$")) as $is_arxiv |
+  ((.link // ("/abs/" + $aid)) | resolve_url("https://www.alphaxiv.org/")) as $url |
+  ((.snippet // "") | split(" • ")) as $sp |
+  (if ($sp | length) > 1 then ($sp[0] | parse_date) else null end) as $pd |
+  ((if $pd != null then ($sp[1:] | join(" • ")) else (.snippet // "") end) | collapse_ws) as $clean |
+  {
+    title: ((.title // "") | collapse_ws // ""),
+    authors: [],
+    year: ((($pd // "")[0:4] | to_int) // (if ($aid | test("^[0-9]{4}\\.")) then ("20" + $aid[0:2] | to_int) else null end)),
+    publishedDate: $pd,
+    venue: "alphaXiv / arXiv",
+    workType: "preprint",
+    ids: { arxiv: (if $is_arxiv then ($aid | sub("v[0-9]+$"; "")) else null end) },
+    abstractText: (if ($clean // "") != "" then $clean else null end),
+    oa: {
+      status: "green",
+      url: $url,
+      pdfUrl: (if $is_arxiv then ("https://arxiv.org/pdf/" + $aid) else null end)
+    },
+    retracted: false,
+    versions: [],
+    url: ($url // "https://www.alphaxiv.org"),
+    sources: ["alphaxiv_mcp"]
+  }
+)'''
+hit = '''(
+  (.paperId // "") as $aid |
+  ((.link // ("/abs/" + $aid)) | resolve_url("https://www.alphaxiv.org/")) as $url |
+  ((.snippet // "") | split(" • ")) as $sp |
+  (if ($sp | length) > 1 then ($sp[0] | parse_date) else null end) as $pd |
+  ((if $pd != null then ($sp[1:] | join(" • ")) else (.snippet // "") end) | collapse_ws) as $clean |
+  {
+    title: ((.title // "") | collapse_ws // ""),
+    url: ($url // "https://www.alphaxiv.org"),
+    snippet: ($clean // ""),
+    date: $pd,
+    dateSource: (if $pd != null then "api" else null end)
+  }
+)'''
+
+[op.work]
+summary = "Fetch alphaXiv paper metadata, BibTeX, and citation count by arXiv ID."
+method = "GET"
+url = "https://api.alphaxiv.org/papers/v3/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+probe = { params = { id = "1706.03762" }, min_results = 1, fixture = "fixtures/w5i/alphaxiv_mcp/work/default.json" }
+examples = ['source.call("alphaxiv_mcp.work", {id: "1706.03762"})']
+
+[op.work.params]
+id = { type = "string", required = true, in = "path", encode = "raw", doc = "arXiv ID (e.g. 1706.03762 or math/0309285)" }
+
+[op.work.map]
+items = "."
+error = '''if type == "object" and .error then (.error.message // (.error | tostring)) else null end'''
+work = '''(
+  (.universalId // $p.id // "") as $aid |
+  ($aid | test("^([0-9]{4}\\.[0-9]{4,5}|[a-z-]+(\\.[A-Z]{2})?/[0-9]{7})(v[0-9]+)?$")) as $is_arxiv |
+  ("https://www.alphaxiv.org/abs/" + $aid) as $url |
+  ((.firstPublicationDate // .publicationDate) | parse_date) as $pd |
+  ((.citationBibtex // "") | [try capture("author\\s*=\\s*\\{(?<a>[^\\n]+)\\},?").a catch empty][0] | if . != null then (gsub("[{}]"; "") | collapse_ws // "") else "" end) as $bib_auth |
+  {
+    title: ((.title // "") | collapse_ws // ""),
+    authors: [($bib_auth | split(" and "))[] | collapse_ws | select(. != null and . != "") | {name: .}],
+    year: ((($pd // "")[0:4] | to_int) // (if ($aid | test("^[0-9]{4}\\.")) then ("20" + $aid[0:2] | to_int) else null end)),
+    publishedDate: $pd,
+    venue: (.sourceName // "arXiv"),
+    workType: "preprint",
+    ids: { arxiv: (if $is_arxiv then ($aid | sub("v[0-9]+$"; "")) else null end) },
+    abstractText: ((.abstract | collapse_ws) | if . == "" then null else . end),
+    citedBy: (.citationsCount | to_int),
+    citedBySource: (if .citationsCount != null then "alphaxiv" else null end),
+    oa: {
+      status: "green",
+      url: (.sourceUrl // $url),
+      pdfUrl: (if $is_arxiv then ("https://arxiv.org/pdf/" + $aid) else null end),
+      license: (.license // null)
+    },
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["alphaxiv_mcp"]
+  }
+)'''
+
+[op.overview]
+summary = "Fetch structured AI overview, community vote/visit metrics, authors, topics, and GitHub links for a paper."
+method = "GET"
+url = "https://api.alphaxiv.org/papers/v3/{id}/preview"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "1706.03762" }, min_results = 1, fixture = "fixtures/w5i/alphaxiv_mcp/overview/default.json" }
+examples = ['source.call("alphaxiv_mcp.overview", {id: "1706.03762"})']
+
+[op.overview.params]
+id = { type = "string", required = true, in = "path", encode = "raw", doc = "arXiv ID (e.g. 1706.03762 or math/0309285)" }
+
+[op.overview.map]
+items = "."
+error = '''if type == "object" and .error then (.error.message // (.error | tostring)) else null end'''
+record = '''{
+  id: (.universal_paper_id // $p.id // ""),
+  title: ((.title // "") | collapse_ws // ""),
+  authors: (.authors // []),
+  publishedDate: ((.first_publication_date // .publication_date) | parse_date),
+  summary: ((.paper_summary.summary // .feed_description) | collapse_ws),
+  keyTakeaways: (.paper_summary // null),
+  citationsCount: (.citations_count | to_int),
+  votes: ((.metrics.public_total_votes // .metrics.total_votes) | to_int),
+  visits: (.metrics.visits_count.all | to_int),
+  githubUrl: (.github_url // null),
+  githubStars: (.github_stars | to_int),
+  topics: (.topics // []),
+  url: ("https://www.alphaxiv.org/abs/" + (.universal_paper_id // $p.id // ""))
+}'''
+
+[op.feed]
+summary = "Browse trending or recently discussed arXiv papers on alphaXiv."
+method = "GET"
+url = "https://api.alphaxiv.org/papers/v3/feed"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+paginate = { style = "page", param = "pageNum", start = 0, max_pages = 3 }
+probe = { params = { sort = "Hot", interval = "7 Days", page = 0, limit = 3 }, min_results = 2, fixture = "fixtures/w5i/alphaxiv_mcp/feed/default.json" }
+examples = ['source.call("alphaxiv_mcp.feed", {sort: "Hot", interval: "7 Days", limit: 5})']
+
+[op.feed.params]
+sort = { type = "string", default = "Hot", enum = ["Hot", "Likes", "Comments", "Views", "GitHub"], to = "sort", doc = "Feed sort order" }
+interval = { type = "string", default = "7 Days", enum = ["3 Days", "7 Days", "30 Days", "90 Days", "All time"], to = "interval", doc = "Time window" }
+page = { type = "int", default = 0, min = 0, to = "pageNum", doc = "Zero-based page index" }
+limit = { type = "int", default = 10, min = 1, max = 30, to = "pageSize", doc = "Results per page" }
+
+[op.feed.map]
+items = ".papers[]"
+error = '''if type == "object" and .error then (.error.message // (.error | tostring)) else null end'''
+work = '''(
+  (.universal_paper_id // "") as $aid |
+  ($aid | test("^([0-9]{4}\\.[0-9]{4,5}|[a-z-]+(\\.[A-Z]{2})?/[0-9]{7})(v[0-9]+)?$")) as $is_arxiv |
+  ("https://www.alphaxiv.org/abs/" + $aid) as $url |
+  ((.first_publication_date // .publication_date) | parse_date) as $pd |
+  {
+    title: ((.title // "") | collapse_ws // ""),
+    authors: [(.authors // [])[] | select(type == "string") | collapse_ws | select(. != null and . != "") | {name: .}],
+    year: (($pd // "")[0:4] | to_int),
+    publishedDate: $pd,
+    venue: "alphaXiv / arXiv",
+    workType: "preprint",
+    ids: { arxiv: (if $is_arxiv then ($aid | sub("v[0-9]+$"; "")) else null end) },
+    abstractText: (((.abstract // .feed_description) | collapse_ws) | if . == "" then null else . end),
+    citedBy: (.citations_count | to_int),
+    citedBySource: (if .citations_count != null then "alphaxiv" else null end),
+    oa: {
+      status: "green",
+      url: $url,
+      pdfUrl: (if $is_arxiv then ("https://arxiv.org/pdf/" + $aid) else null end)
+    },
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["alphaxiv_mcp"]
+  }
+)'''

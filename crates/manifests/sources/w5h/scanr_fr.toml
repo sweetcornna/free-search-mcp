@@ -1,0 +1,124 @@
+id = "scanr_fr"
+name = "France ScanR National Research Graph"
+summary = "French Ministry of Higher Education and Research national scholarly graph indexing French/English publications, laboratories, and organizations via keyless Elasticsearch API."
+aliases = ["scanr", "france scanr", "mesr scanr", "recherche française", "ministère enseignement supérieur"]
+home_url = "https://scanr.enseignementsup-recherche.gouv.fr"
+tier = 2
+scopes = ["academic", "academic.index"]
+caps = ["search", "lookup", "org"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.5, burst = 4, concurrency = 2, timeout_ms = 12000, cache_ttl_s = 43200, host_bucket = "scanr.enseignementsup-recherche.gouv.fr" }
+
+[op.search]
+summary = "Search French national research publications in ScanR via POST Elasticsearch query."
+method = "POST"
+url = "https://scanr.enseignementsup-recherche.gouv.fr/api/scanr-publications/_search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+body = { kind = "json", jaq = '''{
+  _source: ["authors", "doiUrl", "externalIds", "id", "isOa", "landingPage", "oaEvidence", "publicationDate", "source", "summary", "title", "type", "year"],
+  from: ($p.offset // 0),
+  query: { match: { "title.default": $p.query } },
+  size: ($p.limit // 10)
+}''' }
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "transformer", limit = 3 }, min_results = 2, fixture = "fixtures/w5h/scanr_fr/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, in = "body", doc = "Publication title query (French or English)" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "body", doc = "Results per page" }
+offset = { type = "int", default = 0, min = 0, in = "body", doc = "0-based offset" }
+
+[op.search.map]
+items = "(.hits.hits // [])[] | ._source"
+total = ".hits.total.value"
+error = '''if (.error | type) == "object" then (.error.reason // (.error | tostring)) elif .error != null then (.error | tostring) else null end'''
+work = '''(
+  (([(.externalIds // [])[] | select(.type == "doi") | .id][0]) // null) as $doi |
+  (([(.externalIds // [])[] | select(.type == "pmid") | .id][0]) // null) as $pmid |
+  (([(.externalIds // [])[] | select(.type == "pmcid") | .id][0]) // null) as $pmcid |
+  (([(.externalIds // [])[] | select(.type == "arxiv") | .id][0]) // null) as $arxiv |
+  ((.landingPage // .doiUrl // (if $doi != null then ("https://doi.org/" + $doi) else ("https://scanr.enseignementsup-recherche.gouv.fr/publications/" + (.id // "")) end)) | sub("^http://doi\\.org/"; "https://doi.org/")) as $url |
+  {
+    title: (.title.en // .title.default // .title.fr // "" | strip_tags),
+    authors: [(.authors // [])[] | {
+      name: ((.fullName // ([(.firstName // ""), (.lastName // "")] | map(select(length > 0)) | join(" "))) | collapse_ws),
+      orcid: (.denormalized.orcid // null),
+      affiliation: ((.affiliations // [])[0]?.name // null | collapse_ws)
+    } | select(.name != "")],
+    year: (.year | to_int),
+    publishedDate: ((.publicationDate // null) | parse_date),
+    venue: (.source.title // .source.publisher // null | collapse_ws),
+    workType: (.type // "article"),
+    ids: {
+      doi: ($doi | doi_norm),
+      pmid: $pmid,
+      pmcid: $pmcid,
+      arxiv: $arxiv
+    },
+    abstractText: (.summary.en // .summary.default // .summary.fr // null | strip_tags),
+    oa: (if (.isOa // false) == true then { status: "open", url: (.oaEvidence.url // $url), pdfUrl: (.oaEvidence.pdfUrl // null) } else null end),
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["scanr_fr"]
+  }
+)'''
+
+[op.doi]
+summary = "Look up a ScanR publication record by exact DOI."
+method = "POST"
+url = "https://scanr.enseignementsup-recherche.gouv.fr/api/scanr-publications/_search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+body = { kind = "json", jaq = '''{
+  _source: ["authors", "doiUrl", "externalIds", "id", "isOa", "landingPage", "oaEvidence", "publicationDate", "source", "summary", "title", "type", "year"],
+  query: { match_phrase: { "externalIds.id": $p.doi } },
+  size: 1
+}''' }
+probe = { params = { doi = "10.1785/0120110225" }, min_results = 1, fixture = "fixtures/w5h/scanr_fr/doi/default.json" }
+
+[op.doi.params]
+doi = { type = "string", required = true, in = "body", doc = "Publication DOI e.g. 10.1785/0120110225" }
+
+[op.doi.map]
+items = "(.hits.hits // [])[] | ._source"
+error = "@ref:op.search.map.error"
+work = "@ref:op.search.map.work"
+
+[op.orgs]
+summary = "Search French research organizations and laboratories in ScanR as OrgProfile records."
+method = "POST"
+url = "https://scanr.enseignementsup-recherche.gouv.fr/api/scanr-organizations/_search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+body = { kind = "json", jaq = '''{
+  _source: ["acronym", "address", "externalIds", "id", "kind", "label", "links", "status"],
+  from: ($p.offset // 0),
+  query: { match: { "label.default": $p.query } },
+  size: ($p.limit // 10)
+}''' }
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "CNRS", limit = 3 }, min_results = 2, fixture = "fixtures/w5h/scanr_fr/orgs/default.json" }
+
+[op.orgs.params]
+query = { type = "string", required = true, in = "body", doc = "Organization name or acronym e.g. CNRS, INRIA" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "body", doc = "Results per page" }
+offset = { type = "int", default = 0, min = 0, in = "body", doc = "0-based offset" }
+
+[op.orgs.map]
+items = "(.hits.hits // [])[] | ._source"
+total = ".hits.total.value"
+error = "@ref:op.search.map.error"
+record = '''{
+  name: (.label.default // .label.en // .label.fr // .id // ""),
+  ror: (([(.externalIds // [])[] | select(.type == "ror") | .id][0]) // null),
+  country: (.address[0]?.country // "France"),
+  orgType: (.kind[0]? // null),
+  homepage: (([(.links // [])[] | select(.type == "main") | .url][0]) // .links[0]?.url // null),
+  sources: ["scanr_fr"]
+}'''

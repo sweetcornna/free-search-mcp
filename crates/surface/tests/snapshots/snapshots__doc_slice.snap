@@ -1,0 +1,21 @@
+---
+source: crates/surface/tests/snapshots.rs
+expression: out
+---
+# CRISPR Delivered Anti-BCMA Car-T Therapy for Relapsed or Refractory Multiple Myeloma
+
+_pdf: https://clinicaltrials.gov/study/NCT07340853.pdf · 14 pages · ~125 tokens · slice [0:500] of 2063 chars · truncated_
+
+PRIMARY OBJECTIVES:
+
+Dose Escalation:
+
+I. To evaluate the safety and toxicity of administering Chimeric Antigen Receptor T Cells (CAR-T) cells targeting BCMA to participants with Relapsed or Refractory Multiple Myeloma (RRMM).
+
+II. To determine the maximum tolerated dose (MTD) for anti-BCMA CAR-T cells.
+
+Dose Expansion:
+
+III. Determine whether administering conforming CAR T-cell product targeting BCMA to participants with RRMM increases the overall response rate (ORR) compared with historical da
+
+next: `doc.read("https://clinicaltrials.gov/study/NCT07340853.pdf", {start: 500})` or `doc.outline("https://clinicaltrials.gov/study/NCT07340853.pdf")`.

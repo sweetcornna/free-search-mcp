@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "artic_museum",
+  "op": "artists",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.artic.edu/api/v1/agents/search?q=monet&limit=3&fields=id,title,is_artist,birth_date,death_date",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"preference\":null,\"pagination\":{\"total\":5,\"limit\":3,\"offset\":0,\"total_pages\":2,\"current_page\":1},\"data\":[{\"_score\":28.557007,\"id\":35809,\"title\":\"Claude Monet\",\"is_artist\":true,\"birth_date\":1840,\"death_date\":1926},{\"_score\":25.348425,\"id\":93557,\"title\":\"Mus\\u00e9e Marmottan Monet\",\"is_artist\":false,\"birth_date\":null,\"death_date\":null},{\"_score\":5.045216,\"id\":40810,\"title\":\"Georges Seurat\",\"is_artist\":true,\"birth_date\":1859,\"death_date\":1891}],\"info\":{\"license_text\":\"The data in this response is licensed under a Creative Commons Zero (CC0) 1.0 designation and the Terms and Conditions of artic.edu.\",\"license_links\":[\"https:\\/\\/creativecommons.org\\/publicdomain\\/zero\\/1.0\\/\",\"https:\\/\\/www.artic.edu\\/terms\"],\"version\":\"1.16\"},\"config\":{\"iiif_url\":\"https:\\/\\/www.artic.edu\\/iiif\\/2\",\"website_url\":\"https:\\/\\/www.artic.edu\"}}\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

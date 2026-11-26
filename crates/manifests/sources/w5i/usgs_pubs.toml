@@ -1,0 +1,90 @@
+id = "usgs_pubs"
+name = "USGS Publications Warehouse"
+summary = "180k+ US Geological Survey earth-science, hydrology, geology, and natural-hazard technical reports, maps, and PDFs."
+aliases = ["usgs", "pubs.usgs.gov", "usgs publications"]
+home_url = "https://pubs.usgs.gov"
+tier = 1
+scopes = ["academic", "academic.physics", "academic.openaccess"]
+caps = ["search", "lookup", "fulltext"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 10000, cache_ttl_s = 43200, host_bucket = "pubs.usgs.gov" }
+
+[op.search]
+summary = "Search USGS Publications Warehouse reports, journal articles, maps, and book chapters."
+method = "GET"
+url = "https://pubs.usgs.gov/pubs-services/publication"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+paginate = { style = "page", param = "page_number", start = 1, max_pages = 3 }
+probe = { params = { query = "earthquake", limit = 3 }, min_results = 2, fixture = "fixtures/w5i/usgs_pubs/search/default.json" }
+examples = ['source.call("usgs_pubs.search", {query: "earthquake", limit: 5})']
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Keyword query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "page_size", doc = "Results per page" }
+page = { type = "int", min = 1, to = "page_number", doc = "1-based page number" }
+year = { type = "string", to = "year", doc = "Optional publication year filter" }
+type_name = { type = "string", to = "typeName", doc = "Optional publication type (e.g. Report, Article, Map)" }
+
+[op.search.map]
+items = ".records[]"
+total = ".recordCount"
+work = '''(
+  ("https://pubs.usgs.gov/publication/" + ((.indexId // .id // "") | tostring)) as $url |
+  (([(.links // [])[] | select((.url // "" | ascii_downcase) | endswith(".pdf")) | .url][0] // [(.links // [])[] | select((.type.text // "" | ascii_downcase) == "document") | .url][0]) | resolve_url("https://pubs.usgs.gov/")) as $pdfUrl |
+  ([(.links // [])[] | select((.type.text // "" | ascii_downcase) | contains("open access")) | .url][0] | resolve_url("https://pubs.usgs.gov/")) as $oaLink |
+  ((.publicationDate // .publicationYear) | parse_date) as $pd |
+  {
+    title: ((.title // "") | collapse_ws // ""),
+    authors: [(.contributors.authors // [])[] | {
+      name: (([.given, .middleInitial, .family] | map(select(type == "string") | collapse_ws | select(. != null and . != "")) | join(" ")) | if length > 0 then . else ((.text // "") | collapse_ws // "") end),
+      orcid: ((.orcid // null) | if type == "string" and length > 0 then sub("^https?://orcid\\.org/"; "") else null end),
+      affiliation: ((.affiliations | arr | .[0] | if type == "object" then .text else null end) | collapse_ws)
+    } | select(.name != "")],
+    year: ((.publicationYear | to_int) // (($pd // "")[0:4] | to_int)),
+    publishedDate: $pd,
+    venue: ((.seriesTitle.text // .largerWorkTitle // .publisher) | collapse_ws // "USGS"),
+    workType: (if (.publicationType.text // "" | ascii_downcase | contains("article")) then "article" elif (.publicationType.text // "" | ascii_downcase | contains("book")) then "book-chapter" else "report" end),
+    ids: { doi: (.doi | doi_norm) },
+    abstractText: ((.docAbstract | strip_tags) | if . == "" then null else . end),
+    oa: {
+      status: (if $pdfUrl != null then "diamond" elif $oaLink != null then "gold" else "unknown" end),
+      url: ($oaLink // $url),
+      pdfUrl: $pdfUrl
+    },
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["usgs_pubs"]
+  }
+)'''
+hit = '''(
+  ("https://pubs.usgs.gov/publication/" + ((.indexId // .id // "") | tostring)) as $url |
+  ((.publicationDate // .publicationYear) | parse_date) as $dt |
+  {
+    title: ((.title // "") | collapse_ws // ""),
+    url: $url,
+    snippet: ([(.publicationType.text // ""), (.seriesTitle.text // ""), ((.docAbstract | strip_tags) // "" | .[0:200])] | map(select(length > 0)) | join(" · ")),
+    date: $dt,
+    dateSource: (if $dt != null then "api" else null end)
+  }
+)'''
+
+[op.work]
+summary = "Fetch a single USGS publication record by indexId."
+method = "GET"
+url = "https://pubs.usgs.gov/pubs-services/publication/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+probe = { params = { id = "70282754" }, min_results = 1, fixture = "fixtures/w5i/usgs_pubs/work/default.json" }
+examples = ['source.call("usgs_pubs.work", {id: "70282754"})']
+
+[op.work.params]
+id = { type = "string", required = true, in = "path", doc = "USGS publication indexId (e.g. 70282754)" }
+
+[op.work.map]
+items = "."
+work = "@ref:op.search.map.work"

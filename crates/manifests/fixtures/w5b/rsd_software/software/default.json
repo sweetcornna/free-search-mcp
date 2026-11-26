@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "rsd_software",
+  "op": "software",
+  "recordedAt": "2026-11-25T11:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://research-software-directory.org/api/v1/software?slug=eq.3d-e-chem-knime-python-node-archetype&select=id,slug,brand_name,short_statement,description,concept_doi,get_started_url,updated_at",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "[{\"id\":\"faaf7039-54b7-48f3-acda-86fb1c35b525\",\"slug\":\"3d-e-chem-knime-python-node-archetype\",\"brand_name\":\"KNIME Python node archetype\",\"short_statement\":\"Want to write your own KNIME node wrapping a Python library. Then use the KNIME Python node archetype to generate a node skeleton repository with sample code\",\"description\":\"* Similar to KNIME node archetype, but gives utilities to call Python library in a node\\n* For KNIME node developers who like to have  quick start and automated builds\\n* Generates a project skeleton that contains all you need to develop your own KNIME nodes\\n* Automates tests and deploying the node to an update site\\n* Includes dependency management and test coverage\\n* Used to create all KNIME Python nodes in the 3D-e-Chem project\",\"concept_doi\":\"10.5281/zenodo.597226\",\"get_started_url\":\"https://github.com/3D-e-Chem/knime-python-node-archetype\",\"updated_at\":\"2025-02-05T10:32:50.89128+00:00\"}]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

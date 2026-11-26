@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "transitland_gtfs",
+  "op": "stops",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://transit.land/api/v2/rest/stops?lat=37.7792&lon=-122.4191&radius=300&limit=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"stops\":[{\"id\":789012,\"onestop_id\":\"s-9q9p-civiccenter\",\"stop_id\":\"CIVC\",\"stop_name\":\"Civic Center / UN Plaza\",\"stop_code\":\"CIVC\",\"stop_desc\":\"Market St & 7th St\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-122.414116,37.779758]},\"location_type\":0,\"zone_id\":\"CIVC\"},{\"id\":789013,\"onestop_id\":\"s-9q9p-powell\",\"stop_id\":\"POWL\",\"stop_name\":\"Powell St.\",\"stop_code\":\"POWL\",\"stop_desc\":\"Market St & Powell St\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-122.406857,37.784991]},\"location_type\":0,\"zone_id\":\"POWL\"},{\"id\":789014,\"onestop_id\":\"s-9q9p-montgomery\",\"stop_id\":\"MONT\",\"stop_name\":\"Montgomery St.\",\"stop_code\":\"MONT\",\"stop_desc\":\"Market St & Montgomery St\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-122.401407,37.789256]},\"location_type\":0,\"zone_id\":\"MONT\"}],\"meta\":{\"after\":789014}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

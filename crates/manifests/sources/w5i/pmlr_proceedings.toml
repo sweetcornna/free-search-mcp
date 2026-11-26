@@ -1,0 +1,136 @@
+id = "pmlr_proceedings"
+name = "PMLR Machine Learning Proceedings"
+summary = "250+ open-access Proceedings of Machine Learning Research volumes (ICML, AISTATS, COLT, UAI, CoRL) with direct PDFs and BibTeX."
+aliases = ["pmlr", "proceedings.mlr.press", "mlr press"]
+home_url = "https://proceedings.mlr.press"
+tier = 2
+scopes = ["academic", "academic.cs", "academic.openaccess"]
+caps = ["lookup", "fulltext"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 86400, host_bucket = "proceedings.mlr.press" }
+
+[op.volumes]
+summary = "List or filter PMLR conference proceedings volumes from the main index."
+method = "GET"
+url = "https://proceedings.mlr.press/"
+headers = { Accept = "text/html" }
+response = "html"
+returns = "records"
+probe = { params = {}, min_results = 5, fixture = "fixtures/w5i/pmlr_proceedings/volumes/default.json" }
+examples = ['source.call("pmlr_proceedings.volumes", {query: "ICML", limit: 20})']
+
+[op.volumes.params]
+query = { type = "string", in = "none", doc = "Optional case-insensitive substring filter on volume number, label, or conference title" }
+limit = { type = "int", default = 50, min = 1, max = 200, in = "none", doc = "Maximum volumes to return (capped at 200)" }
+
+[op.volumes.html]
+items_css = "ul.proceedings-list li"
+fields = { label = "a | text", path = "a | attr(href)", full = "| text" }
+wall_markers = ["Access Denied"]
+
+[op.volumes.map]
+items = '''(($p.query // "") | ascii_downcase) as $q | [.[] | select((.path // "") != "") | select($q == "" or (((.full // "") | ascii_downcase | contains($q)) or ((.path // "") | ascii_downcase | contains($q))))][0:($p.limit // 50)][]'''
+record = '''(
+  ((.label // "") | collapse_ws // "") as $lbl |
+  ((.full // "") | collapse_ws // "") as $full |
+  (if ($lbl != "" and ($full | startswith($lbl))) then ($full[($lbl | length):] | sub("^[:\\s—–-]+"; "") | collapse_ws) else $full end) as $title |
+  {
+    volume: ((.path // "") | sub("^v"; "")),
+    label: $lbl,
+    title: (if ($title // "") != "" then $title else $lbl end),
+    url: ((((.path // "") + "/") | resolve_url("https://proceedings.mlr.press/")) // "https://proceedings.mlr.press/")
+  }
+)'''
+
+[op.volume]
+summary = "List all papers and direct PDF links in a PMLR volume by volume number."
+method = "GET"
+url = "https://proceedings.mlr.press/v{vol}/"
+headers = { Accept = "text/html" }
+response = "html"
+returns = "works"
+probe = { params = { vol = "1" }, min_results = 2, fixture = "fixtures/w5i/pmlr_proceedings/volume/default.json" }
+examples = ['source.call("pmlr_proceedings.volume", {vol: "1"})']
+
+[op.volume.params]
+vol = { type = "string", required = true, in = "path", doc = "PMLR volume number without leading 'v' (e.g. 1, 235)" }
+
+[op.volume.html]
+items_css = "div.paper"
+fields = { title = "p.title | text", authors = "span.authors | text", info = "span.info | text", abs_url = "p.links a:nth-of-type(1) | attr(href)", pdf_url = "p.links a:nth-of-type(2) | attr(href)" }
+wall_markers = ["Access Denied"]
+
+[op.volume.map]
+items = '''[.[] | select((.title // "") != "")] | .[]'''
+work = '''(
+  ("https://proceedings.mlr.press/v" + ($p.vol // "") + "/") as $base |
+  (((.abs_url | resolve_url($base)) // $base) | sub("^http://proceedings\\.mlr\\.press/"; "https://proceedings.mlr.press/")) as $url |
+  ((.pdf_url | resolve_url($base)) | if . != null then sub("^http://proceedings\\.mlr\\.press/"; "https://proceedings.mlr.press/") else null end) as $pdfUrl |
+  ((.info // "") | [try capture("(?<y>(?:19|20)[0-9]{2})").y catch empty][0] | to_int) as $yr |
+  {
+    title: ((.title // "") | unescape_html | collapse_ws // ""),
+    authors: [(.authors // "") | unescape_html | split(",")[] | collapse_ws | select(. != null and . != "") | {name: .}],
+    year: $yr,
+    publishedDate: null,
+    venue: ((.info | unescape_html | collapse_ws) | if . != null and . != "" then . else ("PMLR v" + ($p.vol // "")) end),
+    workType: "proceedings-article",
+    ids: {},
+    oa: {
+      status: "diamond",
+      url: $url,
+      pdfUrl: $pdfUrl
+    },
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["pmlr_proceedings"]
+  }
+)'''
+
+[op.paper]
+summary = "Fetch abstract, authors, venue info, and publication date for a specific PMLR paper."
+method = "GET"
+url = "https://proceedings.mlr.press/v{vol}/{slug}.html"
+headers = { Accept = "text/html" }
+response = "html"
+returns = "works"
+probe = { params = { vol = "1", slug = "archambeau07a" }, min_results = 1, fixture = "fixtures/w5i/pmlr_proceedings/paper/default.json" }
+examples = ['source.call("pmlr_proceedings.paper", {vol: "1", slug: "archambeau07a"})']
+
+[op.paper.params]
+vol = { type = "string", required = true, in = "path", doc = "PMLR volume number (e.g. 1)" }
+slug = { type = "string", required = true, in = "path", doc = "Paper slug without .html (e.g. archambeau07a)" }
+
+[op.paper.html]
+items_css = "html"
+fields = { title = "article.post-content h1 | text", authors = "article.post-content span.authors | text", info = "#info | text", abstract = "#abstract | text", pub_date = 'meta[name="citation_publication_date"] | attr(content)' }
+wall_markers = ["Access Denied"]
+
+[op.paper.map]
+items = ".[]"
+work = '''(
+  ("https://proceedings.mlr.press/v" + ($p.vol // "") + "/" + ($p.slug // "") + ".html") as $url |
+  ("https://proceedings.mlr.press/v" + ($p.vol // "") + "/" + ($p.slug // "") + "/" + ($p.slug // "") + ".pdf") as $pdfUrl |
+  (.pub_date | parse_date) as $pd |
+  ((($pd // "")[0:4] | to_int) // ((.info // "") | [try capture("(?<y>(?:19|20)[0-9]{2})").y catch empty][0] | to_int)) as $yr |
+  {
+    title: ((.title // "") | unescape_html | collapse_ws // ""),
+    authors: [(.authors // "") | unescape_html | split(",")[] | collapse_ws | select(. != null and . != "") | {name: .}],
+    year: $yr,
+    publishedDate: $pd,
+    venue: ((.info | unescape_html | collapse_ws) | if . != null and . != "" then . else ("PMLR v" + ($p.vol // "")) end),
+    workType: "proceedings-article",
+    ids: {},
+    abstractText: ((.abstract | unescape_html | collapse_ws) | if . == "" then null else . end),
+    oa: {
+      status: "diamond",
+      url: $url,
+      pdfUrl: $pdfUrl
+    },
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["pmlr_proceedings"]
+  }
+)'''

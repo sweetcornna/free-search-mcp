@@ -1,0 +1,100 @@
+id = "treasury_fiscal"
+name = "US Treasury Fiscal Data API"
+summary = "Keyless official US Treasury REST JSON data for daily national debt to the penny, average interest rates on Treasury securities, and Treasury FX rates."
+aliases = ["fiscaldata", "us treasury", "debt to penny", "treasury debt"]
+home_url = "https://fiscaldata.treasury.gov/api-documentation/"
+tier = 1
+scopes = ["finance"]
+caps = ["lookup", "dataset"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 3.0, burst = 6, concurrency = 3, timeout_ms = 10000, cache_ttl_s = 21600 }
+
+[op.debt_to_penny]
+summary = "Fetch daily US public debt outstanding, debt held by the public, and intragovernmental holdings."
+method = "GET"
+url = "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v2/accounting/od/debt_to_penny"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page[number]", start = 1, max_pages = 3 }
+probe = { params = { limit = 3 }, min_results = 2, fixture = "fixtures/w5m/treasury_fiscal/debt_to_penny/default.json" }
+examples = ["source.call('treasury_fiscal.debt_to_penny', { limit: 5 })"]
+
+[op.debt_to_penny.params]
+filter = { type = "string", to = "filter", doc = "Fiscal Data filter expression e.g. record_date:gte:2025-01-01" }
+sort = { type = "string", default = "-record_date", to = "sort", doc = "Sort column (prefix '-' for descending)" }
+limit = { type = "int", default = 10, min = 1, max = 100, to = "page[size]", doc = "Rows per page" }
+page = { type = "int", default = 1, min = 1, to = "page[number]", doc = "1-based page number" }
+
+[op.debt_to_penny.map]
+items = "(.data // [])[]"
+total = '.meta["total-count"]'
+error = 'if .error then (.message // (.error | tostring)) else null end'
+record = '''{
+  recordDate: .record_date,
+  debtHeldPublicUsd: (.debt_held_public_amt | to_num),
+  intragovHoldingsUsd: (.intragov_hold_amt | to_num),
+  totalPublicDebtUsd: (.tot_pub_debt_out_amt | to_num),
+  fiscalYear: (.record_fiscal_year | to_int),
+  fiscalQuarter: (.record_fiscal_quarter | to_int)
+}'''
+
+[op.avg_interest_rates]
+summary = "Fetch monthly average interest rates on US Treasury marketable and non-marketable securities."
+method = "GET"
+url = "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v2/accounting/od/avg_interest_rates"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page[number]", start = 1, max_pages = 3 }
+probe = { params = { limit = 3 }, min_results = 2, fixture = "fixtures/w5m/treasury_fiscal/avg_interest_rates/default.json" }
+examples = ["source.call('treasury_fiscal.avg_interest_rates', { filter: 'security_desc:eq:Treasury Bills', limit: 5 })"]
+
+[op.avg_interest_rates.params]
+filter = { type = "string", to = "filter", doc = "Fiscal Data filter e.g. security_desc:eq:Treasury Notes" }
+sort = { type = "string", default = "-record_date", to = "sort", doc = "Sort column" }
+limit = { type = "int", default = 10, min = 1, max = 100, to = "page[size]", doc = "Rows per page" }
+page = { type = "int", default = 1, min = 1, to = "page[number]", doc = "1-based page number" }
+
+[op.avg_interest_rates.map]
+items = "(.data // [])[]"
+total = '.meta["total-count"]'
+error = "@ref:op.debt_to_penny.map.error"
+record = '''{
+  recordDate: .record_date,
+  securityType: (.security_type_desc // null),
+  securityDesc: (.security_desc // null),
+  avgInterestRatePct: (.avg_interest_rate_amt | to_num),
+  fiscalYear: (.record_fiscal_year | to_int)
+}'''
+
+[op.exchange_rates]
+summary = "Fetch US Treasury Reporting Rates of Exchange by country and currency."
+method = "GET"
+url = "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/od/rates_of_exchange"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page[number]", start = 1, max_pages = 3 }
+probe = { params = { limit = 3 }, min_results = 2, fixture = "fixtures/w5m/treasury_fiscal/exchange_rates/default.json" }
+examples = ["source.call('treasury_fiscal.exchange_rates', { filter: 'country:eq:Japan', limit: 5 })"]
+
+[op.exchange_rates.params]
+filter = { type = "string", to = "filter", doc = "Fiscal Data filter e.g. country:eq:Japan,record_date:gte:2025-01-01" }
+sort = { type = "string", default = "-record_date", to = "sort", doc = "Sort column" }
+limit = { type = "int", default = 10, min = 1, max = 100, to = "page[size]", doc = "Rows per page" }
+page = { type = "int", default = 1, min = 1, to = "page[number]", doc = "1-based page number" }
+
+[op.exchange_rates.map]
+items = "(.data // [])[]"
+total = '.meta["total-count"]'
+error = "@ref:op.debt_to_penny.map.error"
+record = '''{
+  recordDate: .record_date,
+  effectiveDate: (.effective_date // null),
+  country: (.country // null),
+  currency: (.currency // null),
+  countryCurrency: (.country_currency_desc // null),
+  exchangeRate: (.exchange_rate | to_num)
+}'''

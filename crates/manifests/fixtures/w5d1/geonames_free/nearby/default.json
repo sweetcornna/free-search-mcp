@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "geonames_free",
+  "op": "nearby",
+  "recordedAt": "2026-11-25T12:13:33Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://secure.geonames.org/findNearbyPlaceNameJSON?lat=47.3&lng=9.0&maxRows=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"geonames\": [{\"adminCode1\": \"SG\", \"lng\": \"9.016667\", \"distance\": \"0.78122\", \"geonameId\": 2961555, \"toponymName\": \"Rehetobel\", \"countryCode\": \"CH\", \"fcl\": \"P\", \"fcode\": \"PPL\", \"name\": \"Rehetobel\", \"lat\": \"47.383333\", \"fclName\": \"city, village,...\", \"countryName\": \"Switzerland\", \"fcodeName\": \"populated place\", \"adminName1\": \"Canton of St. Gallen\", \"population\": 1750}, {\"adminCode1\": \"SG\", \"lng\": \"9.00511\", \"distance\": \"1.9421\", \"geonameId\": 2658434, \"toponymName\": \"Wattwil\", \"countryCode\": \"CH\", \"fcl\": \"P\", \"fcode\": \"PPL\", \"name\": \"Wattwil\", \"lat\": \"47.30165\", \"fclName\": \"city, village,...\", \"countryName\": \"Switzerland\", \"fcodeName\": \"populated place\", \"adminName1\": \"Canton of St. Gallen\", \"population\": 8840}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

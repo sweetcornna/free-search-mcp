@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "source": "wikidata",
+  "op": "search",
+  "recordedAt": "2026-11-25T10:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Shanghai&language=en&uselang=en&format=json&limit=5",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [["content-type", "application/json"]],
+        "bodyText": "{\"search\":[{\"id\":\"Q8686\"}]}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q8686&props=labels%7Cdescriptions%7Csitelinks%2Furls%7Cclaims&languages=en%7Cen&sitefilter=enwiki%7Cenwiki&format=json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [["content-type", "application/json"]],
+        "bodyText": "{\"entities\":{\"Q8686\":{\"labels\":{\"en\":{\"value\":\"Shanghai\"},\"zh\":{\"value\":\"上海市\"}},\"descriptions\":{\"en\":{\"value\":\"direct-administered municipality in China\"},\"zh\":{\"value\":\"中国直辖市\"}},\"sitelinks\":{\"enwiki\":{\"url\":\"https://en.wikipedia.org/wiki/Shanghai\"},\"zhwiki\":{\"url\":\"https://zh.wikipedia.org/wiki/上海市\"}},\"claims\":{\"P1082\":[{\"mainsnak\":{\"datavalue\":{\"type\":\"quantity\",\"value\":{\"amount\":\"+24870895\",\"unit\":\"1\"}}},\"qualifiers\":{\"P585\":[{\"datavalue\":{\"value\":{\"time\":\"+2020-11-01T00:00:00Z\",\"precision\":9}}}]}},{\"mainsnak\":{\"datavalue\":{\"type\":\"quantity\",\"value\":{\"amount\":\"+23019148\",\"unit\":\"1\"}}},\"qualifiers\":{\"P585\":[{\"datavalue\":{\"value\":{\"time\":\"+2010-11-01T00:00:00Z\",\"precision\":9}}}]}}],\"P2046\":[{\"mainsnak\":{\"datavalue\":{\"type\":\"quantity\",\"value\":{\"amount\":\"+6341\",\"unit\":\"http://www.wikidata.org/entity/Q712226\"}}}}],\"P571\":[{\"mainsnak\":{\"datavalue\":{\"type\":\"time\",\"value\":{\"time\":\"+0751-00-00T00:00:00Z\",\"precision\":9}}}}],\"P856\":[{\"mainsnak\":{\"datavalue\":{\"type\":\"string\",\"value\":\"https://shanghai.gov.cn\"}}}]}}}}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=%E4%B8%8A%E6%B5%B7&language=zh&uselang=zh&format=json&limit=5",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [["content-type", "application/json"]],
+        "bodyText": "{\"search\":[{\"id\":\"Q8686\"}]}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q8686&props=labels%7Cdescriptions%7Csitelinks%2Furls%7Cclaims&languages=zh%7Cen&sitefilter=zhwiki%7Cenwiki&format=json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [["content-type", "application/json"]],
+        "bodyText": "{\"entities\":{\"Q8686\":{\"labels\":{\"en\":{\"value\":\"Shanghai\"},\"zh\":{\"value\":\"上海市\"}},\"descriptions\":{\"en\":{\"value\":\"direct-administered municipality in China\"},\"zh\":{\"value\":\"中国直辖市\"}},\"sitelinks\":{\"enwiki\":{\"url\":\"https://en.wikipedia.org/wiki/Shanghai\"},\"zhwiki\":{\"url\":\"https://zh.wikipedia.org/wiki/上海市\"}},\"claims\":{\"P1082\":[{\"mainsnak\":{\"datavalue\":{\"type\":\"quantity\",\"value\":{\"amount\":\"+24870895\",\"unit\":\"1\"}}},\"qualifiers\":{\"P585\":[{\"datavalue\":{\"value\":{\"time\":\"+2020-11-01T00:00:00Z\",\"precision\":9}}}]}}]}}}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

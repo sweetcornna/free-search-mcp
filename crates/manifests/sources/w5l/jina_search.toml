@@ -1,0 +1,55 @@
+id = "jina_search"
+name = "Jina Search API (s.jina.ai)"
+summary = "LLM-oriented web search returning clean Markdown page contents and token usage via s.jina.ai (requires free Jina API key)."
+aliases = ["jina", "s.jina.ai", "jina ai search"]
+home_url = "https://jina.ai/reader"
+tier = 3
+scopes = ["web"]
+caps = ["search"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 1.5, burst = 3, concurrency = 2, timeout_ms = 15000, cache_ttl_s = 21600 }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_JINA_API_KEY"
+in = "header"
+name = "Authorization"
+format = "Bearer {key}"
+route_requires_key = true
+
+[op.search]
+summary = "Search the web via s.jina.ai and retrieve LLM-ready Markdown content per result."
+method = "GET"
+url = "https://s.jina.ai/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "rust async tokio" }, min_results = 2, fixture = "fixtures/w5l/jina_search/search/default.json" }
+examples = [
+  'source.call("jina_search.search", { query: "rust async tokio" })',
+]
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Web search query" }
+page = { type = "int", min = 1, to = "page", doc = "Optional 1-based results page" }
+
+[op.search.map]
+items = "(.data // [])[]"
+error = "if (.code != null and .code != 200) then (.readableMessage // .message // (\"HTTP \" + (.code | tostring))) else null end"
+record = '''{
+  title: (.title // ""),
+  url: (.url // ""),
+  description: (.description // ""),
+  content: (.content // ""),
+  tokens: (.usage.tokens // null),
+  publishedTime: (.publishedTime // null)
+}'''
+hit = '''{
+  title: ((.title // .url // "") | collapse_ws // ""),
+  url: (.url // ""),
+  snippet: ((if (.description // "") != "" then .description else (.content // "") end) | collapse_ws // "")[0:280],
+  date: (.publishedTime | parse_date),
+  dateSource: "api"
+}'''

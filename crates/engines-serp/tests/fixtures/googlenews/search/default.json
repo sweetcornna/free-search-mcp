@@ -1,0 +1,107 @@
+{
+  "version": 1,
+  "source": "googlenews",
+  "op": "search",
+  "recordedAt": "2026-11-25T13:48:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://news.google.com/rss/search?q=python+asyncio&hl=en-US&gl=US&ceid=US:en",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/xml; charset=utf-8"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<rss version=\"2.0\"><channel>\n<title>\"python asyncio\" - Google News</title>\n<item><title>Kubernetes Python client gets a modern overhaul for the AI/ML era - Google Open Source Blog</title><link>https://news.google.com/rss/articles/CBMimAFBVV95cUxOTXdFaVBZRDdWeFpidmg3T3JkSTMzYm1LamF5VjdoZVZpY1N2UTFMUXNLelY1ZFRPdFlvczRMUUNSTDNPb0xBdHJhZUN4a1JmS0UtWHh2eVdmNlhnUjBSMGoxZXFOVFh3NVdmQWpYVUNtOGRSY3h4dGFWRHZGU3VQQkY1T1hLMTVaSGY1a0xjTjhNZUphbUh2eQ?oc=5</link><guid isPermaLink=\"false\">CBMimAFBVV95cUxOTXdFaVBZRDdWeFpidmg3T3JkSTMzYm1LamF5VjdoZVZpY1N2UTFMUXNLelY1ZFRPdFlvczRMUUNSTDNPb0xBdHJhZUN4a1JmS0UtWHh2eVdmNlhnUjBSMGoxZXFOVFh3NVdmQWpYVUNtOGRSY3h4dGFWRHZGU3VQQkY1T1hLMTVaSGY1a0xjTjhNZUphbUh2eQ</guid><pubDate>Thu, 12 Nov 2026 08:00:00 GMT</pubDate><description>&lt;a href=\"https://news.google.com/rss/articles/CBMimAFBVV95cUxOTXdFaVBZRDdWeFpidmg3T3JkSTMzYm1LamF5VjdoZVZpY1N2UTFMUXNLelY1ZFRPdFlvczRMUUNSTDNPb0xBdHJhZUN4a1JmS0UtWHh2eVdmNlhnUjBSMGoxZXFOVFh3NVdmQWpYVUNtOGRSY3h4dGFWRHZGU3VQQkY1T1hLMTVaSGY1a0xjTjhNZUphbUh2eQ?oc=5\" target=\"_blank\"&gt;Kubernetes Python client gets a modern overhaul for the AI/ML era&lt;/a&gt;&amp;nbsp;&amp;nbsp;&lt;font color=\"#6f6f6f\"&gt;Google Open Source Blog&lt;/font&gt;</description><source url=\"https://opensource.googleblog.com\">Google Open Source Blog</source></item>\n<item><title>Rapidly scaling online storage to serve over 1 billion ChatGPT users - OpenAI</title><link>https://news.google.com/rss/articles/CBMid0FVX3lxTE1XMnIxNjBrMVh1OXY0VlNzWGlBTFZBU1dVMDdmLTVkVWo5TlJnTkFObzFzN1NOUEExUWl6ejl0Q0x1LV9fQmFoRVNUb2x3bW1DTVJZMjRBU3AyMy16ZlVkZWcxYlBnMFVfbWRBNTNjSUNmSEJWZ0NN?oc=5</link><guid isPermaLink=\"false\">CBMid0FVX3lxTE1XMnIxNjBrMVh1OXY0VlNzWGlBTFZBU1dVMDdmLTVkVWo5TlJnTkFObzFzN1NOUEExUWl6ejl0Q0x1LV9fQmFoRVNUb2x3bW1DTVJZMjRBU3AyMy16ZlVkZWcxYlBnMFVfbWRBNTNjSUNmSEJWZ0NN</guid><pubDate>Fri, 11 Sep 2026 07:00:00 GMT</pubDate><description>&lt;a href=\"https://news.google.com/rss/articles/CBMid0FVX3lxTE1XMnIxNjBrMVh1OXY0VlNzWGlBTFZBU1dVMDdmLTVkVWo5TlJnTkFObzFzN1NOUEExUWl6ejl0Q0x1LV9fQmFoRVNUb2x3bW1DTVJZMjRBU3AyMy16ZlVkZWcxYlBnMFVfbWRBNTNjSUNmSEJWZ0NN?oc=5\" target=\"_blank\"&gt;Rapidly scaling online storage to serve over 1 billion ChatGPT users&lt;/a&gt;&amp;nbsp;&amp;nbsp;&lt;font color=\"#6f6f6f\"&gt;OpenAI&lt;/font&gt;</description><source url=\"https://openai.com\">OpenAI</source></item>\n</channel></rss>\n",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://news.google.com/rss/articles/CBMimAFBVV95cUxOTXdFaVBZRDdWeFpidmg3T3JkSTMzYm1LamF5VjdoZVZpY1N2UTFMUXNLelY1ZFRPdFlvczRMUUNSTDNPb0xBdHJhZUN4a1JmS0UtWHh2eVdmNlhnUjBSMGoxZXFOVFh3NVdmQWpYVUNtOGRSY3h4dGFWRHZGU3VQQkY1T1hLMTVaSGY1a0xjTjhNZUphbUh2eQ?oc=5",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/html; charset=utf-8"
+          ]
+        ],
+        "bodyText": "<!doctype html><html><body><c-wiz data-n-a-id=\"CBMimAFBVV95cUxOTXdFaVBZRDdWeFpidmg3T3JkSTMzYm1LamF5VjdoZVZpY1N2UTFMUXNLelY1ZFRPdFlvczRMUUNSTDNPb0xBdHJhZUN4a1JmS0UtWHh2eVdmNlhnUjBSMGoxZXFOVFh3NVdmQWpYVUNtOGRSY3h4dGFWRHZGU3VQQkY1T1hLMTVaSGY1a0xjTjhNZUphbUh2eQ\" data-n-a-ts=\"1795614589\" data-n-a-sg=\"AdwtSYO1Dfm2AXz6YJf0_tGbnX0P\"></c-wiz></body></html>",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://news.google.com/_/DotsSplashUi/data/batchexecute",
+        "headersSubset": {
+          "content-type": "application/x-www-form-urlencoded;charset=UTF-8"
+        },
+        "bodySha256": "c8879e7da2affd737b900c739d4a462bd1916e66d3eabb12e5e62d3c64332069"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": ")]}'\n\n[[\"wrb.fr\",\"Fbv4je\",\"[\\\"garturlres\\\",\\\"https://opensource.googleblog.com/2026/11/kubernetes-python-client-modern-overhaul-ai-ml.html\\\",1]\",null,null,null,\"generic\"],[\"di\",17],[\"af.httprm\",16,\"-8643814522544650460\",1]]",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://news.google.com/rss/articles/CBMid0FVX3lxTE1XMnIxNjBrMVh1OXY0VlNzWGlBTFZBU1dVMDdmLTVkVWo5TlJnTkFObzFzN1NOUEExUWl6ejl0Q0x1LV9fQmFoRVNUb2x3bW1DTVJZMjRBU3AyMy16ZlVkZWcxYlBnMFVfbWRBNTNjSUNmSEJWZ0NN?oc=5",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/html; charset=utf-8"
+          ]
+        ],
+        "bodyText": "<!doctype html><html><body><c-wiz data-n-a-id=\"CBMid0FVX3lxTE1XMnIxNjBrMVh1OXY0VlNzWGlBTFZBU1dVMDdmLTVkVWo5TlJnTkFObzFzN1NOUEExUWl6ejl0Q0x1LV9fQmFoRVNUb2x3bW1DTVJZMjRBU3AyMy16ZlVkZWcxYlBnMFVfbWRBNTNjSUNmSEJWZ0NN\" data-n-a-ts=\"1795614592\" data-n-a-sg=\"AdwtSYNEmTG-W2U1zl9mlq8e0R7T\"></c-wiz></body></html>",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://news.google.com/_/DotsSplashUi/data/batchexecute",
+        "headersSubset": {
+          "content-type": "application/x-www-form-urlencoded;charset=UTF-8"
+        },
+        "bodySha256": "0ce951bbf4bbd1cfe2e38250d86586d82340e3a326477beeebd91c68b8a000df"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": ")]}'\n\n[[\"wrb.fr\",\"Fbv4je\",\"[\\\"garturlres\\\",\\\"https://openai.com/index/scaling-storage-one-billion-users-part-one/\\\",1]\",null,null,null,\"generic\"],[\"di\",8],[\"af.httprm\",7,\"2752993820210280555\",1]]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

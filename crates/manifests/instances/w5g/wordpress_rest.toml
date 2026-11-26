@@ -1,0 +1,56 @@
+protocol = "wordpress_rest"
+
+[[instance]]
+id = "quantamagazine"
+name = "Quanta Magazine"
+summary = "Simons Foundation science journalism covering mathematics, theoretical physics, computer science, and biology."
+aliases = ["quanta", "quantamagazine.org"]
+base_url = "https://www.quantamagazine.org"
+scopes = ["news", "reference"]
+caps = ["search"]
+tier = 1
+probe = { op = "search", params = { query = "quantum", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "harvard_gazette"
+name = "The Harvard Gazette"
+summary = "Harvard University institutional research reporting across science, medicine, policy, and humanities."
+aliases = ["news.harvard.edu", "harvard news"]
+base_url = "https://news.harvard.edu/gazette"
+scopes = ["news", "reference"]
+caps = ["search"]
+tier = 1
+probe = { op = "search", params = { query = "climate", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "github_blog"
+name = "The GitHub Blog"
+summary = "Official GitHub engineering, software supply-chain security, developer tooling, and open-source policy blog."
+aliases = ["github.blog", "github engineering blog"]
+base_url = "https://github.blog"
+scopes = ["code", "security", "news"]
+caps = ["search"]
+tier = 1
+probe = { op = "search", params = { query = "security", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "schneier_security"
+name = "Schneier on Security"
+summary = "Bruce Schneier's analysis of cryptography, cybersecurity vulnerabilities, surveillance, and technology policy."
+aliases = ["schneier.com", "bruce schneier"]
+base_url = "https://www.schneier.com"
+scopes = ["security", "news"]
+caps = ["search"]
+tier = 1
+probe = { op = "search", params = { query = "cryptography", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "mozilla_blog"
+name = "The Mozilla Blog"
+summary = "Mozilla announcements and analysis on web standards, browser privacy, open AI, and internet health."
+aliases = ["blog.mozilla.org", "mozilla news"]
+base_url = "https://blog.mozilla.org"
+scopes = ["news", "docs"]
+caps = ["search"]
+tier = 1
+probe = { op = "search", params = { query = "privacy", limit = 3 }, min_results = 2 }

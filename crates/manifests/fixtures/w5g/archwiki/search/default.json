@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "archwiki",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:13:03Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://wiki.archlinux.org/api.php?action=query&list=search&srsearch=systemd&srlimit=3&format=json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ],
+          [
+            "cache-control",
+            "private, must-revalidate, max-age=0"
+          ]
+        ],
+        "bodyText": "{\"batchcomplete\":\"\",\"continue\":{\"sroffset\":3,\"continue\":\"-||\"},\"query\":{\"searchinfo\":{\"totalhits\":164},\"search\":[{\"ns\":0,\"title\":\"Systemd\",\"pageid\":10292,\"size\":53779,\"wordcount\":7798,\"snippet\":\"[[de:<span class=\\\"searchmatch\\\">Systemd</span>]]\\n[[es:<span class=\\\"searchmatch\\\">Systemd</span>]]\\n\",\"timestamp\":\"2026-10-31T08:10:20Z\"},{\"ns\":0,\"title\":\"Systemd (T\\u00fcrk\\u00e7e)\",\"pageid\":39557,\"size\":53859,\"wordcount\":7851,\"snippet\":\"[[de:<span class=\\\"searchmatch\\\">Systemd</span>]]\\n[[en:<span class=\\\"searchmatch\\\">Systemd</span>]]\\n\",\"timestamp\":\"2026-10-28T08:38:53Z\"},{\"ns\":0,\"title\":\"Systemd-tmpfile\",\"pageid\":31413,\"size\":56,\"wordcount\":6,\"snippet\":\"#redirect [[<span class=\\\"searchmatch\\\">systemd</span>#<span class=\\\"searchmatch\\\">systemd</span>-tmpfiles - temporary files]]\\n\",\"timestamp\":\"2020-08-01T12:18:56Z\"}]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

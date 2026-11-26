@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "wayback_cdx",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:56:51Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://web.archive.org/cdx/search/cdx?output=json&url=example.com&limit=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "[[\"urlkey\",\"timestamp\",\"original\",\"mimetype\",\"statuscode\",\"digest\",\"length\"],\n[\"com,example)/\",\"20020120142510\",\"http://example.com:80/\",\"text/html\",\"200\",\"HT2DYGA5UKZCPBSFVCV3JOBXGW2G5UUA\",\"1792\"],\n[\"com,example)/\",\"20020328012821\",\"http://www.example.com:80/\",\"text/html\",\"200\",\"UY3I2DT2AMWAY6DECFCFYMT5ZOTFHUCH\",\"481\"],\n[\"com,example)/\",\"20020524041628\",\"http://www.example.com:80/\",\"text/html\",\"200\",\"UY3I2DT2AMWAY6DECFCFYMT5ZOTFHUCH\",\"481\"]]\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,89 @@
+protocol = "dspace7"
+
+[[instance]]
+id = "who_iris"
+name = "WHO IRIS"
+summary = "World Health Organization institutional repository of 200k+ global health guidelines, technical reports, and resolutions in 6 UN languages."
+aliases = ["who iris", "who publications", "world health organization repository"]
+base_url = "https://iris.who.int"
+scopes = ["academic", "academic.biomed", "gov"]
+caps = ["search", "lookup", "fulltext", "book"]
+tier = 1
+probe = { op = "search", params = { query = "malaria", limit = 2 }, min_results = 2 }
+
+[[instance]]
+id = "worldbank_okr"
+name = "World Bank Open Knowledge Repository"
+summary = "World Bank open-access repository of 45k+ policy research working papers, World Development Reports, and monographs."
+aliases = ["world bank okr", "okr", "world bank working papers"]
+base_url = "https://openknowledge.worldbank.org"
+scopes = ["academic", "academic.books", "finance"]
+caps = ["search", "lookup", "fulltext", "book"]
+tier = 1
+probe = { op = "search", params = { query = "poverty", limit = 1 }, min_results = 1 }
+
+[[instance]]
+id = "cornell_ecommons"
+name = "Cornell eCommons"
+summary = "Cornell University open-access institutional repository of scholarly articles, theses, technical reports, and datasets."
+aliases = ["cornell ecommons", "ecommons"]
+base_url = "https://ecommons.cornell.edu"
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["search", "lookup", "fulltext", "thesis"]
+tier = 1
+probe = { op = "search", params = { query = "ornithology", limit = 2 }, min_results = 2 }
+
+[[instance]]
+id = "dr_ntu_sg"
+name = "DR-NTU (Nanyang Technological University)"
+summary = "Nanyang Technological University Singapore institutional repository of peer-reviewed articles, theses, and conference papers."
+aliases = ["dr-ntu", "ntu singapore", "nanyang technological university"]
+base_url = "https://dr.ntu.edu.sg"
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["search", "lookup", "fulltext", "thesis"]
+tier = 1
+probe = { op = "search", params = { query = "neural", limit = 2 }, min_results = 2 }
+
+[[instance]]
+id = "helda_helsinki"
+name = "Helda (University of Helsinki)"
+summary = "University of Helsinki open digital repository of scholarly articles, doctoral dissertations, and research monographs."
+aliases = ["helda", "university of helsinki", "helsinki repository"]
+base_url = "https://helda.helsinki.fi"
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["search", "lookup", "fulltext", "thesis"]
+tier = 1
+probe = { op = "search", params = { query = "climate", limit = 2 }, min_results = 2 }
+
+[[instance]]
+id = "auckland_rs"
+name = "ResearchSpace (University of Auckland)"
+summary = "University of Auckland open-access repository of New Zealand research publications, doctoral theses, and creative works."
+aliases = ["researchspace", "university of auckland", "auckland theses"]
+base_url = "https://researchspace.auckland.ac.nz"
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["search", "lookup", "fulltext", "thesis"]
+tier = 1
+probe = { op = "search", params = { query = "climate", limit = 2 }, min_results = 2 }
+
+[[instance]]
+id = "open_uct"
+name = "OpenUCT (University of Cape Town)"
+summary = "University of Cape Town open-access institutional repository of African scholarship, theses, and research reports."
+aliases = ["openuct", "university of cape town", "uct repository"]
+base_url = "https://open.uct.ac.za"
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["search", "lookup", "fulltext", "thesis"]
+tier = 1
+probe = { op = "search", params = { query = "climate", limit = 2 }, min_results = 2 }
+
+[[instance]]
+id = "conicet_ar"
+name = "CONICET Digital (Argentina)"
+summary = "Argentine National Scientific and Technical Research Council institutional repository of open-access articles, theses, and datasets."
+aliases = ["conicet", "conicet digital", "argentina research"]
+base_url = "https://ri.conicet.gov.ar"
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["search", "lookup", "fulltext", "thesis"]
+tier = 1
+probe = { op = "search", params = { query = "glaciar", limit = 2 }, min_results = 2 }

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "hackernews",
+  "op": "recent",
+  "recordedAt": "2026-11-25T11:53:54Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://hn.algolia.com/api/v1/search_by_date?tags=story&query=rust&hitsPerPage=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"exhaustive\":{\"nbHits\":false,\"typo\":false},\"exhaustiveNbHits\":false,\"exhaustiveTypo\":false,\"hits\":[{\"_highlightResult\":{\"author\":{\"matchLevel\":\"none\",\"matchedWords\":[],\"value\":\"ISNIT\"},\"title\":{\"fullyHighlighted\":false,\"matchLevel\":\"full\",\"matchedWords\":[\"rust\"],\"value\":\"Agents are <em>just</em> string concatenation\"},\"url\":{\"fullyHighlighted\":false,\"matchLevel\":\"full\",\"matchedWords\":[\"rust\"],\"value\":\"https://simmsreeve.com/blog/agents-are-<em>just</em>-string-concatenation/\"}},\"_tags\":[\"story\",\"author_ISNIT\",\"story_50641192\"],\"author\":\"ISNIT\",\"created_at\":\"2026-11-25T11:37:25Z\",\"created_at_i\":1795606645,\"num_comments\":0,\"objectID\":\"50641192\",\"points\":1,\"story_id\":50641192,\"title\":\"Agents are just string concatenation\",\"updated_at\":\"2026-11-25T11:38:39Z\",\"url\":\"https://simmsreeve.com/blog/agents-are-just-string-concatenation/\"},{\"_highlightResult\":{\"author\":{\"matchLevel\":\"none\",\"matchedWords\":[],\"value\":\"hdkjhjshkjfhkjs\"},\"title\":{\"matchLevel\":\"none\",\"matchedWords\":[],\"value\":\"Gemini at Work\"},\"url\":{\"fullyHighlighted\":false,\"matchLevel\":\"full\",\"matchedWords\":[\"rust\"],\"value\":\"https://discuss.google.dev/t/<em>trust</em>ed-automation-with-google-antigravity-scaling-secure-finance-integrations-from-40-days-to-5/383313\"}},\"_tags\":[\"story\",\"author_hdkjhjshkjfhkjs\",\"story_50641141\"],\"author\":\"hdkjhjshkjfhkjs\",\"created_at\":\"2026-11-25T11:29:56Z\",\"created_at_i\":1795606196,\"num_comments\":0,\"objectID\":\"50641141\",\"points\":2,\"story_id\":50641141,\"title\":\"Gemini at Work\",\"updated_at\":\"2026-11-25T11:43:10Z\",\"url\":\"https://discuss.google.dev/t/trusted-automation-with-google-antigravity-scaling-secure-finance-integrations-from-40-days-to-5/383313\"},{\"_highlightResult\":{\"author\":{\"matchLevel\":\"none\",\"matchedWords\":[],\"value\":\"rbanffy\"},\"title\":{\"fullyHighlighted\":false,\"matchLevel\":\"full\",\"matchedWords\":[\"rust\"],\"value\":\"Immigration and Federal Funding <em>Sust</em>ain American AI Leadership\"},\"url\":{\"fullyHighlighted\":false,\"matchLevel\":\"full\",\"matchedWords\":[\"rust\"],\"value\":\"https://cacm.acm.org/research/how-immigration-and-federal-funding-<em>sust</em>ain-american-ai-leadership/\"}},\"_tags\":[\"story\",\"author_rbanffy\",\"story_50640943\"],\"author\":\"rbanffy\",\"created_at\":\"2026-11-25T11:02:30Z\",\"created_at_i\":1795604550,\"num_comments\":0,\"objectID\":\"50640943\",\"points\":1,\"story_id\":50640943,\"title\":\"Immigration and Federal Funding Sustain American AI Leadership\",\"updated_at\":\"2026-11-25T11:07:10Z\",\"url\":\"https://cacm.acm.org/research/how-immigration-and-federal-funding-sustain-american-ai-leadership/\"}],\"hitsPerPage\":3,\"nbHits\":61800,\"nbPages\":334,\"page\":0,\"params\":\"query=rust&tags=story&hitsPerPage=3&advancedSyntax=true&analyticsTags=backend\",\"processingTimeMS\":31,\"processingTimingsMS\":{\"_request\":{\"queue\":9,\"roundTrip\":15},\"fetch\":{\"query\":2,\"scanning\":28,\"total\":31},\"total\":31},\"query\":\"rust\",\"serverTimeMS\":41}\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

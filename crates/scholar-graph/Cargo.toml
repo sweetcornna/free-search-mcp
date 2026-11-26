@@ -1,0 +1,39 @@
+[package]
+name = "fsm-scholar-graph"
+description = "Citation graph, integrity, Retraction Watch sync, citations, entities."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+fsm-core.workspace = true
+fsm-net.workspace = true
+fsm-store.workspace = true
+fsm-scholar.workspace = true
+hayagriva.workspace = true
+csv.workspace = true
+fd-lock.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+regex.workspace = true
+tokio.workspace = true
+tokio-util.workspace = true
+futures.workspace = true
+async-trait.workspace = true
+tracing.workspace = true
+url.workspace = true
+percent-encoding.workspace = true
+jiff.workspace = true
+bytes.workspace = true
+tempfile.workspace = true
+roxmltree.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }
+tempfile.workspace = true
+insta.workspace = true

@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "github_blog",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:13:24Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://github.blog/wp-json/wp/v2/search?search=security&per_page=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ],
+          [
+            "cache-control",
+            "max-age=60"
+          ]
+        ],
+        "bodyText": "[{\"id\":100430,\"title\":\"Security advisory permissions are now generally available\",\"url\":\"https:\\/\\/github.blog\\/changelog\\/2026-11-20-security-advisory-permissions-are-now-generally-available\",\"type\":\"post\",\"subtype\":\"changelog\",\"_links\":{\"self\":[{\"embeddable\":true,\"href\":\"https:\\/\\/github.blog\\/wp-json\\/wp\\/v2\\/changelogs\\/100430\",\"targetHints\":{\"allow\":[\"GET\"]}}],\"about\":[{\"href\":\"https:\\/\\/github.blog\\/wp-json\\/wp\\/v2\\/types\\/changelog\"}],\"collection\":[{\"href\":\"https:\\/\\/github.blog\\/wp-json\\/wp\\/v2\\/search\"}]}},{\"id\":100368,\"title\":\"Security risk assessments run automatically on GitHub Team\",\"url\":\"https:\\/\\/github.blog\\/changelog\\/2026-11-18-security-risk-assessments-run-automatically-on-github-team\",\"type\":\"post\",\"subtype\":\"changelog\",\"_links\":{\"self\":[{\"embeddable\":true,\"href\":\"https:\\/\\/github.blog\\/wp-json\\/wp\\/v2\\/changelogs\\/100368\",\"targetHints\":{\"allow\":[\"GET\"]}}],\"about\":[{\"href\":\"https:\\/\\/github.blog\\/wp-json\\/wp\\/v2\\/types\\/changelog\"}],\"collection\":[{\"href\":\"https:\\/\\/github.blog\\/wp-json\\/wp\\/v2\\/search\"}]}},{\"id\":100077,\"title\":\"Git security vulnerabilities announced\",\"url\":\"https:\\/\\/github.blog\\/open-source\\/git\\/git-security-vulnerabilities-announced-7\\/\",\"type\":\"post\",\"subtype\":\"post\",\"_links\":{\"self\":[{\"embeddable\":true,\"href\":\"https:\\/\\/github.blog\\/wp-json\\/wp\\/v2\\/posts\\/100077\",\"targetHints\":{\"allow\":[\"GET\"]}}],\"about\":[{\"href\":\"https:\\/\\/github.blog\\/wp-json\\/wp\\/v2\\/types\\/post\"}],\"collection\":[{\"href\":\"https:\\/\\/github.blog\\/wp-json\\/wp\\/v2\\/search\"}]}}]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

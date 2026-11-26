@@ -1,0 +1,99 @@
+id = "arch_aur"
+name = "Arch Linux AUR RPC v5"
+summary = "Official Arch User Repository (AUR) RPC v5 JSON API for community Arch Linux packages, votes, dependencies, and maintainer status."
+aliases = ["aur", "arch linux", "arch aur"]
+home_url = "https://aur.archlinux.org"
+tier = 1
+scopes = ["code"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 4, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 21600 }
+
+[op.search]
+summary = "Search Arch User Repository packages via AUR RPC v5."
+method = "GET"
+url = "https://aur.archlinux.org/rpc/v5/search/{query}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { query = "paru", by = "name" }, min_results = 2, fixture = "fixtures/w5l/arch_aur/search/default.json" }
+examples = [
+  'source.call("arch_aur.search", { query: "paru", by: "name" })',
+]
+
+[op.search.params]
+query = { type = "string", required = true, in = "path", doc = "Package name or search term (min 2 chars)" }
+by = { type = "string", default = "name-desc", enum = ["name", "name-desc", "maintainer", "depends", "makedepends", "optdepends", "checkdepends"], to = "by", doc = "AUR search field" }
+
+[op.search.map]
+items = "(.results // [])[]"
+total = ".resultcount"
+error = "if .type == \"error\" then (.error // \"AUR RPC error\") else null end"
+record = '''{
+  id: .ID,
+  name: (.Name // ""),
+  packageBase: (.PackageBase // ""),
+  version: (.Version // ""),
+  description: ((.Description // "") | collapse_ws // ""),
+  upstreamUrl: (.URL // null),
+  maintainer: (.Maintainer // null),
+  numVotes: (.NumVotes // 0),
+  popularity: (.Popularity // 0),
+  outOfDate: (.OutOfDate | epoch_to_iso),
+  firstSubmitted: (.FirstSubmitted | epoch_to_iso),
+  lastModified: (.LastModified | epoch_to_iso),
+  url: ("https://aur.archlinux.org/packages/" + (.Name // ""))
+}'''
+hit = '''{
+  title: ((.Name // "") + " " + (.Version // "")),
+  url: ("https://aur.archlinux.org/packages/" + (.Name // "")),
+  snippet: (
+    [
+      (if (.Description // "") != "" then (.Description | collapse_ws // "") else null end),
+      ("votes: " + ((.NumVotes // 0) | tostring)),
+      (if .Maintainer then ("maintainer: " + .Maintainer) else "orphan" end)
+    ] | map(select(. != null)) | join(" · ")
+  )[0:280],
+  date: (.LastModified | parse_date),
+  dateSource: "api"
+}'''
+
+[op.info]
+summary = "Fetch full AUR package info including dependencies, makedepends, licenses, and keywords."
+method = "GET"
+url = "https://aur.archlinux.org/rpc/v5/info/{package}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { package = "yay" }, min_results = 1, fixture = "fixtures/w5l/arch_aur/info/default.json" }
+examples = [
+  'source.call("arch_aur.info", { package: "yay" })',
+]
+
+[op.info.params]
+package = { type = "string", required = true, in = "path", doc = "Exact AUR package name (e.g. yay, paru)" }
+
+[op.info.map]
+items = "(.results // [])[]"
+error = "@ref:op.search.map.error"
+record = '''{
+  id: .ID,
+  name: (.Name // ""),
+  packageBase: (.PackageBase // ""),
+  version: (.Version // ""),
+  description: (.Description // ""),
+  upstreamUrl: (.URL // null),
+  maintainer: (.Maintainer // null),
+  submitter: (.Submitter // null),
+  licenses: (.License // []),
+  keywords: (.Keywords // []),
+  depends: (.Depends // []),
+  makeDepends: (.MakeDepends // []),
+  optDepends: (.OptDepends // []),
+  numVotes: (.NumVotes // 0),
+  popularity: (.Popularity // 0),
+  outOfDate: (.OutOfDate | epoch_to_iso),
+  lastModified: (.LastModified | epoch_to_iso),
+  url: ("https://aur.archlinux.org/packages/" + (.Name // ""))
+}'''

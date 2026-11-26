@@ -1,0 +1,31 @@
+[package]
+name = "fsm-script"
+description = "QuickJS-NG exec sandbox with typed host bridge."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+fsm-core.workspace = true
+rquickjs.workspace = true
+swc_ts_fast_strip.workspace = true
+swc_common.workspace = true
+tokio.workspace = true
+tokio-util.workspace = true
+futures.workspace = true
+async-trait.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+rand.workspace = true
+tracing.workspace = true
+bytes.workspace = true
+regex.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }
+insta.workspace = true

@@ -1,0 +1,72 @@
+id = "osti"
+name = "OSTI.gov (US DOE Science & Technology)"
+summary = "US Dept. of Energy archive of 3.5M+ chemistry, physics, materials, and energy articles, preprints, and technical reports."
+aliases = ["osti.gov", "doe osti", "energy research"]
+home_url = "https://www.osti.gov"
+tier = 1
+scopes = ["academic", "academic.physics", "academic.openaccess"]
+caps = ["search", "lookup", "fulltext"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 43200, host_bucket = "www.osti.gov" }
+
+[op.search]
+summary = "Search OSTI.gov DOE scientific records, journal manuscripts, and technical reports."
+method = "GET"
+url = "https://www.osti.gov/api/v1/records"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "catalyst chemistry", limit = 3 }, min_results = 2, fixture = "fixtures/w5a/osti/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "OSTI search query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "rows", doc = "Max records" }
+page = { type = "int", min = 1, to = "page", doc = "1-indexed page number" }
+
+[op.search.map]
+items = ".[]"
+error = '''if (type == "object") and (.error != null or .message != null) then (.message // (.error | tostring)) else null end'''
+work = '''(
+  ([(.links // [])[] | select(.rel == "citation") | .href][0] // ("https://www.osti.gov/biblio/" + (.osti_id // ""))) as $url |
+  ([(.links // [])[] | select(.rel == "fulltext") | .href][0] // null) as $ft |
+  (.publication_date | parse_date) as $dt |
+  ((.description // "") | strip_tags) as $abs |
+  {
+    title: ((.title // "") | strip_tags),
+    authors: [(.authors // [])[:25][] | {
+      name: (sub("\\s*\\[.*$"; "") | sub("\\s*\\(ORCID:[^)]+\\).*$"; ""; "i") | collapse_ws),
+      orcid: (if test("\\(ORCID:\\s*[0-9]{4}-?[0-9]{4}-?[0-9]{4}-?[0-9]{3}[0-9Xx]\\)"; "i") then (capture("\\(ORCID:\\s*(?<a>[0-9]{4})-?(?<b>[0-9]{4})-?(?<c>[0-9]{4})-?(?<d>[0-9]{3}[0-9Xx])\\)"; "i") | (.a + "-" + .b + "-" + .c + "-" + (.d | ascii_upcase))) else null end),
+      affiliation: (if test("\\[[^\\]]+\\]") then (capture("\\[(?<aff>[^\\]]+)\\]").aff | collapse_ws) else null end)
+    } | select(.name != "")],
+    year: (if $dt != null then ($dt[0:4] | to_int) else null end),
+    publishedDate: $dt,
+    venue: ((.journal_name // .publisher // null) | if type == "string" then collapse_ws else null end),
+    workType: (if (.product_type // "") == "Journal Article" then "article" else "report" end),
+    ids: { doi: (.doi // null | doi_norm) },
+    abstractText: (if ($abs // "") != "" then $abs else null end),
+    oa: (if $ft != null then { status: "green", url: $url, pdfUrl: $ft } else null end),
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["osti"]
+  }
+)'''
+
+[op.work]
+summary = "Fetch a single OSTI.gov record by numeric OSTI ID."
+method = "GET"
+url = "https://www.osti.gov/api/v1/records/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+probe = { params = { id = "17428540" }, min_results = 1, fixture = "fixtures/w5a/osti/work/default.json" }
+
+[op.work.params]
+id = { type = "string", required = true, in = "path", doc = "OSTI numeric ID e.g. 17428540" }
+
+[op.work.map]
+items = ".[]"
+error = "@ref:op.search.map.error"
+work = "@ref:op.search.map.work"

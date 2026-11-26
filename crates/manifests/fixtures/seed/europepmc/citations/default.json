@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "source": "europepmc",
+  "op": "citations",
+  "recordedAt": "2026-11-25T14:13:27Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/MED/25315507/citations?format=json&pageSize=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "vary",
+            "origin,access-control-request-method,access-control-request-headers,accept-encoding"
+          ],
+          [
+            "content-type",
+            "application/json;charset=UTF-8"
+          ],
+          [
+            "strict-transport-security",
+            "max-age=31536000; includeSubDomains; preload"
+          ],
+          [
+            "date",
+            "Wed, 25 Nov 2026 14:13:26 GMT"
+          ]
+        ],
+        "bodyText": "{\"version\":\"6.9\",\"hitCount\":189,\"request\":{\"id\":\"25315507\",\"source\":\"MED\",\"offSet\":0,\"pageSize\":3},\"citationList\":{\"citation\":[{\"source\":\"MED\",\"id\":\"42442303\",\"citationType\":\"review; journal article\",\"title\":\"Bidirectional microbiota-cancer crosstalk: Emerging platforms for advanced diagnostics and precision therapeutics in oncology.\",\"authorString\":\"Moshref-Javadi M, Ahmadbeigi G, Ataollahi H, Boroomand S, Kia SK, Soleimani N, Zia-Jahromi N, Hedayati M.\",\"journalAbbreviation\":\"Biomed Pharmacother\",\"pubYear\":2026,\"volume\":\"201\",\"pageInfo\":\"119745\",\"citedByCount\":0},{\"source\":\"MED\",\"id\":\"42352311\",\"citationType\":\"review-article; review; journal article\",\"title\":\"Research Progress in Biomedical Materials.\",\"authorString\":\"Wang Y, Wang D, Ma X, Cui Y, Liu J, Fang W.\",\"journalAbbreviation\":\"Biomolecules\",\"pubYear\":2026,\"volume\":\"16\",\"issue\":\"6\",\"pageInfo\":\"844\",\"citedByCount\":0},{\"source\":\"MED\",\"id\":\"42293685\",\"citationType\":\"review-article; review; journal article\",\"title\":\"Engineered bacteria in disease diagnosis and therapy: A synthetic biology perspective.\",\"authorString\":\"Shen Y, Lu SM, Yang L, Li Y, Zhang Y, Liang LG.\",\"journalAbbreviation\":\"Synth Syst Biotechnol\",\"pubYear\":2026,\"volume\":\"14\",\"pageInfo\":\"459-470\",\"citedByCount\":0}]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

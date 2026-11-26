@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "who_gho",
+  "op": "data",
+  "recordedAt": "2026-11-25T12:12:19Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://ghoapi.azureedge.net/api/WHOSIS_000001?%24filter=SpatialDim%20eq%20%27USA%27&%24top=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; odata.metadata=minimal; odata.streaming=true; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"@odata.context\":\"https://ghoapi.azureedge.net/api/$metadata#WHOSIS_000001\",\"value\":[{\"Id\":1243969,\"IndicatorCode\":\"WHOSIS_000001\",\"SpatialDimType\":\"COUNTRY\",\"SpatialDim\":\"USA\",\"ParentLocationCode\":\"AMR\",\"TimeDimType\":\"YEAR\",\"ParentLocation\":\"Americas\",\"Dim1Type\":\"SEX\",\"TimeDim\":2022,\"Dim1\":\"SEX_BTSX\",\"Dim2Type\":null,\"Dim2\":null,\"Dim3Type\":null,\"Dim3\":null,\"DataSourceDimType\":null,\"DataSourceDim\":null,\"Value\":\"77.5 [77.4-77.5]\",\"NumericValue\":77.500000000,\"Low\":77.400000000,\"High\":77.500000000,\"Comments\":null,\"Date\":\"2026-10-01T16:11:13.08+02:00\",\"TimeDimensionValue\":\"2022\",\"TimeDimensionBegin\":\"2022-01-01T00:00:00+01:00\",\"TimeDimensionEnd\":\"2022-12-31T00:00:00+01:00\"},{\"Id\":1243970,\"IndicatorCode\":\"WHOSIS_000001\",\"SpatialDimType\":\"COUNTRY\",\"SpatialDim\":\"USA\",\"ParentLocationCode\":\"AMR\",\"TimeDimType\":\"YEAR\",\"ParentLocation\":\"Americas\",\"Dim1Type\":\"SEX\",\"TimeDim\":2023,\"Dim1\":\"SEX_BTSX\",\"Dim2Type\":null,\"Dim2\":null,\"Dim3Type\":null,\"Dim3\":null,\"DataSourceDimType\":null,\"DataSourceDim\":null,\"Value\":\"78.5 [78.4-78.6]\",\"NumericValue\":78.500000000,\"Low\":78.400000000,\"High\":78.600000000,\"Comments\":null,\"Date\":\"2026-10-01T16:11:13.08+02:00\",\"TimeDimensionValue\":\"2023\",\"TimeDimensionBegin\":\"2023-01-01T00:00:00+01:00\",\"TimeDimensionEnd\":\"2023-12-31T00:00:00+01:00\"},{\"Id\":1245949,\"IndicatorCode\":\"WHOSIS_000001\",\"SpatialDimType\":\"COUNTRY\",\"SpatialDim\":\"USA\",\"ParentLocationCode\":\"AMR\",\"TimeDimType\":\"YEAR\",\"ParentLocation\":\"Americas\",\"Dim1Type\":\"SEX\",\"TimeDim\":2022,\"Dim1\":\"SEX_FMLE\",\"Dim2Type\":null,\"Dim2\":null,\"Dim3Type\":null,\"Dim3\":null,\"DataSourceDimType\":null,\"DataSourceDim\":null,\"Value\":\"79.9 [79.8-80]\",\"NumericValue\":79.900000000,\"Low\":79.800000000,\"High\":80.000000000,\"Comments\":null,\"Date\":\"2026-10-01T16:11:13.08+02:00\",\"TimeDimensionValue\":\"2022\",\"TimeDimensionBegin\":\"2022-01-01T00:00:00+01:00\",\"TimeDimensionEnd\":\"2022-12-31T00:00:00+01:00\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

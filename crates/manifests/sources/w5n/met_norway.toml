@@ -1,0 +1,72 @@
+id = "met_norway"
+name = "MET Norway Global Weather Forecast"
+summary = "Norwegian Meteorological Institute global keyless weather forecasts and sunrise/sunset tables."
+aliases = ["met.no", "yr.no", "met norway", "locationforecast", "weather data", "气象数据"]
+home_url = "https://api.met.no/weatherapi/locationforecast/2.0/documentation"
+tier = 1
+scopes = ["reference.geo"]
+caps = ["lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 1800 }
+
+[op.forecast]
+summary = "Fetch global hourly/6-hourly MET Norway Locationforecast 2.0 compact weather timeseries."
+method = "GET"
+url = "https://api.met.no/weatherapi/locationforecast/2.0/compact"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+examples = ['source.call("met_norway.forecast", { lat: 59.91, lon: 10.75 })']
+probe = { params = { lat = 59.91, lon = 10.75 }, min_results = 5, fixture = "fixtures/w5n/met_norway/forecast/default.json" }
+
+[op.forecast.params]
+lat = { type = "float", required = true, doc = "Latitude in decimal degrees (max 4 decimals recommended)" }
+lon = { type = "float", required = true, doc = "Longitude in decimal degrees (max 4 decimals recommended)" }
+altitude = { type = "int", doc = "Optional altitude in meters above sea level" }
+
+[op.forecast.map]
+items = "(.properties.timeseries // [])[0:24][]"
+record = '''{
+  time: .time,
+  temperatureC: (.data.instant.details.air_temperature // null),
+  pressureHpa: (.data.instant.details.air_pressure_at_sea_level // null),
+  cloudFractionPct: (.data.instant.details.cloud_area_fraction // null),
+  humidityPct: (.data.instant.details.relative_humidity // null),
+  windSpeedMs: (.data.instant.details.wind_speed // null),
+  windFromDeg: (.data.instant.details.wind_from_direction // null),
+  next1hSymbol: (.data.next_1_hours.summary.symbol_code // null),
+  next1hPrecipMm: (.data.next_1_hours.details.precipitation_amount // null),
+  next6hSymbol: (.data.next_6_hours.summary.symbol_code // null),
+  next6hPrecipMm: (.data.next_6_hours.details.precipitation_amount // null)
+}'''
+
+[op.sunrise]
+summary = "Fetch MET Norway Sunrise 3.0 solar rise, set, and noon times for coordinates and date."
+method = "GET"
+url = "https://api.met.no/weatherapi/sunrise/3.0/sun"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+examples = ['source.call("met_norway.sunrise", { lat: 59.91, lon: 10.75, date: "2026-11-25" })']
+probe = { params = { lat = 59.91, lon = 10.75, date = "2026-11-25" }, min_results = 1, fixture = "fixtures/w5n/met_norway/sunrise/default.json" }
+
+[op.sunrise.params]
+lat = { type = "float", required = true, doc = "Latitude in decimal degrees" }
+lon = { type = "float", required = true, doc = "Longitude in decimal degrees" }
+date = { type = "string", doc = "ISO date YYYY-MM-DD (defaults to today UTC)" }
+
+[op.sunrise.map]
+items = "."
+record = '''{
+  body: (.properties.body // "Sun"),
+  interval: (.when.interval // []),
+  sunrise: (.properties.sunrise.time // null),
+  sunriseAzimuth: (.properties.sunrise.azimuth // null),
+  sunset: (.properties.sunset.time // null),
+  sunsetAzimuth: (.properties.sunset.azimuth // null),
+  solarNoon: (.properties.solarnoon.time // null),
+  solarNoonElevation: (.properties.solarnoon.disc_centre_elevation // null),
+  lon: (.geometry.coordinates[0] // null),
+  lat: (.geometry.coordinates[1] // null)
+}'''

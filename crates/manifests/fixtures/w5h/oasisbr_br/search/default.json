@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "oasisbr_br",
+  "op": "search",
+  "recordedAt": "2026-11-25T15:04:21Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://oasisbr.ibict.br/vufind/api/v1/search?lookfor=neural&limit=3&page=1&field%5B%5D=id&field%5B%5D=title&field%5B%5D=authors&field%5B%5D=formats&field%5B%5D=languages&field%5B%5D=urls&field%5B%5D=publicationDates&field%5B%5D=summary&field%5B%5D=publishers&field%5B%5D=subjects&field%5B%5D=cleanDoi&field%5B%5D=dc.identifier.doi&field%5B%5D=containerTitle&field%5B%5D=issns",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"resultCount\":27747,\"records\":[{\"id\":\"UFSM-23_5e828dbf9d1ab8c4fef67698c0e225a0\",\"title\":\"Neural networks\",\"authors\":{\"primary\":{\"Almeida, Rita M. C. de\":[]},\"secondary\":[],\"corporate\":[]},\"formats\":[\"article\"],\"languages\":[\"por\"],\"urls\":[{\"url\":\"https:\\/\\/periodicos.ufsm.br\\/cienciaenatura\\/article\\/view\\/26309\",\"desc\":\"https:\\/\\/periodicos.ufsm.br\\/cienciaenatura\\/article\\/view\\/26309\"}],\"publicationDates\":[\"1992\"],\"summary\":[\"In the last ten years many scientific advances regarding neurons and the way they are interconnected has mad o it possible to study the dynamics of storage and Processing of information in the brain. In particular, the physicist J. J. Hopfield proposed a formal minimalist model to these neural networks reducing the problem to a particular case of a well \\u2013 defined physical problem \\u2013 the spin glass. Although the problem \\u00ed s well defined, its solution is far from being trivial.Here we introduce the problem, describe Hopfield model, with its achievements and limitations, and present our contribution to the description of information storage in neural networks.\"],\"publishers\":[],\"subjects\":[],\"issns\":[]},{\"id\":\"RCAP_fa611837af7d636ee884ecc8bb6f6a3d\",\"title\":\"Neural Phonology\",\"authors\":{\"primary\":{\"Odisho, Edward Y.\":[]},\"secondary\":[],\"corporate\":[]},\"formats\":[\"article\"],\"languages\":[\"por\"],\"urls\":[{\"url\":\"https:\\/\\/ojs.letras.up.pt\\/index.php\\/LinguarumArena\\/article\\/view\\/13768\",\"desc\":\"https:\\/\\/ojs.letras.up.pt\\/index.php\\/LinguarumArena\\/article\\/view\\/13768\"}],\"publicationDates\":[\"2024\"],\"summary\":[\"As a reaction to the pedagogical needs of adult learners in mastering speech sounds and sound phenomena unfamiliar to their L1 phonology, there surfaced a pressing need for a radical change in the overall approach to teaching them. A transition had to be gradually implemented in the form of a multisensory (auditory, visual, tactile-kinesthetic) strategies to be propped up with a set of multicognitive ones (e.g. think, associate, analyze, synthesize, memorize) in lieu of the traditional audiolingual one. During the implementation of such strategies for a few years, a fully-fledged approach emerged and titled as: Multisensory, Multicognitive Approach to Teaching Pronunciation (MMA). Further classroom experience with MMA, led to the reconsideration of the linguistic domain of phonology for theoretical and applied purposes and recognizing it in two sections i.e., linguistic phonology vs. neural phonology. Below are a few reasons for introducing neural phonology.\\u00a0 First, traditional phonology barely refers to the role of the brain in internalizing additional phonological constituents when targeting L2\\/FL as adults. Second, teaching phonology and the mastery of unfamiliar sound units\\/features to learners of L2\\/FL has been conventionally attempted in a unisensory (monosensory) manner, the auditory sense in this case, which tends to be less efficient and effective with many adults. Third, in real classroom situations there seems to be greater need to diversify and refine the sensory and cognitive strategies\\/techniques in teaching both sections of phonology, especially the neural one. Fourth, emphasizing the two sections further enhances the overall pedagogical and didactic worth of MMA. DOI: https:\\/\\/doi.org\\/10.21747\\/1647-8770\\/are14a1\"],\"publishers\":[],\"subjects\":[],\"issns\":[]},{\"id\":\"BRCRIS_71eafb6ef5c59c3bf1ae583b2ffbdc37\",\"title\":\"Heterotopia neural.\",\"authors\":{\"primary\":[],\"secondary\":[],\"corporate\":[]},\"formats\":[\"masterThesis\"],\"languages\":[],\"urls\":[],\"publicationDates\":[\"2003\"],\"summary\":[],\"publishers\":[],\"subjects\":[],\"issns\":[]}],\"status\":\"OK\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

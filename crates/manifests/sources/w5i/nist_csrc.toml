@@ -1,0 +1,96 @@
+id = "nist_csrc"
+name = "NIST CSRC Technical Standards Catalog"
+summary = "US NIST Computer Security Resource Center publications catalog (FIPS, SP 800, SP 1800, NISTIR) with search and standard detail pages."
+aliases = ["nist", "csrc.nist.gov", "nist sp", "nist fips"]
+home_url = "https://csrc.nist.gov/publications"
+tier = 1
+scopes = ["docs", "security"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 12000, cache_ttl_s = 43200, host_bucket = "csrc.nist.gov" }
+
+[op.search]
+summary = "Search NIST CSRC cybersecurity and cryptography standards (FIPS, SP 800, NISTIR)."
+method = "GET"
+url = "https://csrc.nist.gov/publications/search"
+headers = { Accept = "text/html" }
+response = "html"
+returns = "records"
+const_query = { ipp = "25" }
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "ML-KEM", limit = 5 }, min_results = 2, fixture = "fixtures/w5i/nist_csrc/search/default.json" }
+examples = ['source.call("nist_csrc.search", {query: "ML-KEM", limit: 5})']
+
+[op.search.params]
+query = { type = "string", required = true, to = "keywords", doc = "Keywords or standard number (e.g. ML-KEM, 800-53, AES)" }
+limit = { type = "int", default = 10, min = 1, max = 25, in = "none", doc = "Maximum matching publications to return (sliced from 25/page)" }
+page = { type = "int", min = 1, to = "page", doc = "1-based results page" }
+status = { type = "string", to = "status", doc = "Optional status filter (Final, Draft, Withdrawn)" }
+
+[op.search.html]
+items_css = "#publications-results-table tbody tr"
+fields = { series = "td:nth-child(1) | text", number = "td:nth-child(2) | text", title = "td:nth-child(3) a | text", path = "td:nth-child(3) a | attr(href)", status = "td:nth-child(4) | text", release_date = "td:nth-child(5) | text" }
+wall_markers = ["Access Denied", "Just a moment"]
+
+[op.search.map]
+items = '''[.[] | select((.title // "") != "")][0:($p.limit // 10)][]'''
+record = '''(
+  ((.path | resolve_url("https://csrc.nist.gov/")) // "https://csrc.nist.gov/publications") as $url |
+  ((.release_date // "") | collapse_ws // "" |
+    if test("^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$") then
+      (split("/") | .[2] + "-" + (if (.[0] | length) == 1 then ("0" + .[0]) else .[0] end) + "-" + (if (.[1] | length) == 1 then ("0" + .[1]) else .[1] end))
+    else (. | parse_date) end) as $dt |
+  {
+    series: ((.series // "") | collapse_ws // ""),
+    number: ((.number // "") | collapse_ws // ""),
+    title: ((.title // "") | collapse_ws // ""),
+    status: ((.status // "") | collapse_ws // ""),
+    releaseDate: $dt,
+    url: $url
+  }
+)'''
+hit = '''(
+  ((.path | resolve_url("https://csrc.nist.gov/")) // "https://csrc.nist.gov/publications") as $url |
+  ((.release_date // "") | collapse_ws // "" |
+    if test("^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$") then
+      (split("/") | .[2] + "-" + (if (.[0] | length) == 1 then ("0" + .[0]) else .[0] end) + "-" + (if (.[1] | length) == 1 then ("0" + .[1]) else .[1] end))
+    else (. | parse_date) end) as $dt |
+  {
+    title: ((.title // "") | collapse_ws // ""),
+    url: $url,
+    snippet: ([((.series // "") | collapse_ws), ((.number // "") | collapse_ws), ((.status // "") | collapse_ws)] | map(select(. != null and . != "")) | join(" · ")),
+    date: $dt,
+    dateSource: (if $dt != null then "html" else null end)
+  }
+)'''
+
+[op.publication]
+summary = "Fetch structured Dublin Core / citation metadata for a NIST CSRC publication page."
+method = "GET"
+url = "https://csrc.nist.gov/pubs/{series}/{number}/{status}"
+headers = { Accept = "text/html" }
+response = "html"
+returns = "records"
+probe = { params = { series = "fips", number = "203", status = "final" }, min_results = 1, fixture = "fixtures/w5i/nist_csrc/publication/default.json" }
+examples = ['source.call("nist_csrc.publication", {series: "fips", number: "203", status: "final"})']
+
+[op.publication.params]
+series = { type = "string", required = true, default = "sp", in = "path", doc = "Publication series path segment (e.g. fips, sp, ir, cswp)" }
+number = { type = "string", required = true, in = "path", encode = "raw", doc = "Publication number path (e.g. 203 or 800/53/r5/upd1)" }
+status = { type = "string", default = "final", in = "path", doc = "Publication stage (e.g. final, ipd, fpd)" }
+
+[op.publication.html]
+items_css = "head"
+fields = { title = 'meta[name="dcterms.title"] | attr(content)', description = 'meta[name="dcterms.description"] | attr(content)', date = 'meta[name="dcterms.date.created"] | attr(content)', doi = 'meta[name="citation_doi"] | attr(content)', url = 'meta[name="dcterms.identifier"] | attr(content)' }
+wall_markers = ["Access Denied"]
+
+[op.publication.map]
+items = ".[]"
+record = '''{
+  title: ((.title // "") | collapse_ws // ""),
+  description: ((.description | collapse_ws) | if . == "" then null else . end),
+  date: (.date | parse_date),
+  doi: (.doi | doi_norm),
+  url: ((.url | resolve_url("https://csrc.nist.gov/")) // ("https://csrc.nist.gov/pubs/" + ($p.series // "") + "/" + ($p.number // "") + "/" + ($p.status // "final")))
+}'''

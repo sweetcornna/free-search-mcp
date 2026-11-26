@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "tvmaze",
+  "op": "people",
+  "recordedAt": "2026-11-25T11:54:42Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.tvmaze.com/search/people?q=adam+scott",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ]
+        ],
+        "bodyText": "[{\"score\":1,\"person\":{\"id\":344165,\"url\":\"https://www.tvmaze.com/people/344165/adam-scott\",\"name\":\"Adam Scott\",\"country\":null,\"birthday\":null,\"deathday\":null,\"gender\":\"Male\",\"image\":{\"medium\":\"https://static.tvmaze.com/uploads/images/medium_portrait/403/1008389.jpg\",\"original\":\"https://static.tvmaze.com/uploads/images/original_untouched/403/1008389.jpg\"},\"updated\":1715010884,\"_links\":{\"self\":{\"href\":\"https://api.tvmaze.com/people/344165\"}}}},{\"score\":1,\"person\":{\"id\":31964,\"url\":\"https://www.tvmaze.com/people/31964/adam-scott\",\"name\":\"Adam Scott\",\"country\":{\"name\":\"United States\",\"code\":\"US\",\"timezone\":\"America/New_York\"},\"birthday\":\"1973-04-03\",\"deathday\":null,\"gender\":\"Male\",\"image\":{\"medium\":\"https://static.tvmaze.com/uploads/images/medium_portrait/3/8618.jpg\",\"original\":\"https://static.tvmaze.com/uploads/images/original_untouched/3/8618.jpg\"},\"updated\":1793571359,\"_links\":{\"self\":{\"href\":\"https://api.tvmaze.com/people/31964\"}}}},{\"score\":0.8164966,\"person\":{\"id\":33339,\"url\":\"https://www.tvmaze.com/people/33339/adam-scott-miller\",\"name\":\"Adam Scott Miller\",\"country\":{\"name\":\"United States\",\"code\":\"US\",\"timezone\":\"America/New_York\"},\"birthday\":\"1991-06-24\",\"deathday\":null,\"gender\":\"Male\",\"image\":{\"medium\":\"https://static.tvmaze.com/uploads/images/medium_portrait/153/383771.jpg\",\"original\":\"https://static.tvmaze.com/uploads/images/original_untouched/153/383771.jpg\"},\"updated\":1524310913,\"_links\":{\"self\":{\"href\":\"https://api.tvmaze.com/people/33339\"}}}},{\"score\":0.8164966,\"person\":{\"id\":233870,\"url\":\"https://www.tvmaze.com/people/233870/adam-scott-weissman\",\"name\":\"Adam Scott Weissman\",\"country\":null,\"birthday\":null,\"deathday\":null,\"gender\":\"Male\",\"image\":null,\"updated\":1715789769,\"_links\":{\"self\":{\"href\":\"https://api.tvmaze.com/people/233870\"}}}},{\"score\":0.8164966,\"person\":{\"id\":252825,\"url\":\"https://www.tvmaze.com/people/252825/adam-scott-boyer\",\"name\":\"Adam Scott Boyer\",\"country\":null,\"birthday\":null,\"deathday\":null,\"gender\":\"Male\",\"image\":null,\"updated\":1575646053,\"_links\":{\"self\":{\"href\":\"https://api.tvmaze.com/people/252825\"}}}},{\"score\":0.36,\"person\":{\"id\":300245,\"url\":\"https://www.tvmaze.com/people/300245/adam-escott\",\"name\":\"Adam Escott\",\"country\":null,\"birthday\":null,\"deathday\":null,\"gender\":null,\"image\":null,\"updated\":1669428368,\"_links\":{\"self\":{\"href\":\"https://api.tvmaze.com/people/300245\"}}}},{\"score\":0.35000002,\"person\":{\"id\":55693,\"url\":\"https://www.tvmaze.com/people/55693/scott-adams\",\"name\":\"Scott Adams\",\"country\":{\"name\":\"United States\",\"code\":\"US\",\"timezone\":\"America/New_York\"},\"birthday\":\"1957-06-08\",\"deathday\":\"2026-01-13\",\"gender\":\"Male\",\"image\":{\"medium\":\"https://static.tvmaze.com/uploads/images/medium_portrait/196/491634.jpg\",\"original\":\"https://static.tvmaze.com/uploads/images/original_untouched/196/491634.jpg\"},\"updated\":1768322776,\"_links\":{\"self\":{\"href\":\"https://api.tvmaze.com/people/55693\"}}}},{\"score\":0.35,\"person\":{\"id\":231624,\"url\":\"https://www.tvmaze.com/people/231624/adam-sina\",\"name\":\"Adam Sina\",\"country\":{\"name\":\"United Kingdom\",\"code\":\"GB\",\"timezone\":\"Europe/London\"},\"birthday\":null,\"deathday\":null,\"gender\":\"Male\",\"image\":{\"medium\":\"https://static.tvmaze.com/uploads/images/medium_portrait/554/1387396.jpg\",\"original\":\"https://static.tvmaze.com/uploads/images/original_untouched/554/1387396.jpg\"},\"updated\":1738876625,\"_links\":{\"self\":{\"href\":\"https://api.tvmaze.com/people/231624\"}}}},{\"score\":0.32659864,\"person\":{\"id\":139892,\"url\":\"https://www.tvmaze.com/people/139892/adam-henderson-scott\",\"name\":\"Adam Henderson Scott\",\"country\":null,\"birthday\":null,\"deathday\":null,\"gender\":\"Male\",\"image\":null,\"updated\":1780173720,\"_links\":{\"self\":{\"href\":\"https://api.tvmaze.com/people/139892\"}}}},{\"score\":0.32659864,\"person\":{\"id\":506944,\"url\":\"https://www.tvmaze.com/people/506944/adam-b-scott\",\"name\":\"Adam B. Scott\",\"country\":{\"name\":\"United States\",\"code\":\"US\",\"timezone\":\"America/New_York\"},\"birthday\":\"1983-06-26\",\"deathday\":null,\"gender\":\"Male\",\"image\":null,\"updated\":1793560453,\"_links\":{\"self\":{\"href\":\"https://api.tvmaze.com/people/506944\"}}}}]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

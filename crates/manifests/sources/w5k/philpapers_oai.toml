@@ -1,0 +1,98 @@
+id = "philpapers_oai"
+name = "PhilPapers Philosophy Bibliography OAI-PMH"
+summary = "OAI-PMH 2.0 metadata interface for PhilPapers (~2.9M indexed philosophy articles, books, and preprints)."
+aliases = ["philpapers", "philosophy bibliography"]
+home_url = "https://philpapers.org"
+tier = 2
+scopes = ["academic", "academic.humanities"]
+caps = ["lookup", "harvest"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 12000, cache_ttl_s = 43200, host_bucket = "philpapers.org" }
+
+[op.identify]
+summary = "Retrieve PhilPapers OAI-PMH repository identity, granularity, and earliest datestamp."
+method = "GET"
+url = "https://philpapers.org/oai.pl"
+headers = { Accept = "application/xml" }
+response = "xml"
+returns = "records"
+const_query = { verb = "Identify" }
+probe = { params = {}, min_results = 1, fixture = "fixtures/w5k/philpapers_oai/identify/default.json" }
+examples = ['source.call("philpapers_oai.identify", {})']
+
+[op.identify.map]
+items = ".\"oai-pmh\".identify"
+error = "if .\"oai-pmh\".error then (.\"oai-pmh\".error.\"@code\" // (.\"oai-pmh\".error | tostring)) else null end"
+record = '''{
+  repositoryName: (.repositoryname // ""),
+  baseUrl: (.baseurl // ""),
+  protocolVersion: (.protocolversion // null),
+  earliestDatestamp: (.earliestdatestamp // null),
+  granularity: (.granularity // null),
+  deletedRecord: (.deletedrecord // null)
+}'''
+
+[op.record]
+summary = "Fetch a single PhilPapers bibliographic record in Dublin Core XML by OAI identifier and map to ScholarlyWork."
+method = "GET"
+url = "https://philpapers.org/oai.pl"
+headers = { Accept = "application/xml" }
+response = "xml"
+returns = "works"
+const_query = { verb = "GetRecord", metadataPrefix = "oai_dc" }
+probe = { params = { identifier = "oai:philpapers.org/rec/TUO-12" }, min_results = 1, fixture = "fixtures/w5k/philpapers_oai/record/default.json" }
+examples = ['source.call("philpapers_oai.record", { identifier: "oai:philpapers.org/rec/TUO-12" })']
+
+[op.record.params]
+identifier = { type = "string", required = true, to = "identifier", doc = "PhilPapers OAI identifier e.g. oai:philpapers.org/rec/TUO-12" }
+
+[op.record.map]
+items = ".\"oai-pmh\".getrecord.record"
+error = "if .\"oai-pmh\".error then (.\"oai-pmh\".error.\"@code\" // (.\"oai-pmh\".error | tostring)) else null end"
+work = '''(
+  (.metadata.dc // {}) as $dc |
+  (([$dc.identifier | arr | .[] | first_str | select(type == "string" and startswith("http"))][0]) // ("https://philpapers.org/rec/" + ((.header.identifier // "") | sub("^oai:philpapers\\.org/rec/"; "")))) as $url |
+  {
+    title: ((($dc.title | first_str) // "") | strip_tags),
+    authors: [($dc.creator | arr)[] | first_str | collapse_ws | select(type == "string" and length > 0) | { name: . }],
+    year: (((($dc.date | first_str) // "")[0:4]) | to_int),
+    publishedDate: (($dc.date | first_str) | parse_date),
+    venue: ((($dc.source | first_str) // ($dc.publisher | first_str)) | strip_tags),
+    workType: (if ((($dc.type | first_str) // "") | test("book"; "i")) then "book" else "article" end),
+    ids: { doi: ((([$dc.identifier | arr | .[] | first_str | select(type == "string" and test("10\\.[0-9]{4,9}/"))][0]) // null) | doi_norm) },
+    abstractText: (($dc.description | first_str) | strip_tags),
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["philpapers_oai"]
+  }
+)'''
+
+[op.identifiers]
+summary = "Harvest PhilPapers OAI-PMH record headers updated within an ISO-8601 date/time window."
+method = "GET"
+url = "https://philpapers.org/oai.pl"
+headers = { Accept = "application/xml" }
+response = "xml"
+returns = "records"
+const_query = { verb = "ListIdentifiers", metadataPrefix = "oai_dc" }
+paginate = { style = "token", param = "resumptionToken", max_pages = 3 }
+probe = { params = { from = "2026-11-25T10:42:55Z", until = "2026-11-25T10:43:05Z" }, min_results = 2, fixture = "fixtures/w5k/philpapers_oai/identifiers/default.json" }
+examples = ['source.call("philpapers_oai.identifiers", { from: "2026-11-25T10:42:55Z", until: "2026-11-25T10:43:05Z" })']
+
+[op.identifiers.params]
+from = { type = "string", to = "from", doc = "Start datestamp YYYY-MM-DD or YYYY-MM-DDThh:mm:ssZ" }
+until = { type = "string", to = "until", doc = "End datestamp YYYY-MM-DD or YYYY-MM-DDThh:mm:ssZ" }
+cursor = { type = "string", to = "resumptionToken", doc = "OAI-PMH resumption token" }
+
+[op.identifiers.map]
+items = ".\"oai-pmh\".listidentifiers.header | arr | .[]"
+next_cursor = "(.\"oai-pmh\".listidentifiers.resumptiontoken | first_str) // null"
+error = "if .\"oai-pmh\".error then (.\"oai-pmh\".error.\"@code\" // (.\"oai-pmh\".error | tostring)) else null end"
+record = '''{
+  identifier: (.identifier // ""),
+  datestamp: (.datestamp // null),
+  deleted: ((."@status" // "") == "deleted"),
+  url: ("https://philpapers.org/rec/" + ((.identifier // "") | sub("^oai:philpapers\\.org/rec/"; "")))
+}'''

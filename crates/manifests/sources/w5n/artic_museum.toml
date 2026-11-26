@@ -1,0 +1,119 @@
+id = "artic_museum"
+name = "Art Institute of Chicago API v1"
+summary = "CC0 artworks, artists, exhibitions, and IIIF high-resolution imagery from the Art Institute of Chicago."
+aliases = ["artic", "aic", "chicago art institute"]
+home_url = "https://api.artic.edu/docs/"
+tier = 1
+scopes = ["media"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 4, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 86400 }
+
+[op.search]
+summary = "Search Art Institute of Chicago artworks by keyword, title, or artist."
+method = "GET"
+url = "https://api.artic.edu/api/v1/artworks/search"
+headers = { Accept = "application/json" }
+const_query = { fields = "id,title,artist_display,date_display,image_id,thumbnail" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+examples = ['source.call("artic_museum.search", { query: "monet", limit: 3 })']
+probe = { params = { query = "monet", limit = 3 }, min_results = 2, fixture = "fixtures/w5n/artic_museum/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Artwork or artist search terms" }
+limit = { type = "int", default = 10, min = 1, max = 50, doc = "Maximum artworks per page" }
+page = { type = "int", min = 1, doc = "Page number (1-based)" }
+
+[op.search.map]
+items = "(.data // [])[]"
+total = ".pagination.total"
+error = "if .error then (.detail // .error) else null end"
+record = '''{
+  id: .id,
+  title: (.title // ""),
+  artist: (.artist_display // null),
+  date: (.date_display | parse_date),
+  dateDisplay: (.date_display // null),
+  imageId: (.image_id // null),
+  iiifUrl: (if .image_id then ("https://www.artic.edu/iiif/2/" + .image_id + "/full/843,/0/default.jpg") else null end),
+  altText: (.thumbnail.alt_text // null),
+  url: ("https://www.artic.edu/artworks/" + (.id | tostring))
+}'''
+hit = '''{
+  title: (.title // "Art Institute Artwork"),
+  url: ("https://www.artic.edu/artworks/" + (.id | tostring)),
+  snippet: ([
+    (.artist_display // empty),
+    (.date_display // empty),
+    (.thumbnail.alt_text // empty)
+  ] | join(" · ")),
+  date: (.date_display | parse_date),
+  dateSource: (if (.date_display | parse_date) != null then "api" else null end)
+}'''
+
+[op.artwork]
+summary = "Fetch detailed artwork metadata, medium, dimensions, and IIIF image URL by AIC artwork ID."
+method = "GET"
+url = "https://api.artic.edu/api/v1/artworks/{id}"
+headers = { Accept = "application/json" }
+const_query = { fields = "id,title,artist_display,date_display,medium_display,dimensions,place_of_origin,department_title,image_id,is_public_domain,thumbnail" }
+response = "json"
+returns = "records"
+examples = ['source.call("artic_museum.artwork", { id: 16568 })']
+probe = { params = { id = 16568 }, min_results = 1, fixture = "fixtures/w5n/artic_museum/artwork/default.json" }
+
+[op.artwork.params]
+id = { type = "int", required = true, in = "path", doc = "Art Institute of Chicago numeric artwork ID" }
+
+[op.artwork.map]
+items = "[.data | select(. != null)][]"
+error = "if .error then (.detail // .error) else null end"
+record = '''{
+  id: .id,
+  title: (.title // ""),
+  artist: (.artist_display // null),
+  date: (.date_display | parse_date),
+  dateDisplay: (.date_display // null),
+  medium: (.medium_display // null),
+  dimensions: (.dimensions // null),
+  placeOfOrigin: (.place_of_origin // null),
+  department: (.department_title // null),
+  isPublicDomain: (.is_public_domain // false),
+  imageId: (.image_id // null),
+  iiifUrl: (if .image_id then ("https://www.artic.edu/iiif/2/" + .image_id + "/full/843,/0/default.jpg") else null end),
+  altText: (.thumbnail.alt_text // null),
+  url: ("https://www.artic.edu/artworks/" + (.id | tostring))
+}'''
+
+[op.artists]
+summary = "Search artists and institutional agents in the Art Institute of Chicago collection."
+method = "GET"
+url = "https://api.artic.edu/api/v1/agents/search"
+headers = { Accept = "application/json" }
+const_query = { fields = "id,title,is_artist,birth_date,death_date" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+examples = ['source.call("artic_museum.artists", { query: "monet", limit: 3 })']
+probe = { params = { query = "monet", limit = 3 }, min_results = 2, fixture = "fixtures/w5n/artic_museum/artists/default.json" }
+
+[op.artists.params]
+query = { type = "string", required = true, to = "q", doc = "Artist or agent name" }
+limit = { type = "int", default = 10, min = 1, max = 50, doc = "Maximum agents" }
+page = { type = "int", min = 1, doc = "Page number (1-based)" }
+
+[op.artists.map]
+items = "(.data // [])[]"
+total = ".pagination.total"
+error = "if .error then (.detail // .error) else null end"
+record = '''{
+  id: .id,
+  name: (.title // ""),
+  isArtist: (.is_artist // false),
+  birthDate: (.birth_date // null),
+  deathDate: (.death_date // null),
+  url: ("https://www.artic.edu/artists/" + (.id | tostring))
+}'''

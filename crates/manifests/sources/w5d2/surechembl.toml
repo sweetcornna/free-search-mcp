@@ -1,0 +1,65 @@
+id = "surechembl"
+name = "SureChEMBL Patent & Chemical API"
+summary = "EMBL-EBI keyless open patent document and chemical compound lookup covering WIPO (WO), EPO (EP), USPTO (US), and JPO (JP) patents (replaces paid-only WIPO PATENTSCOPE)."
+aliases = ["surechembl patents", "ebi patents", "chemical patents", "wo patents"]
+home_url = "https://www.surechembl.org"
+tier = 2
+scopes = ["gov.patents", "academic.biomed"]
+caps = ["lookup", "patent"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 12000, cache_ttl_s = 86400 }
+
+[op.patent]
+summary = "Fetch full patent metadata, titles, abstracts, classifications, and claims by UCID (e.g. EP-0000001-A1, WO-2011043954-A1, US-8592440-B2)."
+method = "GET"
+url = "https://www.surechembl.org/api/patent/get_patent/{ucid}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { ucid = "EP-0000001-A1" }, min_results = 1, fixture = "fixtures/w5d2/surechembl/patent/default.json" }
+
+[op.patent.params]
+ucid = { type = "string", required = true, in = "path", doc = "Unified Citation Identifier, e.g. EP-0000001-A1 or WO-2011043954-A1" }
+
+[op.patent.map]
+items = "."
+error = "if (.detail // .error) then ((.detail // .error) | tostring) else null end"
+record = '''{
+  ucid: .ucid,
+  publishedDate: ((.published_date // null) | parse_date),
+  title: (((.title // []) | (map(select(.language == "EN"))[0] // .[0]) | .text // "") | collapse_ws // ""),
+  titles: (.title // []),
+  abstract: ((((.abstract_text // []) | (map(select(.language == "EN"))[0] // .[0]) | .text // null) | strip_tags) | if . then .[0:1200] else null end),
+  claimsCount: ((((.claims // []) | (map(select(.language == "EN"))[0] // .[0]) | .text // "") | split("</claim>") | length) - 1 | if . < 0 then 0 else . end),
+  claimsLanguages: [(.claims // [])[] | .language | select(. != null)],
+  citationsCount: ((.citations // []) | length),
+  url: ("https://www.surechembl.org/patent/" + (.ucid // ""))
+}'''
+
+[op.chemical]
+summary = "Look up SureChEMBL patent-extracted chemical compound metadata by numeric compound ID."
+method = "GET"
+url = "https://www.surechembl.org/api/chemical/id"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { ids = "3" }, min_results = 1, fixture = "fixtures/w5d2/surechembl/chemical/default.json" }
+
+[op.chemical.params]
+ids = { type = "string", required = true, to = "ids", doc = "Comma-separated numeric SureChEMBL IDs (without SCHEMBL prefix), e.g. 3" }
+
+[op.chemical.map]
+items = ".[]"
+error = "if type == \"object\" and (.detail // .error) then ((.detail // .error) | tostring) else null end"
+record = '''{
+  chemicalId: ("SCHEMBL" + ((.chemical_id // .id // "") | tostring)),
+  name: (.name // null),
+  smiles: (.smiles // null),
+  inchiKey: (.inchi_key // null),
+  molFormula: (.mol_formula // null),
+  molWeight: (.mol_weight // null),
+  logP: (.log_p // null),
+  globalFrequency: (.global_frequency // null),
+  url: ("https://www.surechembl.org/chemical/SCHEMBL" + ((.chemical_id // .id // "") | tostring))
+}'''

@@ -1,0 +1,93 @@
+id = "met_museum"
+name = "Metropolitan Museum of Art API v1.1"
+summary = "Keyless search and object metadata across 470,000+ Metropolitan Museum of Art public-domain artworks."
+aliases = ["met", "metmuseum", "metropolitan museum"]
+home_url = "https://metmuseum.github.io/"
+tier = 1
+scopes = ["media"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 3.0, burst = 6, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 86400 }
+
+[op.search]
+summary = "Search Met Museum collection object IDs via the Elastic v1.1 search endpoint."
+method = "GET"
+url = "https://collectionapi.metmuseum.org/public/collection/v1.1/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+examples = ['source.call("met_museum.search", { query: "sunflowers" })']
+probe = { params = { query = "sunflowers" }, min_results = 2, fixture = "fixtures/w5n/met_museum/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Artwork, artist, culture, or keyword query" }
+is_highlight = { type = "bool", to = "isHighlight", doc = "Limit to museum highlight works" }
+is_public_domain = { type = "bool", to = "isPublicDomain", doc = "Limit to CC0 public-domain works" }
+department_id = { type = "int", to = "departmentId", doc = "Restrict to a specific Met department ID" }
+has_images = { type = "bool", to = "hasImages", doc = "Restrict to records with images" }
+
+[op.search.map]
+items = "(.objectIDs // [])[0:20][]"
+total = ".total"
+record = '''{
+  objectId: .,
+  url: ("https://www.metmuseum.org/art/collection/search/" + (. | tostring)),
+  apiUrl: ("https://collectionapi.metmuseum.org/public/collection/v1/objects/" + (. | tostring))
+}'''
+hit = '''{
+  title: ("Met Museum Object #" + (. | tostring)),
+  url: ("https://www.metmuseum.org/art/collection/search/" + (. | tostring)),
+  snippet: ("Metropolitan Museum of Art collection object ID " + (. | tostring) + " — call met_museum.object for full artwork details.")
+}'''
+
+[op.object]
+summary = "Fetch full artwork metadata, artist, medium, provenance, and CC0 image URLs by Met object ID."
+method = "GET"
+url = "https://collectionapi.metmuseum.org/public/collection/v1/objects/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+examples = ['source.call("met_museum.object", { id: 436524 })']
+probe = { params = { id = 436524 }, min_results = 1, fixture = "fixtures/w5n/met_museum/object/default.json" }
+
+[op.object.params]
+id = { type = "int", required = true, in = "path", doc = "Met Museum numeric object ID (e.g. 436524)" }
+
+[op.object.map]
+items = "."
+error = "if .message then .message else null end"
+record = '''{
+  objectId: .objectID,
+  title: (.title // ""),
+  artist: (.artistDisplayName | first_str),
+  artistBio: (.artistDisplayBio | first_str),
+  date: (.objectDate | first_str),
+  department: (.department | first_str),
+  objectName: (.objectName | first_str),
+  medium: (.medium | first_str),
+  dimensions: (.dimensions | first_str),
+  culture: (.culture | first_str),
+  isPublicDomain: (.isPublicDomain // false),
+  primaryImage: (.primaryImage | first_str),
+  primaryImageSmall: (.primaryImageSmall | first_str),
+  creditLine: (.creditLine | first_str),
+  url: (.objectURL // ("https://www.metmuseum.org/art/collection/search/" + (.objectID | tostring)))
+}'''
+
+[op.departments]
+summary = "List all Metropolitan Museum of Art curatorial department IDs and names."
+method = "GET"
+url = "https://collectionapi.metmuseum.org/public/collection/v1/departments"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+examples = ['source.call("met_museum.departments", {})']
+probe = { params = {}, min_results = 5, fixture = "fixtures/w5n/met_museum/departments/default.json" }
+
+[op.departments.map]
+items = "(.departments // [])[]"
+record = '''{
+  departmentId: .departmentId,
+  displayName: .displayName
+}'''

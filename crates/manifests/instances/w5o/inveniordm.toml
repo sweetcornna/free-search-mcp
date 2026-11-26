@@ -1,0 +1,12 @@
+protocol = "inveniordm"
+
+[[instance]]
+id = "aperta_tubitak_tr"
+name = "TÜBİTAK Aperta (Turkey Open Archive)"
+summary = "Scientific and Technological Research Council of Türkiye (TÜBİTAK) national open archive of Turkish scholarly publications and research datasets."
+aliases = ["aperta", "tubitak aperta", "ulakbim aperta"]
+base_url = "https://aperta.ulakbim.gov.tr"
+scopes = ["academic", "dataset", "academic.openaccess"]
+caps = ["search", "lookup", "dataset", "fulltext"]
+tier = 1
+probe = { op = "search", params = { query = "energy", limit = 2 }, min_results = 2 }

@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "source": "gitlab_projects",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:56:45Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://gitlab.com/api/v4/projects?search=gitlab-runner&per_page=3&order_by=star_count&sort=desc",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "cache-control",
+            "max-age=0, private, must-revalidate"
+          ],
+          [
+            "content-type",
+            "application/json"
+          ],
+          [
+            "link",
+            "<https://gitlab.com/api/v4/projects?imported=false&include_hidden=false&membership=false&order_by=star_count&owned=false&page=2&per_page=3&repository_checksum_failed=false&search=gitlab-runner&simple=false&sort=desc&starred=false&statistics=false&wiki_checksum_failed=false&with_custom_attributes=false&with_issues_enabled=false&with_merge_requests_enabled=false>; rel=\"next\", <https://gitlab.com/api/v4/projects?imported=false&include_hidden=false&membership=false&order_by=star_count&owned=false&page=1&per_page=3&repository_checksum_failed=false&search=gitlab-runner&simple=false&sort=desc&starred=false&statistics=false&wiki_checksum_failed=false&with_custom_attributes=false&with_issues_enabled=false&with_merge_requests_enabled=false>; rel=\"first\", <https://gitlab.com/api/v4/projects?imported=false&include_hidden=false&membership=false&order_by=star_count&owned=false&page=1353&per_page=3&repository_checksum_failed=false&search=gitlab-runner&simple=false&sort=desc&starred=false&statistics=false&wiki_checksum_failed=false&with_custom_attributes=false&with_issues_enabled=false&with_merge_requests_enabled=false>; rel=\"last\""
+          ]
+        ],
+        "bodyText": "[{\"id\":250833,\"description\":\"GitLab Runner is the open source project that is used to run your CI/CD jobs and send the results back to GitLab\",\"name\":\"gitlab-runner\",\"name_with_namespace\":\"GitLab.org / gitlab-runner\",\"path\":\"gitlab-runner\",\"path_with_namespace\":\"gitlab-org/gitlab-runner\",\"created_at\":\"2015-04-27T21:10:25.322Z\",\"default_branch\":\"main\",\"tag_list\":[\"golang\",\"hacktoberfest\"],\"topics\":[\"golang\",\"hacktoberfest\"],\"ssh_url_to_repo\":\"git@gitlab.com:gitlab-org/gitlab-runner.git\",\"http_url_to_repo\":\"https://gitlab.com/gitlab-org/gitlab-runner.git\",\"web_url\":\"https://gitlab.com/gitlab-org/gitlab-runner\",\"readme_url\":\"https://gitlab.com/gitlab-org/gitlab-runner/-/blob/main/README.md\",\"forks_count\":2806,\"avatar_url\":\"https://gitlab.com/uploads/-/system/project/avatar/250833/runner.png?v=1795611012\",\"star_count\":2595,\"last_activity_at\":\"2026-11-25T12:42:18.614Z\",\"visibility\":\"public\",\"namespace\":{\"id\":9970,\"name\":\"GitLab.org\",\"path\":\"gitlab-org\",\"kind\":\"group\",\"full_path\":\"gitlab-org\",\"parent_id\":null,\"avatar_url\":\"/uploads/-/system/group/avatar/9970/project_avatar.png?v=1750616408\",\"web_url\":\"https://gitlab.com/groups/gitlab-org\"}},{\"id\":6329679,\"description\":\"Official Helm Chart for the GitLab Runner (https://gitlab.com/gitlab-org/gitlab-runner)\",\"name\":\"GitLab Runner\",\"name_with_namespace\":\"GitLab.org / charts / GitLab Runner\",\"path\":\"gitlab-runner\",\"path_with_namespace\":\"gitlab-org/charts/gitlab-runner\",\"created_at\":\"2018-05-09T17:53:13.242Z\",\"default_branch\":\"main\",\"tag_list\":[\"hacktoberfest\"],\"topics\":[\"hacktoberfest\"],\"ssh_url_to_repo\":\"git@gitlab.com:gitlab-org/charts/gitlab-runner.git\",\"http_url_to_repo\":\"https://gitlab.com/gitlab-org/charts/gitlab-runner.git\",\"web_url\":\"https://gitlab.com/gitlab-org/charts/gitlab-runner\",\"readme_url\":\"https://gitlab.com/gitlab-org/charts/gitlab-runner/-/blob/main/README.md\",\"forks_count\":568,\"avatar_url\":null,\"star_count\":277,\"last_activity_at\":\"2026-11-25T02:11:44.753Z\",\"visibility\":\"public\",\"namespace\":{\"id\":5032027,\"name\":\"charts\",\"path\":\"charts\",\"kind\":\"group\",\"full_path\":\"gitlab-org/charts\",\"parent_id\":9970,\"avatar_url\":null,\"web_url\":\"https://gitlab.com/groups/gitlab-org/charts\"}},{\"id\":444821,\"description\":\"GitLab Runner Cleanup Tool a tool to automatically manage free space when using Docker\",\"name\":\"gitlab-runner-docker-cleanup\",\"name_with_namespace\":\"GitLab.org / gitlab-runner-docker-cleanup\",\"path\":\"gitlab-runner-docker-cleanup\",\"path_with_namespace\":\"gitlab-org/gitlab-runner-docker-cleanup\",\"created_at\":\"2015-09-03T16:47:07.980Z\",\"default_branch\":\"master\",\"tag_list\":[\"docker\",\"gitlab-runner\"],\"topics\":[\"docker\",\"gitlab-runner\"],\"ssh_url_to_repo\":\"git@gitlab.com:gitlab-org/gitlab-runner-docker-cleanup.git\",\"http_url_to_repo\":\"https://gitlab.com/gitlab-org/gitlab-runner-docker-cleanup.git\",\"web_url\":\"https://gitlab.com/gitlab-org/gitlab-runner-docker-cleanup\",\"readme_url\":\"https://gitlab.com/gitlab-org/gitlab-runner-docker-cleanup/-/blob/master/README.md\",\"forks_count\":123,\"avatar_url\":null,\"star_count\":185,\"last_activity_at\":\"2026-01-07T10:07:57.923Z\",\"visibility\":\"public\",\"namespace\":{\"id\":9970,\"name\":\"GitLab.org\",\"path\":\"gitlab-org\",\"kind\":\"group\",\"full_path\":\"gitlab-org\",\"parent_id\":null,\"avatar_url\":\"/uploads/-/system/group/avatar/9970/project_avatar.png?v=1750616408\",\"web_url\":\"https://gitlab.com/groups/gitlab-org\"}}]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

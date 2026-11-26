@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "source": "frankfurter",
+  "op": "search",
+  "recordedAt": "2026-11-25T10:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.frankfurter.dev/v1/latest?base=USD&symbols=CNY",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          ["content-type", "application/json"]
+        ],
+        "bodyText": "{\"amount\":1.0,\"base\":\"USD\",\"date\":\"2026-09-21\",\"rates\":{\"CNY\":6.6954}}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://open.er-api.com/v6/latest/TWD",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          ["content-type", "application/json"]
+        ],
+        "bodyText": "{\"result\":\"success\",\"base_code\":\"TWD\",\"time_last_update_unix\":1790035351,\"time_last_update_utc\":\"Tue, 22 Sep 2026 00:02:31 +0000\",\"rates\":{\"USD\":0.031495,\"CNY\":0.2105}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+id = "eia_energy"
+name = "US EIA Open Data API v2"
+summary = "US Energy Information Administration electricity, petroleum, natural gas, coal, and renewable energy datasets."
+aliases = ["eia", "us eia", "energy information administration"]
+home_url = "https://www.eia.gov/opendata/"
+tier = 3
+scopes = ["dataset", "finance", "gov"]
+caps = ["lookup", "dataset"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 10000, cache_ttl_s = 21600 }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_EIA_API_KEY"
+in = "query"
+name = "api_key"
+route_requires_key = true
+
+[op.route]
+summary = "Browse EIA API v2 route metadata, child sub-routes, available frequencies, facets, and data columns."
+method = "GET"
+url = "https://api.eia.gov/v2/{route}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { route = "electricity" }, min_results = 2, fixture = "fixtures/w5d1/eia_energy/route/default.json" }
+
+[op.route.params]
+route = { type = "string", default = "electricity", in = "path", encode = "raw", doc = "EIA route path e.g. electricity, petroleum, natural-gas, electricity/retail-sales" }
+
+[op.route.map]
+items = "if (.response.routes? | type == \"array\" and length > 0) then .response.routes[] else .response end"
+error = 'if (.error | type == "object") then (.error.message // (.error | tostring)) elif (.error | type == "string" and length > 0) then .error else null end'
+record = '''
+(.id // "") as $id
+| ($p.route // "") as $pr
+| (if ($id != "" and $pr != "" and (($pr | endswith("/" + $id)) | not) and ($pr != $id))
+   then ($pr + "/" + $id)
+   else (if $pr != "" then $pr else $id end) end) as $fullRoute
+| {
+  id: (.id // null),
+  route: $fullRoute,
+  name: (.name // null),
+  description: (.description // null),
+  facets: (.facets // null),
+  frequencies: (.frequency // null),
+  dataColumns: (.data // null),
+  startPeriod: (.startPeriod // null),
+  endPeriod: (.endPeriod // null),
+  url: ("https://www.eia.gov/opendata/browser/" + $fullRoute)
+}'''
+
+[op.data]
+summary = "Fetch time-series observations from an EIA API v2 data route with optional dynamic facets and data columns (e.g. route=electricity/retail-sales)."
+method = "GET"
+url = "https://api.eia.gov/v2/{route}/data/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+query_jaq = '''
+[
+  ((if ($p.facets | type == "object") then $p.facets else {} end) | to_entries[] | .key as $k | (.value | arr)[] | ["facets[" + $k + "][]", tostring]),
+  (($p.columns // [])[] | ["data[]", tostring])
+]
+'''
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { route = "electricity/retail-sales", frequency = "monthly", limit = 3, columns = ["price", "sales"] }, min_results = 2, fixture = "fixtures/w5d1/eia_energy/data/default.json" }
+
+[op.data.params]
+route = { type = "string", required = true, in = "path", encode = "raw", doc = "EIA data route e.g. electricity/retail-sales, petroleum/pri/spt" }
+facets = { type = "json", in = "none", doc = "Map of facet dimension to value or array e.g. {stateid: \"CO\", sectorid: [\"RES\"]}" }
+columns = { type = "string_array", in = "none", doc = "Data column names e.g. [\"price\", \"sales\"]" }
+frequency = { type = "string", enum = ["hourly", "daily", "weekly", "monthly", "quarterly", "annual"], to = "frequency", doc = "Series frequency" }
+start = { type = "string", to = "start", doc = "Start period e.g. 2025-01" }
+end = { type = "string", to = "end", doc = "End period" }
+limit = { type = "int", default = 10, min = 1, max = 100, to = "length", doc = "Max rows" }
+offset = { type = "int", min = 0, to = "offset", doc = "Row offset" }
+
+[op.data.map]
+items = "(.response.data // [])[]"
+total = "((.response.total | to_int) // .response.total)"
+error = "@ref:op.route.map.error"
+record = "."

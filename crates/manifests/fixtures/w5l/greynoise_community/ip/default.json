@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "greynoise_community",
+  "op": "ip",
+  "recordedAt": "2026-11-25T12:56:45Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.greynoise.io/v3/community/198.235.24.130",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\n    \"ip\": \"198.235.24.130\",\n    \"noise\": true,\n    \"riot\": false,\n    \"classification\": \"benign\",\n    \"name\": \"Cortex Xpanse\",\n    \"link\": \"https://viz.greynoise.io/ip/198.235.24.130\",\n    \"last_seen\": \"2026-11-25\",\n    \"message\": \"Success\"\n}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

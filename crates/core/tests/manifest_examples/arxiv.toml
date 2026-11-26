@@ -1,0 +1,54 @@
+id = "arxiv"
+name = "arXiv Preprints"
+summary = "Open-access e-print archive for CS, physics, math, q-bio, and econ."
+aliases = ["arxiv.org", "eprint"]
+home_url = "https://arxiv.org"
+tier = 1
+scopes = ["academic", "academic.preprint", "academic.cs", "academic.math", "academic.physics"]
+caps = ["search", "lookup", "fulltext"]
+transport = "plain"
+pool_role = "default"
+limits = { rps = 0.5, burst = 3, concurrency = 2, timeout_ms = 6000, cache_ttl_s = 21600 }
+
+[op.search]
+summary = "Search arXiv preprints via Atom API."
+method = "GET"
+url = "https://export.arxiv.org/api/query"
+response = "xml"
+returns = "works"
+const_query = { sortOrder = "descending" }
+probe = { params = { query = "attention is all you need", limit = 3 }, min_results = 2, fixture = "fixtures/seed/arxiv/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "search_query", template = "all:{query}", doc = "Search terms" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "max_results", doc = "Max results" }
+sort = { type = "string", default = "relevance", enum = ["relevance", "lastUpdatedDate", "submittedDate"], to = "sortBy", doc = "Sort key (freshness maps to submittedDate)" }
+
+[op.search.map]
+items = ".feed.entry | arr | .[]"
+work = '''{
+  title: (.title | gsub("\\s+"; " ") | strip_tags),
+  authors: [.author | arr | .[] | {name: .name}],
+  year: (.published[0:4] | tonumber?),
+  publishedDate: .published[0:10],
+  workType: "preprint",
+  ids: { arxiv: (.id | capture("abs/(?<x>.+?)(v\\d+)?$").x), doi: (.doi // null | doi_norm) },
+  abstractText: (.summary | gsub("\\s+"; " ")),
+  oa: { status: "green", url: .id, pdfUrl: (.id | sub("/abs/"; "/pdf/")), structuredFormat: "html5" },
+  versions: [], url: .id, retracted: false, sources: ["arxiv"]
+}'''
+
+[op.work]
+summary = "Lookup an arXiv preprint by exact arXiv ID (supports legacy IDs)."
+method = "GET"
+url = "https://export.arxiv.org/api/query"
+response = "xml"
+returns = "works"
+probe = { params = { id = "1706.03762" }, min_results = 1, fixture = "fixtures/seed/arxiv/work/default.json" }
+
+[op.work.params]
+id = { type = "string", required = true, to = "id_list", doc = "arXiv ID without prefix" }
+
+[op.work.map]
+items = ".feed.entry | arr | .[]"
+work = "@ref:op.search.map.work"

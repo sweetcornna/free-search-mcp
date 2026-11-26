@@ -1,0 +1,83 @@
+id = "fr_entreprises"
+name = "France Annuaire des Entreprises API"
+summary = "Keyless French government open company registry search (SIREN/SIRET, registered offices, NAF industry codes, executives, and reported financials)."
+aliases = ["recherche entreprises", "sirene", "insee entreprises", "french companies"]
+home_url = "https://annuaire-entreprises.data.gouv.fr"
+tier = 1
+scopes = ["finance"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 5.0, burst = 7, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 21600 }
+
+[op.search]
+summary = "Search French companies and associations by name, SIREN/SIRET, postal code, or NAF activity code."
+method = "GET"
+url = "https://recherche-entreprises.api.gouv.fr/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "renault", limit = 3 }, min_results = 2, fixture = "fixtures/w5m/fr_entreprises/search/default.json" }
+examples = ["source.call('fr_entreprises.search', { query: 'renault', limit: 5 })"]
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Company name, SIREN, SIRET, or executive name" }
+naf = { type = "string", to = "activite_principale", doc = "NAF/APE activity code e.g. 62.01Z" }
+postal_code = { type = "string", to = "code_postal", doc = "5-digit French postal code" }
+department = { type = "string", to = "departement", doc = "2- or 3-character French department code e.g. 75" }
+limit = { type = "int", default = 10, min = 1, max = 25, to = "per_page", doc = "Companies per page (max 25)" }
+page = { type = "int", default = 1, min = 1, to = "page", doc = "1-based page number" }
+
+[op.search.map]
+items = "(.results // [])[]"
+total = ".total_results"
+error = 'if .erreur then .erreur else null end'
+record = '''{
+  siren: .siren,
+  siretSiege: (.siege.siret // null),
+  name: (.nom_complet // .nom_raison_sociale // ""),
+  legalForm: (.nature_juridique // null),
+  status: (.etat_administratif // null),
+  category: (.categorie_entreprise // null),
+  nafCode: (.activite_principale // null),
+  section: (.section_activite_principale // null),
+  dateCreation: (.date_creation // null),
+  dateUpdated: (.date_mise_a_jour // null),
+  address: (.siege.adresse // null),
+  postalCode: (.siege.code_postal // null),
+  city: (.siege.libelle_commune // null),
+  establishments: (.nombre_etablissements // null),
+  executives: [(.dirigeants // [])[] | {
+    name: (if .denomination then (.denomination | collapse_ws) else (((.prenoms // "") + " " + (.nom // "")) | collapse_ws) end),
+    role: (.qualite // null)
+  }],
+  finances: (.finances // null),
+  url: ("https://annuaire-entreprises.data.gouv.fr/entreprise/" + .siren)
+}'''
+hit = '''{
+  title: ((.nom_complet // .nom_raison_sociale // "") + " (SIREN " + .siren + ")"),
+  url: ("https://annuaire-entreprises.data.gouv.fr/entreprise/" + .siren),
+  snippet: ("NAF " + (.activite_principale // "?") + " · " + (.siege.adresse // .siege.libelle_commune // "")),
+  date: (.date_creation | parse_date),
+  dateSource: "api"
+}'''
+
+[op.siren]
+summary = "Look up a single French legal entity by exact 9-digit SIREN or 14-digit SIRET."
+method = "GET"
+url = "https://recherche-entreprises.api.gouv.fr/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { per_page = "1" }
+probe = { params = { siren = "982770919" }, min_results = 1, fixture = "fixtures/w5m/fr_entreprises/siren/default.json" }
+examples = ["source.call('fr_entreprises.siren', { siren: '982770919' })"]
+
+[op.siren.params]
+siren = { type = "string", required = true, to = "q", doc = "9-digit SIREN or 14-digit SIRET" }
+
+[op.siren.map]
+items = "@ref:op.search.map.items"
+error = "@ref:op.search.map.error"
+record = "@ref:op.search.map.record"

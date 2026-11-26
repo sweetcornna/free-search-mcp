@@ -1,0 +1,111 @@
+id = "artifacthub_k8s"
+name = "Artifact Hub Cloud-Native Registry"
+summary = "Keyless search and package metadata lookup for Kubernetes Helm charts, Operators, Falco/OPA policies, and CNCF artifacts."
+aliases = ["artifacthub", "artifact hub", "helm charts", "k8s charts"]
+home_url = "https://artifacthub.io"
+tier = 1
+scopes = ["code"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 3.0, burst = 6, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 21600 }
+
+[op.search]
+summary = "Search Kubernetes Helm charts, Operators, OPA policies, and CNCF cloud-native packages."
+method = "GET"
+url = "https://artifacthub.io/api/v1/packages/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "nginx", limit = 3 }, min_results = 3, fixture = "fixtures/w5l/artifacthub_k8s/search/default.json" }
+examples = [
+  'source.call("artifacthub_k8s.search", { query: "nginx", limit: 5 })',
+  'source.call("artifacthub_k8s.search", { query: "prometheus", sort: "stars", limit: 5 })',
+]
+
+[op.search.params]
+query = { type = "string", required = true, to = "ts_query_web", doc = "Search query for cloud-native packages" }
+limit = { type = "int", default = 10, min = 1, max = 60, to = "limit", doc = "Max packages per page" }
+offset = { type = "int", min = 0, to = "offset", doc = "Result offset" }
+sort = { type = "string", enum = ["relevance", "stars", "last_updated"], to = "sort", doc = "Sort order" }
+
+[op.search.map]
+items = "(.packages // [])[]"
+error = "if .message then (.message | tostring) else null end"
+record = '''(
+  ({"0": "helm", "1": "falco", "2": "opa", "3": "olm", "4": "tbaction", "5": "krew", "6": "helm-plugin", "7": "tekton-task", "8": "keda-scaler", "9": "coredns", "10": "keptn", "11": "tekton-pipeline", "12": "container", "13": "kubewarden", "14": "gatekeeper", "15": "kyverno", "18": "argo-template"}[(.repository.kind // 0 | tostring)] // "helm") as $kind |
+  ("https://artifacthub.io/packages/" + $kind + "/" + (.repository.name // "") + "/" + (.normalized_name // .name // "")) as $url |
+  {
+    packageId: (.package_id // ""),
+    name: (.name // ""),
+    normalizedName: (.normalized_name // ""),
+    kind: $kind,
+    repository: (.repository.name // ""),
+    organization: (.repository.organization_name // .repository.user_alias // null),
+    verifiedPublisher: (.repository.verified_publisher // false),
+    official: (.repository.official // false),
+    version: (.version // null),
+    appVersion: (.app_version // null),
+    category: (.category_display_name // null),
+    stars: (.stars // 0),
+    signed: (.signed // false),
+    deprecated: (.deprecated // false),
+    updatedAt: (.ts | epoch_to_iso),
+    description: ((.description // "") | collapse_ws // ""),
+    url: $url
+  }
+)'''
+hit = '''(
+  ({"0": "helm", "1": "falco", "2": "opa", "3": "olm", "4": "tbaction", "5": "krew", "6": "helm-plugin", "7": "tekton-task", "8": "keda-scaler", "9": "coredns", "10": "keptn", "11": "tekton-pipeline", "12": "container", "13": "kubewarden", "14": "gatekeeper", "15": "kyverno", "18": "argo-template"}[(.repository.kind // 0 | tostring)] // "helm") as $kind |
+  ("https://artifacthub.io/packages/" + $kind + "/" + (.repository.name // "") + "/" + (.normalized_name // .name // "")) as $url |
+  {
+    title: ((.repository.name // "") + "/" + (.name // "") + (if (.version // "") != "" then " v" + .version else "" end)),
+    url: $url,
+    snippet: (((.description // "") | collapse_ws // "") + " · ★" + ((.stars // 0) | tostring))[0:280],
+    date: (.ts | parse_date),
+    dateSource: "api"
+  }
+)'''
+
+[op.package]
+summary = "Fetch full Artifact Hub package details, links, maintainers, and available versions."
+method = "GET"
+url = "https://artifacthub.io/api/v1/packages/{kind}/{repo}/{name}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { kind = "helm", repo = "metrics-server", name = "metrics-server" }, min_results = 1, fixture = "fixtures/w5l/artifacthub_k8s/package/default.json" }
+examples = [
+  'source.call("artifacthub_k8s.package", { kind: "helm", repo: "metrics-server", name: "metrics-server" })',
+]
+
+[op.package.params]
+kind = { type = "string", default = "helm", enum = ["helm", "falco", "opa", "olm", "krew", "helm-plugin", "tekton-task", "keda-scaler", "coredns", "container", "kubewarden", "gatekeeper", "kyverno"], in = "path", doc = "Artifact Hub package kind slug" }
+repo = { type = "string", required = true, in = "path", doc = "Repository slug (e.g. metrics-server, bitnami)" }
+name = { type = "string", required = true, in = "path", doc = "Normalized package name" }
+
+[op.package.map]
+items = "."
+error = "@ref:op.search.map.error"
+record = '''{
+  packageId: (.package_id // ""),
+  name: (.name // ""),
+  version: (.version // null),
+  appVersion: (.app_version // null),
+  license: (.license // null),
+  homeUrl: (.home_url // null),
+  contentUrl: (.content_url // null),
+  repository: (.repository.name // ""),
+  repositoryUrl: (.repository.url // null),
+  stars: (.stars // 0),
+  signed: (.signed // false),
+  deprecated: (.deprecated // false),
+  updatedAt: (.ts | epoch_to_iso),
+  description: ((.description // "") | collapse_ws // ""),
+  keywords: (.keywords // []),
+  links: (.links // []),
+  maintainers: [(.maintainers // [])[] | .name],
+  recentVersions: [(.available_versions // [])[:5][] | .version],
+  url: ("https://artifacthub.io/packages/" + ($p.kind // "helm") + "/" + (.repository.name // "") + "/" + (.normalized_name // .name // ""))
+}'''

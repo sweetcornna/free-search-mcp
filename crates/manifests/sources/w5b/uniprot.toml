@@ -1,0 +1,81 @@
+id = "uniprot"
+name = "UniProtKB REST API"
+summary = "250M+ curated protein sequences (Swiss-Prot & TrEMBL), gene mappings, functions, and evidence."
+aliases = ["uniprotkb", "swissprot", "proteins"]
+home_url = "https://www.uniprot.org"
+tier = 1
+scopes = ["academic.biomed", "dataset"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 43200 }
+
+[op.search]
+summary = "Search UniProtKB protein entries by gene, protein name, or organism."
+method = "GET"
+url = "https://rest.uniprot.org/uniprotkb/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "json", fields = "accession,id,protein_name,gene_names,organism_name,length,reviewed,cc_function" }
+paginate = { style = "link_header", max_pages = 3 }
+probe = { params = { query = "insulin", limit = 3 }, min_results = 2, fixture = "fixtures/w5b/uniprot/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "query", doc = "UniProt query (e.g. insulin, gene:BRCA1 AND organism_id:9606)" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "size", doc = "Maximum entries per page" }
+cursor = { type = "string", to = "cursor", doc = "Pagination cursor from Link header" }
+
+[op.search.map]
+items = ".results[]"
+error = 'if type == "object" and (.messages // null) != null then (.messages | arr | join("; ")) else null end'
+record = '''{
+  accession: (.primaryAccession // ""),
+  entryName: (.uniProtkbId // ""),
+  reviewed: ((.entryType // "") == "UniProtKB reviewed (Swiss-Prot)"),
+  proteinName: ((.proteinDescription.recommendedName.fullName.value // .proteinDescription.submissionNames[0].fullName.value // "") | collapse_ws),
+  genes: [(.genes // [])[] | .geneName.value // empty],
+  organism: (.organism.scientificName // null),
+  taxonId: (.organism.taxonId | to_int),
+  length: (.sequence.length | to_int),
+  function: (([(.comments // [])[] | select(.commentType == "FUNCTION") | .texts[0].value][0] // null) | collapse_ws),
+  url: ("https://www.uniprot.org/uniprotkb/" + (.primaryAccession // ""))
+}'''
+hit = '''{
+  title: (((.primaryAccession // "") + " (" + (.uniProtkbId // "") + ") — " + (.proteinDescription.recommendedName.fullName.value // .proteinDescription.submissionNames[0].fullName.value // "")) | collapse_ws),
+  url: ("https://www.uniprot.org/uniprotkb/" + (.primaryAccession // "")),
+  snippet: (((.organism.scientificName // "") + (if ((.genes // []) | length) > 0 then (" · Gene: " + (.genes[0].geneName.value // "")) else "" end) + (if (([(.comments // [])[] | select(.commentType == "FUNCTION") | .texts[0].value][0]) // "") != "" then (" — " + (([(.comments // [])[] | select(.commentType == "FUNCTION") | .texts[0].value][0]) // "")) else "" end)) | collapse_ws)[0:280],
+  date: null,
+  dateSource: null
+}'''
+
+[op.entry]
+summary = "Fetch a UniProtKB protein record by primary accession."
+method = "GET"
+url = "https://rest.uniprot.org/uniprotkb/{accession}.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { fields = "accession,id,protein_name,gene_names,organism_name,length,reviewed,cc_function,cc_subcellular_location,sequence" }
+probe = { params = { accession = "P01308" }, min_results = 1, fixture = "fixtures/w5b/uniprot/entry/default.json" }
+
+[op.entry.params]
+accession = { type = "string", required = true, in = "path", doc = "UniProtKB primary accession (e.g. P01308)" }
+
+[op.entry.map]
+items = "."
+error = 'if type == "object" and (.messages // null) != null then (.messages | arr | join("; ")) else null end'
+record = '''{
+  accession: (.primaryAccession // ""),
+  entryName: (.uniProtkbId // ""),
+  reviewed: ((.entryType // "") == "UniProtKB reviewed (Swiss-Prot)"),
+  proteinName: ((.proteinDescription.recommendedName.fullName.value // .proteinDescription.submissionNames[0].fullName.value // "") | collapse_ws),
+  genes: [(.genes // [])[] | .geneName.value // empty],
+  organism: (.organism.scientificName // null),
+  taxonId: (.organism.taxonId | to_int),
+  length: (.sequence.length | to_int),
+  sequence: (.sequence.value // null),
+  function: (([(.comments // [])[] | select(.commentType == "FUNCTION") | .texts[0].value][0] // null) | collapse_ws),
+  subcellularLocation: ([(.comments // [])[] | select(.commentType == "SUBCELLULAR LOCATION") | (.subcellularLocations // [])[] | .location.value // empty] | unique),
+  url: ("https://www.uniprot.org/uniprotkb/" + (.primaryAccession // ""))
+}'''

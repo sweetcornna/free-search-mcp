@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "persee_sparql",
+  "op": "query",
+  "recordedAt": "2026-11-25T12:18:35Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://data.persee.fr/sparql?query=SELECT+%3Fs+%3Ftitle+WHERE+%7B+%3Fs+%3Chttp%3A%2F%2Fpurl.org%2Fdc%2Fterms%2Ftitle%3E+%3Ftitle+%7D+LIMIT+3",
+        "headersSubset": {
+          "accept": "application/sparql-results+json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/sparql-results+json"
+          ]
+        ],
+        "bodyText": "\n{ \"head\": { \"link\": [], \"vars\": [\"s\", \"title\"] },\n  \"results\": { \"distinct\": false, \"ordered\": true, \"bindings\": [\n    { \"s\": { \"type\": \"uri\", \"value\": \"http://data.persee.fr/image/reco_0035-2764_1981_num_32_2_T1_0282_0000_002\" }\t, \"title\": { \"type\": \"literal\", \"value\": \"\" }},\n    { \"s\": { \"type\": \"uri\", \"value\": \"http://data.persee.fr/image/efr_0000-0000_1986_cat_92_1_T1_0290_0003_2\" }\t, \"title\": { \"type\": \"literal\", \"value\": \"2\" }},\n    { \"s\": { \"type\": \"uri\", \"value\": \"http://data.persee.fr/image/reper_0755-7817_1986_num_68_1_T1_0016_0000_4\" }\t, \"title\": { \"type\": \"literal\", \"value\": \"2\" }} ] } }",
+        "bodyB64": null
+      }
+    }
+  ]
+}

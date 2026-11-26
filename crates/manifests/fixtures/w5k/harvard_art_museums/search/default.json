@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "harvard_art_museums",
+  "op": "search",
+  "recordedAt": "2026-11-25T13:05:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.harvardartmuseums.org/object?q=monet&size=3&page=1",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"info\": {\"totalrecordsperquery\": 3, \"totalrecords\": 47, \"pages\": 16, \"page\": 1, \"responsetime\": \"6 ms\"}, \"records\": [{\"objectid\": 228649, \"objectnumber\": \"1951.53\", \"title\": \"The Gare Saint-Lazare: Arrival of a Train\", \"classification\": \"Paintings\", \"century\": \"19th century\", \"dated\": \"1877\", \"culture\": \"French\", \"medium\": \"Oil on canvas\", \"division\": \"European and American Art\", \"creditline\": \"Harvard Art Museums/Fogg Museum, Bequest from the Collection of Maurice Wertheim, Class of 1906\", \"url\": \"https://www.harvardartmuseums.org/collections/object/228649\", \"primaryimageurl\": \"https://nrs.harvard.edu/urn-3:HUAM:DDC251346_dynmc\", \"people\": [{\"name\": \"Claude Monet\", \"role\": \"Artist\", \"culture\": \"French\"}]}, {\"objectid\": 228650, \"objectnumber\": \"1951.54\", \"title\": \"Red Boats, Argenteuil\", \"classification\": \"Paintings\", \"century\": \"19th century\", \"dated\": \"1875\", \"culture\": \"French\", \"medium\": \"Oil on canvas\", \"division\": \"European and American Art\", \"creditline\": \"Harvard Art Museums/Fogg Museum, Bequest from the Collection of Maurice Wertheim, Class of 1906\", \"url\": \"https://www.harvardartmuseums.org/collections/object/228650\", \"primaryimageurl\": \"https://nrs.harvard.edu/urn-3:HUAM:DDC251347_dynmc\", \"people\": [{\"name\": \"Claude Monet\", \"role\": \"Artist\", \"culture\": \"French\"}]}, {\"objectid\": 299843, \"objectnumber\": \"1943.262\", \"title\": \"Gorge of the Petit Ailly, Varengeville\", \"classification\": \"Paintings\", \"century\": \"19th century\", \"dated\": \"1897\", \"culture\": \"French\", \"medium\": \"Oil on canvas\", \"division\": \"European and American Art\", \"creditline\": \"Harvard Art Museums/Fogg Museum, Bequest of Grenville L. Winthrop\", \"url\": \"https://www.harvardartmuseums.org/collections/object/299843\", \"primaryimageurl\": \"https://nrs.harvard.edu/urn-3:HUAM:DDC103052_dynmc\", \"people\": [{\"name\": \"Claude Monet\", \"role\": \"Artist\", \"culture\": \"French\"}]}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

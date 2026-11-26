@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "worldbank",
+  "op": "document",
+  "recordedAt": "2026-11-25T12:12:19Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://search.worldbank.org/api/v3/wds?format=json&fl=id,docdt,display_title,pdfurl,txturl,url,count,docty,owner,abstracts,authr,lang&id=735811",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/plain; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"rows\":10,\"os\":0,\"page\":1,\"total\":1,\"documents\":{\"D735811\":{\"id\":\"735811\",\"authors\":{\"0\":{\"author\":\"Khadr, Ali\"},\"1\":{\"author\":\"Parks, James\"}},\"count\":\"Algeria\",\"docty\":\"Internal Discussion Paper\",\"owner\":\"Middle East and North Africa\",\"lang\":\"English\",\"entityids\":{\"entityid\":\"000009265_3960930181825\"},\"docdt\":\"1991-02-28T05:00:00Z\",\"abstracts\":{\"cdata!\":\"This paper attempts to gauge the potential impact of full price liberalization on the general price level and future open inflation. First, the available evidence is evaluated to assess the degree of repressed inflation in Algeria and its potential impact on open inflation. The evaluation is based on a descriptive analysis of past macroeconomic policies, statistical comparison, and econometric analysis. Although there are clear indications that official prices are repressed in Algeria, the degree of repression and the impact of price liberalization on economic behavior are much less certain. Evaluation of the evidence suggests that, immediately lifting all remaining price controls would result in an immediate one-time jump in the general price level as measured by the official CPI. However, because the extent of parallel market activity is uncertain, the size of this increase and its impact on consumer behavior and future open inflation remain unclear. Given the uncertain impact of price liberalization, therefore, a flexible policy package is required for controlling inflation during the remainder of the transition. A tight medium-term monetary stance would be required if inflation accelerates and a more accommodating monetary stance preferred if precautionary measures taken to absorb liquidity and contain cost-push factors turn out to be deflationary.\"},\"display_title\":\"Algeria : inflation in the transition\",\"pdfurl\":\"http://documents.worldbank.org/curated/en/429831468913782253/pdf/Algeria-inflation-in-the-transition.pdf\",\"txturl\":\"http://documents.worldbank.org/curated/en/429831468913782253/text/Algeria-inflation-in-the-transition.txt\",\"guid\":\"429831468913782253\",\"url\":\"http://documents.worldbank.org/curated/en/429831468913782253\"},\"facets\":{}}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

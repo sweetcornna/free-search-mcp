@@ -1,0 +1,12 @@
+protocol = "ckan"
+
+[[instance]]
+id = "data_qld_au"
+name = "Queensland Government Open Data (Australia)"
+summary = "Australian state open data portal with 17k+ hydrology, environment, health, transport, and public sector datasets."
+aliases = ["queensland open data", "data.qld.gov.au"]
+base_url = "https://www.data.qld.gov.au"
+scopes = ["dataset", "gov"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "water", limit = 2 }, min_results = 1 }

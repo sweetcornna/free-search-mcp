@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "fao_stat",
+  "op": "dataset",
+  "recordedAt": "2026-11-25T12:12:19Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://data.apps.fao.org/catalog/api/3/action/package_show?id=grassland-global-national-annual-faostat",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json;charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"help\": \"https://data.apps.fao.org/catalog/api/3/action/help_show?name=package_show\", \"success\": true, \"result\": {\"license_title\": \"Creative Commons Attribution 4.0 International\", \"maintainer\": \"\", \"relationships_as_object\": [], \"private\": false, \"maintainer_email\": \"\", \"num_tags\": 5, \"id\": \"410b03ee-eaa4-434d-82a5-573b3ee09d53\", \"metadata_created\": \"2022-02-08T08:22:02.564945\", \"metadata_modified\": \"2026-07-14T21:05:00.721475\", \"author\": \"\", \"author_email\": \"\", \"state\": \"active\", \"version\": \"\", \"creator_user_id\": \"357ad101-1307-4664-96a6-7035fe236233\", \"type\": \"dataset\", \"resources\": [{\"mimetype\": \"application/x-sql\", \"cache_url\": null, \"hash\": \"\", \"description\": \"\", \"name\": \"Grassland (Global - National - Annual - FAOSTAT)\", \"format\": \"smart-csv\", \"url\": \"https://api.data.apps.fao.org/api/v2/bigquery?sql_url=https://data.apps.fao.org/catalog/dataset/410b03ee-eaa4-434d-82a5-573b3ee09d53/resource/9f989ccd-8924-4996-b01f-71c52c17aef1/download/emissions-land-use-gg-query.sql\", \"datastore_active\": false, \"cache_last_updated\": null, \"package_id\": \"410b03ee-eaa4-434d-82a5-573b3ee09d53\", \"created\": \"2022-02-08T08:25:24.638848\", \"state\": \"active\", \"mimetype_inner\": null, \"last_modified\": null, \"position\": 0, \"revision_id\": \"5ba6d610-afed-45c3-ac43-c78207250633\", \"url_type\": null, \"id\": \"fbb6d9d2-9f52-45fd-b08f-c964d795ac0f\", \"resource_type\": null, \"size\": null}, {\"mimetype\": \"application/x-sql\", \"cache_url\": null, \"hash\": \"\", \"description\": \"\", \"name\": \"emissions-land-use-gg-query\", \"format\": \"application/x-sql\", \"url\": \"https://data.apps.fao.org/catalog/dataset/410b03ee-eaa4-434d-82a5-573b3ee09d53/resource/9f989ccd-8924-4996-b01f-71c52c17aef1/download/emissions-land-use-gg-query.sql\", \"datastore_active\": false, \"cache_last_updated\": null, \"package_id\": \"410b03ee-eaa4-434d-82a5-573b3ee09d53\", \"created\": \"2022-02-08T08:22:14.639863\", \"state\": \"active\", \"mimetype_inner\": null, \"last_modified\": \"2022-02-08T08:22:14.590661\", \"position\": 1, \"revision_id\": \"5ba6d610-afed-45c3-ac43-c78207250633\", \"url_type\": \"upload\", \"id\": \"9f989ccd-8924-4996-b01f-71c52c17aef1\", \"resource_type\": null, \"size\": 104}, {\"mimetype\": \"application/json\", \"cache_url\": null, \"hash\": \"\", \"description\": \"\", \"name\": \"emissions-land-use-gg-schema\", \"format\": \"JSON\", \"url\": \"https://data.apps.fao.org/catalog/dataset/410b03ee-eaa4-434d-82a5-573b3ee09d53/resource/3aaad1e4-adba-4db1-bdbf-48f2c0a95605/download/emissions-land-use-gg-schema.json\", \"datastore_active\": false, \"cache_last_updated\": null, \"package_id\": \"410b03ee-eaa4-434d-82a5-573b3ee09d53\", \"created\": \"2022-02-08T08:22:35.984583\", \"state\": \"active\", \"mimetype_inner\": null, \"last_modified\": \"2022-02-08T08:22:35.933587\", \"position\": 2, \"revision_id\": \"5ba6d610-afed-45c3-ac43-c78207250633\", \"url_type\": \"upload\", \"id\": \"3aaad1e4-adba-4db1-bdbf-48f2c0a95605\", \"resource_type\": null, \"size\": 699}], \"num_resources\": 3, \"tags\": [{\"vocabulary_id\": null, \"state\": \"active\", \"display_name\": \"Grassland\", \"id\": \"c5a49f1b-494b-49ec-8cd0-5e2525f91616\", \"name\": \"Grassland\"}, {\"vocabulary_id\": null, \"state\": \"active\", \"display_name\": \"National\", \"id\": \"43533a5a-297c-432c-8835-3d363583cfdb\", \"name\": \"National\"}, {\"vocabulary_id\": null, \"state\": \"active\", \"display_name\": \"annual\", \"id\": \"cf2d734a-875d-471a-b970-bb0836acf4f4\", \"name\": \"annual\"}, {\"vocabulary_id\": null, \"state\": \"active\", \"display_name\": \"faostat\", \"id\": \"9e764b87-dc5b-4e03-8de1-6ee115627190\", \"name\": \"faostat\"}, {\"vocabulary_id\": null, \"state\": \"active\", \"display_name\": \"global\", \"id\": \"56ab799a-0ecb-4005-93ae-08fccf974a30\", \"name\": \"global\"}], \"groups\": [], \"license_id\": \"CC-BY-4.0\", \"relationships_as_subject\": [], \"organization\": {\"description\": \"FAOSTAT provides free access to food and agriculture data for over 245 countries and territories and covers all FAO regional groupings from 1961 to the most recent year available. \\r\\n\\r\\nhttps://www.fao.org/faostat\", \"created\": \"2020-10-09T16:51:33.932640\", \"title\": \"FAOSTAT\", \"name\": \"faostat\", \"is_organization\": true, \"state\": \"active\", \"image_url\": \"https://data.apps.fao.org/catalog/uploads/group/2020-07-15-111212.1059692020-06-15-121051.064347FAO-logo-210.png\", \"revision_id\": \"cd4c5e63-052e-494d-8106-fc1a33845e91\", \"type\": \"organization\", \"id\": \"dd68412c-df30-44bf-a382-94c24b52955c\", \"approval_status\": \"approved\"}, \"name\": \"grassland-global-national-annual-faostat\", \"isopen\": true, \"url\": \"\", \"notes\": \"Grassland (Global - National - Annual - FAOSTAT)\", \"owner_org\": \"dd68412c-df30-44bf-a382-94c24b52955c\", \"extras\": [], \"license_url\": \"https://creativecommons.org/licenses/by/4.0/\", \"title\": \"Grassland (Global - National - Annual) - FAOSTAT\", \"revision_id\": \"fb04d9c9-ddc5-43ec-b91f-41c19f1923c6\"}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

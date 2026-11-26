@@ -1,0 +1,93 @@
+id = "acl_anthology"
+name = "ACL Anthology"
+summary = "Open-access computational linguistics and NLP conference proceedings and Findings (ACL, EMNLP, NAACL, EACL via Crossref prefix 10.18653)."
+aliases = ["aclanthology.org", "acl", "emnlp", "naacl", "eacl", "computational linguistics", "nlp papers"]
+home_url = "https://aclanthology.org"
+tier = 1
+scopes = ["academic", "academic.cs", "academic.openaccess"]
+caps = ["search", "lookup", "fulltext"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 43200, host_bucket = "api.crossref.org" }
+
+[op.search]
+summary = "Search ACL Anthology papers via Crossref's exclusive 10.18653 ACL DOI prefix."
+method = "GET"
+url = "https://api.crossref.org/works"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+const_query = { filter = "prefix:10.18653" }
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "transformer", limit = 3 }, min_results = 2, fixture = "fixtures/w5a/acl_anthology/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "query", doc = "NLP / ACL Anthology search terms" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "rows", doc = "Max results" }
+offset = { type = "int", min = 0, to = "offset", doc = "Result offset" }
+
+[op.search.map]
+items = ".message.items[]"
+total = '''.message."total-results"'''
+error = '''if (.status // "ok") == "failed" then (if (.message | type) == "array" then (.message[0]?.message // "crossref error") elif (.message | type) == "string" then .message else "crossref error" end) else null end'''
+work = '''(
+  (.resource.primary.URL // .URL // ("https://doi.org/" + (.DOI // ""))) as $url |
+  (.issued."date-parts"[0]? // .published."date-parts"[0]? // []) as $dp0 |
+  (.event.start."date-parts"[0]? // []) as $edp |
+  (if ($dp0 | length) >= 2 then $dp0 elif ($edp | length) >= 2 then $edp else $dp0 end) as $dp |
+  (if ($dp | length) >= 3 and $dp[0] != null and $dp[1] != null and $dp[2] != null then (($dp[0] | tostring) + "-" + (if $dp[1] < 10 then "0" else "" end) + ($dp[1] | tostring) + "-" + (if $dp[2] < 10 then "0" else "" end) + ($dp[2] | tostring)) elif ($dp | length) >= 2 and $dp[0] != null and $dp[1] != null then (($dp[0] | tostring) + "-" + (if $dp[1] < 10 then "0" else "" end) + ($dp[1] | tostring)) elif ($dp | length) >= 1 and $dp[0] != null then ($dp[0] | tostring) else null end | parse_date) as $dt |
+  (if (.abstract // "") != "" then (.abstract | strip_tags) else null end) as $abs |
+  {
+    title: ((.title[0]? // "") | strip_tags),
+    authors: [(.author // [])[] | {
+      name: ([.given, .family] | map(select(type == "string" and length > 0)) | join(" ") | collapse_ws),
+      orcid: ((.ORCID // null) | if type == "string" then sub("^https?://orcid\\.org/"; "") else null end)
+    } | select(.name != "")],
+    year: (($dp[0]? // $dp0[0]?) | to_int),
+    publishedDate: $dt,
+    venue: ((."container-title"[0]? // .event.name // "ACL Anthology") | strip_tags),
+    workType: (.type // "proceedings-article"),
+    ids: { doi: (.DOI // null | doi_norm) },
+    abstractText: (if ($abs // "") != "" then $abs else null end),
+    citedBy: (."is-referenced-by-count" | to_int),
+    citedBySource: (if ."is-referenced-by-count" != null then "crossref" else null end),
+    oa: {
+      status: "diamond",
+      url: $url,
+      pdfUrl: (if ($url | startswith("https://aclanthology.org/")) then (($url | sub("/$"; "")) + ".pdf") else null end),
+      license: (.license[0]?.URL // null)
+    },
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["acl_anthology"]
+  }
+)'''
+
+[op.work]
+summary = "Fetch a single ACL Anthology paper by Anthology ID (e.g. 2024.acl-long.1)."
+method = "GET"
+url = "https://api.crossref.org/works/10.18653/v1/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+probe = { params = { id = "2024.acl-long.1" }, min_results = 1, fixture = "fixtures/w5a/acl_anthology/work/default.json" }
+
+[op.work.params]
+id = { type = "string", required = true, in = "path", doc = "ACL Anthology ID e.g. 2024.acl-long.1" }
+
+[op.work.map]
+items = ".message"
+error = "@ref:op.search.map.error"
+work = "@ref:op.search.map.work"
+
+[op.bibtex]
+summary = "Fetch official BibTeX directly from aclanthology.org by Anthology ID."
+method = "GET"
+url = "https://aclanthology.org/{id}.bib"
+response = "text"
+returns = "text"
+probe = { params = { id = "2024.acl-long.1" }, min_results = 1, fixture = "fixtures/w5a/acl_anthology/bibtex/default.json" }
+
+[op.bibtex.params]
+id = { type = "string", required = true, in = "path", doc = "ACL Anthology ID e.g. 2024.acl-long.1" }

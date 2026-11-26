@@ -1,0 +1,133 @@
+id = "openfda"
+name = "openFDA"
+summary = "US Food and Drug Administration public datasets for drug labels, drug enforcement recalls, and medical device recalls."
+aliases = ["fda", "fda drugs", "fda recalls", "drug labels"]
+home_url = "https://open.fda.gov"
+tier = 1
+scopes = ["gov", "academic.biomed"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 3.0, burst = 6, concurrency = 4, timeout_ms = 8000, cache_ttl_s = 21600 }
+
+[auth]
+mode = "optional"
+env = "SEARCH_MCP_OPENFDA_API_KEY"
+in = "query"
+name = "api_key"
+format = "{key}"
+route_requires_key = false
+
+[op.search]
+summary = "Search FDA Structured Product Labeling (drug labels) using openFDA query syntax or plain keywords."
+method = "GET"
+url = "https://api.fda.gov/drug/label.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+query_jaq = '''[
+  ["search", (if ($p.query | test("[:+()\"]|\\b(AND|OR|NOT)\\b")) then $p.query else (($p.query | collapse_ws // "") | split(" ") | map(select(length > 0)) | join(" AND ")) end)]
+]'''
+paginate = { style = "offset", param = "skip", start = 0, max_pages = 3 }
+probe = { params = { query = "openfda.brand_name:tylenol", limit = 2 }, min_results = 2, fixture = "fixtures/w5d2/openfda/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, in = "none", doc = "openFDA query (e.g. openfda.brand_name:tylenol) or plain keywords (joined with AND)" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Maximum records returned" }
+skip = { type = "int", min = 0, to = "skip", doc = "Offset to skip" }
+
+[op.search.map]
+items = ".results[]"
+total = ".meta.results.total"
+error = "if .error then (.error.message // (.error | tostring)) else null end"
+record = '''{
+  id: (.id // null),
+  setId: (.set_id // null),
+  brandName: (.openfda.brand_name[0] // null),
+  genericName: (.openfda.generic_name[0] // null),
+  manufacturer: (.openfda.manufacturer_name[0] // null),
+  productType: (.openfda.product_type[0] // null),
+  route: (.openfda.route // []),
+  effectiveDate: ((.effective_time // null) | parse_date),
+  purpose: ((.purpose[0] // null) | collapse_ws),
+  indications: (((.indications_and_usage[0] // null) | collapse_ws) | if . then .[0:500] else null end),
+  url: ("https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=" + (.set_id // ""))
+}'''
+hit = '''{
+  title: ((.openfda.brand_name[0] // .openfda.generic_name[0] // .id // "FDA Drug Label") | collapse_ws // "FDA Drug Label"),
+  url: ("https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=" + (.set_id // "")),
+  snippet: (
+    [
+      .openfda.generic_name[0],
+      .openfda.manufacturer_name[0],
+      .openfda.product_type[0],
+      (((.purpose[0] // .indications_and_usage[0] // "") | collapse_ws // "") | if length > 0 then .[0:200] else null end)
+    ] | map(select(. != null)) | join(" · ")
+  ),
+  date: ((.effective_time // null) | parse_date),
+  dateSource: "api"
+}'''
+
+[op.drug_recalls]
+summary = "Search FDA drug enforcement and recall reports."
+method = "GET"
+url = "https://api.fda.gov/drug/enforcement.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "skip", start = 0, max_pages = 3 }
+probe = { params = { query = "reason_for_recall:contamination", limit = 3 }, min_results = 2, fixture = "fixtures/w5d2/openfda/drug_recalls/default.json" }
+
+[op.drug_recalls.params]
+query = { type = "string", required = true, to = "search", doc = "openFDA enforcement query, e.g. reason_for_recall:contamination" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Maximum records returned" }
+skip = { type = "int", min = 0, to = "skip", doc = "Offset to skip" }
+
+[op.drug_recalls.map]
+items = ".results[]"
+total = ".meta.results.total"
+error = "if .error then (.error.message // (.error | tostring)) else null end"
+record = '''{
+  recallNumber: (.recall_number // null),
+  eventId: (.event_id // null),
+  classification: (.classification // null),
+  status: (.status // null),
+  recallingFirm: (.recalling_firm // null),
+  productDescription: (((.product_description // "") | collapse_ws // "") | .[0:300]),
+  reasonForRecall: ((.reason_for_recall // null) | collapse_ws),
+  initiationDate: ((.recall_initiation_date // null) | parse_date),
+  reportDate: ((.report_date // null) | parse_date),
+  state: (if (.state // "") != "" then .state else null end),
+  country: (.country // null)
+}'''
+
+[op.device_recalls]
+summary = "Search FDA medical device recall notices."
+method = "GET"
+url = "https://api.fda.gov/device/recall.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "skip", start = 0, max_pages = 3 }
+probe = { params = { query = "product_description:pump", limit = 3 }, min_results = 2, fixture = "fixtures/w5d2/openfda/device_recalls/default.json" }
+
+[op.device_recalls.params]
+query = { type = "string", required = true, to = "search", doc = "openFDA device recall query, e.g. product_description:pump" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Maximum records returned" }
+skip = { type = "int", min = 0, to = "skip", doc = "Offset to skip" }
+
+[op.device_recalls.map]
+items = ".results[]"
+total = ".meta.results.total"
+error = "if .error then (.error.message // (.error | tostring)) else null end"
+record = '''{
+  resEventNumber: (.res_event_number // null),
+  productResNumber: (.product_res_number // null),
+  recallStatus: (.recall_status // null),
+  recallingFirm: (.recalling_firm // null),
+  productCode: (.product_code // null),
+  productDescription: (((.product_description // "") | collapse_ws // "") | .[0:300]),
+  reasonForRecall: ((.reason_for_recall // null) | collapse_ws),
+  eventDateInitiated: ((.event_date_initiated // null) | parse_date),
+  eventDatePosted: ((.event_date_posted // null) | parse_date)
+}'''

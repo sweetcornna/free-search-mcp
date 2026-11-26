@@ -1,0 +1,93 @@
+id = "openreview"
+name = "OpenReview API v2"
+summary = "ML/AI conference submissions, camera-ready papers, and public peer reviews (ICLR, NeurIPS, ICML, MLSys, TMLR)."
+aliases = ["openreview.net", "iclr", "neurips", "icml", "tmlr", "iclr reviews", "peer reviews"]
+home_url = "https://openreview.net"
+tier = 1
+scopes = ["academic", "academic.cs", "academic.openaccess"]
+caps = ["search", "fulltext"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 0.3, burst = 2, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 43200, host_bucket = "api2.openreview.net" }
+
+[op.search]
+summary = "Search OpenReview paper submissions (forums) by keyword."
+method = "GET"
+url = "https://api2.openreview.net/notes/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+const_query = { source = "forum" }
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "attention is all you need", limit = 3 }, min_results = 2, fixture = "fixtures/w5a/openreview/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "term", doc = "Search terms" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Max results" }
+offset = { type = "int", min = 0, to = "offset", doc = "Result offset" }
+
+[op.search.map]
+items = ".notes[]"
+total = ".count"
+error = '''if .name and (.status // 200) >= 400 then (.message // .name) else null end'''
+work = '''(
+  ((.content.pdf.value // null) | if type == "string" then resolve_url("https://openreview.net") else null end) as $pdf |
+  ((.pdate // .cdate // .tcdate) | epoch_to_iso | parse_date) as $dt |
+  (((((.content._bibtex.value // "") + " " + (.content.venue.value // "")) | if test("(19|20)[0-9]{2}") then capture("(?<y>(19|20)[0-9]{2})").y else null end) | to_int) // (if $dt != null then ($dt[0:4] | to_int) else null end)) as $yr |
+  ((.content.abstract.value // "") | unescape_html | collapse_ws) as $abs |
+  (((.content.html.value // "") + " " + (.content.pdf.value // "")) | if test("arxiv\\.org/(?:abs|pdf)/[0-9]{4}\\.[0-9]{4,5}"; "i") then capture("arxiv\\.org/(?:abs|pdf)/(?<ax>[0-9]{4}\\.[0-9]{4,5})"; "i").ax else null end) as $ax |
+  {
+    title: ((.content.title.value // "") | unescape_html | collapse_ws),
+    authors: [(.content.authors.value // [])[] | collapse_ws | select(length > 0) | {name: .}],
+    year: $yr,
+    publishedDate: $dt,
+    venue: ((.content.venue.value // null) | if type == "string" then collapse_ws else null end),
+    workType: "proceedings-article",
+    ids: { arxiv: $ax },
+    abstractText: (if ($abs // "") != "" then $abs else null end),
+    oa: (if $pdf != null then { status: "green", url: ("https://openreview.net/forum?id=" + (.forum // .id)), pdfUrl: $pdf, license: (.license // null) } else null end),
+    retracted: ((.content.venue.value // "") | test("Withdrawn|Desk Rejected"; "i")),
+    versions: [],
+    url: ("https://openreview.net/forum?id=" + (.forum // .id)),
+    sources: ["openreview"]
+  }
+)'''
+
+[op.reviews]
+summary = "Search OpenReview public peer reviews and rebuttals matching a topic."
+method = "GET"
+url = "https://api2.openreview.net/notes/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { source = "reply" }
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "attention is all you need", limit = 3 }, min_results = 2, fixture = "fixtures/w5a/openreview/reviews/default.json" }
+
+[op.reviews.params]
+query = { type = "string", required = true, to = "term", doc = "Search terms in review text" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Max reviews" }
+offset = { type = "int", min = 0, to = "offset", doc = "Result offset" }
+
+[op.reviews.map]
+items = ".notes[]"
+total = ".count"
+error = '''if .name and (.status // 200) >= 400 then (.message // .name) else null end'''
+record = '''{
+  id: .id,
+  forum: .forum,
+  paperTitle: ((.forumContent.title.value // "") | unescape_html | collapse_ws),
+  venue: ((.forumContent.venue.value // .domain // null) | if type == "string" then collapse_ws else null end),
+  date: ((.cdate // .tcdate) | epoch_to_iso | parse_date),
+  rating: (.content.rating.value // null),
+  confidence: (.content.confidence.value // null),
+  soundness: (.content.soundness.value // null),
+  presentation: (.content.presentation.value // null),
+  contribution: (.content.contribution.value // null),
+  summary: ((.content.summary.value // null) | if type == "string" then (unescape_html | collapse_ws) else null end),
+  strengths: ((.content.strengths.value // null) | if type == "string" then (unescape_html | collapse_ws) else null end),
+  weaknesses: ((.content.weaknesses.value // null) | if type == "string" then (unescape_html | collapse_ws) else null end),
+  questions: ((.content.questions.value // null) | if type == "string" then (unescape_html | collapse_ws) else null end),
+  comment: ((.content.comment.value // null) | if type == "string" then (unescape_html | collapse_ws) else null end),
+  url: ("https://openreview.net/forum?id=" + .forum + "&noteId=" + .id)
+}'''

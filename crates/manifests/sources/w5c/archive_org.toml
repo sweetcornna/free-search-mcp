@@ -1,0 +1,107 @@
+id = "archive_org"
+name = "Internet Archive"
+summary = "Search 40M+ digitized books, audio, video, software, and historical snapshots via Internet Archive & Wayback Machine APIs."
+aliases = ["internet archive", "ia", "archive.org"]
+home_url = "https://archive.org"
+tier = 1
+scopes = ["media", "academic.books", "reference"]
+caps = ["search", "lookup", "book"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.5, burst = 4, concurrency = 2, timeout_ms = 12000, cache_ttl_s = 43200, host_bucket = "archive.org" }
+
+[op.search]
+summary = "Search Internet Archive items (texts, audio, movies, software) via Solr advancedsearch API."
+method = "GET"
+url = "https://archive.org/advancedsearch.php"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { output = "json", fl = "identifier,title,creator,date,mediatype,description" }
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "rust programming", limit = 3 }, min_results = 2, fixture = "fixtures/w5c/archive_org/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Lucene/Solr query e.g. title:(rust) AND mediatype:(texts)" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "rows", doc = "Rows per page" }
+page = { type = "int", min = 1, to = "page", doc = "1-based page number" }
+
+[op.search.map]
+items = ".response.docs[]"
+total = ".response.numFound"
+error = "if (.error | type) == \"string\" and (.error | length) > 0 then .error else null end"
+record = '''{
+  identifier: .identifier,
+  title: ((.title | first_str) // .identifier // ""),
+  creator: (.creator | first_str),
+  mediatype: .mediatype,
+  date: ((.date | first_str) | parse_date),
+  description: ((.description | first_str) // "" | strip_tags),
+  url: ("https://archive.org/details/" + (.identifier // ""))
+}'''
+hit = '''
+((.title | first_str) // .identifier // "") as $t |
+((.creator | first_str) // "") as $cr |
+((.date | first_str) | parse_date) as $dt |
+(((.description | first_str) // "") | strip_tags) as $desc |
+{
+  title: $t,
+  url: ("https://archive.org/details/" + (.identifier // "")),
+  snippet: ([
+    (if (.mediatype | type) == "string" then .mediatype else empty end),
+    (if ($cr | length) > 0 then "by \($cr)" else empty end),
+    (if ($desc | length) > 200 then $desc[0:200] + "..." elif ($desc | length) > 0 then $desc else empty end)
+  ] | join(" · ")),
+  date: $dt,
+  dateSource: (if $dt != null then "api" else null end)
+}'''
+
+[op.item]
+summary = "Fetch item metadata from Internet Archive by exact identifier."
+method = "GET"
+url = "https://archive.org/metadata/{id}/metadata"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "github.com-MystenLabs-sui_-_2022-08-15_21-35-59" }, min_results = 1, fixture = "fixtures/w5c/archive_org/item/default.json" }
+
+[op.item.params]
+id = { type = "string", required = true, in = "path", doc = "Internet Archive item identifier" }
+
+[op.item.map]
+items = ".result"
+error = "@ref:op.search.map.error"
+record = '''{
+  identifier: .identifier,
+  title: ((.title | first_str) // .identifier // ""),
+  creator: (.creator | first_str),
+  collection: (.collection | arr),
+  mediatype: .mediatype,
+  date: ((.date | first_str) | parse_date),
+  description: (((.description | first_str) // "") | strip_tags),
+  url: ("https://archive.org/details/" + (.identifier // ""))
+}'''
+
+[op.wayback]
+summary = "Check closest available Wayback Machine archived snapshot for a URL."
+method = "GET"
+url = "https://archive.org/wayback/available"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { url = "https://example.com" }, min_results = 1, fixture = "fixtures/w5c/archive_org/wayback/default.json" }
+
+[op.wayback.params]
+url = { type = "string", required = true, to = "url", doc = "Target URL to check in Wayback Machine" }
+timestamp = { type = "string", to = "timestamp", doc = "Optional YYYYMMDDhhmmss target timestamp" }
+
+[op.wayback.map]
+items = "."
+error = "@ref:op.search.map.error"
+record = '''{
+  requestedUrl: .url,
+  available: (.archived_snapshots.closest.available // false),
+  status: (.archived_snapshots.closest.status // null),
+  timestamp: (.archived_snapshots.closest.timestamp // null),
+  snapshotUrl: (if (.archived_snapshots.closest.url | type) == "string" then (.archived_snapshots.closest.url | sub("^http://"; "https://")) else null end)
+}'''

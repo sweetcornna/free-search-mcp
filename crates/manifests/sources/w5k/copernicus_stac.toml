@@ -1,0 +1,112 @@
+id = "copernicus_stac"
+name = "Copernicus Data Space Ecosystem STAC API"
+summary = "European Space Agency Copernicus Data Space STAC v1 API for Sentinel-1/2/3/5P and contributing Earth-observation satellite imagery collections and scenes."
+aliases = ["copernicus", "sentinel stac", "cdse stac"]
+home_url = "https://dataspace.copernicus.eu"
+tier = 1
+scopes = ["dataset", "reference.geo"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 12000, cache_ttl_s = 21600, host_bucket = "stac.dataspace.copernicus.eu" }
+
+[op.search]
+summary = "Search Copernicus STAC satellite scenes by collection ID and optional ISO-8601 datetime interval."
+method = "POST"
+url = "https://stac.dataspace.copernicus.eu/v1/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+body = { kind = "json", jaq = "({ collections: [($p.collection // \"sentinel-2-l2a\")] } + (if ($p.datetime // \"\") != \"\" then { datetime: $p.datetime } else {} end) + { fields: { exclude: [\"assets\"] }, limit: ($p.limit // 10) } + (if ($p.cursor // \"\") != \"\" then { token: $p.cursor } else {} end))" }
+paginate = { style = "token", param = "cursor", max_pages = 3 }
+probe = { params = { collection = "sentinel-2-l2a", datetime = "2026-11-01T00:00:00Z/2026-11-25T23:59:59Z", limit = 2 }, min_results = 2, fixture = "fixtures/w5k/copernicus_stac/search/default.json" }
+examples = ['source.call("copernicus_stac.search", { collection: "sentinel-2-l2a", datetime: "2026-11-01T00:00:00Z/2026-11-25T23:59:59Z", limit: 5 })']
+
+[op.search.params]
+collection = { type = "string", required = true, default = "sentinel-2-l2a", in = "body", doc = "STAC collection ID e.g. sentinel-2-l2a, sentinel-1-grd, sentinel-3-olci-1-efr-nrt" }
+datetime = { type = "string", in = "body", doc = "ISO-8601 instant or interval e.g. 2026-11-01T00:00:00Z/2026-11-25T23:59:59Z" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "body", doc = "Maximum STAC items returned" }
+cursor = { type = "string", in = "body", doc = "Next-page STAC token from previous response" }
+
+[op.search.map]
+items = "(.features // [])[]"
+next_cursor = "(([(.links // [])[] | select(.rel == \"next\") | .body.token][0]) // null)"
+error = "if .code and .description then .description else null end"
+record = '''{
+  id: (.id // ""),
+  collection: (.collection // null),
+  datetime: (.properties.datetime // null),
+  platform: (.properties.platform // null),
+  gsd: (.properties.gsd // null),
+  cloudCover: (.properties."eo:cloud_cover" // null),
+  gridCode: (.properties."grid:code" // null),
+  bbox: (.bbox // null),
+  url: (([(.links // [])[] | select(.rel == "self") | .href][0]) // ("https://stac.dataspace.copernicus.eu/v1/collections/" + (.collection // "") + "/items/" + (.id // "")))
+}'''
+hit = '''(
+  (.properties.datetime | parse_date) as $d |
+  {
+    title: (.id // ""),
+    url: (([(.links // [])[] | select(.rel == "self") | .href][0]) // ("https://stac.dataspace.copernicus.eu/v1/collections/" + (.collection // "") + "/items/" + (.id // ""))),
+    snippet: ([(.collection // ""), (.properties.platform // ""), (.properties."grid:code" // ""), (if .properties."eo:cloud_cover" != null then ("cloud=" + (.properties."eo:cloud_cover" | tostring) + "%") else "" end)] | map(select(length > 0)) | join(" · ")),
+    date: $d,
+    dateSource: (if $d != null then "api" else null end)
+  }
+)'''
+
+[op.collections]
+summary = "List available Copernicus Data Space STAC collections."
+method = "GET"
+url = "https://stac.dataspace.copernicus.eu/v1/collections"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { limit = 3 }, min_results = 2, fixture = "fixtures/w5k/copernicus_stac/collections/default.json" }
+examples = ['source.call("copernicus_stac.collections", { limit: 10 })']
+
+[op.collections.params]
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Collections per page" }
+
+[op.collections.map]
+items = "(.collections // [])[]"
+total = ".numberMatched"
+error = "@ref:op.search.map.error"
+record = '''{
+  id: (.id // ""),
+  title: (.title // .id // ""),
+  description: (.description // null),
+  license: (.license // null),
+  keywords: (.keywords // []),
+  spatialBbox: (.extent.spatial.bbox[0]? // null),
+  temporalInterval: (.extent.temporal.interval[0]? // null),
+  url: (([(.links // [])[] | select(.rel == "self") | .href][0]) // ("https://stac.dataspace.copernicus.eu/v1/collections/" + (.id // "")))
+}'''
+
+[op.collection]
+summary = "Fetch full STAC collection specification, spectral bands, and spatial/temporal extent by collection ID."
+method = "GET"
+url = "https://stac.dataspace.copernicus.eu/v1/collections/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "sentinel-2-l2a" }, min_results = 1, fixture = "fixtures/w5k/copernicus_stac/collection/default.json" }
+examples = ['source.call("copernicus_stac.collection", { id: "sentinel-2-l2a" })']
+
+[op.collection.params]
+id = { type = "string", required = true, in = "path", doc = "STAC collection ID e.g. sentinel-2-l2a" }
+
+[op.collection.map]
+items = "."
+error = "@ref:op.search.map.error"
+record = '''{
+  id: (.id // ""),
+  title: ((.title // .id // "") | collapse_ws),
+  description: (.description | collapse_ws),
+  license: (.license // null),
+  doi: (."sci:doi" | doi_norm),
+  keywords: (.keywords // []),
+  bands: [(.bands // [])[] | { name: .name, commonName: (."eo:common_name" // null), gsd: (.gsd // null) }],
+  spatialBbox: (.extent.spatial.bbox[0]? // null),
+  temporalInterval: (.extent.temporal.interval[0]? // null),
+  url: ("https://stac.dataspace.copernicus.eu/v1/collections/" + (.id // ""))
+}'''

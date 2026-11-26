@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "sov2ex_cn",
+  "op": "topic",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.v2ex.com/api/topics/show.json?id=431357",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json;charset=UTF-8"
+          ]
+        ],
+        "bodyText": "[{\"node\": {\"avatar_large\": \"https://cdn.v2ex.com/navatar/70ef/df2e/17_large.png?m=1660301119\", \"name\": \"create\", \"avatar_normal\": \"https://cdn.v2ex.com/navatar/70ef/df2e/17_normal.png?m=1660301119\", \"title\": \"\\u5206\\u4eab\\u521b\\u9020\", \"url\": \"https://www.v2ex.com/go/create\", \"topics\": 39448, \"footer\": \"\", \"header\": \"\\u6b22\\u8fce\\u4f60\\u5728\\u8fd9\\u91cc\\u53d1\\u5e03\\u81ea\\u5df1\\u7684\\u6700\\u65b0\\u4f5c\\u54c1\\uff01\", \"title_alternative\": \"Create\", \"avatar_mini\": \"https://cdn.v2ex.com/navatar/70ef/df2e/17_mini.png?m=1660301119\", \"stars\": 6284, \"founder_id\": 0, \"aliases\": [], \"root\": false, \"id\": 17, \"parent_node_name\": \"geek\"}, \"member\": {\"id\": 166309, \"username\": \"samray\", \"url\": \"https://www.v2ex.com/u/samray\", \"website\": \"\", \"twitter\": \"\", \"psn\": \"\", \"github\": \"ramsayleung\", \"btc\": \"\", \"location\": \"\", \"tagline\": \"\", \"bio\": \"\", \"avatar_mini\": \"https://cdn.v2ex.com/avatar/146e/13ed/166309_mini.png?m=1756788252\", \"avatar_normal\": \"https://cdn.v2ex.com/avatar/146e/13ed/166309_normal.png?m=1756788252\", \"avatar_large\": \"https://cdn.v2ex.com/avatar/146e/13ed/166309_large.png?m=1756788252\", \"created\": 1459756963, \"last_modified\": 1756788252, \"pro\": 0}, \"last_reply_by\": \"samray\", \"last_touched\": 1519328082, \"title\": \"rspotify-- Rust \\u5b9e\\u73b0\\u7684 Spotify API SDK\", \"url\": \"https://www.v2ex.com/t/431357\", \"created\": 1519118261, \"deleted\": 0, \"content\": \"\\u4e4b\\u524d\\u56e0\\u4e3a\\u60f3\\u7528 Spotify \\u7684\\u63a5\\u53e3\\u5199\\u70b9\\u4e1c\\u897f, Spotify \\u7684 API \\u7684\\u516c\\u5f00\\u7684,\\u4f46\\u662f\\u5728 Spotify \\u7b2c\\u4e09\\u65b9[library]( https://developer.spotify.com/web-api/code-examples/) \\u5217\\u8868\\u91cc\\u9762\\u6ca1\\u6709 Rust \\u7684\\u5b9e\\u73b0. \\u6240\\u4ee5\\u6211\\u81ea\\u5df1\\u5b9e\\u73b0\\u4e86 Rust \\u7248\\u672c\\u7684 Spotify API SDK, \\u8fd9\\u4e2a\\u4e5f\\u662f\\u6211\\u5199\\u7684\\u7b2c\\u4e00\\u4e2a Rust crate, \\u4e5f\\u662f\\u82b1\\u8d39\\u4e86\\u86ee\\u591a\\u5fc3\\u601d\\u7684. Github \\u5730\\u5740: [rspotify]( https://github.com/samrayleung/rspotify), \\u5176\\u4ed6\\u5bf9 Rust \\u611f\\u5174\\u8da3\\u7684\\u540c\\u5b66\\u4e5f\\u53ef\\u4ee5\\u770b\\u770b\", \"content_rendered\": \"<p>\\u4e4b\\u524d\\u56e0\\u4e3a\\u60f3\\u7528 Spotify \\u7684\\u63a5\\u53e3\\u5199\\u70b9\\u4e1c\\u897f, Spotify \\u7684 API \\u7684\\u516c\\u5f00\\u7684,\\u4f46\\u662f\\u5728 Spotify \\u7b2c\\u4e09\\u65b9<a href=\\\"https://developer.spotify.com/web-api/code-examples/\\\" rel=\\\"nofollow\\\">library</a> \\u5217\\u8868\\u91cc\\u9762\\u6ca1\\u6709 Rust \\u7684\\u5b9e\\u73b0. \\u6240\\u4ee5\\u6211\\u81ea\\u5df1\\u5b9e\\u73b0\\u4e86 Rust \\u7248\\u672c\\u7684 Spotify API SDK, \\u8fd9\\u4e2a\\u4e5f\\u662f\\u6211\\u5199\\u7684\\u7b2c\\u4e00\\u4e2a Rust crate, \\u4e5f\\u662f\\u82b1\\u8d39\\u4e86\\u86ee\\u591a\\u5fc3\\u601d\\u7684. Github \\u5730\\u5740: <a href=\\\"https://github.com/samrayleung/rspotify\\\" rel=\\\"nofollow\\\">rspotify</a>, \\u5176\\u4ed6\\u5bf9 Rust \\u611f\\u5174\\u8da3\\u7684\\u540c\\u5b66\\u4e5f\\u53ef\\u4ee5\\u770b\\u770b</p>\\n\", \"last_modified\": 1519118261, \"replies\": 15, \"id\": 431357}]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

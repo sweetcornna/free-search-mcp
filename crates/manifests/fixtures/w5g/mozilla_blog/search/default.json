@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "mozilla_blog",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:13:30Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://blog.mozilla.org/wp-json/wp/v2/search?search=privacy&per_page=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ],
+          [
+            "cache-control",
+            "max-age=600, stale-if-error=86400"
+          ]
+        ],
+        "bodyText": "[{\"id\":85385,\"title\":\"Reddit expands privacy-sensitive performance measurement through partnership with Anonym\",\"url\":\"https:\\/\\/blog.mozilla.org\\/en\\/advertising\\/anonym-reddit-partnership\\/\",\"type\":\"post\",\"subtype\":\"post\",\"_links\":{\"self\":[{\"embeddable\":true,\"href\":\"https:\\/\\/blog.mozilla.org\\/en\\/wp-json\\/wp\\/v2\\/posts\\/85385\"}],\"about\":[{\"href\":\"https:\\/\\/blog.mozilla.org\\/en\\/wp-json\\/wp\\/v2\\/types\\/post\"}],\"collection\":[{\"href\":\"https:\\/\\/blog.mozilla.org\\/en\\/wp-json\\/wp\\/v2\\/search\"}]}},{\"id\":84139,\"title\":\"Anonym expands privacy-centric measurement on Pinterest for data-driven advertisers\",\"url\":\"https:\\/\\/blog.mozilla.org\\/en\\/advertising\\/pinterest-partnership\\/\",\"type\":\"post\",\"subtype\":\"post\",\"_links\":{\"self\":[{\"embeddable\":true,\"href\":\"https:\\/\\/blog.mozilla.org\\/en\\/wp-json\\/wp\\/v2\\/posts\\/84139\"}],\"about\":[{\"href\":\"https:\\/\\/blog.mozilla.org\\/en\\/wp-json\\/wp\\/v2\\/types\\/post\"}],\"collection\":[{\"href\":\"https:\\/\\/blog.mozilla.org\\/en\\/wp-json\\/wp\\/v2\\/search\"}]}},{\"id\":81686,\"title\":\"Firefox DNS privacy: Faster than ever, now on Android\",\"url\":\"https:\\/\\/blog.mozilla.org\\/en\\/firefox\\/dns-android\\/\",\"type\":\"post\",\"subtype\":\"post\",\"_links\":{\"self\":[{\"embeddable\":true,\"href\":\"https:\\/\\/blog.mozilla.org\\/en\\/wp-json\\/wp\\/v2\\/posts\\/81686\"}],\"about\":[{\"href\":\"https:\\/\\/blog.mozilla.org\\/en\\/wp-json\\/wp\\/v2\\/types\\/post\"}],\"collection\":[{\"href\":\"https:\\/\\/blog.mozilla.org\\/en\\/wp-json\\/wp\\/v2\\/search\"}]}}]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

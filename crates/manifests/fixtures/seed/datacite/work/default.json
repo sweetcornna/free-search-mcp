@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "source": "datacite",
+  "op": "work",
+  "recordedAt": "2026-11-25T14:12:23Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.datacite.org/dois/10.5281/zenodo.24500003",
+        "headersSubset": {
+          "accept": "application/vnd.api+json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "date",
+            "Wed, 25 Nov 2026 14:12:23 GMT"
+          ],
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ],
+          [
+            "status",
+            "200 OK"
+          ],
+          [
+            "x-anonymous-consumer",
+            "true"
+          ],
+          [
+            "cache-control",
+            "no-cache"
+          ],
+          [
+            "vary",
+            "Accept,Accept-Encoding"
+          ],
+          [
+            "referrer-policy",
+            "strict-origin-when-cross-origin"
+          ],
+          [
+            "x-permitted-cross-domain-policies",
+            "none"
+          ],
+          [
+            "x-xss-protection",
+            "0"
+          ],
+          [
+            "x-request-id",
+            "483b589a-cac3-40aa-a395-691cca221827"
+          ],
+          [
+            "x-runtime",
+            "0.035232"
+          ],
+          [
+            "x-frame-options",
+            "SAMEORIGIN"
+          ],
+          [
+            "x-content-type-options",
+            "nosniff"
+          ],
+          [
+            "x-powered-by",
+            "Phusion Passenger(R) 6.2.1"
+          ],
+          [
+            "server",
+            "nginx/1.28.3 + Phusion Passenger(R) 6.2.1"
+          ],
+          [
+            "access-control-allow-credentials",
+            "true"
+          ],
+          [
+            "access-control-allow-methods",
+            "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+          ],
+          [
+            "access-control-allow-headers",
+            "Accept,Access-Control-Allow-Origin,Access-Control-Expose-Headers,Access-Control-Allow-Methods,Access-Control-Allow-Headers,Authorization,Cache-Control,Content-Type,DNT,If-Modified-Since,Keep-Alive,Origin,User-Agent,X-Mx-ReqToken,X-Requested-With"
+          ],
+          [
+            "access-control-expose-headers",
+            "Authorization"
+          ],
+          [
+            "x-lupoversion",
+            "5.96.1"
+          ]
+        ],
+        "bodyText": "{\"data\":{\"id\":\"10.5281/zenodo.24500003\",\"type\":\"dois\",\"attributes\":{\"doi\":\"10.5281/zenodo.24500003\",\"prefix\":\"10.5281\",\"suffix\":\"zenodo.24500003\",\"identifiers\":[{\"identifier\":\"oai:zenodo.org:24500003\",\"identifierType\":\"oai\"}],\"alternateIdentifiers\":[{\"alternateIdentifierType\":\"oai\",\"alternateIdentifier\":\"oai:zenodo.org:24500003\"}],\"creators\":[{\"name\":\"Zaripova, Kamilia\",\"nameType\":\"Personal\",\"givenName\":\"Kamilia\",\"familyName\":\"Zaripova\",\"affiliation\":[\"Technical University of Munich; Munich Center for Machine Learning (MCML)\"],\"nameIdentifiers\":[]},{\"name\":\"Gössl, Felix Johannes\",\"nameType\":\"Personal\",\"givenName\":\"Felix Johannes\",\"familyName\":\"Gössl\",\"affiliation\":[\"Dr. von Hauner Children's Hospital, LMU Munich\"],\"nameIdentifiers\":[]},{\"name\":\"Bettecken, Thomas\",\"nameType\":\"Personal\",\"givenName\":\"Thomas\",\"familyName\":\"Bettecken\",\"affiliation\":[\"Dr. von Hauner Children's Hospital, LMU Munich\"],\"nameIdentifiers\":[]},{\"name\":\"Özsoy, Ege\",\"nameType\":\"Personal\",\"givenName\":\"Ege\",\"familyName\":\"Özsoy\",\"affiliation\":[\"Technical University of Munich; Munich Center for Machine Learning (MCML)\"],\"nameIdentifiers\":[]},{\"name\":\"Klein, Christoph\",\"nameType\":\"Personal\",\"givenName\":\"Christoph\",\"familyName\":\"Klein\",\"affiliation\":[\"Dr. von Hauner Children's Hospital, LMU Munich\"],\"nameIdentifiers\":[]},{\"name\":\"Navab, Nassir\",\"nameType\":\"Personal\",\"givenName\":\"Nassir\",\"familyName\":\"Navab\",\"affiliation\":[\"Technical University of Munich; Munich Center for Machine Learning (MCML)\"],\"nameIdentifiers\":[]},{\"name\":\"Farshad, Azade\",\"nameType\":\"Personal\",\"givenName\":\"Azade\",\"familyName\":\"Farshad\",\"affiliation\":[\"Technical University of Munich; MCML; ELLIS Institute Finland; Aalto University\"],\"nameIdentifiers\":[]}],\"titles\":[{\"title\":\"PhenoKG: code, trained model, knowledge graph and data for phenotype-only genome-wide gene prioritization in rare diseases\"}],\"publisher\":\"Zenodo\",\"container\":{},\"publicationYear\":2026,\"subjects\":[{\"subject\":\"rare diseases\"},{\"subject\":\"gene prioritization\"},{\"subject\":\"knowledge graph\"},{\"subject\":\"graph neural network\"},{\"subject\":\"Human Phenotype Ontology\"}],\"contributors\":[],\"dates\":[{\"date\":\"2026-11-24\",\"dateType\":\"Issued\"}],\"language\":null,\"types\":{\"ris\":\"DATA\",\"bibtex\":\"misc\",\"citeproc\":\"dataset\",\"schemaOrg\":\"Dataset\",\"resourceType\":\"\",\"resourceTypeGeneral\":\"Dataset\"},\"relatedIdentifiers\":[{\"relationType\":\"IsVersionOf\",\"relatedIdentifier\":\"10.5281/zenodo.24500002\",\"relatedIdentifierType\":\"DOI\"}],\"relatedItems\":[],\"sizes\":[],\"formats\":[],\"version\":null,\"rightsList\":[{\"rights\":\"Creative Commons Attribution 4.0 International\",\"rightsUri\":\"https://creativecommons.org/licenses/by/4.0/legalcode\",\"schemeUri\":\"https://spdx.org/licenses/\",\"rightsIdentifier\":\"cc-by-4.0\",\"rightsIdentifierScheme\":\"SPDX\"}],\"descriptions\":[{\"description\":\"Code and data of the manuscript \\\"Knowledge-graph based neural network model for phenotype-only genome-wide gene prioritization in rare diseases\\\".\\nPhenoKG_code.zip: the PhenoKG code (MIT licence) with a README covering system requirements, installation, a demo with expected output, scoring new patients genome-wide or with a candidate gene list, and the reproduction of all main results (README.md is also attached separately). pipeline/download_data.sh downloads the files below, checks their SHA-256 sums and places them where the code expects them.\\nData (CC BY 4.0; third-party data remain under the terms of their sources): phenokg_kg_features_2026-10-07.tar: Monarch knowledge graph release 2026-10-07 as downloaded and as processed for PhenoKG, BioLORD-2023 node features, HPO annotations, HPO v2026-09-01; phenokg_simulated_and_phenopacket_patients.tar: simulated training and validation patients and the GA4GH Phenopacket Store 0.1.26 cases split by publication; phenokg_inputs_test_data_reference_results.tar: all test sets, the original cohort files, HGNC, and the reference outputs of the final model; phenokg_2026.ckpt: the trained final model; phenokg_test_subgraphs_2026-10-07.tar and phenokg_training_subgraphs_2026-10-07.tar: pre-built patient subgraphs (optional; they can be rebuilt with the code); SHA256SUMS: checksums.\",\"descriptionType\":\"Abstract\"}],\"geoLocations\":[],\"fundingReferences\":[],\"xml\":\"PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHJlc291cmNlIHhtbG5zOnhzaT0iaHR0cDovL3d3dy53My5vcmcvMjAwMS9YTUxTY2hlbWEtaW5zdGFuY2UiIHhtbG5zPSJodHRwOi8vZGF0YWNpdGUub3JnL3NjaGVtYS9rZXJuZWwtNCIgeHNpOnNjaGVtYUxvY2F0aW9uPSJodHRwOi8vZGF0YWNpdGUub3JnL3NjaGVtYS9rZXJuZWwtNCBodHRwOi8vc2NoZW1hLmRhdGFjaXRlLm9yZy9tZXRhL2tlcm5lbC00L21ldGFkYXRhLnhzZCI+CiAgPGlkZW50aWZpZXIgaWRlbnRpZmllclR5cGU9IkRPSSI+MTAuNTI4MS9aRU5PRE8uMjQ1MDAwMDM8L2lkZW50aWZpZXI+CiAgPGNyZWF0b3JzPgogICAgPGNyZWF0b3I+CiAgICAgIDxjcmVhdG9yTmFtZSBuYW1lVHlwZT0iUGVyc29uYWwiPlphcmlwb3ZhLCBLYW1pbGlhPC9jcmVhdG9yTmFtZT4KICAgICAgPGdpdmVuTmFtZT5LYW1pbGlhPC9naXZlbk5hbWU+CiAgICAgIDxmYW1pbHlOYW1lPlphcmlwb3ZhPC9mYW1pbHlOYW1lPgogICAgICA8YWZmaWxpYXRpb24+VGVjaG5pY2FsIFVuaXZlcnNpdHkgb2YgTXVuaWNoOyBNdW5pY2ggQ2VudGVyIGZvciBNYWNoaW5lIExlYXJuaW5nIChNQ01MKTwvYWZmaWxpYXRpb24+CiAgICA8L2NyZWF0b3I+CiAgICA8Y3JlYXRvcj4KICAgICAgPGNyZWF0b3JOYW1lIG5hbWVUeXBlPSJQZXJzb25hbCI+R8O2c3NsLCBGZWxpeCBKb2hhbm5lczwvY3JlYXRvck5hbWU+CiAgICAgIDxnaXZlbk5hbWU+RmVsaXggSm9oYW5uZXM8L2dpdmVuTmFtZT4KICAgICAgPGZhbWlseU5hbWU+R8O2c3NsPC9mYW1pbHlOYW1lPgogICAgICA8YWZmaWxpYXRpb24+RHIuIHZvbiBIYXVuZXIgQ2hpbGRyZW4ncyBIb3NwaXRhbCwgTE1VIE11bmljaDwvYWZmaWxpYXRpb24+CiAgICA8L2NyZWF0b3I+CiAgICA8Y3JlYXRvcj4KICAgICAgPGNyZWF0b3JOYW1lIG5hbWVUeXBlPSJQZXJzb25hbCI+QmV0dGVja2VuLCBUaG9tYXM8L2NyZWF0b3JOYW1lPgogICAgICA8Z2l2ZW5OYW1lPlRob21hczwvZ2l2ZW5OYW1lPgogICAgICA8ZmFtaWx5TmFtZT5CZXR0ZWNrZW48L2ZhbWlseU5hbWU+CiAgICAgIDxhZmZpbGlhdGlvbj5Eci4gdm9uIEhhdW5lciBDaGlsZHJlbidzIEhvc3BpdGFsLCBMTVUgTXVuaWNoPC9hZmZpbGlhdGlvbj4KICAgIDwvY3JlYXRvcj4KICAgIDxjcmVhdG9yPgogICAgICA8Y3JlYXRvck5hbWUgbmFtZVR5cGU9IlBlcnNvbmFsIj7Dlnpzb3ksIEVnZTwvY3JlYXRvck5hbWU+CiAgICAgIDxnaXZlbk5hbWU+RWdlPC9naXZlbk5hbWU+CiAgICAgIDxmYW1pbHlOYW1lPsOWenNveTwvZmFtaWx5TmFtZT4KICAgICAgPGFmZmlsaWF0aW9uPlRlY2huaWNhbCBVbml2ZXJzaXR5IG9mIE11bmljaDsgTXVuaWNoIENlbnRlciBmb3IgTWFjaGluZSBMZWFybmluZyAoTUNNTCk8L2FmZmlsaWF0aW9uPgogICAgPC9jcmVhdG9yPgogICAgPGNyZWF0b3I+CiAgICAgIDxjcmVhdG9yTmFtZSBuYW1lVHlwZT0iUGVyc29uYWwiPktsZWluLCBDaHJpc3RvcGg8L2NyZWF0b3JOYW1lPgogICAgICA8Z2l2ZW5OYW1lPkNocmlzdG9waDwvZ2l2ZW5OYW1lPgogICAgICA8ZmFtaWx5TmFtZT5LbGVpbjwvZmFtaWx5TmFtZT4KICAgICAgPGFmZmlsaWF0aW9uPkRyLiB2b24gSGF1bmVyIENoaWxkcmVuJ3MgSG9zcGl0YWwsIExNVSBNdW5pY2g8L2FmZmlsaWF0aW9uPgogICAgPC9jcmVhdG9yPgogICAgPGNyZWF0b3I+CiAgICAgIDxjcmVhdG9yTmFtZSBuYW1lVHlwZT0iUGVyc29uYWwiPk5hdmFiLCBOYXNzaXI8L2NyZWF0b3JOYW1lPgogICAgICA8Z2l2ZW5OYW1lPk5hc3NpcjwvZ2l2ZW5OYW1lPgogICAgICA8ZmFtaWx5TmFtZT5OYXZhYjwvZmFtaWx5TmFtZT4KICAgICAgPGFmZmlsaWF0aW9uPlRlY2huaWNhbCBVbml2ZXJzaXR5IG9mIE11bmljaDsgTXVuaWNoIENlbnRlciBmb3IgTWFjaGluZSBMZWFybmluZyAoTUNNTCk8L2FmZmlsaWF0aW9uPgogICAgPC9jcmVhdG9yPgogICAgPGNyZWF0b3I+CiAgICAgIDxjcmVhdG9yTmFtZSBuYW1lVHlwZT0iUGVyc29uYWwiPkZhcnNoYWQsIEF6YWRlPC9jcmVhdG9yTmFtZT4KICAgICAgPGdpdmVuTmFtZT5BemFkZTwvZ2l2ZW5OYW1lPgogICAgICA8ZmFtaWx5TmFtZT5GYXJzaGFkPC9mYW1pbHlOYW1lPgogICAgICA8YWZmaWxpYXRpb24+VGVjaG5pY2FsIFVuaXZlcnNpdHkgb2YgTXVuaWNoOyBNQ01MOyBFTExJUyBJbnN0aXR1dGUgRmlubGFuZDsgQWFsdG8gVW5pdmVyc2l0eTwvYWZmaWxpYXRpb24+CiAgICA8L2NyZWF0b3I+CiAgPC9jcmVhdG9ycz4KICA8dGl0bGVzPgogICAgPHRpdGxlPlBoZW5vS0c6IGNvZGUsIHRyYWluZWQgbW9kZWwsIGtub3dsZWRnZSBncmFwaCBhbmQgZGF0YSBmb3IgcGhlbm90eXBlLW9ubHkgZ2Vub21lLXdpZGUgZ2VuZSBwcmlvcml0aXphdGlvbiBpbiByYXJlIGRpc2Vhc2VzPC90aXRsZT4KICA8L3RpdGxlcz4KICA8cHVibGlzaGVyPlplbm9kbzwvcHVibGlzaGVyPgogIDxwdWJsaWNhdGlvblllYXI+MjAyNjwvcHVibGljYXRpb25ZZWFyPgogIDxyZXNvdXJjZVR5cGUgcmVzb3VyY2VUeXBlR2VuZXJhbD0iRGF0YXNldCIvPgogIDxzdWJqZWN0cz4KICAgIDxzdWJqZWN0PnJhcmUgZGlzZWFzZXM8L3N1YmplY3Q+CiAgICA8c3ViamVjdD5nZW5lIHByaW9yaXRpemF0aW9uPC9zdWJqZWN0PgogICAgPHN1YmplY3Q+a25vd2xlZGdlIGdyYXBoPC9zdWJqZWN0PgogICAgPHN1YmplY3Q+Z3JhcGggbmV1cmFsIG5ldHdvcms8L3N1YmplY3Q+CiAgICA8c3ViamVjdD5IdW1hbiBQaGVub3R5cGUgT250b2xvZ3k8L3N1YmplY3Q+CiAgPC9zdWJqZWN0cz4KICA8ZGF0ZXM+CiAgICA8ZGF0ZSBkYXRlVHlwZT0iSXNzdWVkIj4yMDI2LTExLTI0PC9kYXRlPgogIDwvZGF0ZXM+CiAgPGFsdGVybmF0ZUlkZW50aWZpZXJzPgogICAgPGFsdGVybmF0ZUlkZW50aWZpZXIgYWx0ZXJuYXRlSWRlbnRpZmllclR5cGU9Im9haSI+b2FpOnplbm9kby5vcmc6MjQ1MDAwMDM8L2FsdGVybmF0ZUlkZW50aWZpZXI+CiAgPC9hbHRlcm5hdGVJZGVudGlmaWVycz4KICA8cmVsYXRlZElkZW50aWZpZXJzPgogICAgPHJlbGF0ZWRJZGVudGlmaWVyIHJlbGF0ZWRJZGVudGlmaWVyVHlwZT0iRE9JIiByZWxhdGlvblR5cGU9IklzVmVyc2lvbk9mIj4xMC41MjgxL3plbm9kby4yNDUwMDAwMjwvcmVsYXRlZElkZW50aWZpZXI+CiAgPC9yZWxhdGVkSWRlbnRpZmllcnM+CiAgPHNpemVzLz4KICA8Zm9ybWF0cy8+CiAgPHZlcnNpb24vPgogIDxyaWdodHNMaXN0PgogICAgPHJpZ2h0cyByaWdodHNVUkk9Imh0dHBzOi8vY3JlYXRpdmVjb21tb25zLm9yZy9saWNlbnNlcy9ieS80LjAvbGVnYWxjb2RlIiByaWdodHNJZGVudGlmaWVyPSJjYy1ieS00LjAiIHJpZ2h0c0lkZW50aWZpZXJTY2hlbWU9IlNQRFgiIHNjaGVtZVVSST0iaHR0cHM6Ly9zcGR4Lm9yZy9saWNlbnNlcy8iPkNyZWF0aXZlIENvbW1vbnMgQXR0cmlidXRpb24gNC4wIEludGVybmF0aW9uYWw8L3JpZ2h0cz4KICA8L3JpZ2h0c0xpc3Q+CiAgPGRlc2NyaXB0aW9ucz4KICAgIDxkZXNjcmlwdGlvbiBkZXNjcmlwdGlvblR5cGU9IkFic3RyYWN0Ij5Db2RlIGFuZCBkYXRhIG9mIHRoZSBtYW51c2NyaXB0ICJLbm93bGVkZ2UtZ3JhcGggYmFzZWQgbmV1cmFsIG5ldHdvcmsgbW9kZWwgZm9yIHBoZW5vdHlwZS1vbmx5IGdlbm9tZS13aWRlIGdlbmUgcHJpb3JpdGl6YXRpb24gaW4gcmFyZSBkaXNlYXNlcyIuClBoZW5vS0dfY29kZS56aXA6IHRoZSBQaGVub0tHIGNvZGUgKE1JVCBsaWNlbmNlKSB3aXRoIGEgUkVBRE1FIGNvdmVyaW5nIHN5c3RlbSByZXF1aXJlbWVudHMsIGluc3RhbGxhdGlvbiwgYSBkZW1vIHdpdGggZXhwZWN0ZWQgb3V0cHV0LCBzY29yaW5nIG5ldyBwYXRpZW50cyBnZW5vbWUtd2lkZSBvciB3aXRoIGEgY2FuZGlkYXRlIGdlbmUgbGlzdCwgYW5kIHRoZSByZXByb2R1Y3Rpb24gb2YgYWxsIG1haW4gcmVzdWx0cyAoUkVBRE1FLm1kIGlzIGFsc28gYXR0YWNoZWQgc2VwYXJhdGVseSkuIHBpcGVsaW5lL2Rvd25sb2FkX2RhdGEuc2ggZG93bmxvYWRzIHRoZSBmaWxlcyBiZWxvdywgY2hlY2tzIHRoZWlyIFNIQS0yNTYgc3VtcyBhbmQgcGxhY2VzIHRoZW0gd2hlcmUgdGhlIGNvZGUgZXhwZWN0cyB0aGVtLgpEYXRhIChDQyBCWSA0LjA7IHRoaXJkLXBhcnR5IGRhdGEgcmVtYWluIHVuZGVyIHRoZSB0ZXJtcyBvZiB0aGVpciBzb3VyY2VzKTogcGhlbm9rZ19rZ19mZWF0dXJlc18yMDI2LTEwLTA3LnRhcjogTW9uYXJjaCBrbm93bGVkZ2UgZ3JhcGggcmVsZWFzZSAyMDI2LTEwLTA3IGFzIGRvd25sb2FkZWQgYW5kIGFzIHByb2Nlc3NlZCBmb3IgUGhlbm9LRywgQmlvTE9SRC0yMDIzIG5vZGUgZmVhdHVyZXMsIEhQTyBhbm5vdGF0aW9ucywgSFBPIHYyMDI2LTA5LTAxOyBwaGVub2tnX3NpbXVsYXRlZF9hbmRfcGhlbm9wYWNrZXRfcGF0aWVudHMudGFyOiBzaW11bGF0ZWQgdHJhaW5pbmcgYW5kIHZhbGlkYXRpb24gcGF0aWVudHMgYW5kIHRoZSBHQTRHSCBQaGVub3BhY2tldCBTdG9yZSAwLjEuMjYgY2FzZXMgc3BsaXQgYnkgcHVibGljYXRpb247IHBoZW5va2dfaW5wdXRzX3Rlc3RfZGF0YV9yZWZlcmVuY2VfcmVzdWx0cy50YXI6IGFsbCB0ZXN0IHNldHMsIHRoZSBvcmlnaW5hbCBjb2hvcnQgZmlsZXMsIEhHTkMsIGFuZCB0aGUgcmVmZXJlbmNlIG91dHB1dHMgb2YgdGhlIGZpbmFsIG1vZGVsOyBwaGVub2tnXzIwMjYuY2twdDogdGhlIHRyYWluZWQgZmluYWwgbW9kZWw7IHBoZW5va2dfdGVzdF9zdWJncmFwaHNfMjAyNi0xMC0wNy50YXIgYW5kIHBoZW5va2dfdHJhaW5pbmdfc3ViZ3JhcGhzXzIwMjYtMTAtMDcudGFyOiBwcmUtYnVpbHQgcGF0aWVudCBzdWJncmFwaHMgKG9wdGlvbmFsOyB0aGV5IGNhbiBiZSByZWJ1aWx0IHdpdGggdGhlIGNvZGUpOyBTSEEyNTZTVU1TOiBjaGVja3N1bXMuPC9kZXNjcmlwdGlvbj4KICA8L2Rlc2NyaXB0aW9ucz4KPC9yZXNvdXJjZT4K\",\"url\":\"https://zenodo.org/doi/10.5281/zenodo.24500003\",\"contentUrl\":null,\"metadataVersion\":0,\"schemaVersion\":\"http://datacite.org/schema/kernel-4\",\"source\":\"api\",\"isActive\":true,\"state\":\"findable\",\"reason\":null,\"viewCount\":0,\"viewsOverTime\":[],\"downloadCount\":0,\"downloadsOverTime\":[],\"referenceCount\":0,\"citationCount\":0,\"citationsOverTime\":[],\"partCount\":0,\"partOfCount\":0,\"versionCount\":0,\"versionOfCount\":1,\"created\":\"2026-11-25T11:48:59.000Z\",\"registered\":\"2026-11-25T11:49:00.000Z\",\"published\":\"2026\",\"updated\":\"2026-11-25T11:49:00.000Z\"},\"relationships\":{\"client\":{\"data\":{\"id\":\"cern.zenodo\",\"type\":\"clients\"}},\"provider\":{\"data\":{\"id\":\"cern\",\"type\":\"providers\"}},\"media\":{\"data\":{\"id\":\"10.5281/zenodo.24500003\",\"type\":\"media\"}},\"references\":{\"data\":[]},\"citations\":{\"data\":[]},\"parts\":{\"data\":[]},\"partOf\":{\"data\":[]},\"versions\":{\"data\":[]},\"versionOf\":{\"data\":[{\"id\":\"10.5281/zenodo.24500002\",\"type\":\"dois\"}]}}}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,120 @@
+id = "w3c_specs"
+name = "W3C Technical Specifications API"
+summary = "Official keyless W3C HAL+JSON API indexing 1,700+ Web technical standards, working drafts, version histories, and working groups."
+aliases = ["w3c", "api.w3.org", "w3c standards"]
+home_url = "https://www.w3.org/TR/"
+tier = 1
+scopes = ["docs"]
+caps = ["lookup", "harvest"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 86400, host_bucket = "api.w3.org" }
+
+[op.list]
+summary = "Browse W3C technical specifications with embedded descriptions and shortlinks."
+method = "GET"
+url = "https://api.w3.org/specifications"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { embed = "true" }
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { limit = 3 }, min_results = 2, fixture = "fixtures/w5i/w3c_specs/list/default.json" }
+examples = ['source.call("w3c_specs.list", {limit: 10})']
+
+[op.list.params]
+limit = { type = "int", default = 10, min = 1, max = 50, to = "items", doc = "Specifications per page" }
+page = { type = "int", min = 1, to = "page", doc = "1-based page number" }
+
+[op.list.map]
+items = "(._embedded.specifications // [])[]"
+total = ".total"
+error = "if .code != null and .message != null then .message else null end"
+record = '''{
+  shortname: (.shortname // ""),
+  title: ((.title // "") | collapse_ws // ""),
+  description: ((.description | strip_tags) | if . == "" then null else . end),
+  shortlink: (.shortlink // ""),
+  editorDraft: (."editor-draft" // null),
+  seriesVersion: (."series-version" // null),
+  latestStatus: (._links."latest-version".title // null)
+}'''
+
+[op.spec]
+summary = "Look up a single W3C specification by shortname (e.g. html52, wai-aria-1.2, css-grid-1)."
+method = "GET"
+url = "https://api.w3.org/specifications/{shortname}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { shortname = "html52" }, min_results = 1, fixture = "fixtures/w5i/w3c_specs/spec/default.json" }
+examples = ['source.call("w3c_specs.spec", {shortname: "html52"})']
+
+[op.spec.params]
+shortname = { type = "string", required = true, in = "path", doc = "W3C specification shortname (e.g. html52, wai-aria-1.2)" }
+
+[op.spec.map]
+items = "."
+error = "if .code != null and .message != null then .message else null end"
+record = "@ref:op.list.map.record"
+
+[op.versions]
+summary = "Retrieve published version history for a W3C specification by shortname."
+method = "GET"
+url = "https://api.w3.org/specifications/{shortname}/versions"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { embed = "true" }
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { shortname = "html52", limit = 3 }, min_results = 2, fixture = "fixtures/w5i/w3c_specs/versions/default.json" }
+examples = ['source.call("w3c_specs.versions", {shortname: "html52", limit: 5})']
+
+[op.versions.params]
+shortname = { type = "string", required = true, in = "path", doc = "W3C specification shortname" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "items", doc = "Versions per page" }
+page = { type = "int", min = 1, to = "page", doc = "1-based page number" }
+
+[op.versions.map]
+items = "(._embedded.\"version-history\" // [])[]"
+total = ".total"
+error = "if .code != null and .message != null then .message else null end"
+record = '''{
+  title: ((.title // "") | collapse_ws // ""),
+  status: (.status // null),
+  date: (.date | parse_date),
+  uri: (.uri // .shortlink // ""),
+  informative: (if .informative == null then null else .informative end),
+  recTrack: (if ."rec-track" == null then null else ."rec-track" end)
+}'''
+
+[op.groups]
+summary = "List W3C working groups, interest groups, and community groups."
+method = "GET"
+url = "https://api.w3.org/groups"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { embed = "true" }
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { limit = 3 }, min_results = 2, fixture = "fixtures/w5i/w3c_specs/groups/default.json" }
+examples = ['source.call("w3c_specs.groups", {limit: 10})']
+
+[op.groups.params]
+limit = { type = "int", default = 10, min = 1, max = 50, to = "items", doc = "Groups per page" }
+page = { type = "int", min = 1, to = "page", doc = "1-based page number" }
+
+[op.groups.map]
+items = "(._embedded.groups // [])[]"
+total = ".total"
+error = "if .code != null and .message != null then .message else null end"
+record = '''{
+  id: .id,
+  shortname: (.shortname // null),
+  name: ((.name // "") | collapse_ws // ""),
+  type: (.type // .discr // null),
+  creationDate: (."creation-date" | parse_date),
+  isClosed: (if .is_closed == null then null else .is_closed end),
+  description: ((.description | strip_tags) | if . == "" then null else . end),
+  homepage: (._links.homepage.href // ._links.self.href // "")
+}'''

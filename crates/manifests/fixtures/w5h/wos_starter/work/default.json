@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "wos_starter",
+  "op": "work",
+  "recordedAt": "2026-11-25T13:03:45Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.clarivate.com/apis/wos-starter/v1/documents/WOS:000469615300001",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"uid\": \"WOS:000469615300001\", \"title\": \"Transformer-based neural machine translation for low-resource languages\", \"types\": [\"Article\"], \"source\": {\"sourceTitle\": \"IEEE/ACM Transactions on Audio, Speech, and Language Processing\", \"publishYear\": 2022, \"publishMonth\": \"APR\"}, \"names\": {\"authors\": [{\"displayName\": \"Wang, Hao\", \"wosStandard\": \"Wang, H\", \"orcid\": \"0000-0002-1825-0097\"}]}, \"identifiers\": {\"doi\": \"10.1109/TASLP.2022.3160001\", \"issn\": \"2329-9290\"}, \"citations\": [{\"db\": \"WOS\", \"count\": 63}], \"links\": {\"record\": \"https://www.webofscience.com/api/gateway?GWVersion=2&SrcApp=starter&SrcAuth=WosAPI&KeyUT=WOS:000469615300001\"}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

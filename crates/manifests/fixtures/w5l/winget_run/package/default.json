@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "winget_run",
+  "op": "package",
+  "recordedAt": "2026-11-25T12:56:54Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.winget.run/v2/packages/BurntSushi/ripgrep.GNU",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"Package\":{\"createdAt\":\"2023-03-16T14:49:20.747Z\",\"updatedAt\":\"2023-03-16T14:49:20.747Z\",\"Id\":\"BurntSushi.ripgrep.GNU\",\"Versions\":[\"13.0.0\"],\"Latest\":{\"Name\":\"RipGrep GNU\",\"Publisher\":\"BurntSushi\",\"Tags\":[\"regex\"],\"Description\":\"ripgrep is a line-oriented search tool that recursively searches the current directory for a regex pattern.\\nBy default, ripgrep will respect gitignore rules and automatically skip hidden files/directories and binary files.\",\"Homepage\":\"https://github.com/BurntSushi/ripgrep\",\"License\":\"MIT and Unlicense\",\"LicenseUrl\":null},\"Featured\":false,\"Search\":{\"Name\":\"RPKRPNRPKRPKN RP_ PK_ KR_ PN_ RPK PKR KRP RPN RPKR PKRP KRPN RPKRP PKRPN KN_ PKN KRPK RPKN PKRPK KRPKN RPKRPK PKRPKN\",\"Publisher\":\"PRNTSX PR_ RN_ NT_ TS_ SX_ PRN RNT NTS TSX PRNT RNTS NTSX PRNTS RNTSX\",\"Tags\":\"RKKS RK_ KK_ KS_ RKK KKS\",\"Description\":\"\"},\"UpdatedAt\":\"2023-03-16T14:34:16.581027\",\"CreatedAt\":\"2023-03-16T14:34:16.581027\"}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

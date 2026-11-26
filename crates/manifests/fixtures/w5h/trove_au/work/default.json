@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "trove_au",
+  "op": "work",
+  "recordedAt": "2026-11-25T13:03:45Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.trove.nla.gov.au/v3/work/190226707?encoding=json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"id\": \"190226707\", \"url\": \"https://api.trove.nla.gov.au/v3/work/190226707\", \"troveUrl\": \"https://trove.nla.gov.au/work/190226707\", \"title\": \"Climate variability and hydrology in the Murray-Darling Basin\", \"contributor\": [\"CSIRO\", \"Australian National University\"], \"issued\": \"2021\", \"type\": [\"Thesis\", \"Research report\"], \"snippet\": \"Long-term paleoclimate and instrumental drought reconstruction across southeastern Australia.\", \"isPartOf\": [{\"value\": \"CSIRO Water for a Healthy Country\"}], \"identifier\": [{\"type\": \"doi\", \"value\": \"10.25919/murray-darling-2021\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

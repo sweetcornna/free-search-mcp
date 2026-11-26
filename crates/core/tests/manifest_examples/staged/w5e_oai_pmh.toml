@@ -1,0 +1,101 @@
+# W0a test vector: copy of crates/manifests/staging/w5e/oai_pmh.toml (2026-11-25), verbatim.
+protocol = "oai_pmh"
+
+[[instance]]
+id = "doab_oai"
+name = "DOAB (Directory of Open Access Books)"
+summary = "Global OAI-PMH harvester of 85k+ peer-reviewed open-access academic books and monographs."
+aliases = ["doab", "directory of open access books", "oa books"]
+base_url = "https://directory.doabooks.org/oai/request"
+scopes = ["academic", "academic.books", "academic.openaccess"]
+caps = ["lookup", "harvest", "book"]
+tier = 1
+probe = { op = "identify", params = {}, min_results = 1 }
+
+[[instance]]
+id = "irdb_japan"
+name = "IRDB (Institutional Repositories DataBase, Japan)"
+summary = "NII national OAI-PMH harvester aggregating 5M+ papers, kiyo bulletins, and theses from ~800 Japanese universities."
+aliases = ["irdb", "nii irdb", "japan institutional repositories", "jpcoar"]
+base_url = "https://irdb.nii.ac.jp/oai"
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["lookup", "harvest", "thesis"]
+tier = 1
+probe = { op = "identify", params = {}, min_results = 1 }
+
+[[instance]]
+id = "kci_korea"
+name = "KCI (Korea Citation Index)"
+summary = "National Research Foundation of Korea OAI-PMH repository indexing ~2M+ accredited Korean scholarly journal articles."
+aliases = ["kci", "korea citation index", "nrf korea"]
+base_url = "https://www.kci.go.kr/kciportal/oai/request"
+scopes = ["academic", "academic.index"]
+caps = ["lookup", "harvest"]
+tier = 1
+probe = { op = "identify", params = {}, min_results = 1 }
+
+[[instance]]
+id = "sciencedb_cn"
+name = "ScienceDB (CAS China)"
+summary = "Chinese Academy of Sciences CNIC open scientific data repository (500k+ multidisciplinary research datasets)."
+aliases = ["sciencedb", "scidb", "cas data", "科学数据银行"]
+base_url = "https://www.scidb.cn/oai"
+scopes = ["dataset", "academic"]
+caps = ["lookup", "harvest", "dataset"]
+tier = 1
+probe = { op = "identify", params = {}, min_results = 1 }
+
+[[instance]]
+id = "ajol_africa"
+name = "AJOL (African Journals Online)"
+summary = "Pan-African PKP OJS OAI-PMH repository indexing 600+ African peer-reviewed journals and 250k+ articles."
+aliases = ["ajol", "african journals online", "africa journals"]
+base_url = "https://www.ajol.info/index.php/index/oai"
+scopes = ["academic", "academic.openaccess"]
+caps = ["lookup", "harvest"]
+tier = 1
+probe = { op = "identify", params = {}, min_results = 1 }
+
+[[instance]]
+id = "scielo_preprints"
+name = "SciELO Preprints"
+summary = "Latin American and Iberian multidisciplinary open-access preprint server in Spanish, Portuguese, and English."
+aliases = ["scielo", "scielo preprints", "latin america preprints"]
+base_url = "https://preprints.scielo.org/index.php/scielo/oai"
+scopes = ["academic", "academic.preprint", "academic.openaccess"]
+caps = ["lookup", "harvest"]
+tier = 1
+probe = { op = "identify", params = {}, min_results = 1 }
+
+[[instance]]
+id = "ndltd_union"
+name = "NDLTD Union Catalog"
+summary = "Networked Digital Library of Theses and Dissertations global OAI-PMH union catalog (~6M+ ETDs)."
+aliases = ["ndltd", "global etd", "union theses"]
+base_url = "https://union.ndltd.org/oai-pmh/"
+scopes = ["academic", "academic.theses"]
+caps = ["lookup", "harvest", "thesis"]
+tier = 1
+probe = { op = "identify", params = {}, min_results = 1 }
+
+[[instance]]
+id = "cyberleninka"
+name = "CyberLeninka"
+summary = "Open-access Russian and CIS scientific library OAI-PMH harvester (~3.3M+ articles across 4,000+ journals)."
+aliases = ["cyberleninka", "russian open access"]
+base_url = "https://cyberleninka.ru/oai"
+scopes = ["academic", "academic.openaccess"]
+caps = ["lookup", "harvest"]
+tier = 2
+probe = { op = "identify", params = {}, min_results = 1 }
+
+[[instance]]
+id = "philarchive"
+name = "PhilArchive"
+summary = "Open-access digital archive for philosophy preprints, journal articles, and monographs (~85k+ works)."
+aliases = ["philarchive", "philosophy archive"]
+base_url = "https://philarchive.org/oai.pl"
+scopes = ["academic", "academic.humanities", "academic.openaccess"]
+caps = ["lookup", "harvest"]
+tier = 2
+probe = { op = "identify", params = {}, min_results = 1 }

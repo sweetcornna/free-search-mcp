@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "nasa_eonet",
+  "op": "search",
+  "recordedAt": "2026-11-25T13:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://eonet.gsfc.nasa.gov/api/v3/events?category=wildfires&status=open&limit=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/rss+xml; charset=utf-8"
+          ],
+          [
+            "cache-control",
+            "no-cache, private"
+          ]
+        ],
+        "bodyText": "{\n\t\"title\": \"EONET Events\",\n\t\"description\": \"Natural events from EONET.\",\n\t\"link\": \"https://eonet.gsfc.nasa.gov/api/v3/events\",\n\t\"events\": [\n\t\t{\n\t\t\t\"id\": \"EONET_26661\",\n\t\t\t\"title\": \"Wildfire Little Ridge, Highland, Virginia\",\n            \"description\": \"12 Miles SW from Monterey, VA\",\n\t\t\t\"link\": \"https://eonet.gsfc.nasa.gov/api/v3/events/EONET_26661\",\n\t\t\t\"closed\": null,\n\t\t\t\t\"categories\": [\n\t\t\t\t\t{\n\t\t\t\t\t\"id\": \"wildfires\",\n\t\t\t\t\t\"title\": \"Wildfires\"\n\t\t\t\t}\n\n\t    \t\t\t\t],\n    \t\t\t\"sources\": [\n\t\t\t\t\t{\n\t\t\t\t\t\"id\": \"IRWIN\",\n\t\t\t\t\t\"url\": \"https://irwin.doi.gov/observer/incidents/2026-VAVAF-260139\"\n\t\t\t\t}\n\n\t\t\t\t\t\t\n\t\t\t],\n\t\t\t\t\t\"geometry\": [\n\t\t\t\t\t{\n\t\t\t\t\t\t\t\"magnitudeValue\": 900.00,\n\t\t\t\t\t\"magnitudeUnit\": \"acres\",\n\t\t\t\t\t\"date\": \"2026-11-21T23:15:00Z\",\n\t\t\t\t\t\"type\": \"Point\", \n\t\t\t\t\t\t\t\"coordinates\": [ -79.791367, 38.313617 ]\n\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\n\t\t\t]\n\t\t},\n\n\t\t\t{\n\t\t\t\"id\": \"EONET_26662\",\n\t\t\t\"title\": \"Wildfire White Oak Flat, Alleghany, Virginia\",\n            \"description\": \"2 Miles NW from Clifton Forge, VA\",\n\t\t\t\"link\": \"https://eonet.gsfc.nasa.gov/api/v3/events/EONET_26662\",\n\t\t\t\"closed\": null,\n\t\t\t\t\"categories\": [\n\t\t\t\t\t{\n\t\t\t\t\t\"id\": \"wildfires\",\n\t\t\t\t\t\"title\": \"Wildfires\"\n\t\t\t\t}\n\n\t    \t\t\t\t],\n    \t\t\t\"sources\": [\n\t\t\t\t\t{\n\t\t\t\t\t\"id\": \"IRWIN\",\n\t\t\t\t\t\"url\": \"https://irwin.doi.gov/observer/incidents/2026-VAVAF-260136\"\n\t\t\t\t}\n\n\t\t\t\t\t\t\n\t\t\t],\n\t\t\t\t\t\"geometry\": [\n\t\t\t\t\t{\n\t\t\t\t\t\t\t\"magnitudeValue\": 2237.00,\n\t\t\t\t\t\"magnitudeUnit\": \"acres\",\n\t\t\t\t\t\"date\": \"2026-11-20T13:16:00Z\",\n\t\t\t\t\t\"type\": \"Point\", \n\t\t\t\t\t\t\t\"coordinates\": [ -79.862117, 37.8422 ]\n\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\n\t\t\t]\n\t\t},\n\n\t\t\t{\n\t\t\t\"id\": \"EONET_26568\",\n\t\t\t\"title\": \"Wildfire Greene - Caney Creek Lane, Greene, Tennessee\",\n            \"description\": null,\n\t\t\t\"link\": \"https://eonet.gsfc.nasa.gov/api/v3/events/EONET_26568\",\n\t\t\t\"closed\": null,\n\t\t\t\t\"categories\": [\n\t\t\t\t\t{\n\t\t\t\t\t\"id\": \"wildfires\",\n\t\t\t\t\t\"title\": \"Wildfires\"\n\t\t\t\t}\n\n\t    \t\t\t\t],\n    \t\t\t\"sources\": [\n\t\t\t\t\t{\n\t\t\t\t\t\"id\": \"IRWIN\",\n\t\t\t\t\t\"url\": \"https://irwin.doi.gov/observer/incidents/2026-TNTNS-261114\"\n\t\t\t\t}\n\n\t\t\t\t\t\t\n\t\t\t],\n\t\t\t\t\t\"geometry\": [\n\t\t\t\t\t{\n\t\t\t\t\t\t\t\"magnitudeValue\": 500.00,\n\t\t\t\t\t\"magnitudeUnit\": \"acres\",\n\t\t\t\t\t\"date\": \"2026-11-18T14:11:00Z\",\n\t\t\t\t\t\"type\": \"Point\", \n\t\t\t\t\t\t\t\"coordinates\": [ -82.7985, 36.36301667 ]\n\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\n\t\t\t]\n\t\t}\n\n\t\t]\n}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

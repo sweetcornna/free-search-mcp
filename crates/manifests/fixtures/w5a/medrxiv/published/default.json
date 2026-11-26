@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "medrxiv",
+  "op": "published",
+  "recordedAt": "2026-11-25T12:14:41Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.biorxiv.org/pubs/medrxiv/3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"messages\":[{\"status\":\"ok\"}], \"collection\":[{\"preprint_doi\":\"10.64898\\/2026.07.26.26358975\",\"published_doi\":\"10.1371\\/journal.pgph.0006655\",\"published_journal\":\"PLOS Global Public Health\",\"preprint_platform\":\"medRxiv\",\"preprint_title\":null,\"preprint_authors\":null,\"preprint_category\":null,\"preprint_date\":null,\"published_date\":\"2026-10-27\"},{\"preprint_doi\":\"10.1101\\/2025.08.08.25332920\",\"published_doi\":\"10.1016\\/j.nexres.2026.102693\",\"published_journal\":\"Next Research\",\"preprint_platform\":\"medRxiv\",\"preprint_title\":null,\"preprint_authors\":null,\"preprint_category\":null,\"preprint_date\":null,\"published_date\":\"2026-11-10\"},{\"preprint_doi\":\"10.64898\\/2026.09.25.26364021\",\"published_doi\":\"10.3390\\/info17111160\",\"published_journal\":\"Information\",\"preprint_platform\":\"medRxiv\",\"preprint_title\":null,\"preprint_authors\":null,\"preprint_category\":null,\"preprint_date\":null,\"published_date\":\"2026-11-17\"}]}\r\n\r\n\r\n\r\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+[package]
+name = "fsm-store"
+description = "SQLite storage layer (search-mcp.sqlite): caches, pages FTS5, exec_kv, scholar works, retractions, health."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+fsm-core.workspace = true
+rusqlite.workspace = true
+zstd.workspace = true
+fd-lock.workspace = true
+tokio.workspace = true
+tokio-util.workspace = true
+async-trait.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+bytes.workspace = true
+tracing.workspace = true
+regex.workspace = true
+sha2.workspace = true
+hex.workspace = true
+jiff.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }
+tempfile.workspace = true
+proptest.workspace = true

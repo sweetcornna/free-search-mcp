@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "scielo_articlemeta",
+  "op": "journals",
+  "recordedAt": "2026-11-25T13:02:20Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://articlemeta.scielo.org/api/v1/journal/identifiers/?collection=scl&limit=3&offset=0",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\n    \"meta\": {\n        \"limit\": 3,\n        \"offset\": 0,\n        \"filter\": {\n            \"collection\": \"scl\"\n        },\n        \"total\": 428\n    },\n    \"objects\": [\n        {\n            \"code\": \"1676-5648\",\n            \"collection\": \"scl\",\n            \"processing_date\": \"2012-08-24\"\n        },\n        {\n            \"code\": \"0101-8108\",\n            \"collection\": \"scl\",\n            \"processing_date\": \"2012-08-27\"\n        },\n        {\n            \"code\": \"1516-9332\",\n            \"collection\": \"scl\",\n            \"processing_date\": \"2012-08-27\"\n        }\n    ]\n}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

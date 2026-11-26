@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "abusech_urlhaus",
+  "op": "url",
+  "recordedAt": "2026-11-25T12:56:38Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://urlhaus-api.abuse.ch/v1/url/",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": "ed13164758909e972f17474a2ae84982086f0be1ca65acb7a5cdd8a410987ac1"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"query_status\": \"ok\", \"id\": \"2654321\", \"urlhaus_reference\": \"https://urlhaus.abuse.ch/url/2654321/\", \"url\": \"http://vektorex.com/evil/payload.exe\", \"uri\": \"/evil/payload.exe\", \"host\": \"vektorex.com\", \"date_added\": \"2023-05-12 14:22:10 UTC\", \"url_status\": \"offline\", \"last_online\": \"2023-05-12 16:40:00 UTC\", \"threat\": \"malware_download\", \"blacklists\": {\"spamhaus_dbl\": \"not listed\", \"surbl\": \"listed\"}, \"reporter\": \"abuse_user\", \"tags\": [\"exe\", \"trojan\"], \"payloads\": [{\"filename\": \"payload.exe\", \"file_size\": \"51200\", \"file_type\": \"peexe\", \"md5_hash\": \"d72ba95c67364911636a82f711732eb6\", \"sha256_hash\": \"275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

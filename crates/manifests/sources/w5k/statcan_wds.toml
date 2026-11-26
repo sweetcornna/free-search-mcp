@@ -1,0 +1,93 @@
+id = "statcan_wds"
+name = "Statistics Canada Web Data Service (WDS)"
+summary = "Official Statistics Canada keyless Web Data Service for Canadian socioeconomic cube metadata, vector time series, and daily cube release lists."
+aliases = ["statcan", "statistics canada", "cansim"]
+home_url = "https://www.statcan.gc.ca/en/developers/wds"
+tier = 1
+scopes = ["dataset", "finance"]
+caps = ["lookup", "dataset"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 2.0, burst = 5, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 21600, host_bucket = "www150.statcan.gc.ca" }
+
+[op.cube_metadata]
+summary = "Fetch cube title, date range, frequency, dimensions, and series counts for a Statistics Canada table productId."
+method = "POST"
+url = "https://www150.statcan.gc.ca/t1/wds/rest/getCubeMetadata"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+body = { kind = "json", jaq = "[{ productId: $p.product_id }]" }
+probe = { params = { product_id = 17100009 }, min_results = 1, fixture = "fixtures/w5k/statcan_wds/cube_metadata/default.json" }
+examples = ['source.call("statcan_wds.cube_metadata", { product_id: 17100009 })']
+
+[op.cube_metadata.params]
+product_id = { type = "int", required = true, in = "body", doc = "8-digit StatCan cube productId e.g. 17100009 (Population estimates, quarterly)" }
+
+[op.cube_metadata.map]
+items = ".[]"
+error = "if type == \"object\" and .message then .message else null end"
+record = '''{
+  status: (.status // ""),
+  productId: (.object.productId // null),
+  cansimId: (.object.cansimId // null),
+  titleEn: (.object.cubeTitleEn // ""),
+  titleFr: (.object.cubeTitleFr // null),
+  startDate: (.object.cubeStartDate // null),
+  endDate: (.object.cubeEndDate // null),
+  releaseTime: (.object.releaseTime // null),
+  nbSeriesCube: (.object.nbSeriesCube // null),
+  nbDatapointsCube: (.object.nbDatapointsCube // null),
+  archiveStatus: (.object.archiveStatusEn // null),
+  dimensions: [(.object.dimension // [])[] | { id: .dimensionPositionId, nameEn: .dimensionNameEn, memberCount: ((.member // []) | length) }],
+  url: ("https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=" + ((.object.productId // "") | tostring) + "01")
+}'''
+
+[op.vector_data]
+summary = "Retrieve the latest N data points for a Statistics Canada time-series vectorId."
+method = "POST"
+url = "https://www150.statcan.gc.ca/t1/wds/rest/getDataFromVectorsAndLatestNPeriods"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+body = { kind = "json", jaq = "[{ latestN: ($p.latest_n // 5), vectorId: $p.vector_id }]" }
+probe = { params = { vector_id = 41690973, latest_n = 3 }, min_results = 1, fixture = "fixtures/w5k/statcan_wds/vector_data/default.json" }
+examples = ['source.call("statcan_wds.vector_data", { vector_id: 41690973, latest_n: 5 })']
+
+[op.vector_data.params]
+vector_id = { type = "int", required = true, in = "body", doc = "Numeric StatCan vectorId (without 'v' prefix) e.g. 41690973" }
+latest_n = { type = "int", default = 5, min = 1, max = 50, in = "body", doc = "Number of most recent reference periods" }
+
+[op.vector_data.map]
+items = ".[]"
+error = "if type == \"object\" and .message then .message else null end"
+record = '''{
+  status: (.status // ""),
+  productId: (.object.productId // null),
+  vectorId: (.object.vectorId // null),
+  coordinate: (.object.coordinate // null),
+  points: [(.object.vectorDataPoint // [])[] | { refPer: .refPer, value: .value, decimals: .decimals, releaseTime: .releaseTime }],
+  url: ("https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=" + ((.object.productId // "") | tostring) + "01")
+}'''
+
+[op.changed_cubes]
+summary = "List Statistics Canada data cubes updated on a given ISO date (YYYY-MM-DD)."
+method = "GET"
+url = "https://www150.statcan.gc.ca/t1/wds/rest/getChangedCubeList/{date}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { date = "2025-01-15" }, min_results = 2, fixture = "fixtures/w5k/statcan_wds/changed_cubes/default.json" }
+examples = ['source.call("statcan_wds.changed_cubes", { date: "2025-01-15" })']
+
+[op.changed_cubes.params]
+date = { type = "string", required = true, in = "path", doc = "Release date in YYYY-MM-DD format" }
+
+[op.changed_cubes.map]
+items = "(.object // [])[]"
+error = "if .status != \"SUCCESS\" then (.status // \"error\") else null end"
+record = '''{
+  productId: .productId,
+  releaseTime: (.releaseTime // null),
+  url: ("https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=" + (.productId | tostring) + "01")
+}'''

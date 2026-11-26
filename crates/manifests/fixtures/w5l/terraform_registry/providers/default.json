@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "terraform_registry",
+  "op": "providers",
+  "recordedAt": "2026-11-25T12:56:56Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://registry.terraform.io/v1/providers?limit=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "cache-control",
+            "public, stale-if-error=31536000"
+          ],
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"meta\":{\"limit\":3,\"current_offset\":0,\"next_offset\":3,\"next_url\":\"https://registry.terraform.io/v1/providers?limit=3\\u0026offset=3\"},\"providers\":[{\"id\":\"hashicorp/helm/3.3.0\",\"owner\":\"\",\"namespace\":\"hashicorp\",\"name\":\"helm\",\"alias\":null,\"version\":\"3.3.0\",\"tag\":\"v3.3.0\",\"description\":\"terraform-provider-helm\",\"source\":\"https://github.com/hashicorp/terraform-provider-helm\",\"published_at\":\"2026-09-02T09:49:41Z\",\"downloads\":844139289,\"tier\":\"official\",\"logo_url\":\"/images/providers/helm.svg?3\"},{\"id\":\"hashicorp/tls/4.4.2\",\"owner\":\"\",\"namespace\":\"hashicorp\",\"name\":\"tls\",\"alias\":null,\"version\":\"4.4.2\",\"tag\":\"v4.4.2\",\"description\":\"terraform-provider-tls\",\"source\":\"https://github.com/hashicorp/terraform-provider-tls\",\"published_at\":\"2026-10-21T17:17:06Z\",\"downloads\":1141716074,\"tier\":\"official\",\"logo_url\":\"/images/providers/hashicorp.svg\"},{\"id\":\"hashicorp/consul/2.24.0\",\"owner\":\"\",\"namespace\":\"hashicorp\",\"name\":\"consul\",\"alias\":null,\"version\":\"2.24.0\",\"tag\":\"v2.24.0\",\"description\":\"terraform-provider-consul\",\"source\":\"https://github.com/hashicorp/terraform-provider-consul\",\"published_at\":\"2026-11-02T11:36:13Z\",\"downloads\":119422429,\"tier\":\"official\",\"logo_url\":\"/images/providers/consul.svg?3\"}]}\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

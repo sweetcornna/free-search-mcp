@@ -1,0 +1,75 @@
+id = "snf_grants_ch"
+name = "Swiss National Science Foundation (SNSF) Data API"
+summary = "Official Swiss National Science Foundation (SNSF/SNF) open grant search API covering 91k+ funded research projects, approved CHF budgets, PIs, and institutions."
+aliases = ["snsf", "snf", "swiss grants", "data.snf.ch"]
+home_url = "https://data.snf.ch/grants"
+tier = 1
+scopes = ["academic", "academic.grants"]
+caps = ["search", "lookup", "grant"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 43200, host_bucket = "data.snf.ch" }
+
+[op.search]
+summary = "Search Swiss National Science Foundation (SNSF) grants via POST JSON full-text query."
+method = "POST"
+url = "https://data.snf.ch/api/grants/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+body = { kind = "json", jaq = "{ filters: { text_search: $p.query }, includeFacets: false, rows: (($p.limit // 10) | tostring), start: (($p.offset // 0) | tostring) }" }
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "quantum", limit = 3, offset = 0 }, min_results = 2, fixture = "fixtures/w5k/snf_grants_ch/search/default.json" }
+examples = ['source.call("snf_grants_ch.search", { query: "quantum", limit: 5 })']
+
+[op.search.params]
+query = { type = "string", required = true, in = "body", doc = "Grant search keywords or grant number" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "body", doc = "Maximum grants returned" }
+offset = { type = "int", default = 0, min = 0, in = "body", doc = "Pagination offset" }
+
+[op.search.map]
+items = "(.hits.hits // [])[] | ._source"
+total = ".hits.total.value"
+error = "if .error then (.message // (.error | tostring)) else null end"
+record = '''{
+  id: ((.application_number // "") | tostring),
+  title: ((.english_title // .title // "") | collapse_ws),
+  funder: "SNSF",
+  pi: (.main_applicant_full_name | collapse_ws),
+  org: ((.research_institution_name_en // .research_institution_name_de) | collapse_ws),
+  amount: (.approved_amount | to_num),
+  currency: "CHF",
+  startDate: (.effective_start_date | parse_date),
+  endDate: (.effective_end_date | parse_date),
+  url: ("https://data.snf.ch/grants/grant/" + ((.application_number // "") | tostring)),
+  source: "snf_grants_ch"
+}'''
+hit = '''(
+  (.effective_start_date | parse_date) as $d |
+  {
+    title: ((.english_title // .title // "") | collapse_ws),
+    url: ("https://data.snf.ch/grants/grant/" + ((.application_number // "") | tostring)),
+    snippet: ([("SNSF #" + ((.application_number // "") | tostring)), ((.main_applicant_full_name // "") | collapse_ws), ((.research_institution_name_en // .research_institution_name_de // "") | collapse_ws), (if .approved_amount != null then ("CHF " + (.approved_amount | tostring)) else "" end)] | map(select(. != null and length > 0)) | join(" · ")),
+    date: $d,
+    dateSource: (if $d != null then "api" else null end)
+  }
+)'''
+
+[op.grant]
+summary = "Look up a single SNSF grant by its application/grant number."
+method = "POST"
+url = "https://data.snf.ch/api/grants/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+body = { kind = "json", jaq = "{ filters: { text_search: ($p.grant_number | tostring) }, includeFacets: false, rows: \"1\", start: \"0\" }" }
+probe = { params = { grant_number = "225229" }, min_results = 1, fixture = "fixtures/w5k/snf_grants_ch/grant/default.json" }
+examples = ['source.call("snf_grants_ch.grant", { grant_number: "225229" })']
+
+[op.grant.params]
+grant_number = { type = "string", required = true, in = "body", doc = "SNSF grant / application number e.g. 225229" }
+
+[op.grant.map]
+items = "@ref:op.search.map.items"
+error = "@ref:op.search.map.error"
+record = "@ref:op.search.map.record"

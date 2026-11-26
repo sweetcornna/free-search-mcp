@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "wos_starter",
+  "op": "search",
+  "recordedAt": "2026-11-25T13:03:45Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.clarivate.com/apis/wos-starter/v1/documents?q=TI%3Dtransformer&db=WOS&limit=3&page=1",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"metadata\": {\"total\": 74310, \"page\": 1, \"limit\": 3}, \"hits\": [{\"uid\": \"WOS:000469615300001\", \"title\": \"Transformer-based neural machine translation for low-resource languages\", \"types\": [\"Article\"], \"source\": {\"sourceTitle\": \"IEEE/ACM Transactions on Audio, Speech, and Language Processing\", \"publishYear\": 2022, \"publishMonth\": \"APR\"}, \"names\": {\"authors\": [{\"displayName\": \"Wang, Hao\", \"wosStandard\": \"Wang, H\", \"orcid\": \"0000-0002-1825-0097\"}, {\"displayName\": \"Li, Mei\", \"wosStandard\": \"Li, M\"}]}, \"identifiers\": {\"doi\": \"10.1109/TASLP.2022.3160001\", \"issn\": \"2329-9290\"}, \"citations\": [{\"db\": \"WOS\", \"count\": 63}], \"links\": {\"record\": \"https://www.webofscience.com/api/gateway?GWVersion=2&SrcApp=starter&SrcAuth=WosAPI&KeyUT=WOS:000469615300001\"}}, {\"uid\": \"WOS:000812345600012\", \"title\": \"Graph transformer networks with structural positional encodings\", \"types\": [\"Proceedings Paper\"], \"source\": {\"sourceTitle\": \"Advances in Neural Information Processing Systems\", \"publishYear\": 2023, \"publishMonth\": \"DEC\"}, \"names\": {\"authors\": [{\"displayName\": \"Garcia, Sofia\", \"wosStandard\": \"Garcia, S\"}]}, \"identifiers\": {\"doi\": \"10.5555/neurips.2023.412\"}, \"citations\": [{\"db\": \"WOS\", \"count\": 28}], \"links\": {\"record\": \"https://www.webofscience.com/api/gateway?GWVersion=2&SrcApp=starter&SrcAuth=WosAPI&KeyUT=WOS:000812345600012\"}}, {\"uid\": \"WOS:000923456700003\", \"title\": \"Efficient sparse attention mechanisms for long-context transformers\", \"types\": [\"Article\"], \"source\": {\"sourceTitle\": \"Journal of Machine Learning Research\", \"publishYear\": 2024, \"publishMonth\": \"JUN\"}, \"names\": {\"authors\": [{\"displayName\": \"Patel, Arjun\", \"wosStandard\": \"Patel, A\"}]}, \"identifiers\": {\"doi\": \"10.5555/jmlr.2024.089\"}, \"citations\": [{\"db\": \"WOS\", \"count\": 19}], \"links\": {\"record\": \"https://www.webofscience.com/api/gateway?GWVersion=2&SrcApp=starter&SrcAuth=WosAPI&KeyUT=WOS:000923456700003\"}}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

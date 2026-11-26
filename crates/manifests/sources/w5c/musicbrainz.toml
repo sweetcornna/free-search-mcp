@@ -1,0 +1,147 @@
+id = "musicbrainz"
+name = "MusicBrainz"
+summary = "Open CC0 music encyclopedia API for artists, recordings, releases, and MusicBrainz Identifiers (MBIDs)."
+aliases = ["mb", "musicbrainz api", "mbid"]
+home_url = "https://musicbrainz.org"
+tier = 1
+scopes = ["media"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 0.8, burst = 1, concurrency = 1, timeout_ms = 8000, cache_ttl_s = 86400 }
+
+[op.search]
+summary = "Search music artists on MusicBrainz."
+method = "GET"
+url = "https://musicbrainz.org/ws/2/artist/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { fmt = "json" }
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "radiohead", limit = 3 }, min_results = 2, fixture = "fixtures/w5c/musicbrainz/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "query", doc = "Lucene artist search query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Max artists" }
+offset = { type = "int", min = 0, to = "offset", doc = "Offset" }
+
+[op.search.map]
+items = ".artists[]"
+total = ".count"
+error = "if .error then .error else null end"
+record = '''{
+  mbid: .id,
+  name: (.name // ""),
+  sortName: .["sort-name"],
+  type: .type,
+  country: .country,
+  area: (.area.name // null),
+  disambiguation: (if (.disambiguation | type) == "string" and (.disambiguation | length) > 0 then .disambiguation else null end),
+  lifeSpan: .["life-span"],
+  score: .score,
+  url: ("https://musicbrainz.org/artist/" + (.id // ""))
+}'''
+hit = '''{
+  title: (.name // ""),
+  url: ("https://musicbrainz.org/artist/" + (.id // "")),
+  snippet: ([
+    (if (.type | type) == "string" then .type else empty end),
+    (if (.area.name | type) == "string" then .area.name elif (.country | type) == "string" then .country else empty end),
+    (if (.disambiguation | type) == "string" and (.disambiguation | length) > 0 then .disambiguation else empty end),
+    (if (.["life-span"].begin | type) == "string" then "active from \(.["life-span"].begin)" else empty end)
+  ] | join(" · ")),
+  date: (.["life-span"].begin | parse_date),
+  dateSource: (if (.["life-span"].begin | parse_date) != null then "api" else null end)
+}'''
+
+[op.recording]
+summary = "Search recordings (songs/tracks) on MusicBrainz."
+method = "GET"
+url = "https://musicbrainz.org/ws/2/recording/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { fmt = "json" }
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "creep", limit = 3 }, min_results = 2, fixture = "fixtures/w5c/musicbrainz/recording/default.json" }
+
+[op.recording.params]
+query = { type = "string", required = true, to = "query", doc = "Recording search query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Max recordings" }
+offset = { type = "int", min = 0, to = "offset", doc = "Offset" }
+
+[op.recording.map]
+items = ".recordings[]"
+total = ".count"
+error = "@ref:op.search.map.error"
+record = '''{
+  mbid: .id,
+  title: (.title // ""),
+  artists: [(.["artist-credit"] // [])[] | .name],
+  lengthMs: .length,
+  firstReleaseDate: (.["first-release-date"] | parse_date),
+  releases: [(.releases // [])[0:5][] | .title],
+  url: ("https://musicbrainz.org/recording/" + (.id // ""))
+}'''
+
+[op.release]
+summary = "Search music releases (albums/singles) on MusicBrainz."
+method = "GET"
+url = "https://musicbrainz.org/ws/2/release/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { fmt = "json" }
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "ok computer", limit = 3 }, min_results = 2, fixture = "fixtures/w5c/musicbrainz/release/default.json" }
+
+[op.release.params]
+query = { type = "string", required = true, to = "query", doc = "Release title or Lucene search query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Max releases" }
+offset = { type = "int", min = 0, to = "offset", doc = "Offset" }
+
+[op.release.map]
+items = ".releases[]"
+total = ".count"
+error = "@ref:op.search.map.error"
+record = '''{
+  mbid: .id,
+  title: (.title // ""),
+  artists: [(.["artist-credit"] // [])[] | .name],
+  status: .status,
+  country: .country,
+  date: (.date | parse_date),
+  trackCount: .["track-count"],
+  url: ("https://musicbrainz.org/release/" + (.id // ""))
+}'''
+
+[op.artist]
+summary = "Look up a MusicBrainz artist by exact MBID."
+method = "GET"
+url = "https://musicbrainz.org/ws/2/artist/{mbid}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { fmt = "json" }
+probe = { params = { mbid = "a74b1b7f-71a5-4011-9441-d0b5e4122711" }, min_results = 1, fixture = "fixtures/w5c/musicbrainz/artist/default.json" }
+
+[op.artist.params]
+mbid = { type = "string", required = true, in = "path", doc = "MusicBrainz artist UUID" }
+
+[op.artist.map]
+items = "."
+error = "@ref:op.search.map.error"
+record = '''{
+  mbid: .id,
+  name: (.name // ""),
+  sortName: .["sort-name"],
+  type: .type,
+  country: .country,
+  area: (.area.name // null),
+  beginArea: (.["begin-area"].name // null),
+  disambiguation: (if (.disambiguation | type) == "string" and (.disambiguation | length) > 0 then .disambiguation else null end),
+  lifeSpan: .["life-span"],
+  isnis: (.isnis // []),
+  url: ("https://musicbrainz.org/artist/" + (.id // ""))
+}'''

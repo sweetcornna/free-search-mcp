@@ -1,0 +1,56 @@
+protocol = "wordpress_rest"
+
+[[instance]]
+id = "cncf_blog_wp"
+name = "Cloud Native Computing Foundation (CNCF) Blog"
+summary = "Official CNCF WordPress site covering Kubernetes, OpenTelemetry, Prometheus, cloud-native standards, and graduated open-source projects."
+aliases = ["cncf", "cncf blog", "cncf.io"]
+base_url = "https://www.cncf.io"
+scopes = ["code", "docs", "news"]
+caps = ["search"]
+tier = 1
+probe = { op = "search", params = { query = "kubernetes", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "isoc_blog_wp"
+name = "Internet Society Official Blog"
+summary = "Internet Society WordPress site covering internet protocol standards, BGP routing security (MANRS), encryption, and global governance."
+aliases = ["internet society", "isoc", "internetsociety.org"]
+base_url = "https://www.internetsociety.org"
+scopes = ["docs", "security", "news"]
+caps = ["search"]
+tier = 1
+probe = { op = "search", params = { query = "routing", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "oasis_open_wp"
+name = "OASIS Open Standards Consortium"
+summary = "OASIS Open WordPress site publishing technical committee standards announcements across cybersecurity (STIX/TAXII/CSAF), identity, and cloud."
+aliases = ["oasis open", "oasis standards", "oasis-open.org"]
+base_url = "https://www.oasis-open.org"
+scopes = ["docs", "security", "news"]
+caps = ["search"]
+tier = 1
+probe = { op = "search", params = { query = "standard", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "fnal_news_wp"
+name = "Fermilab News"
+summary = "Fermi National Accelerator Laboratory WordPress news site covering particle physics, neutrino experiments (DUNE), accelerators, and quantum science."
+aliases = ["fermilab", "fnal news", "news.fnal.gov"]
+base_url = "https://news.fnal.gov"
+scopes = ["news", "reference"]
+caps = ["search"]
+tier = 1
+probe = { op = "search", params = { query = "neutrino", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "embl_news_wp"
+name = "EMBL News (European Molecular Biology Laboratory)"
+summary = "European Molecular Biology Laboratory WordPress news portal covering genomics, structural biology, bioinformatics, and European life sciences."
+aliases = ["embl", "embl news", "embl.org"]
+base_url = "https://www.embl.org/news"
+scopes = ["news", "reference"]
+caps = ["search"]
+tier = 1
+probe = { op = "search", params = { query = "genome", limit = 3 }, min_results = 2 }

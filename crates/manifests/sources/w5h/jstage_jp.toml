@@ -1,0 +1,109 @@
+id = "jstage_jp"
+name = "J-STAGE Search API"
+summary = "Japan Science and Technology Agency (JST) scholarly platform indexing 3,800+ Japanese and English journals and ~6M articles via keyless Atom XML API."
+aliases = ["jstage", "j-stage", "jst japan", "科学技術情報発信・流通総合システム", "科学技術振興機構"]
+home_url = "https://www.jstage.jst.go.jp"
+tier = 1
+scopes = ["academic", "academic.index"]
+caps = ["search", "venue"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 43200, host_bucket = "api.jstage.jst.go.jp" }
+
+[op.search]
+summary = "Search J-STAGE Japanese and English scholarly articles via OpenSearch Atom XML."
+method = "GET"
+url = "https://api.jstage.jst.go.jp/searchapi/do"
+response = "xml"
+returns = "works"
+const_query = { service = 3 }
+paginate = { style = "offset", param = "start", start = 1, max_pages = 3 }
+probe = { params = { query = "transformer", limit = 3 }, min_results = 2, fixture = "fixtures/w5h/jstage_jp/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "text", doc = "Full-text / metadata search query (English or Japanese)" }
+author = { type = "string", to = "author", doc = "Optional author name filter" }
+year_from = { type = "int", to = "pubyearfrom", doc = "Optional start publication year YYYY" }
+year_to = { type = "int", to = "pubyearto", doc = "Optional end publication year YYYY" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "count", doc = "Results per page" }
+start = { type = "int", default = 1, min = 1, to = "start", doc = "1-based start offset" }
+
+[op.search.map]
+items = ".feed.entry | arr | .[] | select(.article_title != null or (.title != null and .title != \"\"))"
+total = "(.feed.totalresults | to_int)"
+error = '''if (.feed.result.status // "" | tostring | startswith("ERR_")) then (.feed.result.message // .feed.result.status) else null end'''
+work = '''(
+  ([(.article_title.en | first_str), (.article_title.ja | first_str), (.title | first_str)] | map(select(type == "string" and length > 0)) | .[0] // "" | strip_tags) as $title |
+  ([(.article_link.en | first_str), (.article_link.ja | first_str), (.link."@href"), (if (.doi | first_str // "") != "" then ("https://doi.org/" + (.doi | first_str)) else null end)] | map(select(type == "string" and length > 0)) | .[0] // "") as $url |
+  ([(.material_title.en | first_str), (.material_title.ja | first_str)] | map(select(type == "string" and length > 0)) | .[0] // null | collapse_ws) as $venue |
+  (if (.author | type) == "object" and (.author.en | type) == "object" then ((.author.en.name | arr) | map(first_str | select(type == "string" and length > 0) | collapse_ws)) else [] end) as $en_auths |
+  (if ($en_auths | length) > 0 then $en_auths elif (.author | type) == "object" and (.author.ja | type) == "object" then ((.author.ja.name | arr) | map(first_str | select(type == "string" and length > 0) | collapse_ws)) else [] end) as $auth_names |
+  {
+    title: $title,
+    authors: [$auth_names[] | { name: . }],
+    year: ((((.pubyear // "") | tostring)[0:4]) | to_int),
+    publishedDate: ((.updated // null) | parse_date),
+    venue: $venue,
+    workType: "article",
+    ids: { doi: ((.doi | first_str) // null | doi_norm) },
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["jstage_jp"]
+  }
+)'''
+
+[op.journal]
+summary = "Fetch J-STAGE journal VenueProfile metadata (name, ISSNs, publisher) by journal code (cdjournal) or ISSN (provide at least one)."
+method = "GET"
+url = "https://api.jstage.jst.go.jp/searchapi/do"
+response = "xml"
+returns = "records"
+const_query = { service = 2 }
+probe = { params = { cdjournal = "jaciii", year_from = 2025, year_to = 2025 }, min_results = 1, fixture = "fixtures/w5h/jstage_jp/journal/default.json" }
+
+[op.journal.params]
+cdjournal = { type = "string", to = "cdjournal", doc = "J-STAGE journal code e.g. jaciii (required if issn omitted)" }
+issn = { type = "string", to = "issn", doc = "Journal ISSN e.g. 1343-0130 (required if cdjournal omitted)" }
+year_from = { type = "int", to = "pubyearfrom", doc = "Optional start publication year YYYY" }
+year_to = { type = "int", to = "pubyearto", doc = "Optional end publication year YYYY" }
+
+[op.journal.map]
+items = ".feed.entry | arr | .[0:1] | .[] | select(.cdjournal != null)"
+total = "(.feed.totalresults | to_int)"
+error = "@ref:op.search.map.error"
+record = '''{
+  name: ([(.material_title.en | first_str), (.material_title.ja | first_str), (.cdjournal | first_str)] | map(select(type == "string" and length > 0)) | .[0] // "" | collapse_ws),
+  issn: ([(.issn | first_str), (.eissn | first_str)] | map(select(type == "string" and length > 0)) | unique),
+  publisher: ([(.publisher.name.en | first_str), (.publisher.name.ja | first_str)] | map(select(type == "string" and length > 0)) | .[0] // null | collapse_ws),
+  sources: ["jstage_jp"]
+}'''
+
+[op.issues]
+summary = "List J-STAGE journal volumes and issues by journal code (cdjournal) or ISSN (provide at least one)."
+method = "GET"
+url = "https://api.jstage.jst.go.jp/searchapi/do"
+response = "xml"
+returns = "records"
+const_query = { service = 2 }
+probe = { params = { cdjournal = "jaciii", year_from = 2025, year_to = 2025 }, min_results = 2, fixture = "fixtures/w5h/jstage_jp/issues/default.json" }
+
+[op.issues.params]
+cdjournal = { type = "string", to = "cdjournal", doc = "J-STAGE journal code e.g. jaciii (required if issn omitted)" }
+issn = { type = "string", to = "issn", doc = "Journal ISSN e.g. 1343-0130 (required if cdjournal omitted)" }
+year_from = { type = "int", to = "pubyearfrom", doc = "Optional start publication year YYYY" }
+year_to = { type = "int", to = "pubyearto", doc = "Optional end publication year YYYY" }
+
+[op.issues.map]
+items = ".feed.entry | arr | .[] | select(.cdjournal != null)"
+total = "(.feed.totalresults | to_int)"
+error = "@ref:op.search.map.error"
+record = '''{
+  cdjournal: (.cdjournal | first_str // ""),
+  journal: ([(.material_title.en | first_str), (.material_title.ja | first_str)] | map(select(type == "string" and length > 0)) | .[0] // null | collapse_ws),
+  title: ([(.vols_title.en | first_str), (.vols_title.ja | first_str), (.title | first_str)] | map(select(type == "string" and length > 0)) | .[0] // "" | collapse_ws),
+  volume: (.volume | first_str // null),
+  issue: (.number | first_str // null),
+  year: ((.pubyear | first_str) | to_int),
+  url: ([(.vols_link.en | first_str), (.vols_link.ja | first_str), (.link."@href")] | map(select(type == "string" and length > 0)) | .[0] // "")
+}'''

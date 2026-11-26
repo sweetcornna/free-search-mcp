@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "hkex_news",
+  "op": "by_stock",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www1.hkexnews.hk/search/titleSearchServlet.do?sortDir=0&sortByOptions=DateTime&category=0&market=SEHK&documentType=-1&title=&searchType=0&t1code=-2&t2Gcode=-2&t2code=-2&stockId=7609&lang=E&rowRange=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "cache-control",
+            "private, no-store, no-cache, must-revalidate"
+          ],
+          [
+            "content-type",
+            "application/json;charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"result\":\"[{\\\"FILE_INFO\\\":\\\"731KB\\\",\\\"NEWS_ID\\\":\\\"12416823\\\",\\\"SHORT_TEXT\\\":\\\"Announcements and Notices - [Quarterly Results]\\\\u003cbr/\\\\u003e\\\",\\\"TOTAL_COUNT\\\":\\\"2\\\",\\\"DOD_WEB_PATH\\\":\\\"\\\",\\\"STOCK_NAME\\\":\\\"TENCENT\\\\u003cbr/\\\\u003eTENCENT-R\\\",\\\"TITLE\\\":\\\"ANNOUNCEMENT OF THE RESULTS FOR THE THREE AND NINE MONTHS ENDED 30 SEPTEMBER 2026\\\",\\\"FILE_TYPE\\\":\\\"PDF\\\",\\\"DATE_TIME\\\":\\\"18/11/2026 16:30\\\",\\\"LONG_TEXT\\\":\\\"Announcements and Notices - [Quarterly Results]\\\",\\\"STOCK_CODE\\\":\\\"00700\\\\u003cbr/\\\\u003e80700\\\",\\\"FILE_LINK\\\":\\\"/listedco/listconews/sehk/2026/1118/2026111800448.pdf\\\"},{\\\"FILE_INFO\\\":\\\"68KB\\\",\\\"NEWS_ID\\\":\\\"12401980\\\",\\\"SHORT_TEXT\\\":\\\"Monthly Returns\\\\u003cbr/\\\\u003e\\\",\\\"TOTAL_COUNT\\\":\\\"2\\\",\\\"DOD_WEB_PATH\\\":\\\"\\\",\\\"STOCK_NAME\\\":\\\"TENCENT\\\\u003cbr/\\\\u003eTENCENT-R\\\",\\\"TITLE\\\":\\\"Monthly Return of Equity Issuer on Movements in Securities for the month ended 31 October 2026\\\",\\\"FILE_TYPE\\\":\\\"PDF\\\",\\\"DATE_TIME\\\":\\\"05/11/2026 16:55\\\",\\\"LONG_TEXT\\\":\\\"Monthly Returns\\\",\\\"STOCK_CODE\\\":\\\"00700\\\\u003cbr/\\\\u003e80700\\\",\\\"FILE_LINK\\\":\\\"/listedco/listconews/sehk/2026/1105/2026110501130.pdf\\\"}]\",\"hasNextRow\":false,\"sortList\":\"[[0,0]]\",\"rowRange\":3,\"lang\":\"E\",\"loadedRecord\":2,\"recordCnt\":2}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

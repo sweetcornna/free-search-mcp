@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "defillama_crypto",
+  "op": "protocol_tvl",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.llama.fi/tvl/aave",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "15932766041.847668",
+        "bodyB64": null
+      }
+    }
+  ]
+}

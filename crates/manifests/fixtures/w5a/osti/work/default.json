@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "osti",
+  "op": "work",
+  "recordedAt": "2026-11-25T12:14:11Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.osti.gov/api/v1/records/17428540",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "[\r\n{\"language\":\"English\",\"entry_date\":\"2026-11-16T09:33:31Z\",\"relation\":\"Journal Name: Applied Catalysis B: Environment and Energy Journal Volume: 403\",\"report_number\":\"BNL-230433-2026-JAAM\",\"identifier\":\"SC0012704\",\"country_publication\":\"United States\",\"journal_type\":\"AM\",\"doi\":\"10.1016/j.apcatb.2026.127584\",\"description\":\"Direct ammonia protonic ceramic fuel cells (DA-PCFCs) represent a promising platform for efficient, low-emission power generation at intermediate temperatures; however, their performance is often constrained by sluggish anodic reaction kinetics. Herein, we demonstrate an active and durable DA-PCFC employing a self-assembled, heterostructured Ni-BaZr0.1Ce0.7Y0.1Yb0.1O3−δ (Ni-BZCYYb) cermet anode, decorated with in situ formed NiCo alloy and MoO3−δ catalyst under operating conditions. The resulting three-phase heterointerfaces synergistically enhance ammonia adsorption, activation, and decomposition kinetics. The cell delivers peak power densities of 0.464, 0.713, 1.051, and 1.566 W cm−2 at 550, 600, 650, and 700 °C, respectively, and exhibits stable operation for 100 h at 600 °C under a constant current density of 0.5 A cm−2. Density functional theory calculations identify the NiCo-MoO3−δ interface as the primary active site, providing favorable adsorption energetics and reduced reaction barriers. These findings establish an effective strategy for developing efficient electrocatalysts for high-performance, intermediate-temperature DA-PCFCs.\",\"title\":\"In-situ self-assembled NiCo-MoO3-δ heterostructured catalysts for high-performance direct ammonia protonic ceramic fuel cells\",\"other_number\":\"Journal ID: ISSN 0926-3373\",\"contract_number\":\"SC0012704\",\"publication_date\":\"2027-04-01T00:00:00Z\",\"journal_volume\":\"403\",\"osti_id\":\"17428540\",\"journal_name\":\"Applied Catalysis B: Environment and Energy\",\"product_type\":\"Journal Article\",\"authors\":[\"Chen, Liyan\",\"Sasaki, Kotaro (ORCID:0000000324748323)\",\"He, Fan\",\"Yang, Xuan\",\"Zhu, Feng\",\"Hu, Feng\",\"Sasaki, Kotaro\",\"Choi, YongMan\",\"Chen, Yu\"],\"subjects\":[\"30 DIRECT ENERGY CONVERSION\",\"Activity\",\"Ammonia decomposition catalyst\",\"Durability\",\"Protonic ceramic fuel cells\"],\"article_type\":\"Accepted Manuscript\",\"doe_contract_number\":\"SC0012704\",\"sponsor_orgs\":[\"Brookhaven National Lab\",\"Office of Critical Minerals and Energy Innovation (CMEI), Hydrogen Fuel Cell Technologies Office (HFTO)\"],\"research_orgs\":[\"Brookhaven National Lab\"],\"journal_issn\":\"ISSN 0926-3373\",\"other_identifiers\":[\"Journal ID: ISSN 0926-3373\"],\"links\":[{\"rel\":\"citation\",\"href\":\"https://www.osti.gov/biblio/17428540\"},{\"rel\":\"fulltext\",\"href\":\"https://www.osti.gov/servlets/purl/17428540\"},{\"rel\":\"citation_doe_pages\",\"href\":\"https://www.osti.gov/pages/biblio/17428540\"}]}\r\n]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "dockerhub",
+  "op": "search",
+  "recordedAt": "2026-11-25T11:54:07Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://hub.docker.com/v2/search/repositories/?query=postgres&page_size=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"count\":53633,\"next\":\"https://hub.docker.com/v2/search/repositories/?page=2\\u0026page_size=3\\u0026query=postgres\",\"previous\":\"\",\"results\":[{\"repo_name\":\"postgres\",\"short_description\":\"The PostgreSQL object-relational database system provides reliability and data integrity.\",\"star_count\":15061,\"pull_count\":12687742214,\"repo_owner\":\"\",\"is_automated\":false,\"is_official\":true},{\"repo_name\":\"cimg/postgres\",\"short_description\":\"\",\"star_count\":9,\"pull_count\":878033382,\"repo_owner\":\"\",\"is_automated\":false,\"is_official\":false},{\"repo_name\":\"circleci/postgres\",\"short_description\":\"The PostgreSQL object-relational database system provides reliability and data integrity.\",\"star_count\":35,\"pull_count\":510437216,\"repo_owner\":\"\",\"is_automated\":false,\"is_official\":false}]}\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

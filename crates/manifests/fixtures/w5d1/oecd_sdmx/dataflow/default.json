@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "oecd_sdmx",
+  "op": "dataflow",
+  "recordedAt": "2026-11-25T15:03:51Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://sdmx.oecd.org/public/rest/dataflow/OECD.SDD.STES/DSD_STES@DF_CLI",
+        "headersSubset": {
+          "accept": "application/vnd.sdmx.structure+json;version=1.0"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/vnd.sdmx.structure+json; version=1.0; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"data\":{\"dataflows\":[{\"id\":\"DSD_STES@DF_CLI\",\"version\":\"4.1\",\"agencyID\":\"OECD.SDD.STES\",\"isFinal\":true,\"name\":\"Composite leading indicators\",\"names\":{\"en\":\"Composite leading indicators\"},\"description\":\"The composite leading indicator is a times series, formed by aggregating a variety of component indicators which show a reasonably consistent relationship with a reference series (e.g. industrial production IIP up to March 2012 and since then the reference series is GDP) at turning points. The OECD CLI is designed to provide qualitative information on short-term economic movements, especially at the turning points, rather than quantitative measures. Therefore, the main message of CLI movements over time is the increase or decrease, rather than the amplitude of the changes.  The OECD’s headline indicator is the amplitude adjusted CLI. In practice, turning points in the de-trended reference series have been found about 4 to 8 months (on average) after the signals of turning points had been detected in the headline CLI. Detailed information on the OECD methodology for CLIs can be found on the OECD website at:  <a href=\\\"https://www.oecd.org/en/data/datasets/oecd-composite-leading-indicators-clis.html\\\">OECD CLIs</a><p />CLIs are calculated for G20 countries plus Spain and 5 zone aggregates. A country CLI comprises a set of component series selected from a wide range of key short-term economic indicators.  CLIs, reference series data (see below) and standardised business and consumer confidence indicators are presented in various forms. <p /><a href=\\\"https://www.oecd.org/content/dam/oecd/en/data/methods/OECD-System-of-Composite-Leading-Indicators.pdf\\\">OECD CLI methodology document</a><p /><a href=mailto:stat.contact@oecd.org>OECD statistics contact</a><p />\",\"descriptions\":{\"en\":\"The composite leading indicator is a times series, formed by aggregating a variety of component indicators which show a reasonably consistent relationship with a reference series (e.g. industrial production IIP up to March 2012 and since then the reference series is GDP) at turning points. The OECD CLI is designed to provide qualitative information on short-term economic movements, especially at the turning points, rather than quantitative measures. Therefore, the main message of CLI movements over time is the increase or decrease, rather than the amplitude of the changes.  The OECD’s headline indicator is the amplitude adjusted CLI. In practice, turning points in the de-trended reference series have been found about 4 to 8 months (on average) after the signals of turning points had been detected in the headline CLI. Detailed information on the OECD methodology for CLIs can be found on the OECD website at:  <a href=\\\"https://www.oecd.org/en/data/datasets/oecd-composite-leading-indicators-clis.html\\\">OECD CLIs</a><p />CLIs are calculated for G20 countries plus Spain and 5 zone aggregates. A country CLI comprises a set of component series selected from a wide range of key short-term economic indicators.  CLIs, reference series data (see below) and standardised business and consumer confidence indicators are presented in various forms. <p /><a href=\\\"https://www.oecd.org/content/dam/oecd/en/data/methods/OECD-System-of-Composite-Leading-Indicators.pdf\\\">OECD CLI methodology document</a><p /><a href=mailto:stat.contact@oecd.org>OECD statistics contact</a><p />\"},\"annotations\":[{\"type\":\"NonProductionDataflow\",\"text\":\"true\",\"texts\":{\"en\":\"true\"}},{\"id\":\"@SDMX\",\"title\":\"TIME_PERIOD\",\"type\":\"LAYOUT_ROW\"},{\"id\":\"@SDMX\",\"title\":\"REF_AREA\",\"type\":\"LAYOUT_COLUMN\"},{\"id\":\"@SDMX\",\"title\":\"UNIT_MULT=0,OBS_STATUS=A,UNIT_MEASURE=IX,METHODOLOGY=N\",\"type\":\"NOT_DISPLAYED\"},{\"id\":\"@SDMX\",\"title\":\"MEASURE=LI,ADJUSTMENT=AA,FREQ=M,METHODOLOGY=H,LASTNPERIODS=10\",\"type\":\"DEFAULT\"},{\"title\":\"COMBINED_UNIT_MEASURE:TRANSFORMATION,ADJUSTMENT,UNIT_MULT\",\"type\":\"COMBINED_CONCEPTS\",\"text\":\"COMBINED_UNIT_MEASURE:Unit of measure\",\"texts\":{\"en\":\"COMBINED_UNIT_MEASURE:Unit of measure\"}}],\"structure\":\"urn:sdmx:org.sdmx.infomodel.datastructure.DataStructure=OECD.SDD.STES:DSD_STES(4.1)\"}]},\"meta\":{\"schema\":\"https://raw.githubusercontent.com/sdmx-twg/sdmx-json/develop/structure-message/tools/schemas/1.0/sdmx-json-structure-schema.json\",\"contentLanguages\":[\"en\"],\"id\":\"IDREF642\",\"prepared\":\"2026-11-25T15:00:45Z\",\"test\":false,\"sender\":{\"id\":\"Unknown\"},\"receiver\":[{\"id\":\"Unknown\"}]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

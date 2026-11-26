@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "source": "statcan_wds",
+  "op": "vector_data",
+  "recordedAt": "2026-11-25T13:05:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://www150.statcan.gc.ca/t1/wds/rest/getDataFromVectorsAndLatestNPeriods",
+        "headersSubset": {
+          "accept": "application/json",
+          "content-type": "application/json"
+        },
+        "bodySha256": "ba23a3b6427f39c6790a14ef46ffb619ff948e094159ed368a8b02f427ebe555"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "[{\"status\":\"SUCCESS\",\"object\":{\"responseStatusCode\":0,\"productId\":18100004,\"coordinate\":\"2.2.0.0.0.0.0.0.0.0\",\"vectorId\":41690973,\"vectorDataPoint\":[{\"refPer\":\"2026-08-01\",\"refPer2\":\"\",\"refPerRaw\":\"2026-08-01\",\"refPerRaw2\":\"\",\"value\":169.8,\"decimals\":1,\"scalarFactorCode\":0,\"symbolCode\":0,\"statusCode\":0,\"securityLevelCode\":0,\"releaseTime\":\"2026-09-14T08:30\",\"frequencyCode\":6},{\"refPer\":\"2026-09-01\",\"refPer2\":\"\",\"refPerRaw\":\"2026-09-01\",\"refPerRaw2\":\"\",\"value\":170.0,\"decimals\":1,\"scalarFactorCode\":0,\"symbolCode\":0,\"statusCode\":0,\"securityLevelCode\":0,\"releaseTime\":\"2026-10-19T08:30\",\"frequencyCode\":6},{\"refPer\":\"2026-10-01\",\"refPer2\":\"\",\"refPerRaw\":\"2026-10-01\",\"refPerRaw2\":\"\",\"value\":170.4,\"decimals\":1,\"scalarFactorCode\":0,\"symbolCode\":0,\"statusCode\":0,\"securityLevelCode\":0,\"releaseTime\":\"2026-11-16T08:30\",\"frequencyCode\":6}]}}]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

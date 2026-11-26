@@ -1,0 +1,101 @@
+id = "binance_market"
+name = "Binance Public Market Ticker API"
+summary = "Keyless cryptocurrency spot prices, 24-hour market statistics, and OHLCV klines from Binance public market endpoints."
+aliases = ["binance", "binance spot", "crypto ticker"]
+home_url = "https://developers.binance.com/docs/binance-spot-api-docs/rest-api/market-data-endpoints"
+tier = 1
+scopes = ["finance"]
+caps = ["lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 5.0, burst = 10, concurrency = 4, timeout_ms = 6000, cache_ttl_s = 60 }
+
+[op.price]
+summary = "Fetch latest spot price for a Binance trading pair symbol (e.g. BTCUSDT, ETHUSDT)."
+method = "GET"
+url = "https://api.binance.com/api/v3/ticker/price"
+fallback_urls = ["https://data-api.binance.vision/api/v3/ticker/price"]
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { symbol = "BTCUSDT" }, min_results = 1, fixture = "fixtures/w5m/binance_market/price/default.json" }
+examples = ["source.call('binance_market.price', { symbol: 'BTCUSDT' })"]
+
+[op.price.params]
+symbol = { type = "string", required = true, to = "symbol", doc = "Uppercase trading pair e.g. BTCUSDT, ETHUSDT, SOLUSDT" }
+
+[op.price.map]
+items = "."
+error = 'if type == "object" and .code and .msg then .msg else null end'
+record = '''{
+  symbol: .symbol,
+  price: (.price | (to_num // .))
+}'''
+
+[op.ticker_24h]
+summary = "Fetch 24-hour rolling price change, high/low, weighted average, and volume statistics for a symbol."
+method = "GET"
+url = "https://api.binance.com/api/v3/ticker/24hr"
+fallback_urls = ["https://data-api.binance.vision/api/v3/ticker/24hr"]
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { symbol = "BTCUSDT" }, min_results = 1, fixture = "fixtures/w5m/binance_market/ticker_24h/default.json" }
+examples = ["source.call('binance_market.ticker_24h', { symbol: 'BTCUSDT' })"]
+
+[op.ticker_24h.params]
+symbol = { type = "string", required = true, to = "symbol", doc = "Uppercase trading pair e.g. BTCUSDT" }
+
+[op.ticker_24h.map]
+items = "."
+error = "@ref:op.price.map.error"
+record = '''{
+  symbol: .symbol,
+  lastPrice: (.lastPrice | (to_num // .)),
+  priceChange: (.priceChange | (to_num // .)),
+  priceChangePercent: (.priceChangePercent | (to_num // .)),
+  weightedAvgPrice: (.weightedAvgPrice | (to_num // .)),
+  openPrice: (.openPrice | (to_num // .)),
+  highPrice: (.highPrice | (to_num // .)),
+  lowPrice: (.lowPrice | (to_num // .)),
+  volume: (.volume | (to_num // .)),
+  quoteVolume: (.quoteVolume | (to_num // .)),
+  tradeCount: .count,
+  openTimeMs: .openTime,
+  closeTimeMs: .closeTime,
+  openTime: (.openTime | epoch_to_iso),
+  closeTime: (.closeTime | epoch_to_iso)
+}'''
+
+[op.klines]
+summary = "Fetch OHLCV candlestick bars (klines) for a symbol and timeframe."
+method = "GET"
+url = "https://api.binance.com/api/v3/klines"
+fallback_urls = ["https://data-api.binance.vision/api/v3/klines"]
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { symbol = "BTCUSDT", interval = "1d", limit = 3 }, min_results = 2, fixture = "fixtures/w5m/binance_market/klines/default.json" }
+examples = ["source.call('binance_market.klines', { symbol: 'BTCUSDT', interval: '1d', limit: 7 })"]
+
+[op.klines.params]
+symbol = { type = "string", required = true, to = "symbol", doc = "Uppercase trading pair e.g. BTCUSDT" }
+interval = { type = "string", default = "1d", enum = ["1m", "5m", "15m", "1h", "4h", "1d", "1w", "1M"], to = "interval", doc = "Candlestick interval" }
+limit = { type = "int", default = 10, min = 1, max = 100, to = "limit", doc = "Number of bars" }
+
+[op.klines.map]
+items = ".[]"
+error = "@ref:op.price.map.error"
+record = '''{
+  openTimeMs: .[0],
+  openTime: (.[0] | epoch_to_iso),
+  open: (.[1] | (to_num // .)),
+  high: (.[2] | (to_num // .)),
+  low: (.[3] | (to_num // .)),
+  close: (.[4] | (to_num // .)),
+  volume: (.[5] | (to_num // .)),
+  closeTimeMs: .[6],
+  closeTime: (.[6] | epoch_to_iso),
+  quoteVolume: (.[7] | (to_num // .)),
+  tradeCount: .[8]
+}'''

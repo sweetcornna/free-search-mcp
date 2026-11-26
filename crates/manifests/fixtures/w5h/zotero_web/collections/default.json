@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "source": "zotero_web",
+  "op": "collections",
+  "recordedAt": "2026-11-25T13:02:20Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.zotero.org/users/475425/collections?limit=3",
+        "headersSubset": {
+          "accept": "application/json",
+          "zotero-api-version": "3"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "[\n    {\n        \"key\": \"N7W92H48\",\n        \"version\": 1,\n        \"library\": {\n            \"type\": \"user\",\n            \"id\": 475425,\n            \"name\": \"Z public library\",\n            \"links\": {\n                \"alternate\": {\n                    \"href\": \"https://www.zotero.org/z_public_library\",\n                    \"type\": \"text/html\"\n                }\n            }\n        },\n        \"links\": {\n            \"self\": {\n                \"href\": \"https://api.zotero.org/users/475425/collections/N7W92H48\",\n                \"type\": \"application/json\"\n            },\n            \"alternate\": {\n                \"href\": \"https://www.zotero.org/z_public_library/collections/N7W92H48\",\n                \"type\": \"text/html\"\n            }\n        },\n        \"meta\": {\n            \"numCollections\": 1,\n            \"numItems\": 16\n        },\n        \"data\": {\n            \"key\": \"N7W92H48\",\n            \"version\": 1,\n            \"name\": \"LoC\",\n            \"parentCollection\": false,\n            \"relations\": {}\n        }\n    },\n    {\n        \"key\": \"9MK5KS97\",\n        \"version\": 1,\n        \"library\": {\n            \"type\": \"user\",\n            \"id\": 475425,\n            \"name\": \"Z public library\",\n            \"links\": {\n                \"alternate\": {\n                    \"href\": \"https://www.zotero.org/z_public_library\",\n                    \"type\": \"text/html\"\n                }\n            }\n        },\n        \"links\": {\n            \"self\": {\n                \"href\": \"https://api.zotero.org/users/475425/collections/9MK5KS97\",\n                \"type\": \"application/json\"\n            },\n            \"alternate\": {\n                \"href\": \"https://www.zotero.org/z_public_library/collections/9MK5KS97\",\n                \"type\": \"text/html\"\n            }\n        },\n        \"meta\": {\n            \"numCollections\": 0,\n            \"numItems\": 12\n        },\n        \"data\": {\n            \"key\": \"9MK5KS97\",\n            \"version\": 1,\n            \"name\": \"Humanities\",\n            \"parentCollection\": false,\n            \"relations\": {}\n        }\n    },\n    {\n        \"key\": \"BX9965IJ\",\n        \"version\": 1,\n        \"library\": {\n            \"type\": \"user\",\n            \"id\": 475425,\n            \"name\": \"Z public library\",\n            \"links\": {\n                \"alternate\": {\n                    \"href\": \"https://www.zotero.org/z_public_library\",\n                    \"type\": \"text/html\"\n                }\n            }\n        },\n        \"links\": {\n            \"self\": {\n                \"href\": \"https://api.zotero.org/users/475425/collections/BX9965IJ\",\n                \"type\": \"application/json\"\n            },\n            \"alternate\": {\n                \"href\": \"https://www.zotero.org/z_public_library/collections/BX9965IJ\",\n                \"type\": \"text/html\"\n            }\n        },\n        \"meta\": {\n            \"numCollections\": 0,\n            \"numItems\": 26\n        },\n        \"data\": {\n            \"key\": \"BX9965IJ\",\n            \"version\": 1,\n            \"name\": \"Sciences (miscellaneous)\",\n            \"parentCollection\": false,\n            \"relations\": {}\n        }\n    }\n]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

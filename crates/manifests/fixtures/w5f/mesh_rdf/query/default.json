@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "mesh_rdf",
+  "op": "query",
+  "recordedAt": "2026-11-25T12:18:28Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://id.nlm.nih.gov/mesh/sparql?query=SELECT+%3Fd+%3Flabel+FROM+%3Chttp%3A%2F%2Fid.nlm.nih.gov%2Fmesh%3E+WHERE+%7B+%3Fd+a+%3Chttp%3A%2F%2Fid.nlm.nih.gov%2Fmesh%2Fvocab%23TopicalDescriptor%3E+%3B+%3Chttp%3A%2F%2Fwww.w3.org%2F2000%2F01%2Frdf-schema%23label%3E+%3Flabel+%7D+LIMIT+3",
+        "headersSubset": {
+          "accept": "application/sparql-results+json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/sparql-results+json;charset=utf-8"
+          ],
+          [
+            "cache-control",
+            "no-cache,no-store"
+          ]
+        ],
+        "bodyText": "{ \"head\": {\n    \"vars\": [ \"d\" , \"label\" ]\n  } ,\n  \"results\": {\n    \"bindings\": [\n      { \n        \"d\": { \"type\": \"uri\" , \"value\": \"http://id.nlm.nih.gov/mesh/D000086402\" } ,\n        \"label\": { \"type\": \"literal\" , \"xml:lang\": \"en\" , \"value\": \"SARS-CoV-2\" }\n      } ,\n      { \n        \"d\": { \"type\": \"uri\" , \"value\": \"http://id.nlm.nih.gov/mesh/D000084562\" } ,\n        \"label\": { \"type\": \"literal\" , \"xml:lang\": \"en\" , \"value\": \"Retinyl Esters\" }\n      } ,\n      { \n        \"d\": { \"type\": \"uri\" , \"value\": \"http://id.nlm.nih.gov/mesh/D000083722\" } ,\n        \"label\": { \"type\": \"literal\" , \"xml:lang\": \"en\" , \"value\": \"Bacillus thuringiensis Toxins\" }\n      }\n    ]\n  }\n}\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

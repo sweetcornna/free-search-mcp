@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "search": {
-      "command": "uv",
-      "args": ["run", "search-mcp"]
+      "command": "cargo",
+      "args": ["run", "--quiet", "--locked", "-p", "fsm-server", "--bin", "free-search-mcp"]
     }
   }
 }

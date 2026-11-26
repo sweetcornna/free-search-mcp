@@ -1,0 +1,69 @@
+id = "zbmath"
+name = "zbMATH Open"
+summary = "Curated mathematics and mathematical-physics literature index with MSC2020 codes and reviews."
+aliases = ["zbmath open", "zbmath.org", "zentralblatt math", "zentralblatt für mathematik", "zbl"]
+home_url = "https://zbmath.org"
+tier = 1
+scopes = ["academic", "academic.math"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 43200, host_bucket = "api.zbmath.org" }
+
+[op.search]
+summary = "Search zbMATH Open mathematics documents."
+method = "GET"
+url = "https://api.zbmath.org/v1/document/_search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+paginate = { style = "page", param = "page", start = 0, max_pages = 3 }
+probe = { params = { query = "riemann hypothesis", limit = 3 }, min_results = 2, fixture = "fixtures/w5a/zbmath/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "search_string", doc = "zbMATH search string (supports au:, msc:, py:)" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "results_per_page", doc = "Results per page" }
+page = { type = "int", default = 0, min = 0, to = "page", doc = "0-indexed page number" }
+
+[op.search.map]
+items = ".result[]"
+total = ".status.nr_total_results"
+error = '''if .status.execution_bool == false then (.status.message // .status.status // "zbMATH query failed") elif .detail != null then (.detail | tostring) else null end'''
+work = '''(
+  ([(.editorial_contributions // [])[] | .text | select(type == "string" and (contains("unavailable due to conflicting licenses") | not))][0] // null | if type == "string" then (unescape_html | collapse_ws) else null end) as $rev |
+  ([(.links // [])[] | select(.type == "arxiv") | .identifier][0] // null) as $ax |
+  {
+    title: ((.title.title // "") | unescape_html | collapse_ws),
+    authors: [(.contributors.authors // [])[] | select(.name != null) | {name: (.name | collapse_ws)}],
+    year: (.year | to_int),
+    venue: ((.source.source // null) | if type == "string" then collapse_ws else null end),
+    workType: (if (.database // "") == "arXiv" then "preprint" elif (.document_type.code // "") == "b" then "book" else "article" end),
+    ids: {
+      doi: (([(.links // [])[] | select(.type == "doi") | .identifier][0] // null) | doi_norm),
+      arxiv: $ax
+    },
+    abstractText: (if ($rev // "") != "" then $rev else null end),
+    oa: (if $ax != null then { status: "green", url: ("https://arxiv.org/abs/" + $ax), pdfUrl: ("https://arxiv.org/pdf/" + $ax) } else null end),
+    retracted: false,
+    versions: [],
+    url: (.zbmath_url // ("https://zbmath.org/" + (.id | tostring))),
+    sources: ["zbmath"]
+  }
+)'''
+
+[op.work]
+summary = "Fetch a single zbMATH Open document by numeric zbMATH document ID."
+method = "GET"
+url = "https://api.zbmath.org/v1/document/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+probe = { params = { id = "2675811" }, min_results = 1, fixture = "fixtures/w5a/zbmath/work/default.json" }
+
+[op.work.params]
+id = { type = "string", required = true, in = "path", doc = "zbMATH document ID e.g. 2675811" }
+
+[op.work.map]
+items = ".result"
+error = "@ref:op.search.map.error"
+work = "@ref:op.search.map.work"

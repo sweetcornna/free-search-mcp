@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "common_crawl",
+  "op": "crawl_cdx",
+  "recordedAt": "2026-11-25T12:59:04Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://index.commoncrawl.org/CC-MAIN-2026-43-index?output=json&url=example.com&limit=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/x-ndjson"
+          ]
+        ],
+        "bodyText": "{\"urlkey\": \"com,example)/\", \"timestamp\": \"20261005112841\", \"url\": \"https://example.com/\", \"mime\": \"text/html\", \"mime-detected\": \"text/html\", \"status\": \"200\", \"digest\": \"7R2CIN6GF6Q6ESDIBYADLOX3YVMSGQR3\", \"length\": \"996\", \"offset\": \"204233603\", \"filename\": \"crawl-data/CC-MAIN-2026-43/segments/1791170053823.21/warc/CC-MAIN-20261005105623-20261005135623-00162.warc.gz\", \"languages\": \"eng\", \"recordid\": \"01a10bd2-b85a-7f82-93ed-b4bfc0d91cc3\", \"encoding\": \"UTF-8\"}\n{\"urlkey\": \"com,example)/\", \"timestamp\": \"20261005151603\", \"url\": \"https://example.com/\", \"mime\": \"text/html\", \"mime-detected\": \"text/html\", \"status\": \"200\", \"digest\": \"7R2CIN6GF6Q6ESDIBYADLOX3YVMSGQR3\", \"length\": \"999\", \"offset\": \"205600757\", \"filename\": \"crawl-data/CC-MAIN-2026-43/segments/1791170053887.69/warc/CC-MAIN-20261005135916-20261005165916-00162.warc.gz\", \"languages\": \"eng\", \"recordid\": \"01a10ca2-e0b6-7bf1-be6d-43ba7cbcf469\", \"encoding\": \"UTF-8\"}\n{\"urlkey\": \"com,example)/\", \"timestamp\": \"20261005154750\", \"url\": \"http://example.com/\", \"mime\": \"text/html\", \"mime-detected\": \"text/html\", \"status\": \"200\", \"digest\": \"7R2CIN6GF6Q6ESDIBYADLOX3YVMSGQR3\", \"length\": \"993\", \"offset\": \"8509856\", \"filename\": \"crawl-data/CC-MAIN-2026-43/segments/1791170053887.69/warc/CC-MAIN-20261005135916-20261005165916-00699.warc.gz\", \"languages\": \"eng\", \"recordid\": \"01a10cbf-fbb8-75e4-ae19-5a7aa90a4427\", \"encoding\": \"UTF-8\"}\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

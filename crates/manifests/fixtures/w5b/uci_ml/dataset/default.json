@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "uci_ml",
+  "op": "dataset",
+  "recordedAt": "2026-11-25T11:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://archive.ics.uci.edu/api/dataset?id=53",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/plain;charset=UTF-8"
+          ]
+        ],
+        "bodyText": "{\"status\":200,\"statusText\":\"OK\",\"data\":{\"uci_id\":53,\"name\":\"Iris\",\"repository_url\":\"https://archive.ics.uci.edu/dataset/53/iris\",\"data_url\":\"https://archive.ics.uci.edu/static/public/53/data.csv\",\"abstract\":\"A small classic dataset from Fisher, 1936. One of the earliest known datasets used for evaluating classification methods.\\n\",\"area\":\"Biology\",\"tasks\":[\"Classification\"],\"characteristics\":[\"Tabular\"],\"num_instances\":150,\"num_features\":4,\"feature_types\":[\"Real\"],\"demographics\":[],\"target_col\":[\"class\"],\"index_col\":null,\"has_missing_values\":\"no\",\"missing_values_symbol\":null,\"year_of_dataset_creation\":1936,\"last_updated\":\"Tue Sep 12 2023\",\"dataset_doi\":\"10.24432/C56C76\",\"creators\":[\"R. A. Fisher\"],\"intro_paper\":{\"ID\":191,\"type\":\"NATIVE\",\"title\":\"The Iris data set: In search of the source of virginica\",\"authors\":\"A. Unwin, K. Kleinman\",\"venue\":\"Significance, 2021\",\"year\":2021,\"journal\":\"Significance, 2021\",\"DOI\":\"1740-9713.01589\",\"URL\":\"https://www.semanticscholar.org/paper/4599862ea877863669a6a8e63a3c707a787d5d7e\",\"sha\":null,\"corpus\":null,\"arxiv\":null,\"mag\":null,\"acl\":null,\"pmid\":null,\"pmcid\":null},\"variables\":[{\"name\":\"sepal length\",\"role\":\"Feature\",\"type\":\"Continuous\",\"demographic\":null,\"description\":null,\"units\":\"cm\",\"missing_values\":\"no\"},{\"name\":\"sepal width\",\"role\":\"Feature\",\"type\":\"Continuous\",\"demographic\":null,\"description\":null,\"units\":\"cm\",\"missing_values\":\"no\"},{\"name\":\"petal length\",\"role\":\"Feature\",\"type\":\"Continuous\",\"demographic\":null,\"description\":null,\"units\":\"cm\",\"missing_values\":\"no\"},{\"name\":\"petal width\",\"role\":\"Feature\",\"type\":\"Continuous\",\"demographic\":null,\"description\":null,\"units\":\"cm\",\"missing_values\":\"no\"},{\"name\":\"class\",\"role\":\"Target\",\"type\":\"Categorical\",\"demographic\":null,\"description\":\"class of iris plant: Iris Setosa, Iris Versicolour, or Iris Virginica\",\"units\":null,\"missing_values\":\"no\"}],\"additional_info\":{\"summary\":\"This is one of the earliest datasets used in the literature on classification methods and widely used in statistics and machine learning.  The data set contains 3 classes of 50 instances each, where each class refers to a type of iris plant.  One class is linearly separable from the other 2; the latter are not linearly separable from each other.\\n\\nPredicted attribute: class of iris plant.\\n\\nThis is an exceedingly simple domain.\\n\\nThis data differs from the data presented in Fishers article (identified by Steve Chadwick,  spchadwick@espeedaz.net ).  The 35th sample should be: 4.9,3.1,1.5,0.2,\\\"Iris-setosa\\\" where the error is in the fourth feature. The 38th sample: 4.9,3.6,1.4,0.1,\\\"Iris-setosa\\\" where the errors are in the second and third features.  \",\"purpose\":\"N/A\",\"funded_by\":null,\"instances_represent\":\"Each instance is a plant\",\"recommended_data_splits\":null,\"sensitive_data\":null,\"preprocessing_description\":null,\"variable_info\":null,\"citation\":null}}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -4,6 +4,121 @@ All notable changes to this project are documented here. The format is loosely
 based on [Keep a Changelog](https://keepachangelog.com/), and the project follows
 semantic versioning.
 
+## [1.0.0] - 2026-11-25
+
+Complete Rust 1.0 rewrite (`free-search-mcp`, with `search-mcp` CLI alias)
+compressing the MCP surface to three keyless tools (`search`, `exec`, and
+`ask`), keeping the optional answer agent, agent lane, `codex`/`antigravity`
+engines, and OAuth login, aggregating 500+ web, academic, and specialist
+sources, and treating Claude Code, Codex, and Antigravity (`agy`) as equal
+first-class plugin targets.
+
+### Breaking Changes
+
+- **Three-tool MCP surface**: Replaced the 11+ legacy single-purpose tools
+  (`fetch`, `fetch_batch`, `compare`, `extract_structured`, `download`,
+  `research`, `read_doc`, `paper_graph`, `cache_search`, `engines`), 5 MCP
+  prompts, 2 `cache://` resource templates, completions, `format="json"`, and
+  `structuredContent` with exactly **3 always-listed tools**:
+  - `search({ query, scope?, sources?, freshness?, domains?, lang?, limit?, max_age_hours? })`
+    (live web/vertical search, optional signed-in agent lane and optional
+    answer above results, zero-network `scope="catalog"` over 500+ sources &
+    Host APIs, and zero-network local FTS5 `scope="cache"`).
+  - `exec({ code, max_tokens?, timeout_s? })` (sandboxed QuickJS-NG ES2020 JS
+    over a typed Host SDK: `web.*` including `web.ask`, `scholar.*`, `doc.*`,
+    `source.*`, `cache.*`, `catalog.*`, `util.*`).
+  - `ask({ question, freshness?, lang?, domains?, mode?, max_tokens? })`
+    (always listed, unlike v0.18.x where it was conditional: `mode="fast"`
+    runs keyless direct-answer + parallel search/read in ~8 s with no LLM;
+    `mode="agent"` synthesizes a sourced answer with the configured answer
+    agent; `mode="auto"` picks `agent` when configured, else `fast`).
+  - `tools/list` drops from ~35 KB (~8,748 tok) to ≤ 6,800 B (`instructions`
+    ≤ 450 B).
+- **Removed legacy engines & web admin UI**: Dropped `brave` (browser-only
+  HTML; use keyed `brave_api` if desired), `zhihu` (browser + login wall),
+  `google_cse` (closed/deprecated), and the `search-mcp-admin` web UI (replaced
+  by native CLI subcommands `free-search-mcp config|doctor|probe|sources|login|ask|eval-replay`).
+- **Agent search kept**: Ported from Python with the same environment variables
+  and defaults: answer agent (`SEARCH_MCP_AGENT_BACKEND` = `off` | `api` |
+  `claude-code` | `codex`, `SEARCH_MCP_AGENT_IN_SEARCH`), agent lane
+  (`SEARCH_MCP_AGENT_ENGINES=auto`, wait 6 s / grace 2 s), `codex` and opt-in
+  `antigravity` search engines, and OAuth login + `0600` keystore
+  (`free-search-mcp login codex|antigravity|status|logout`). `docs/CODEX_SEARCH.md`
+  and `docs/ANTIGRAVITY_SEARCH.md` now cover both tri-client plugin setup and
+  the `codex` / `antigravity` agent-lane engines.
+- **Parameter & environment renames**:
+  - `search` replaces `category` → `scope` (old names like `paper`, `github`,
+    `software`, `weather`, `image` still resolve as synonyms), `engines` →
+    `sources`, `include_domains`/`exclude_domains` → `domains` (`"-"` prefix
+    excludes), `max_results` → `limit`.
+  - `SEARCH_MCP_CATEGORY_ENGINE_LIMIT` → `SEARCH_MCP_SCOPE_ENGINE_LIMIT`,
+    `SEARCH_MCP_RESCUE_ENABLED` → `SEARCH_MCP_HEDGE_ENABLED`,
+    `SEARCH_MCP_RESCUE_ENGINES` → appended to `SEARCH_MCP_RESERVE_ENGINES`
+    (legacy names honored with a one-time stderr notice).
+- **New SQLite cache file**: 1.0 stores data in
+  `~/.cache/search-mcp/search-mcp.sqlite` and does not open or migrate legacy
+  `cache.sqlite`, allowing clean coexistence with v0.18.x.
+- **Browser rendering deferred to P1**: 1.0 ships the pure-Rust HTTP + TLS
+  impersonation stack (`reqwest` + `wreq`) with no Playwright/Chromium
+  requirement. `SEARCH_MCP_FETCH_STRATEGY=browser` and `SEARCH_MCP_BROWSER_*`
+  settings are accepted with a one-time notice until P1 CDP ships.
+- **Platform support**: 1.0 targets macOS and Linux (Windows is P1).
+
+### Notice: Retraction Watch Initial Sync (~70 MB)
+
+- On the first scholarly lookup (`scope="academic"` or `scholar.*`), the server
+  lazily downloads the Crossref Retraction Watch dataset (~70 MB CSV, CC0 1.0)
+  under a cross-process file lock, indexes 6 columns into `search-mcp.sqlite`
+  (~8–12 MB), deletes the raw CSV immediately, and refreshes via `ETag` every
+  7 days. Set `SEARCH_MCP_OFFLINE_SYNC=false` to disable the download and fall
+  back to online Crossref checks only.
+
+### Added
+
+- **Quick-search `ask` across every surface**: Always-listed MCP tool `ask`,
+  `web.ask(question, opts)` inside `exec`, shell command
+  `free-search-mcp ask "<question>"`, and HTTP endpoint `POST/GET /v1/ask`
+  behind the same token/host guards when Streamable HTTP is enabled.
+
+- **Single-binary Rust architecture** (22-crate workspace, ~20 MB binary,
+  ≤ 15 ms cold start, `free-search-mcp` with `search-mcp` alias, packaged as a
+  binary wheel via `maturin` `bindings = "bin"` for `uvx free-search-mcp`,
+  binary `.mcpb` bundles for Claude Desktop, and a ~25 MB distroless Docker
+  image).
+- **500+ aggregated sources**: 42 native Rust engines (including new `daum` for
+  Korean search), 18 generic protocol adapters (OAI-PMH, DSpace 7, InvenioRDM,
+  Dataverse, EPrints, SRU, CKAN, Socrata, OpenDataSoft, SPARQL, OpenSearch,
+  MediaWiki, Discourse, WordPress, RSS/Atom, Fediverse, Shopify JSON, Sitemap)
+  across curated instances plus ad-hoc `source.protocol(...)`, and declarative
+  TOML + `jaq` API manifests (including keyless `mwmbl`).
+- **First-class Scholar subsystem**: Unified `ScholarlyWork` dedup & field
+  merge, `arXiv:1706.03762` resolution fix, keyless default pool (`arxiv`,
+  `crossref`, `openaire` v3, `europepmc`), citation graph (`scholar.graph`),
+  11-step structured-first lawful OA full text (`scholar.fulltext`, skipping
+  Unpaywall cleanly when `SEARCH_MCP_CONTACT_EMAIL` is unset), local+online
+  integrity checks (`scholar.integrity`), offline citation formatting via
+  `hayagriva` (`scholar.cite`), and entity/grant queries (`scholar.author`,
+  `scholar.org`, `scholar.venue`, `scholar.grants`).
+- **Tri-client plugin parity**: Equal first-class support for Claude Code
+  (`.claude-plugin/plugin.json`, `.mcp.json`), Codex (`plugin.json`,
+  `mcp.json`, `codex/agents/quick_search.toml`), and Antigravity (`agy`:
+  `mcp_config.json`, `rules/AGENTS.md`, `antigravity/agents/quick-search.md`),
+  plus a new `scholar-research` skill alongside `verified-research`.
+- **Security & sandboxing hardening**:
+  - QuickJS-NG sandbox with zero ambient fs/env/net, heap/stack/call/wall-clock
+    caps, nonced output delimiters, and 4 Markdown boundary guardrails.
+  - Unified local-document egress taint rule: reading a local file under
+    `SEARCH_MCP_DOCUMENT_ROOT` blocks all subsequent network egress for that
+    `exec` call.
+  - CWD `./.env` security isolation: credentials, proxy, SSRF, HTTP token, and
+    document/download controls are ignored in working-directory `.env` files.
+  - Isolated `__pdf-worker` subprocess with cleared environment, piped stdio,
+    concurrency/queue limits, timeout, and cross-platform RSS kill guard.
+  - Optional Bearer token authentication (`SEARCH_MCP_HTTP_TOKEN`) and strict
+    loopback/origin enforcement for Streamable HTTP.
+  - 4-layer SSRF guard with DNS pinning and automatic Clash/Surge/sing-box
+    Fake-IP TUN canary detection.
+
 ## [0.18.2] - 2026-11-16
 
 Searches, document reads and the cache stay within their time and size limits,

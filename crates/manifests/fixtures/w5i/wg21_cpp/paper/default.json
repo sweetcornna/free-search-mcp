@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "source": "wg21_cpp",
+  "op": "paper",
+  "recordedAt": "2026-11-25T12:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://wg21.link/p2300.yaml",
+        "headersSubset": {
+          "accept": "text/plain"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/plain; charset=UTF-8"
+          ],
+          [
+            "last-modified",
+            "Wed, 18 Nov 2026 10:21:50 GMT"
+          ],
+          [
+            "etag",
+            "\"6afd7c3e-141\""
+          ]
+        ],
+        "bodyText": "  - id: P2300R10\n    citation-label: P2300R10\n    title: \"`std::execution`\"\n    author:\n      - family: Eric Niebler, Michał Dominiak, Georgy Evtushenko, Lewis Baker, Lucian Radu Teodorescu, Lee Howes, Kirk Shoop, Michael Garland, Bryce Adelstein Lelbach\n    issued:\n      year: 2024\n    URL: https://wg21.link/p2300r10\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

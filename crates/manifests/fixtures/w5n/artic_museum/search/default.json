@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "artic_museum",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.artic.edu/api/v1/artworks/search?q=monet&limit=3&fields=id,title,artist_display,date_display,image_id,thumbnail",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"preference\":null,\"pagination\":{\"total\":133375,\"limit\":3,\"offset\":0,\"total_pages\":44459,\"current_page\":1},\"data\":[{\"_score\":129.06352,\"id\":16568,\"title\":\"Water Lilies\",\"thumbnail\":{\"lqip\":\"data:image\\/gif;base64,R0lGODlhBQAFAPQAAEZcaFFfdVtqbk9ldFBlcVFocllrcFlrd11rdl9sdFZtf15wcWV0d2R2eGByfmd6eGl6e2t9elZxiGF4kWB4kmJ9kGJ8lWeCkWSAnQAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAAAAAAALAAAAAAFAAUAAAUVoJBADXI4TLRMWHU9hmRRCjAURBACADs=\",\"width\":8808,\"height\":8460,\"alt_text\":\"Painting of a pond seen up close spotted with thickly painted pink and white water lilies and a shadow across the top third of the picture.\"},\"date_display\":\"1906\",\"artist_display\":\"Claude Monet (French, 1840\\u20131926)\",\"image_id\":\"3c27b499-af56-f0d5-93b5-a7f2f1ad5813\"},{\"_score\":119.57778,\"id\":16571,\"title\":\"Arrival of the Normandy Train, Gare Saint-Lazare\",\"thumbnail\":{\"lqip\":\"data:image\\/gif;base64,R0lGODlhBwAFAPUAADU8QkROS0ZPU0hSVk1YXVFWUlBXXlFaWVNcWFFkV1plVVtjWmBnWmFqXmRrX05ZYFFaYlljbF5qbGNsY2ZydmlzdWRxeGdze2l1fWx3fG16enJ4fH+KioWOkZeam5yjqZ2lqrG1ubS6vwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAAAAAAALAAAAAAHAAUAAAYhQIKmYslQDoONp8ORBECi0OfyKEAMmAhAgFhMHA2GIhEEADs=\",\"width\":6786,\"height\":5092,\"alt_text\":\"Loosely painted image of an open-air train station. On the right, a parked train gives off an enormous plumb of white smoke, making the scene look as though it were full of clouds. A huddled mass of barely discernible people crowd around the train on both sides of the tracks. Blue, green, and gray tones dominate.\"},\"date_display\":\"1877\",\"artist_display\":\"Claude Monet (French, 1840\\u20131926)\",\"image_id\":\"0f1cc0e0-e42e-be16-3f71-2022da38cb93\"},{\"_score\":118.25957,\"id\":64818,\"title\":\"Stacks of Wheat (End of Summer)\",\"thumbnail\":{\"lqip\":\"data:image\\/gif;base64,R0lGODlhCAAFAPUAAF5eVW1bVm9eVmpjW3RoXXxyV39yXmdsZmhmaXZtbG11eH57eYl5bYR7dHuAf4mDfo6HfpePdpCFeZSOfJ+VdnZ+g4ODgoCHg4iHgo+GgY2MgpmThJeTipaSjaCcmbWnh6qrpKmopqqtrKusrbGxobq4pLu5qq2zsQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAAAAAAALAAAAAAIAAUAAAYlwJNoFAKRSiZPh7OZRCgfBWJwAAQEBU2D8VgkCAYI5uKoWDKSIAA7\",\"width\":6884,\"height\":4068,\"alt_text\":\"Painting composed of short, dense brushstrokes depicts two domed stacks of wheat that cast long shadows on a field. The angled light indicates either a rising or setting sun.\"},\"date_display\":\"1890\\u201391\",\"artist_display\":\"Claude Monet (French, 1840\\u20131926)\",\"image_id\":\"a38e2828-ec6f-ece1-a30f-70243449197b\"}],\"info\":{\"license_text\":\"The `description` field in this response is licensed under a Creative Commons Attribution 4.0 Generic License (CC-By) and the Terms and Conditions of artic.edu. All other data in this response is licensed under a Creative Commons Zero (CC0) 1.0 designation and the Terms and Conditions of artic.edu.\",\"license_links\":[\"https:\\/\\/creativecommons.org\\/publicdomain\\/zero\\/1.0\\/\",\"https:\\/\\/www.artic.edu\\/terms\"],\"version\":\"1.16\"},\"config\":{\"iiif_url\":\"https:\\/\\/www.artic.edu\\/iiif\\/2\",\"website_url\":\"https:\\/\\/www.artic.edu\"}}\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

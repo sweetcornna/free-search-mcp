@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "surechembl",
+  "op": "chemical",
+  "recordedAt": "2026-11-25T12:12:46Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.surechembl.org/api/chemical/id?ids=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "[{\"id\":\"3\",\"chemical_id\":\"3\",\"name\":\"ethane-1,2-diol\",\"smiles\":\"OCCO\",\"inchi\":\"InChI=1S/C2H6O2/c3-1-2-4/h3-4H,1-2H2\",\"inchi_key\":\"LYCAIKOWRPUZTN-UHFFFAOYSA-N\",\"mol_weight\":62.0678,\"log_p\":-1.029,\"is_element\":\"0\",\"global_frequency\":59,\"mchem_struct_alert\":\"0\",\"mol_formula\":\"C2H6O2\",\"hbd\":2,\"heavy_atoms\":4,\"rtb\":1,\"psa\":40.46,\"hba\":2,\"aromatic_rings\":0,\"qed_weighted\":0.407528,\"organic\":1,\"num_ro5_violations\":0,\"ro3_pass\":1,\"similarity\":null}]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

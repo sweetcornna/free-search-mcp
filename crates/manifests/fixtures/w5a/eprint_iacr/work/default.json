@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "source": "eprint_iacr",
+  "op": "work",
+  "recordedAt": "2026-11-25T12:13:58Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://eprint.iacr.org/oai?identifier=oai:eprint.iacr.org:2024/001&metadataPrefix=oai_dc&verb=GetRecord",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/xml; charset=utf-8"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?> \n<?xml-stylesheet type=\"text/xsl\" href=\"/css/oai2.xsl\" ?>\n<OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\" \n         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n         xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/\n         http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd\">\n  <responseDate>2026-11-25T12:13:58Z</responseDate>\n  \n<request verb=\"GetRecord\" identifier=\"oai:eprint.iacr.org:2024/001\"\n         metadataPrefix=\"oai_dc\">http://arXiv.org/oai2</request>\n<GetRecord>\n\n<record> \n <header>\n   <identifier>oai:eprint.iacr.org:2024/001</identifier> \n   <datestamp>2024-01-01T00:51:55Z</datestamp>\n </header>\n \n <metadata>\n    <oai_dc:dc \n        xmlns:oai_dc=\"http://www.openarchives.org/OAI/2.0/oai_dc/\" \n        xmlns:dc=\"http://purl.org/dc/elements/1.1/\" \n        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" \n        xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/oai_dc/ \n                            http://www.openarchives.org/OAI/2.0/oai_dc.xsd\">\n      <dc:identifier>https://eprint.iacr.org/2024/001</dc:identifier>\n      <dc:title>On short digital signatures with Eulerian transformations</dc:title> \n      <dc:creator>Vasyl Ustimenko</dc:creator>\n      \n      <dc:subject>Foundations</dc:subject>\n      <dc:description>Let n stands for the length of digital signatures with quadratic multivariate public rule in n variables. We construct postquantum secure procedure to sign O(n^t),  t ≥1  digital documents with the signature  of size n in time O(n^{3+t}). It allows to sign O(n^t), t &lt;1 in time  O(n^4).  The procedure is defined in terms of Algebraic Cryptography. Its security rests on the semigroup based protocol of Noncommutative Cryptography referring to complexity of the decomposition of the collision element into composition into given generators. The protocol uses the semigroup of Eulerian transformations of variety (K*)^n  where K* is a nontrivial multiplicative group of the finite commutative ring K.  Its execution complexity is O(n^3).  Additionally we use this protocol to define asymmetric cryptosystem with the space of plaintexts and ciphertexts (K*)^n  which allows users to encrypt and decrypt O(n^t)  documents of size n in time O(n^{3+[t]}) where [x] stands for the flow function from x. Finally we suggest protocol based cryptosystem working with plaintext space (K*)^n and the space of ciphertext K^n which allows decryption of O(n^t), t&gt;1 documents of size n in time O(n^{t+3}), t&gt;1. The multivariate encryption map has linear degree O(n) and density O(n^4). We discuss the idea of public key with Eulerian transformations which allows to sign O(n^t), t≥0 documents in time O(n^{t+2}). The idea of delivery and usage of several Eulerian and quadratic transformations is also discussed.</dc:description> \n      <dc:date>2024-01-01T00:51:55Z</dc:date>\n      <dc:date>2024-01-01T00:51:55Z</dc:date>\n      <dc:rights>https://creativecommons.org/licenses/by/4.0/</dc:rights>\n      <dc:publisher>International Association for Cryptologic Research (IACR)</dc:publisher>\n      <dc:type>e-print</dc:type>\n      <dc:language>en</dc:language>\n      \n    </oai_dc:dc>\n </metadata>\n</record>\n</GetRecord>\n\n</OAI-PMH>",
+        "bodyB64": null
+      }
+    }
+  ]
+}

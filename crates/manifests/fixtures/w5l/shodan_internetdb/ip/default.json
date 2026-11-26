@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "shodan_internetdb",
+  "op": "ip",
+  "recordedAt": "2026-11-25T12:56:48Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://internetdb.shodan.io/1.1.1.1",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "cache-control",
+            "public, max-age=432000"
+          ],
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"cpes\":[\"cpe:/a:cloudflare:cloudflare\"],\"hostnames\":[\"one.one.one.one\",\"my.commercemtg.com\",\"guest.reinders.com\"],\"ip\":\"1.1.1.1\",\"ports\":[53,80,443,2082,2083,2086,2087,2095,2096,8443,8880],\"tags\":[\"pqc\"],\"vulns\":[]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+id = "dataeuropa"
+name = "data.europa.eu"
+summary = "European Union official portal indexing 1.7M+ EU and member-state public-sector open datasets."
+aliases = ["eu open data", "data.europa.eu", "european data portal", "données ouvertes ue", "eu offene daten", "datos abiertos ue"]
+home_url = "https://data.europa.eu"
+tier = 1
+scopes = ["dataset", "gov"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 21600 }
+
+[op.search]
+summary = "Search EU and member-state public-sector datasets on data.europa.eu."
+method = "GET"
+url = "https://data.europa.eu/api/hub/search/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { facets = "false", includes = "id,title,description,resource,catalog_record,publisher,issued,modified" }
+paginate = { style = "page", param = "page", start = 0, max_pages = 3 }
+probe = { params = { query = "air quality", limit = 3 }, min_results = 2, fixture = "fixtures/w5b/dataeuropa/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Dataset search keywords" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Results per page" }
+page = { type = "int", default = 0, min = 0, to = "page", doc = "0-based page index" }
+
+[op.search.map]
+items = ".result.results[]"
+total = ".result.count"
+error = 'if type == "object" and ((.code | to_int) // 200) >= 400 and (.message // null) != null then .message else null end'
+record = '''{
+  id: (.id // ""),
+  title: ((if (.title | type) == "string" then .title elif (.title | type) == "object" then (.title.en // ([.title[] | select(type == "string" and length > 0)][0]) // "") else "" end) | strip_tags),
+  description: (if (.description | type) == "string" then (.description | strip_tags) elif (.description | type) == "object" then ((.description.en // ([.description[] | select(type == "string" and length > 0)][0]) // null) | strip_tags) else null end),
+  publisher: ((.publisher.name // null) | collapse_ws),
+  modified: ((.modified // .issued // .catalog_record.modified // .catalog_record.issued // null) | parse_date),
+  url: (if (.id // "") != "" then ("https://data.europa.eu/data/datasets/" + .id) else ((.resource // "") | sub("^http://data\\.europa\\.eu/"; "https://data.europa.eu/")) end)
+}'''
+hit = '''((.modified // .issued // .catalog_record.modified // .catalog_record.issued // null) | parse_date) as $d | (if (.description | type) == "string" then (.description | strip_tags) elif (.description | type) == "object" then ((.description.en // ([.description[] | select(type == "string" and length > 0)][0]) // "") | strip_tags) else "" end) as $desc | {
+  title: ((if (.title | type) == "string" then .title elif (.title | type) == "object" then (.title.en // ([.title[] | select(type == "string" and length > 0)][0]) // "") else "" end) | strip_tags),
+  url: (if (.id // "") != "" then ("https://data.europa.eu/data/datasets/" + .id) else ((.resource // "") | sub("^http://data\\.europa\\.eu/"; "https://data.europa.eu/")) end),
+  snippet: ((((.publisher.name // "") + (if ($desc // "") != "" then (" — " + $desc) else "" end)) | gsub("^ — "; "")) | collapse_ws)[0:280],
+  date: $d,
+  dateSource: (if $d != null then "api" else null end)
+}'''
+
+[op.dataset]
+summary = "Fetch full metadata and distribution list for a data.europa.eu dataset by ID."
+method = "GET"
+url = "https://data.europa.eu/api/hub/search/datasets/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "https-opendata-cc-coeurdefrance-fr-explore-dataset-pelouses-et-lisieres-seches-sur-sols-calcaires-reservoirs-de-biodiversite-srce-" }, min_results = 1, fixture = "fixtures/w5b/dataeuropa/dataset/default.json" }
+
+[op.dataset.params]
+id = { type = "string", required = true, in = "path", doc = "Dataset identifier slug from search results" }
+
+[op.dataset.map]
+items = ".result"
+error = 'if type == "object" and ((.code | to_int) // 200) >= 400 and (.message // null) != null then .message else null end'
+record = '''{
+  id: (.id // ""),
+  title: ((if (.title | type) == "string" then .title elif (.title | type) == "object" then (.title.en // ([.title[] | select(type == "string" and length > 0)][0]) // "") else "" end) | strip_tags),
+  description: (if (.description | type) == "string" then (.description | strip_tags) elif (.description | type) == "object" then ((.description.en // ([.description[] | select(type == "string" and length > 0)][0]) // null) | strip_tags) else null end),
+  publisher: ((.publisher.name // null) | collapse_ws),
+  distributions: [(.distributions // [])[0:10][] | {format: (.format.label // .format.id // null), accessUrl: ((.access_url // [])[0] // null), downloadUrl: ((.download_url // [])[0] // null)}],
+  modified: ((.modified // .issued // .catalog_record.modified // .catalog_record.issued // null) | parse_date),
+  url: (if (.id // "") != "" then ("https://data.europa.eu/data/datasets/" + .id) else ((.resource // "") | sub("^http://data\\.europa\\.eu/"; "https://data.europa.eu/")) end)
+}'''

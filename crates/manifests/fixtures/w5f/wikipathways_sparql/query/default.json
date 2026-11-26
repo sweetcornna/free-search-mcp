@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "wikipathways_sparql",
+  "op": "query",
+  "recordedAt": "2026-11-25T12:18:39Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://sparql.wikipathways.org/sparql?query=SELECT+%3Fp+%3Ftitle+WHERE+%7B+%3Fp+a+%3Chttp%3A%2F%2Fvocabularies.wikipathways.org%2Fwp%23Pathway%3E+%3B+%3Chttp%3A%2F%2Fpurl.org%2Fdc%2Felements%2F1.1%2Ftitle%3E+%3Ftitle+%7D+LIMIT+3",
+        "headersSubset": {
+          "accept": "application/sparql-results+json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/sparql-results+json"
+          ]
+        ],
+        "bodyText": "\n{ \"head\": { \"link\": [], \"vars\": [\"p\", \"title\"] },\n  \"results\": { \"distinct\": false, \"ordered\": true, \"bindings\": [\n    { \"p\": { \"type\": \"uri\", \"value\": \"https://identifiers.org/wikipathways/WP5518_r140909\" }\t, \"title\": { \"type\": \"literal\", \"xml:lang\": \"en\", \"value\": \"Aspirin prevention of cancer metastasis\" }},\n    { \"p\": { \"type\": \"uri\", \"value\": \"https://identifiers.org/wikipathways/WP1000_r20260607143312\" }\t, \"title\": { \"type\": \"literal\", \"xml:lang\": \"en\", \"value\": \"Arachidonate epoxygenase / epoxide hydrolase\" }},\n    { \"p\": { \"type\": \"uri\", \"value\": \"https://identifiers.org/wikipathways/WP1001_r139954\" }\t, \"title\": { \"type\": \"literal\", \"xml:lang\": \"en\", \"value\": \"Peptide GPCRs\" }} ] } }",
+        "bodyB64": null
+      }
+    }
+  ]
+}

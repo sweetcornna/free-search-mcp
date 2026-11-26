@@ -1,0 +1,66 @@
+id = "wg21_cpp"
+name = "ISO C++ WG21 Standards Papers Index"
+summary = "ISO/IEC JTC1/SC22/WG21 C++ standards proposals, technical specifications, and defect reports via wg21.link and open-std.org."
+aliases = ["wg21", "wg21.link", "isocpp papers", "cpp standards"]
+home_url = "https://wg21.link"
+tier = 2
+scopes = ["docs", "code"]
+caps = ["lookup", "harvest"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 86400 }
+
+[op.paper]
+summary = "Look up Pandoc/CSL YAML bibliographic metadata for a WG21 C++ proposal or issue (e.g. p2300, P2300, p2300r10, n4950, cwg1)."
+method = "GET"
+url = "https://wg21.link/{id}.yaml"
+headers = { Accept = "text/plain" }
+response = "text"
+returns = "text"
+probe = { params = { id = "p2300" }, min_results = 1, fixture = "fixtures/w5i/wg21_cpp/paper/default.json" }
+examples = ['source.call("wg21_cpp.paper", {id: "p2300"})', 'source.call("wg21_cpp.paper", {id: "P2300"})']
+
+[op.paper.params]
+id = { type = "string", required = true, in = "path", doc = "WG21 paper or issue ID (case-insensitive, e.g. p2300, P2300, p2300r10, N4950, cwg1)" }
+
+[op.year]
+summary = "List or filter WG21 C++ committee papers published in a given year (2013-present 8-column index on open-std.org)."
+method = "GET"
+url = "https://www.open-std.org/jtc1/sc22/wg21/docs/papers/{year}/"
+headers = { Accept = "text/html" }
+response = "html"
+returns = "records"
+probe = { params = { year = 2013 }, min_results = 5, fixture = "fixtures/w5i/wg21_cpp/year/default.json" }
+examples = ['source.call("wg21_cpp.year", {year: 2026, query: "sender", limit: 20})', 'source.call("wg21_cpp.year", {year: 2013, subgroup: "Concurrency"})']
+
+[op.year.params]
+year = { type = "int", required = true, default = 2026, min = 2013, max = 2030, in = "path", doc = "WG21 papers year (2013-present)" }
+query = { type = "string", in = "none", doc = "Optional case-insensitive substring filter on paper number, title, or author" }
+subgroup = { type = "string", in = "none", doc = "Optional case-insensitive subgroup filter (e.g. Core, Library, Evolution, Concurrency)" }
+limit = { type = "int", default = 50, min = 1, max = 200, in = "none", doc = "Maximum papers to return (capped at 200)" }
+
+[op.year.html]
+items_css = "table tr"
+fields = { number = "td:nth-child(1) | text", path = "td:nth-child(1) a | attr(href)", title = "td:nth-child(2) | text", author = "td:nth-child(3) | text", date = "td:nth-child(4) | text", mailing_date = "td:nth-child(5) | text", subgroup = "td:nth-child(7) | text" }
+wall_markers = ["Access Denied"]
+
+[op.year.map]
+items = '''(($p.query // "") | ascii_downcase) as $q | (($p.subgroup // "") | ascii_downcase) as $sg | [.[] | select((.number // "") != "" and (.title // "") != "") | select($q == "" or (((.number // "") | ascii_downcase | contains($q)) or ((.title // "") | ascii_downcase | contains($q)) or ((.author // "") | ascii_downcase | contains($q)))) | select($sg == "" or ((.subgroup // "") | ascii_downcase | contains($sg)))][0:($p.limit // 50)][]'''
+record = '''(
+  ("https://www.open-std.org/jtc1/sc22/wg21/docs/papers/" + (($p.year // "") | tostring) + "/") as $base |
+  ((.number // "") | collapse_ws // "") as $num |
+  ((.path | resolve_url($base)) // ("https://wg21.link/" + ($num | ascii_downcase))) as $url |
+  ((.date // "") | collapse_ws // "" |
+    if test("^[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}$") then
+      (split("-") | .[0] + "-" + (if (.[1] | length) == 1 then ("0" + .[1]) else .[1] end) + "-" + (if (.[2] | length) == 1 then ("0" + .[2]) else .[2] end))
+    else . end | parse_date) as $dt0 |
+  ($dt0 // (.mailing_date | parse_date)) as $dt |
+  {
+    number: $num,
+    title: ((.title // "") | collapse_ws // ""),
+    author: ((.author // "") | collapse_ws // ""),
+    date: $dt,
+    subgroup: ((.subgroup | collapse_ws) | if . == "" then null else . end),
+    url: $url
+  }
+)'''

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "semanticscholar",
+  "op": "search",
+  "recordedAt": "2026-11-25T14:08:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.semanticscholar.org/graph/v1/paper/search?fields=paperId%2Ctitle%2Cabstract%2Cyear%2CpublicationDate%2Cvenue%2CcitationCount%2CinfluentialCitationCount%2CisOpenAccess%2CopenAccessPdf%2CexternalIds%2Cauthors&limit=3&query=attention+is+all+you+need",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"total\":2500,\"offset\":0,\"data\":[{\"paperId\":\"204e3073870fae3d05bcbc2f6a8e263d9b72e776\",\"title\":\"Attention is All you Need\",\"abstract\":\"The dominant sequence transduction models are based on complex recurrent or convolutional neural networks.\",\"year\":2017,\"publicationDate\":\"2017-06-12\",\"venue\":\"Neural Information Processing Systems\",\"citationCount\":140000,\"influentialCitationCount\":15000,\"isOpenAccess\":true,\"openAccessPdf\":{\"url\":\"https://arxiv.org/pdf/1706.03762.pdf\",\"status\":\"GREEN\"},\"externalIds\":{\"ArXiv\":\"1706.03762\",\"DBLP\":\"conf/nips/VaswaniSPUJGKP17\"},\"authors\":[{\"name\":\"Ashish Vaswani\"},{\"name\":\"Noam Shazeer\"}]},{\"paperId\":\"df2b0e26d0599ce3e70df8a9da02e51594e0e992\",\"title\":\"BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding\",\"abstract\":\"We introduce a new language representation model called BERT.\",\"year\":2019,\"publicationDate\":\"2019-06-02\",\"venue\":\"NAACL\",\"citationCount\":92000,\"influentialCitationCount\":9800,\"isOpenAccess\":true,\"openAccessPdf\":{\"url\":\"https://aclanthology.org/N19-1423.pdf\",\"status\":\"GOLD\"},\"externalIds\":{\"DOI\":\"10.18653/v1/N19-1423\",\"ArXiv\":\"1810.04805\"},\"authors\":[{\"name\":\"Jacob Devlin\"},{\"name\":\"Ming-Wei Chang\"}]},{\"paperId\":\"32ac52069e562d4f900afee70bdca63f53461281\",\"title\":\"An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale\",\"abstract\":\"While the Transformer architecture has become the de-facto standard for natural language processing tasks.\",\"year\":2020,\"publicationDate\":\"2020-10-22\",\"venue\":\"ICLR\",\"citationCount\":42000,\"influentialCitationCount\":4100,\"isOpenAccess\":true,\"openAccessPdf\":{\"url\":\"\",\"status\":\"GREEN\",\"disclaimer\":\"Notice: Paper or abstract available at https://arxiv.org/abs/2010.11929\"},\"externalIds\":{\"DOI\":\"10.48550/arXiv.2010.11929\",\"ArXiv\":\"2010.11929\"},\"authors\":[{\"name\":\"Alexey Dosovitskiy\"}]}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

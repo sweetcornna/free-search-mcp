@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "ietf",
+  "op": "search",
+  "recordedAt": "2026-11-25T11:54:04Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://datatracker.ietf.org/api/v1/doc/document/?format=json&type=rfc&title__icontains=HTTP&limit=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ],
+          [
+            "etag",
+            "W/\"ee45462ccf81414b65da63859050c02d\""
+          ]
+        ],
+        "bodyText": "{\"meta\": {\"limit\": 3, \"next\": \"/api/v1/doc/document/?format=json&title__icontains=HTTP&type=rfc&limit=3&offset=3\", \"offset\": 0, \"previous\": null, \"total_count\": 140}, \"objects\": [{\"abstract\": \"This document describes a set of data types and associated algorithms that are intended to make it easier and safer to define and handle HTTP header and trailer fields, known as \\\"Structured Fields\\\", \\\"Structured Headers\\\", or \\\"Structured Trailers\\\". It is intended for use by specifications of new HTTP fields.\\n\\n This document obsoletes RFC 8941.\", \"ad\": \"/api/v1/person/person/119822/\", \"expires\": null, \"external_url\": \"\", \"group\": \"/api/v1/group/group/1718/\", \"id\": 139487, \"intended_std_level\": null, \"keywords\": \"['trailer', 'header']\", \"name\": \"rfc9651\", \"note\": \"\", \"notify\": \"\", \"pages\": 35, \"resource_uri\": \"/api/v1/doc/document/rfc9651/\", \"rev\": \"\", \"rfc\": \"9651\", \"rfc_number\": 9651, \"shepherd\": null, \"states\": [\"/api/v1/doc/state/177/\"], \"std_level\": \"/api/v1/name/stdlevelname/ps/\", \"stream\": \"/api/v1/name/streamname/ietf/\", \"submissions\": [], \"tags\": [\"/api/v1/name/doctagname/errata/\", \"/api/v1/name/doctagname/verified-errata/\"], \"time\": \"2026-05-20T15:45:14Z\", \"title\": \"Structured Field Values for HTTP\", \"type\": \"/api/v1/name/doctypename/rfc/\", \"uploaded_filename\": \"\", \"words\": null}, {\"abstract\": \"This specification defines the Link-Template HTTP header field, providing a means for describing the structure of a link between two resources so that new links can be generated.\", \"ad\": \"/api/v1/person/person/109753/\", \"expires\": null, \"external_url\": \"\", \"group\": \"/api/v1/group/group/2283/\", \"id\": 139488, \"intended_std_level\": null, \"keywords\": \"['link relation']\", \"name\": \"rfc9652\", \"note\": \"\", \"notify\": \"\", \"pages\": 5, \"resource_uri\": \"/api/v1/doc/document/rfc9652/\", \"rev\": \"\", \"rfc\": \"9652\", \"rfc_number\": 9652, \"shepherd\": null, \"states\": [\"/api/v1/doc/state/177/\"], \"std_level\": \"/api/v1/name/stdlevelname/ps/\", \"stream\": \"/api/v1/name/streamname/ietf/\", \"submissions\": [], \"tags\": [], \"time\": \"2026-05-20T15:45:12Z\", \"title\": \"The Link-Template HTTP Header Field\", \"type\": \"/api/v1/name/doctypename/rfc/\", \"uploaded_filename\": \"\", \"words\": null}, {\"abstract\": \"This document specifies additional HyperText Transfer Protocol (HTTP) status codes for a variety of common situations. [STANDARDS-TRACK]\", \"ad\": \"/api/v1/person/person/21684/\", \"expires\": null, \"external_url\": \"\", \"group\": \"/api/v1/group/group/934/\", \"id\": 128433, \"intended_std_level\": null, \"keywords\": \"['Hypertext Transfer Protocol']\", \"name\": \"rfc6585\", \"note\": \"\", \"notify\": \"\", \"pages\": 10, \"resource_uri\": \"/api/v1/doc/document/rfc6585/\", \"rev\": \"\", \"rfc\": \"6585\", \"rfc_number\": 6585, \"shepherd\": null, \"states\": [\"/api/v1/doc/state/177/\"], \"std_level\": \"/api/v1/name/stdlevelname/ps/\", \"stream\": \"/api/v1/name/streamname/ietf/\", \"submissions\": [], \"tags\": [\"/api/v1/name/doctagname/errata/\"], \"time\": \"2026-05-20T15:36:40Z\", \"title\": \"Additional HTTP Status Codes\", \"type\": \"/api/v1/name/doctypename/rfc/\", \"uploaded_filename\": \"\", \"words\": 2033}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

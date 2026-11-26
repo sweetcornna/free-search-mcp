@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "source": "erddap_marine_ie",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:19:10Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://erddap.marine.ie/erddap/opensearch1.1/description.xml",
+        "headersSubset": {
+          "accept": "application/opensearchdescription+xml, application/xml"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/opensearchdescription+xml;charset=UTF-8"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<OpenSearchDescription xmlns=\"http://a9.com/-/spec/opensearch/1.1/\">\n  <ShortName>ERDDAP</ShortName>\n  <Description>The ERDDAP at Marine Institute Ireland is a data server that gives you a simple, consistent way to download subsets of scientific datasets in common file formats and make graphs and maps.</Description>\n  <Url type=\"application/atom+xml\"\n       template=\"https://erddap.marine.ie/erddap/opensearch1.1/search?searchTerms={searchTerms}&#x26;page={startPage?}&#x26;itemsPerPage={count?}&#x26;format=atom\"/>\n  <Url type=\"application/rss+xml\"\n       template=\"https://erddap.marine.ie/erddap/opensearch1.1/search?searchTerms={searchTerms}&#x26;page={startPage?}&#x26;itemsPerPage={count?}&#x26;format=rss\"/>\n  <Contact>datarequests@marine.ie</Contact>\n  <Tags>atmosphere biology biosphere earth environment ocean science</Tags>\n  <LongName>ERDDAP at Marine Institute Ireland</LongName>\n  <Image height=\"53\" width=\"55\">https://erddap.marine.ie/erddap/images/nlogo.gif</Image>\n  <Image height=\"313\" width=\"313\">https://erddap.marine.ie/erddap/images/noaa_simple.gif</Image>\n  <Image height=\"20\" width=\"20\">https://erddap.marine.ie/erddap/images/noaa20.gif</Image>\n  <Query role=\"example\" searchTerms=\"temperature\" />\n  <Developer>Bob Simons (bob.simons at noaa.gov)</Developer>\n  <Attribution>Marine Institute Ireland</Attribution>\n  <SyndicationRight>private</SyndicationRight>\n  <AdultContent>false</AdultContent>\n  <Language>en-us</Language>\n  <InputEncoding>UTF-8</InputEncoding>\n  <OutputEncoding>UTF-8</OutputEncoding>\n</OpenSearchDescription>\n",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://erddap.marine.ie/erddap/opensearch1.1/search?searchTerms=temperature&page=1&itemsPerPage=3&format=atom",
+        "headersSubset": {
+          "accept": "application/atom+xml, application/xml"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/atom+xml;charset=UTF-8"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<feed xmlns=\"https://www.w3.org/2005/Atom\" \n      xmlns:opensearch=\"http://a9.com/-/spec/opensearch/1.1/\">\n  <title>ERDDAP Search: temperature</title> \n  <link href=\"https&#x3a;&#x2f;&#x2f;erddap&#x2e;marine&#x2e;ie&#x2f;erddap&#x2f;opensearch1&#x2e;1&#x2f;search&#x3f;searchTerms&#x3d;temperature&#x26;page&#x3d;1&#x26;itemsPerPage&#x3d;3&#x26;format&#x3d;atom\"/>\n  <updated>2026-11-25T12:17:17Z</updated>\n  <author> \n    <name>Data Requests</name>\n    <email>datarequests@marine.ie</email>\n  </author> \n  <id>https&#x3a;&#x2f;&#x2f;erddap&#x2e;marine&#x2e;ie&#x2f;erddap&#x2f;opensearch1&#x2e;1&#x2f;search&#x3f;searchTerms&#x3d;temperature&#x26;page&#x3d;1&#x26;itemsPerPage&#x3d;3&#x26;format&#x3d;atom</id>\n  <opensearch:totalResults>50</opensearch:totalResults>\n  <opensearch:startIndex>1</opensearch:startIndex>\n  <opensearch:itemsPerPage>3</opensearch:itemsPerPage>\n  <opensearch:Query role=\"request\" searchTerms=\"temperature\" startPage=\"1\" />\n  <link rel=\"first\" href=\"https://erddap.marine.ie/erddap/opensearch1.1/search?searchTerms=temperature&amp;format=atom&amp;itemsPerPage=3&amp;page=1\" type=\"application/atom+xml\"/>\n  <link rel=\"self\" href=\"https://erddap.marine.ie/erddap/opensearch1.1/search?searchTerms=temperature&amp;format=atom&amp;itemsPerPage=3&amp;page=1\" type=\"application/atom+xml\"/>\n  <link rel=\"next\" href=\"https://erddap.marine.ie/erddap/opensearch1.1/search?searchTerms=temperature&amp;format=atom&amp;itemsPerPage=3&amp;page=2\" type=\"application/atom+xml\"/>\n  <link rel=\"last\" href=\"https://erddap.marine.ie/erddap/opensearch1.1/search?searchTerms=temperature&amp;format=atom&amp;itemsPerPage=3&amp;page=17\" type=\"application/atom+xml\"/>\n  <entry>\n    <title>Coastal Temperature Network</title>\n    <link href=\"https://erddap.marine.ie/erddap/tabledap/ICTempNetwork.html\"/>\n    <id>https://erddap.marine.ie/erddap/tabledap/ICTempNetwork.html</id>\n    <updated>2026-11-25T11:31:04Z</updated>\n    <content type=\"text\">\nIrish Coastal Temperature Network\n\ncdm_data_type = TimeSeries\nVARIABLES:\nSiteName (Station ID)\nlongitude (degrees_east)\nlatitude (degrees_north)\nBay\nyear\nmonth\ntime (Detection Time, seconds since 1970-01-01T00:00:00Z)\nDepth (m)\nSeaTemperature (Sea Surface Temperature, degree_C)\nQFlag (Quality Control Flags)\n    </content>\n  </entry>\n  <entry>\n    <title>Coastal Temperature Network - Freshwater sites</title>\n    <link href=\"https://erddap.marine.ie/erddap/tabledap/ICTempNetworkFreshwater.html\"/>\n    <id>https://erddap.marine.ie/erddap/tabledap/ICTempNetworkFreshwater.html</id>\n    <updated>2026-11-25T11:45:00Z</updated>\n    <content type=\"text\">\nIrish Coastal Temperature Network Freshwater sites\n\ncdm_data_type = TimeSeries\nVARIABLES:\nSiteName (Station ID)\nlongitude (degrees_east)\nlatitude (degrees_north)\nBay\nyear\nmonth\ntime (Detection Time, seconds since 1970-01-01T00:00:00Z)\nDepth (m)\ntemperature (Surface Temperature, degree_C)\nQFlag (Quality Control Flags)\n    </content>\n  </entry>\n  <entry>\n    <title>Water temperature profiles at Bunaveela Lough County Mayo (2009-2019)</title>\n    <link href=\"https://erddap.marine.ie/erddap/tabledap/bunaveela_water_temp_profiles.html\"/>\n    <id>https://erddap.marine.ie/erddap/tabledap/bunaveela_water_temp_profiles.html</id>\n    <updated>2026-11-20T09:18:00Z</updated>\n    <content type=\"text\">\nBunaveela water temperature profiles Time Series\n\ncdm_data_type = TimeSeries\nVARIABLES:\ntime (Date Time, seconds since 1970-01-01T00:00:00Z)\nlatitude (degrees_north)\nlongitude (degrees_east)\nyear\nmonth\nday\nstation (station id)\ndepth (depth of measurement, m)\ntemperature (water temperature in-situ ITS-90 scale, degree_Celsius)\ntemperature_qc\ndepth_qc\n    </content>\n  </entry>\n</feed>\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,174 @@
+{
+  "version": 1,
+  "source": "pubmed",
+  "op": "search",
+  "recordedAt": "2026-11-25T15:09:59Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&retmode=json&sort=relevance&tool=free-search-mcp&retmax=3&retstart=0&term=crispr",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "date",
+            "Wed, 25 Nov 2026 15:09:57 GMT"
+          ],
+          [
+            "server",
+            "Finatra"
+          ],
+          [
+            "strict-transport-security",
+            "max-age=31536000; includeSubDomains; preload"
+          ],
+          [
+            "content-security-policy",
+            "upgrade-insecure-requests"
+          ],
+          [
+            "referrer-policy",
+            "origin-when-cross-origin"
+          ],
+          [
+            "ncbi-sid",
+            "208D06A7547B93F0_9C37SID"
+          ],
+          [
+            "ncbi-phid",
+            "1D3460D53899E3E5000017E6513D9772.1.1.m_1"
+          ],
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ],
+          [
+            "cache-control",
+            "private"
+          ],
+          [
+            "x-ratelimit-limit",
+            "3"
+          ],
+          [
+            "x-ratelimit-remaining",
+            "2"
+          ],
+          [
+            "access-control-allow-origin",
+            "*"
+          ],
+          [
+            "access-control-expose-headers",
+            "X-RateLimit-Limit,X-RateLimit-Remaining"
+          ],
+          [
+            "x-ua-compatible",
+            "IE=Edge"
+          ],
+          [
+            "x-xss-protection",
+            "1; mode=block"
+          ],
+          [
+            "via",
+            "1.1 google"
+          ],
+          [
+            "alt-svc",
+            "clear"
+          ]
+        ],
+        "bodyText": "{\"header\":{\"type\":\"esearch\",\"version\":\"0.3\"},\"esearchresult\":{\"count\":\"73043\",\"retmax\":\"3\",\"retstart\":\"0\",\"idlist\":[\"25315507\",\"27699445\",\"38786024\"],\"translationset\":[{\"from\":\"crispr\",\"to\":\"\\\"clustered regularly interspaced short palindromic repeats\\\"[MeSH Terms] OR (\\\"clustered\\\"[All Fields] AND \\\"regularly\\\"[All Fields] AND \\\"interspaced\\\"[All Fields] AND \\\"short\\\"[All Fields] AND \\\"palindromic\\\"[All Fields] AND \\\"repeats\\\"[All Fields]) OR \\\"clustered regularly interspaced short palindromic repeats\\\"[All Fields] OR \\\"crispr\\\"[All Fields] OR \\\"crisprs\\\"[All Fields]\"}],\"querytranslation\":\"\\\"clustered regularly interspaced short palindromic repeats\\\"[MeSH Terms] OR (\\\"clustered\\\"[All Fields] AND \\\"regularly\\\"[All Fields] AND \\\"interspaced\\\"[All Fields] AND \\\"short\\\"[All Fields] AND \\\"palindromic\\\"[All Fields] AND \\\"repeats\\\"[All Fields]) OR \\\"clustered regularly interspaced short palindromic repeats\\\"[All Fields] OR \\\"crispr\\\"[All Fields] OR \\\"crisprs\\\"[All Fields]\"}}\n",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?id=25315507,27699445,38786024&db=pubmed&retmode=json&tool=free-search-mcp",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "date",
+            "Wed, 25 Nov 2026 15:09:58 GMT"
+          ],
+          [
+            "server",
+            "Finatra"
+          ],
+          [
+            "strict-transport-security",
+            "max-age=31536000; includeSubDomains; preload"
+          ],
+          [
+            "content-security-policy",
+            "upgrade-insecure-requests"
+          ],
+          [
+            "referrer-policy",
+            "origin-when-cross-origin"
+          ],
+          [
+            "ncbi-sid",
+            "8FBDD4597805C7F0_B5A1SID"
+          ],
+          [
+            "ncbi-phid",
+            "1D33C917C97CBB85000057EB75C22203.1.1.m_1"
+          ],
+          [
+            "content-type",
+            "application/json; charset=UTF-8"
+          ],
+          [
+            "cache-control",
+            "private"
+          ],
+          [
+            "x-ratelimit-limit",
+            "3"
+          ],
+          [
+            "x-ratelimit-remaining",
+            "2"
+          ],
+          [
+            "access-control-allow-origin",
+            "*"
+          ],
+          [
+            "access-control-expose-headers",
+            "X-RateLimit-Limit,X-RateLimit-Remaining"
+          ],
+          [
+            "x-ua-compatible",
+            "IE=Edge"
+          ],
+          [
+            "x-xss-protection",
+            "1; mode=block"
+          ],
+          [
+            "via",
+            "1.1 google"
+          ],
+          [
+            "alt-svc",
+            "clear"
+          ]
+        ],
+        "bodyText": "{\"header\":{\"type\":\"esummary\",\"version\":\"0.3\"},\"result\":{\"uids\":[\"25315507\",\"27699445\",\"38786024\"],\"25315507\":{\"uid\":\"25315507\",\"pubdate\":\"2014 Dec\",\"epubdate\":\"2014 Nov 7\",\"source\":\"FEBS J\",\"authors\":[{\"name\":\"Ma Y\",\"authtype\":\"Author\",\"clusterid\":\"\"},{\"name\":\"Zhang L\",\"authtype\":\"Author\",\"clusterid\":\"\"},{\"name\":\"Huang X\",\"authtype\":\"Author\",\"clusterid\":\"\"}],\"lastauthor\":\"Huang X\",\"title\":\"Genome modification by CRISPR/Cas9.\",\"sorttitle\":\"genome modification by crispr cas9\",\"volume\":\"281\",\"issue\":\"23\",\"pages\":\"5186-93\",\"lang\":[\"eng\"],\"nlmuniqueid\":\"101229646\",\"issn\":\"1742-464X\",\"essn\":\"1742-4658\",\"pubtype\":[\"Journal Article\",\"Research Support, Non-U.S. Gov't\",\"Review\"],\"recordstatus\":\"PubMed - indexed for MEDLINE\",\"pubstatus\":\"256\",\"articleids\":[{\"idtype\":\"pubmed\",\"idtypen\":1,\"value\":\"25315507\"},{\"idtype\":\"doi\",\"idtypen\":3,\"value\":\"10.1111/febs.13110\"}],\"history\":[{\"pubstatus\":\"received\",\"date\":\"2014/06/04 00:00\"},{\"pubstatus\":\"revised\",\"date\":\"2014/08/21 00:00\"},{\"pubstatus\":\"accepted\",\"date\":\"2014/10/03 00:00\"},{\"pubstatus\":\"entrez\",\"date\":\"2014/10/16 06:00\"},{\"pubstatus\":\"pubmed\",\"date\":\"2014/10/16 06:00\"},{\"pubstatus\":\"medline\",\"date\":\"2015/01/27 06:00\"}],\"references\":[],\"attributes\":[\"Has Abstract\"],\"pmcrefcount\":\"\",\"fulljournalname\":\"The FEBS journal\",\"elocationid\":\"doi: 10.1111/febs.13110\",\"doctype\":\"citation\",\"srccontriblist\":[],\"booktitle\":\"\",\"medium\":\"\",\"edition\":\"\",\"publisherlocation\":\"\",\"publishername\":\"\",\"srcdate\":\"\",\"reportnumber\":\"\",\"availablefromurl\":\"\",\"locationlabel\":\"\",\"doccontriblist\":[],\"docdate\":\"\",\"bookname\":\"\",\"chapter\":\"\",\"sortpubdate\":\"2014/12/01 00:00\",\"sortfirstauthor\":\"Ma Y\",\"vernaculartitle\":\"\"},\"27699445\":{\"uid\":\"27699445\",\"pubdate\":\"2017 Jun\",\"epubdate\":\"2016 Oct 3\",\"source\":\"Arch Immunol Ther Exp (Warsz)\",\"authors\":[{\"name\":\"Hryhorowicz M\",\"authtype\":\"Author\",\"clusterid\":\"\"},{\"name\":\"Lipiński D\",\"authtype\":\"Author\",\"clusterid\":\"\"},{\"name\":\"Zeyland J\",\"authtype\":\"Author\",\"clusterid\":\"\"},{\"name\":\"Słomski R\",\"authtype\":\"Author\",\"clusterid\":\"\"}],\"lastauthor\":\"Słomski R\",\"title\":\"CRISPR/Cas9 Immune System as a Tool for Genome Engineering.\",\"sorttitle\":\"crispr cas9 immune system as a tool for genome engineering\",\"volume\":\"65\",\"issue\":\"3\",\"pages\":\"233-240\",\"lang\":[\"eng\"],\"nlmuniqueid\":\"0114365\",\"issn\":\"0004-069X\",\"essn\":\"1661-4917\",\"pubtype\":[\"Journal Article\",\"Review\"],\"recordstatus\":\"PubMed - indexed for MEDLINE\",\"pubstatus\":\"256\",\"articleids\":[{\"idtype\":\"pubmed\",\"idtypen\":1,\"value\":\"27699445\"},{\"idtype\":\"pmc\",\"idtypen\":8,\"value\":\"PMC5434172\"},{\"idtype\":\"pmcid\",\"idtypen\":5,\"value\":\"pmc-id: PMC5434172;\"},{\"idtype\":\"doi\",\"idtypen\":3,\"value\":\"10.1007/s00005-016-0427-5\"},{\"idtype\":\"pii\",\"idtypen\":4,\"value\":\"10.1007/s00005-016-0427-5\"}],\"history\":[{\"pubstatus\":\"received\",\"date\":\"2016/02/03 00:00\"},{\"pubstatus\":\"accepted\",\"date\":\"2016/09/16 00:00\"},{\"pubstatus\":\"pubmed\",\"date\":\"2016/10/05 06:00\"},{\"pubstatus\":\"medline\",\"date\":\"2018/02/24 06:00\"},{\"pubstatus\":\"entrez\",\"date\":\"2016/10/05 06:00\"},{\"pubstatus\":\"pmc-release\",\"date\":\"2016/10/03 00:00\"}],\"references\":[],\"attributes\":[\"Has Abstract\"],\"pmcrefcount\":62,\"fulljournalname\":\"Archivum immunologiae et therapiae experimentalis\",\"elocationid\":\"doi: 10.1007/s00005-016-0427-5\",\"doctype\":\"citation\",\"srccontriblist\":[],\"booktitle\":\"\",\"medium\":\"\",\"edition\":\"\",\"publisherlocation\":\"\",\"publishername\":\"\",\"srcdate\":\"\",\"reportnumber\":\"\",\"availablefromurl\":\"\",\"locationlabel\":\"\",\"doccontriblist\":[],\"docdate\":\"\",\"bookname\":\"\",\"chapter\":\"\",\"sortpubdate\":\"2017/06/01 00:00\",\"sortfirstauthor\":\"Hryhorowicz M\",\"vernaculartitle\":\"\"},\"38786024\":{\"uid\":\"38786024\",\"pubdate\":\"2024 May 8\",\"epubdate\":\"2024 May 8\",\"source\":\"Cells\",\"authors\":[{\"name\":\"Laurent M\",\"authtype\":\"Author\",\"clusterid\":\"\"},{\"name\":\"Geoffroy M\",\"authtype\":\"Author\",\"clusterid\":\"\"},{\"name\":\"Pavani G\",\"authtype\":\"Author\",\"clusterid\":\"\"},{\"name\":\"Guiraud S\",\"authtype\":\"Author\",\"clusterid\":\"\"}],\"lastauthor\":\"Guiraud S\",\"title\":\"CRISPR-Based Gene Therapies: From Preclinical to Clinical Treatments.\",\"sorttitle\":\"crispr based gene therapies from preclinical to clinical treatments\",\"volume\":\"13\",\"issue\":\"10\",\"pages\":\"\",\"lang\":[\"eng\"],\"nlmuniqueid\":\"101600052\",\"issn\":\"\",\"essn\":\"2073-4409\",\"pubtype\":[\"Journal Article\",\"Review\",\"Research Support, Non-U.S. Gov't\"],\"recordstatus\":\"PubMed - indexed for MEDLINE\",\"pubstatus\":\"3\",\"articleids\":[{\"idtype\":\"pubmed\",\"idtypen\":1,\"value\":\"38786024\"},{\"idtype\":\"pmc\",\"idtypen\":8,\"value\":\"PMC11119143\"},{\"idtype\":\"pmcid\",\"idtypen\":5,\"value\":\"pmc-id: PMC11119143;\"},{\"idtype\":\"doi\",\"idtypen\":3,\"value\":\"10.3390/cells13100800\"},{\"idtype\":\"pii\",\"idtypen\":4,\"value\":\"cells13100800\"}],\"history\":[{\"pubstatus\":\"received\",\"date\":\"2024/03/26 00:00\"},{\"pubstatus\":\"revised\",\"date\":\"2024/05/03 00:00\"},{\"pubstatus\":\"accepted\",\"date\":\"2024/05/05 00:00\"},{\"pubstatus\":\"medline\",\"date\":\"2024/05/24 12:45\"},{\"pubstatus\":\"pubmed\",\"date\":\"2024/05/24 12:44\"},{\"pubstatus\":\"entrez\",\"date\":\"2024/05/24 09:16\"},{\"pubstatus\":\"pmc-release\",\"date\":\"2024/05/08 00:00\"}],\"references\":[],\"attributes\":[\"Has Abstract\"],\"pmcrefcount\":207,\"fulljournalname\":\"Cells\",\"elocationid\":\"doi: 10.3390/cells13100800\",\"doctype\":\"citation\",\"srccontriblist\":[],\"booktitle\":\"\",\"medium\":\"\",\"edition\":\"\",\"publisherlocation\":\"\",\"publishername\":\"\",\"srcdate\":\"\",\"reportnumber\":\"\",\"availablefromurl\":\"\",\"locationlabel\":\"\",\"doccontriblist\":[],\"docdate\":\"\",\"bookname\":\"\",\"chapter\":\"\",\"sortpubdate\":\"2024/05/08 00:00\",\"sortfirstauthor\":\"Laurent M\",\"vernaculartitle\":\"\"}}}\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

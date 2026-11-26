@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "nasa_exoplanet",
+  "op": "search",
+  "recordedAt": "2026-11-25T13:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query=select+pl_name%2Chostname%2Cdiscoverymethod%2Cdisc_year%2Cdisc_facility%2Cpl_orbper%2Cpl_rade%2Cpl_bmasse%2Cpl_eqt%2Csy_dist+from+pscomppars+where+pl_name+like+%27%25TRAPPIST-1%25%27&MAXREC=3&format=json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "[\n{\"pl_name\": \"TRAPPIST-1 b\",\n\"hostname\": \"TRAPPIST-1\",\n\"discoverymethod\": \"Transit\",\n\"disc_year\": 2016,\n\"disc_facility\": \"La Silla Observatory\",\n\"pl_orbper\": 1.51082600000,\n\"pl_rade\": 1.11600000,\n\"pl_bmasse\": 1.37400000,\n\"pl_eqt\": 397.60,\n\"sy_dist\": 12.42988881},\n{\"pl_name\": \"TRAPPIST-1 c\",\n\"hostname\": \"TRAPPIST-1\",\n\"discoverymethod\": \"Transit\",\n\"disc_year\": 2016,\n\"disc_facility\": \"La Silla Observatory\",\n\"pl_orbper\": 2.42193700000,\n\"pl_rade\": 1.09700000,\n\"pl_bmasse\": 1.30800000,\n\"pl_eqt\": 339.70,\n\"sy_dist\": 12.42988881},\n{\"pl_name\": \"TRAPPIST-1 d\",\n\"hostname\": \"TRAPPIST-1\",\n\"discoverymethod\": \"Transit\",\n\"disc_year\": 2016,\n\"disc_facility\": \"La Silla Observatory\",\n\"pl_orbper\": 4.04921900000,\n\"pl_rade\": 0.78800000,\n\"pl_bmasse\": 0.38800000,\n\"pl_eqt\": 286.20,\n\"sy_dist\": 12.42988881}\n]\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+id = "rsd_software"
+name = "Research Software Directory (RSD)"
+summary = "Curated FAIR academic research software registry linked to Zenodo DOIs, repositories, and papers."
+aliases = ["rsd", "research software directory"]
+home_url = "https://research-software-directory.org"
+tier = 1
+scopes = ["code", "academic", "dataset"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 2, timeout_ms = 6000, cache_ttl_s = 43200 }
+
+[op.search]
+summary = "Search academic research software packages in the Research Software Directory."
+method = "GET"
+url = "https://research-software-directory.org/api/v1/software"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { select = "id,slug,brand_name,short_statement,concept_doi,get_started_url,updated_at" }
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "climate", limit = 3 }, min_results = 2, fixture = "fixtures/w5b/rsd_software/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "or", template = '(brand_name.ilike."*{query}*",short_statement.ilike."*{query}*")', doc = "Keyword matched against software name and summary" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Maximum software entries" }
+offset = { type = "int", min = 0, to = "offset", doc = "Result offset" }
+
+[op.search.map]
+items = ".[]"
+error = 'if type == "object" and (.message // null) != null then .message else null end'
+record = '''{
+  id: (.id // ""),
+  slug: (.slug // ""),
+  name: ((.brand_name // "") | collapse_ws),
+  summary: ((.short_statement // null) | collapse_ws),
+  conceptDoi: ((.concept_doi // null) | doi_norm),
+  getStartedUrl: (.get_started_url // null),
+  updatedAt: ((.updated_at // null) | parse_date),
+  url: ("https://research-software-directory.org/software/" + (.slug // ""))
+}'''
+hit = '''((.updated_at // null) | parse_date) as $d | {
+  title: ((.brand_name // .slug // "") | collapse_ws),
+  url: ("https://research-software-directory.org/software/" + (.slug // "")),
+  snippet: ((((.short_statement // "") + (if (.concept_doi // "") != "" then (" · DOI: " + .concept_doi) else "" end)) | collapse_ws)[0:280]),
+  date: $d,
+  dateSource: (if $d != null then "api" else null end)
+}'''
+
+[op.software]
+summary = "Fetch a Research Software Directory entry by slug."
+method = "GET"
+url = "https://research-software-directory.org/api/v1/software"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { select = "id,slug,brand_name,short_statement,description,concept_doi,get_started_url,updated_at" }
+probe = { params = { slug = "3d-e-chem-knime-python-node-archetype" }, min_results = 1, fixture = "fixtures/w5b/rsd_software/software/default.json" }
+
+[op.software.params]
+slug = { type = "string", required = true, to = "slug", template = "eq.{slug}", doc = "RSD software slug" }
+
+[op.software.map]
+items = ".[]"
+error = 'if type == "object" and (.message // null) != null then .message else null end'
+record = '''{
+  id: (.id // ""),
+  slug: (.slug // ""),
+  name: ((.brand_name // "") | collapse_ws),
+  summary: ((.short_statement // null) | collapse_ws),
+  description: ((.description // null) | collapse_ws),
+  conceptDoi: ((.concept_doi // null) | doi_norm),
+  getStartedUrl: (.get_started_url // null),
+  updatedAt: ((.updated_at // null) | parse_date),
+  url: ("https://research-software-directory.org/software/" + (.slug // ""))
+}'''

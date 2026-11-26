@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "source": "plos",
+  "op": "work",
+  "recordedAt": "2026-11-25T15:09:55Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.plos.org/search?fl=id%2Cjournal%2Ceissn%2Cpublication_date%2Carticle_type%2Cauthor_display%2Cabstract%2Ctitle_display&rows=1&wt=json&q=id%3A%2210.1371%2Fjournal.pgen.1002441%22",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "date",
+            "Wed, 25 Nov 2026 15:09:55 GMT"
+          ],
+          [
+            "content-type",
+            "application/json;charset=utf-8"
+          ],
+          [
+            "last-modified",
+            "Tue, 24 Nov 2026 19:08:03 GMT"
+          ],
+          [
+            "etag",
+            "\"MWE5NzQwMDAwMDAwMDAwMFNvbHI=\""
+          ],
+          [
+            "strict-transport-security",
+            "max-age=31536000; includeSubDomains"
+          ],
+          [
+            "access-control-allow-origin",
+            "*"
+          ],
+          [
+            "access-control-allow-credentials",
+            "true"
+          ],
+          [
+            "access-control-allow-methods",
+            "GET, PUT, POST, DELETE, PATCH, OPTIONS"
+          ],
+          [
+            "access-control-allow-headers",
+            "DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
+          ],
+          [
+            "access-control-max-age",
+            "1728000"
+          ]
+        ],
+        "bodyText": "{\n  \"response\":{\"numFound\":1,\"start\":0,\"docs\":[\n      {\n        \"id\":\"10.1371/journal.pgen.1002441\",\n        \"journal\":\"PLoS Genetics\",\n        \"eissn\":\"1553-7404\",\n        \"publication_date\":\"2012-06-13T00:00:00Z\",\n        \"article_type\":\"Research Article\",\n        \"author_display\":[\"Mina Rho\",\n          \"Yu-Wei Wu\",\n          \"Haixu Tang\",\n          \"Thomas G. Doak\",\n          \"Yuzhen Ye\"],\n        \"abstract\":[\"\\n        CRISPR (Clustered Regularly Interspaced Short Palindromic Repeats) loci, together with cas (CRISPR–associated) genes, form the CRISPR/Cas adaptive immune system, a primary defense strategy that eubacteria and archaea mobilize against foreign nucleic acids, including phages and conjugative plasmids. Short spacer sequences separated by the repeats are derived from foreign DNA and direct interference to future infections. The availability of hundreds of shotgun metagenomic datasets from the Human Microbiome Project (HMP) enables us to explore the distribution and diversity of known CRISPRs in human-associated microbial communities and to discover new CRISPRs. We propose a targeted assembly strategy to reconstruct CRISPR arrays, which whole-metagenome assemblies fail to identify. For each known CRISPR type (identified from reference genomes), we use its direct repeat consensus sequence to recruit reads from each HMP dataset and then assemble the recruited reads into CRISPR loci; the unique spacer sequences can then be extracted for analysis. We also identified novel CRISPRs or new CRISPR variants in contigs from whole-metagenome assemblies and used targeted assembly to more comprehensively identify these CRISPRs across samples. We observed that the distributions of CRISPRs (including 64 known and 86 novel ones) are largely body-site specific. We provide detailed analysis of several CRISPR loci, including novel CRISPRs. For example, known streptococcal CRISPRs were identified in most oral microbiomes, totaling ∼8,000 unique spacers: samples resampled from the same individual and oral site shared the most spacers; different oral sites from the same individual shared significantly fewer, while different individuals had almost no common spacers, indicating the impact of subtle niche differences on the evolution of CRISPR defenses. We further demonstrate potential applications of CRISPRs to the tracing of rare species and the virus exposure of individuals. This work indicates the importance of effective identification and characterization of CRISPR loci to the study of the dynamic ecology of microbiomes.\\n      Author Summary: Human bodies are complex ecological systems in which various microbial organisms and viruses interact with each other and with the human host. The Human Microbiome Project (HMP) has resulted in >700 datasets of shotgun metagenomic sequences, from which we can learn about the compositions and functions of human-associated microbial communities. CRISPR/Cas systems are a widespread class of adaptive immune systems in bacteria and archaea, providing acquired immunity against foreign nucleic acids: CRISPR/Cas defense pathways involve integration of viral- or plasmid-derived DNA segments into CRISPR arrays (forming spacers between repeated structural sequences), and expression of short crRNAs from these single repeat-spacer units, to generate interference to future invading foreign genomes. Powered by an effective computational approach (the targeted assembly approach for CRISPR), our analysis of CRISPR arrays in the HMP datasets provides the very first global view of bacterial immunity systems in human-associated microbial communities. The great diversity of CRISPR spacers we observed among different body sites, in different individuals, and in single individuals over time, indicates the impact of subtle niche differences on the evolution of CRISPR defenses and indicates the key role of bacteriophage (and plasmids) in shaping human microbial communities. \"],\n        \"title_display\":\"Diverse CRISPRs Evolving in Human Microbiomes\"}]\n  }}\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

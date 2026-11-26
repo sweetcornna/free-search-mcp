@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "uniprot",
+  "op": "entry",
+  "recordedAt": "2026-11-25T11:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://rest.uniprot.org/uniprotkb/P01308.json?fields=accession,id,protein_name,gene_names,organism_name,length,reviewed,cc_function,cc_subcellular_location,sequence",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "cache-control",
+            "public, max-age=43200"
+          ],
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"entryType\":\"UniProtKB reviewed (Swiss-Prot)\",\"primaryAccession\":\"P01308\",\"uniProtkbId\":\"INS_HUMAN\",\"organism\":{\"scientificName\":\"Homo sapiens\",\"commonName\":\"Human\",\"taxonId\":9606,\"lineage\":[\"Eukaryota\",\"Metazoa\",\"Chordata\",\"Craniata\",\"Vertebrata\",\"Euteleostomi\",\"Mammalia\",\"Eutheria\",\"Euarchontoglires\",\"Primates\",\"Haplorrhini\",\"Catarrhini\",\"Hominidae\",\"Homo\"]},\"proteinDescription\":{\"recommendedName\":{\"fullName\":{\"value\":\"Insulin\"}},\"contains\":[{\"recommendedName\":{\"fullName\":{\"value\":\"Insulin B chain\"}}},{\"recommendedName\":{\"fullName\":{\"value\":\"Insulin A chain\"}}}],\"flag\":\"Precursor\"},\"genes\":[{\"geneName\":{\"value\":\"INS\"}}],\"comments\":[{\"texts\":[{\"evidences\":[{\"evidenceCode\":\"ECO:0000269\",\"source\":\"PubMed\",\"id\":\"12754525\"},{\"evidenceCode\":\"ECO:0000269\",\"source\":\"PubMed\",\"id\":\"15113941\"},{\"evidenceCode\":\"ECO:0000269\",\"source\":\"PubMed\",\"id\":\"32291281\"},{\"evidenceCode\":\"ECO:0000269\",\"source\":\"PubMed\",\"id\":\"7763247\"},{\"evidenceCode\":\"ECO:0000269\",\"source\":\"PubMed\",\"id\":\"7983060\"},{\"evidenceCode\":\"ECO:0000269\",\"source\":\"PubMed\",\"id\":\"9235985\"}],\"value\":\"Hormone secreted by pancreatic islet beta cells, that is the principal anabolic regulator of glucose, lipid, and protein metabolism and the central controller of blood glucose homeostasis (PubMed:32291281). Acts by binding to and activating the insulin receptor INSR, a receptor tyrosine kinase, triggering INSR autophosphorylation and recruitment/phosphorylation of insulin receptor substrate proteins IRS1 and IRS2, which activate the downstream PI3K/AKT and RAS/MAPK signaling cascades (PubMed:7983060). Through the PI3K/AKT pathway, stimulates glucose uptake into skeletal muscle and adipose tissue by promoting translocation of the glucose transporter GLUT4/SLC2A4 from intracellular storage vesicles to the plasma membrane (PubMed:9235985). In liver and muscle, promotes glycogen synthesis through AKT-mediated inhibitory phosphorylation of glycogen synthase kinase-3 (GSK3), thereby activating glycogen synthase (PubMed:7763247). In the liver, suppresses hepatic glucose production by inhibiting gluconeogenesis, in part through phosphorylation and exclusion of the FOXO1 transcription factor, which downregulates the gluconeogenic enzymes PEPCK and glucose-6-phosphatase (PubMed:12754525). In adipose tissue, promotes lipogenesis and potently suppresses lipolysis, reducing the flux of free fatty acids and glycerol to the liver and thereby further restraining hepatic gluconeogenesis (PubMed:15113941)\"}],\"commentType\":\"FUNCTION\"},{\"commentType\":\"SUBCELLULAR LOCATION\",\"subcellularLocations\":[{\"location\":{\"evidences\":[{\"evidenceCode\":\"ECO:0000269\",\"source\":\"PubMed\",\"id\":\"36309486\"}],\"value\":\"Secreted\",\"id\":\"SL-0243\"}}]}],\"sequence\":{\"value\":\"MALWMRLLPLLALLALWGPDPAAAFVNQHLCGSHLVEALYLVCGERGFFYTPKTRREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN\",\"length\":110,\"molWeight\":11981,\"crc64\":\"C2C3B23B85E520E5\",\"md5\":\"12E9C9E4E2835C302E8BA615115EDDA3\"},\"extraAttributes\":{\"uniParcId\":\"UPI00000017EA\"}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

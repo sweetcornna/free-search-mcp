@@ -1,0 +1,97 @@
+id = "uspto_odp"
+name = "USPTO Open Data Portal (ODP)"
+summary = "Official US Patent and Trademark Office Open Data Portal v1 API for US patent applications, granted patents, and file wrappers (replaces retired PatentsView API; requires free USPTO ODP API key)."
+aliases = ["uspto", "patentsview", "us patents", "patent file wrapper"]
+home_url = "https://data.uspto.gov"
+tier = 3
+scopes = ["gov", "gov.patents"]
+caps = ["search", "lookup", "patent"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 10000, cache_ttl_s = 43200 }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_USPTO_ODP_API_KEY"
+in = "header"
+name = "X-API-KEY"
+format = "{key}"
+route_requires_key = true
+
+[op.search]
+summary = "Search USPTO patent applications and granted patents via Open Data Portal v1."
+method = "GET"
+url = "https://api.uspto.gov/api/v1/patent/applications/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "neural network", limit = 3 }, min_results = 2, fixture = "fixtures/w5d2/uspto_odp/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Keyword or fielded OpenSearch query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Results per page" }
+offset = { type = "int", min = 0, to = "offset", doc = "Pagination offset" }
+sort = { type = "string", to = "sort", doc = "Optional sort specification" }
+
+[op.search.map]
+items = "(.patentFileWrapperDataBag // .patentApplicationDataBag // [])[]"
+total = ".count"
+error = "if .error then (.error | tostring) elif .message and (.patentFileWrapperDataBag == null and .patentApplicationDataBag == null) then .message else null end"
+record = '''{
+  applicationNumber: .applicationNumberText,
+  patentNumber: (.applicationMetaData.patentNumber // .patentNumber // null),
+  title: ((.applicationMetaData.inventionTitle // .inventionTitle // "") | collapse_ws // ""),
+  filingDate: ((.applicationMetaData.filingDate // .filingDate // null) | parse_date),
+  grantDate: ((.applicationMetaData.grantDate // .applicationMetaData.patentIssueDate // null) | parse_date),
+  status: (.applicationMetaData.applicationStatusDescriptionText // .applicationStatusCategory // null),
+  applicationType: (.applicationMetaData.applicationTypeLabelName // .applicationTypeLabelName // null),
+  firstInventor: (.applicationMetaData.firstInventorName // .firstInventorName // null),
+  firstApplicant: (.applicationMetaData.firstApplicantName // .firstApplicantName // null),
+  cpc: (.applicationMetaData.cpcClassificationBag // .cpcClassificationBag // []),
+  url: ("https://data.uspto.gov/patent-file-wrapper/search/details/" + (.applicationNumberText // "") + "/application-data")
+}'''
+hit = '''{
+  title: ((.applicationMetaData.inventionTitle // .inventionTitle // ("US Application " + (.applicationNumberText // ""))) | collapse_ws // ""),
+  url: ("https://data.uspto.gov/patent-file-wrapper/search/details/" + (.applicationNumberText // "") + "/application-data"),
+  snippet: (
+    [
+      (if (.applicationMetaData.patentNumber // null) then ("US" + .applicationMetaData.patentNumber) else ("App " + (.applicationNumberText // "")) end),
+      (.applicationMetaData.applicationStatusDescriptionText // .applicationStatusCategory),
+      (.applicationMetaData.firstApplicantName // .applicationMetaData.firstInventorName)
+    ] | map(select(. != null)) | join(" · ")
+  ),
+  date: ((.applicationMetaData.grantDate // .applicationMetaData.filingDate // .filingDate // null) | parse_date),
+  dateSource: "api"
+}'''
+
+[op.application]
+summary = "Fetch full USPTO file-wrapper metadata for a specific US patent application number."
+method = "GET"
+url = "https://api.uspto.gov/api/v1/patent/applications/{application_number}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { application_number = "16330077" }, min_results = 1, fixture = "fixtures/w5d2/uspto_odp/application/default.json" }
+
+[op.application.params]
+application_number = { type = "string", required = true, in = "path", doc = "8-digit USPTO application number, e.g. 16330077" }
+
+[op.application.map]
+items = "(.patentFileWrapperDataBag // .patentApplicationDataBag // (if .applicationNumberText then [.] else [] end))[]"
+error = "if .error then (.error | tostring) elif .message and (.patentFileWrapperDataBag == null and .patentApplicationDataBag == null) then .message else null end"
+record = '''{
+  applicationNumber: .applicationNumberText,
+  patentNumber: (.applicationMetaData.patentNumber // .patentNumber // null),
+  title: ((.applicationMetaData.inventionTitle // .inventionTitle // "") | collapse_ws // ""),
+  filingDate: ((.applicationMetaData.filingDate // .filingDate // null) | parse_date),
+  grantDate: ((.applicationMetaData.grantDate // .applicationMetaData.patentIssueDate // null) | parse_date),
+  status: (.applicationMetaData.applicationStatusDescriptionText // .applicationStatusCategory // null),
+  applicationType: (.applicationMetaData.applicationTypeLabelName // .applicationTypeLabelName // null),
+  firstInventor: (.applicationMetaData.firstInventorName // .firstInventorName // null),
+  firstApplicant: (.applicationMetaData.firstApplicantName // .firstApplicantName // null),
+  applicants: [(.applicationMetaData.applicantBag // .applicantBag // [])[] | (.applicantNameText // .name // null) | select(. != null)],
+  inventors: [(.applicationMetaData.inventorBag // .inventorBag // [])[] | (.inventorNameText // .name // null) | select(. != null)],
+  cpc: (.applicationMetaData.cpcClassificationBag // .cpcClassificationBag // []),
+  url: ("https://data.uspto.gov/patent-file-wrapper/search/details/" + (.applicationNumberText // "") + "/application-data")
+}'''

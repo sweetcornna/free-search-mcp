@@ -1,0 +1,77 @@
+id = "nwo_grants_nl"
+name = "Dutch Research Council (NWO) Open API"
+summary = "Official Dutch Research Council (NWO) CC0 open JSON API for funded research projects, schemes, project leaders, institutions with ROR IDs, and summaries."
+aliases = ["nwo", "nwopen", "netherlands grants"]
+home_url = "https://www.nwo.nl/en/researchprogrammes/open-science/nwo-open-api"
+tier = 1
+scopes = ["academic", "academic.grants"]
+caps = ["search", "lookup", "grant"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.5, burst = 4, concurrency = 2, timeout_ms = 12000, cache_ttl_s = 43200, host_bucket = "nwopen-api.nwo.nl" }
+
+[op.search]
+summary = "Search NWO-funded research projects by title keyword, organization, or reporting year."
+method = "GET"
+url = "https://nwopen-api.nwo.nl/NWOpen-API/api/Projects"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "quantum", limit = 2, page = 1 }, min_results = 2, fixture = "fixtures/w5k/nwo_grants_nl/search/default.json" }
+examples = ['source.call("nwo_grants_nl.search", { query: "quantum", limit: 5 })']
+
+[op.search.params]
+query = { type = "string", required = true, to = "title", doc = "Keyword matched against NWO project titles" }
+organisation = { type = "string", to = "organisation", doc = "Optional host university or institute name" }
+reporting_year = { type = "string", to = "reporting_year", doc = "Optional 4-digit reporting year YYYY" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "per_page", doc = "Projects per page" }
+page = { type = "int", default = 1, min = 1, to = "page", doc = "1-based page number" }
+
+[op.search.map]
+items = "(.projects // [])[]"
+total = ".meta.count"
+record = '''(
+  (([(.project_members // [])[] | select(.role == "Project leader" or .role == "Main applicant")] + (.project_members // []))[0]) as $lead |
+  {
+    id: (.project_id // ""),
+    title: ((.title // "") | collapse_ws),
+    funder: "NWO",
+    pi: (if $lead != null then ([$lead.first_name, $lead.prefix, $lead.last_name] | map(select(. != null and length > 0)) | join(" ") | collapse_ws) else null end),
+    org: (if ($lead.organisation // "") != "" then ($lead.organisation | split("||")[0] | collapse_ws) else null end),
+    amount: null,
+    currency: null,
+    startDate: (.start_date | parse_date),
+    endDate: (.end_date | parse_date),
+    url: ("https://www.nwo.nl/en/projects/" + ((.project_id // "") | gsub("\\."; "-"))),
+    source: "nwo_grants_nl"
+  }
+)'''
+hit = '''(
+  (([(.project_members // [])[] | select(.role == "Project leader" or .role == "Main applicant")] + (.project_members // []))[0]) as $lead |
+  (.start_date | parse_date) as $d |
+  {
+    title: ((.title // "") | collapse_ws),
+    url: ("https://www.nwo.nl/en/projects/" + ((.project_id // "") | gsub("\\."; "-"))),
+    snippet: ([(.project_id // ""), ((.funding_scheme // "") | collapse_ws), (if ($lead.organisation // "") != "" then ($lead.organisation | split("||")[0] | collapse_ws) else "" end)] | map(select(. != null and length > 0)) | join(" · ")),
+    date: $d,
+    dateSource: (if $d != null then "api" else null end)
+  }
+)'''
+
+[op.project]
+summary = "Look up a specific NWO research project by project_id."
+method = "GET"
+url = "https://nwopen-api.nwo.nl/NWOpen-API/api/Projects"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { project_id = "012.000.802" }, min_results = 1, fixture = "fixtures/w5k/nwo_grants_nl/project/default.json" }
+examples = ['source.call("nwo_grants_nl.project", { project_id: "012.000.802" })']
+
+[op.project.params]
+project_id = { type = "string", required = true, to = "project_id", doc = "NWO project ID e.g. 012.000.802" }
+
+[op.project.map]
+items = "@ref:op.search.map.items"
+record = "@ref:op.search.map.record"

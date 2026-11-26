@@ -1,0 +1,92 @@
+id = "bluesky"
+name = "Bluesky (AT Protocol)"
+summary = "Public Bluesky microblog post search and actor profile lookup via api.bsky.app XRPC."
+aliases = ["bsky", "atproto", "bluesky social"]
+home_url = "https://bsky.app"
+tier = 1
+scopes = ["forum"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 3.0, burst = 6, concurrency = 3, timeout_ms = 6000, cache_ttl_s = 1800 }
+
+[op.search]
+summary = "Search public Bluesky posts by keywords."
+method = "GET"
+url = "https://api.bsky.app/xrpc/app.bsky.feed.searchPosts"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "cursor", param = "cursor", max_pages = 3 }
+probe = { params = { query = "rust", limit = 3 }, min_results = 2, fixture = "fixtures/w5c/bluesky/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Post search query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Max posts" }
+sort = { type = "string", default = "top", enum = ["top", "latest"], to = "sort", doc = "Sort order" }
+lang = { type = "string", to = "lang", doc = "ISO 639-1 language filter e.g. en" }
+cursor = { type = "string", to = "cursor", doc = "Pagination cursor" }
+
+[op.search.map]
+items = ".posts[]"
+next_cursor = ".cursor"
+total = ".hitsTotal"
+error = "if .error then (.message // .error) else null end"
+record = '''
+((.uri // "") | split("/") | last) as $rkey |
+{
+  uri: .uri,
+  cid: .cid,
+  url: ("https://bsky.app/profile/" + (.author.handle // .author.did // "") + "/post/" + ($rkey // "")),
+  authorHandle: .author.handle,
+  authorName: (.author.displayName // .author.handle),
+  text: (.record.text // ""),
+  embedTitle: ((.record.embed.media.external.title // .record.embed.external.title // null) | if type == "string" then collapse_ws else null end),
+  embedUrl: (.record.embed.media.external.uri // .record.embed.external.uri // null),
+  createdAt: .record.createdAt,
+  likeCount: (.likeCount // 0),
+  repostCount: (.repostCount // 0),
+  replyCount: (.replyCount // 0)
+}'''
+hit = '''
+((.uri // "") | split("/") | last) as $rkey |
+((.record.text // "") | collapse_ws) as $txt |
+((.record.embed.media.external.title // .record.embed.external.title // "") | collapse_ws) as $emb |
+(if ($txt | length) > 0 then $txt elif ($emb | length) > 0 then $emb else "Post by @\(.author.handle // "unknown")" end) as $body |
+{
+  title: ("@\(.author.handle // "bsky"): " + (if ($body | length) > 100 then $body[0:100] + "..." else $body end)),
+  url: ("https://bsky.app/profile/" + (.author.handle // .author.did // "") + "/post/" + ($rkey // "")),
+  snippet: ([
+    (if ($body | length) > 220 then $body[0:220] + "..." else $body end),
+    "\(.likeCount // 0) likes · \(.repostCount // 0) reposts · \(.replyCount // 0) replies"
+  ] | join(" · ")),
+  date: (.record.createdAt | parse_date),
+  dateSource: (if (.record.createdAt | parse_date) != null then "api" else null end)
+}'''
+
+[op.profile]
+summary = "Fetch a Bluesky actor profile by handle or DID."
+method = "GET"
+url = "https://api.bsky.app/xrpc/app.bsky.actor.getProfile"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { actor = "bsky.app" }, min_results = 1, fixture = "fixtures/w5c/bluesky/profile/default.json" }
+
+[op.profile.params]
+actor = { type = "string", required = true, to = "actor", doc = "Handle (e.g. bsky.app) or DID" }
+
+[op.profile.map]
+items = "."
+error = "@ref:op.search.map.error"
+record = '''{
+  did: .did,
+  handle: .handle,
+  displayName: (.displayName // .handle),
+  description: (.description // ""),
+  url: ("https://bsky.app/profile/" + (.handle // .did // "")),
+  followersCount: .followersCount,
+  followsCount: .followsCount,
+  postsCount: .postsCount,
+  createdAt: .createdAt
+}'''

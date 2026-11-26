@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "source": "cisakev",
+  "op": "search",
+  "recordedAt": "2026-11-25T10:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          ["content-type", "application/json"]
+        ],
+        "bodyText": "{\"catalogVersion\":\"2026.09.21\",\"vulnerabilities\":[{\"cveID\":\"CVE-2026-7273\",\"vendorProject\":\"Zyxel\",\"product\":\"GS1900 Series Switches\",\"vulnerabilityName\":\"Zyxel GS1900 Series Switches Stack-Based Buffer Overflow Vulnerability\",\"dateAdded\":\"2026-09-21\",\"dueDate\":\"2026-09-24\",\"knownRansomwareCampaignUse\":\"Unknown\",\"requiredAction\":\"Apply mitigations per vendor instructions.\",\"shortDescription\":\"Zyxel GS1900 switches contain a stack-based buffer overflow.\"},{\"cveID\":\"CVE-2024-40891\",\"vendorProject\":\"Zyxel\",\"product\":\"DSL CPE Devices\",\"vulnerabilityName\":\"Zyxel DSL CPE OS Command Injection Vulnerability\",\"dateAdded\":\"2025-02-11\",\"dueDate\":\"2025-03-04\",\"knownRansomwareCampaignUse\":\"Unknown\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

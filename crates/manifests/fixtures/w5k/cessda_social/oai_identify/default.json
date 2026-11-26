@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "cessda_social",
+  "op": "oai_identify",
+  "recordedAt": "2026-11-25T13:05:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://datacatalogue.cessda.eu/oai-pmh/v0/oai?verb=Identify",
+        "headersSubset": {
+          "accept": "application/xml"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/xml; charset=UTF-8"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<?xml-stylesheet type='text/xsl' href='/oai/static/oai2.xsl' ?><OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd\">\n  <responseDate>2026-11-25T13:02:33Z</responseDate>\n  <request verb=\"Identify\">https://datacatalogue.cessda.eu/oai-pmh/v0/oai</request>\n  <Identify>\n    <repositoryName>CESSDA Data Catalogue OAI-PMH Repository</repositoryName>\n    <baseURL>https://datacatalogue.cessda.eu/oai-pmh/v0/oai</baseURL>\n    <protocolVersion>2.0</protocolVersion>\n    <adminEmail>support@cessda.eu</adminEmail>\n    <earliestDatestamp>2026-06-02T12:54:57Z</earliestDatestamp>\n    <deletedRecord>transient</deletedRecord>\n    <granularity>YYYY-MM-DDThh:mm:ssZ</granularity>\n  </Identify>\n</OAI-PMH>",
+        "bodyB64": null
+      }
+    }
+  ]
+}

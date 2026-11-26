@@ -1,0 +1,107 @@
+id = "nasa_exoplanet"
+name = "NASA Exoplanet Archive TAP"
+summary = "Confirmed exoplanet catalog, orbital periods, radii, masses, equilibrium temperatures, and host star parameters via Caltech/IPAC TAP API."
+aliases = ["exoplanet archive", "exoplanets", "kepler", "tess", "trappist"]
+home_url = "https://exoplanetarchive.ipac.caltech.edu"
+tier = 1
+scopes = ["academic.physics", "dataset"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 12000, cache_ttl_s = 86400, host_bucket = "exoplanetarchive.ipac.caltech.edu" }
+
+[op.search]
+summary = "Search confirmed exoplanets (pscomppars composite table) by planet or host-star name substring."
+method = "GET"
+url = "https://exoplanetarchive.ipac.caltech.edu/TAP/sync"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "json" }
+probe = { params = { query = "TRAPPIST-1", limit = 3 }, min_results = 2, fixture = "fixtures/w5j/nasa_exoplanet/search/default.json" }
+examples = ["source.call('nasa_exoplanet.search', { query: 'TRAPPIST-1', limit: 5 })"]
+
+[op.search.params]
+query = { type = "string", required = true, to = "query", template = "select pl_name,hostname,discoverymethod,disc_year,disc_facility,pl_orbper,pl_rade,pl_bmasse,pl_eqt,sy_dist from pscomppars where pl_name like '%{query}%'", doc = "Planet or host star name substring (e.g. TRAPPIST-1, Kepler-186, Proxima)" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "MAXREC", doc = "Maximum exoplanets to return" }
+
+[op.search.map]
+items = ".[]"
+record = '''{
+  planetName: (.pl_name // ""),
+  hostStar: (.hostname // ""),
+  discoveryMethod: (.discoverymethod // null),
+  discoveryYear: (.disc_year // null),
+  discoveryFacility: (.disc_facility // null),
+  orbitalPeriodDays: (.pl_orbper // null),
+  radiusEarth: (.pl_rade // null),
+  massEarth: (.pl_bmasse // null),
+  equilibriumTempK: (.pl_eqt // null),
+  distanceParsecs: (.sy_dist // null),
+  url: ("https://exoplanetarchive.ipac.caltech.edu/overview/" + ((.hostname // .pl_name // "") | gsub(" "; "%20")))
+}'''
+hit = '''{
+  title: (.pl_name // ""),
+  url: ("https://exoplanetarchive.ipac.caltech.edu/overview/" + ((.hostname // .pl_name // "") | gsub(" "; "%20"))),
+  snippet: ([
+    (if (.discoverymethod // "") != "" then .discoverymethod else empty end),
+    (if (.disc_year | type) == "number" then "\(.disc_year)" else empty end),
+    (if (.pl_orbper | type) == "number" then "P=\(.pl_orbper) d" else empty end),
+    (if (.pl_rade | type) == "number" then "R=\(.pl_rade) R_E" else empty end),
+    (if (.sy_dist | type) == "number" then "d=\(.sy_dist) pc" else empty end)
+  ] | join(" · ")),
+  date: (if (.disc_year | type) == "number" then "\(.disc_year)" else null end),
+  dateSource: "api"
+}'''
+
+[op.planet]
+summary = "Fetch composite planetary and host-star parameters for an exact confirmed exoplanet name."
+method = "GET"
+url = "https://exoplanetarchive.ipac.caltech.edu/TAP/sync"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "json", MAXREC = 5 }
+probe = { params = { name = "Kepler-186 f" }, min_results = 1, fixture = "fixtures/w5j/nasa_exoplanet/planet/default.json" }
+examples = ["source.call('nasa_exoplanet.planet', { name: 'Kepler-186 f' })"]
+
+[op.planet.params]
+name = { type = "string", required = true, to = "query", template = "select pl_name,hostname,discoverymethod,disc_year,disc_facility,pl_orbper,pl_rade,pl_bmasse,pl_eqt,sy_dist,st_teff,st_rad,st_mass from pscomppars where pl_name='{name}'", doc = "Exact confirmed planet name (e.g. Kepler-186 f, Proxima Cen b)" }
+
+[op.planet.map]
+items = ".[]"
+record = '''{
+  planetName: (.pl_name // ""),
+  hostStar: (.hostname // ""),
+  discoveryMethod: (.discoverymethod // null),
+  discoveryYear: (.disc_year // null),
+  discoveryFacility: (.disc_facility // null),
+  orbitalPeriodDays: (.pl_orbper // null),
+  radiusEarth: (.pl_rade // null),
+  massEarth: (.pl_bmasse // null),
+  equilibriumTempK: (.pl_eqt // null),
+  distanceParsecs: (.sy_dist // null),
+  starTeffK: (.st_teff // null),
+  starRadiusSolar: (.st_rad // null),
+  starMassSolar: (.st_mass // null),
+  url: ("https://exoplanetarchive.ipac.caltech.edu/overview/" + ((.hostname // .pl_name // "") | gsub(" "; "%20")))
+}'''
+
+[op.adql]
+summary = "Run a custom read-only ADQL query against any NASA Exoplanet Archive TAP table."
+method = "GET"
+url = "https://exoplanetarchive.ipac.caltech.edu/TAP/sync"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "json" }
+probe = { params = { adql = "select top 2 pl_name,hostname,disc_year from pscomppars where pl_name like 'Kepler-186%'", limit = 2 }, min_results = 2, fixture = "fixtures/w5j/nasa_exoplanet/adql/default.json" }
+examples = ["source.call('nasa_exoplanet.adql', { adql: 'select top 5 pl_name,pl_rade,pl_eqt from pscomppars where pl_rade < 1.5', limit: 5 })"]
+
+[op.adql.params]
+adql = { type = "string", required = true, to = "query", doc = "ADQL SELECT statement over Exoplanet Archive tables (e.g. ps, pscomppars)" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "MAXREC", doc = "Maximum rows to return" }
+
+[op.adql.map]
+items = ".[]"
+record = "."

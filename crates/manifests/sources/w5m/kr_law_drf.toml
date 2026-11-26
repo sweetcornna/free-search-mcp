@@ -1,0 +1,95 @@
+id = "kr_law_drf"
+name = "Korea National Law Information DRF"
+summary = "Official Ministry of Government Legislation (법제처) API for searching Korean statutes and retrieving full statutory text and articles in XML (requires free registered OC ID)."
+aliases = ["law.go.kr", "korea law", "국가법령정보센터", "법제처"]
+home_url = "https://open.law.go.kr"
+tier = 3
+scopes = ["gov", "gov.law"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 4, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 43200 }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_KR_LAW_OC_KEY"
+in = "query"
+name = "OC"
+format = "{key}"
+route_requires_key = true
+
+[op.search]
+summary = "Search Korean national statutes, presidential decrees, and administrative rules by title keyword."
+method = "GET"
+url = "https://www.law.go.kr/DRF/lawSearch.do"
+headers = { Accept = "application/xml" }
+response = "xml"
+returns = "records"
+const_query = { target = "law", type = "XML" }
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "개인정보", limit = 3 }, min_results = 2, fixture = "fixtures/w5m/kr_law_drf/search/default.json" }
+examples = ["source.call('kr_law_drf.search', { query: '개인정보', limit: 5 })"]
+
+[op.search.params]
+query = { type = "string", required = true, to = "query", doc = "Korean statute keyword e.g. 개인정보, 자동차관리법" }
+limit = { type = "int", default = 10, min = 1, max = 100, to = "display", doc = "Results per page" }
+page = { type = "int", default = 1, min = 1, to = "page", doc = "1-based page number" }
+
+[op.search.map]
+items = "(.lawsearch.law // []) | arr | .[]"
+total = "(.lawsearch.totalcnt | to_int)"
+error = 'if .response then (.response.msg // .response.result // "DRF API error") else null end'
+record = '''{
+  mst: (.["법령일련번호"] // null),
+  lawId: (.["법령id"] // null),
+  title: ((.["법령명한글"] // "") | collapse_ws),
+  shortTitle: ((.["법령약칭명"] // null) | first_str),
+  lawType: (.["법령구분명"] // null),
+  ministry: (.["소관부처명"] // null),
+  status: (.["현행연혁코드"] // null),
+  amendmentType: (.["제개정구분명"] // null),
+  promulgationDate: (.["공포일자"] | parse_date),
+  promulgationNumber: (.["공포번호"] // null),
+  effectiveDate: (.["시행일자"] | parse_date),
+  url: ("https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=" + (.["법령일련번호"] // ""))
+}'''
+hit = '''{
+  title: ((.["법령명한글"] // "") | collapse_ws),
+  url: ("https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=" + (.["법령일련번호"] // "")),
+  snippet: ((.["법령구분명"] // "") + " · " + (.["소관부처명"] // "") + " · 시행 " + ((.["시행일자"] | parse_date) // "")),
+  date: ((.["시행일자"] // .["공포일자"]) | parse_date),
+  dateSource: "api"
+}'''
+
+[op.law]
+summary = "Fetch full statutory metadata and articles for a Korean law by serial number (MST / 법령일련번호)."
+method = "GET"
+url = "https://www.law.go.kr/DRF/lawService.do"
+headers = { Accept = "application/xml" }
+response = "xml"
+returns = "records"
+const_query = { target = "law", type = "XML" }
+probe = { params = { mst = "265129" }, min_results = 1, fixture = "fixtures/w5m/kr_law_drf/law/default.json" }
+examples = ["source.call('kr_law_drf.law', { mst: '265129' })"]
+
+[op.law.params]
+mst = { type = "string", required = true, to = "MST", doc = "Law serial number (법령일련번호) from search results" }
+
+[op.law.map]
+items = '.["법령"]'
+error = "@ref:op.search.map.error"
+record = '''{
+  mst: (.["기본정보"]["법령일련번호"] // null),
+  lawId: (.["기본정보"]["법령id"] // null),
+  title: ((.["기본정보"]["법령명_한글"] // "") | collapse_ws),
+  lawType: (.["기본정보"]["법종구분"] // null),
+  ministry: (.["기본정보"]["소관부처"] // null),
+  promulgationDate: (.["기본정보"]["공포일자"] | parse_date),
+  effectiveDate: (.["기본정보"]["시행일자"] | parse_date),
+  articles: [((.["조문"]["조문단위"] // []) | arr | .[]) | {
+    number: (.["조문번호"] // null),
+    title: (.["조문제목"] // null),
+    content: ((.["조문내용"] // "") | collapse_ws)
+  }],
+  url: ("https://www.law.go.kr/LSW/lsInfoP.do?lsiSeq=" + (.["기본정보"]["법령일련번호"] // ""))
+}'''

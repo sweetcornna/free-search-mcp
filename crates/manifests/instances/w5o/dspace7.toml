@@ -1,0 +1,144 @@
+protocol = "dspace7"
+
+[[instance]]
+id = "kyoto_kurenai"
+name = "Kyoto University KURENAI"
+summary = "Kyoto University institutional repository hosting 140k+ Japanese and English journal articles, doctoral dissertations, and departmental bulletins."
+aliases = ["kurenai", "kyoto university repository", "京都大学紅"]
+base_url = "https://repository.kulib.kyoto-u.ac.jp"
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["search", "lookup", "fulltext", "thesis"]
+tier = 1
+probe = { op = "search", params = { query = "kyoto", limit = 2 }, min_results = 2 }
+
+[[instance]]
+id = "unesp_br"
+name = "Repositório Institucional UNESP (Brazil)"
+summary = "São Paulo State University (UNESP) open-access repository of Portuguese and English scholarly articles, conference papers, and graduate theses."
+aliases = ["unesp", "repositorio unesp", "sao paulo state university"]
+base_url = "https://repositorio.unesp.br"
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["search", "lookup", "fulltext", "thesis"]
+tier = 1
+probe = { op = "search", params = { query = "educacao", limit = 1 }, min_results = 1 }
+
+[[instance]]
+id = "pucp_pe"
+name = "Repositorio Institucional PUCP (Peru)"
+summary = "Pontifical Catholic University of Peru institutional repository of Andean humanities, law, social sciences, and engineering papers and theses."
+aliases = ["pucp", "repositorio pucp", "pontificia universidad catolica del peru"]
+base_url = "https://repositorio.pucp.edu.pe"
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["search", "lookup", "fulltext", "thesis"]
+tier = 1
+probe = { op = "search", params = { query = "peru", limit = 2 }, min_results = 2 }
+
+[[instance]]
+id = "uniandes_co"
+name = "Séneca — Universidad de los Andes (Colombia)"
+summary = "Universidad de los Andes institutional repository indexing Colombian and Latin American Spanish- and English-language articles, monographs, and theses."
+aliases = ["uniandes", "seneca uniandes", "universidad de los andes"]
+base_url = "https://repositorio.uniandes.edu.co"
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["search", "lookup", "fulltext", "thesis"]
+tier = 1
+probe = { op = "search", params = { query = "colombia", limit = 2 }, min_results = 2 }
+
+[[instance]]
+id = "sun_scholar"
+name = "SUNScholar (Stellenbosch University)"
+summary = "Stellenbosch University South Africa open-access repository of Southern African agricultural, biomedical, engineering, and social science theses and papers."
+aliases = ["sunscholar", "stellenbosch university", "sun repository"]
+base_url = "https://scholar.sun.ac.za"
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["search", "lookup", "fulltext", "thesis"]
+tier = 1
+probe = { op = "search", params = { query = "climate", limit = 2 }, min_results = 2 }
+
+[[instance]]
+id = "up_space"
+name = "UPSpace (University of Pretoria)"
+summary = "University of Pretoria institutional repository covering African veterinary science, engineering, law, theology, and multidisciplinary theses and articles."
+aliases = ["upspace", "university of pretoria", "pretoria repository"]
+base_url = "https://repository.up.ac.za"
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["search", "lookup", "fulltext", "thesis"]
+tier = 1
+probe = { op = "search", params = { query = "africa", limit = 2 }, min_results = 2 }
+
+[[instance]]
+id = "wits_wiredspace"
+name = "WIReDSpace (University of the Witwatersrand)"
+summary = "University of the Witwatersrand Johannesburg open repository strong in African paleoanthropology, mining, medicine, and public policy research."
+aliases = ["wiredspace", "wits repository", "witwatersrand"]
+base_url = "https://wiredspace.wits.ac.za"
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["search", "lookup", "fulltext", "thesis"]
+tier = 1
+probe = { op = "search", params = { query = "africa", limit = 2 }, min_results = 2 }
+
+[[instance]]
+id = "uonbi_erepo"
+name = "University of Nairobi Digital Repository"
+summary = "University of Nairobi open-access repository indexing 70k+ East African graduate theses, public health studies, and sustainable development papers."
+aliases = ["uonbi", "university of nairobi", "nairobi repository"]
+base_url = "https://erepository.uonbi.ac.ke"
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["search", "lookup", "fulltext", "thesis"]
+tier = 1
+probe = { op = "search", params = { query = "kenya", limit = 2 }, min_results = 2 }
+
+[[instance]]
+id = "cvut_dspace_cz"
+name = "CTU Digital Library (Czech Technical University in Prague)"
+summary = "Czech Technical University in Prague institutional repository of 50k+ engineering, computer science, architecture, and physics theses and publications."
+aliases = ["cvut", "ctu prague", "czech technical university"]
+base_url = "https://dspace.cvut.cz"
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["search", "lookup", "fulltext", "thesis"]
+tier = 1
+probe = { op = "search", params = { query = "prague", limit = 2 }, min_results = 2 }
+
+[[instance]]
+id = "ruj_uj_pl"
+name = "RUJ — Jagiellonian University Repository (Poland)"
+summary = "Jagiellonian University in Kraków open-access institutional repository covering 60k+ Polish and English publications and doctoral dissertations."
+aliases = ["ruj", "jagiellonian university", "repozytorium uj"]
+base_url = "https://ruj.uj.edu.pl"
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["search", "lookup", "fulltext", "thesis"]
+tier = 1
+probe = { op = "search", params = { query = "poland", limit = 1 }, min_results = 1 }
+
+[[instance]]
+id = "aub_scholarworks_lb"
+name = "AUB ScholarWorks (American University of Beirut)"
+summary = "American University of Beirut open repository hosting Middle Eastern medicine, public health, engineering, Arabic studies, and theses."
+aliases = ["aub scholarworks", "american university of beirut", "beirut repository"]
+base_url = "https://scholarworks.aub.edu.lb"
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["search", "lookup", "fulltext", "thesis"]
+tier = 1
+probe = { op = "search", params = { query = "lebanon", limit = 2 }, min_results = 2 }
+
+[[instance]]
+id = "bilkent_tr"
+name = "Bilkent University Institutional Repository (Turkey)"
+summary = "Bilkent University Ankara open-access repository of 35k+ engineering, computer science, economics, and humanities publications and theses."
+aliases = ["bilkent", "bilkent repository", "bilkent theses"]
+base_url = "https://repository.bilkent.edu.tr"
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["search", "lookup", "fulltext", "thesis"]
+tier = 1
+probe = { op = "search", params = { query = "turkey", limit = 2 }, min_results = 2 }
+
+[[instance]]
+id = "qspace_qa"
+name = "QSpace (Qatar University Institutional Repository)"
+summary = "Qatar University open-access institutional repository indexing 57k+ Gulf region energy, engineering, law, Islamic studies, and social science works."
+aliases = ["qspace", "qatar university", "qu repository"]
+base_url = "https://qspace.qu.edu.qa"
+scopes = ["academic", "academic.openaccess", "academic.theses"]
+caps = ["search", "lookup", "fulltext", "thesis"]
+tier = 1
+probe = { op = "search", params = { query = "qatar", limit = 2 }, min_results = 2 }

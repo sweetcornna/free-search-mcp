@@ -1,0 +1,56 @@
+protocol = "inveniordm"
+
+[[instance]]
+id = "caltechdata"
+name = "CaltechDATA"
+summary = "California Institute of Technology InvenioRDM repository for open STEM research data, software releases, and technical outputs."
+aliases = ["caltechdata", "caltech data"]
+base_url = "https://data.caltech.edu"
+scopes = ["dataset", "academic", "academic.physics"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "climate", limit = 2 }, min_results = 2 }
+
+[[instance]]
+id = "tugraz_repo"
+name = "TU Graz Repository"
+summary = "Graz University of Technology InvenioRDM repository of open-access engineering, CS, and science publications, theses, and datasets."
+aliases = ["tu graz", "tugraz repository"]
+base_url = "https://repository.tugraz.at"
+scopes = ["academic", "dataset", "academic.openaccess"]
+caps = ["search", "lookup", "dataset", "thesis"]
+tier = 1
+probe = { op = "search", params = { query = "neural", limit = 2 }, min_results = 2 }
+
+[[instance]]
+id = "b2share_eudat"
+name = "EUDAT B2SHARE"
+summary = "Pan-European EUDAT collaborative InvenioRDM repository for FAIR multidisciplinary scientific research datasets."
+aliases = ["b2share", "eudat", "eudat b2share"]
+base_url = "https://b2share.eudat.eu"
+scopes = ["dataset", "academic"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "climate", limit = 2 }, min_results = 2 }
+
+[[instance]]
+id = "kcworks_hcommons"
+name = "KCWorks (Knowledge Commons)"
+summary = "Knowledge Commons (formerly Humanities Commons) open-access InvenioRDM repository for humanities and social sciences scholarship."
+aliases = ["kcworks", "knowledge commons", "humanities commons", "hcommons"]
+base_url = "https://works.hcommons.org"
+scopes = ["academic", "academic.humanities", "academic.openaccess"]
+caps = ["search", "lookup", "fulltext"]
+tier = 1
+probe = { op = "search", params = { query = "history", limit = 2 }, min_results = 2 }
+
+[[instance]]
+id = "nyu_ultraviolet"
+name = "NYU UltraViolet"
+summary = "New York University InvenioRDM repository for open research data, code, and digital scholarship."
+aliases = ["ultraviolet", "nyu ultraviolet", "nyu data"]
+base_url = "https://ultraviolet.library.nyu.edu"
+scopes = ["dataset", "academic"]
+caps = ["search", "lookup", "dataset"]
+tier = 2
+probe = { op = "search", params = { query = "data", limit = 2 }, min_results = 2 }

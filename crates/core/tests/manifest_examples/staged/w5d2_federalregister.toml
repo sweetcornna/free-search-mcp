@@ -1,0 +1,97 @@
+# W0a test vector: copy of crates/manifests/staging/w5d2/federalregister.toml (2026-11-25), verbatim.
+id = "federalregister"
+name = "US Federal Register"
+summary = "Daily journal of US federal rules, proposed rules, notices, and presidential documents."
+aliases = ["fedreg", "cfr", "us rules", "executive orders"]
+home_url = "https://www.federalregister.gov"
+tier = 1
+scopes = ["gov", "gov.law"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "direct_claimant"
+limits = { rps = 3.0, burst = 6, concurrency = 4, timeout_ms = 8000, cache_ttl_s = 21600 }
+
+[claims]
+patterns = [
+  '(?i)federal register|executive order|final rule|proposed rule|\bcfr\b|rulemaking|notice of proposed',
+  '联邦公报|行政令|美国.*(?:法规|规则)',
+]
+keywords = ["federal register", "executive order", "final rule", "proposed rule", "rulemaking"]
+max_per_search = 3
+
+[op.search]
+summary = "Search US Federal Register documents by keyword and document type."
+method = "GET"
+url = "https://www.federalregister.gov/api/v1/documents.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { order = "relevance" }
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "artificial intelligence", limit = 3 }, min_results = 2, fixture = "fixtures/w5d2/federalregister/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "conditions[term]", doc = "Search terms" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "per_page", doc = "Results per page" }
+page = { type = "int", default = 1, min = 1, to = "page", doc = "Page number" }
+doc_type = { type = "string", enum = ["RULE", "PRORULE", "NOTICE", "PRESDOCU"], to = "conditions[type][]", doc = "Document type filter" }
+
+[op.search.map]
+items = ".results[]"
+total = ".count"
+error = "if .errors then (.errors | tostring) else null end"
+record = '''{
+  documentNumber: .document_number,
+  title: (.title // ""),
+  type: (.type // null),
+  publicationDate: (.publication_date // null),
+  agencies: [(.agencies // [])[] | .name | select(. != null)],
+  abstract: (.abstract // null),
+  url: (.html_url // ""),
+  pdfUrl: (.pdf_url // null)
+}'''
+hit = '''{
+  title: (.title // ""),
+  url: (.html_url // "https://www.federalregister.gov"),
+  snippet: (
+    [
+      .type,
+      (if .publication_date then "published " + .publication_date else null end),
+      (([(.agencies // [])[] | .name | select(. != null)] | .[0:3] | join(", ")) | if length > 0 then . else null end),
+      (if (.abstract // "") != "" then (.abstract | .[0:240]) else null end)
+    ] | map(select(. != null)) | join(" · ")
+  ),
+  date: (.publication_date // null),
+  dateSource: "api"
+}'''
+
+[op.document]
+summary = "Fetch full metadata for a single Federal Register document by document number."
+method = "GET"
+url = "https://www.federalregister.gov/api/v1/documents/{document_number}.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { document_number = "2023-24283" }, min_results = 1, fixture = "fixtures/w5d2/federalregister/document/default.json" }
+
+[op.document.params]
+document_number = { type = "string", required = true, in = "path", doc = "Federal Register document number, e.g. 2023-24283" }
+
+[op.document.map]
+items = "."
+error = "if .errors then (.errors | tostring) else null end"
+record = '''{
+  documentNumber: .document_number,
+  citation: (.citation // null),
+  title: (.title // ""),
+  type: (.type // null),
+  publicationDate: (.publication_date // null),
+  effectiveOn: (.effective_on // null),
+  agencies: [(.agencies // [])[] | .name | select(. != null)],
+  abstract: (.abstract // null),
+  cfrReferences: (.cfr_references // []),
+  docketIds: (.docket_ids // []),
+  url: (.html_url // ""),
+  bodyHtmlUrl: (.body_html_url // null),
+  pdfUrl: (.pdf_url // null)
+}'''

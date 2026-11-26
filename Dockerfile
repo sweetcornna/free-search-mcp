@@ -1,34 +1,45 @@
-# Containerized free-search-mcp. Defaults to MCP over stdio, so run it
-# attached:   docker run -i --rm search-mcp
-# (or use docker-compose, which sets stdin_open).
+# syntax=docker/dockerfile:1
+# Containerized free-search-mcp 1.0 (distroless Rust binary, ~25 MB).
 #
-# To serve over HTTP instead — protocol revision 2026-07-28 is stateless, so
-# no sticky sessions are needed and replicas scale horizontally:
-#   docker run --rm -p 8000:8000 search-mcp \
-#     uv run search-mcp --transport streamable-http --host 0.0.0.0
-# That endpoint is UNAUTHENTICATED and fetches arbitrary URLs on the caller's
-# behalf. Only publish the port behind a proxy that terminates auth.
-FROM python:3.12-slim
+# Defaults to MCP over stdio, so run attached:
+#   docker run -i --rm free-search-mcp
+# (or use docker-compose.yml, which sets stdin_open: true).
+#
+# Streamable HTTP mode (configure SEARCH_MCP_HTTP_TOKEN before exposing beyond loopback):
+#   docker run --rm -p 8000:8000 \
+#     -e SEARCH_MCP_HTTP_TOKEN="change-me" \
+#     free-search-mcp --transport streamable-http --host 0.0.0.0 --port 8000
 
-ENV PYTHONUNBUFFERED=1 \
-    UV_LINK_MODE=copy \
-    UV_COMPILE_BYTECODE=1 \
-    SEARCH_MCP_CACHE_DIR=/data
+FROM rust:1.98-slim-bookworm AS builder
 
-# uv (fast Python package manager), pinned-free latest.
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends build-essential pkg-config \
+    && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
+WORKDIR /src
 
-# Install deps first (better layer caching), then the source.
-COPY pyproject.toml uv.lock README.md ./
-COPY src ./src
-RUN uv sync --frozen --no-dev
+COPY Cargo.toml Cargo.lock rust-toolchain.toml ./
+COPY crates ./crates
+COPY xtask ./xtask
 
-# Chromium + its OS deps, matched to the installed Playwright (browser-rendered
-# engines: brave/baidu/zhihu, and the fetch browser fallback).
-RUN uv run playwright install --with-deps chromium
+RUN cargo build --release --locked -p fsm-server --bin free-search-mcp \
+    && mkdir -p /out/usr/local/bin /out/data /out/config \
+    && cp target/release/free-search-mcp /out/usr/local/bin/free-search-mcp \
+    && ln -s free-search-mcp /out/usr/local/bin/search-mcp \
+    && chown -R 65532:65532 /out/data /out/config
 
-VOLUME /data
-# stdio transport — keep STDIN open when running this image.
-CMD ["uv", "run", "search-mcp"]
+FROM gcr.io/distroless/cc-debian12:nonroot
+
+ENV SEARCH_MCP_CACHE_DIR=/data \
+    SEARCH_MCP_CONFIG_DIR=/config
+
+COPY --from=builder /out/usr/local/bin/free-search-mcp /usr/local/bin/free-search-mcp
+COPY --from=builder /out/usr/local/bin/search-mcp /usr/local/bin/search-mcp
+COPY --from=builder --chown=65532:65532 /out/data /data
+COPY --from=builder --chown=65532:65532 /out/config /config
+
+VOLUME ["/data", "/config"]
+USER nonroot:nonroot
+
+# stdio transport by default — keep STDIN open when running this image.
+ENTRYPOINT ["/usr/local/bin/free-search-mcp"]

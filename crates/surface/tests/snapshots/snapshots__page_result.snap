@@ -1,0 +1,26 @@
+---
+source: crates/surface/tests/snapshots.rs
+expression: out
+---
+# A backdoor in xz
+<https://lwn.net/Articles/967180/>
+_LWN.net · by [Posted March · published 2024-03-29_
+_fetched via http · ~430 tokens · cached 2 hours ago · retrieved 2026-11-25T14:00:00Z_
+
+# A backdoor in xz
+
+[a detailed investigation](https://lwn.net/ml/oss-security/20240329155126.kjjfduxw2yrlxgzm@awork3.anarazel.de/)into a backdoor that was shipped with versions 5.6.0 and 5.6.1 of the xz compression utility. It appears that the malicious code may be aimed at allowing SSH authentication to be bypassed.
+
+
+I have not yet analyzed precisely what is being checked for in the injected code, to allow unauthorized access. Since this is running in a pre-authentication context, it seems likely to allow some form of access or other form of remote code execution.
+
+The affected versions are not yet widely shipped, but checking systems for the bad version would be a good idea.
+
+**Update**: there are advisories out now from
+[Arch](https://archlinux.org/news/the-xz-package-has-been-backdoored/),
+[Debian](https://lists.debian.org/debian-security-announce/2024/msg00057.html),
+[Red
+Hat](https://www.redhat.com/en/blog/urgent-security-alert-fedora-41-and-rawhide-users), and
+[openSUSE](https://lwn.net/ml/opensuse-factory/5d7acd45-7021-4c09-8c0b-6f4b8797aecd@suse.com/).
+
+[…truncated]

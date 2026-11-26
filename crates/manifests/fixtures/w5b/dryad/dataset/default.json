@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "source": "dryad",
+  "op": "dataset",
+  "recordedAt": "2026-11-25T11:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://datadryad.org/api/v2/datasets/102889",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ],
+          [
+            "cache-control",
+            "no-store"
+          ],
+          [
+            "etag",
+            "W/\"83fc8fe981ed76dbb62cfdd1efde92ba\""
+          ]
+        ],
+        "bodyText": "{\"_links\":{\"self\":{\"href\":\"/api/v2/datasets/doi%3A10.5061%2Fdryad.hx3ffbgjj\"},\"stash:versions\":{\"href\":\"/api/v2/datasets/doi%3A10.5061%2Fdryad.hx3ffbgjj/versions\"},\"stash:version\":{\"href\":\"/api/v2/versions/216242\"},\"stash:download\":{\"href\":\"/api/v2/datasets/doi%3A10.5061%2Fdryad.hx3ffbgjj/download\"},\"curies\":[{\"name\":\"stash\",\"href\":\"https://github.com/datadryad/dryad-app/blob/main/documentation/apis/link_relations.md#{rel}\",\"templated\":\"true\"}]},\"identifier\":\"doi:10.5061/dryad.hx3ffbgjj\",\"id\":102889,\"storageSize\":750054,\"relatedPublicationISSN\":\"1365-2486\",\"title\":\"The climatic drivers of long-term population changes in rainforest montane birds\",\"authors\":[{\"firstName\":\"Alejandro\",\"lastName\":\"de la Fuente\",\"email\":\"alejandro.delafuentepinero1@my.jcu.edu.au\",\"affiliation\":\"James Cook University\",\"affiliationROR\":\"https://ror.org/04gsp2c11\",\"affiliations\":[{\"organization\":\"James Cook University\",\"identifier\":\"https://ror.org/04gsp2c11\"}],\"orcid\":\"0000-0001-9686-3844\"},{\"firstName\":\"Alejandro\",\"lastName\":\"Navarro\",\"email\":\"alejandro.navarrootero@jcu.edu.au\",\"affiliation\":\"James Cook University\",\"affiliationROR\":\"https://ror.org/04gsp2c11\",\"affiliations\":[{\"organization\":\"James Cook University\",\"identifier\":\"https://ror.org/04gsp2c11\"}],\"order\":1},{\"firstName\":\"Stephen\",\"lastName\":\"Williams\",\"email\":\"stephen.williams@jcu.edu.au\",\"affiliation\":\"James Cook University\",\"affiliationROR\":\"https://ror.org/04gsp2c11\",\"affiliations\":[{\"organization\":\"James Cook University\",\"identifier\":\"https://ror.org/04gsp2c11\"}],\"order\":2}],\"abstract\":\"\\u003cp\\u003eClimate-driven biodiversity erosion is escalating at an alarming rate. The pressure imposed by climate change is exceptionally high in tropical ecosystems, where species adapted to narrow environmental ranges exhibit strong physiological constraints. Despite the observed detrimental effect of climate change on ecosystems at a global scale, our understanding of the extent to which multiple climatic drivers affect population dynamics is limited. Here, we disentangle the impact of different climatic stressors on 47 rainforest birds inhabiting the mountains of the Australian Wet Tropics using hierarchical population models. We estimate the effect of spatiotemporal changes in temperature, precipitation, heatwaves, droughts, and cyclones on the population dynamics of rainforest birds between 2000–2016. We find a strong effect of warming and changes in rainfall patterns across the elevational-segregated bird communities, with lowland populations benefiting from increasing temperature and precipitation, while upland species show an inverse strong negative response to the same drivers. Additionally, we find a negative effect of heatwaves on lowland populations, a pattern associated with the observed distribution of these extreme events across elevations. In contrast, cyclones and droughts have a marginal effect on spatiotemporal changes in rainforest bird communities, suggesting a species-specific response unrelated to the elevational gradient. This study demonstrated the importance of unravelling the drivers of climate change impacts on population changes, providing significant insight into the mechanisms accelerating climate-induced biodiversity degradation.\\u003c/p\\u003e\",\"funders\":[{\"organization\":\"Wet Tropics Management Authority\",\"identifierType\":\"ror\",\"identifier\":\"https://ror.org/02m23mg23\",\"awardNumber\":\"Climate action\"},{\"organization\":\"Skyrail Rainforest Foundation\",\"identifierType\":\"ror\",\"identifier\":\"https://ror.org/03kfr2z97\",\"awardNumber\":\"\"}],\"fieldOfScience\":\"Natural sciences\",\"relatedWorks\":[{\"relationship\":\"primary_article\",\"identifierType\":\"DOI\",\"identifier\":\"https://doi.org/10.1111/GCB.16608\"}],\"versionNumber\":4,\"versionStatus\":\"submitted\",\"curationStatus\":\"Published\",\"versionChanges\":\"metadata_changed\",\"publicationDate\":\"2023-01-19\",\"lastModificationDate\":\"2023-01-19\",\"visibility\":\"public\",\"sharingLink\":\"http://datadryad.org/dataset/doi:10.5061/dryad.hx3ffbgjj\",\"changedFields\":[\"none\"],\"license\":\"https://spdx.org/licenses/CC0-1.0.html\",\"metrics\":{\"views\":220,\"downloads\":60,\"citations\":1}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

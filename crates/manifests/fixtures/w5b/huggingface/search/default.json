@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "huggingface",
+  "op": "search",
+  "recordedAt": "2026-11-25T11:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://huggingface.co/api/datasets?search=squad&limit=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ],
+          [
+            "etag",
+            "W/\"a82-Az9g8tM3Or4xnOfrajEaw8DpB7o\""
+          ]
+        ],
+        "bodyText": "[{\"_id\":\"621ffdd236468d709f181f9c\",\"id\":\"rajpurkar/squad_v2\",\"author\":\"rajpurkar\",\"disabled\":false,\"gated\":false,\"lastModified\":\"2024-03-04T13:55:27.000Z\",\"likes\":275,\"trendingScore\":1,\"private\":false,\"sha\":\"3ffb306f725f7d2ce8394bc1873b24868140c412\",\"description\":\"\\n\\t\\n\\t\\t\\n\\t\\n\\t\\n\\t\\tDataset Card for SQuAD 2.0\\n\\t\\n\\n\\n\\t\\n\\t\\t\\n\\t\\n\\t\\n\\t\\tDataset Summary\\n\\t\\n\\nStanford Question Answering Dataset (SQuAD) is a reading comprehension dataset, consisting of questions posed by crowdworkers on a set of Wikipedia articles, where the answer to every question is a segment of text, or span, from the corresponding reading passage, or the question might be unanswerable.\\nSQuAD 2.0 combines the 100,000 questions in SQuAD1.1 with over 50,000 unanswerable questions written adversarially by… See the full description on the dataset page: https://huggingface.co/datasets/rajpurkar/squad_v2.\",\"downloads\":51680,\"paperswithcode_id\":\"squad\",\"tags\":[\"task_categories:question-answering\",\"task_ids:open-domain-qa\",\"task_ids:extractive-qa\",\"annotations_creators:crowdsourced\",\"language_creators:crowdsourced\",\"multilinguality:monolingual\",\"source_datasets:original\",\"language:en\",\"license:cc-by-sa-4.0\",\"size_categories:100K<n<1M\",\"format:parquet\",\"modality:text\",\"library:datasets\",\"library:pandas\",\"library:mlcroissant\",\"library:polars\",\"arxiv:1806.03822\",\"arxiv:1606.05250\",\"region:us\"],\"createdAt\":\"2022-03-02T23:29:22.000Z\",\"key\":\"\"},{\"_id\":\"621ffdd236468d709f18303c\",\"id\":\"caltonji/harrypotter_squad_v2\",\"author\":\"caltonji\",\"disabled\":false,\"gated\":false,\"lastModified\":\"2021-12-31T19:11:29.000Z\",\"likes\":1,\"trendingScore\":1,\"private\":false,\"sha\":\"bec349bde53f1eeb1dd83503637da7dbb4fc5e23\",\"downloads\":118,\"tags\":[\"size_categories:n<1K\",\"format:parquet\",\"modality:text\",\"library:datasets\",\"library:pandas\",\"library:mlcroissant\",\"library:polars\",\"region:us\"],\"createdAt\":\"2022-03-02T23:29:22.000Z\",\"key\":\"\"},{\"_id\":\"66c5a8a73496dcc9c291da39\",\"id\":\"TheFuzzyScientist/squad-for-llms\",\"author\":\"TheFuzzyScientist\",\"disabled\":false,\"gated\":false,\"lastModified\":\"2024-08-22T04:54:46.000Z\",\"likes\":1,\"trendingScore\":1,\"private\":false,\"sha\":\"4b6b2f08a49230a43be3869ce5b9f9a60dbf9420\",\"description\":\"\\n\\t\\n\\t\\t\\n\\t\\n\\t\\n\\t\\tOverview\\n\\t\\n\\nThe validation split of the original SQuAD dataset with the answer column formated only as a string.\\nMeant for easier and direct integration when training decoder only models.\\n\\n\\n\\t\\n\\t\\t\\n\\t\\n\\t\\n\\t\\tlicense: cc-by-sa-4.0\\n\\t\\n\\n\",\"downloads\":78,\"tags\":[\"size_categories:10K<n<100K\",\"format:parquet\",\"modality:text\",\"library:datasets\",\"library:pandas\",\"library:mlcroissant\",\"library:polars\",\"region:us\"],\"createdAt\":\"2024-08-21T08:43:19.000Z\",\"key\":\"\"}]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

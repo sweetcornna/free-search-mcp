@@ -1,0 +1,131 @@
+id = "terraform_registry"
+name = "Terraform Public Registry"
+summary = "Official HashiCorp Terraform Registry API for searching public IaC modules, inspecting module metadata, and listing providers."
+aliases = ["terraform", "terraform modules", "terraform providers", "iac"]
+home_url = "https://registry.terraform.io"
+tier = 1
+scopes = ["code"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 3.0, burst = 6, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 21600 }
+
+[op.search]
+summary = "Search public Terraform Registry modules by keyword, provider, or namespace."
+method = "GET"
+url = "https://registry.terraform.io/v1/modules/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "vpc", limit = 3 }, min_results = 3, fixture = "fixtures/w5l/terraform_registry/search/default.json" }
+examples = [
+  'source.call("terraform_registry.search", { query: "vpc", provider: "aws", limit: 5 })',
+]
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Module search terms" }
+provider = { type = "string", to = "provider", doc = "Optional provider filter (e.g. aws, google, azurerm)" }
+namespace = { type = "string", to = "namespace", doc = "Optional registry namespace filter" }
+verified = { type = "bool", to = "verified", doc = "Filter to verified modules only" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Results per page" }
+offset = { type = "int", min = 0, to = "offset", doc = "Offset for pagination" }
+
+[op.search.map]
+items = "(.modules // [])[]"
+error = "if (.errors | type) == \"array\" and (.errors | length) > 0 then (.errors | join(\"; \")) else null end"
+record = '''{
+  id: (.id // ""),
+  namespace: (.namespace // ""),
+  name: (.name // ""),
+  provider: (.provider // ""),
+  version: (.version // ""),
+  description: (.description // ""),
+  source: (.source // null),
+  downloads: (.downloads // 0),
+  verified: (.verified // false),
+  publishedAt: (.published_at // null),
+  url: ("https://registry.terraform.io/modules/" + (.namespace // "") + "/" + (.name // "") + "/" + (.provider // "") + "/" + (.version // ""))
+}'''
+hit = '''{
+  title: ((.namespace // "") + "/" + (.name // "") + "/" + (.provider // "") + " v" + (.version // "")),
+  url: ("https://registry.terraform.io/modules/" + (.namespace // "") + "/" + (.name // "") + "/" + (.provider // "") + "/" + (.version // "")),
+  snippet: (
+    [
+      (if (.description // "") != "" then .description else null end),
+      (((.downloads // 0) | tostring) + " downloads")
+    ] | map(select(. != null)) | join(" · ")
+  )[0:280],
+  date: (.published_at | parse_date),
+  dateSource: "api"
+}'''
+
+[op.module]
+summary = "Fetch latest release metadata, inputs/outputs summary, and source repo for a specific Terraform module."
+method = "GET"
+url = "https://registry.terraform.io/v1/modules/{namespace}/{name}/{provider}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { namespace = "hashicorp", name = "dir", provider = "template" }, min_results = 1, fixture = "fixtures/w5l/terraform_registry/module/default.json" }
+examples = [
+  'source.call("terraform_registry.module", { namespace: "hashicorp", name: "dir", provider: "template" })',
+]
+
+[op.module.params]
+namespace = { type = "string", required = true, in = "path", doc = "Module namespace (e.g. hashicorp, terraform-aws-modules)" }
+name = { type = "string", required = true, in = "path", doc = "Module name (e.g. dir, vpc)" }
+provider = { type = "string", required = true, in = "path", doc = "Target provider (e.g. aws, template, google)" }
+
+[op.module.map]
+items = "."
+error = "@ref:op.search.map.error"
+record = '''{
+  id: (.id // ""),
+  namespace: (.namespace // ""),
+  name: (.name // ""),
+  provider: (.provider // ""),
+  version: (.version // ""),
+  description: (.description // ""),
+  source: (.source // null),
+  downloads: (.downloads // 0),
+  verified: (.verified // false),
+  publishedAt: (.published_at // null),
+  versions: (.versions // []),
+  inputs: [(.root.inputs // [])[] | { name, type, required, description }],
+  outputs: [(.root.outputs // [])[] | { name, description }],
+  url: ("https://registry.terraform.io/modules/" + (.namespace // "") + "/" + (.name // "") + "/" + (.provider // "") + "/" + (.version // ""))
+}'''
+
+[op.providers]
+summary = "List public Terraform providers from the official Registry."
+method = "GET"
+url = "https://registry.terraform.io/v1/providers"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { limit = 3 }, min_results = 3, fixture = "fixtures/w5l/terraform_registry/providers/default.json" }
+examples = [
+  'source.call("terraform_registry.providers", { limit: 10 })',
+]
+
+[op.providers.params]
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Providers per page" }
+offset = { type = "int", min = 0, to = "offset", doc = "Offset for pagination" }
+
+[op.providers.map]
+items = "(.providers // [])[]"
+error = "@ref:op.search.map.error"
+record = '''{
+  id: (.id // ""),
+  namespace: (.namespace // ""),
+  name: (.name // ""),
+  version: (.version // ""),
+  tier: (.tier // null),
+  description: (.description // ""),
+  source: (.source // null),
+  downloads: (.downloads // 0),
+  publishedAt: (.published_at // null),
+  url: ("https://registry.terraform.io/providers/" + (.namespace // "") + "/" + (.name // "") + "/" + (.version // ""))
+}'''

@@ -1,0 +1,97 @@
+id = "pubtator3"
+name = "PubTator3 (NCBI Biomedical Text Mining)"
+summary = "NCBI AI-annotated PubMed and PMC OA biomedical literature with normalized entity search and BioC JSON export."
+aliases = ["pubtator", "ncbi pubtator3"]
+home_url = "https://www.ncbi.nlm.nih.gov/research/pubtator3/"
+tier = 1
+scopes = ["academic", "academic.biomed", "academic.openaccess"]
+caps = ["search", "lookup", "fulltext"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 3.0, burst = 5, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 43200, host_bucket = "ncbi.nlm.nih.gov" }
+
+[op.search]
+summary = "Search entity-normalized biomedical literature in PubTator3."
+method = "GET"
+url = "https://www.ncbi.nlm.nih.gov/research/pubtator3-api/search/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "CRISPR" }, min_results = 2, fixture = "fixtures/w5a/pubtator3/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "text", doc = "Keyword or entity query (e.g. CRISPR, @GENE_BRCA1)" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "none", doc = "Max results" }
+page = { type = "int", min = 1, to = "page", doc = "1-indexed page number" }
+
+[op.search.map]
+items = ".results[:($p.limit // 10)][]"
+total = ".count"
+error = '''if .detail != null then (.detail | tostring) elif .error != null then (.error | tostring) else null end'''
+work = '''(
+  (if (.pmid != null and ((.pmid | tostring) | test("^[0-9]+$"))) then (.pmid | tostring) elif ((._id // "" | tostring) | test("^[0-9]+$")) then (._id | tostring) else null end) as $pmid |
+  (.date | parse_date) as $dt |
+  (if $pmid != null then ("https://pubmed.ncbi.nlm.nih.gov/" + $pmid + "/") elif (.pmcid // "") != "" then ("https://pmc.ncbi.nlm.nih.gov/articles/" + .pmcid + "/") else ("https://www.ncbi.nlm.nih.gov/research/pubtator3/publication/" + ((._id // "") | tostring)) end) as $url |
+  {
+    title: ((.title // "") | unescape_html | collapse_ws | sub("\\s*\\.$"; "")),
+    authors: [(.authors // [])[] | collapse_ws | select(length > 0) | {name: .}],
+    year: (if $dt != null then ($dt[0:4] | to_int) else null end),
+    publishedDate: $dt,
+    venue: (.journal // null),
+    workType: "article",
+    ids: {
+      pmid: $pmid,
+      pmcid: (.pmcid // null),
+      doi: (.doi // null | doi_norm)
+    },
+    oa: (if (.pmcid // "") != "" then { status: "green", url: ("https://pmc.ncbi.nlm.nih.gov/articles/" + .pmcid + "/"), structuredFormat: "bioc" } else null end),
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["pubtator3"]
+  }
+)'''
+
+[op.work]
+summary = "Export BioC JSON title, abstract, DOI, and publication metadata by PMID."
+method = "GET"
+url = "https://www.ncbi.nlm.nih.gov/research/pubtator3-api/publications/export/biocjson"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+probe = { params = { pmid = "34668968" }, min_results = 1, fixture = "fixtures/w5a/pubtator3/work/default.json" }
+
+[op.work.params]
+pmid = { type = "string", required = true, to = "pmids", doc = "PubMed ID (numeric PMID)" }
+
+[op.work.map]
+items = ".PubTator3[]"
+error = "@ref:op.search.map.error"
+work = '''(
+  (if (.pmid != null and ((.pmid | tostring) | test("^[0-9]+$"))) then (.pmid | tostring) elif ((.id // "" | tostring) | test("^[0-9]+$")) then (.id | tostring) else null end) as $pmid |
+  (.date | parse_date) as $dt |
+  ([(.passages // [])[] | select(.infons.type == "title") | .text][0] // "") as $title |
+  ([(.passages // [])[] | select(.infons.type == "abstract") | .text] | join(" ") | unescape_html | collapse_ws) as $abs |
+  (([(.passages // [])[] | .infons."article-id_doi" | select(type == "string")][0]) // ([(.passages // [])[] | .infons.journal | select(type == "string" and test("doi:\\s*10\\.\\d{4,9}/\\S+"; "i")) | capture("doi:\\s*(?<d>10\\.\\d{4,9}/\\S+)"; "i").d][0]) // null | doi_norm) as $doi |
+  (if $pmid != null then ("https://pubmed.ncbi.nlm.nih.gov/" + $pmid + "/") elif (.pmcid // "") != "" then ("https://pmc.ncbi.nlm.nih.gov/articles/" + .pmcid + "/") else ("https://www.ncbi.nlm.nih.gov/research/pubtator3/publication/" + ((.id // "") | tostring)) end) as $url |
+  {
+    title: ($title | unescape_html | collapse_ws | sub("\\s*\\.$"; "")),
+    authors: [(.authors // [])[] | collapse_ws | select(length > 0) | {name: .}],
+    year: (if $dt != null then ($dt[0:4] | to_int) else null end),
+    publishedDate: $dt,
+    venue: (.journal // null),
+    workType: "article",
+    ids: {
+      pmid: $pmid,
+      pmcid: (.pmcid // null),
+      doi: $doi
+    },
+    abstractText: (if ($abs // "") != "" then $abs else null end),
+    oa: (if (.pmcid // "") != "" then { status: "green", url: ("https://pmc.ncbi.nlm.nih.gov/articles/" + .pmcid + "/"), structuredFormat: "bioc" } else null end),
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["pubtator3"]
+  }
+)'''

@@ -1,0 +1,78 @@
+id = "dryad"
+name = "Dryad Research Data Repository"
+summary = "Curated multidisciplinary scientific datasets with DOIs, abstracts, and open CC0 downloads."
+aliases = ["datadryad", "dryad datasets"]
+home_url = "https://datadryad.org"
+tier = 1
+scopes = ["dataset", "academic"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 21600 }
+
+[op.search]
+summary = "Search curated research datasets on Dryad."
+method = "GET"
+url = "https://datadryad.org/api/v2/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "climate", limit = 3 }, min_results = 2, fixture = "fixtures/w5b/dryad/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Dataset search query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "per_page", doc = "Results per page" }
+page = { type = "int", default = 1, min = 1, to = "page", doc = "1-based page number" }
+
+[op.search.map]
+items = "._embedded[\"stash:datasets\"][]"
+total = ".total"
+error = 'if type == "object" and (.error // .message // null) != null then (.error // .message | tostring) else null end'
+work = '''{
+  title: ((.title // "") | strip_tags),
+  authors: [(.authors // [])[] | {name: (((.firstName // "") + " " + (.lastName // "")) | collapse_ws), orcid: (.orcid // null), affiliation: (.affiliation // null)}],
+  year: ((.publicationDate // "")[0:4] | to_int),
+  publishedDate: ((.publicationDate // null) | parse_date),
+  venue: "Dryad",
+  workType: "dataset",
+  ids: { doi: ((.identifier // null) | doi_norm) },
+  abstractText: ((.abstract // null) | strip_tags),
+  oa: { status: "open", url: ("https://doi.org/" + ((.identifier // "") | sub("^doi:"; ""))), license: (.license // null) },
+  retracted: false,
+  versions: [],
+  url: ("https://doi.org/" + ((.identifier // "") | sub("^doi:"; ""))),
+  sources: ["dryad"]
+}'''
+
+[op.dataset]
+summary = "Fetch a Dryad dataset record by numeric dataset ID or URL-encoded DOI (e.g. doi:10.5061/dryad.hx3ffbgjj)."
+method = "GET"
+url = "https://datadryad.org/api/v2/datasets/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "102889" }, min_results = 1, fixture = "fixtures/w5b/dryad/dataset/default.json" }
+
+[op.dataset.params]
+id = { type = "string", required = true, in = "path", doc = "Dryad numeric dataset ID (e.g. 102889) or prefixed DOI (e.g. doi:10.5061/dryad.hx3ffbgjj)" }
+
+[op.dataset.map]
+items = "."
+error = 'if type == "object" and (.error // .message // null) != null then (.error // .message | tostring) else null end'
+record = '''{
+  id: (.id | to_int),
+  doi: ((.identifier // null) | doi_norm),
+  title: ((.title // "") | strip_tags),
+  authors: [(.authors // [])[] | {name: (((.firstName // "") + " " + (.lastName // "")) | collapse_ws), orcid: (.orcid // null), affiliation: (.affiliation // null)}],
+  abstractText: ((.abstract // null) | strip_tags),
+  publicationDate: ((.publicationDate // null) | parse_date),
+  fieldOfScience: (.fieldOfScience // null),
+  license: (.license // null),
+  storageSize: (.storageSize | to_int),
+  funders: [(.funders // [])[] | {organization: (.organization // null), awardNumber: (if (.awardNumber // "") != "" then .awardNumber else null end)}],
+  relatedWorks: [(.relatedWorks // [])[] | {relationship: (.relationship // null), identifierType: (.identifierType // null), identifier: (.identifier // null)}],
+  metrics: (if .metrics != null then {views: (.metrics.views | to_int), downloads: (.metrics.downloads | to_int), citations: (.metrics.citations | to_int)} else null end),
+  downloadUrl: (if (._links["stash:download"].href // "") != "" then ("https://datadryad.org" + ._links["stash:download"].href) else null end),
+  url: ("https://doi.org/" + ((.identifier // "") | sub("^doi:"; "")))
+}'''

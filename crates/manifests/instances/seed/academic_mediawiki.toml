@@ -1,0 +1,29 @@
+protocol = "mediawiki"
+
+[[instance]]
+id = "wikipedia"
+name = "Wikipedia"
+summary = "Multilingual free encyclopedia via MediaWiki API; language subdomain selected from caller lang or region."
+aliases = ["wiki", "wikipedia.org"]
+base_url = "https://{lang_sub}.wikipedia.org/w/api.php"
+scopes = ["web", "reference"]
+caps = ["search", "lookup"]
+tier = 1
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 43200, host_bucket = "wikimedia.org" }
+dialect = { dynamic_lang_host = true }
+probe = { op = "search", params = { query = "Alan Turing", limit = 3 }, min_results = 1 }
+
+[[instance]]
+id = "wikimedia"
+name = "Wikimedia Commons"
+summary = "Wikimedia Commons freely licensed images and media files with attribution and license metadata."
+aliases = ["commons", "wikimedia commons"]
+base_url = "https://commons.wikimedia.org/w/api.php"
+scopes = ["media"]
+caps = ["search"]
+tier = 1
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 43200, host_bucket = "wikimedia.org" }
+default_params = { namespace = 6, prop = "imageinfo" }
+probe = { op = "search", params = { query = "lighthouse", limit = 3 }, min_results = 1 }

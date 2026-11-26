@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "usgs_earthquakes",
+  "op": "event",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&eventid=us6000udf2",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"type\":\"Feature\",\"properties\":{\"mag\":5,\"place\":\"67 km NNE of Luwuk, Indonesia\",\"time\":1795608492731,\"updated\":1795609540040,\"tz\":null,\"url\":\"https://earthquake.usgs.gov/earthquakes/eventpage/us6000udf2\",\"felt\":null,\"cdi\":null,\"mmi\":null,\"alert\":null,\"status\":\"reviewed\",\"tsunami\":0,\"sig\":385,\"net\":\"us\",\"code\":\"6000udf2\",\"ids\":\",us6000udf2,\",\"sources\":\",us,\",\"types\":\",origin,phase-data,\",\"nst\":73,\"dmin\":5.629,\"rms\":0.79,\"gap\":64,\"magType\":\"mb\",\"type\":\"earthquake\",\"title\":\"M 5.0 - 67 km NNE of Luwuk, Indonesia\",\"products\":{\"origin\":[{\"indexid\":28823197,\"indexTime\":1795609552925,\"id\":\"urn:usgs-product:us:origin:us6000udf2:1795609540040\",\"type\":\"origin\",\"code\":\"us6000udf2\",\"source\":\"us\",\"updateTime\":1795609540040,\"status\":\"UPDATE\",\"properties\":{\"azimuthal-gap\":\"64\",\"depth\":\"106.384\",\"depth-type\":\"from location\",\"error-ellipse-azimuth\":\"268\",\"error-ellipse-intermediate\":\"11976\",\"error-ellipse-major\":\"14106\",\"error-ellipse-minor\":\"8809\",\"error-ellipse-plunge\":\"16\",\"error-ellipse-rotation\":\"102\",\"evaluation-status\":\"preliminary\",\"event-type\":\"earthquake\",\"eventParametersPublicID\":\"quakeml:us.anss.org/eventparameters/6000udf2/1795609542\",\"eventsource\":\"us\",\"eventsourcecode\":\"6000udf2\",\"eventtime\":\"2026-11-25T12:08:12.731Z\",\"eventtime-error\":\"1.60\",\"horizontal-error\":\"8.4\",\"latitude\":\"-0.3849\",\"latitude-error\":\"0.0702\",\"longitude\":\"123.0018\",\"longitude-error\":\"0.0814\",\"magnitude\":\"5.0\",\"magnitude-error\":\"0.066\",\"magnitude-num-stations-used\":\"73\",\"magnitude-source\":\"us\",\"magnitude-type\":\"mb\",\"minimum-distance\":\"5.629\",\"num-phases-used\":\"74\",\"num-stations-used\":\"73\",\"origin-source\":\"us\",\"pdl-client-version\":\"Version 3.6.0 2026-08-20\",\"quakeml-magnitude-publicid\":\"quakeml:us.anss.org/magnitude/6000udf2/mb\",\"quakeml-origin-publicid\":\"quakeml:us.anss.org/origin/6000udf2\",\"quakeml-publicid\":\"quakeml:us.anss.org/event/6000udf2\",\"review-status\":\"reviewed\",\"standard-error\":\"0.79\",\"title\":\"67 km NNE of Luwuk, Indonesia\",\"vertical-error\":\"6.239\"},\"preferredWeight\":158,\"contents\":{\"contents.xml\":{\"contentType\":\"application/xml\",\"lastModified\":1795609544000,\"length\":195,\"url\":\"https://earthquake.usgs.gov/product/origin/us6000udf2/us/1795609540040/contents.xml\",\"sha256\":\"ABhLiaqdYWmIak24eD/csBAWouBShhatD9bUzLNEZFk=\"},\"quakeml.xml\":{\"contentType\":\"application/xml\",\"lastModified\":1795609540000,\"length\":3808,\"url\":\"https://earthquake.usgs.gov/product/origin/us6000udf2/us/1795609540040/quakeml.xml\",\"sha256\":\"kQiQxlyFScCm1jdCiITRN+H1CsV2bYqhlyV5HeobEWE=\"}}}],\"phase-data\":[{\"indexid\":28823198,\"indexTime\":1795609553964,\"id\":\"urn:usgs-product:us:phase-data:us6000udf2:1795609540040\",\"type\":\"phase-data\",\"code\":\"us6000udf2\",\"source\":\"us\",\"updateTime\":1795609540040,\"status\":\"UPDATE\",\"properties\":{\"azimuthal-gap\":\"64\",\"depth\":\"106.384\",\"depth-type\":\"from location\",\"error-ellipse-azimuth\":\"268\",\"error-ellipse-intermediate\":\"11976\",\"error-ellipse-major\":\"14106\",\"error-ellipse-minor\":\"8809\",\"error-ellipse-plunge\":\"16\",\"error-ellipse-rotation\":\"102\",\"evaluation-status\":\"preliminary\",\"event-type\":\"earthquake\",\"eventParametersPublicID\":\"quakeml:us.anss.org/eventparameters/6000udf2/1795609542\",\"eventsource\":\"us\",\"eventsourcecode\":\"6000udf2\",\"eventtime\":\"2026-11-25T12:08:12.731Z\",\"eventtime-error\":\"1.60\",\"horizontal-error\":\"8.4\",\"latitude\":\"-0.3849\",\"latitude-error\":\"0.0702\",\"longitude\":\"123.0018\",\"longitude-error\":\"0.0814\",\"magnitude\":\"5.0\",\"magnitude-error\":\"0.066\",\"magnitude-num-stations-used\":\"73\",\"magnitude-source\":\"us\",\"magnitude-type\":\"mb\",\"minimum-distance\":\"5.629\",\"num-phases-used\":\"74\",\"num-stations-used\":\"73\",\"origin-source\":\"us\",\"pdl-client-version\":\"Version 3.6.0 2026-08-20\",\"quakeml-magnitude-publicid\":\"quakeml:us.anss.org/magnitude/6000udf2/mb\",\"quakeml-origin-publicid\":\"quakeml:us.anss.org/origin/6000udf2\",\"quakeml-publicid\":\"quakeml:us.anss.org/event/6000udf2\",\"review-status\":\"reviewed\",\"standard-error\":\"0.79\",\"vertical-error\":\"6.239\"},\"preferredWeight\":158,\"contents\":{\"contents.xml\":{\"contentType\":\"application/xml\",\"lastModified\":1795609544000,\"length\":195,\"url\":\"https://earthquake.usgs.gov/product/phase-data/us6000udf2/us/1795609540040/contents.xml\",\"sha256\":\"ABhLiaqdYWmIak24eD/csBAWouBShhatD9bUzLNEZFk=\"},\"quakeml.xml\":{\"contentType\":\"application/xml\",\"lastModified\":1795609540000,\"length\":197326,\"url\":\"https://earthquake.usgs.gov/product/phase-data/us6000udf2/us/1795609540040/quakeml.xml\",\"sha256\":\"Ot5zpHUV6PfXWHQJD5ZElAdBArh3kP68NQRemyAxwVM=\"}}}]}},\"geometry\":{\"type\":\"Point\",\"coordinates\":[123.0018,-0.3849,106.384]},\"id\":\"us6000udf2\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

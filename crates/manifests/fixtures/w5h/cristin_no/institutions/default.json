@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "cristin_no",
+  "op": "institutions",
+  "recordedAt": "2026-11-25T13:02:20Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.cristin.no/v2/institutions?name=Oslo&per_page=3&page=1",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "[ {\n  \"cristin_institution_id\" : \"11220011\",\n  \"institution_name\" : {\n    \"en\" : \"Oslo Region European Office\"\n  },\n  \"acronym\" : \"OSLOREGION\",\n  \"country\" : \"BE\",\n  \"cristin_user_institution\" : false,\n  \"url\" : \"https://api.cristin.no/v2/institutions/11220011\"\n}, {\n  \"cristin_institution_id\" : \"1126\",\n  \"institution_name\" : {\n    \"nb\" : \"Folkeuniversitetet Oslo\"\n  },\n  \"acronym\" : \"FUOSLO\",\n  \"country\" : \"NO\",\n  \"cristin_user_institution\" : false,\n  \"url\" : \"https://api.cristin.no/v2/institutions/1126\"\n}, {\n  \"cristin_institution_id\" : \"11905701\",\n  \"institution_name\" : {\n    \"nb\" : \"Embassy of Greece in Oslo\"\n  },\n  \"acronym\" : \"EMBGREECE\",\n  \"country\" : \"GR\",\n  \"cristin_user_institution\" : false,\n  \"url\" : \"https://api.cristin.no/v2/institutions/11905701\"\n} ]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+protocol = "sru"
+
+[[instance]]
+id = "nli_il_sru"
+name = "National Library of Israel Catalog (SRU)"
+summary = "National Library of Israel Ex Libris Alma SRU/CQL bibliographic catalog covering Hebrew, Arabic, and English books, manuscripts, and Middle East studies."
+aliases = ["nli", "national library of israel", "merhav"]
+base_url = "https://nli.alma.exlibrisgroup.com/view/sru/972NNL_INST"
+scopes = ["academic", "academic.books", "academic.humanities", "reference"]
+caps = ["search", "lookup", "book"]
+tier = 1
+default_params = { version = "1.2", recordSchema = "dc" }
+probe = { op = "search", params = { query = "alma.title=jerusalem", limit = 3 }, min_results = 2 }

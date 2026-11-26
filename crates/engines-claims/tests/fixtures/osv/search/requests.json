@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "source": "osv",
+  "op": "search",
+  "recordedAt": "2026-11-25T10:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://api.osv.dev/v1/query",
+        "headersSubset": {
+          "accept": "application/json",
+          "content-type": "application/json"
+        },
+        "bodySha256": "9e0d7d57c33ed9171b3a92623a1f2cf5e0df6bff80d534cdf2e84463968aad24"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          ["content-type", "application/json"]
+        ],
+        "bodyText": "{\"vulns\":[{\"id\":\"PYSEC-2020-1\",\"summary\":\"Requests vulnerable to .netrc credentials leak via malicious URLs\",\"aliases\":[\"CVE-2024-47081\",\"GHSA-9hjg-9r4m-mvj7\"],\"published\":\"2020-01-01T00:00:00Z\",\"affected\":[{\"package\":{\"ecosystem\":\"PyPI\",\"name\":\"requests\",\"purl\":\"pkg:pypi/requests\"},\"ranges\":[{\"type\":\"ECOSYSTEM\",\"events\":[{\"introduced\":\"0\"},{\"fixed\":\"2.32.4\"}]}]}]},{\"id\":\"PYSEC-2026-1872\",\"summary\":\"Requests vulnerable to .netrc credentials leak via malicious URLs\",\"aliases\":[\"CVE-2024-47081\",\"GHSA-9hjg-9r4m-mvj7\"],\"published\":\"2026-07-07T00:00:00Z\",\"affected\":[{\"package\":{\"ecosystem\":\"PyPI\",\"name\":\"requests\",\"purl\":\"pkg:pypi/requests\"},\"ranges\":[{\"type\":\"ECOSYSTEM\",\"events\":[{\"introduced\":\"0\"},{\"fixed\":\"2.32.4\"}]}]}]}]}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://api.osv.dev/v1/query",
+        "headersSubset": {
+          "accept": "application/json",
+          "content-type": "application/json"
+        },
+        "bodySha256": "9f7bddf09c2a8d2febabd0b17d16db5e3439057683277b86753b417226167aba"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          ["content-type", "application/json"]
+        ],
+        "bodyText": "{}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.osv.dev/v1/vulns/GHSA-9hjg-9r4m-mvj7",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          ["content-type", "application/json"]
+        ],
+        "bodyText": "{\"id\":\"PYSEC-2026-1872\",\"summary\":\"Requests vulnerable to .netrc credentials leak via malicious URLs\",\"aliases\":[\"CVE-2024-47081\",\"GHSA-9hjg-9r4m-mvj7\"],\"published\":\"2026-07-07T00:00:00Z\",\"affected\":[{\"package\":{\"ecosystem\":\"PyPI\",\"name\":\"requests\",\"purl\":\"pkg:pypi/requests\"},\"ranges\":[{\"type\":\"ECOSYSTEM\",\"events\":[{\"introduced\":\"0\"},{\"fixed\":\"2.32.4\"}]}]}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

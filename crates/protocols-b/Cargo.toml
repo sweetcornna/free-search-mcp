@@ -1,0 +1,39 @@
+[package]
+name = "fsm-protocols-b"
+description = "Generic protocol adapters, part 2 (data/web)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+fsm-core.workspace = true
+fsm-net.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+roxmltree.workspace = true
+quick-xml.workspace = true
+dom_query.workspace = true
+url.workspace = true
+percent-encoding.workspace = true
+async-trait.workspace = true
+tokio.workspace = true
+futures.workspace = true
+regex.workspace = true
+csv.workspace = true
+flate2.workspace = true
+tracing.workspace = true
+jiff.workspace = true
+bytes.workspace = true
+encoding_rs.workspace = true
+tokio-util.workspace = true
+moka.workspace = true
+base64.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }
+insta.workspace = true

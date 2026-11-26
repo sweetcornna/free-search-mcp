@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "source": "openalex",
+  "op": "work",
+  "recordedAt": "2026-11-25T14:07:12Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.openalex.org/works/https://doi.org/10.9999/fsm-scholar-nonexistent?select=id%2Cdoi%2Cdisplay_name%2Cpublication_year%2Cpublication_date%2Ctype%2Ccited_by_count%2Cis_retracted%2Cprimary_location%2Cbest_oa_location%2Copen_access%2Cauthorships%2Cabstract_inverted_index%2Cids"
+      },
+      "response": {
+        "status": 404,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"error\": \"Not Found\", \"message\": \"Work https://doi.org/10.9999/fsm-scholar-nonexistent not found\"}"
+      }
+    }
+  ]
+}

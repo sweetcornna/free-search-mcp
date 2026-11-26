@@ -1,0 +1,104 @@
+id = "lmfdb_math"
+name = "LMFDB L-Functions & Modular Forms DB"
+summary = "Structured number theory database of elliptic curves over Q, number fields, modular forms, and L-functions."
+aliases = ["lmfdb", "elliptic curves", "number fields", "modular forms"]
+home_url = "https://www.lmfdb.org"
+tier = 2
+scopes = ["academic.math", "dataset"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 4, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 86400, host_bucket = "www.lmfdb.org" }
+
+[op.search]
+summary = "Search LMFDB elliptic curves over Q by conductor (exact integer or range such as 11..20)."
+method = "GET"
+url = "https://www.lmfdb.org/api/ec_curvedata/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { _format = "json", _fields = "lmfdb_label,Clabel,conductor,ainvs,analytic_rank,torsion,cm,jinv,bad_primes" }
+paginate = { style = "offset", param = "_offset", start = 0, max_pages = 3 }
+probe = { params = { query = "11", limit = 3 }, min_results = 2, fixture = "fixtures/w5j/lmfdb_math/search/default.json" }
+examples = ["source.call('lmfdb_math.search', { query: '11', limit: 5 })"]
+
+[op.search.params]
+query = { type = "string", required = true, to = "conductor", doc = "Elliptic curve conductor integer or LMFDB filter (e.g. 11, 37)" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "_max_count", doc = "Maximum curves to return" }
+offset = { type = "int", default = 0, min = 0, to = "_offset", doc = "0-based offset" }
+
+[op.search.map]
+items = "(.data // [])[]"
+record = '''{
+  lmfdbLabel: (.lmfdb_label // ""),
+  cremonaLabel: (.Clabel // null),
+  conductor: (.conductor // null),
+  ainvs: (.ainvs // []),
+  analyticRank: (.analytic_rank // null),
+  torsionOrder: (.torsion // null),
+  cmDiscriminant: (.cm // null),
+  jInvariant: (.jinv // null),
+  badPrimes: (.bad_primes // []),
+  url: ("https://www.lmfdb.org/EllipticCurve/Q/" + (.lmfdb_label // ""))
+}'''
+hit = '''{
+  title: ("Elliptic Curve " + (.lmfdb_label // "") + (if (.Clabel // "") != "" then (" (Cremona " + .Clabel + ")") else "" end)),
+  url: ("https://www.lmfdb.org/EllipticCurve/Q/" + (.lmfdb_label // "")),
+  snippet: ([
+    (if (.conductor | type) == "number" then "N=\(.conductor)" else empty end),
+    (if (.analytic_rank | type) == "number" then "rank=\(.analytic_rank)" else empty end),
+    (if (.torsion | type) == "number" then "torsion=\(.torsion)" else empty end),
+    (if ((.ainvs // []) | length) > 0 then ("ainvs=" + ((.ainvs | map(tostring)) | join(","))) else empty end)
+  ] | join(" · ")),
+  date: null,
+  dateSource: "api"
+}'''
+
+[op.curve]
+summary = "Fetch full LMFDB elliptic curve invariants by LMFDB label (e.g. 11.a2)."
+method = "GET"
+url = "https://www.lmfdb.org/api/ec_curvedata/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { _format = "json", _max_count = 1 }
+probe = { params = { label = "11.a2" }, min_results = 1, fixture = "fixtures/w5j/lmfdb_math/curve/default.json" }
+examples = ["source.call('lmfdb_math.curve', { label: '11.a2' })"]
+
+[op.curve.params]
+label = { type = "string", required = true, to = "lmfdb_label", doc = "LMFDB elliptic curve label (e.g. 11.a2, 37.a1)" }
+
+[op.curve.map]
+items = "(.data // [])[]"
+record = "@ref:op.search.map.record"
+
+[op.number_fields]
+summary = "Query LMFDB algebraic number fields by degree."
+method = "GET"
+url = "https://www.lmfdb.org/api/nf_fields/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { _format = "json", _fields = "label,degree,disc_abs,disc_sign,coeffs,class_number,galt,r2" }
+paginate = { style = "offset", param = "_offset", start = 0, max_pages = 3 }
+probe = { params = { degree = 2, limit = 3 }, min_results = 2, fixture = "fixtures/w5j/lmfdb_math/number_fields/default.json" }
+examples = ["source.call('lmfdb_math.number_fields', { degree: 2, limit: 5 })"]
+
+[op.number_fields.params]
+degree = { type = "int", default = 2, min = 1, max = 23, to = "degree", doc = "Field extension degree over Q" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "_max_count", doc = "Maximum number fields to return" }
+offset = { type = "int", default = 0, min = 0, to = "_offset", doc = "0-based offset" }
+
+[op.number_fields.map]
+items = "(.data // [])[0:($p.limit // 10)][]"
+record = '''{
+  label: (.label // ""),
+  degree: (.degree // null),
+  discAbs: (.disc_abs // null),
+  discSign: (.disc_sign // null),
+  coeffs: (.coeffs // []),
+  classNumber: (.class_number // null),
+  galoisGroupT: (.galt // null),
+  complexPlacesR2: (.r2 // null),
+  url: ("https://www.lmfdb.org/NumberField/" + (.label // ""))
+}'''

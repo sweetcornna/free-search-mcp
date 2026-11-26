@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "source": "makerere_makir",
+  "op": "identify",
+  "recordedAt": "2026-11-25T12:44:32Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://makir.mak.ac.ug/server/oai/request?verb=Identify",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-language",
+            "en"
+          ],
+          [
+            "content-type",
+            "text/xml;charset=UTF-8"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><?xml-stylesheet type=\"text/xsl\" href=\"static/style.xsl\"?><OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd\"><responseDate>2026-11-25T12:44:11Z</responseDate><request verb=\"Identify\">http://localhost:8080/server/oai/request</request><Identify><repositoryName>DSpace MUK</repositoryName><baseURL>http://localhost:8080/server/oai/request</baseURL><protocolVersion>2.0</protocolVersion><adminEmail>dspace-help@myu.edu</adminEmail><earliestDatestamp>2025-02-07T13:36:57Z</earliestDatestamp><deletedRecord>transient</deletedRecord><granularity>YYYY-MM-DDThh:mm:ssZ</granularity><description><oai-identifier xmlns=\"http://www.openarchives.org/OAI/2.0/oai-identifier\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/oai-identifier http://www.openarchives.org/OAI/2.0/oai-identifier.xsd\">\n<scheme>oai</scheme>\n<repositoryIdentifier>localhost</repositoryIdentifier>\n<delimiter>:</delimiter>\n<sampleIdentifier>oai:localhost:123456789/1234</sampleIdentifier>\n</oai-identifier></description></Identify></OAI-PMH>",
+        "bodyB64": null
+      }
+    }
+  ]
+}

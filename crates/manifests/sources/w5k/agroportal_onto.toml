@@ -1,0 +1,83 @@
+id = "agroportal_onto"
+name = "AgroPortal Agronomy & Plant Ontologies API"
+summary = "OntoPortal REST API hosting 160+ agronomy, crop breeding, plant trait, ecology, and food science ontologies and controlled vocabularies (migrated to data.agroportal.eu; requires free API key)."
+aliases = ["agroportal", "agronomy ontologies", "crop ontologies"]
+home_url = "https://agroportal.lirmm.fr"
+tier = 3
+scopes = ["academic", "academic.biomed"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 1.5, burst = 4, concurrency = 2, timeout_ms = 12000, cache_ttl_s = 86400, host_bucket = "data.agroportal.eu" }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_AGROPORTAL_API_KEY"
+in = "header"
+name = "Authorization"
+format = "apikey token={key}"
+route_requires_key = true
+
+[op.search]
+summary = "Search agronomy, plant science, and food ontology concepts across AgroPortal."
+method = "GET"
+url = "https://data.agroportal.eu/search"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "wheat", limit = 3, page = 1 }, min_results = 2, fixture = "fixtures/w5k/agroportal_onto/search/default.json" }
+examples = ['source.call("agroportal_onto.search", { query: "wheat", ontologies: "AGRO,AGROVOC", limit: 5 })']
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Concept or ontology term query" }
+ontologies = { type = "string", to = "ontologies", doc = "Optional comma-separated ontology acronyms e.g. AGRO,AGROVOC,TO" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "pagesize", doc = "Concepts per page" }
+page = { type = "int", default = 1, min = 1, to = "page", doc = "1-based page number" }
+
+[op.search.map]
+items = "(.collection // [])[]"
+total = ".totalCount"
+error = "if .error then (.error | tostring) elif .errors then (.errors | tostring) else null end"
+record = '''{
+  iri: (."@id" // ""),
+  prefLabel: ((.prefLabel // "") | collapse_ws),
+  synonyms: [(.synonym // [])[] | collapse_ws | select(. != null and length > 0)],
+  definition: (.definition[0]? | collapse_ws),
+  obsolete: (.obsolete // false),
+  ontologyUrl: (.links.ontology // null),
+  url: (.links.ui // ."@id" // "")
+}'''
+hit = '''{
+  title: ((.prefLabel // ."@id" // "") | collapse_ws),
+  url: (.links.ui // ."@id" // ""),
+  snippet: ([((.links.ontology // "") | split("/") | last), ((.definition[0]? // "") | collapse_ws), ((.synonym // [])[:3] | join(", "))] | map(select(. != null and length > 0)) | join(" · ")),
+  date: null,
+  dateSource: null
+}'''
+
+[op.ontology]
+summary = "Fetch AgroPortal metadata and links for a specific ontology acronym (e.g. AGRO, AGROVOC, TO)."
+method = "GET"
+url = "https://data.agroportal.eu/ontologies/{acronym}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { acronym = "AGRO" }, min_results = 1, fixture = "fixtures/w5k/agroportal_onto/ontology/default.json" }
+examples = ['source.call("agroportal_onto.ontology", { acronym: "AGRO" })']
+
+[op.ontology.params]
+acronym = { type = "string", required = true, in = "path", doc = "AgroPortal ontology acronym e.g. AGRO, AGROVOC, CO_321" }
+
+[op.ontology.map]
+items = "."
+error = "@ref:op.search.map.error"
+record = '''{
+  id: (."@id" // ""),
+  acronym: (.acronym // ""),
+  name: (.name // ""),
+  ontologyType: (.ontologyType // null),
+  classesUrl: (.links.classes // null),
+  submissionsUrl: (.links.submissions // null),
+  url: (.links.ui // ."@id" // "")
+}'''

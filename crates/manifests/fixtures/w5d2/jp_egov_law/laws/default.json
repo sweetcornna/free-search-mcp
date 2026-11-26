@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "jp_egov_law",
+  "op": "laws",
+  "recordedAt": "2026-11-25T12:12:46Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://laws.e-gov.go.jp/api/2/laws?law_title=%E5%80%8B%E4%BA%BA%E6%83%85%E5%A0%B1&limit=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ],
+          [
+            "cache-control",
+            "max-age=0, no-cache, no-store"
+          ]
+        ],
+        "bodyText": "{\"total_count\":39,\"count\":3,\"next_offset\":3,\"laws\":[{\"law_info\":{\"law_type\":\"Rule\",\"law_id\":\"413R00000001003\",\"law_num\":\"平成十三年会計検査院規則第三号\",\"law_num_era\":\"Heisei\",\"law_num_year\":13,\"law_num_type\":\"Rule\",\"law_num_num\":\"003\",\"promulgation_date\":\"2001-03-30\"},\"revision_info\":{\"law_revision_id\":\"413R00000001003_20220401_504R00000001006\",\"law_type\":\"Rule\",\"law_title\":\"会計検査院情報公開・個人情報保護審査会規則\",\"law_title_kana\":\"かいけいけんさいんじょうほうこうかいこじんじょうほうほごしんさかいきそく\",\"abbrev\":null,\"category\":\"行政組織\",\"updated\":\"2024-04-24T15:50:54+09:00\",\"amendment_promulgate_date\":\"2022-04-01\",\"amendment_enforcement_date\":\"2022-04-01\",\"amendment_enforcement_comment\":null,\"amendment_scheduled_enforcement_date\":null,\"amendment_law_id\":\"504R00000001006\",\"amendment_law_title\":\"会計検査院情報公開・個人情報保護審査会規則の一部を改正する規則\",\"amendment_law_title_kana\":null,\"amendment_law_num\":\"令和四年会計検査院規則第六号\",\"amendment_type\":\"3\",\"repeal_status\":\"None\",\"repeal_date\":null,\"remain_in_force\":false,\"mission\":\"New\",\"current_revision_status\":\"CurrentEnforced\"},\"current_revision_info\":{\"law_revision_id\":\"413R00000001003_20220401_504R00000001006\",\"law_type\":\"Rule\",\"law_title\":\"会計検査院情報公開・個人情報保護審査会規則\",\"law_title_kana\":\"かいけいけんさいんじょうほうこうかいこじんじょうほうほごしんさかいきそく\",\"abbrev\":null,\"category\":\"行政組織\",\"updated\":\"2024-04-24T15:50:54+09:00\",\"amendment_promulgate_date\":\"2022-04-01\",\"amendment_enforcement_date\":\"2022-04-01\",\"amendment_enforcement_comment\":null,\"amendment_scheduled_enforcement_date\":null,\"amendment_law_id\":\"504R00000001006\",\"amendment_law_title\":\"会計検査院情報公開・個人情報保護審査会規則の一部を改正する規則\",\"amendment_law_title_kana\":null,\"amendment_law_num\":\"令和四年会計検査院規則第六号\",\"amendment_type\":\"3\",\"repeal_status\":\"None\",\"repeal_date\":null,\"remain_in_force\":false,\"mission\":\"New\",\"current_revision_status\":\"CurrentEnforced\"}},{\"law_info\":{\"law_type\":\"Act\",\"law_id\":\"415AC0000000057\",\"law_num\":\"平成十五年法律第五十七号\",\"law_num_era\":\"Heisei\",\"law_num_year\":15,\"law_num_type\":\"Act\",\"law_num_num\":\"057\",\"promulgation_date\":\"2003-05-30\"},\"revision_info\":{\"law_revision_id\":\"415AC0000000057_20261102_508AC0000000062\",\"law_type\":\"Act\",\"law_title\":\"個人情報の保護に関する法律\",\"law_title_kana\":\"こじんじょうほうのほごにかんするほうりつ\",\"abbrev\":\"個人情報保護法\",\"category\":\"憲法\",\"updated\":\"2026-11-02T01:26:24+09:00\",\"amendment_promulgate_date\":\"2026-07-17\",\"amendment_enforcement_date\":\"2026-11-02\",\"amendment_enforcement_comment\":null,\"amendment_scheduled_enforcement_date\":null,\"amendment_law_id\":\"508AC0000000062\",\"amendment_law_title\":\"防災庁設置法の施行に伴う関係法律の整備等に関する法律\",\"amendment_law_title_kana\":null,\"amendment_law_num\":\"令和八年法律第六十二号\",\"amendment_type\":\"3\",\"repeal_status\":\"None\",\"repeal_date\":null,\"remain_in_force\":false,\"mission\":\"New\",\"current_revision_status\":\"CurrentEnforced\"},\"current_revision_info\":{\"law_revision_id\":\"415AC0000000057_20261102_508AC0000000062\",\"law_type\":\"Act\",\"law_title\":\"個人情報の保護に関する法律\",\"law_title_kana\":\"こじんじょうほうのほごにかんするほうりつ\",\"abbrev\":\"個人情報保護法\",\"category\":\"憲法\",\"updated\":\"2026-11-02T01:26:24+09:00\",\"amendment_promulgate_date\":\"2026-07-17\",\"amendment_enforcement_date\":\"2026-11-02\",\"amendment_enforcement_comment\":null,\"amendment_scheduled_enforcement_date\":null,\"amendment_law_id\":\"508AC0000000062\",\"amendment_law_title\":\"防災庁設置法の施行に伴う関係法律の整備等に関する法律\",\"amendment_law_title_kana\":null,\"amendment_law_num\":\"令和八年法律第六十二号\",\"amendment_type\":\"3\",\"repeal_status\":\"None\",\"repeal_date\":null,\"remain_in_force\":false,\"mission\":\"New\",\"current_revision_status\":\"CurrentEnforced\"}},{\"law_info\":{\"law_type\":\"Act\",\"law_id\":\"415AC0000000058\",\"law_num\":\"平成十五年法律第五十八号\",\"law_num_era\":\"Heisei\",\"law_num_year\":15,\"law_num_type\":\"Act\",\"law_num_num\":\"058\",\"promulgation_date\":\"2003-05-30\"},\"revision_info\":{\"law_revision_id\":\"415AC0000000058_20220401_503AC0000000037\",\"law_type\":\"Act\",\"law_title\":\"行政機関の保有する個人情報の保護に関する法律\",\"law_title_kana\":\"ぎょうせいきかんのほゆうするこじんじょうほうのほごにかんするほうりつ\",\"abbrev\":\"行政機関個人情報保護法\",\"category\":\"行政手続\",\"updated\":\"2023-12-26T10:39:30+09:00\",\"amendment_promulgate_date\":\"2021-05-19\",\"amendment_enforcement_date\":\"2022-04-01\",\"amendment_enforcement_comment\":null,\"amendment_scheduled_enforcement_date\":null,\"amendment_law_id\":\"503AC0000000037\",\"amendment_law_title\":\"デジタル社会の形成を図るための関係法律の整備に関する法律\",\"amendment_law_title_kana\":\"\",\"amendment_law_num\":\"令和三年法律第三十七号\",\"amendment_type\":\"8\",\"repeal_status\":\"Repeal\",\"repeal_date\":\"2022-04-01\",\"remain_in_force\":false,\"mission\":\"New\",\"current_revision_status\":\"Repeal\"},\"current_revision_info\":{\"law_revision_id\":\"415AC0000000058_20220401_503AC0000000037\",\"law_type\":\"Act\",\"law_title\":\"行政機関の保有する個人情報の保護に関する法律\",\"law_title_kana\":\"ぎょうせいきかんのほゆうするこじんじょうほうのほごにかんするほうりつ\",\"abbrev\":\"行政機関個人情報保護法\",\"category\":\"行政手続\",\"updated\":\"2023-12-26T10:39:30+09:00\",\"amendment_promulgate_date\":\"2021-05-19\",\"amendment_enforcement_date\":\"2022-04-01\",\"amendment_enforcement_comment\":null,\"amendment_scheduled_enforcement_date\":null,\"amendment_law_id\":\"503AC0000000037\",\"amendment_law_title\":\"デジタル社会の形成を図るための関係法律の整備に関する法律\",\"amendment_law_title_kana\":\"\",\"amendment_law_num\":\"令和三年法律第三十七号\",\"amendment_type\":\"8\",\"repeal_status\":\"Repeal\",\"repeal_date\":\"2022-04-01\",\"remain_in_force\":false,\"mission\":\"New\",\"current_revision_status\":\"Repeal\"}}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

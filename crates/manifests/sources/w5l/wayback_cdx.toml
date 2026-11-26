@@ -1,0 +1,95 @@
+id = "wayback_cdx"
+name = "Wayback Machine CDX & Availability"
+summary = "Internet Archive Wayback Machine CDX historical snapshot index (with id_ raw HTML URLs) and closest-capture availability lookup."
+aliases = ["wayback", "wayback machine", "web archive", "cdx"]
+home_url = "https://web.archive.org"
+tier = 2
+scopes = ["web"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 0.5, burst = 1, concurrency = 1, timeout_ms = 25000, cache_ttl_s = 43200, host_bucket = "archive.org" }
+
+[op.search]
+summary = "Query Internet Archive Wayback Machine CDX snapshots for a URL or prefix."
+method = "GET"
+url = "https://web.archive.org/cdx/search/cdx"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { output = "json" }
+probe = { params = { query = "example.com", limit = 3 }, min_results = 2, fixture = "fixtures/w5l/wayback_cdx/search/default.json" }
+examples = [
+  'source.call("wayback_cdx.search", { query: "example.com", limit: 5 })',
+  'source.call("wayback_cdx.search", { query: "example.com", from: "20250101", collapse: "timestamp:6", limit: 5 })',
+]
+
+[op.search.params]
+query = { type = "string", required = true, to = "url", doc = "Target URL, host, or URL prefix" }
+limit = { type = "int", default = 10, min = 1, max = 100, to = "limit", doc = "Maximum snapshots to return (negative selects most recent)" }
+match_type = { type = "string", enum = ["exact", "prefix", "host", "domain"], to = "matchType", doc = "CDX URL match type" }
+from = { type = "string", to = "from", doc = "Start timestamp inclusive (YYYYMMDD or YYYYMMDDhhmmss)" }
+to = { type = "string", to = "to", doc = "End timestamp inclusive (YYYYMMDD or YYYYMMDDhhmmss)" }
+collapse = { type = "string", to = "collapse", doc = "Deduplication key (e.g. digest, timestamp:8)" }
+
+[op.search.map]
+items = '''if (type == "array") and (length > 1) then .[0] as $h | .[1:][] | . as $r | reduce range(0; ($h | length)) as $i ({}; . + { ($h[$i]): $r[$i] }) else empty end'''
+record = '''{
+  urlkey: (.urlkey // ""),
+  timestamp: (.timestamp // ""),
+  original: (.original // ""),
+  mimetype: (.mimetype // null),
+  statuscode: (.statuscode // null),
+  digest: (.digest // null),
+  length: (.length | to_int),
+  snapshotUrl: ("https://web.archive.org/web/" + (.timestamp // "") + "/" + (.original // "")),
+  rawHtmlUrl: ("https://web.archive.org/web/" + (.timestamp // "") + "id_/" + (.original // ""))
+}'''
+hit = '''(
+  (if (.timestamp | type) == "string" and (.timestamp | length) >= 8 then (.timestamp[0:8] | parse_date) else null end) as $dt |
+  ("https://web.archive.org/web/" + (.timestamp // "") + "/" + (.original // "")) as $snap |
+  {
+    title: ((.original // .urlkey // "") + (if $dt then " [" + $dt + "]" else "" end)),
+    url: $snap,
+    snippet: (
+      [
+        (if .statuscode then ("HTTP " + (.statuscode | tostring)) else null end),
+        (.mimetype // null),
+        ("raw: https://web.archive.org/web/" + (.timestamp // "") + "id_/" + (.original // ""))
+      ] | map(select(. != null)) | join(" · ")
+    )[0:280],
+    date: $dt,
+    dateSource: "api"
+  }
+)'''
+
+[op.available]
+summary = "Check closest available Wayback Machine snapshot for a URL (optionally near a timestamp)."
+method = "GET"
+url = "https://archive.org/wayback/available"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { url = "example.com" }, min_results = 1, fixture = "fixtures/w5l/wayback_cdx/available/default.json" }
+examples = [
+  'source.call("wayback_cdx.available", { url: "example.com" })',
+]
+
+[op.available.params]
+url = { type = "string", required = true, to = "url", doc = "Target URL to check for archived snapshots" }
+timestamp = { type = "string", to = "timestamp", doc = "Optional target timestamp (YYYYMMDD[hhmmss])" }
+
+[op.available.map]
+items = "if .archived_snapshots.closest then (.archived_snapshots.closest + { queryUrl: .url }) else empty end"
+record = '''(
+  (.timestamp // "") as $ts |
+  ((.url // "") | sub("^http://"; "https://")) as $snap |
+  {
+    queryUrl: (.queryUrl // ""),
+    available: (.available // false),
+    status: (.status // null),
+    timestamp: (if $ts != "" then $ts else null end),
+    snapshotUrl: $snap,
+    rawHtmlUrl: (if $snap != "" and $ts != "" then ($snap | sub("/web/" + $ts + "/"; "/web/" + $ts + "id_/")) else null end)
+  }
+)'''

@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "source": "sru_ops",
+  "op": "all",
+  "recordedAt": "2026-11-25T12:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://catalogue.bnf.fr/api/SRU?version=1.2&operation=searchRetrieve&query=bib.title+all+%22neural+%5C%22nets%5C%22%22&recordSchema=dublincore&maximumRecords=2&startRecord=3",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          ["content-type", "text/xml; charset=utf-8"]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><srw:searchRetrieveResponse xmlns:srw=\"http://www.loc.gov/zing/srw/\"><srw:version>1.2</srw:version><srw:numberOfRecords>10</srw:numberOfRecords><srw:nextRecordPosition>4</srw:nextRecordPosition><srw:records><srw:record><srw:recordPacking>xml</srw:recordPacking><srw:recordData><oai_dc:dc xmlns:oai_dc=\"http://www.openarchives.org/OAI/2.0/oai_dc/\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\"><dc:title>Neural Networks Monograph</dc:title><dc:creator>LeCun, Yann</dc:creator><dc:date>2021</dc:date><dc:identifier>https://catalogue.bnf.fr/ark:/12148/cb00000001</dc:identifier></oai_dc:dc></srw:recordData></srw:record></srw:records></srw:searchRetrieveResponse>",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://catalogue.bnf.fr/api/SRU?version=1.2&operation=searchRetrieve&query=dc.title%3Dalgorithms&recordSchema=marcxml&maximumRecords=1",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          ["content-type", "text/xml; charset=utf-8"]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><srw:searchRetrieveResponse xmlns:srw=\"http://www.loc.gov/zing/srw/\"><srw:version>1.2</srw:version><srw:numberOfRecords>1</srw:numberOfRecords><srw:records><srw:record><srw:recordPacking>xml</srw:recordPacking><srw:recordData><marc:record xmlns:marc=\"http://www.loc.gov/MARC21/slim\"><marc:datafield tag=\"100\"><marc:subfield code=\"a\">Cormen, Thomas H.</marc:subfield></marc:datafield><marc:datafield tag=\"245\"><marc:subfield code=\"a\">Introduction to Algorithms /</marc:subfield></marc:datafield><marc:datafield tag=\"264\"><marc:subfield code=\"b\">MIT Press,</marc:subfield><marc:subfield code=\"c\">2022.</marc:subfield></marc:datafield></marc:record></srw:recordData></srw:record></srw:records></srw:searchRetrieveResponse>",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://catalogue.bnf.fr/api/SRU?version=1.2&operation=explain",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          ["content-type", "text/xml; charset=utf-8"]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><srw:explainResponse xmlns:srw=\"http://www.loc.gov/zing/srw/\"><srw:version>1.2</srw:version><srw:record><srw:recordData><explain xmlns=\"http://explain.z3950.org/dtd/2.0/\"><serverInfo><host>catalogue.bnf.fr</host><database>SRU</database></serverInfo><databaseInfo><title>BnF General Catalog</title></databaseInfo><schemaInfo><schema name=\"dublincore\"/></schemaInfo></explain></srw:recordData></srw:record></srw:explainResponse>",
+        "bodyB64": null
+      }
+    }
+  ]
+}

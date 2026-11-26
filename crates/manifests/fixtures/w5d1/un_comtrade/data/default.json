@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "un_comtrade",
+  "op": "data",
+  "recordedAt": "2026-11-25T14:10:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://comtradeapi.un.org/data/v1/get/C/A/HS?cmdCode=TOTAL&flowCode=X&maxRecords=5&partnerCode=0&period=2022%2C2023&reporterCode=842",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"elapsedTime\":\"0.42 secs\",\"count\":2,\"data\":[{\"typeCode\":\"C\",\"freqCode\":\"A\",\"refPeriodId\":20220101,\"refYear\":2022,\"refMonth\":52,\"period\":\"2022\",\"reporterCode\":842,\"reporterISO\":\"USA\",\"reporterDesc\":\"USA\",\"flowCode\":\"X\",\"flowDesc\":\"Export\",\"partnerCode\":0,\"partnerISO\":\"W00\",\"partnerDesc\":\"World\",\"partner2Code\":0,\"partner2ISO\":\"W00\",\"partner2Desc\":\"World\",\"classificationCode\":\"H6\",\"classificationSearchCode\":\"HS\",\"isOriginalClassification\":true,\"cmdCode\":\"TOTAL\",\"cmdDesc\":\"All Commodities\",\"customsCode\":\"C00\",\"mosCode\":\"0\",\"motCode\":0,\"qtyUnitCode\":-1,\"qty\":0.0,\"netWgt\":0.0,\"grossWgt\":0.0,\"cifvalue\":null,\"fobvalue\":2064786714132.0,\"primaryValue\":2064786714132.0},{\"typeCode\":\"C\",\"freqCode\":\"A\",\"refPeriodId\":20230101,\"refYear\":2023,\"refMonth\":52,\"period\":\"2023\",\"reporterCode\":842,\"reporterISO\":\"USA\",\"reporterDesc\":\"USA\",\"flowCode\":\"X\",\"flowDesc\":\"Export\",\"partnerCode\":0,\"partnerISO\":\"W00\",\"partnerDesc\":\"World\",\"partner2Code\":0,\"partner2ISO\":\"W00\",\"partner2Desc\":\"World\",\"classificationCode\":\"H6\",\"classificationSearchCode\":\"HS\",\"isOriginalClassification\":true,\"cmdCode\":\"TOTAL\",\"cmdDesc\":\"All Commodities\",\"customsCode\":\"C00\",\"mosCode\":\"0\",\"motCode\":0,\"qtyUnitCode\":-1,\"qty\":0.0,\"netWgt\":0.0,\"grossWgt\":0.0,\"cifvalue\":null,\"fobvalue\":2019542038909.0,\"primaryValue\":2019542038909.0}],\"error\":\"\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

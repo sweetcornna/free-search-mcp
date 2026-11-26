@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "openrouter_models",
+  "op": "endpoints",
+  "recordedAt": "2026-11-25T12:56:49Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://openrouter.ai/api/v1/models/openai/gpt-4o/endpoints",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "cache-control",
+            "private, no-store"
+          ],
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"data\":{\"id\":\"openai/gpt-4o\",\"name\":\"OpenAI: GPT-4o\",\"created\":1715558400,\"description\":\"GPT-4o (\\\"o\\\" for \\\"omni\\\") is OpenAI's latest AI model, supporting both text and image inputs with text outputs. It maintains the intelligence level of [GPT-4 Turbo](/models/openai/gpt-4-turbo) while being twice as...\",\"architecture\":{\"tokenizer\":\"GPT\",\"instruct_type\":null,\"modality\":\"text+image+file->text\",\"input_modalities\":[\"text\",\"image\",\"file\"],\"output_modalities\":[\"text\"]},\"endpoints\":[{\"name\":\"Azure | openai/gpt-4o\",\"model_id\":\"openai/gpt-4o\",\"model_name\":\"OpenAI: GPT-4o\",\"context_length\":128000,\"pricing\":{\"prompt\":\"0.0000025\",\"completion\":\"0.00001\",\"discount\":0},\"provider_name\":\"Azure\",\"tag\":\"azure\",\"service_tier\":null,\"quantization\":\"unknown\",\"max_completion_tokens\":16384,\"max_prompt_tokens\":null,\"supported_parameters\":[\"temperature\",\"top_p\",\"max_completion_tokens\",\"tools\",\"tool_choice\",\"stop\",\"frequency_penalty\",\"presence_penalty\",\"web_search_options\",\"seed\",\"logit_bias\",\"logprobs\",\"top_logprobs\",\"response_format\",\"structured_outputs\"],\"supports_tool_choice\":{\"none\":true,\"auto\":true,\"required\":true,\"function\":true},\"status\":0,\"uptime_last_30m\":100,\"uptime_last_5m\":null,\"uptime_last_1d\":97.03264094955489,\"supports_implicit_caching\":false,\"native_tools\":{},\"supports_voice_cloning\":false,\"supports_multiple_audio_references\":false,\"supports_image_reference\":false,\"supports_diarization\":false,\"latency_last_30m\":null,\"throughput_last_30m\":null},{\"name\":\"OpenAI | openai/gpt-4o\",\"model_id\":\"openai/gpt-4o\",\"model_name\":\"OpenAI: GPT-4o\",\"context_length\":128000,\"pricing\":{\"prompt\":\"0.0000025\",\"completion\":\"0.00001\",\"input_cache_read\":\"0.00000125\",\"discount\":0},\"provider_name\":\"OpenAI\",\"tag\":\"openai\",\"service_tier\":null,\"quantization\":\"unknown\",\"max_completion_tokens\":16384,\"max_prompt_tokens\":null,\"supported_parameters\":[\"seed\",\"max_tokens\",\"response_format\",\"structured_outputs\",\"tools\",\"tool_choice\",\"frequency_penalty\",\"logit_bias\",\"logprobs\",\"prediction\",\"presence_penalty\",\"stop\",\"temperature\",\"top_logprobs\",\"top_p\",\"web_search_options\"],\"supports_tool_choice\":{\"none\":true,\"auto\":true,\"required\":true,\"function\":true},\"status\":0,\"uptime_last_30m\":100,\"uptime_last_5m\":100,\"uptime_last_1d\":99.93055555555556,\"supports_implicit_caching\":true,\"native_tools\":{},\"supports_voice_cloning\":false,\"supports_multiple_audio_references\":false,\"supports_image_reference\":false,\"supports_diarization\":false,\"latency_last_30m\":null,\"throughput_last_30m\":null}]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

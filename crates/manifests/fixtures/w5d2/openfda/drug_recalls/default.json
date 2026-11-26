@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "source": "openfda",
+  "op": "drug_recalls",
+  "recordedAt": "2026-11-25T12:12:46Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.fda.gov/drug/enforcement.json?limit=3&search=reason_for_recall%3Acontamination",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ],
+          [
+            "cache-control",
+            "no-cache, no-store, must-revalidate"
+          ],
+          [
+            "etag",
+            "W/\"13ec-I7EN93aP+Zzu7HnJOfdjEniQHMo\""
+          ]
+        ],
+        "bodyText": "{\n  \"meta\": {\n    \"disclaimer\": \"Do not rely on openFDA to make decisions regarding medical care. While we make every effort to ensure that data is accurate, you should assume all results are unvalidated. We may limit or otherwise restrict your access to the API in line with our Terms of Service.\",\n    \"terms\": \"https://open.fda.gov/terms/\",\n    \"license\": \"https://open.fda.gov/license/\",\n    \"last_updated\": \"2026-11-18\",\n    \"results\": {\n      \"skip\": 0,\n      \"limit\": 3,\n      \"total\": 2083\n    }\n  },\n  \"results\": [\n    {\n      \"status\": \"Ongoing\",\n      \"city\": \"Dawsonville\",\n      \"state\": \"GA\",\n      \"country\": \"United States\",\n      \"classification\": \"Class II\",\n      \"openfda\": {},\n      \"product_type\": \"Drugs\",\n      \"event_id\": \"92054\",\n      \"recalling_firm\": \"Direct Rx\",\n      \"address_1\": \"94 Worldwide Dr\",\n      \"address_2\": \"\",\n      \"postal_code\": \"30534-6828\",\n      \"voluntary_mandated\": \"Voluntary: Firm initiated\",\n      \"initial_firm_notification\": \"Letter\",\n      \"distribution_pattern\": \"Nationwide in the USA\",\n      \"recall_number\": \"D-0508-2023\",\n      \"product_description\": \"Alprazolam C-IV, 1 mg, packaged in a) 30 Tabs per bottle, NDC 72189-213-30; b) 60 Tabs per bottle, NDC 72189-213-60; Rx only, Packaged and Distributed By: Direct Rx Dawsonville, GA 30534.\",\n      \"product_quantity\": \"349 bottles\",\n      \"reason_for_recall\": \"CGMP Deviations: Repackaging firm recalling due to potential product cross contamination concerns at the manufacturer.\",\n      \"recall_initiation_date\": \"20230322\",\n      \"center_classification_date\": \"20230406\",\n      \"report_date\": \"20230412\",\n      \"code_info\": \"Lots: a) 03FE2318, Exp. 8/31/24; b) 27FE2315, 28FE2313, 02MA2306, 21SE2201, 16NO2216, 17NO2216, 24FA2314, Exp. 8/31/24; 17FE2203, 12AP2204, 17MA2205, Exp. 3/31/23; 21JU2206, 22JU2220, 12JY2206, Exp. 5/31/23; 10AU2209, Exp. 6/30/23; 14DE2215, Exp. 9/30/24; 05JA2304, 27JA2301, Exp. 11/30/24.\",\n      \"more_code_info\": \"\"\n    },\n    {\n      \"status\": \"Terminated\",\n      \"city\": \"Toronto\",\n      \"state\": \"\",\n      \"country\": \"Canada\",\n      \"classification\": \"Class II\",\n      \"openfda\": {},\n      \"product_type\": \"Drugs\",\n      \"event_id\": \"70452\",\n      \"recalling_firm\": \"Attix Pharmaceuticals\",\n      \"address_1\": \"184 Front St E\",\n      \"address_2\": \"unit 801\",\n      \"postal_code\": \"N/A\",\n      \"voluntary_mandated\": \"Voluntary: Firm initiated\",\n      \"initial_firm_notification\": \"Two or more of the following: Email, Fax, Letter, Press Release, Telephone, Visit\",\n      \"distribution_pattern\": \"Nationwide to compounding pharmacies and research organizations.\",\n      \"recall_number\": \"D-707-2015\",\n      \"product_description\": \"Homatropine Methylbromide active pharmaceutical ingredient packaged in varying grams or kg in bags or drums, Attix Pharmaceuticals, 184 Front Street East, Unit 801, Toronto, Ontario M5A 4N3, Canada\",\n      \"product_quantity\": \"940 grams\",\n      \"reason_for_recall\": \"Penicillin Cross Contamination: All lots of all products repackaged and distributed between 01/05/12 and 02/12/15 are being recalled because they were repackaged in a facility with penicillin products without adequate separation which could introduce the potential for cross contamination with penicillin.\",\n      \"recall_initiation_date\": \"20141114\",\n      \"center_classification_date\": \"20150420\",\n      \"termination_date\": \"20151007\",\n      \"report_date\": \"20150429\",\n      \"code_info\": \"All lots repackaged and distributed between 01/05/12 to 02/12/15\",\n      \"more_code_info\": \"\"\n    },\n    {\n      \"status\": \"Terminated\",\n      \"city\": \"Toronto\",\n      \"state\": \"\",\n      \"country\": \"Canada\",\n      \"classification\": \"Class II\",\n      \"openfda\": {},\n      \"product_type\": \"Drugs\",\n      \"event_id\": \"70452\",\n      \"recalling_firm\": \"Attix Pharmaceuticals\",\n      \"address_1\": \"184 Front St E\",\n      \"address_2\": \"unit 801\",\n      \"postal_code\": \"N/A\",\n      \"voluntary_mandated\": \"Voluntary: Firm initiated\",\n      \"initial_firm_notification\": \"Two or more of the following: Email, Fax, Letter, Press Release, Telephone, Visit\",\n      \"distribution_pattern\": \"Nationwide to compounding pharmacies and research organizations.\",\n      \"recall_number\": \"D-790-2015\",\n      \"product_description\": \"Methyl Folate Calcium active pharmaceutical ingredient packaged in varying grams or kg in bags or drums, Attix Pharmaceuticals, 184 Front Street East, Unit 801, Toronto, Ontario M5A 4N3, Canada\",\n      \"product_quantity\": \"5 grams\",\n      \"reason_for_recall\": \"Penicillin Cross Contamination: All lots of all products repackaged and distributed between 01/05/12 and 02/12/15 are being recalled because they were repackaged in a facility with penicillin products without adequate separation which could introduce the potential for cross contamination with penicillin.\",\n      \"recall_initiation_date\": \"20141114\",\n      \"center_classification_date\": \"20150420\",\n      \"termination_date\": \"20151007\",\n      \"report_date\": \"20150429\",\n      \"code_info\": \"All lots repackaged and distributed between 01/05/12 to 02/12/15\",\n      \"more_code_info\": \"\"\n    }\n  ]\n}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

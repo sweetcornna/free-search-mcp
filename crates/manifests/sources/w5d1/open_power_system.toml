@@ -1,0 +1,68 @@
+id = "open_power_system"
+name = "Open Power System Data (OPSD)"
+summary = "European power system Frictionless Data Packages (generation capacity, conventional & renewable plants, time series, weather)."
+aliases = ["opsd", "open power system data", "european power grid"]
+home_url = "https://open-power-system-data.org"
+tier = 2
+scopes = ["dataset", "reference"]
+caps = ["lookup", "dataset"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 604800 }
+
+[op.datapackage]
+summary = "Fetch Frictionless Data Package metadata, DOI, temporal/spatial scope, and documentation for an OPSD package."
+method = "GET"
+url = "https://data.open-power-system-data.org/{package}/latest/datapackage.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { package = "national_generation_capacity" }, min_results = 1, fixture = "fixtures/w5d1/open_power_system/datapackage/default.json" }
+
+[op.datapackage.params]
+package = { type = "string", required = true, enum = ["national_generation_capacity", "conventional_power_plants", "renewable_power_plants", "time_series", "weather_data", "household_data", "when2heat"], in = "path", doc = "OPSD package slug" }
+
+[op.datapackage.map]
+items = "."
+record = '''{
+  name: .name,
+  title: .title,
+  version: (.version // null),
+  publicationDate: (.publicationDate // null),
+  doiUrl: (.id // null),
+  homepage: (.homepage // null),
+  description: (.description // null),
+  spatial: (.spatial.location // null),
+  temporal: (.temporal // null),
+  resourceCount: ((.resources // []) | length),
+  url: (.homepage // .id // "https://data.open-power-system-data.org/")
+}'''
+
+[op.resources]
+summary = "List downloadable CSV/SQLite/Excel resource files, byte sizes, SHA-256 hashes, and direct URLs for an OPSD package."
+method = "GET"
+url = "https://data.open-power-system-data.org/{package}/latest/datapackage.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { package = "national_generation_capacity" }, min_results = 2, fixture = "fixtures/w5d1/open_power_system/resources/default.json" }
+
+[op.resources.params]
+package = { type = "string", required = true, enum = ["national_generation_capacity", "conventional_power_plants", "renewable_power_plants", "time_series", "weather_data", "household_data", "when2heat"], in = "path", doc = "OPSD package slug" }
+
+[op.resources.map]
+items = '''
+(.homepage // "https://data.open-power-system-data.org/") as $base
+| (.resources // [])[]
+| . + { _baseUrl: ($base | sub("/+$"; "")) }
+'''
+record = '''{
+  name: .name,
+  title: (.title // .name),
+  path: .path,
+  format: (.format // null),
+  mediaType: (.mediatype // null),
+  bytes: (.bytes // null),
+  sha256: (.hash // null),
+  downloadUrl: ((._baseUrl + "/") as $b | (.path | resolve_url($b)))
+}'''

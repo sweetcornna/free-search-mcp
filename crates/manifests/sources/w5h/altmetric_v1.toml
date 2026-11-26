@@ -1,0 +1,90 @@
+id = "altmetric_v1"
+name = "Altmetric Attention API v1"
+summary = "Alternative metrics (news, policy documents, patents, Wikipedia, and social mentions) by DOI, PMID, or arXiv ID (requires API key since 2025-11-10)."
+aliases = ["altmetric", "attention score", "altmetrics"]
+home_url = "https://api.altmetric.com"
+tier = 3
+scopes = ["academic", "academic.index"]
+caps = ["lookup", "integrity"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 86400, host_bucket = "api.altmetric.com" }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_ALTMETRIC_API_KEY"
+in = "query"
+name = "key"
+format = "{key}"
+route_requires_key = true
+
+[op.doi]
+summary = "Fetch Altmetric attention score and mention counts by DOI."
+method = "GET"
+url = "https://api.altmetric.com/v1/doi/{doi}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { doi = "10.1038/nature12373" }, min_results = 1, fixture = "fixtures/w5h/altmetric_v1/doi/default.json" }
+
+[op.doi.params]
+doi = { type = "string", required = true, in = "path", encode = "raw", doc = "Publication DOI e.g. 10.1038/nature12373" }
+
+[op.doi.map]
+items = "."
+error = '''if (type == "object" and .error != null and .altmetric_id == null) then (.error | tostring) else null end'''
+record = '''{
+  altmetricId: (.altmetric_id // null),
+  title: (.title // "" | strip_tags),
+  authors: [(.authors // [])[] | select(type == "string" and length > 0) | collapse_ws],
+  publishedDate: ((.published_on // null) | parse_date),
+  doi: (.doi // null | doi_norm),
+  pmid: (.pmid // null),
+  arxivId: (.arxiv_id // null),
+  journal: (.journal // null),
+  score: (.score // 0),
+  citedByPosts: (.cited_by_posts_count // 0),
+  citedByNews: (.cited_by_msm_count // 0),
+  citedByBlogs: (.cited_by_feeds_count // 0),
+  citedByPolicies: (.cited_by_policies_count // 0),
+  citedByPatents: (.cited_by_patents_count // 0),
+  citedByWikipedia: (.cited_by_wikipedia_count // 0),
+  citedByTweeters: (.cited_by_tweeters_count // 0),
+  readersMendeley: (.readers.mendeley // null),
+  detailsUrl: (.details_url // null),
+  url: (.url // .details_url // "")
+}'''
+
+[op.pmid]
+summary = "Fetch Altmetric attention score and mention counts by PubMed ID (PMID)."
+method = "GET"
+url = "https://api.altmetric.com/v1/pmid/{pmid}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { pmid = "23903748" }, min_results = 1, fixture = "fixtures/w5h/altmetric_v1/pmid/default.json" }
+
+[op.pmid.params]
+pmid = { type = "string", required = true, in = "path", doc = "PubMed ID e.g. 23903748" }
+
+[op.pmid.map]
+items = "."
+error = "@ref:op.doi.map.error"
+record = "@ref:op.doi.map.record"
+
+[op.arxiv]
+summary = "Fetch Altmetric attention score and mention counts by arXiv ID."
+method = "GET"
+url = "https://api.altmetric.com/v1/arxiv/{arxiv_id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { arxiv_id = "1706.03762" }, min_results = 1, fixture = "fixtures/w5h/altmetric_v1/arxiv/default.json" }
+
+[op.arxiv.params]
+arxiv_id = { type = "string", required = true, in = "path", encode = "raw", doc = "arXiv ID without prefix e.g. 1706.03762 or hep-th/9901001" }
+
+[op.arxiv.map]
+items = "."
+error = "@ref:op.doi.map.error"
+record = "@ref:op.doi.map.record"

@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "source": "nci_gdc",
+  "op": "search",
+  "recordedAt": "2026-11-25T13:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://api.gdc.cancer.gov/projects",
+        "headersSubset": {
+          "accept": "application/json",
+          "content-type": "application/json"
+        },
+        "bodySha256": "270571b69f6ee251032443ad1e45be414907daffbf5d75b8eb377c2350a545e5"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"data\": {\"hits\": [{\"id\": \"MATCH-S1\", \"summary\": {\"file_count\": 980, \"case_count\": 41}, \"primary_site\": [\"Other and unspecified female genital organs\", \"Bronchus and lung\", \"Colon\", \"Stomach\", \"Breast\", \"Liver and intrahepatic bile ducts\", \"Brain\", \"Corpus uteri\", \"Skin\", \"Other and ill-defined sites in lip, oral cavity and pharynx\", \"Ovary\", \"Small intestine\", \"Unknown\", \"Gallbladder\", \"Rectum\", \"Peripheral nerves and autonomic nervous system\", \"Connective, subcutaneous and other soft tissues\", \"Parotid gland\"], \"project_id\": \"MATCH-S1\", \"disease_type\": [\"Neoplasms, NOS\", \"Complex Mixed and Stromal Neoplasms\", \"Epithelial Neoplasms, NOS\", \"Adenomas and Adenocarcinomas\", \"Gliomas\", \"Myomatous Neoplasms\", \"Ductal and Lobular Neoplasms\", \"Squamous Cell Neoplasms\", \"Nerve Sheath Tumors\", \"Soft Tissue Tumors and Sarcomas, NOS\"], \"name\": \"Genomic Characterization CS-MATCH-0007 Arm S1\", \"program\": {\"name\": \"MATCH\"}}, {\"id\": \"MATCH-W\", \"summary\": {\"file_count\": 1091, \"case_count\": 45}, \"primary_site\": [\"Other and unspecified female genital organs\", \"Bronchus and lung\", \"Cervix uteri\", \"Breast\", \"Liver and intrahepatic bile ducts\", \"Other and unspecified major salivary glands\", \"Prostate gland\", \"Anus and anal canal\", \"Corpus uteri\", \"Brain\", \"Pancreas\", \"Gallbladder\", \"Other and unspecified urinary organs\", \"Rectum\", \"Bladder\", \"Renal pelvis\", \"Parotid gland\", \"Thyroid gland\"], \"project_id\": \"MATCH-W\", \"disease_type\": [\"Neoplasms, NOS\", \"Cystic, Mucinous and Serous Neoplasms\", \"Adenomas and Adenocarcinomas\", \"Gliomas\", \"Epithelial Neoplasms, NOS\", \"Ductal and Lobular Neoplasms\", \"Squamous Cell Neoplasms\", \"Transitional Cell Papillomas and Carcinomas\"], \"name\": \"Genomic Characterization CS-MATCH-0007 Arm W\", \"program\": {\"name\": \"MATCH\"}}, {\"id\": \"MATCH-Z1D\", \"summary\": {\"file_count\": 891, \"case_count\": 36}, \"primary_site\": [\"Esophagus\", \"Other and unspecified female genital organs\", \"Other endocrine glands and related structures\", \"Stomach\", \"Other and unspecified parts of biliary tract\", \"Breast\", \"Liver and intrahepatic bile ducts\", \"Corpus uteri\", \"Prostate gland\", \"Brain\", \"Uterus, NOS\", \"Other and unspecified major salivary glands\", \"Small intestine\", \"Bones, joints and articular cartilage of other and unspecified sites\", \"Thyroid gland\"], \"project_id\": \"MATCH-Z1D\", \"disease_type\": [\"Neoplasms, NOS\", \"Cystic, Mucinous and Serous Neoplasms\", \"Complex Mixed and Stromal Neoplasms\", \"Adenomas and Adenocarcinomas\", \"Gliomas\", \"Myomatous Neoplasms\", \"Ductal and Lobular Neoplasms\", \"Squamous Cell Neoplasms\"], \"name\": \"Genomic Characterization CS-MATCH-0007 Arm Z1D\", \"program\": {\"name\": \"MATCH\"}}], \"pagination\": {\"count\": 3, \"total\": 21, \"size\": 3, \"from\": 0, \"sort\": \"\", \"page\": 1, \"pages\": 7}}, \"warnings\": {}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "jp_estat",
+  "op": "stats_data",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsData?statsDataId=0003448233&lang=E&limit=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"GET_STATS_DATA\":{\"RESULT\":{\"STATUS\":0,\"ERROR_MSG\":\"The process was normally terminated.\",\"DATE\":\"2026-11-25T21:45:01.000+09:00\"},\"STATISTICAL_DATA\":{\"DATA_INF\":{\"VALUE\":[{\"@tab\":\"001\",\"@cat01\":\"000\",\"@area\":\"00000\",\"@time\":\"2020100000\",\"@unit\":\"persons\",\"$\":\"126146099\"},{\"@tab\":\"001\",\"@cat01\":\"000\",\"@area\":\"01000\",\"@time\":\"2020100000\",\"@unit\":\"persons\",\"$\":\"5224614\"},{\"@tab\":\"001\",\"@cat01\":\"000\",\"@area\":\"13000\",\"@time\":\"2020100000\",\"@unit\":\"persons\",\"$\":\"14047594\"}]}}}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

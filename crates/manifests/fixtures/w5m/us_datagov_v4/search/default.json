@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "us_datagov_v4",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.gsa.gov/technology/datagov/v4/search?q=climate&sort=relevance&per_page=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"sort\":\"relevance\",\"after\":\"WzY5LjM0NCwwLCJhYmMxMjMiXQ==\",\"results\":[{\"identifier\":\"noaa-ncei-global-temp-2026\",\"title\":\"NOAA Global Surface Temperature Dataset (NOAAGlobalTemp v6)\",\"description\":\"Monthly global land and ocean surface temperature anomalies compiled from GHCNm and ERSST observations.\",\"issued\":\"2024-02-15\",\"modified\":\"2026-11-10\",\"landingPage\":\"https://www.ncei.noaa.gov/products/land-based-station/noaa-global-temp\",\"license\":\"https://creativecommons.org/publicdomain/zero/1.0/\",\"theme\":[\"Climate\",\"Atmosphere\"],\"keyword\":[\"temperature\",\"climate\",\"global\",\"NOAA\"],\"organization\":{\"name\":\"noaa-gov\",\"title\":\"National Oceanic and Atmospheric Administration\",\"slug\":\"noaa-gov\",\"org_type\":\"Federal Government\"},\"distribution\":[{\"title\":\"NetCDF Archive\",\"format\":\"NetCDF\",\"downloadURL\":\"https://www.ncei.noaa.gov/data/noaa-global-surface-temperature/v6/access/\"}]},{\"identifier\":\"epa-ghg-inventory-2026\",\"title\":\"Inventory of U.S. Greenhouse Gas Emissions and Sinks\",\"description\":\"Annual US national greenhouse gas emissions and removals by economic sector and gas type.\",\"issued\":\"2025-04-15\",\"modified\":\"2026-04-15\",\"landingPage\":\"https://www.epa.gov/ghgemissions/inventory-us-greenhouse-gas-emissions-and-sinks\",\"license\":\"https://creativecommons.org/publicdomain/zero/1.0/\",\"theme\":[\"Environment\",\"Climate\"],\"keyword\":[\"greenhouse gas\",\"emissions\",\"climate\",\"EPA\"],\"organization\":{\"name\":\"epa-gov\",\"title\":\"U.S. Environmental Protection Agency\",\"slug\":\"epa-gov\",\"org_type\":\"Federal Government\"},\"distribution\":[{\"title\":\"CSV Data Tables\",\"format\":\"CSV\",\"downloadURL\":\"https://www.epa.gov/system/files/other-files/2026-04/ghg-inventory-tables.zip\"}]},{\"identifier\":\"nasa-giss-surface-temp-v4\",\"title\":\"GISS Surface Temperature Analysis (GISTEMP v4)\",\"description\":\"Monthly global surface temperature change estimates combining land-surface air and sea-surface water temperature anomalies.\",\"issued\":\"2023-07-01\",\"modified\":\"2026-10-18\",\"landingPage\":\"https://data.giss.nasa.gov/gistemp/\",\"license\":\"https://creativecommons.org/publicdomain/zero/1.0/\",\"theme\":[\"Climate\",\"Earth Science\"],\"keyword\":[\"temperature\",\"climate\",\"NASA\",\"GISTEMP\"],\"organization\":{\"name\":\"nasa-gov\",\"title\":\"National Aeronautics and Space Administration\",\"slug\":\"nasa-gov\",\"org_type\":\"Federal Government\"},\"distribution\":[{\"title\":\"Global Mean CSV\",\"format\":\"CSV\",\"downloadURL\":\"https://data.giss.nasa.gov/gistemp/tabledata_v4/GLB.Ts+dSST.csv\"}]}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

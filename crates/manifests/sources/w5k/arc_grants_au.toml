@@ -1,0 +1,85 @@
+id = "arc_grants_au"
+name = "Australian Research Council (ARC) Data Portal"
+summary = "Official Australian Research Council National Competitive Grants Program (NCGP) keyless JSON:API for funded grants, AUD amounts, lead investigators, and administering universities."
+aliases = ["arc grants", "arc australia", "ncgp"]
+home_url = "https://dataportal.arc.gov.au/NCGP/Web/Grant/Grants"
+tier = 1
+scopes = ["academic", "academic.grants"]
+caps = ["search", "lookup", "grant"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.5, burst = 4, concurrency = 2, timeout_ms = 12000, cache_ttl_s = 43200, host_bucket = "dataportal.arc.gov.au" }
+
+[op.search]
+summary = "Search Australian Research Council funded grants via keyless JSON:API."
+method = "GET"
+url = "https://dataportal.arc.gov.au/NCGP/API/grants"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page[number]", start = 1, max_pages = 3 }
+probe = { params = { query = "quantum", limit = 3, page = 1 }, min_results = 2, fixture = "fixtures/w5k/arc_grants_au/search/default.json" }
+examples = ['source.call("arc_grants_au.search", { query: "quantum", limit: 5 })']
+
+[op.search.params]
+query = { type = "string", required = true, to = "filter", doc = "ARC grant filter expression or keyword" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "page[size]", doc = "Grants per page" }
+page = { type = "int", default = 1, min = 1, to = "page[number]", doc = "1-based page number" }
+
+[op.search.map]
+items = "(.data // [])[]"
+total = ".meta.\"total-size\""
+error = "if .errors and (.errors | length) > 0 then (.errors[0].detail // .errors[0].title // \"ARC API error\") else null end"
+record = '''{
+  id: (.id // .attributes.code // ""),
+  title: ((.attributes."grant-summary" // .attributes."scheme-name" // "") | collapse_ws | .[0:180] | collapse_ws),
+  funder: "ARC",
+  pi: (.attributes."lead-investigator" | collapse_ws),
+  org: ((.attributes."current-admin-organisation" // .attributes."announcement-admin-organisation") | collapse_ws),
+  amount: ((.attributes."current-funding-amount" // .attributes."announced-funding-amount") | to_num),
+  currency: "AUD",
+  startDate: (if .attributes."funding-commencement-year" != null then (.attributes."funding-commencement-year" | tostring | parse_date) else null end),
+  endDate: (.attributes."anticipated-end-date" | parse_date),
+  url: ("https://dataportal.arc.gov.au/NCGP/Web/Grant/Grant/" + (.id // .attributes.code // "")),
+  source: "arc_grants_au"
+}'''
+hit = '''(
+  (if .attributes."funding-commencement-year" != null then (.attributes."funding-commencement-year" | tostring | parse_date) else null end) as $d |
+  {
+    title: (((.id // .attributes.code // "") + " — " + (.attributes."scheme-name" // "ARC Grant")) | collapse_ws),
+    url: ("https://dataportal.arc.gov.au/NCGP/Web/Grant/Grant/" + (.id // .attributes.code // "")),
+    snippet: ([((.attributes."lead-investigator" // "") | collapse_ws), ((.attributes."current-admin-organisation" // "") | collapse_ws), (if (.attributes."current-funding-amount" // null) != null then ("AUD " + (.attributes."current-funding-amount" | tostring)) else "" end), ((.attributes."grant-summary" // "") | collapse_ws | .[0:160] | collapse_ws)] | map(select(. != null and length > 0)) | join(" · ")),
+    date: $d,
+    dateSource: (if $d != null then "api" else null end)
+  }
+)'''
+
+[op.grant]
+summary = "Fetch full ARC grant details, investigators, and funding figures by ARC grant code (e.g. CE260100009)."
+method = "GET"
+url = "https://dataportal.arc.gov.au/NCGP/API/grants/{code}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { code = "CE260100009" }, min_results = 1, fixture = "fixtures/w5k/arc_grants_au/grant/default.json" }
+examples = ['source.call("arc_grants_au.grant", { code: "CE260100009" })']
+
+[op.grant.params]
+code = { type = "string", required = true, in = "path", doc = "ARC grant code e.g. CE260100009" }
+
+[op.grant.map]
+items = ".data"
+error = "@ref:op.search.map.error"
+record = '''{
+  id: (.id // .attributes.code // ""),
+  title: ((.attributes."grant-summary" // .attributes."scheme-name" // "") | collapse_ws | .[0:180] | collapse_ws),
+  funder: "ARC",
+  pi: (if ((.attributes."investigators-current" // []) | length) > 0 then ([.attributes."investigators-current"[0].title, .attributes."investigators-current"[0].firstName, .attributes."investigators-current"[0].familyName] | map(select(. != null and length > 0)) | join(" ") | collapse_ws) else null end),
+  org: ((.attributes."administering-organisation" // .attributes."announcement-administering-organisation") | collapse_ws),
+  amount: ((.attributes."funding-current" // .attributes."funding-at-announcement") | to_num),
+  currency: "AUD",
+  startDate: ((.attributes."project-start-date" | parse_date) // (if .attributes."funding-commencement-year" != null then (.attributes."funding-commencement-year" | tostring | parse_date) else null end)),
+  endDate: (.attributes."anticipated-end-date" | parse_date),
+  url: ("https://dataportal.arc.gov.au/NCGP/Web/Grant/Grant/" + (.id // .attributes.code // "")),
+  source: "arc_grants_au"
+}'''

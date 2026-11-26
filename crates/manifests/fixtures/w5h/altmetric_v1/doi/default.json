@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "altmetric_v1",
+  "op": "doi",
+  "recordedAt": "2026-11-25T13:03:45Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.altmetric.com/v1/doi/10.1038/nature12373",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"title\": \"Nanometre-scale thermometry in a living cell\", \"doi\": \"10.1038/nature12373\", \"pmid\": \"23903748\", \"journal\": \"Nature\", \"altmetric_id\": 1656565, \"score\": 182.5, \"cited_by_posts_count\": 245, \"cited_by_msm_count\": 18, \"cited_by_feeds_count\": 9, \"cited_by_policies_count\": 2, \"cited_by_patents_count\": 4, \"cited_by_wikipedia_count\": 3, \"cited_by_tweeters_count\": 162, \"readers\": {\"mendeley\": 614}, \"url\": \"https://www.nature.com/articles/nature12373\", \"details_url\": \"https://www.altmetric.com/details.php?citation_id=1656565\", \"published_on\": 1375315200, \"authors\": [\"G. Kucsko\", \"P. C. Maurer\", \"M. D. Lukin\"]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

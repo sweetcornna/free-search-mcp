@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "usgs_sciencebase",
+  "op": "item",
+  "recordedAt": "2026-11-25T13:05:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.sciencebase.gov/catalog/item/58ecf3efe4b0b4d95d33535f?fields=title%2Csummary%2Cdates%2Clink%2Ctags%2CwebLinks&format=json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json;charset=UTF-8"
+          ]
+        ],
+        "bodyText": "{\"link\":{\"rel\":\"self\",\"url\":\"https://www.sciencebase.gov/catalog/item/58ecf3efe4b0b4d95d33535f\"},\"relatedItems\":{\"link\":{\"url\":\"https://www.sciencebase.gov/catalog/itemLinks?itemId=58ecf3efe4b0b4d95d33535f\",\"rel\":\"related\"}},\"id\":\"58ecf3efe4b0b4d95d33535f\",\"title\":\"Earthquake Hazards Program: Earthquake Scenarios\",\"summary\":\"A scenario represents one realization of a potential future earthquake by assuming a particular magnitude, location, and fault-rupture geometry and estimating shaking using a variety of strategies. In planning and coordinating emergency response, utilities, local government, and other organizations are best served by conducting training exercises based on realistic earthquake situations—ones similar to those they are most likely to face. ShakeMap Scenario earthquakes can fill this role. They can also be used to examine exposure of structures, lifelines, utilities, and transportation corridors to specified potential earthquakes. A ShakeMap earthquake scenario is a predictive ShakeMap with an assumed magnitude and location, and, optionally, [...]\",\"webLinks\":[{\"type\":\"Online Link\",\"uri\":\"https://doi.org/10.5066/F7765CKX\",\"rel\":\"related\",\"hidden\":false}],\"tags\":[{\"type\":\"Theme\",\"scheme\":\"USGS Thesaurus\",\"name\":\"USGS\"},{\"type\":\"Theme\",\"scheme\":\"USGS Thesaurus\",\"name\":\"Geologic Hazards Science Center\"},{\"type\":\"Theme\",\"scheme\":\"USGS Thesaurus\",\"name\":\"GHSC\"},{\"type\":\"Theme\",\"scheme\":\"USGS Thesaurus\",\"name\":\"Earthquake Hazards Program\"},{\"type\":\"Theme\",\"scheme\":\"USGS Thesaurus\",\"name\":\"earthquake hazard\"},{\"type\":\"Theme\",\"scheme\":\"USGS Thesaurus\",\"name\":\"seismology\"},{\"type\":\"Theme\",\"scheme\":\"USGS Thesaurus\",\"name\":\"seismic hazard\"},{\"type\":\"Theme\",\"scheme\":\"USGS Thesaurus\",\"name\":\"earth science\"},{\"type\":\"Theme\",\"scheme\":\"USGS Thesaurus\",\"name\":\"geophysics\"},{\"type\":\"Theme\",\"scheme\":\"USGS Thesaurus\",\"name\":\"earthquake scenario\"},{\"type\":\"Theme\",\"scheme\":\"USGS Thesaurus\",\"name\":\"fault-rupture geometry\"},{\"type\":\"Theme\",\"scheme\":\"USGS Thesaurus\",\"name\":\"ShakeMap\"},{\"type\":\"Place\",\"scheme\":\"Geographic Names Information System (GNIS)\",\"name\":\"United States\"}],\"dates\":[{\"type\":\"Publication\",\"dateString\":\"2010\",\"label\":\"Publication Date\"},{\"type\":\"Start\",\"dateString\":\"1938\",\"label\":\"\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

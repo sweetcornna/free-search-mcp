@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "launch_library2",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://ll.thespacedevs.com/2.2.0/launch/?search=Starship&limit=3&mode=list",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"count\":27,\"next\":\"https://ll.thespacedevs.com/2.2.0/launch/?limit=3&mode=list&offset=3&search=Starship\",\"previous\":null,\"results\":[{\"id\":\"eae177d1-3de8-4a21-ad79-fe21afac4f04\",\"url\":\"https://ll.thespacedevs.com/2.2.0/launch/eae177d1-3de8-4a21-ad79-fe21afac4f04/\",\"slug\":\"starship-hopper-20m-hop\",\"name\":\"Starship Hopper | 20m Hop\",\"status\":{\"id\":3,\"name\":\"Launch Successful\",\"abbrev\":\"Success\",\"description\":\"The launch vehicle successfully inserted its payload(s) into the target orbit(s).\"},\"last_updated\":\"2024-03-05T18:12:51Z\",\"net\":\"2019-07-26T03:45:00Z\",\"net_precision\":null,\"window_end\":\"2019-07-26T03:45:00Z\",\"window_start\":\"2019-07-26T03:45:00Z\",\"lsp_name\":\"SpaceX\",\"mission\":\"Starhopper 20m Hop\",\"mission_type\":\"Test Flight\",\"pad\":\"Suborbital Pad A\",\"location\":\"SpaceX Starbase, TX, USA\",\"landing\":null,\"landing_success\":null,\"launcher\":null,\"orbit\":null,\"image\":\"https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/starship2520ho_image_20200820191128.png\",\"infographic\":null,\"type\":\"list\"},{\"id\":\"0389266e-e523-4a18-a320-ed746a5a315b\",\"url\":\"https://ll.thespacedevs.com/2.2.0/launch/0389266e-e523-4a18-a320-ed746a5a315b/\",\"slug\":\"starship-hopper-150m-hop\",\"name\":\"Starship Hopper | 150m Hop\",\"status\":{\"id\":3,\"name\":\"Launch Successful\",\"abbrev\":\"Success\",\"description\":\"The launch vehicle successfully inserted its payload(s) into the target orbit(s).\"},\"last_updated\":\"2024-03-05T18:38:32Z\",\"net\":\"2019-08-27T22:02:00Z\",\"net_precision\":null,\"window_end\":\"2019-08-27T22:02:00Z\",\"window_start\":\"2019-08-27T22:02:00Z\",\"lsp_name\":\"SpaceX\",\"mission\":\"Starhopper 150m Hop\",\"mission_type\":\"Test Flight\",\"pad\":\"Suborbital Pad A\",\"location\":\"SpaceX Starbase, TX, USA\",\"landing\":null,\"landing_success\":null,\"launcher\":null,\"orbit\":null,\"image\":\"https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/starship2520ho_image_20200820191836.jpg\",\"infographic\":null,\"type\":\"list\"},{\"id\":\"20e3fd08-b603-4b05-9c61-a4d4c7cf9e82\",\"url\":\"https://ll.thespacedevs.com/2.2.0/launch/20e3fd08-b603-4b05-9c61-a4d4c7cf9e82/\",\"slug\":\"starship-sn5-150m-hop\",\"name\":\"Starship SN5 | 150m Hop\",\"status\":{\"id\":3,\"name\":\"Launch Successful\",\"abbrev\":\"Success\",\"description\":\"The launch vehicle successfully inserted its payload(s) into the target orbit(s).\"},\"last_updated\":\"2024-03-05T18:30:31Z\",\"net\":\"2020-08-04T23:57:00Z\",\"net_precision\":null,\"window_end\":\"2020-08-05T01:00:00Z\",\"window_start\":\"2020-08-04T13:00:00Z\",\"lsp_name\":\"SpaceX\",\"mission\":\"Starship SN5 150m Hop\",\"mission_type\":\"Test Flight\",\"pad\":\"Suborbital Pad A\",\"location\":\"SpaceX Starbase, TX, USA\",\"landing\":null,\"landing_success\":null,\"launcher\":null,\"orbit\":null,\"image\":\"https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/starship2520sn_image_20201207205018.jpeg\",\"infographic\":null,\"type\":\"list\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

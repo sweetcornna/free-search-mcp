@@ -1,0 +1,79 @@
+id = "pangaea"
+name = "PANGAEA Data Publisher"
+summary = "Earth and environmental science curated georeferenced datasets with DOIs and Croissant 1.0 JSON-LD."
+aliases = ["pangaea.de", "earth science data"]
+home_url = "https://www.pangaea.de"
+tier = 1
+scopes = ["dataset", "academic"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 4, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 21600, host_bucket = "pangaea.de" }
+
+[op.search]
+summary = "Search PANGAEA earth and environmental science datasets via Elasticsearch JSON API."
+method = "POST"
+url = "https://ws.pangaea.de/es/pangaea/panmd/_search"
+headers = { Accept = "application/json", "Content-Type" = "application/json" }
+response = "json"
+returns = "works"
+body = { kind = "json", jaq = '''({
+  _source: ["URI", "agg-author", "agg-pubYear", "agg-location", "agg-project", "agg-campaign", "minDateTime", "maxDateTime", "meanPosition", "sp-doiRegistrationDate", "xml-thumb"],
+  query: { query_string: { query: $p.query } },
+  size: ($p.limit // 10)
+} + (if $p.offset != null then { from: $p.offset } else {} end))''' }
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "arctic temperature", limit = 3 }, min_results = 2, fixture = "fixtures/w5b/pangaea/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, in = "body", doc = "Keyword or Lucene query for PANGAEA datasets" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "body", doc = "Maximum datasets to return" }
+offset = { type = "int", min = 0, in = "body", doc = "0-based result offset" }
+
+[op.search.map]
+items = ".hits.hits[]"
+total = 'if (.hits.total | type) == "object" then .hits.total.value else .hits.total end'
+error = 'if type == "object" and (.error // null) != null then (if (.error | type) == "object" then (.error.root_cause[0]?.reason // .error.reason // (.error | tostring)) else (.error | tostring) end) else null end'
+work = '''(
+  (._source["xml-thumb"] // "") as $xml |
+  {
+    title: (if ($xml | contains("<md:title")) then (($xml | split("<md:title")[1] | split(">")[1:] | join(">") | split("</md:title>")[0]) | strip_tags) else ("PANGAEA." + (._id // "")) end),
+    authors: [(._source["agg-author"] | arr)[] | {name: (. | collapse_ws)}],
+    year: (._source["agg-pubYear"] | to_int),
+    publishedDate: ((._source["sp-doiRegistrationDate"] // (if ._source["agg-pubYear"] != null then (._source["agg-pubYear"] | tostring) else null end)) | parse_date),
+    venue: "PANGAEA",
+    workType: "dataset",
+    ids: { doi: ((._source.URI // null) | doi_norm) },
+    abstractText: (if ($xml | contains("<md:abstract")) then (($xml | split("<md:abstract")[1] | split(">")[1:] | join(">") | split("</md:abstract>")[0]) | strip_tags) else null end),
+    retracted: false,
+    versions: [],
+    url: (._source.URI // ("https://doi.pangaea.de/10.1594/PANGAEA." + (._id // ""))),
+    sources: ["pangaea"]
+  }
+)'''
+
+[op.dataset]
+summary = "Fetch a PANGAEA dataset record as MLCommons Croissant 1.0 JSON-LD by PANGAEA dataset number."
+method = "GET"
+url = "https://doi.pangaea.de/10.1594/PANGAEA.{id}"
+headers = { Accept = "application/ld+json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "887877" }, min_results = 1, fixture = "fixtures/w5b/pangaea/dataset/default.json" }
+
+[op.dataset.params]
+id = { type = "string", required = true, in = "path", doc = "Numeric PANGAEA dataset ID (e.g. 887877 for 10.1594/PANGAEA.887877)" }
+
+[op.dataset.map]
+items = "."
+record = '''{
+  doi: ((.identifier // null) | doi_norm),
+  title: ((.name // "") | strip_tags),
+  description: ((.description // null) | strip_tags),
+  conformsTo: (.conformsTo // null),
+  creators: [(.creator | arr)[] | {name: ((.name // "") | collapse_ws), orcid: (if ((.identifier // .["@id"] // "") | contains("orcid.org/")) then ((.identifier // .["@id"]) | sub("^https?://orcid\\.org/"; "")) else null end)} | select(.name != "")],
+  datePublished: ((.datePublished // null) | parse_date),
+  license: (.license // null),
+  distributions: [(.distribution | arr)[] | {format: (.encodingFormat // null), contentUrl: (.contentUrl // null)} | select(.contentUrl != null)],
+  url: (.url // .identifier // "")
+}'''

@@ -27,3 +27,6 @@ evals/ranking/buckets.json
 # with uvx), and `mcpb pack` output is a release asset, not source.
 mcpb/uv.lock
 *.mcpb
+
+# Rust build output
+/target

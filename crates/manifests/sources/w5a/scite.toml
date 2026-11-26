@@ -1,0 +1,74 @@
+id = "scite"
+name = "scite Smart Citations"
+summary = "Smart citation sentiment tallies (supporting, contradicting, mentioning) and paper metadata by DOI."
+aliases = ["scite.ai", "smart citations"]
+home_url = "https://scite.ai"
+tier = 2
+scopes = ["academic", "academic.index"]
+caps = ["lookup", "integrity"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 86400, host_bucket = "api.scite.ai" }
+
+[op.tallies]
+summary = "Fetch supporting, contradicting, and mentioning citation tallies for a DOI."
+method = "GET"
+url = "https://api.scite.ai/tallies/{doi}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { doi = "10.1038/nature12373" }, min_results = 1, fixture = "fixtures/w5a/scite/tallies/default.json" }
+
+[op.tallies.params]
+doi = { type = "string", required = true, in = "path", encode = "raw", doc = "DOI e.g. 10.1038/nature12373" }
+
+[op.tallies.map]
+items = "."
+error = '''if .detail != null then (.detail | tostring) elif .error != null then (.error | tostring) else null end'''
+record = '''{
+  doi: (.doi // null | doi_norm),
+  supporting: (.supporting // 0),
+  contradicting: (.contradicting // 0),
+  mentioning: (.mentioning // 0),
+  unclassified: (.unclassified // 0),
+  total: (.total // 0),
+  citingPublications: (.citingPublications // 0)
+}'''
+
+[op.work]
+summary = "Fetch paper metadata and retraction flag from scite by DOI."
+method = "GET"
+url = "https://api.scite.ai/papers/{doi}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+probe = { params = { doi = "10.1038/nature12373" }, min_results = 1, fixture = "fixtures/w5a/scite/work/default.json" }
+
+[op.work.params]
+doi = { type = "string", required = true, in = "path", encode = "raw", doc = "DOI e.g. 10.1038/nature12373" }
+
+[op.work.map]
+items = "."
+error = "@ref:op.tallies.map.error"
+work = '''(
+  ((.abstract // "") | unescape_html | collapse_ws) as $abs |
+  ([(.preprintLinks // [])[] | select(.preprintDoi != null) | { kind: "preprint", doi: (.preprintDoi | doi_norm), url: ("https://doi.org/" + .preprintDoi) }] + [(.publicationLinks // [])[] | select((.publicationDoi // .doi) != null) | { kind: "published", doi: ((.publicationDoi // .doi) | doi_norm), url: ("https://doi.org/" + (.publicationDoi // .doi)) }]) as $vers |
+  ([(.editorialNotices // [])[] | (.status // .type // .message // .reason) | select(type == "string" and length > 0)] | if length > 0 then join("; ") else null end) as $reason |
+  {
+    title: ((.title // "") | unescape_html | collapse_ws),
+    authors: [(.authors // [])[] | {
+      name: ((.authorName // ([.given, .family] | map(select(type == "string" and length > 0)) | join(" "))) | collapse_ws),
+      affiliation: ((.affiliation // null) | if type == "string" then collapse_ws else null end)
+    } | select(.name != "")],
+    year: (.year | to_int),
+    venue: (.journal // .shortJournal // null),
+    workType: (.normalizedTypes[0]? // .type // "article"),
+    ids: { doi: (.doi // null | doi_norm) },
+    abstractText: (if ($abs // "") != "" then $abs else null end),
+    retracted: (.retracted // false),
+    retractionReason: $reason,
+    versions: $vers,
+    url: ("https://scite.ai/reports/" + (.doi // "")),
+    sources: ["scite"]
+  }
+)'''

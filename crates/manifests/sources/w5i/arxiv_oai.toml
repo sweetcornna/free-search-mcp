@@ -1,0 +1,133 @@
+id = "arxiv_oai"
+name = "arXiv OAI-PMH 2.0"
+summary = "arXiv March 2025 OAI-PMH 2.0 endpoint (/oai) for incremental harvesting and arXivRaw multi-version submission history."
+aliases = ["oaipmh.arxiv.org", "arxiv oai-pmh", "arxivraw"]
+home_url = "https://oaipmh.arxiv.org/oai"
+tier = 2
+scopes = ["academic", "academic.preprint", "academic.cs", "academic.math", "academic.physics"]
+caps = ["lookup", "harvest"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 0.33, burst = 1, concurrency = 1, timeout_ms = 12000, cache_ttl_s = 43200, host_bucket = "oaipmh.arxiv.org" }
+
+[op.work]
+summary = "Fetch a single arXiv preprint record with full multi-version history via OAI-PMH arXivRaw."
+method = "GET"
+url = "https://oaipmh.arxiv.org/oai"
+headers = { Accept = "application/xml" }
+response = "xml"
+returns = "works"
+const_query = { metadataPrefix = "arXivRaw", verb = "GetRecord" }
+probe = { params = { id = "1706.03762" }, min_results = 1, fixture = "fixtures/w5i/arxiv_oai/work/default.json" }
+examples = ['source.call("arxiv_oai.work", {id: "1706.03762"})']
+
+[op.work.params]
+id = { type = "string", required = true, to = "identifier", template = "oai:arXiv.org:{id}", doc = "arXiv ID without prefix (e.g. 1706.03762)" }
+
+[op.work.map]
+items = '''."oai-pmh".getrecord.record | arr | .[] | select(.header."@status" != "deleted" and .metadata.arxivraw != null)'''
+error = '''."oai-pmh".error | if . == null then null else (first_str // ."@code" // "OAI error") end'''
+work = '''(
+  .metadata.arxivraw as $m |
+  ($m.id | xml_text) as $aid |
+  ("https://arxiv.org/abs/" + $aid) as $url |
+  ($m.version | arr) as $vers |
+  (($vers | .[0] | if type == "object" then .date else null end) // .header.datestamp | first_str | parse_date) as $pd |
+  {
+    title: (($m.title | xml_text | collapse_ws) // ""),
+    authors: [($m.authors | xml_text | split(","))[] | collapse_ws | select(. != null and . != "") | {name: .}],
+    year: (($pd // "")[0:4] | to_int),
+    publishedDate: $pd,
+    venue: (($m."journal-ref" | first_str | collapse_ws) // ($m.categories | first_str) // "arXiv"),
+    workType: "preprint",
+    ids: { arxiv: (if $aid != "" then $aid else null end), doi: (($m.doi | first_str) | doi_norm) },
+    abstractText: (($m.abstract | xml_text | collapse_ws) | if . == "" then null else . end),
+    oa: {
+      status: "green",
+      url: $url,
+      pdfUrl: ("https://arxiv.org/pdf/" + $aid),
+      structuredFormat: "html5",
+      license: ($m.license | first_str)
+    },
+    retracted: false,
+    versions: [$vers[] | {
+      kind: "preprint",
+      arxiv: ($aid + (."@version" // "")),
+      url: ("https://arxiv.org/abs/" + $aid + (."@version" // ""))
+    }],
+    url: $url,
+    sources: ["arxiv_oai"]
+  }
+)'''
+
+[op.records]
+summary = "Harvest arXiv records incrementally by subject set and date window via OAI-PMH ListRecords."
+method = "GET"
+url = "https://oaipmh.arxiv.org/oai"
+headers = { Accept = "application/xml" }
+response = "xml"
+returns = "works"
+const_query = { verb = "ListRecords" }
+query_jaq = '''if ($p.cursor // "") != "" then [["resumptionToken", $p.cursor]] else ([["metadataPrefix", "arXiv"]] + (if ($p.set // "") != "" then [["set", $p.set]] else [] end) + (if ($p.from // "") != "" then [["from", $p.from]] else [] end) + (if ($p.until // "") != "" then [["until", $p.until]] else [] end)) end'''
+paginate = { style = "token", param = "cursor", max_pages = 3 }
+probe = { params = { set = "math:math:HO", from = "2026-11-20", until = "2026-11-25" }, min_results = 1, fixture = "fixtures/w5i/arxiv_oai/records/default.json" }
+examples = ['source.call("arxiv_oai.records", {set: "cs:cs:AI", from: "2026-11-20", until: "2026-11-25"})']
+
+[op.records.params]
+set = { type = "string", in = "none", doc = "OAI-PMH subject setSpec (e.g. cs:cs:AI, math:math:HO)" }
+from = { type = "string", in = "none", doc = "Start datestamp YYYY-MM-DD" }
+until = { type = "string", in = "none", doc = "End datestamp YYYY-MM-DD" }
+cursor = { type = "string", in = "none", doc = "Exclusive OAI-PMH resumptionToken for next page" }
+
+[op.records.map]
+items = '''."oai-pmh".listrecords.record | arr | .[] | select(.header."@status" != "deleted" and .metadata.arxiv != null)'''
+next_cursor = '''."oai-pmh".listrecords.resumptiontoken | first_str'''
+error = '''."oai-pmh".error | if . == null then null else (first_str // ."@code" // "OAI error") end'''
+work = '''(
+  .metadata.arxiv as $m |
+  ($m.id | xml_text) as $aid |
+  ("https://arxiv.org/abs/" + $aid) as $url |
+  (($m.created // .header.datestamp) | first_str | parse_date) as $pd |
+  {
+    title: (($m.title | xml_text | collapse_ws) // ""),
+    authors: [($m.authors.author | arr)[] | {
+      name: ([(.forenames | first_str), (.keyname | first_str)] | map(select(. != null and . != "")) | join(" "))
+    } | select(.name != "")],
+    year: (($pd // "")[0:4] | to_int),
+    publishedDate: $pd,
+    venue: (($m."journal-ref" | first_str | collapse_ws) // ($m.categories | first_str) // "arXiv"),
+    workType: "preprint",
+    ids: { arxiv: (if $aid != "" then $aid else null end), doi: (($m.doi | first_str) | doi_norm) },
+    abstractText: (($m.abstract | xml_text | collapse_ws) | if . == "" then null else . end),
+    oa: {
+      status: "green",
+      url: $url,
+      pdfUrl: ("https://arxiv.org/pdf/" + $aid),
+      structuredFormat: "html5",
+      license: ($m.license | first_str)
+    },
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["arxiv_oai"]
+  }
+)'''
+
+[op.sets]
+summary = "List all available arXiv OAI-PMH subject sets."
+method = "GET"
+url = "https://oaipmh.arxiv.org/oai"
+headers = { Accept = "application/xml" }
+response = "xml"
+returns = "records"
+const_query = { verb = "ListSets" }
+probe = { params = {}, min_results = 5, fixture = "fixtures/w5i/arxiv_oai/sets/default.json" }
+examples = ['source.call("arxiv_oai.sets", {})']
+
+[op.sets.map]
+items = '''."oai-pmh".listsets.set | arr | .[]'''
+error = '''."oai-pmh".error | if . == null then null else (first_str // ."@code" // "OAI error") end'''
+record = '''{
+  setSpec: (.setspec | xml_text),
+  setName: ((.setname | xml_text | collapse_ws) // "")
+}'''

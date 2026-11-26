@@ -1,0 +1,62 @@
+id = "overpass_osm"
+name = "OpenStreetMap Overpass API"
+summary = "Structured Overpass QL queries for OpenStreetMap nodes, ways, relations, tags, and nearby POIs."
+aliases = ["overpass", "osm overpass", "overpass ql"]
+home_url = "https://wiki.openstreetmap.org/wiki/Overpass_API"
+tier = 2
+scopes = ["reference.geo", "dataset"]
+caps = ["lookup", "dataset"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 0.5, burst = 1, concurrency = 1, timeout_ms = 20000, cache_ttl_s = 21600 }
+
+[op.node]
+summary = "Look up a single OpenStreetMap node by numeric ID with coordinates and tags."
+method = "GET"
+url = "https://maps.mail.ru/osm/tools/overpass/api/interpreter"
+fallback_urls = [
+  "https://overpass-api.de/api/interpreter",
+  "https://overpass.private.coffee/api/interpreter",
+]
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = 240109189 }, min_results = 1, fixture = "fixtures/w5d1/overpass_osm/node/default.json" }
+
+[op.node.params]
+id = { type = "int", required = true, to = "data", template = "[out:json][timeout:10];node({id});out;", doc = "Numeric OSM node ID e.g. 240109189" }
+
+[op.node.map]
+items = "(.elements // [])[]"
+error = ".remark"
+record = '''{
+  type: .type,
+  id: .id,
+  name: (.tags.name // .tags["name:en"] // null),
+  lat: (.lat // .center.lat // null),
+  lon: (.lon // .center.lon // null),
+  amenity: (.tags.amenity // null),
+  tags: (.tags // {}),
+  url: ("https://www.openstreetmap.org/" + .type + "/" + (.id | tostring))
+}'''
+
+[op.query]
+summary = "Execute a tight, bounded Overpass QL query (must include [out:json]; and small bbox/around radius)."
+method = "GET"
+url = "https://maps.mail.ru/osm/tools/overpass/api/interpreter"
+fallback_urls = [
+  "https://overpass-api.de/api/interpreter",
+  "https://overpass.private.coffee/api/interpreter",
+]
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { ql = "[out:json][timeout:10];node(around:150,52.517,13.388)[\"amenity\"];out 3;" }, min_results = 2, fixture = "fixtures/w5d1/overpass_osm/query/default.json" }
+
+[op.query.params]
+ql = { type = "string", required = true, to = "data", doc = "Overpass QL string with [out:json][timeout:10]; and tight spatial filter" }
+
+[op.query.map]
+items = "(.elements // [])[]"
+error = ".remark"
+record = "@ref:op.node.map.record"

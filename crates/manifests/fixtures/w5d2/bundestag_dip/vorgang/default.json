@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "bundestag_dip",
+  "op": "vorgang",
+  "recordedAt": "2026-11-25T12:14:49Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://search.dip.bundestag.de/api/v1/vorgang?f.titel=Klima&format=json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"numFound\": 92, \"cursor\": \"AoJwgNjC_PYCMVZvcmdhbmctMzA4MTIw\", \"documents\": [{\"id\": \"308120\", \"typ\": \"Vorgang\", \"beratungsstand\": \"Verkündet\", \"vorgangstyp\": \"Gesetzgebung\", \"wahlperiode\": 20, \"initiative\": [\"Bundesregierung\"], \"datum\": \"2024-07-17\", \"aktualisiert\": \"2024-07-22T10:00:00+02:00\", \"titel\": \"Zweites Gesetz zur Änderung des Bundes-Klimaschutzgesetzes\", \"abstract\": \"Übergang zu einer mehrjährigen und sektorübergreifenden Gesamtrechnung der Treibhausgasemissionen.\", \"sachgebiet\": [\"Umwelt\"], \"gesta\": \"N018\"}, {\"id\": \"304210\", \"typ\": \"Vorgang\", \"beratungsstand\": \"Verkündet\", \"vorgangstyp\": \"Gesetzgebung\", \"wahlperiode\": 20, \"initiative\": [\"Bundesregierung\"], \"datum\": \"2023-12-22\", \"aktualisiert\": \"2024-01-05T08:30:00+01:00\", \"titel\": \"Bundes-Klimaanpassungsgesetz (KAnG)\", \"abstract\": \"Schaffung eines verbindlichen Rahmens für eine vorsorgende Klimaanpassungsstrategie auf Bundes-, Landes- und Kommunalebene.\", \"sachgebiet\": [\"Umwelt\"], \"gesta\": \"N014\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

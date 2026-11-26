@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "open_food_facts",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:12:19Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://search.openfoodfacts.org/search?fields=code,product_name,brands,nutriscore_grade,ecoscore_grade,categories_tags,quantity&q=olive+oil&page_size=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"hits\":[{\"code\":\"0634039000016\",\"brands\":[\"olive\"],\"nutriscore_grade\":\"c\",\"product_name\":\"Organic crushed meyer lemon olive oil\",\"_score\":17.045937},{\"code\":\"0029205016500\",\"brands\":[\"bella-imported\"],\"nutriscore_grade\":\"unknown\",\"product_name\":\"Oil Cured Olives, With Olive Oil\",\"_score\":11.498379},{\"code\":\"6191509903719\",\"brands\":[\"xx:Huile D’Olive\"],\"nutriscore_grade\":\"b\",\"product_name\":\"Huile d’olive premiere pression\",\"_score\":11.384977}],\"aggregations\":null,\"facets\":{},\"charts\":{},\"page\":1,\"page_size\":3,\"page_count\":2912,\"debug\":null,\"took\":10,\"timed_out\":false,\"count\":8734,\"is_count_exact\":true,\"warnings\":null}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

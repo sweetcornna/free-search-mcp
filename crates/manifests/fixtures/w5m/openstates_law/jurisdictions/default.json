@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "openstates_law",
+  "op": "jurisdictions",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://v3.openstates.org/jurisdictions?classification=state&per_page=3&page=1",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"pagination\":{\"per_page\":3,\"page\":1,\"max_page\":18,\"total_items\":52},\"results\":[{\"id\":\"ocd-jurisdiction/country:us/state:ca/government\",\"name\":\"California\",\"classification\":\"state\",\"division_id\":\"ocd-division/country:us/state:ca\",\"url\":\"https://legislature.ca.gov/\"},{\"id\":\"ocd-jurisdiction/country:us/state:ny/government\",\"name\":\"New York\",\"classification\":\"state\",\"division_id\":\"ocd-division/country:us/state:ny\",\"url\":\"https://nyassembly.gov/\"},{\"id\":\"ocd-jurisdiction/country:us/state:tx/government\",\"name\":\"Texas\",\"classification\":\"state\",\"division_id\":\"ocd-division/country:us/state:tx\",\"url\":\"https://capitol.texas.gov/\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

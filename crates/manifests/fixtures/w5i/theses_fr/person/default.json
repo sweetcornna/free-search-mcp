@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "theses_fr",
+  "op": "person",
+  "recordedAt": "2026-11-25T12:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://theses.fr/api/v1/personnes/recherche/?q=Chapelle&nombre=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "cache-control",
+            "no-cache, no-store, max-age=0, must-revalidate"
+          ],
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"totalHits\":592,\"took\":8,\"personnes\":[{\"id\":\"110591143\",\"nom\":\"Rapti\",\"prenom\":\"Ioanna\",\"roles\":{\"Rapporteur / Rapporteuse\":5,\"Président / Présidente du jury\":13,\"Examinateur / Examinatrice\":19,\"Directeur / Directrice\":17},\"theses\":[\"2016PA100174\",\"2015EPHE5066\",\"2018SORUL102\",\"2021EHES0043\",\"2015PA010516\",\"2018PA01H022\",\"2017MON30063\",\"2020SORUL008\",\"2017PA040051\",\"2019AIXM0341\",\"2021MON30083\",\"2022PA01H125\",\"2022PA01H104\",\"2017PSLEP012\",\"2017PSLEP041\",\"2018PSLEP045\",\"2018PSLEP051\",\"2024UPSLP057\",\"2021UPSLP083\",\"2020UPSLP008\",\"2021UPSLP003\",\"2021UPSLP040\",\"2021UPSLP071\",\"s302244\",\"s356561\",\"2024UPSLP069\",\"2024UPSLP041\",\"s378436\",\"s378529\",\"s381835\",\"2025SORUL075\",\"2024UPSLP021\",\"2023AIXM0053\",\"s403574\",\"s435949\",\"s422901\",\"s348772\"],\"disciplines\":[\"Histoire de l'art\",\"Histoire et archéologie du monde byzantin et post-byzantin\",\"Archéologie\"],\"etablissements\":[\"Université Paris sciences et lettres\",\"Paris 1\",\"Paris Sciences et Lettres (ComUE)\"],\"has_idref\":true},{\"id\":\"086695266\",\"nom\":\"Chapel\",\"prenom\":\"Jean-Paul\",\"roles\":{\"Examinateur / Examinatrice\":15,\"Directeur / Directrice\":11,\"Rapporteur / Rapporteuse\":22,\"Président / Présidente du jury\":3},\"theses\":[\"2011BOR14326\",\"2004LYO10242\",\"2013BOR14811\",\"2016LYSE1306\",\"2013BOR15207\",\"2017LYSE1250\",\"2014LYO10081\",\"2014LYO10140\",\"2017BORD0964\",\"2018LYSE1131\",\"2016BORD0364\",\"2012LYO10258\",\"2015PA066386\",\"2000ISAL0007\",\"2012LYO10051\",\"2016LYSE1017\",\"2016LORIS416\",\"2016MONTT187\",\"2021LYSE1100\",\"2021BORD0071\",\"2022BORD0059\",\"2022BORD0037\",\"2021LYSE1239\",\"2019BORD0031\",\"2018SORUS062\",\"2016SACLX100\",\"2019PAUU3035\",\"2019PESC1033\",\"2020SORUS029\",\"2021SORUS487\",\"2021BORD0174\",\"2023UPASP176\",\"2021UNIP7274\",\"s351920\",\"2025SORUS683\",\"s391390\",\"2024SORUS255\",\"2024URENS135\",\"2025BORD0383\",\"2026BORD0079\"],\"disciplines\":[\"Polymères\",\"Physico-Chimie de la Matière Condensée\",\"Physique\"],\"etablissements\":[\"Bordeaux\",\"Lyon\",\"Lyon 1\"],\"has_idref\":true},{\"id\":\"120806118\",\"nom\":\"Lamy de la Chapelle\",\"prenom\":\"Marc\",\"roles\":{\"Examinateur / Examinatrice\":12,\"Rapporteur / Rapporteuse\":11,\"Directeur / Directrice\":16,\"Auteur / Autrice\":1,\"Président / Présidente du jury\":2},\"theses\":[\"2014DIJOS037\",\"2014DIJOS023\",\"2012PA112145\",\"2012PA132048\",\"1998NANT2119\",\"2005TROY0011\",\"2008TROY0022\",\"2013BOR14848\",\"2012PA132054\",\"2014PA132049\",\"2017USPCD039\",\"2015USPCD018\",\"2015USPCD115\",\"2018NANT4076\",\"2017MONTS075\",\"2016USPCD007\",\"2016PA066625\",\"2017USPCD003\",\"2021LIMO0009\",\"2020LYSE1197\",\"2021LEMA1034\",\"2017MONTS066\",\"2021PA131014\",\"2019PA131038\",\"2024PA131005\",\"2018USPCD065\",\"2023UBFCK080\",\"2024UPASP032\",\"2019UNIP5137\",\"2019UNIP7243\",\"2024LIMO0064\",\"2024LEMA1024\",\"2024URENS027\",\"2024AIXM0596\",\"2025NANU4027\"],\"disciplines\":[\"Physique\",\"Chimie\",\"Optique et nanotechnologies\"],\"etablissements\":[\"Paris 13\",\"Sorbonne Paris Cité\",\"Montpellier\"],\"has_idref\":true}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

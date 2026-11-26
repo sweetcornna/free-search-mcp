@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "source": "pypi",
+  "op": "search",
+  "recordedAt": "2026-11-25T10:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://pypi.org/pypi/fastapi/json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          ["content-type", "application/json"]
+        ],
+        "bodyText": "{\"info\":{\"name\":\"fastapi\",\"version\":\"0.141.1\",\"summary\":\"FastAPI framework, high performance, easy to learn\",\"requires_python\":\">=3.10\",\"project_urls\":{\"Homepage\":\"https://github.com/fastapi/fastapi\"}},\"urls\":[{\"upload_time_iso_8601\":\"2026-07-29T10:11:12.000000Z\"}]}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://pypi.org/pypi/vs/json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 404,
+        "headers": [
+          ["content-type", "application/json"]
+        ],
+        "bodyText": "{\"message\":\"Not Found\"}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://pypi.org/pypi/starlette/json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 404,
+        "headers": [
+          ["content-type", "application/json"]
+        ],
+        "bodyText": "{\"message\":\"Not Found\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,165 @@
+id = "us_congress"
+name = "Congress.gov API v3"
+summary = "Official Library of Congress API for US federal bills, legislative actions, and members of Congress (requires free api.data.gov key)."
+aliases = ["congress.gov", "congress", "us bills"]
+home_url = "https://api.congress.gov"
+tier = 3
+scopes = ["gov", "gov.law"]
+caps = ["lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 21600 }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_DATA_GOV_API_KEY"
+in = "header"
+name = "X-Api-Key"
+format = "{key}"
+route_requires_key = true
+
+[op.bills]
+summary = "List US congressional bills ordered by recent updates or filtered by date range."
+method = "GET"
+url = "https://api.congress.gov/v3/bill"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "json" }
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { limit = 3 }, min_results = 2, fixture = "fixtures/w5d2/us_congress/bills/default.json" }
+
+[op.bills.params]
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Maximum bills per page" }
+offset = { type = "int", min = 0, to = "offset", doc = "Pagination offset" }
+from_date = { type = "string", to = "fromDateTime", doc = "Filter updates starting at ISO-8601 timestamp (e.g. 2024-01-01T00:00:00Z)" }
+to_date = { type = "string", to = "toDateTime", doc = "Filter updates ending at ISO-8601 timestamp" }
+
+[op.bills.map]
+items = ".bills[]"
+total = ".pagination.count"
+error = "if .error then (.error.message // (.error | tostring)) else null end"
+record = '''{
+  congress: .congress,
+  type: .type,
+  number: .number,
+  title: (.title // ""),
+  originChamber: (.originChamber // null),
+  latestActionDate: (.latestAction.actionDate // null),
+  latestActionText: (.latestAction.text // null),
+  updateDate: (.updateDate // null),
+  apiUrl: (.url // null),
+  url: (
+    "https://www.congress.gov/bill/" +
+    (.congress | tostring) +
+    ((.congress | to_int // 0) as $c | ($c % 100) as $m | if $m >= 11 and $m <= 13 then "th" elif ($c % 10) == 1 then "st" elif ($c % 10) == 2 then "nd" elif ($c % 10) == 3 then "rd" else "th" end) +
+    "-congress/" +
+    ({"hr":"house-bill","s":"senate-bill","hjres":"house-joint-resolution","sjres":"senate-joint-resolution","hconres":"house-concurrent-resolution","sconres":"senate-concurrent-resolution","hres":"house-resolution","sres":"senate-resolution"}[(.type // "") | ascii_downcase] // (if (.originChamber // "") == "Senate" then "senate-bill" else "house-bill" end)) +
+    "/" + (.number | tostring)
+  )
+}'''
+
+[op.bill]
+summary = "Fetch full details for a specific US bill by congress number, bill type, and bill number."
+method = "GET"
+url = "https://api.congress.gov/v3/bill/{congress}/{bill_type}/{bill_number}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "json" }
+probe = { params = { congress = 118, bill_type = "hr", bill_number = "1" }, min_results = 1, fixture = "fixtures/w5d2/us_congress/bill/default.json" }
+
+[op.bill.params]
+congress = { type = "int", required = true, in = "path", min = 93, doc = "Congress number, e.g. 118" }
+bill_type = { type = "string", required = true, in = "path", enum = ["hr", "s", "hjres", "sjres", "hconres", "sconres", "hres", "sres"], doc = "Lowercase bill type" }
+bill_number = { type = "string", required = true, in = "path", doc = "Bill number, e.g. 1" }
+
+[op.bill.map]
+items = ".bill"
+error = "if .error then (.error.message // (.error | tostring)) else null end"
+record = '''{
+  congress: .congress,
+  type: .type,
+  number: .number,
+  title: (.title // ""),
+  originChamber: (.originChamber // null),
+  introducedDate: (.introducedDate // null),
+  policyArea: (.policyArea.name // null),
+  sponsors: [(.sponsors // [])[] | {bioguideId, fullName, party, state}],
+  cosponsorsCount: (.cosponsors.count // 0),
+  latestActionDate: (.latestAction.actionDate // null),
+  latestActionText: (.latestAction.text // null),
+  updateDate: (.updateDate // null),
+  url: (
+    "https://www.congress.gov/bill/" +
+    (.congress | tostring) +
+    ((.congress | to_int // 0) as $c | ($c % 100) as $m | if $m >= 11 and $m <= 13 then "th" elif ($c % 10) == 1 then "st" elif ($c % 10) == 2 then "nd" elif ($c % 10) == 3 then "rd" else "th" end) +
+    "-congress/" +
+    ({"hr":"house-bill","s":"senate-bill","hjres":"house-joint-resolution","sjres":"senate-joint-resolution","hconres":"house-concurrent-resolution","sconres":"senate-concurrent-resolution","hres":"house-resolution","sres":"senate-resolution"}[(.type // "") | ascii_downcase] // (if (.originChamber // "") == "Senate" then "senate-bill" else "house-bill" end)) +
+    "/" + (.number | tostring)
+  )
+}'''
+
+[op.members]
+summary = "List US Congress members with party, state, bioguideId, and chambers served."
+method = "GET"
+url = "https://api.congress.gov/v3/member"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "json" }
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { limit = 3 }, min_results = 2, fixture = "fixtures/w5d2/us_congress/members/default.json" }
+
+[op.members.params]
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Maximum members per page" }
+offset = { type = "int", min = 0, to = "offset", doc = "Pagination offset" }
+current_member = { type = "bool", to = "currentMember", doc = "Restrict to currently serving members" }
+
+[op.members.map]
+items = ".members[]"
+total = ".pagination.count"
+error = "if .error then (.error.message // (.error | tostring)) else null end"
+record = '''{
+  bioguideId: .bioguideId,
+  name: (.name // ""),
+  partyName: (.partyName // null),
+  state: (.state // null),
+  district: (.district // null),
+  terms: [(.terms.item // [])[] | {chamber, startYear, endYear}],
+  updateDate: (.updateDate // null),
+  url: ("https://www.congress.gov/member/" + .bioguideId)
+}'''
+
+[op.member]
+summary = "Fetch full profile, party history, terms, and legislation counts for a single US Congress member by Bioguide ID."
+method = "GET"
+url = "https://api.congress.gov/v3/member/{bioguide_id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { format = "json" }
+probe = { params = { bioguide_id = "S001176" }, min_results = 1, fixture = "fixtures/w5d2/us_congress/member/default.json" }
+
+[op.member.params]
+bioguide_id = { type = "string", required = true, in = "path", doc = "Congressional Bioguide ID, e.g. S001176" }
+
+[op.member.map]
+items = ".member"
+error = "if .error then (.error.message // (.error | tostring)) else null end"
+record = '''{
+  bioguideId: .bioguideId,
+  name: (.directOrderName // .invertedOrderName // ""),
+  invertedName: (.invertedOrderName // null),
+  currentMember: .currentMember,
+  birthYear: (.birthYear // null),
+  state: (.state // null),
+  district: (.district // null),
+  partyHistory: [(.partyHistory // [])[] | {partyName, partyAbbreviation, startYear, endYear}],
+  terms: [((if (.terms | type) == "object" then .terms.item else .terms end) // [])[] | {chamber, congress, memberType, stateCode, district, startYear, endYear}],
+  sponsoredLegislationCount: (.sponsoredLegislation.count // null),
+  cosponsoredLegislationCount: (.cosponsoredLegislation.count // null),
+  officialWebsiteUrl: (.officialWebsiteUrl // null),
+  updateDate: (.updateDate // null),
+  url: ("https://www.congress.gov/member/" + (.bioguideId // ""))
+}'''

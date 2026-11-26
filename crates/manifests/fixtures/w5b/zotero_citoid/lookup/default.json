@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "source": "zotero_citoid",
+  "op": "lookup",
+  "recordedAt": "2026-11-25T11:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://en.wikipedia.org/api/rest_v1/data/citation/zotero/23903748",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "cache-control",
+            "private, max-age=0, s-maxage=0, must-revalidate"
+          ],
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ],
+          [
+            "etag",
+            "W/\"b09-+Om1ZXUUytfH9MhN0Q7da1Zk1j8\""
+          ]
+        ],
+        "bodyText": "[{\"key\":\"LT6LLYWJ\",\"version\":0,\"itemType\":\"journalArticle\",\"creators\":[{\"firstName\":\"G.\",\"lastName\":\"Kucsko\",\"creatorType\":\"author\"},{\"firstName\":\"P. C.\",\"lastName\":\"Maurer\",\"creatorType\":\"author\"},{\"firstName\":\"N. Y.\",\"lastName\":\"Yao\",\"creatorType\":\"author\"},{\"firstName\":\"M.\",\"lastName\":\"Kubo\",\"creatorType\":\"author\"},{\"firstName\":\"H. J.\",\"lastName\":\"Noh\",\"creatorType\":\"author\"},{\"firstName\":\"P. K.\",\"lastName\":\"Lo\",\"creatorType\":\"author\"},{\"firstName\":\"H.\",\"lastName\":\"Park\",\"creatorType\":\"author\"},{\"firstName\":\"M. D.\",\"lastName\":\"Lukin\",\"creatorType\":\"author\"}],\"tags\":[{\"tag\":\"Cell Survival\",\"type\":1},{\"tag\":\"Color\",\"type\":1},{\"tag\":\"Fibroblasts\",\"type\":1},{\"tag\":\"Gold\",\"type\":1},{\"tag\":\"Humans\",\"type\":1},{\"tag\":\"Metal Nanoparticles\",\"type\":1},{\"tag\":\"Nanodiamonds\",\"type\":1},{\"tag\":\"Nanotechnology\",\"type\":1},{\"tag\":\"Nitrogen\",\"type\":1},{\"tag\":\"Single-Cell Analysis\",\"type\":1},{\"tag\":\"Temperature\",\"type\":1},{\"tag\":\"Thermometers\",\"type\":1},{\"tag\":\"Thermometry\",\"type\":1}],\"title\":\"Nanometre-scale thermometry in a living cell\",\"pages\":\"54–58\",\"ISSN\":\"1476-4687\",\"journalAbbreviation\":\"Nature\",\"publicationTitle\":\"Nature\",\"volume\":\"500\",\"issue\":\"7460\",\"date\":\"2013-08-01\",\"abstractNote\":\"Sensitive probing of temperature variations on nanometre scales is an outstanding challenge in many areas of modern science and technology. In particular, a thermometer capable of subdegree temperature resolution over a large range of temperatures as well as integration within a living system could provide a powerful new tool in many areas of biological, physical and chemical research. Possibilities range from the temperature-induced control of gene expression and tumour metabolism to the cell-selective treatment of disease and the study of heat dissipation in integrated circuits. By combining local light-induced heat sources with sensitive nanoscale thermometry, it may also be possible to engineer biological processes at the subcellular level. Here we demonstrate a new approach to nanoscale thermometry that uses coherent manipulation of the electronic spin associated with nitrogen-vacancy colour centres in diamond. Our technique makes it possible to detect temperature variations as small as 1.8 mK (a sensitivity of 9 mK Hz(-1/2)) in an ultrapure bulk diamond sample. Using nitrogen-vacancy centres in diamond nanocrystals (nanodiamonds), we directly measure the local thermal environment on length scales as short as 200 nanometres. Finally, by introducing both nanodiamonds and gold nanoparticles into a single human embryonic fibroblast, we demonstrate temperature-gradient control and mapping at the subcellular level, enabling unique potential applications in life sciences.\",\"DOI\":\"10.1038/nature12373\",\"PMID\":\"23903748\",\"PMCID\":\"PMC4221854\",\"libraryCatalog\":\"PubMed\",\"accessDate\":\"2026-11-25\"}]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

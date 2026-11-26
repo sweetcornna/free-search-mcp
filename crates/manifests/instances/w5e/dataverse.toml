@@ -1,0 +1,67 @@
+protocol = "dataverse"
+
+[[instance]]
+id = "borealis_ca"
+name = "Borealis (Canadian Dataverse)"
+summary = "Canadian national multidisciplinary research data repository shared across 70+ Canadian universities and research institutions."
+aliases = ["borealis", "canadian dataverse", "scholars portal dataverse"]
+base_url = "https://borealisdata.ca"
+scopes = ["dataset", "academic"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "climate", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "recherche_data_gouv"
+name = "Recherche Data Gouv"
+summary = "French national multidisciplinary research data repository operated for French universities and public research organizations."
+aliases = ["recherche data gouv", "rdg", "france dataverse"]
+base_url = "https://entrepot.recherche.data.gouv.fr"
+scopes = ["dataset", "academic"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "climate", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "dataverse_nl"
+name = "DataverseNL"
+summary = "Dutch national research data repository managed by DANS and participating Dutch universities."
+aliases = ["dataversenl", "dans dataverse", "netherlands dataverse"]
+base_url = "https://dataverse.nl"
+scopes = ["dataset", "academic"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "climate", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "edmond_mpg"
+name = "Edmond (Max Planck Society)"
+summary = "Max Planck Society open research data repository covering physics, chemistry, biology, social sciences, and humanities."
+aliases = ["edmond", "max planck data", "mpg dataverse"]
+base_url = "https://edmond.mpg.de"
+scopes = ["dataset", "academic"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "quantum", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "pku_opendata"
+name = "Peking University Open Research Data"
+summary = "Peking University Dataverse repository hosting Chinese social science surveys, humanities collections, and scientific datasets."
+aliases = ["pku opendata", "peking university dataverse", "北京大学开放研究数据平台", "中文学术"]
+base_url = "https://opendata.pku.edu.cn"
+scopes = ["dataset", "academic"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "china", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "cipotato_pe"
+name = "CIP Dataverse (International Potato Center)"
+summary = "CGIAR International Potato Center (Lima, Peru) open research data repository for crop genetics, agronomy, and food security."
+aliases = ["cip dataverse", "cipotato", "cgiar potato data"]
+base_url = "https://data.cipotato.org"
+scopes = ["dataset", "academic"]
+caps = ["search", "lookup", "dataset"]
+tier = 2
+probe = { op = "search", params = { query = "potato", limit = 3 }, min_results = 2 }

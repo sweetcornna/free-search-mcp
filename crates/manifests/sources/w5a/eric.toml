@@ -1,0 +1,67 @@
+id = "eric"
+name = "ERIC (Education Resources Information Center)"
+summary = "US Dept. of Education index of 1.49M+ education and social-science research articles, reports, and dissertations."
+aliases = ["ies eric", "education research"]
+home_url = "https://eric.ed.gov"
+tier = 1
+scopes = ["academic", "academic.humanities", "academic.openaccess"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 8000, cache_ttl_s = 43200, host_bucket = "api.ies.ed.gov" }
+
+[op.search]
+summary = "Search ERIC education and social-science literature via Solr JSON API."
+method = "GET"
+url = "https://api.ies.ed.gov/eric/"
+response = "json"
+returns = "works"
+const_query = { fields = "id,title,author,description,publicationdateyear,publicationtype,source,publisher,e_fulltextauth,url,issn", format = "json" }
+paginate = { style = "offset", param = "start", start = 0, max_pages = 3 }
+probe = { params = { query = "stem education", limit = 3 }, min_results = 2, fixture = "fixtures/w5a/eric/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "search", doc = "ERIC search query (supports fielded syntax like title:, author:)" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "rows", doc = "Max results" }
+offset = { type = "int", min = 0, to = "start", doc = "Offset" }
+
+[op.search.map]
+items = ".response.docs[]"
+total = ".response.numFound"
+error = '''if .error != null then (.error.msg // (.error | tostring)) else null end'''
+work = '''(
+  ("https://eric.ed.gov/?id=" + (.id // "")) as $url |
+  ((.description // "") | unescape_html | collapse_ws) as $abs |
+  (if (.source // "") != "" then (.source | collapse_ws) elif (.publisher // "") != "" then ((.publisher | split(". ")[0]) | collapse_ws) else null end) as $venue |
+  {
+    title: ((.title // "") | unescape_html | collapse_ws),
+    authors: [(.author // [])[] | collapse_ws | select(length > 0) | {name: .}],
+    year: (.publicationdateyear | to_int),
+    venue: $venue,
+    workType: (if ((.publicationtype // []) | any(. == "Journal Articles")) then "article" elif ((.publicationtype // []) | any(test("Dissertation|Theses"; "i"))) then "thesis" else "report" end),
+    ids: { doi: (.url // null | doi_norm) },
+    abstractText: (if ($abs // "") != "" then $abs else null end),
+    oa: (if (.e_fulltextauth // 0) == 1 then { status: "green", url: $url, pdfUrl: ("https://files.eric.ed.gov/fulltext/" + .id + ".pdf") } else null end),
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["eric"]
+  }
+)'''
+
+[op.work]
+summary = "Fetch a single ERIC record by ERIC accession ID (EJ... or ED...)."
+method = "GET"
+url = "https://api.ies.ed.gov/eric/"
+response = "json"
+returns = "works"
+const_query = { fields = "id,title,author,description,publicationdateyear,publicationtype,source,publisher,e_fulltextauth,url,issn", format = "json", rows = "1" }
+probe = { params = { id = "EJ996400" }, min_results = 1, fixture = "fixtures/w5a/eric/work/default.json" }
+
+[op.work.params]
+id = { type = "string", required = true, to = "search", template = "id:{id}", doc = "ERIC ID e.g. EJ996400" }
+
+[op.work.map]
+items = ".response.docs[]"
+error = "@ref:op.search.map.error"
+work = "@ref:op.search.map.work"

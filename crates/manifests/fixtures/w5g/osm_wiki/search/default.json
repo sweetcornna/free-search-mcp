@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "osm_wiki",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:13:05Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://wiki.openstreetmap.org/w/api.php?action=query&list=search&srsearch=highway&srlimit=3&format=json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "cache-control",
+            "private, must-revalidate, max-age=0"
+          ],
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"batchcomplete\":\"\",\"continue\":{\"sroffset\":3,\"continue\":\"-||\"},\"query\":{\"searchinfo\":{\"totalhits\":7829},\"search\":[{\"ns\":0,\"title\":\"Key:highway\",\"pageid\":1378,\"size\":4245,\"wordcount\":475,\"snippet\":\"include the Kolyma <span class=\\\"searchmatch\\\">Highway</span> (P-504) and the Vilyuy <span class=\\\"searchmatch\\\">Highway</span> (A-331) in the Russian Far East, and a long stretch of the Trans-Amazonian <span class=\\\"searchmatch\\\">Highway</span> (BR-230) and BR-319\",\"timestamp\":\"2026-11-12T10:34:00Z\"},{\"ns\":0,\"title\":\"Way\",\"pageid\":5463,\"size\":7838,\"wordcount\":1118,\"snippet\":\"described by its nodes\\u00a0 and the area representation of a <span class=\\\"searchmatch\\\">highway</span> (and stepping stones functioning as a <span class=\\\"searchmatch\\\">highway</span>) will end in the examples above where the linear\",\"timestamp\":\"2026-11-19T11:53:38Z\"},{\"ns\":0,\"title\":\"Node\",\"pageid\":41734,\"size\":5784,\"wordcount\":416,\"snippet\":\"along a way may have tags. For example: <span class=\\\"searchmatch\\\">highway</span>=crossing + crossing=* to define a pedestrian crossing along a <span class=\\\"searchmatch\\\">highway</span>=* natural=tree to identify a lone tree\",\"timestamp\":\"2026-11-19T13:05:42Z\"}]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+id = "perseus_cts"
+name = "Perseus Digital Library (CTS)"
+summary = "Canonical Text Services (CTS) XML API for Ancient Greek and Latin primary classical texts at Tufts University Perseus Digital Library."
+aliases = ["perseus", "cts", "classical texts", "tufts perseus"]
+home_url = "https://www.perseus.tufts.edu/hopper/"
+tier = 2
+scopes = ["academic", "academic.humanities"]
+caps = ["lookup", "fulltext"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 12000, cache_ttl_s = 604800, host_bucket = "www.perseus.tufts.edu" }
+
+[op.passage]
+summary = "Retrieve a canonical classical Greek or Latin passage in TEI XML by CTS URN."
+method = "GET"
+url = "https://www.perseus.tufts.edu/hopper/CTS"
+headers = { Accept = "application/xml" }
+response = "xml"
+returns = "records"
+const_query = { request = "GetPassage" }
+probe = { params = { urn = "urn:cts:greekLit:tlg0012.tlg001.perseus-grc1:1.1-1.5" }, min_results = 1, fixture = "fixtures/w5k/perseus_cts/passage/default.json" }
+examples = ['source.call("perseus_cts.passage", { urn: "urn:cts:greekLit:tlg0012.tlg001.perseus-grc1:1.1-1.5" })']
+
+[op.passage.params]
+urn = { type = "string", required = true, to = "urn", doc = "Canonical CTS URN including passage reference e.g. urn:cts:greekLit:tlg0012.tlg001.perseus-grc1:1.1-1.5" }
+
+[op.passage.map]
+items = ".getpassage"
+error = "if .ctserror then (.ctserror.message // (.ctserror | tostring)) else null end"
+record = '''{
+  urn: (.request.requesturn // ""),
+  workUrn: (.request.workurn // null),
+  passage: (.request.psg // null),
+  author: (.request.groupname | collapse_ws),
+  title: ((.request.title // .request.label // "") | collapse_ws),
+  versionInfo: (.request.versioninfo // null),
+  language: (.reply.tei.text."@lang" // null),
+  text: (
+    [(.reply.tei.text.body.div | arr)[] |
+      if type == "string" then collapse_ws
+      elif type == "object" then ((."#text" | collapse_ws) // ([(.l | arr)[] | xml_text | collapse_ws | select(. != null and length > 0)] | join("\n")) // ([(.p | arr)[] | xml_text | collapse_ws | select(. != null and length > 0)] | join("\n")) // "")
+      else "" end
+    ] | map(select(. != null and length > 0)) | join("\n")
+  ),
+  url: ("https://www.perseus.tufts.edu/hopper/CTS?request=GetPassage&urn=" + (.request.requesturn // ""))
+}'''

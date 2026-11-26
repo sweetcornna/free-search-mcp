@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "source": "legifrance_open",
+  "op": "article",
+  "recordedAt": "2026-11-25T15:05:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://api.piste.gouv.fr/dila/legifrance/lf-engine-app/consult/getArticle",
+        "headersSubset": {
+          "accept": "application/json",
+          "content-type": "application/json"
+        },
+        "bodySha256": "766bd2e053a1a011da4336fef9c47f40dcab1049a322ee71412603fca458e9ad"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"article\": {\"id\": \"LEGIARTI000006900823\", \"cid\": \"LEGIARTI000006900823\", \"num\": \"L1221-1\", \"etat\": \"VIGUEUR\", \"dateDebut\": 1209600000000, \"dateFin\": 32472144000000, \"texte\": \"Le contrat de travail est soumis aux règles du droit commun. Il peut être établi selon les formes que les parties contractantes décident d'adopter.\", \"texteHtml\": \"<p>Le contrat de travail est soumis aux règles du droit commun. Il peut être établi selon les formes que les parties contractantes décident d'adopter.</p>\", \"textTitles\": [{\"id\": \"LEGITEXT000006072050\", \"cid\": \"LEGITEXT000006072050\", \"titre\": \"Code du travail\", \"titreLong\": \"Code du travail\", \"nature\": \"CODE\"}]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

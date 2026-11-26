@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "source": "gene_ontology",
+  "op": "genes",
+  "recordedAt": "2026-11-25T13:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.geneontology.org/api/bioentity/function/GO:0006915/genes?rows=3&start=0",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ],
+          [
+            "cache-control",
+            "public, max-age=3600"
+          ],
+          [
+            "last-modified",
+            "Wed, 25 Nov 2026 13:02:38 GMT"
+          ]
+        ],
+        "bodyText": "{\"associations\":[{\"id\":\"556e6950726f744b4209463654365a320945524e320909474f3a3030333032363309474f5f5245463a303030303130370949454109556e6950726f744b423a5137364d4a357c656e73656d626c3a454e53503030303030323536373937095009536572696e652f746872656f6e696e652d70726f7465696e090970726f7465696e097461786f6e3a3935343409323032363037323409456e73656d626c0909556e6950726f744b423a463654365a3209\",\"subject\":{\"id\":\"UniProtKB:F6T6Z2\",\"iri\":\"http://identifiers.org/uniprot/F6T6Z2\",\"label\":\"ERN2\",\"category\":[null],\"taxon\":{\"id\":\"NCBITaxon:9544\",\"iri\":\"http://purl.obolibrary.org/obo/NCBITaxon_9544\",\"label\":\"Macaca mulatta\"}},\"object\":{\"id\":\"GO:0030263\",\"iri\":\"http://purl.obolibrary.org/obo/GO_0030263\",\"label\":\"apoptotic chromosome condensation\",\"category\":[null],\"taxon\":{\"id\":\"NCBITaxon:9544\",\"iri\":\"http://purl.obolibrary.org/obo/NCBITaxon_9544\",\"label\":\"Macaca mulatta\"}},\"negated\":false,\"relation\":null,\"publications\":[{\"id\":\"UniProtKB\"}],\"evidence_types\":[{\"id\":\"ECO:0000501\",\"label\":\"evidence used in automatic assertion\"}],\"object_closure\":null,\"provided_by\":[\"Ensembl\"],\"evidence\":\"ECO:0000501\"},{\"id\":\"556e6950726f744b4209463654365a320945524e320909474f3a3030373030353909474f5f5245463a3030303030333309494241094d47493a4d47493a313334393433367c4d47493a4d47493a313933303133347c50414e544845523a50544e303030333539333434095009536572696e652f746872656f6e696e652d70726f7465696e090970726f7465696e097461786f6e3a3935343409323032363033303409474f5f43656e7472616c0909556e6950726f744b423a463654365a3209\",\"subject\":{\"id\":\"UniProtKB:F6T6Z2\",\"iri\":\"http://identifiers.org/uniprot/F6T6Z2\",\"label\":\"ERN2\",\"category\":[null],\"taxon\":{\"id\":\"NCBITaxon:9544\",\"iri\":\"http://purl.obolibrary.org/obo/NCBITaxon_9544\",\"label\":\"Macaca mulatta\"}},\"object\":{\"id\":\"GO:0070059\",\"iri\":\"http://purl.obolibrary.org/obo/GO_0070059\",\"label\":\"intrinsic apoptotic signaling pathway in response to endoplasmic reticulum stress\",\"category\":[null],\"taxon\":{\"id\":\"NCBITaxon:9544\",\"iri\":\"http://purl.obolibrary.org/obo/NCBITaxon_9544\",\"label\":\"Macaca mulatta\"}},\"negated\":false,\"relation\":null,\"publications\":[{\"id\":\"UniProtKB\"}],\"evidence_types\":[{\"id\":\"ECO:0000318\",\"label\":\"biological aspect of ancestor evidence used in manual assertion\"}],\"object_closure\":null,\"provided_by\":[\"GO_Central\"],\"evidence\":\"ECO:0000318\"},{\"id\":\"4d4749094d47493a31333431323937094461706b320909474f3a3030343332373609474f5f5245463a303030303130370949454109556e6950726f744b423a513955494b347c656e73656d626c3a454e5350303030303034303832373709500964656174682d6173736f6369617465642070726f7465696e206b696e6173652032090970726f7465696e097461786f6e3a313030393009323032363037323409456e73656d626c09094d47493a4d47493a3133343132393709\",\"subject\":{\"id\":\"MGI:1341297\",\"iri\":\"http://www.informatics.jax.org/accession/MGI:1341297\",\"label\":\"Dapk2\",\"category\":[null],\"taxon\":{\"id\":\"NCBITaxon:10090\",\"iri\":\"http://purl.obolibrary.org/obo/NCBITaxon_10090\",\"label\":\"Mus musculus\"}},\"object\":{\"id\":\"GO:0043276\",\"iri\":\"http://purl.obolibrary.org/obo/GO_0043276\",\"label\":\"anoikis\",\"category\":[null],\"taxon\":{\"id\":\"NCBITaxon:10090\",\"iri\":\"http://purl.obolibrary.org/obo/NCBITaxon_10090\",\"label\":\"Mus musculus\"}},\"negated\":false,\"relation\":null,\"publications\":[{\"id\":\"MGI\"}],\"evidence_types\":[{\"id\":\"ECO:0000501\",\"label\":\"evidence used in automatic assertion\"}],\"object_closure\":null,\"provided_by\":[\"Ensembl\"],\"evidence\":\"ECO:0000501\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

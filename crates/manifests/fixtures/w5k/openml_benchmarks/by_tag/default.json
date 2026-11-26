@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "openml_benchmarks",
+  "op": "by_tag",
+  "recordedAt": "2026-11-25T13:05:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.openml.org/api/v1/json/data/list/tag/OpenML100/limit/3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"data\":{\"dataset\":[\n    {\"did\":40668,\n   \"name\":\"connect-4\",\n   \"version\":2,\n   \"status\":\"active\",\n   \"format\":\"ARFF\",\n   \"md5_checksum\":\"\",\n      \"file_id\": 4965243,\n      \"quality\":[\n        {\"name\":\"MajorityClassSize\",\n     \"value\":\"44473.0\"\n    }\n    ,    {\"name\":\"MinorityClassSize\",\n     \"value\":\"6449.0\"\n    }\n    ,    {\"name\":\"NumberOfClasses\",\n     \"value\":\"3.0\"\n    }\n    ,    {\"name\":\"NumberOfFeatures\",\n     \"value\":\"43.0\"\n    }\n    ,    {\"name\":\"NumberOfInstances\",\n     \"value\":\"67557.0\"\n    }\n    ,    {\"name\":\"NumberOfInstancesWithMissingValues\",\n     \"value\":\"0.0\"\n    }\n    ,    {\"name\":\"NumberOfMissingValues\",\n     \"value\":\"0.0\"\n    }\n    ,    {\"name\":\"NumberOfNumericFeatures\",\n     \"value\":\"0.0\"\n    }\n    ,    {\"name\":\"NumberOfSymbolicFeatures\",\n     \"value\":\"43.0\"\n    }\n        ]\n      }\n  ,  {\"did\":40981,\n   \"name\":\"Australian\",\n   \"version\":4,\n   \"status\":\"active\",\n   \"format\":\"ARFF\",\n   \"md5_checksum\":\"\",\n      \"file_id\": 18151910,\n      \"quality\":[\n        {\"name\":\"MajorityClassSize\",\n     \"value\":\"383.0\"\n    }\n    ,    {\"name\":\"MaxNominalAttDistinctValues\",\n     \"value\":\"14.0\"\n    }\n    ,    {\"name\":\"MinorityClassSize\",\n     \"value\":\"307.0\"\n    }\n    ,    {\"name\":\"NumberOfClasses\",\n     \"value\":\"2.0\"\n    }\n    ,    {\"name\":\"NumberOfFeatures\",\n     \"value\":\"15.0\"\n    }\n    ,    {\"name\":\"NumberOfInstances\",\n     \"value\":\"690.0\"\n    }\n    ,    {\"name\":\"NumberOfInstancesWithMissingValues\",\n     \"value\":\"0.0\"\n    }\n    ,    {\"name\":\"NumberOfMissingValues\",\n     \"value\":\"0.0\"\n    }\n    ,    {\"name\":\"NumberOfNumericFeatures\",\n     \"value\":\"6.0\"\n    }\n    ,    {\"name\":\"NumberOfSymbolicFeatures\",\n     \"value\":\"9.0\"\n    }\n        ]\n      }\n  ,  {\"did\":3,\n   \"name\":\"kr-vs-kp\",\n   \"version\":1,\n   \"status\":\"active\",\n   \"format\":\"ARFF\",\n   \"md5_checksum\":\"\",\n      \"file_id\": 3,\n      \"quality\":[\n        {\"name\":\"MajorityClassSize\",\n     \"value\":\"1669.0\"\n    }\n    ,    {\"name\":\"MaxNominalAttDistinctValues\",\n     \"value\":\"3.0\"\n    }\n    ,    {\"name\":\"MinorityClassSize\",\n     \"value\":\"1527.0\"\n    }\n    ,    {\"name\":\"NumberOfClasses\",\n     \"value\":\"2.0\"\n    }\n    ,    {\"name\":\"NumberOfFeatures\",\n     \"value\":\"37.0\"\n    }\n    ,    {\"name\":\"NumberOfInstances\",\n     \"value\":\"3196.0\"\n    }\n    ,    {\"name\":\"NumberOfInstancesWithMissingValues\",\n     \"value\":\"0.0\"\n    }\n    ,    {\"name\":\"NumberOfMissingValues\",\n     \"value\":\"0.0\"\n    }\n    ,    {\"name\":\"NumberOfNumericFeatures\",\n     \"value\":\"0.0\"\n    }\n    ,    {\"name\":\"NumberOfSymbolicFeatures\",\n     \"value\":\"37.0\"\n    }\n        ]\n      }\n    ]}\n}\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

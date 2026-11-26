@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "noaa_tides",
+  "op": "predictions",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?station=9414290&product=predictions&datum=MLLW&time_zone=gmt&units=metric&interval=hilo&range=24&format=json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json;charset=UTF-8"
+          ]
+        ],
+        "bodyText": "{ \"predictions\" : [\n{\"t\":\"2026-11-24 18:05\", \"v\":\"2.115\", \"type\":\"H\"},{\"t\":\"2026-11-25 01:03\", \"v\":\"-0.452\", \"type\":\"L\"},{\"t\":\"2026-11-25 08:26\", \"v\":\"1.493\", \"type\":\"H\"},{\"t\":\"2026-11-25 12:39\", \"v\":\"0.926\", \"type\":\"L\"}\n]}\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

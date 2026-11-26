@@ -1,0 +1,99 @@
+id = "openml_benchmarks"
+name = "OpenML ML Benchmarks REST API"
+summary = "5,000+ structured machine learning benchmark datasets with instance/feature/class quality metrics and ARFF/Parquet metadata."
+aliases = ["openml", "openml datasets", "ml benchmarks"]
+home_url = "https://www.openml.org"
+tier = 2
+scopes = ["dataset"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 15000, cache_ttl_s = 43200, host_bucket = "api.openml.org" }
+
+[op.search]
+summary = "Search OpenML datasets by exact dataset name."
+method = "GET"
+url = "https://api.openml.org/api/v1/json/data/list/data_name/{query}/limit/{limit}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { query = "iris", limit = 3 }, min_results = 2, fixture = "fixtures/w5k/openml_benchmarks/search/default.json" }
+examples = ['source.call("openml_benchmarks.search", { query: "iris", limit: 5 })']
+
+[op.search.params]
+query = { type = "string", required = true, in = "path", doc = "Exact OpenML dataset name (e.g. iris, adult, mnist_784)" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "path", doc = "Maximum datasets returned" }
+
+[op.search.map]
+items = "((.data.dataset // []) | if type == \"array\" then . else [.] end)[]"
+error = "if .error then (.error.message // (.error | tostring)) else null end"
+record = '''{
+  id: .did,
+  name: (.name // ""),
+  version: (.version // null),
+  status: (.status // null),
+  format: (.format // null),
+  fileId: (.file_id // null),
+  instances: (([(.quality // [])[] | select(.name == "NumberOfInstances") | (.value | to_int)][0]) // null),
+  features: (([(.quality // [])[] | select(.name == "NumberOfFeatures") | (.value | to_int)][0]) // null),
+  classes: (([(.quality // [])[] | select(.name == "NumberOfClasses") | (.value | to_int)][0]) // null),
+  url: ("https://www.openml.org/d/" + (.did | tostring))
+}'''
+hit = '''{
+  title: ((.name // "") + " (OpenML #" + (.did | tostring) + ", v" + ((.version // 1) | tostring) + ")"),
+  url: ("https://www.openml.org/d/" + (.did | tostring)),
+  snippet: ([(.format // ""), (.status // ""), (([(.quality // [])[] | select(.name == "NumberOfInstances") | (.value | to_int) | select(. != null) | ("instances=" + tostring)][0]) // ""), (([(.quality // [])[] | select(.name == "NumberOfFeatures") | (.value | to_int) | select(. != null) | ("features=" + tostring)][0]) // "")] | map(select(length > 0)) | join(" · ")),
+  date: null,
+  dateSource: null
+}'''
+
+[op.by_tag]
+summary = "List OpenML benchmark datasets carrying a curated suite tag (e.g. OpenML100, OpenML-CC18)."
+method = "GET"
+url = "https://api.openml.org/api/v1/json/data/list/tag/{tag}/limit/{limit}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { tag = "OpenML100", limit = 3 }, min_results = 2, fixture = "fixtures/w5k/openml_benchmarks/by_tag/default.json" }
+examples = ['source.call("openml_benchmarks.by_tag", { tag: "OpenML100", limit: 10 })']
+
+[op.by_tag.params]
+tag = { type = "string", required = true, default = "OpenML100", in = "path", doc = "OpenML dataset tag e.g. OpenML100, OpenML-CC18" }
+limit = { type = "int", default = 10, min = 1, max = 50, in = "path", doc = "Maximum datasets returned" }
+
+[op.by_tag.map]
+items = "@ref:op.search.map.items"
+error = "@ref:op.search.map.error"
+record = "@ref:op.search.map.record"
+
+[op.dataset]
+summary = "Fetch complete metadata, license, target attribute, and ARFF/Parquet download URLs for an OpenML dataset ID."
+method = "GET"
+url = "https://api.openml.org/api/v1/json/data/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "61" }, min_results = 1, fixture = "fixtures/w5k/openml_benchmarks/dataset/default.json" }
+examples = ['source.call("openml_benchmarks.dataset", { id: "61" })']
+
+[op.dataset.params]
+id = { type = "string", required = true, in = "path", doc = "OpenML numeric dataset ID (did) e.g. 61" }
+
+[op.dataset.map]
+items = ".data_set_description"
+error = "if .error then (.error.message // (.error | tostring)) else null end"
+record = '''{
+  id: ((.id | to_int) // .id),
+  name: (.name // ""),
+  version: (.version // null),
+  description: (.description | collapse_ws),
+  format: (.format // null),
+  creator: (.creator | collapse_ws),
+  licence: (.licence // null),
+  defaultTargetAttribute: (.default_target_attribute // null),
+  collectionDate: (.collection_date | parse_date),
+  uploadDate: (.upload_date | parse_date),
+  downloadUrl: (.url // null),
+  parquetUrl: (.parquet_url // null),
+  url: ("https://www.openml.org/d/" + (.id | tostring))
+}'''

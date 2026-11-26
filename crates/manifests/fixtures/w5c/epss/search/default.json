@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "epss",
+  "op": "search",
+  "recordedAt": "2026-11-25T11:54:53Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.first.org/data/v1/epss?q=2024-3094&limit=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "link",
+            "<https://api.first.org/data/v1/epss/schema> rel=describedBy"
+          ],
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"status\":\"OK\",\"status-code\":200,\"version\":\"1.0\",\"access\":\"public\",\"total\":6,\"offset\":0,\"limit\":3,\"data\":[{\"cve\":\"CVE-2024-53094\",\"epss\":\"0.005940000\",\"percentile\":\"0.490800000\",\"date\":\"2026-11-24\"},{\"cve\":\"CVE-2024-30949\",\"epss\":\"0.007620000\",\"percentile\":\"0.560930000\",\"date\":\"2026-11-24\"},{\"cve\":\"CVE-2024-30946\",\"epss\":\"0.001780000\",\"percentile\":\"0.073120000\",\"date\":\"2026-11-24\"}]}\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "cristin_no",
+  "op": "result",
+  "recordedAt": "2026-11-25T13:02:20Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.cristin.no/v2/results/10531514",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\n  \"category\" : {\n    \"code\" : \"ACADEMICREVIEW\",\n    \"name\" : {\n      \"en\" : \"Academic literature review\"\n    }\n  },\n  \"channel\" : {\n    \"title\" : \"Springer Nature Link IFIP\"\n  },\n  \"contributors\" : {\n    \"url\" : \"https://api.cristin.no/v2/results/10531514/contributors\",\n    \"count\" : 1,\n    \"preview\" : [ {\n      \"first_name\" : \"Savis\",\n      \"surname\" : \"Gohari\"\n    } ]\n  },\n  \"cristin_result_id\" : \"10531514\",\n  \"nva_result_id\" : \"01a21261a966-ee84fa59-aefb-4142-a758-7f3bd9983862\",\n  \"created\" : {\n    \"date\" : \"2026-11-25T11:05:19.000Z\"\n  },\n  \"last_modified\" : {\n    \"date\" : \"2026-11-25T11:55:17.000Z\"\n  },\n  \"links\" : [ {\n    \"url_type\" : \"DOI\",\n    \"url\" : \"https://doi.org/10.1007/978-3-032-27698-8_109\"\n  }, {\n    \"url_type\" : \"ARKIV\",\n    \"url\" : \"https://hdl.handle.net/11250/5602809\"\n  } ],\n  \"original_language\" : \"en\",\n  \"summary\" : {\n    \"en\" : \"The European Commission set an ambitious goal of achieving 100 Positive Energy Districts (PEDs) by 2030, but the target remains unmet. A key challenge has been the lack of a unified definition, roadmap, or clear direction for PEDs, with cities pursuing individual,...\"\n  },\n  \"title\" : {\n    \"en\" : \"Pathways to Positive Energy Districts: Proposing a Roadmap for Achieving Climate Neutrality by 2050 | Springer Nature Link\"\n  },\n  \"year_published\" : \"2026\",\n  \"url\" : \"https://api.cristin.no/v2/results/10531514\",\n  \"journal\" : {\n    \"cristin_journal_id\" : \"A606C1D6-777E-4EE3-AD22-88B2B787C957\",\n    \"name\" : \"Springer Nature Link IFIP\",\n    \"external_url\" : \"https://kanalregister.hkdir.no/publiseringskanaler/info/nvakanal?pid=A606C1D6-777E-4EE3-AD22-88B2B787C957\"\n  }\n}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

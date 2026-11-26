@@ -1,0 +1,1095 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ManifestDecl",
+  "description": "One `crates/manifests/sources/<wave>/<id>.toml` file.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description": "`^[a-z][a-z0-9_]{1,39}$`.",
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "aliases": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "home_url": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "default": null
+    },
+    "tier": {
+      "description": "1 = core, 2 = specialised, 3 = long tail.",
+      "type": "integer",
+      "format": "uint8",
+      "minimum": 0,
+      "maximum": 255
+    },
+    "scopes": {
+      "description": "Canonical `core::SCOPES` ids.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "caps": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Capability"
+      }
+    },
+    "transport": {
+      "$ref": "#/$defs/ManifestTransport"
+    },
+    "pool_role": {
+      "$ref": "#/$defs/PoolRole"
+    },
+    "limits": {
+      "$ref": "#/$defs/SourceLimits"
+    },
+    "auth": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/AuthDecl"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "claims": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ClaimsManifest"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "op": {
+      "description": "`[op.<name>]` tables in document order.",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/OpSpec"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "name",
+    "summary",
+    "tier",
+    "scopes",
+    "caps",
+    "transport",
+    "pool_role",
+    "limits",
+    "op"
+  ],
+  "$defs": {
+    "Capability": {
+      "description": "What a source can do (catalog facets; entity caps map to structs per M13:\n`grant` → `GrantRecord`, `author` → `AuthorProfile`, `org` →\n`OrgProfile`, `venue` → `VenueProfile`).",
+      "type": "string",
+      "enum": [
+        "search",
+        "lookup",
+        "harvest",
+        "graph",
+        "fulltext",
+        "author",
+        "org",
+        "venue",
+        "dataset",
+        "patent",
+        "grant",
+        "thesis",
+        "book",
+        "integrity"
+      ]
+    },
+    "ManifestTransport": {
+      "description": "`transport` of a manifest (`local` is reserved for in-process sources).",
+      "type": "string",
+      "enum": [
+        "plain",
+        "chrome",
+        "edge_preflight"
+      ]
+    },
+    "PoolRole": {
+      "description": "How a source joins pools.",
+      "oneOf": [
+        {
+          "description": "In the default web pool.",
+          "type": "string",
+          "const": "default"
+        },
+        {
+          "description": "A hedging reserve.",
+          "type": "string",
+          "const": "reserve"
+        },
+        {
+          "description": "Joins when the query language matches (`{ locale = \"zh\" }` in TOML).",
+          "type": "object",
+          "properties": {
+            "locale": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "locale"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "description": "Joins only when its scope is requested.",
+          "type": "string",
+          "const": "scope_only"
+        },
+        {
+          "description": "Only when named in `sources`.",
+          "type": "string",
+          "const": "explicit"
+        },
+        {
+          "description": "Auto-routed through `Source::claims()`.",
+          "type": "string",
+          "const": "direct_claimant"
+        }
+      ]
+    },
+    "SourceLimits": {
+      "description": "Rate/time limits of a source (also the `limits = {..}` table of a manifest).",
+      "type": "object",
+      "properties": {
+        "rps": {
+          "type": "number",
+          "format": "double"
+        },
+        "burst": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "concurrency": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "timeout_ms": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "cache_ttl_s": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "host_bucket": {
+          "description": "Shared GCRA bucket (S8); defaults to the source id.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "rps",
+        "burst",
+        "concurrency",
+        "timeout_ms",
+        "cache_ttl_s"
+      ]
+    },
+    "AuthDecl": {
+      "description": "`[auth]`: a static key (`env`) or OAuth2 client credentials (A1 §A.2).",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/AuthKind",
+          "default": "static"
+        },
+        "mode": {
+          "$ref": "#/$defs/AuthModeManifest"
+        },
+        "env": {
+          "description": "Static only: full variable name, e.g. `SEARCH_MCP_ADS_API_KEY`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "in": {
+          "description": "Required for `static`; OAuth2 default `header`.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AuthIn"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "name": {
+          "description": "Header / query / body field name. Required for `static`; OAuth2 default `Authorization`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "format": {
+          "description": "Value template containing `{key}`. Default `{key}` (static) / `Bearer {key}` (OAuth2).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "route_requires_key": {
+          "type": "boolean",
+          "default": false
+        },
+        "token_url": {
+          "description": "OAuth2: `https://` token endpoint.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "env_id": {
+          "description": "OAuth2: variable holding `client_id`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "env_secret": {
+          "description": "OAuth2: variable holding `client_secret`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "style": {
+          "description": "OAuth2: default `basic`.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OAuthStyle"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "scope": {
+          "description": "OAuth2: optional space-delimited scope.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "mode"
+      ]
+    },
+    "AuthKind": {
+      "description": "`[auth] kind` (A1 §A.2).",
+      "oneOf": [
+        {
+          "description": "A key read from `env`.",
+          "type": "string",
+          "const": "static"
+        },
+        {
+          "description": "RFC 6749 §4.4 token exchange (runtime rules: A1 §B.8).",
+          "type": "string",
+          "const": "oauth2_client_credentials"
+        }
+      ]
+    },
+    "AuthModeManifest": {
+      "description": "`auth.mode`.",
+      "type": "string",
+      "enum": [
+        "optional",
+        "required"
+      ]
+    },
+    "AuthIn": {
+      "description": "Where the credential goes (`[auth] in`).",
+      "type": "string",
+      "enum": [
+        "header",
+        "query",
+        "body"
+      ]
+    },
+    "OAuthStyle": {
+      "description": "How OAuth2 client credentials are sent to `token_url`.",
+      "oneOf": [
+        {
+          "description": "HTTP Basic header.",
+          "type": "string",
+          "const": "basic"
+        },
+        {
+          "description": "Form-urlencoded `client_id` / `client_secret`.",
+          "type": "string",
+          "const": "body"
+        }
+      ]
+    },
+    "ClaimsManifest": {
+      "description": "`[claims]` (direct-answer claim routing).",
+      "type": "object",
+      "properties": {
+        "patterns": {
+          "description": "Rust `regex` syntax (no look-around).",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "keywords": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "max_per_search": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0,
+          "default": 3
+        }
+      },
+      "additionalProperties": false
+    },
+    "OpSpec": {
+      "description": "`[op.<name>]`.",
+      "type": "object",
+      "properties": {
+        "summary": {
+          "type": "string"
+        },
+        "method": {
+          "$ref": "#/$defs/HttpMethod"
+        },
+        "url": {
+          "description": "May contain `{query}`, `{limit}`, `{cursor}`, `{lang}`, `{contact_email}`, `{key}`, `{pre}`, `{<param>}`.",
+          "type": "string"
+        },
+        "fallback_urls": {
+          "description": "Mirrors tried in order when `url` fails (≤ 3, same template variables; A1 §A.6).",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "auth": {
+          "description": "Per-op auth override (A1 §A.1).",
+          "$ref": "#/$defs/OpAuthOverride",
+          "default": "inherit"
+        },
+        "headers": {
+          "description": "Replace default headers case-insensitively (A1 §B.1).",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {}
+        },
+        "response": {
+          "$ref": "#/$defs/ResponseFormat"
+        },
+        "csv": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CsvOpts"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "body": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BodySpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "const_query": {
+          "description": "Constant query pairs; arrays emit repeated keys (A1 §A.5).",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/ConstQueryVal"
+          },
+          "default": {}
+        },
+        "query_jaq": {
+          "description": "`jaq` filter returning `[[key, value], ...]` appended to the query (A1 §A.4).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "returns": {
+          "$ref": "#/$defs/ReturnKind"
+        },
+        "params": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/ParamDecl"
+          },
+          "default": {}
+        },
+        "pre": {
+          "description": "At most one pre-request step.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PreStepDecl"
+          },
+          "default": []
+        },
+        "map": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MapSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "html": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HtmlSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "paginate": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaginateSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "probe": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProbeManifest"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "examples": {
+          "description": "Copy-ready call examples for the catalog (feeds `OpDecl::examples`).",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "summary",
+        "method",
+        "url",
+        "response",
+        "returns"
+      ]
+    },
+    "HttpMethod": {
+      "description": "HTTP method (`\"GET\" | \"POST\" | \"HEAD\"` on the wire and in manifests).",
+      "type": "string",
+      "enum": [
+        "GET",
+        "POST",
+        "HEAD"
+      ]
+    },
+    "OpAuthOverride": {
+      "description": "Per-op auth override (A1 §A.1): `inherit` the source's `[auth]`, `none`\n(a keyless op of a keyed source) or `required` (needs a top-level `[auth]`).",
+      "type": "string",
+      "enum": [
+        "inherit",
+        "none",
+        "required"
+      ]
+    },
+    "ResponseFormat": {
+      "description": "`response` format of an op; the body is parsed by this, never by\n`Content-Type` (A1 §B.1).",
+      "type": "string",
+      "enum": [
+        "json",
+        "xml",
+        "html",
+        "csv",
+        "ndjson",
+        "text"
+      ]
+    },
+    "CsvOpts": {
+      "description": "`csv = { header, delimiter }`.",
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "boolean",
+          "default": true
+        },
+        "delimiter": {
+          "type": "string",
+          "default": ","
+        }
+      },
+      "additionalProperties": false
+    },
+    "BodySpec": {
+      "description": "`body = {..}` (wire contract: A1 §B.7). `graphql` uses `query` (+ optional\n`variables_jaq`, `operation_name`); every other kind uses `jaq` over `$p`/`$cfg`.",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/BodyKind"
+        },
+        "jaq": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "query": {
+          "description": "GraphQL document.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "variables_jaq": {
+          "description": "GraphQL: `jaq` producing the `variables` object (default `{}`).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "operation_name": {
+          "description": "GraphQL `operationName`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ]
+    },
+    "BodyKind": {
+      "description": "Request body encoding (wire contract: A1 §B.7).",
+      "type": "string",
+      "enum": [
+        "json",
+        "form",
+        "graphql",
+        "sparql"
+      ]
+    },
+    "ConstQueryVal": {
+      "description": "A string (numbers/booleans are stringified) or an array of them (repeated k=v pairs).",
+      "anyOf": [
+        {
+          "type": [
+            "string",
+            "number",
+            "boolean"
+          ]
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": [
+              "string",
+              "number",
+              "boolean"
+            ]
+          }
+        }
+      ]
+    },
+    "ReturnKind": {
+      "description": "What an op returns.",
+      "type": "string",
+      "enum": [
+        "hits",
+        "works",
+        "records",
+        "text",
+        "raw"
+      ]
+    },
+    "ParamDecl": {
+      "description": "`[op.<name>.params.<p>]`.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/ParamType",
+          "default": "string"
+        },
+        "required": {
+          "type": "boolean",
+          "default": false
+        },
+        "default": {
+          "default": null
+        },
+        "min": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double",
+          "default": null
+        },
+        "max": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double",
+          "default": null
+        },
+        "enum": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "default": null
+        },
+        "in": {
+          "$ref": "#/$defs/ParamLocation",
+          "default": "query"
+        },
+        "to": {
+          "description": "Literal outgoing key (default: the param name). Nested POST JSON paths\nlive in `body.jaq`, never here. Forbidden with `in = \"none\"`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "template": {
+          "description": "Value template, e.g. `\"all:{query}\"`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "doc": {
+          "type": "string",
+          "default": ""
+        },
+        "array": {
+          "description": "`string_array` + `in = \"query\"` only; default `repeat`.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ArrayStyle"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "encode": {
+          "description": "`in = \"path\"` only; default `segment`.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PathEncode"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "additionalProperties": false
+    },
+    "ParamType": {
+      "description": "Parameter type of an op.",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "string",
+            "int",
+            "float",
+            "bool",
+            "string_array"
+          ]
+        },
+        {
+          "description": "Any JSON value (A1 §A.3); only `in = \"none\"` or `in = \"body\"`.",
+          "type": "string",
+          "const": "json"
+        }
+      ]
+    },
+    "ParamLocation": {
+      "description": "Where a parameter goes; `none` = never transmitted directly (usable in\ntemplates, `pre`, `jaq`, `query_jaq`; A1 §A.3).",
+      "type": "string",
+      "enum": [
+        "query",
+        "path",
+        "header",
+        "body",
+        "none"
+      ]
+    },
+    "ArrayStyle": {
+      "description": "`string_array` query serialization (A1 §A.3): `k=a&k=b`, `k=a,b`, `k[]=a&k[]=b`.",
+      "type": "string",
+      "enum": [
+        "repeat",
+        "csv",
+        "brackets"
+      ]
+    },
+    "PathEncode": {
+      "description": "Path parameter encoding (A1 §A.3, §B.3): `segment` percent-encodes `/`,\n`raw` keeps `/` (traversal guardrails still apply).",
+      "type": "string",
+      "enum": [
+        "segment",
+        "raw"
+      ]
+    },
+    "PreStepDecl": {
+      "description": "`[[op.<name>.pre]]`: one request whose `bind` result is exposed as `{pre}`.",
+      "type": "object",
+      "properties": {
+        "method": {
+          "$ref": "#/$defs/HttpMethod",
+          "default": "GET"
+        },
+        "url": {
+          "type": "string"
+        },
+        "headers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {}
+        },
+        "const_query": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/ConstQueryVal"
+          },
+          "default": {}
+        },
+        "params": {
+          "description": "Templated query pairs, e.g. `{ term = \"{query}\" }`.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/ConstQueryVal"
+          },
+          "default": {}
+        },
+        "response": {
+          "$ref": "#/$defs/ResponseFormat",
+          "default": "json"
+        },
+        "bind": {
+          "description": "`jaq` expression producing the `{pre}` value.",
+          "type": "string"
+        },
+        "body": {
+          "description": "Body for `POST` pre-flight steps (A1 §A.7).",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BodySpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "auth": {
+          "$ref": "#/$defs/PreAuth",
+          "default": "inherit"
+        },
+        "on_empty": {
+          "$ref": "#/$defs/OnEmpty",
+          "default": "empty"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "url",
+        "bind"
+      ]
+    },
+    "PreAuth": {
+      "description": "Whether a pre-flight step injects the op's effective auth (A1 §A.7).",
+      "type": "string",
+      "enum": [
+        "inherit",
+        "none"
+      ]
+    },
+    "OnEmpty": {
+      "description": "What happens when `pre.bind` yields `null`, `\"\"`, `[]` or nothing (A1 §A.7).",
+      "oneOf": [
+        {
+          "description": "Return an empty result without calling the main request.",
+          "type": "string",
+          "const": "empty"
+        },
+        {
+          "description": "Fail with an upstream error.",
+          "type": "string",
+          "const": "error"
+        },
+        {
+          "description": "Call the main request with an empty `{pre}`.",
+          "type": "string",
+          "const": "continue"
+        }
+      ]
+    },
+    "MapSpec": {
+      "description": "`[op.<name>.map]` (`jaq` expressions, or `\"@ref:op.<other>.map.<field>\"`).",
+      "type": "object",
+      "properties": {
+        "items": {
+          "description": "A `jaq` stream of item values (A1 §B.5: `\".\"`, not `\"[.]\"`).",
+          "type": "string"
+        },
+        "next_cursor": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "total": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "error": {
+          "description": "Non-null result ⇒ `FsmError::Upstream`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "work": {
+          "description": "→ `ScholarlyWork` (camelCase keys).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "record": {
+          "description": "→ record (entity caps: `GrantRecord`/`AuthorProfile`/`OrgProfile`/`VenueProfile`, M13).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "hit": {
+          "description": "→ `Hit` (M3 defaults `source`/`sources`/`score`/`kind`).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "items"
+      ]
+    },
+    "HtmlSpec": {
+      "description": "`[op.<name>.html]`: CSS-selector pipeline for HTML responses (grammar:\nA1 §B.4); its JSON array of records may feed `[op.<name>.map]`.",
+      "type": "object",
+      "properties": {
+        "items_css": {
+          "type": "string"
+        },
+        "fields": {
+          "description": "Output key → `\"<css> | <filter>\"`, in document order.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "wall_markers": {
+          "description": "Page text that marks a block/consent wall (⇒ upstream error).",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "items_css",
+        "fields"
+      ]
+    },
+    "PaginateSpec": {
+      "description": "`[op.<name>.paginate]`.",
+      "type": "object",
+      "properties": {
+        "style": {
+          "$ref": "#/$defs/PaginateStyle"
+        },
+        "param": {
+          "description": "Outgoing parameter carrying the page/offset/cursor/token (not used by `link_header`).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "start": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "int64",
+          "default": null
+        },
+        "max_pages": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0,
+          "default": null
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "style"
+      ]
+    },
+    "PaginateStyle": {
+      "description": "`paginate.style`.",
+      "type": "string",
+      "enum": [
+        "page",
+        "offset",
+        "cursor",
+        "link_header",
+        "token"
+      ]
+    },
+    "ProbeManifest": {
+      "description": "`probe = {..}` of an op, and of a protocol instance (which also names the\nadapter `op`). The TOML/postcard-safe form of [`ProbeSpec`].",
+      "type": "object",
+      "properties": {
+        "op": {
+          "description": "Instances only.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "params": {
+          "type": "object",
+          "additionalProperties": true,
+          "default": {}
+        },
+        "min_results": {
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0,
+          "default": 1
+        },
+        "fixture": {
+          "description": "`fixtures/<wave>/<id>/<op>/<case>.json` (M5); `None` = `.../default.json`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

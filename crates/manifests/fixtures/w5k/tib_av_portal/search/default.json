@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "tib_av_portal",
+  "op": "search",
+  "recordedAt": "2026-11-25T13:05:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://av.tib.eu/api/v0/search?metadata=false&viewable=true&query=quantum&max-videos=3&offset=0",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"totalEntries\":2399,\"entries\":[{\"id\":\"17998\",\"type\":\"video\",\"language\":\"en\",\"title\":\"Master class with Alain Aspect\",\"duration\":\"2:38:15\",\"durationInSeconds\":9495,\"stock\":\"online\",\"viewCount\":273,\"testData\":false,\"thumbnailPlaceholder\":false,\"canView\":true,\"firstPublished\":\"2016-02-24T17:20:54Z\"},{\"id\":\"18023\",\"type\":\"video\",\"language\":\"en\",\"title\":\"Master class with Andreas Heinrich\",\"duration\":\"2:21:07\",\"durationInSeconds\":8467,\"stock\":\"online\",\"viewCount\":128,\"testData\":false,\"thumbnailPlaceholder\":false,\"canView\":true,\"firstPublished\":\"2016-02-25T00:13:44Z\"},{\"id\":\"15272\",\"type\":\"video\",\"language\":\"en\",\"title\":\"The quantum computer is growing up\",\"duration\":\"04:55\",\"durationInSeconds\":295,\"stock\":\"online\",\"viewCount\":6,\"testData\":false,\"thumbnailPlaceholder\":false,\"canView\":true,\"firstPublished\":\"2015-03-13T13:58:27Z\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

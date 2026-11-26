@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "springer_nature",
+  "op": "work",
+  "recordedAt": "2026-11-25T13:03:45Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.springernature.com/meta/v2/json?p=1&q=doi%3A10.1038%2Fs41598-020-79929-0",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"apiMessage\": \"This JSON was provided by Springer Nature\", \"query\": \"doi:10.1038/s41598-020-79929-0\", \"result\": [{\"total\": \"1\", \"start\": \"1\", \"pageLength\": \"1\", \"recordsDisplayed\": \"1\"}], \"records\": [{\"contentType\": \"Article\", \"identifier\": \"doi:10.1038/s41598-020-79929-0\", \"title\": \"Reliance on model-based and model-free control in obesity\", \"creators\": [{\"ORCID\": \"0000-0002-0166-8163\", \"creator\": \"Janssen, Lieneke K.\"}, {\"creator\": \"Mahner, Florian P.\"}], \"publicationName\": \"Scientific Reports\", \"openaccess\": \"true\", \"doi\": \"10.1038/s41598-020-79929-0\", \"publicationDate\": \"2020-12-18\", \"abstract\": \"Background: Obesity is frequently associated with altered reinforcement learning dynamics.\", \"url\": [{\"format\": \"html\", \"platform\": \"web\", \"value\": \"https://www.nature.com/articles/s41598-020-79929-0\"}, {\"format\": \"pdf\", \"platform\": \"web\", \"value\": \"https://www.nature.com/articles/s41598-020-79929-0.pdf\"}]}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

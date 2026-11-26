@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "ensembl_rest",
+  "op": "symbol",
+  "recordedAt": "2026-11-25T13:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://rest.ensembl.org/lookup/symbol/homo_sapiens/BRCA1?expand=0",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"assembly_name\":\"GRCh38\",\"logic_name\":\"ensembl_havana_gene_homo_sapiens\",\"strand\":-1,\"display_name\":\"BRCA1\",\"description\":\"BRCA1 DNA repair associated [Source:HGNC Symbol;Acc:HGNC:1100]\",\"source\":\"ensembl_havana\",\"start\":43044292,\"seq_region_name\":\"17\",\"object_type\":\"Gene\",\"biotype\":\"protein_coding\",\"id\":\"ENSG00000012048\",\"end\":43170245,\"species\":\"homo_sapiens\",\"canonical_transcript\":\"ENST00000357654.9\",\"db_type\":\"core\",\"version\":28}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "nlm_clinicaltables",
+  "op": "conditions",
+  "recordedAt": "2026-11-25T13:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://clinicaltables.nlm.nih.gov/api/conditions/v3/search?terms=asthma&maxList=3&ef=primary_name%2Cicd10cm_codes%2Csynonyms",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ],
+          [
+            "etag",
+            "W/\"134-6jZ6OLSohF6ApWv/kUUfX3GFLwI\""
+          ]
+        ],
+        "bodyText": "[5,[\"366\",\"30572\",\"30573\"],{\"primary_name\":[\"Asthma\",\"Asthma - mild persistent\",\"Asthma - moderate persistent\"],\"icd10cm_codes\":[\"J45.909\",\"J45.30\",\"J45.40\"],\"synonyms\":[[],[\"asthma mild persistent\"],[\"asthma moderate persistent\"]]},[[\"Asthma\"],[\"Asthma - mild persistent\"],[\"Asthma - moderate persistent\"]]]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

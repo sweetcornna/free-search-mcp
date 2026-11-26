@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "open_prices",
+  "op": "locations",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://prices.openfoodfacts.org/api/v1/locations?size=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"items\":[{\"id\":1,\"osm_brand_logo_url\":null,\"type\":\"OSM\",\"osm_id\":1392117416,\"osm_type\":\"NODE\",\"osm_name\":\"L'Éléfàn\",\"osm_display_name\":\"L'Éléfàn, 32, Avenue Marcelin Berthelot, Capuche, Secteur 4, Grenoble, Isère, Auvergne-Rhône-Alpes, France métropolitaine, 38100, France\",\"osm_tag_key\":\"shop\",\"osm_tag_value\":\"supermarket\",\"osm_tags\":[\"bulk_purchase:yes\",\"organic:yes\"],\"osm_brand\":null,\"osm_address_postcode\":\"38100\",\"osm_address_city\":\"Grenoble\",\"osm_address_country\":\"France\",\"osm_address_country_code\":\"FR\",\"osm_lat\":45.1750672,\"osm_lon\":5.7304083,\"osm_version\":20,\"osm_version_date\":\"2023-11-20T22:15:30Z\",\"website_url\":null,\"tags\":[],\"price_count\":4084,\"user_count\":5,\"product_count\":2134,\"proof_count\":97,\"source\":null,\"created\":\"2023-11-27T11:37:14.059085Z\",\"updated\":\"2026-09-16T10:27:56.736101Z\"},{\"id\":2,\"osm_brand_logo_url\":\"https://raw.githubusercontent.com/openfoodfacts/brand-images/refs/heads/main/xx/stores/naturalia.png\",\"type\":\"OSM\",\"osm_id\":2685586034,\"osm_type\":\"NODE\",\"osm_name\":\"Naturalia\",\"osm_display_name\":\"Naturalia, Rue de la Verrerie, Quartier Saint-Merri, Paris 4e Arrondissement, Paris, Île-de-France, France métropolitaine, 75004, France\",\"osm_tag_key\":\"shop\",\"osm_tag_value\":\"supermarket\",\"osm_tags\":[\"organic:only\"],\"osm_brand\":\"Naturalia\",\"osm_address_postcode\":\"75004\",\"osm_address_city\":\"Paris\",\"osm_address_country\":\"France\",\"osm_address_country_code\":\"FR\",\"osm_lat\":48.8585959,\"osm_lon\":2.3511475,\"osm_version\":11,\"osm_version_date\":\"2022-11-26T09:48:12Z\",\"website_url\":null,\"tags\":[],\"price_count\":304,\"user_count\":5,\"product_count\":250,\"proof_count\":67,\"source\":null,\"created\":\"2023-12-18T15:41:07.584317Z\",\"updated\":\"2026-09-16T08:58:57.210144Z\"},{\"id\":3,\"osm_brand_logo_url\":\"https://raw.githubusercontent.com/openfoodfacts/brand-images/refs/heads/main/xx/stores/auchan.png\",\"type\":\"OSM\",\"osm_id\":872934393,\"osm_type\":\"WAY\",\"osm_name\":\"Auchan Supermarché\",\"osm_display_name\":\"Auchan Supermarché, Rue de Stalingrad, Capuche, Secteur 4, Grenoble, Isère, Auvergne-Rhône-Alpes, France métropolitaine, 38100, France\",\"osm_tag_key\":\"shop\",\"osm_tag_value\":\"supermarket\",\"osm_tags\":[],\"osm_brand\":\"Auchan\",\"osm_address_postcode\":\"38100\",\"osm_address_city\":\"Grenoble\",\"osm_address_country\":\"France\",\"osm_address_country_code\":\"FR\",\"osm_lat\":45.1793824,\"osm_lon\":5.726661,\"osm_version\":7,\"osm_version_date\":\"2023-09-14T16:23:07Z\",\"website_url\":null,\"tags\":[],\"price_count\":8719,\"user_count\":4,\"product_count\":5049,\"proof_count\":2182,\"source\":null,\"created\":\"2023-12-19T19:11:02.694100Z\",\"updated\":\"2024-09-01T13:28:19.350103Z\"}],\"page\":1,\"pages\":2675,\"size\":3,\"total\":8023}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

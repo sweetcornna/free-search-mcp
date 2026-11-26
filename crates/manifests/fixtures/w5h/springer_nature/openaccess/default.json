@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "springer_nature",
+  "op": "openaccess",
+  "recordedAt": "2026-11-25T13:03:45Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.springernature.com/openaccess/json?q=keyword%3Acrispr&p=3&s=1",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"apiMessage\": \"This JSON was provided by Springer Nature\", \"query\": \"keyword:crispr\", \"result\": [{\"total\": \"14205\", \"start\": \"1\", \"pageLength\": \"3\", \"recordsDisplayed\": \"3\"}], \"records\": [{\"contentType\": \"Article\", \"identifier\": \"doi:10.1186/s13059-023-02910-z\", \"title\": \"High-efficiency CRISPR base editing in primary human cells\", \"creators\": [{\"creator\": \"Kim, Minji\"}, {\"creator\": \"Rossi, Elena\"}], \"publicationName\": \"Genome Biology\", \"openaccess\": \"true\", \"doi\": \"10.1186/s13059-023-02910-z\", \"publicationDate\": \"2023-04-12\", \"abstract\": \"Engineered adenine base editors minimize bystander mutations across therapeutically relevant loci.\", \"url\": [{\"format\": \"html\", \"platform\": \"web\", \"value\": \"https://genomebiology.biomedcentral.com/articles/10.1186/s13059-023-02910-z\"}]}, {\"contentType\": \"Article\", \"identifier\": \"doi:10.1038/s41467-024-45102-8\", \"title\": \"CRISPR-Cas13 RNA targeting for viral suppression\", \"creators\": [{\"creator\": \"Nguyen, Linh\"}], \"publicationName\": \"Nature Communications\", \"openaccess\": \"true\", \"doi\": \"10.1038/s41467-024-45102-8\", \"publicationDate\": \"2024-02-05\", \"abstract\": \"Programmable Cas13 ribonucleases provide broad-spectrum suppression of RNA viruses in vitro.\", \"url\": [{\"format\": \"html\", \"platform\": \"web\", \"value\": \"https://www.nature.com/articles/s41467-024-45102-8\"}]}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

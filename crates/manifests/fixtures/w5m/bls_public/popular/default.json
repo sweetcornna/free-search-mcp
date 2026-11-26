@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "bls_public",
+  "op": "popular",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.bls.gov/publicAPI/v2/timeseries/popular",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ],
+          [
+            "cache-control",
+            "max-age=0, no-cache, no-store"
+          ]
+        ],
+        "bodyText": "{\"status\":\"REQUEST_SUCCEEDED\",\"responseTime\":8,\"message\":[],\"Results\":{\n\"series\":\n[{\"seriesID\":\"CUUR0000SA0\"},\n{\"seriesID\":\"LNS14000000\"},\n{\"seriesID\":\"CES0000000001\"},\n{\"seriesID\":\"CUSR0000SA0\"},\n{\"seriesID\":\"CUUR0000SA0L1E\"},\n{\"seriesID\":\"CUSR0000SA0L1E\"},\n{\"seriesID\":\"CES0500000003\"},\n{\"seriesID\":\"WPSFD4\"},\n{\"seriesID\":\"WPUFD49104\"},\n{\"seriesID\":\"WPUFD4\"},\n{\"seriesID\":\"ISU00000000031004\"},\n{\"seriesID\":\"ISU00000000031006\"},\n{\"seriesID\":\"ISU00000000031029\"},\n{\"seriesID\":\"ISU00000000031001\"},\n{\"seriesID\":\"ISU00000000031018\"},\n{\"seriesID\":\"ISU00000000031048\"},\n{\"seriesID\":\"ISU00000000031051\"},\n{\"seriesID\":\"ISU00000000031039\"},\n{\"seriesID\":\"ISU00000000031017\"},\n{\"seriesID\":\"ISU00000000031005\"},\n{\"seriesID\":\"ISU00000000031021\"},\n{\"seriesID\":\"ISU00000000031026\"},\n{\"seriesID\":\"ISU00000000031027\"},\n{\"seriesID\":\"ISU00000000031019\"},\n{\"seriesID\":\"ISU00000000031022\"}]\n}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

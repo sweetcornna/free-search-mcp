@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "courtlistener",
+  "op": "cluster",
+  "recordedAt": "2026-11-25T15:05:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.courtlistener.com/api/rest/v4/clusters/2812209/",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"id\": 2812209, \"absolute_url\": \"/opinion/2812209/obergefell-v-hodges/\", \"resource_uri\": \"https://www.courtlistener.com/api/rest/v4/clusters/2812209/\", \"docket\": \"https://www.courtlistener.com/api/rest/v4/dockets/68533094/\", \"sub_opinions\": [\"https://www.courtlistener.com/api/rest/v4/opinions/2812209/\"], \"case_name\": \"Obergefell v. Hodges\", \"case_name_full\": \"James Obergefell, et al. v. Richard Hodges, Director, Ohio Department of Health, et al.\", \"citations\": [{\"volume\": \"576\", \"reporter\": \"U.S.\", \"page\": \"644\", \"type\": 1}, {\"volume\": \"135\", \"reporter\": \"S. Ct.\", \"page\": \"2584\", \"type\": 3}, {\"volume\": \"192\", \"reporter\": \"L. Ed. 2d\", \"page\": \"609\", \"type\": 4}], \"date_filed\": \"2015-06-26\", \"precedential_status\": \"Published\", \"judges\": \"Kennedy\", \"syllabus\": \"<p>The Fourteenth Amendment requires a State to license a marriage between two people of the same sex.</p>\", \"disposition\": \"Reversed.\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

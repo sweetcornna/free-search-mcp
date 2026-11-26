@@ -1,0 +1,44 @@
+[package]
+name = "xtask"
+description = "Manifest tooling: validate, record, probe."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+fsm-core.workspace = true
+fsm-net.workspace = true
+fsm-manifests.workspace = true
+fsm-sources.workspace = true
+fsm-protocols-a.workspace = true
+fsm-protocols-b.workspace = true
+fsm-engines-serp.workspace = true
+fsm-engines-api.workspace = true
+fsm-engines-claims.workspace = true
+clap.workspace = true
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+toml.workspace = true
+anyhow.workspace = true
+jiff.workspace = true
+glob.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+sha2.workspace = true
+hex.workspace = true
+base64.workspace = true
+futures.workspace = true
+bytes.workspace = true
+tokio-util.workspace = true
+url.workspace = true
+percent-encoding.workspace = true
+regex.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true

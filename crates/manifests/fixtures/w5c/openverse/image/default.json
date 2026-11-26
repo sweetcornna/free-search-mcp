@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "openverse",
+  "op": "image",
+  "recordedAt": "2026-11-25T11:54:17Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.openverse.org/v1/images/1c3cefca-c00e-484c-af57-4a5316c8e3a2/?format=json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ],
+          [
+            "last-modified",
+            "Wed, 25 Nov 2026 11:54:17 GMT"
+          ]
+        ],
+        "bodyText": "{\"id\":\"1c3cefca-c00e-484c-af57-4a5316c8e3a2\",\"title\":\"aurora\",\"indexed_on\":\"2020-05-03T05:48:27.285165Z\",\"foreign_landing_url\":\"https://www.flickr.com/photos/8940722@N02/1054046071\",\"url\":\"https://live.staticflickr.com/1088/1054046071_9a6fc75c9a.jpg\",\"creator\":\"well_lucio\",\"creator_url\":\"https://www.flickr.com/photos/8940722@N02\",\"license\":\"by-nd\",\"license_version\":\"2.0\",\"license_url\":\"https://creativecommons.org/licenses/by-nd/2.0/\",\"provider\":\"flickr\",\"source\":\"flickr\",\"category\":null,\"filesize\":null,\"filetype\":null,\"tags\":[{\"name\":\"aurora\",\"accuracy\":null,\"unstable__provider\":\"flickr\"}],\"attribution\":\"\\\"aurora\\\" by well_lucio is licensed under CC BY-ND 2.0. To view a copy of this license, visit https://creativecommons.org/licenses/by-nd/2.0/.\",\"fields_matched\":[],\"mature\":false,\"height\":348,\"width\":500,\"thumbnail\":\"https://api.openverse.org/v1/images/1c3cefca-c00e-484c-af57-4a5316c8e3a2/thumb/?format=json\",\"detail_url\":\"https://api.openverse.org/v1/images/1c3cefca-c00e-484c-af57-4a5316c8e3a2/?format=json\",\"related_url\":\"https://api.openverse.org/v1/images/1c3cefca-c00e-484c-af57-4a5316c8e3a2/related/?format=json\",\"unstable__sensitivity\":[]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

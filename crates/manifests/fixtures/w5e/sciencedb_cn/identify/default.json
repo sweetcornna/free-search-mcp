@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "source": "sciencedb_cn",
+  "op": "identify",
+  "recordedAt": "2026-11-25T12:13:52Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.scidb.cn/oai?verb=Identify",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "text/xml;charset=UTF-8"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<?xml-stylesheet type=\"text/xsl\" href=\"oaitohtml.xsl\"?>\n<OAI-PMH xmlns='http://www.openarchives.org/OAI/2.0/' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'\n         xsi:schemaLocation='http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd'>\n    <responseDate>2026-11-25T20:13:52Z</responseDate>\n    <request verb=\"Identify\">https://www.scidb.cn/oai</request>\n    <Identify>\n        <repositoryName>ScienceDB repository</repositoryName>\n        <baseURL>https://www.scidb.cn/oai</baseURL>\n        <protocolVersion>2.0</protocolVersion>\n        <adminEmail>sciencedb@cnic.cn</adminEmail>\n        <earliestDatestamp>2014-12-28T00:07:00Z</earliestDatestamp>\n        <deletedRecord>persistent</deletedRecord>\n        <granularity>YYYY-MM-DDThh:mm:ssZ</granularity>\n    </Identify>\n</OAI-PMH>",
+        "bodyB64": null
+      }
+    }
+  ]
+}

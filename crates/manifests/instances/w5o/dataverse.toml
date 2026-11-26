@@ -1,0 +1,67 @@
+protocol = "dataverse"
+
+[[instance]]
+id = "cuhk_rdr"
+name = "CUHK Research Data Repository"
+summary = "Chinese University of Hong Kong bilingual English/Chinese open research data repository across STEM, medicine, and social sciences."
+aliases = ["cuhk", "cuhk research data", "香港中文大学研究数据", "中文学术"]
+base_url = "https://researchdata.cuhk.edu.hk"
+scopes = ["dataset", "academic"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "data", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "hkust_dataspace"
+name = "HKUST DataSpace"
+summary = "Hong Kong University of Science and Technology Dataverse repository hosting engineering, computing, physical sciences, and business datasets."
+aliases = ["hkust", "hkust dataspace", "香港科技大学数据"]
+base_url = "https://dataspace.hkust.edu.hk"
+scopes = ["dataset", "academic"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "data", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "dr_ntu_data"
+name = "DR-NTU (Data) — Nanyang Technological University"
+summary = "Nanyang Technological University Singapore Dataverse repository for multidisciplinary open research datasets complementing DR-NTU publications."
+aliases = ["dr-ntu data", "ntu singapore data", "researchdata ntu"]
+base_url = "https://researchdata.ntu.edu.sg"
+scopes = ["dataset", "academic"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "data", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "dataverse_unr_ar"
+name = "Repositorio de Datos Académicos UNR (Argentina)"
+summary = "National University of Rosario (Universidad Nacional de Rosario) open research data repository for Argentine and Latin American scholarship."
+aliases = ["unr dataverse", "universidad nacional de rosario data", "rda unr"]
+base_url = "https://dataverse.unr.edu.ar"
+scopes = ["dataset", "academic"]
+caps = ["search", "lookup", "dataset"]
+tier = 2
+probe = { op = "search", params = { query = "datos", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "cora_rdr_es"
+name = "CORA.RDR (Catalan Research Data Repository)"
+summary = "Consortial Dataverse repository of Catalan universities and research centers (CSUC) hosting multidisciplinary Spanish, Catalan, and English datasets."
+aliases = ["cora rdr", "csuc dataverse", "catalonia research data"]
+base_url = "https://dataverse.csuc.cat"
+scopes = ["dataset", "academic"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "climate", limit = 3 }, min_results = 2 }
+
+[[instance]]
+id = "repod_pl"
+name = "RepOD (Repository for Open Data, ICM Poland)"
+summary = "Polish national multidisciplinary open research data repository operated by ICM at the University of Warsaw."
+aliases = ["repod", "icm repod", "poland open research data"]
+base_url = "https://repod.icm.edu.pl"
+scopes = ["dataset", "academic"]
+caps = ["search", "lookup", "dataset"]
+tier = 1
+probe = { op = "search", params = { query = "data", limit = 3 }, min_results = 2 }

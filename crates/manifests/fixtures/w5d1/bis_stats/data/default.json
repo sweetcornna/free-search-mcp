@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "bis_stats",
+  "op": "data",
+  "recordedAt": "2026-11-25T12:12:19Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://stats.bis.org/api/v2/data/dataflow/BIS/WS_CBPOL/1.0/M.US?format=sdmx-json&lastNObservations=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json;charset=UTF-8"
+          ]
+        ],
+        "bodyText": "{\"meta\":{\"id\":\"IDREF8c8b8593-658b-4dd5-9d69-e5643021053f\",\"prepared\":\"2026-11-25T12:12:32\",\"test\":false,\"datasetId\":\"a882d019-7e87-4fe7-905b-e9b881fc7dbc\",\"sender\":{\"id\":\"UNKNOWN\"},\"receiver\":{\"id\":\"guest\"},\"links\":[{\"rel\":\"self\",\"href\":\"/data/dataflow/BIS/WS_CBPOL/1.0/M.US?format=sdmx-json&lastNObservations=3\",\"uri\":\"https://raw.githubusercontent.com/sdmx-twg/sdmx-json/develop/structure-message/tools/schemas/1.0/sdmx-json-structure-schema.json\"}]},\"data\":{\"dataSets\":[{\"links\":[{\"rel\":\"dataflow\",\"urn\":\"urn:sdmx:org.sdmx.infomodel.datastructure.Dataflow=BIS:WS_CBPOL(1.0)\"}],\"reportingBegin\":\"2026-08-01T00:00:00\",\"reportingEnd\":\"2026-10-01T23:59:59\",\"action\":\"Information\",\"series\":{\"0:0\":{\"attributes\":[null,0,0,0,null,0],\"observations\":{\"0\":[\"3.625\",0,0,null],\"1\":[\"3.875\",0,0,null],\"2\":[\"3.875\",0,0,null]}}},\"attributes\":[0,0]}],\"structure\":{\"links\":[{\"rel\":\"dataflow\",\"urn\":\"urn:sdmx:org.sdmx.infomodel.datastructure.Dataflow=BIS:WS_CBPOL(1.0)\"},{\"rel\":\"datastructure\",\"urn\":\"urn:sdmx:org.sdmx.infomodel.datastructure.DataStructure=BIS:BIS_CBPOL(1.0)\"}],\"name\":\"Central bank policy rates\",\"names\":{\"en\":\"Central bank policy rates\"},\"description\":\"The interest rate which best captures the monetary authorities' policy intentions.\",\"descriptions\":{\"en\":\"The interest rate which best captures the monetary authorities' policy intentions.\"},\"dimensions\":{\"dataset\":[],\"series\":[{\"id\":\"FREQ\",\"name\":\"Frequency\",\"keyPosition\":0,\"role\":null,\"values\":[{\"id\":\"M\",\"name\":\"Monthly\"}]},{\"id\":\"REF_AREA\",\"name\":\"Reference area\",\"keyPosition\":1,\"role\":null,\"values\":[{\"id\":\"US\",\"name\":\"United States\"}]}],\"observation\":[{\"id\":\"TIME_PERIOD\",\"name\":\"Time period or range\",\"keyPosition\":2,\"role\":\"time\",\"values\":[{\"start\":\"2026-08-01T00:00:00\",\"end\":\"2026-08-31T23:59:59\",\"id\":\"2026-08\",\"name\":\"2026-08\"},{\"start\":\"2026-09-01T00:00:00\",\"end\":\"2026-09-30T23:59:59\",\"id\":\"2026-09\",\"name\":\"2026-09\"},{\"start\":\"2026-10-01T00:00:00\",\"end\":\"2026-10-31T23:59:59\",\"id\":\"2026-10\",\"name\":\"2026-10\"}]}]},\"attributes\":{\"dataset\":[{\"id\":\"UNIT_MEASURE\",\"name\":\"Unit of measure\",\"relationship\":{\"none\":{}},\"role\":null,\"values\":[{\"id\":\"368\",\"name\":\"Per cent per year\"}]},{\"id\":\"UNIT_MULT\",\"name\":\"Unit Multiplier\",\"relationship\":{\"none\":{}},\"role\":null,\"values\":[{\"id\":\"0\",\"name\":\"Units\"}]}],\"series\":[{\"id\":\"TIME_FORMAT\",\"name\":\"Time Format\",\"relationship\":{\"dimensions\":[\"FREQ\",\"REF_AREA\"]},\"role\":null,\"values\":[]},{\"id\":\"COMPILATION\",\"name\":\"Compilation\",\"relationship\":{\"dimensions\":[\"FREQ\",\"REF_AREA\"]},\"role\":null,\"values\":[{\"id\":\"From 19 Dec 1985 onwards: mid-point of the Federal Reserve target rate; from 1 Jul 1954 to 18 Dec 1985: US Fed Funds effective rate.\",\"name\":\"From 19 Dec 1985 onwards: mid-point of the Federal Reserve target rate; from 1 Jul 1954 to 18 Dec 1985: US Fed Funds effective rate.\"}]},{\"id\":\"DECIMALS\",\"name\":\"Decimals\",\"relationship\":{\"dimensions\":[\"FREQ\",\"REF_AREA\"]},\"role\":null,\"values\":[{\"id\":\"4\",\"name\":\"Four\"}]},{\"id\":\"SOURCE_REF\",\"name\":\"Publication Source\",\"relationship\":{\"dimensions\":[\"FREQ\",\"REF_AREA\"]},\"role\":null,\"values\":[{\"id\":\"US Federal Reserve System\",\"name\":\"US Federal Reserve System\"}]},{\"id\":\"SUPP_INFO_BREAKS\",\"name\":\"Supplemental information and breaks\",\"relationship\":{\"dimensions\":[\"FREQ\",\"REF_AREA\"]},\"role\":null,\"values\":[]},{\"id\":\"TITLE\",\"name\":\"Title\",\"relationship\":{\"dimensions\":[\"FREQ\",\"REF_AREA\"]},\"role\":null,\"values\":[{\"id\":\" Central bank policy rates - United States - Monthly - End of period\",\"name\":\" Central bank policy rates - United States - Monthly - End of period\"}]}],\"observation\":[{\"id\":\"OBS_STATUS\",\"name\":\"Observation Status\",\"relationship\":{\"primaryMeasure\":\"OBS_VALUE\"},\"role\":null,\"values\":[{\"id\":\"A\",\"name\":\"Normal value\"}]},{\"id\":\"OBS_CONF\",\"name\":\"Observation confidentiality\",\"relationship\":{\"primaryMeasure\":\"OBS_VALUE\"},\"role\":null,\"values\":[{\"id\":\"F\",\"name\":\"Free\"}]},{\"id\":\"OBS_PRE_BREAK\",\"name\":\"Pre-Break Observation\",\"relationship\":{\"primaryMeasure\":\"OBS_VALUE\"},\"role\":null,\"values\":[]}]}}}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

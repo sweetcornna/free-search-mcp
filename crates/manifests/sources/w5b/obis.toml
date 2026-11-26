@@ -1,0 +1,126 @@
+id = "obis"
+name = "OBIS Ocean Biodiversity Information System"
+summary = "Global open-access marine biodiversity datasets, WoRMS marine taxonomy, and ocean occurrence records."
+aliases = ["ocean biodiversity", "marine species", "iobis"]
+home_url = "https://obis.org"
+tier = 1
+scopes = ["dataset", "academic.biomed", "reference.geo"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 43200 }
+
+[op.search]
+summary = "Search marine biodiversity datasets in OBIS."
+method = "GET"
+url = "https://api.obis.org/v3/dataset"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { query = "coral", limit = 3 }, min_results = 2, fixture = "fixtures/w5b/obis/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Keyword search across OBIS marine datasets" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "size", doc = "Maximum datasets to return" }
+
+[op.search.map]
+items = ".results[]"
+total = ".total"
+record = '''{
+  id: (.id // ""),
+  title: ((.title // "") | strip_tags),
+  abstractText: ((.abstract // null) | strip_tags),
+  records: (.records | to_int),
+  published: ((.published // null) | parse_date),
+  citation: ((.citation // null) | strip_tags),
+  url: ("https://obis.org/dataset/" + (.id // ""))
+}'''
+hit = '''((.published // null) | parse_date) as $d | {
+  title: ((.title // "") | strip_tags),
+  url: ("https://obis.org/dataset/" + (.id // "")),
+  snippet: (((if .records != null then ((.records | tostring) + " records — ") else "" end) + ((.abstract // .citation // "") | strip_tags)) | collapse_ws)[0:280],
+  date: $d,
+  dateSource: (if $d != null then "api" else null end)
+}'''
+
+[op.dataset]
+summary = "Fetch a single OBIS marine biodiversity dataset record by dataset UUID."
+method = "GET"
+url = "https://api.obis.org/v3/dataset/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "a54a77db-7b42-4101-8d71-1adec3dd4ed5" }, min_results = 1, fixture = "fixtures/w5b/obis/dataset/default.json" }
+
+[op.dataset.params]
+id = { type = "string", required = true, in = "path", doc = "OBIS dataset UUID" }
+
+[op.dataset.map]
+items = ".results[]"
+record = "@ref:op.search.map.record"
+
+[op.taxon]
+summary = "Look up marine species taxonomic metadata by scientific name or WoRMS AphiaID."
+method = "GET"
+url = "https://api.obis.org/v3/taxon/{name}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { name = "Mola mola" }, min_results = 1, fixture = "fixtures/w5b/obis/taxon/default.json" }
+
+[op.taxon.params]
+name = { type = "string", required = true, in = "path", doc = "Scientific name (e.g. Mola mola) or WoRMS AphiaID" }
+
+[op.taxon.map]
+items = ".results[]"
+record = '''{
+  taxonId: (.taxonID | to_int),
+  scientificName: ((.scientificName // "") | collapse_ws),
+  authorship: (.scientificNameAuthorship // null),
+  rank: (.taxonRank // null),
+  status: (.taxonomicStatus // null),
+  kingdom: (.kingdom // null),
+  phylum: (.phylum // null),
+  class: (.class // null),
+  order: (.order // null),
+  family: (.family // null),
+  genus: (.genus // null),
+  isMarine: (.is_marine // null),
+  iucnCategory: (.category // null),
+  vernacularNames: (.vernacularNames // []),
+  url: ("https://obis.org/taxon/" + (.taxonID | tostring))
+}'''
+
+[op.occurrences]
+summary = "Search marine species occurrence observations in OBIS."
+method = "GET"
+url = "https://api.obis.org/v3/occurrence"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "cursor", param = "after", max_pages = 3 }
+probe = { params = { scientific_name = "Mola mola", limit = 3 }, min_results = 2, fixture = "fixtures/w5b/obis/occurrences/default.json" }
+
+[op.occurrences.params]
+scientific_name = { type = "string", required = true, to = "scientificname", doc = "Marine species scientific name (e.g. Mola mola)" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "size", doc = "Maximum occurrence records" }
+after = { type = "string", to = "after", doc = "Last occurrence ID for cursor pagination" }
+
+[op.occurrences.map]
+items = ".results[]"
+next_cursor = "if (.results | length) > 0 then .results[-1].id else null end"
+total = ".total"
+record = '''{
+  id: (.id // ""),
+  scientificName: ((.scientificName // "") | collapse_ws),
+  aphiaId: (.aphiaID | to_int),
+  lat: (.decimalLatitude | to_num),
+  lon: (.decimalLongitude | to_num),
+  depth: (.depth | to_num),
+  eventDate: ((.eventDate // (if .date_year != null then (.date_year | tostring) else null end)) | parse_date),
+  year: (.date_year | to_int),
+  basisOfRecord: (.basisOfRecord // null),
+  datasetName: (.datasetName // null),
+  datasetId: (.dataset_id // null),
+  url: (if .aphiaID != null then ("https://obis.org/taxon/" + (.aphiaID | tostring)) elif (.dataset_id // "") != "" then ("https://obis.org/dataset/" + .dataset_id) else "https://obis.org" end)
+}'''

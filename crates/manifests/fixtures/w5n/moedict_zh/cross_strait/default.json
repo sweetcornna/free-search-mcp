@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "moedict_zh",
+  "op": "cross_strait",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.moedict.tw/c/%E8%90%8C",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"n\":8,\"t\":\"萌\",\"r\":\"`艸~\",\"c\":12,\"h\":[{\"d\":[{\"e\":[\"例⃝「`萌芽~」、「`萌發~」。\"],\"f\":\"`（~`草木~）`發芽~。\"},{\"e\":[\"例⃝「`萌生~」、「`故態復萌~」。\"],\"f\":\"`比喻~`（~`事物~）`開始~`發生~。\"},{\"f\":\"〈`口~〉`起源~`於~`日~`本~`御宅族~`次文化~`的~`詞彙~，`用以~`形容~`極端~`喜愛~`的~`事物~，`該~`事物~`的~`某~`種~`特徵~`可~`使~`個人~`萌發~`熱情~。`現~`多~`用以~`形容~`可愛~`的~`表情~`或~`人物~。\"},{\"e\":[\"例⃝「`命~`南宮~`括~`散~`鹿~`臺~`之~`財~，`發~`鉅~`橋~`之~`粟~，`以~`振~`貧弱~`萌~`隸~`（~《`史記~‧`卷~`四~‧`周~`本紀~》）」。\"],\"f\":\"〈`書~〉`古代~`對~`百姓~`的~`稱謂~。`通~「`氓~」`（~ㄇㄥˊ　méng）。\"},{\"f\":\"`姓~。\"}],\"_\":\"1035090000\",\"p\":\"méng\",\"b\":\"ㄇㄥˊ\"}],\"translation\":{\"francais\":[\"germer\",\"bourgeonner\",\"mignon\",\"adorable\"],\"Deutsch\":[\"Leute, Menschen  (S)\",\"Meng  (Eig, Fam)\",\"keimen, sprießen, knospen, ausschlagen \"],\"English\":[\"to sprout\",\"to bud\",\"to have a strong affection for (slang)\",\"adorable (loanword from Japanese `萌~え moe, slang describing affection for a cute character)\"]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "source": "lobsters",
+  "op": "story",
+  "recordedAt": "2026-11-25T11:54:31Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://lobste.rs/s/em9zdb.json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ],
+          [
+            "etag",
+            "\"dn49sg75y6et-1as-gzip\""
+          ],
+          [
+            "last-modified",
+            "Wed, 25 Nov 2026 11:54:13 GMT"
+          ]
+        ],
+        "bodyText": "{\"short_id\":\"em9zdb\",\"created_at\":\"2026-11-24T17:14:50.733-06:00\",\"title\":\"Pokemon Childhood Version: A romhack where Mew is under the truck\",\"url\":\"https://wheybags.com/blog/pokemon_childhood_version.html\",\"score\":47,\"flags\":2,\"comment_count\":2,\"description\":\"\",\"description_plain\":\"\",\"submitter_user\":\"wheybags\",\"user_is_author\":true,\"tags\":[\"assembly\",\"games\"],\"comments\":[{\"short_id\":\"mag55m\",\"created_at\":\"2026-11-25T00:19:36.860-06:00\",\"last_edited_at\":\"2026-11-25T00:19:36.724-06:00\",\"is_deleted\":false,\"is_moderated\":false,\"score\":8,\"flags\":0,\"parent_comment\":null,\"comment\":\"\\u003cp\\u003eThis unlocks so many memories!\\u003c/p\\u003e\\n\",\"comment_plain\":\"This unlocks so many memories!\",\"depth\":0,\"commenting_user\":\"gignico\",\"short_id_url\":\"https://lobste.rs/c/mag55m\",\"url\":\"https://lobste.rs/s/em9zdb/pokemon_childhood_version_romhack_where#c_mag55m\"},{\"short_id\":\"ywro3f\",\"created_at\":\"2026-11-25T04:59:04.697-06:00\",\"last_edited_at\":\"2026-11-25T04:59:04.564-06:00\",\"is_deleted\":false,\"is_moderated\":false,\"score\":1,\"flags\":0,\"parent_comment\":null,\"comment\":\"\\u003cp\\u003eGiven it's not implemented, I guess it's true that you train your team to level 100, release it and then can upgrade your bike to a car!\\u003c/p\\u003e\\n\",\"comment_plain\":\"Given it's not implemented, I guess it's true that you train your team to level 100, release it and then can upgrade your bike to a car!\",\"depth\":0,\"commenting_user\":\"xash\",\"short_id_url\":\"https://lobste.rs/c/ywro3f\",\"url\":\"https://lobste.rs/s/em9zdb/pokemon_childhood_version_romhack_where#c_ywro3f\"}],\"short_id_url\":\"https://lobste.rs/s/em9zdb\",\"comments_url\":\"https://lobste.rs/s/em9zdb/pokemon_childhood_version_romhack_where\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

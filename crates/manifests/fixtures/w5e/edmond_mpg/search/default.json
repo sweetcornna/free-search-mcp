@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "source": "edmond_mpg",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:13:59Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://edmond.mpg.de/api/search?q=quantum&type=dataset&per_page=3",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json;charset=UTF-8"
+          ]
+        ],
+        "bodyText": "{\"status\":\"OK\",\"data\":{\"q\":\"quantum\",\"total_count\":70,\"start\":0,\"spelling_alternatives\":{},\"items\":[{\"name\":\"Emergence of fluctuating hydrodynamics in chaotic quantum systems\",\"type\":\"dataset\",\"url\":\"https://doi.org/10.17617/3.L50Q6I\",\"global_id\":\"doi:10.17617/3.L50Q6I\",\"description\":\"Data presented in the publication.\",\"published_at\":\"2024-07-03T15:31:21Z\",\"publisher\":\"Edmond\",\"citationHtml\":\"Wienand, Julian; Karch, Simon; Impertro, Alexander; Schweizer, Christian; McCulloch, Ewan; Vasseur, Romain; Gopalakrishnan, Sarang; Aidelsburger, Monika; Bloch, Immanuel, 2024, \\\"Emergence of fluctuating hydrodynamics in chaotic quantum systems\\\", <a href=\\\"https://doi.org/10.17617/3.L50Q6I\\\" target=\\\"_blank\\\">https://doi.org/10.17617/3.L50Q6I</a>, Edmond, V1\",\"identifier_of_dataverse\":\"edmond\",\"name_of_dataverse\":\"Edmond\",\"citation\":\"Wienand, Julian; Karch, Simon; Impertro, Alexander; Schweizer, Christian; McCulloch, Ewan; Vasseur, Romain; Gopalakrishnan, Sarang; Aidelsburger, Monika; Bloch, Immanuel, 2024, \\\"Emergence of fluctuating hydrodynamics in chaotic quantum systems\\\", https://doi.org/10.17617/3.L50Q6I, Edmond, V1\",\"publicationStatuses\":[\"Published\"],\"storageIdentifier\":\"54://10.17617/3.L50Q6I\",\"keywords\":[\"Quantum Gases\",\"Our-of-equilibrium dynamics\",\"Quantum Gas Microscopy\",\"Quantum simulation\",\"Optical lattices\"],\"subjects\":[\"Physics\"],\"fileCount\":19,\"versionId\":1224,\"versionState\":\"RELEASED\",\"majorVersion\":1,\"minorVersion\":0,\"createdAt\":\"2023-11-22T14:32:08Z\",\"updatedAt\":\"2024-07-03T15:31:21Z\",\"contacts\":[{\"name\":\"\",\"affiliation\":\"\"}],\"authors\":[\"Wienand, Julian\",\"Karch, Simon\",\"Impertro, Alexander\",\"Schweizer, Christian\",\"McCulloch, Ewan\",\"Vasseur, Romain\",\"Gopalakrishnan, Sarang\",\"Aidelsburger, Monika\",\"Bloch, Immanuel\"]},{\"name\":\"Quantum gas microscopy of Kardar-Parisi-Zhang superdiffusion\",\"type\":\"dataset\",\"url\":\"https://doi.org/10.17617/3.8W\",\"global_id\":\"doi:10.17617/3.8W\",\"description\":\"Data presented in the publication and code associated with numerical simulations\",\"published_at\":\"2022-04-28T08:16:03Z\",\"publisher\":\"Edmond\",\"citationHtml\":\"Wei, David; Rubio-Abadal, Antonio; Ye, Bingtian; Machado, Francisco; Kemp, Jack; Srakaew, Kritsana; Hollerith, Simon; Rui, Jun; Gopalakrishnan, Sarang; Yao, Norman Y.; Bloch, Immanuel; Zeiher, Johannes, 2022, \\\"Quantum gas microscopy of Kardar-Parisi-Zhang superdiffusion\\\", <a href=\\\"https://doi.org/10.17617/3.8W\\\" target=\\\"_blank\\\">https://doi.org/10.17617/3.8W</a>, Edmond, V1\",\"identifier_of_dataverse\":\"edmond\",\"name_of_dataverse\":\"Edmond\",\"citation\":\"Wei, David; Rubio-Abadal, Antonio; Ye, Bingtian; Machado, Francisco; Kemp, Jack; Srakaew, Kritsana; Hollerith, Simon; Rui, Jun; Gopalakrishnan, Sarang; Yao, Norman Y.; Bloch, Immanuel; Zeiher, Johannes, 2022, \\\"Quantum gas microscopy of Kardar-Parisi-Zhang superdiffusion\\\", https://doi.org/10.17617/3.8W, Edmond, V1\",\"publicationStatuses\":[\"Published\"],\"storageIdentifier\":\"54://10.17617/3.8w\",\"subjects\":[\"Physics\"],\"fileCount\":98,\"versionId\":400,\"versionState\":\"RELEASED\",\"majorVersion\":1,\"minorVersion\":0,\"createdAt\":\"2021-12-21T10:01:04Z\",\"updatedAt\":\"2022-04-28T08:16:03Z\",\"contacts\":[{\"name\":\"\",\"affiliation\":\"\"}],\"publications\":[{\"citation\":\"Quantum gas microscopy of Kardar-Parisi-Zhang superdiffusion\"}],\"authors\":[\"Wei, David\",\"Rubio-Abadal, Antonio\",\"Ye, Bingtian\",\"Machado, Francisco\",\"Kemp, Jack\",\"Srakaew, Kritsana\",\"Hollerith, Simon\",\"Rui, Jun\",\"Gopalakrishnan, Sarang\",\"Yao, Norman Y.\",\"Bloch, Immanuel\",\"Zeiher, Johannes\"]},{\"name\":\"Quantum gas microscopy of Rydberg macrodimers\",\"type\":\"dataset\",\"url\":\"https://doi.org/10.17617/3.29\",\"global_id\":\"doi:10.17617/3.29\",\"description\":\"Data underlying the figures displayed in the publication\",\"published_at\":\"2019-04-18T04:32:22Z\",\"publisher\":\"Edmond\",\"citationHtml\":\"Gro&szlig;, Christian, 2019, \\\"Quantum gas microscopy of Rydberg macrodimers\\\", <a href=\\\"https://doi.org/10.17617/3.29\\\" target=\\\"_blank\\\">https://doi.org/10.17617/3.29</a>, Edmond, V1\",\"identifier_of_dataverse\":\"edmond\",\"name_of_dataverse\":\"Edmond\",\"citation\":\"Groß, Christian, 2019, \\\"Quantum gas microscopy of Rydberg macrodimers\\\", https://doi.org/10.17617/3.29, Edmond, V1\",\"publicationStatuses\":[\"Published\"],\"storageIdentifier\":\"54://10.17617/3.29\",\"subjects\":[],\"fileCount\":31,\"versionId\":373,\"versionState\":\"RELEASED\",\"majorVersion\":1,\"minorVersion\":0,\"createdAt\":\"2019-04-15T11:49:37Z\",\"updatedAt\":\"2019-04-18T04:32:22Z\",\"contacts\":[{\"name\":\"\",\"affiliation\":\"\"}],\"authors\":[\"Groß, Christian\"]}],\"count_in_response\":3}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

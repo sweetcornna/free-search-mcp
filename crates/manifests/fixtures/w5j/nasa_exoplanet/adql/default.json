@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "nasa_exoplanet",
+  "op": "adql",
+  "recordedAt": "2026-11-25T13:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query=select+top+2+pl_name%2Chostname%2Cdisc_year+from+pscomppars+where+pl_name+like+%27Kepler-186%25%27&MAXREC=2&format=json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "[\n{\"pl_name\": \"Kepler-186 b\",\n\"hostname\": \"Kepler-186\",\n\"disc_year\": 2014},\n{\"pl_name\": \"Kepler-186 c\",\n\"hostname\": \"Kepler-186\",\n\"disc_year\": 2014}\n]\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "epss",
+  "op": "cve",
+  "recordedAt": "2026-11-25T11:54:54Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.first.org/data/v1/epss?cve=CVE-2024-3094",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "link",
+            "<https://api.first.org/data/v1/epss/schema> rel=describedBy"
+          ],
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"status\":\"OK\",\"status-code\":200,\"version\":\"1.0\",\"access\":\"public\",\"total\":1,\"offset\":0,\"limit\":100,\"data\":[{\"cve\":\"CVE-2024-3094\",\"epss\":\"0.909000000\",\"percentile\":\"0.998060000\",\"date\":\"2026-11-24\"}]}\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

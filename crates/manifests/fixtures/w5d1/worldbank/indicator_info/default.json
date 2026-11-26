@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "worldbank",
+  "op": "indicator_info",
+  "recordedAt": "2026-11-25T15:03:51Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.worldbank.org/v2/indicator/NY.GDP.MKTP.CD?format=json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json;charset=utf-8"
+          ]
+        ],
+        "bodyText": "[{\"page\":1,\"pages\":1,\"per_page\":\"50\",\"total\":1},[{\"id\":\"NY.GDP.MKTP.CD\",\"name\":\"GDP (current US$)\",\"unit\":\"\",\"source\":{\"id\":\"2\",\"value\":\"World Development Indicators\"},\"sourceNote\":\"Gross domestic product is the total income earned through the production of goods and services in an economic territory during an accounting period. It can be measured in three different ways: using either the expenditure approach, the income approach, or the production approach. This indicator is expressed in current prices, meaning no adjustment has been made to account for price changes over time. This indicator is expressed in United States dollars.\",\"sourceOrganization\":\"Country official statistics, National Statistical Organizations and\\/or Central Banks;\\u000aNational Accounts data files, Organisation for Economic Co-operation and Development (OECD);\\u000aStaff estimates, World Bank (WB)\",\"topics\":[{\"id\":\"3\",\"value\":\"Economy & Growth\"}]}]]",
+        "bodyB64": null
+      }
+    }
+  ]
+}

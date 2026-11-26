@@ -1,0 +1,124 @@
+id = "courtlistener"
+name = "CourtListener API v4"
+summary = "Free Law Project database of US federal and state court opinions, dockets, RECAP filings, and judges (requires free API token)."
+aliases = ["free law project", "recap", "us case law"]
+home_url = "https://www.courtlistener.com"
+tier = 3
+scopes = ["gov", "gov.law"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 43200 }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_COURTLISTENER_API_KEY"
+in = "header"
+name = "Authorization"
+format = "Token {key}"
+route_requires_key = true
+
+[op.search]
+summary = "Full-text search across US court opinions, RECAP dockets, oral arguments, and judges."
+method = "GET"
+url = "https://www.courtlistener.com/api/rest/v4/search/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "cursor", param = "cursor", max_pages = 3 }
+probe = { params = { query = "fair use", type = "o" }, min_results = 2, fixture = "fixtures/w5d2/courtlistener/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Legal search query" }
+type = { type = "string", default = "o", enum = ["o", "r", "rd", "d", "p", "oa"], to = "type", doc = "Search corpus: o=opinions, r=RECAP, d=dockets, p=people, oa=oral arguments" }
+court = { type = "string", to = "court", doc = "Space-separated court IDs, e.g. scotus ca9" }
+cursor = { type = "string", to = "cursor", doc = "Pagination cursor" }
+
+[op.search.map]
+items = ".results[]"
+total = ".count"
+next_cursor = "if (.next // \"\" | test(\"cursor=\")) then (.next | capture(\"cursor=(?<c>[^&]+)\").c | gsub(\"%3[dD]\"; \"=\") | gsub(\"%2[bB]\"; \"+\") | gsub(\"%2[fF]\"; \"/\")) else null end"
+error = "if .detail then .detail else null end"
+record = '''{
+  id: (.cluster_id // .docket_id // .id // null),
+  clusterId: (.cluster_id // null),
+  caseName: ((.caseName // .caseNameFull // .name // "") | collapse_ws // ""),
+  citation: (.citation // []),
+  court: (.court // null),
+  courtId: (.court_id // null),
+  docketNumber: (.docketNumber // null),
+  dateFiled: ((.dateFiled // null) | parse_date),
+  status: (.status // null),
+  snippet: ((.opinions[0]?.snippet // .snippet // "") | strip_tags // ""),
+  url: ((.absolute_url // "") | resolve_url("https://www.courtlistener.com") // "https://www.courtlistener.com")
+}'''
+hit = '''{
+  title: ((.caseName // .caseNameFull // .name // "") | collapse_ws // ""),
+  url: ((.absolute_url // "") | resolve_url("https://www.courtlistener.com") // "https://www.courtlistener.com"),
+  snippet: (
+    [
+      ((.citation // []) | .[0:2] | join(", ") | if length > 0 then . else null end),
+      .court,
+      (((.opinions[0]?.snippet // .snippet // "") | strip_tags // "") | if length > 0 then .[0:220] else null end)
+    ] | map(select(. != null)) | join(" · ")
+  ),
+  date: ((.dateFiled // null) | parse_date),
+  dateSource: "api"
+}'''
+
+[op.cluster]
+summary = "Fetch metadata, citations, and sub-opinion links for a CourtListener opinion cluster by ID."
+method = "GET"
+url = "https://www.courtlistener.com/api/rest/v4/clusters/{id}/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "2812209" }, min_results = 1, fixture = "fixtures/w5d2/courtlistener/cluster/default.json" }
+
+[op.cluster.params]
+id = { type = "string", required = true, in = "path", doc = "CourtListener cluster ID, e.g. 2812209" }
+
+[op.cluster.map]
+items = "."
+error = "if .detail then .detail else null end"
+record = '''{
+  id: .id,
+  caseName: ((.case_name // "") | collapse_ws // ""),
+  caseNameFull: ((.case_name_full // null) | collapse_ws),
+  citation: [(.citations // .citation // [])[] | if type == "object" then ([.volume, .reporter, .page] | map(select(. != null and . != "")) | join(" ")) else . end],
+  dateFiled: ((.date_filed // null) | parse_date),
+  status: (.precedential_status // .status // null),
+  judges: (.judges // null),
+  syllabus: ((.syllabus // null) | strip_tags),
+  disposition: (.disposition // null),
+  subOpinions: (.sub_opinions // []),
+  url: ((.absolute_url // "") | resolve_url("https://www.courtlistener.com") // "https://www.courtlistener.com")
+}'''
+
+[op.opinion]
+summary = "Fetch opinion metadata and stripped text for a single CourtListener opinion by ID."
+method = "GET"
+url = "https://www.courtlistener.com/api/rest/v4/opinions/{id}/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { id = "2812209" }, min_results = 1, fixture = "fixtures/w5d2/courtlistener/opinion/default.json" }
+
+[op.opinion.params]
+id = { type = "string", required = true, in = "path", doc = "CourtListener opinion ID, e.g. 2812209" }
+
+[op.opinion.map]
+items = "."
+error = "if .detail then .detail else null end"
+record = '''{
+  id: .id,
+  cluster: (.cluster // null),
+  type: (.type // null),
+  author: (if (.author_str // "") != "" then .author_str else null end),
+  perCuriam: .per_curiam,
+  pageCount: (.page_count // null),
+  dateCreated: ((.date_created // null) | parse_date),
+  dateModified: ((.date_modified // null) | parse_date),
+  text: (((if (.plain_text // "") != "" then .plain_text else (.html_with_citations // .html // .html_lawbox // .html_columbia // null) end) | strip_tags) | if . and (length > 0) then .[0:4000] else null end),
+  url: ((.absolute_url // "") | resolve_url("https://www.courtlistener.com") // "https://www.courtlistener.com")
+}'''

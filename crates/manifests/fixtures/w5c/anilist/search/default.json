@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "anilist",
+  "op": "search",
+  "recordedAt": "2026-11-25T15:02:28Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://graphql.anilist.co",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": "a36ec582b2eacd53e2c3f078ef318c6e8bd5331a5dd8c4ac87b78366bc712e75"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"data\":{\"Page\":{\"pageInfo\":{\"currentPage\":1,\"hasNextPage\":true,\"total\":5000},\"media\":[{\"id\":1,\"title\":{\"romaji\":\"Cowboy Bebop\",\"english\":\"Cowboy Bebop\",\"native\":\"\\u30ab\\u30a6\\u30dc\\u30fc\\u30a4\\u30d3\\u30d0\\u30c3\\u30d7\"},\"format\":\"TV\",\"status\":\"FINISHED\",\"episodes\":26,\"chapters\":null,\"seasonYear\":1998,\"startDate\":{\"year\":1998,\"month\":4,\"day\":3},\"averageScore\":86,\"genres\":[\"Action\",\"Adventure\",\"Drama\",\"Sci-Fi\"],\"siteUrl\":\"https:\\/\\/anilist.co\\/anime\\/1\",\"description\":\"Enter a world in the distant future, where Bounty Hunters roam the solar system. Spike and Jet, bounty hunting partners, set out on journeys in an ever struggling effort to win bounty rewards to survive.<br><br>\\nWhile traveling, they meet up with other very interesting people. Could Faye, the beautiful and ridiculously poor gambler, Edward, the computer genius, and Ein, the engineered dog be a good addition to the group?\"},{\"id\":5,\"title\":{\"romaji\":\"Cowboy Bebop: Tengoku no Tobira\",\"english\":\"Cowboy Bebop: The Movie - Knockin' on Heaven's Door\",\"native\":\"\\u30ab\\u30a6\\u30dc\\u30fc\\u30a4\\u30d3\\u30d0\\u30c3\\u30d7\\u5929\\u56fd\\u306e\\u6249\"},\"format\":\"MOVIE\",\"status\":\"FINISHED\",\"episodes\":1,\"chapters\":null,\"seasonYear\":2001,\"startDate\":{\"year\":2001,\"month\":9,\"day\":1},\"averageScore\":82,\"genres\":[\"Action\",\"Drama\",\"Mystery\",\"Sci-Fi\"],\"siteUrl\":\"https:\\/\\/anilist.co\\/anime\\/5\",\"description\":\"As the <i>Cowboy Bebop<\\/i> crew travels the stars, they learn of the largest bounty yet, a huge 300 million Woolongs. Apparently, someone is wielding a hugely powerful chemical weapon, and of course the authorities are at a loss to stop it. The war to take down the most dangerous criminal yet forces the crew to face a true madman, with bare hope to succeed.\\n<br><br>\\n(Source: Anime News Network)\"},{\"id\":17205,\"title\":{\"romaji\":\"Cowboy Bebop: Ein no Natsuyasumi\",\"english\":\"Ein's Summer Vacation\",\"native\":\"\\u30a2\\u30a4\\u30f3\\u306e\\u306a\\u3064\\u3084\\u3059\\u307f\"},\"format\":\"SPECIAL\",\"status\":\"FINISHED\",\"episodes\":1,\"chapters\":null,\"seasonYear\":2012,\"startDate\":{\"year\":2012,\"month\":12,\"day\":21},\"averageScore\":61,\"genres\":[\"Adventure\"],\"siteUrl\":\"https:\\/\\/anilist.co\\/anime\\/17205\",\"description\":\"Picture drama featuring Ein.\"}]}}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

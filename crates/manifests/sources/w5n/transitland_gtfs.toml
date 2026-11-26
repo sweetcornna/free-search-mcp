@@ -1,0 +1,126 @@
+id = "transitland_gtfs"
+name = "Transitland Global GTFS Transit API"
+summary = "Global public transit GTFS feeds, routes, stops, and operators via Transitland REST API v2."
+aliases = ["transitland", "gtfs", "public transit", "transit feeds"]
+home_url = "https://www.transit.land/documentation/rest-api/"
+tier = 3
+scopes = ["reference.geo"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 21600 }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_TRANSITLAND_API_KEY"
+in = "header"
+name = "apikey"
+format = "{key}"
+route_requires_key = true
+
+[op.search]
+summary = "Search global GTFS and GTFS-RT transit feeds by operator or region name."
+method = "GET"
+url = "https://transit.land/api/v2/rest/feeds"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "cursor", param = "after", max_pages = 3 }
+examples = ['source.call("transitland_gtfs.search", { query: "bart", limit: 3 })']
+probe = { params = { query = "bart", limit = 3 }, min_results = 1, fixture = "fixtures/w5n/transitland_gtfs/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "search", doc = "Transit feed or agency search query" }
+spec = { type = "string", enum = ["gtfs", "gtfs-rt", "gbfs", "mds"], doc = "Feed specification filter" }
+limit = { type = "int", default = 10, min = 1, max = 50, doc = "Maximum feeds to return" }
+after = { type = "int", doc = "Pagination cursor ID from meta.after" }
+
+[op.search.map]
+items = "(.feeds // [])[]"
+next_cursor = "if .meta.after then (.meta.after | tostring) else null end"
+error = "if .error then .error else null end"
+record = '''{
+  id: .id,
+  onestopId: .onestop_id,
+  name: (.name // .onestop_id),
+  spec: (.spec // null),
+  staticUrl: (.urls.static_current // null),
+  realtimeTripUpdates: (.urls.realtime_trip_updates // null),
+  realtimeAlerts: (.urls.realtime_alerts // null),
+  licenseUrl: (.license.url // null),
+  url: ("https://www.transit.land/feeds/" + (.onestop_id // ""))
+}'''
+hit = '''{
+  title: (.name // .onestop_id // "Transit Feed"),
+  url: ("https://www.transit.land/feeds/" + (.onestop_id // "")),
+  snippet: ([
+    (.onestop_id // empty),
+    (.spec // empty),
+    (.urls.static_current // empty) | select(length > 0)
+  ] | join(" · "))
+}'''
+
+[op.routes]
+summary = "Query GTFS transit routes by operator Onestop ID or keyword."
+method = "GET"
+url = "https://transit.land/api/v2/rest/routes"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "cursor", param = "after", max_pages = 3 }
+examples = ['source.call("transitland_gtfs.routes", { operator_onestop_id: "o-9q9-bart", limit: 3 })']
+probe = { params = { operator_onestop_id = "o-9q9-bart", limit = 3 }, min_results = 1, fixture = "fixtures/w5n/transitland_gtfs/routes/default.json" }
+
+[op.routes.params]
+operator_onestop_id = { type = "string", doc = "Transitland operator Onestop ID (e.g. o-9q9-bart)" }
+query = { type = "string", to = "search", doc = "Optional route name search" }
+limit = { type = "int", default = 10, min = 1, max = 50, doc = "Maximum routes" }
+after = { type = "int", doc = "Pagination cursor ID" }
+
+[op.routes.map]
+items = "(.routes // [])[]"
+next_cursor = "if .meta.after then (.meta.after | tostring) else null end"
+error = "if .error then .error else null end"
+record = '''{
+  id: .id,
+  onestopId: .onestop_id,
+  routeId: .route_id,
+  shortName: (.route_short_name // null),
+  longName: (.route_long_name // null),
+  routeType: (.route_type // null),
+  agencyName: (.agency.agency_name // null),
+  url: ("https://www.transit.land/routes/" + (.onestop_id // ""))
+}'''
+
+[op.stops]
+summary = "Find GTFS transit stops near lat/lon coordinates or by stop name."
+method = "GET"
+url = "https://transit.land/api/v2/rest/stops"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+examples = ['source.call("transitland_gtfs.stops", { lat: 37.7792, lon: -122.4191, radius: 300, limit: 3 })']
+probe = { params = { lat = 37.7792, lon = -122.4191, radius = 300, limit = 3 }, min_results = 1, fixture = "fixtures/w5n/transitland_gtfs/stops/default.json" }
+
+[op.stops.params]
+lat = { type = "float", doc = "Latitude in decimal degrees" }
+lon = { type = "float", doc = "Longitude in decimal degrees" }
+radius = { type = "int", min = 1, max = 10000, doc = "Search radius in meters" }
+query = { type = "string", to = "search", doc = "Optional stop name query" }
+limit = { type = "int", default = 10, min = 1, max = 50, doc = "Maximum stops" }
+
+[op.stops.map]
+items = "(.stops // [])[]"
+next_cursor = "if .meta.after then (.meta.after | tostring) else null end"
+error = "if .error then .error else null end"
+record = '''{
+  id: .id,
+  onestopId: .onestop_id,
+  stopId: .stop_id,
+  name: (.stop_name // ""),
+  code: (.stop_code // null),
+  desc: (.stop_desc // null),
+  lon: (.geometry.coordinates[0] // null),
+  lat: (.geometry.coordinates[1] // null),
+  url: ("https://www.transit.land/stops/" + (.onestop_id // ""))
+}'''

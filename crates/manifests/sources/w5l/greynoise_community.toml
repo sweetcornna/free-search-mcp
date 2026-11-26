@@ -1,0 +1,48 @@
+id = "greynoise_community"
+name = "GreyNoise Community IP Threat API"
+summary = "Distinguishes internet-wide background scanning noise and known benign services (RIOT) from targeted IP traffic."
+aliases = ["greynoise", "ip threat", "scanner intel"]
+home_url = "https://www.greynoise.io"
+tier = 2
+scopes = ["security"]
+caps = ["lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 1.0, burst = 2, concurrency = 1, timeout_ms = 6000, cache_ttl_s = 21600 }
+
+[auth]
+mode = "optional"
+env = "SEARCH_MCP_GREYNOISE_API_KEY"
+in = "header"
+name = "key"
+format = "{key}"
+route_requires_key = false
+
+[op.ip]
+summary = "Classify an IPv4 address via GreyNoise Community v3 API (returns noise, riot, classification, and visualizer link)."
+method = "GET"
+url = "https://api.greynoise.io/v3/community/{ip}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { ip = "198.235.24.130" }, min_results = 1, fixture = "fixtures/w5l/greynoise_community/ip/default.json" }
+examples = [
+  'source.call("greynoise_community.ip", { ip: "198.235.24.130" })',
+]
+
+[op.ip.params]
+ip = { type = "string", required = true, in = "path", doc = "Public IPv4 address to classify" }
+
+[op.ip.map]
+items = "if .ip then . else empty end"
+error = "if (.message != null and .ip == null) then (.message | tostring) else null end"
+record = '''{
+  ip: (.ip // ""),
+  noise: (.noise // false),
+  riot: (.riot // false),
+  classification: (.classification // null),
+  name: (.name // null),
+  lastSeen: (.last_seen // null),
+  message: (.message // null),
+  url: (.link // ("https://viz.greynoise.io/ip/" + (.ip // "")))
+}'''

@@ -1,0 +1,21 @@
+---
+source: crates/surface/tests/snapshots.rs
+expression: out
+---
+# Full text: 10.1371/journal.ppat.1002485
+_format: bioc · source: pmc_bioc · license: CC BY_
+<https://pmc.ncbi.nlm.nih.gov/articles/PMC3257301/>
+
+## Title
+
+The bZIP Transcription Factor Rca1p Is a Central Regulator of a Novel CO2 Sensing Pathway in Yeast
+
+## Abstract
+
+Like many organisms the fungal pathogen Candida albicans senses changes in the environmental CO2 concentration. This response involves two major proteins: adenylyl cyclase and carbonic anhydrase (CA). Here, we demonstrate that CA expression is tightly controlled by the availability of CO2 and identify the bZIP transcription factor Rca1p as the first CO2 regulator of CA expression in yeast. We show that Rca1p upregulates CA expression during contact with mammalian phagocytes and demonstrate that serine 124 is critical for Rca1p signaling, which occurs independently of adenylyl cyclase.
+
+[…truncated]
+
+## Introduction
+
+Atmospheric carbon dioxide (CO2) with a concentration of 0.039% is not only central to the Earth's biogeochemical carbon cycle but is also sensed as a signal by many organisms. The nematode and parasite of insects Neoaplectana carpocapsae localizes its prey via a CO2 gradient, while avoidance behaviour in another nematode, Caenorhabditis elegans , or the model organism Drosophila melanogaster is provoked by elevated CO2 . C. elegans detects CO2 via a cGMP-gated ion channel whereas in D. melanogaster CO2 is sensed by a pair of 7 transmembrane domains chemoreceptors localized on specialized sensory neurons.

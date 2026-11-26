@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "huggingface",
+  "op": "dataset",
+  "recordedAt": "2026-11-25T11:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://huggingface.co/api/datasets/rajpurkar/squad_v2",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ],
+          [
+            "etag",
+            "W/\"b9b-c1fU2HfAU9s+/H77/gkqUAiMyUU\""
+          ]
+        ],
+        "bodyText": "{\"_id\":\"621ffdd236468d709f181f9c\",\"id\":\"rajpurkar/squad_v2\",\"author\":\"rajpurkar\",\"sha\":\"3ffb306f725f7d2ce8394bc1873b24868140c412\",\"lastModified\":\"2024-03-04T13:55:27.000Z\",\"private\":false,\"gated\":false,\"disabled\":false,\"tags\":[\"task_categories:question-answering\",\"task_ids:open-domain-qa\",\"task_ids:extractive-qa\",\"annotations_creators:crowdsourced\",\"language_creators:crowdsourced\",\"multilinguality:monolingual\",\"source_datasets:original\",\"language:en\",\"license:cc-by-sa-4.0\",\"size_categories:100K<n<1M\",\"format:parquet\",\"modality:text\",\"library:datasets\",\"library:pandas\",\"library:mlcroissant\",\"library:polars\",\"arxiv:1806.03822\",\"arxiv:1606.05250\",\"region:us\"],\"description\":\"\\n\\t\\n\\t\\t\\n\\t\\n\\t\\n\\t\\tDataset Card for SQuAD 2.0\\n\\t\\n\\n\\n\\t\\n\\t\\t\\n\\t\\n\\t\\n\\t\\tDataset Summary\\n\\t\\n\\nStanford Question Answering Dataset (SQuAD) is a reading comprehension dataset, consisting of questions posed by crowdworkers on a set of Wikipedia articles, where the answer to every question is a segment of text, or span, from the corresponding reading passage, or the question might be unanswerable.\\nSQuAD 2.0 combines the 100,000 questions in SQuAD1.1 with over 50,000 unanswerable questions written adversarially by… See the full description on the dataset page: https://huggingface.co/datasets/rajpurkar/squad_v2.\",\"paperswithcode_id\":\"squad\",\"downloads\":51680,\"likes\":275,\"cardData\":{\"annotations_creators\":[\"crowdsourced\"],\"language_creators\":[\"crowdsourced\"],\"language\":[\"en\"],\"license\":[\"cc-by-sa-4.0\"],\"multilinguality\":[\"monolingual\"],\"size_categories\":[\"100K<n<1M\"],\"source_datasets\":[\"original\"],\"task_categories\":[\"question-answering\"],\"task_ids\":[\"open-domain-qa\",\"extractive-qa\"],\"paperswithcode_id\":\"squad\",\"pretty_name\":\"SQuAD2.0\",\"dataset_info\":{\"config_name\":\"squad_v2\",\"features\":[{\"name\":\"id\",\"dtype\":\"string\"},{\"name\":\"title\",\"dtype\":\"string\"},{\"name\":\"context\",\"dtype\":\"string\"},{\"name\":\"question\",\"dtype\":\"string\"},{\"name\":\"answers\",\"sequence\":[{\"name\":\"text\",\"dtype\":\"string\"},{\"name\":\"answer_start\",\"dtype\":\"int32\"}]}],\"splits\":[{\"name\":\"train\",\"num_bytes\":116732025,\"num_examples\":130319},{\"name\":\"validation\",\"num_bytes\":11661091,\"num_examples\":11873}],\"download_size\":17720493,\"dataset_size\":128393116},\"configs\":[{\"config_name\":\"squad_v2\",\"data_files\":[{\"split\":\"train\",\"path\":\"squad_v2/train-*\"},{\"split\":\"validation\",\"path\":\"squad_v2/validation-*\"}],\"default\":true}],\"train-eval-index\":[{\"config\":\"squad_v2\",\"task\":\"question-answering\",\"task_id\":\"extractive_question_answering\",\"splits\":{\"train_split\":\"train\",\"eval_split\":\"validation\"},\"col_mapping\":{\"question\":\"question\",\"context\":\"context\",\"answers\":{\"text\":\"text\",\"answer_start\":\"answer_start\"}},\"metrics\":[{\"type\":\"squad_v2\",\"name\":\"SQuAD v2\"}]}]},\"siblings\":[{\"rfilename\":\".gitattributes\"},{\"rfilename\":\"README.md\"},{\"rfilename\":\"squad_v2/train-00000-of-00001.parquet\"},{\"rfilename\":\"squad_v2/validation-00000-of-00001.parquet\"}],\"createdAt\":\"2022-03-02T23:29:22.000Z\",\"usedStorage\":17738055}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

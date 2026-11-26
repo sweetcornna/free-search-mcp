@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "scite",
+  "op": "tallies",
+  "recordedAt": "2026-11-25T12:14:20Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.scite.ai/tallies/10.1038/nature12373",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"total\":1943,\"supporting\":22,\"contradicting\":1,\"mentioning\":1911,\"unclassified\":9,\"doi\":\"10.1038/nature12373\",\"citingPublications\":2179}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

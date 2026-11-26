@@ -1,0 +1,87 @@
+id = "kci_openapi"
+name = "KCI Korea Citation Index OpenAPI"
+summary = "National Research Foundation of Korea (NRF) accredited academic journal keyword search and article detail XML API (requires free KCI OpenAPI key)."
+aliases = ["kci", "korea citation index", "nrf kci", "한국학술지인용색인", "한국연구재단"]
+home_url = "https://www.kci.go.kr"
+tier = 3
+scopes = ["academic", "academic.index"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 43200, host_bucket = "open.kci.go.kr" }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_KCI_API_KEY"
+in = "query"
+name = "key"
+format = "{key}"
+route_requires_key = true
+
+[op.search]
+summary = "Search Korean and English accredited scholarly articles in KCI via XML OpenAPI."
+method = "GET"
+url = "https://open.kci.go.kr/po/openapi/openApiSearch.kci"
+response = "xml"
+returns = "works"
+const_query = { apiCode = "articleSearch" }
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "neural", limit = 3 }, min_results = 2, fixture = "fixtures/w5h/kci_openapi/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "title", doc = "Article title search query (Korean or English)" }
+author = { type = "string", to = "author", doc = "Optional author name filter" }
+journal = { type = "string", to = "journal", doc = "Optional journal name filter" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "displayCount", doc = "Results per page" }
+page = { type = "int", default = 1, min = 1, to = "page", doc = "1-based page number" }
+
+[op.search.map]
+items = ".metadata.outputdata.record | arr | .[]"
+total = "(.metadata.outputdata.result.total | first_str | to_int)"
+error = '''(.metadata.outputdata.result.resultmsg // null) as $msg | if $msg != null and (.metadata.outputdata.record == null) and (($msg | tostring | ascii_downcase | test("^(success|normal(\\s+service)?)$")) | not) then ($msg | tostring) else null end'''
+work = '''(
+  (.articleinfo // {}) as $ai |
+  (.journalinfo // {}) as $ji |
+  (($ai."title-group"."article-title" | arr) | ([.[] | select(type == "object" and ."@lang" == "english") | xml_text][0] // [.[] | xml_text | select(length > 0)][0] // "") | strip_tags) as $title |
+  (($ai."abstract-group".abstract | arr) | ([.[] | select(type == "object" and ."@lang" == "english") | xml_text][0] // [.[] | xml_text | select(length > 0)][0] // null) | strip_tags) as $abs |
+  ($ai.url // (if $ai."@article-id" then ("https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId=" + $ai."@article-id") else "" end)) as $url |
+  (if ($ji."pub-year" != null and $ji."pub-mon" != null) then (($ji."pub-year" | tostring) + "/" + ($ji."pub-mon" | tostring) | parse_date) else null end) as $pub_date |
+  (($ai."citation-count" | first_str | to_int)) as $cites |
+  {
+    title: $title,
+    authors: [($ai."author-group".author | arr)[] | (xml_text | collapse_ws) as $raw | {
+      name: ((if type == "object" and (."@english" // "") != "" then ."@english" else ($raw | sub("\\([^()]+\\)$"; "")) end) | collapse_ws),
+      orcid: (if type == "object" and (."@orc-id" // "") != "" then (."@orc-id" | sub("^https?://orcid\\.org/"; "")) else null end),
+      affiliation: (if type == "object" and (."@institution" // "") != "" then (."@institution" | collapse_ws) elif ($raw | test("\\([^()]+\\)$")) then ($raw | capture("\\((?<aff>[^()]+)\\)$").aff | collapse_ws) else null end)
+    } | select(.name != "")],
+    year: (((($ji."pub-year" // $ai."pub-year" // "") | tostring)[0:4]) | to_int),
+    publishedDate: $pub_date,
+    venue: ($ji."journal-name" // null | first_str | collapse_ws),
+    workType: "article",
+    ids: { doi: ($ai.doi // null | first_str | doi_norm) },
+    abstractText: (if ($abs | type) == "string" and ($abs | length) > 0 then $abs else null end),
+    citedBy: $cites,
+    citedBySource: (if $cites != null then "kci_openapi" else null end),
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["kci_openapi"]
+  }
+)'''
+
+[op.work]
+summary = "Fetch detailed KCI article metadata by KCI article control ID (e.g. ART002749031)."
+method = "GET"
+url = "https://open.kci.go.kr/po/openapi/openApiSearch.kci"
+response = "xml"
+returns = "works"
+const_query = { apiCode = "articleDetail" }
+probe = { params = { id = "ART002749031" }, min_results = 1, fixture = "fixtures/w5h/kci_openapi/work/default.json" }
+
+[op.work.params]
+id = { type = "string", required = true, to = "id", doc = "KCI article control number e.g. ART002749031" }
+
+[op.work.map]
+items = ".metadata.outputdata.record | arr | .[]"
+error = "@ref:op.search.map.error"
+work = "@ref:op.search.map.work"

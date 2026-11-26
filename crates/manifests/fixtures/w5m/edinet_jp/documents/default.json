@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "edinet_jp",
+  "op": "documents",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.edinet-fsa.go.jp/api/v2/documents.json?type=2&date=2026-06-25",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"metadata\":{\"title\":\"提出された書類を把握するためのAPI\",\"parameter\":{\"date\":\"2026-06-25\",\"type\":\"2\"},\"resultset\":{\"count\":2},\"processDateTime\":\"2026-06-26 00:01\",\"status\":\"200\",\"message\":\"OK\"},\"results\":[{\"seqNumber\":1,\"docID\":\"S100T720\",\"edinetCode\":\"E02144\",\"secCode\":\"72030\",\"JCN\":\"1180301018771\",\"filerName\":\"トヨタ自動車株式会社\",\"fundCode\":null,\"ordinanceCode\":\"010\",\"formCode\":\"030000\",\"docTypeCode\":\"120\",\"periodStart\":\"2025-04-01\",\"periodEnd\":\"2026-03-31\",\"submitDateTime\":\"2026-06-25 09:05\",\"docDescription\":\"有価証券報告書－第122期(2025/04/01－2026/03/31)\",\"withdrawalStatus\":\"0\",\"pdfFlag\":\"1\",\"xbrlFlag\":\"1\",\"csvFlag\":\"1\",\"englishDocFlag\":\"1\"},{\"seqNumber\":2,\"docID\":\"S100T675\",\"edinetCode\":\"E01777\",\"secCode\":\"67580\",\"JCN\":\"7010401067252\",\"filerName\":\"ソニーグループ株式会社\",\"fundCode\":null,\"ordinanceCode\":\"010\",\"formCode\":\"030000\",\"docTypeCode\":\"120\",\"periodStart\":\"2025-04-01\",\"periodEnd\":\"2026-03-31\",\"submitDateTime\":\"2026-06-25 10:15\",\"docDescription\":\"有価証券報告書－第109期(2025/04/01－2026/03/31)\",\"withdrawalStatus\":\"0\",\"pdfFlag\":\"1\",\"xbrlFlag\":\"1\",\"csvFlag\":\"1\",\"englishDocFlag\":\"1\"}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

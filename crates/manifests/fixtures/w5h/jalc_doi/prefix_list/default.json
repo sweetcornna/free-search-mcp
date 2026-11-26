@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "jalc_doi",
+  "op": "prefix_list",
+  "recordedAt": "2026-11-25T13:02:20Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.japanlinkcenter.org/doilist/10.1241?from=2020-01-01&until=2020-02-01&rows=3&page=1",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"status\":\"OK\",\"apiType\":\"doilist\",\"apiVersion\":\"v1\",\"message\":{\"total\":90,\"rows\":3,\"totalPages\":30,\"page\":1},\"data\":{\"items\":[{\"dois\":{\"doi\":\"10.1241/jstnews.2014.2015.2_10\",\"url\":\"https://doi.org/10.1241/jstnews.2014.2015.2_10\"},\"ra\":\"JaLC\",\"siteId\":\"SI/JST.JSTAGE\",\"updated_date\":\"2020-01-20\"},{\"dois\":{\"doi\":\"10.1241/jstnews.2014.2015.2_14\",\"url\":\"https://doi.org/10.1241/jstnews.2014.2015.2_14\"},\"ra\":\"JaLC\",\"siteId\":\"SI/JST.JSTAGE\",\"updated_date\":\"2020-01-20\"},{\"dois\":{\"doi\":\"10.1241/jstnews.2014.2015.2_16\",\"url\":\"https://doi.org/10.1241/jstnews.2014.2015.2_16\"},\"ra\":\"JaLC\",\"siteId\":\"SI/JST.JSTAGE\",\"updated_date\":\"2020-01-20\"}]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

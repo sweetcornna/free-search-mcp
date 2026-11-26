@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "noaa_tides",
+  "op": "water_level",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?station=9414290&product=water_level&datum=MLLW&time_zone=gmt&units=metric&date=latest&format=json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json;charset=UTF-8"
+          ]
+        ],
+        "bodyText": "\n{\"metadata\":{\"id\":\"9414290\",\"name\":\"San Francisco\",\"lat\":\"37.8063\",\"lon\":\"-122.4659\"},\"data\":[{\"t\":\"2026-11-25 12:36\", \"v\":\"1.221\", \"s\":\"0.095\", \"f\":\"0,0,0,0\", \"q\":\"p\"}]}\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

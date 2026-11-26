@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "uspto_odp",
+  "op": "application",
+  "recordedAt": "2026-11-25T12:14:49Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.uspto.gov/api/v1/patent/applications/16330077",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"count\": 1, \"patentFileWrapperDataBag\": [{\"applicationNumberText\": \"16330077\", \"applicationMetaData\": {\"inventionTitle\": \"Neural network accelerator with sparse matrix execution\", \"filingDate\": \"2019-03-15\", \"applicationTypeLabelName\": \"Utility\", \"applicationStatusDescriptionText\": \"Patented Case\", \"applicationStatusDate\": \"2022-05-10\", \"patentNumber\": \"11328189\", \"grantDate\": \"2022-05-10\", \"firstInventorName\": \"Doe, Jane\", \"firstApplicantName\": \"Example Silicon Corp.\", \"entityStatusData\": {\"businessEntityStatusCategory\": \"LARGE\"}, \"cpcClassificationBag\": [\"G06N3/063\", \"G06N3/04\"], \"applicantBag\": [{\"applicantNameText\": \"Example Silicon Corp.\"}], \"inventorBag\": [{\"inventorNameText\": \"Doe, Jane\"}]}}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

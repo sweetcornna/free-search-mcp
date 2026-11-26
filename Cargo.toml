@@ -1,0 +1,157 @@
+[workspace]
+resolver = "3"
+members = [
+  "crates/core", "crates/net", "crates/store", "crates/script",
+  "crates/surface", "crates/server", "crates/browser",
+  "crates/search", "crates/engines-serp", "crates/engines-api", "crates/engines-claims",
+  "crates/manifests", "crates/sources", "crates/protocols-a", "crates/protocols-b", "crates/catalog",
+  "crates/scholar", "crates/scholar-graph", "crates/scholar-fulltext",
+  "crates/extract", "crates/docs", "crates/agent", "xtask",
+]
+
+[workspace.package]
+version = "1.0.0"
+edition = "2024"
+rust-version = "1.98.0"
+license = "MIT"
+publish = false
+
+[workspace.lints.rust]
+unsafe_op_in_unsafe_fn = "deny"
+
+[workspace.lints.clippy]
+# stdout is the MCP stdio transport: a stray println! corrupts JSON-RPC framing.
+# Binaries that legitimately print (CLI subcommands, xtask) allow it locally.
+print_stdout = "warn"
+dbg_macro = "warn"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+strip = true
+panic = "unwind" # host boundary wraps calls in catch_unwind (Spike C)
+
+[profile.release.build-override]
+strip = false # required when release strip = true (Spike C L356)
+
+[workspace.dependencies]
+# Workspace crates
+fsm-core = { path = "crates/core" }
+fsm-net = { path = "crates/net" }
+fsm-store = { path = "crates/store" }
+fsm-script = { path = "crates/script" }
+fsm-surface = { path = "crates/surface" }
+fsm-browser = { path = "crates/browser" }
+fsm-search = { path = "crates/search" }
+fsm-engines-serp = { path = "crates/engines-serp" }
+fsm-engines-api = { path = "crates/engines-api" }
+fsm-engines-claims = { path = "crates/engines-claims" }
+fsm-manifests = { path = "crates/manifests" }
+fsm-sources = { path = "crates/sources" }
+fsm-protocols-a = { path = "crates/protocols-a" }
+fsm-protocols-b = { path = "crates/protocols-b" }
+fsm-catalog = { path = "crates/catalog" }
+fsm-scholar = { path = "crates/scholar" }
+fsm-scholar-graph = { path = "crates/scholar-graph" }
+fsm-scholar-fulltext = { path = "crates/scholar-fulltext" }
+fsm-extract = { path = "crates/extract" }
+fsm-docs = { path = "crates/docs" }
+fsm-agent = { path = "crates/agent" }
+
+# Async / MCP / HTTP Server / CLI / Core Utils
+tokio = { version = "1.54.1", features = ["rt-multi-thread", "macros", "net", "time", "sync", "process", "signal", "io-std", "io-util", "fs"] }
+tokio-util = { version = "0.7.20", features = ["rt", "io", "io-util"] }
+rmcp = { version = "3.11.0", features = ["server", "macros", "transport-io", "transport-streamable-http-server"] }
+async-trait = "0.1.92"
+futures = "0.3.34"
+bytes = "1.12.2"
+http = "1.5.0"
+axum = "0.8.9"
+tower = "0.5.3"
+tower-http = { version = "0.7.1", features = ["cors", "trace"] }
+clap = { version = "4.6.10", features = ["derive", "env"] }
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
+thiserror = "2.0.21"
+anyhow = "1.0.105"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = { version = "1.0.154", features = ["preserve_order"] }
+schemars = "1.2.3"
+url = "2.5.9"
+regex = "1.13.2"
+sha2 = "0.11.1"
+hex = "0.4.3"
+uuid = { version = "1.29.3", features = ["v4"] }
+base64 = "0.23.1"
+percent-encoding = "2.3.2"
+rand = "0.10.4"
+dotenvy = "0.15.7"
+fd-lock = "4.0.4"
+libc = "0.2.191"
+libproc = "0.15.0"      # macOS PDF worker RSS polling
+windows-sys = { version = "0.61.2", features = ["Win32_System_ProcessStatus", "Win32_System_Threading"] } # P1
+glob = "0.3.4"
+unicode-normalization = "0.1.26"
+jiff = { version = "1.0.3", features = ["tzdb-bundle-always"] } # worldclock IANA TZ + ISO dates (bundled for musl)
+
+# Sandbox (QuickJS-NG + TS strip)
+rquickjs = { version = "0.14.0", default-features = false, features = ["std", "futures"] } # NO rust-alloc ("allocator"), NO macro, NO loader; "std" is the only default
+swc_ts_fast_strip = "=61.0.0"
+swc_common = "28.0.0"
+
+# HTTP / Net / SSRF / Resilience
+reqwest = { version = "0.13.5", default-features = false, features = ["rustls-no-provider", "http2", "charset", "gzip", "brotli", "deflate", "zstd", "socks", "json", "stream"] }
+rustls = { version = "0.23.46", default-features = false, features = ["ring", "std", "tls12"] }
+rustls-platform-verifier = "0.7"
+webpki-roots = "1.0.12"
+wreq = { version = "=0.16.5", default-features = false, features = ["webpki-roots", "tokio-rt", "gzip", "brotli", "zstd", "deflate", "socks"] } # compression REQUIRED for emulation-compression
+wreq-util = { version = "=0.2.1", default-features = false, features = ["emulation", "emulation-compression"] }
+async-compression = { version = "0.4.54", features = ["tokio", "gzip", "zlib", "deflate", "brotli", "zstd"] }
+governor = "0.10.4"
+moka = { version = "0.12.16", features = ["future"] }
+http-cache-semantics = "3.0.0"
+hickory-resolver = "0.26.4"
+ipnet = "2.12.2"
+idna = "1.1.0"
+
+# Storage / Mapping / Catalog
+rusqlite = { version = "0.43.0", features = ["bundled", "modern_sqlite"] }
+zstd = "0.14.5"
+jaq-core = "3.1.2"
+jaq-std = "3.0.4"
+jaq-json = { version = "2.0.3", features = ["serde"] } # serde: Val <-> serde_json::Value without re-parsing
+bm25 = "2.3.2"
+rapidfuzz = "0.5.0"
+postcard = { version = "1.2.0", features = ["alloc"] }
+toml = { version = "1.2.3", features = ["preserve_order"] }
+
+# Extraction / Documents / Scholar (P1 chromey excluded from active 1.0 lock per M9)
+trafilatura = "0.6.1"
+dom_smoothie = "0.20.0"
+htmd = "0.6.1"
+lol_html = "3.0.3"
+dom_query = "0.30.0"
+chardetng = "1.0.0"
+encoding_rs = "0.8.44"
+whatlang = "0.18.0"
+pdf_oxide = "0.3.78"
+calamine = "0.38.0"
+quick-xml = "0.42.0"
+roxmltree = "0.21.2"
+csv = "1.4.0"
+zip = { version = "9.8.2", default-features = false, features = ["deflate-flate2"] }
+flate2 = "1.1.11"
+tar = "0.4.46"
+bzip2 = "0.6.1"
+liblzma = "0.4.9"
+imagesize = "0.15.0"
+hayagriva = { version = "0.10.1", features = ["csl-json"] } # csl-json: parse DOI content-negotiation CSL-JSON
+# P1 optional browser crate (NOT in 1.0 Cargo.lock — avoids unused openssl-sys):
+# chromey = { version = "3.0.0", default-features = false, features = ["bytes", "auto-detect-executable", "serde0"] }
+
+# Dev / Test Dependencies
+tempfile = "3.27.0"
+wiremock = "0.6.5"
+insta = { version = "1.49.0", features = ["json"] }
+proptest = "1.12.0"

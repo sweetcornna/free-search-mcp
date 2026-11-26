@@ -1,0 +1,13 @@
+protocol = "oai_pmh"
+
+[[instance]]
+id = "hal_oai"
+name = "HAL Open Archive (OAI-PMH)"
+summary = "French national multidisciplinary open archive OAI-PMH harvester."
+aliases = ["hal"]
+base_url = "https://api.archives-ouvertes.fr/oai/hal/"
+scopes = ["academic.preprint"]
+caps = ["lookup", "harvest"]
+tier = 1
+limits = { rps = 2.0, burst = 4, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 21600, host_bucket = "api.archives-ouvertes.fr" }
+probe = { op = "identify", params = {}, min_results = 1 }

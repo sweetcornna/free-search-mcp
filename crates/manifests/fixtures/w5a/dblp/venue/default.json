@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "source": "dblp",
+  "op": "venue",
+  "recordedAt": "2026-11-25T15:05:14Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://sparql.dblp.org/sparql",
+        "headersSubset": {
+          "accept": "application/sparql-results+json",
+          "content-type": "application/sparql-query"
+        },
+        "bodySha256": "f658bb7117ce562c6970a395d63773c73abfe3d3f1a3e6c6aea65096a023926a"
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "date",
+            "Wed, 25 Nov 2026 15:05:14 GMT"
+          ],
+          [
+            "server",
+            "Apache/2.4.52 (Ubuntu)"
+          ],
+          [
+            "content-type",
+            "application/sparql-results+json"
+          ],
+          [
+            "access-control-allow-origin",
+            "*"
+          ],
+          [
+            "access-control-allow-headers",
+            "*"
+          ],
+          [
+            "access-control-allow-methods",
+            "GET, POST, OPTIONS"
+          ],
+          [
+            "content-security-policy",
+            "frame-ancestors 'self' https://dblps.uni-trier.de"
+          ]
+        ],
+        "bodyText": "{\"head\":{\"vars\":[\"stream\",\"title\",\"issns\",\"worksCount\"]},\"results\":{\"bindings\":[{\"stream\":{\"type\":\"uri\",\"value\":\"https://dblp.org/streams/conf/iconip\"},\"title\":{\"type\":\"literal\",\"value\":\"International Conference on Neural Information Processing (ICONIP)\"},\"worksCount\":{\"datatype\":\"http://www.w3.org/2001/XMLSchema#int\",\"type\":\"literal\",\"value\":\"8541\"}},{\"stream\":{\"type\":\"uri\",\"value\":\"https://dblp.org/streams/conf/nips\"},\"title\":{\"type\":\"literal\",\"value\":\"Conference on Neural Information Processing Systems (NeurIPS)\"},\"worksCount\":{\"datatype\":\"http://www.w3.org/2001/XMLSchema#int\",\"type\":\"literal\",\"value\":\"31003\"}}]},\"meta\":{\"query-time-ms\":27,\"result-size-total\":2}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

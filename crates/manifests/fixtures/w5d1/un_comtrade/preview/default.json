@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "un_comtrade",
+  "op": "preview",
+  "recordedAt": "2026-11-25T12:12:19Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://comtradeapi.un.org/public/v1/preview/C/A/HS?reporterCode=842&partnerCode=156,276,392&period=2023&cmdCode=TOTAL&flowCode=X&maxRecords=5",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"elapsedTime\":\"4.04 secs\",\"count\":3,\"data\":[{\"typeCode\":\"C\",\"freqCode\":\"A\",\"refPeriodId\":20230101,\"refYear\":2023,\"refMonth\":52,\"period\":\"2023\",\"reporterCode\":842,\"reporterISO\":null,\"reporterDesc\":null,\"flowCode\":\"X\",\"flowDesc\":null,\"partnerCode\":156,\"partnerISO\":null,\"partnerDesc\":null,\"partner2Code\":0,\"partner2ISO\":null,\"partner2Desc\":null,\"classificationCode\":\"H6\",\"classificationSearchCode\":\"HS\",\"isOriginalClassification\":true,\"cmdCode\":\"TOTAL\",\"cmdDesc\":null,\"aggrLevel\":null,\"isLeaf\":null,\"customsCode\":\"C00\",\"customsDesc\":null,\"mosCode\":\"0\",\"motCode\":0,\"motDesc\":null,\"qtyUnitCode\":-1,\"qtyUnitAbbr\":null,\"qty\":0.0,\"isQtyEstimated\":false,\"altQtyUnitCode\":-1,\"altQtyUnitAbbr\":null,\"altQty\":0.0,\"isAltQtyEstimated\":false,\"netWgt\":0.0,\"isNetWgtEstimated\":true,\"grossWgt\":0.0,\"isGrossWgtEstimated\":false,\"cifvalue\":null,\"fobvalue\":147805519996.0,\"primaryValue\":147805519996.0,\"legacyEstimationFlag\":4,\"isReported\":false,\"isAggregate\":true},{\"typeCode\":\"C\",\"freqCode\":\"A\",\"refPeriodId\":20230101,\"refYear\":2023,\"refMonth\":52,\"period\":\"2023\",\"reporterCode\":842,\"reporterISO\":null,\"reporterDesc\":null,\"flowCode\":\"X\",\"flowDesc\":null,\"partnerCode\":276,\"partnerISO\":null,\"partnerDesc\":null,\"partner2Code\":0,\"partner2ISO\":null,\"partner2Desc\":null,\"classificationCode\":\"H6\",\"classificationSearchCode\":\"HS\",\"isOriginalClassification\":true,\"cmdCode\":\"TOTAL\",\"cmdDesc\":null,\"aggrLevel\":null,\"isLeaf\":null,\"customsCode\":\"C00\",\"customsDesc\":null,\"mosCode\":\"0\",\"motCode\":0,\"motDesc\":null,\"qtyUnitCode\":-1,\"qtyUnitAbbr\":null,\"qty\":0.0,\"isQtyEstimated\":false,\"altQtyUnitCode\":-1,\"altQtyUnitAbbr\":null,\"altQty\":0.0,\"isAltQtyEstimated\":false,\"netWgt\":0.0,\"isNetWgtEstimated\":true,\"grossWgt\":0.0,\"isGrossWgtEstimated\":false,\"cifvalue\":null,\"fobvalue\":76472551326.0,\"primaryValue\":76472551326.0,\"legacyEstimationFlag\":4,\"isReported\":false,\"isAggregate\":true},{\"typeCode\":\"C\",\"freqCode\":\"A\",\"refPeriodId\":20230101,\"refYear\":2023,\"refMonth\":52,\"period\":\"2023\",\"reporterCode\":842,\"reporterISO\":null,\"reporterDesc\":null,\"flowCode\":\"X\",\"flowDesc\":null,\"partnerCode\":392,\"partnerISO\":null,\"partnerDesc\":null,\"partner2Code\":0,\"partner2ISO\":null,\"partner2Desc\":null,\"classificationCode\":\"H6\",\"classificationSearchCode\":\"HS\",\"isOriginalClassification\":true,\"cmdCode\":\"TOTAL\",\"cmdDesc\":null,\"aggrLevel\":null,\"isLeaf\":null,\"customsCode\":\"C00\",\"customsDesc\":null,\"mosCode\":\"0\",\"motCode\":0,\"motDesc\":null,\"qtyUnitCode\":-1,\"qtyUnitAbbr\":null,\"qty\":0.0,\"isQtyEstimated\":false,\"altQtyUnitCode\":-1,\"altQtyUnitAbbr\":null,\"altQty\":0.0,\"isAltQtyEstimated\":false,\"netWgt\":0.0,\"isNetWgtEstimated\":true,\"grossWgt\":0.0,\"isGrossWgtEstimated\":false,\"cifvalue\":null,\"fobvalue\":76154045176.0,\"primaryValue\":76154045176.0,\"legacyEstimationFlag\":4,\"isReported\":false,\"isAggregate\":true}],\"error\":\"\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+---
+source: crates/surface/tests/snapshots.rs
+expression: out
+---
+# python crispr — 3 results · mwmbl, clinicaltrials · 1.24s · cached 5 minutes ago
+_scope: web · dated: 1/3 · retrieved 2026-11-25T14:15:00Z_
+_(requested but contributed nothing: bing)_
+
+> **Lead:** Python is a high-level, general-purpose programming language.
+
+## 1. Welcome to Python.org
+<http://python.org>
+_mwmbl · undated · score 0.032_
+> Lists (known as arrays in other languages) are one of the compound data types that Python understands. Lists can be indexed, sliced and manipulated with o…
+
+## 2. Python (programming language)
+<https://en.wikipedia.org/wiki/Python_(programming_language)>
+_mwmbl · undated · score 0.032_
+> Python is a high-level, general-purpose programming language. Its design philosophy emphasizes code readability with the use of significant indentation
+
+## 3. CRISPR-Edited Allogeneic Anti-CD19 CAR-T Cell Therapy for Relapsed/Refractory B Cell Non-Hodgkin Lymphoma (ANTLER)
+<https://clinicaltrials.gov/study/NCT04637763>
+_clinicaltrials · record · dated 2026-10-19 · score 0.081_
+> CB010A is a study evaluating safety, emerging efficacy, pharmacokinetics and immunogenicity of CB-010 in adults with relapsed/refractory B cell non-Hodgkin lymphoma after lymphodepletion consisting of cyclophosphamide and fludarabine.
+
+notes: bing timed out after 5.0s; served via mwmbl + clinicaltrials
+next: `web.fetch(url)` to read full pages before citing exact numbers/dates, or `web.research(q)`.

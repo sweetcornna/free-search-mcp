@@ -1,0 +1,82 @@
+id = "mitre_attack"
+name = "MITRE ATT&CK (TAXII 2.1)"
+summary = "Official MITRE ATT&CK TAXII 2.1 STIX server covering Enterprise, Mobile, and ICS adversary tactics, techniques, groups, and software."
+aliases = ["att&ck", "attack", "mitre taxii", "stix attack"]
+home_url = "https://attack.mitre.org"
+tier = 1
+scopes = ["security"]
+caps = ["lookup", "harvest"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 1.0, burst = 2, concurrency = 2, timeout_ms = 12000, cache_ttl_s = 86400 }
+
+[op.collections]
+summary = "List available MITRE ATT&CK TAXII 2.1 collections (Enterprise, Mobile, ICS)."
+method = "GET"
+url = "https://attack-taxii.mitre.org/api/v21/collections/"
+headers = { Accept = "application/taxii+json;version=2.1" }
+response = "json"
+returns = "records"
+probe = { params = {}, min_results = 3, fixture = "fixtures/w5c/mitre_attack/collections/default.json" }
+
+[op.collections.map]
+items = ".collections[]"
+error = "if .http_status then (.description // .title // \"TAXII error\") else null end"
+record = '''{
+  id: .id,
+  title: .title,
+  description: (.description // ""),
+  canRead: (.can_read // true)
+}'''
+
+[op.objects]
+summary = "Browse STIX 2.1 objects (techniques, groups, malware, tools, mitigations) from a MITRE ATT&CK collection."
+method = "GET"
+url = "https://attack-taxii.mitre.org/api/v21/collections/{collection}/objects/"
+headers = { Accept = "application/taxii+json;version=2.1" }
+response = "json"
+returns = "records"
+paginate = { style = "cursor", param = "next", max_pages = 3 }
+probe = { params = { object_type = "attack-pattern", limit = 3 }, min_results = 2, fixture = "fixtures/w5c/mitre_attack/objects/default.json" }
+
+[op.objects.params]
+collection = { type = "string", default = "x-mitre-collection--1f5f1533-f617-4ca8-9ab4-6a02367fa019", in = "path", doc = "TAXII collection ID (default: Enterprise ATT&CK)" }
+object_type = { type = "string", default = "attack-pattern", enum = ["attack-pattern", "intrusion-set", "malware", "tool", "course-of-action", "x-mitre-tactic", "campaign"], to = "match[type]", doc = "STIX object type filter" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Max objects per page" }
+cursor = { type = "string", to = "next", doc = "TAXII pagination cursor" }
+
+[op.objects.map]
+items = "(.objects // [])[]"
+next_cursor = "if .more == true then .next else null end"
+error = "@ref:op.collections.map.error"
+record = '''
+([(.external_references // [])[] | select((.source_name // "") | test("^mitre-(mobile-|ics-)?attack$"))][0] // {}) as $ref |
+{
+  stixId: .id,
+  attackId: ($ref.external_id // null),
+  type: .type,
+  name: (.name // ""),
+  url: ($ref.url // "https://attack.mitre.org"),
+  tactics: [(.kill_chain_phases // [])[] | .phase_name],
+  platforms: (.x_mitre_platforms // []),
+  modified: .modified,
+  description: (.description // "")
+}'''
+
+[op.object]
+summary = "Fetch a specific MITRE ATT&CK STIX 2.1 object by exact STIX ID."
+method = "GET"
+url = "https://attack-taxii.mitre.org/api/v21/collections/{collection}/objects/"
+headers = { Accept = "application/taxii+json;version=2.1" }
+response = "json"
+returns = "records"
+probe = { params = { id = "attack-pattern--d1fcf083-a721-4223-aedf-bf8960798d62" }, min_results = 1, fixture = "fixtures/w5c/mitre_attack/object/default.json" }
+
+[op.object.params]
+collection = { type = "string", default = "x-mitre-collection--1f5f1533-f617-4ca8-9ab4-6a02367fa019", in = "path", doc = "TAXII collection ID (default: Enterprise ATT&CK)" }
+id = { type = "string", required = true, to = "match[id]", doc = "Exact STIX object ID e.g. attack-pattern--d1fcf083-a721-4223-aedf-bf8960798d62" }
+
+[op.object.map]
+items = "(.objects // [])[]"
+error = "@ref:op.collections.map.error"
+record = "@ref:op.objects.map.record"

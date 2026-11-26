@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "source": "pku_opendata",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:13:58Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://opendata.pku.edu.cn/api/search?q=china&type=dataset&per_page=3",
+        "headersSubset": {},
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"status\":\"OK\",\"data\":{\"q\":\"china\",\"total_count\":278,\"start\":0,\"spelling_alternatives\":{},\"items\":[{\"name\":\"Tornado Database in China (2007~2016)\",\"type\":\"dataset\",\"url\":\"https://doi.org/10.18170/DVN/QKQHTG\",\"global_id\":\"doi:10.18170/DVN/QKQHTG\",\"description\":\"This tornado databse includes the tornado information in contiguous China from 2007 to 2016. These data were obtained from various sources with cross checking: the Yearbook of Meteorological Disasters in China (China Meteorological Administration, 2005–2017), the tornado dataset in contiguous China during the period 1948–2012 compiled by Chen et al. (2018), almost all the published papers on tornadoes in China, the damage surveys conducted by local meteorological agencies and the reports archived through web searches. With the availability of widely-covering China New Generation Weather Radar network after 2006, we performed quality control on tornado records by reviewing the national and regional radar reflectivity mosaic images, and some tornado records that were not associated with a convective storm were removed. In the high-incidence area of tornadoes (e.g., Jiangsu Province), the reported locations and times of most tornado reports in JS were further manually verified and corrected, based on the track of parent storms and the cyclonic rotational signature at the lowest two levels in the radial velocity field from the available Doppler radar base data.\",\"published_at\":\"2020-09-11T11:40:14Z\",\"citationHtml\":\"Ruilin Zhou; Zhiyong Meng; Lanqiang Bai, 2020, \\\"Tornado Database in China (2007~2016)\\\", <a href=\\\"https://doi.org/10.18170/DVN/QKQHTG\\\" target=\\\"_blank\\\">https://doi.org/10.18170/DVN/QKQHTG</a>, Peking University Open Research Data Platform, V2, UNF:6:LHlSiyVTt6/QCGIWEXNTmA== [fileUNF]\",\"identifier_of_dataverse\":\"China_Tornado_2007_2016\",\"name_of_dataverse\":\"Tornado Database in China\",\"citation\":\"Ruilin Zhou; Zhiyong Meng; Lanqiang Bai, 2020, \\\"Tornado Database in China (2007~2016)\\\", https://doi.org/10.18170/DVN/QKQHTG, Peking University Open Research Data Platform, V2, UNF:6:LHlSiyVTt6/QCGIWEXNTmA== [fileUNF]\",\"authors\":[\"Ruilin Zhou\",\"Zhiyong Meng\",\"Lanqiang Bai\"]},{\"name\":\"Tornado Database in China (2017~2020)\",\"type\":\"dataset\",\"url\":\"https://doi.org/10.18170/DVN/M7PTV9\",\"global_id\":\"doi:10.18170/DVN/M7PTV9\",\"description\":\"This tornado database includes the tornado information in contiguous China from 2017 to 2020.\",\"published_at\":\"2023-07-03T01:46:14Z\",\"citationHtml\":\"Ruilin Zhou; Zhiyong Meng, 2023, \\\"Tornado Database in China (2017~2020)\\\", <a href=\\\"https://doi.org/10.18170/DVN/M7PTV9\\\" target=\\\"_blank\\\">https://doi.org/10.18170/DVN/M7PTV9</a>, Peking University Open Research Data Platform, V1, UNF:6:5vqpAispdhQaDuewbT91zA== [fileUNF]\",\"identifier_of_dataverse\":\"China_Tornado_2007_2016\",\"name_of_dataverse\":\"Tornado Database in China\",\"citation\":\"Ruilin Zhou; Zhiyong Meng, 2023, \\\"Tornado Database in China (2017~2020)\\\", https://doi.org/10.18170/DVN/M7PTV9, Peking University Open Research Data Platform, V1, UNF:6:5vqpAispdhQaDuewbT91zA== [fileUNF]\",\"authors\":[\"Ruilin Zhou\",\"Zhiyong Meng\"]},{\"name\":\"Attitudes towards Citizenship in China-2008\",\"type\":\"dataset\",\"url\":\"https://doi.org/10.18170/DVN/1ZIGVS\",\"global_id\":\"doi:10.18170/DVN/1ZIGVS\",\"description\":\"Attitudes towards Citizenship in China-2008\",\"published_at\":\"2020-10-28T05:55:57Z\",\"citationHtml\":\"Mingming Shen; Ming Yang; Jie Yan, 2015, \\\"Attitudes towards Citizenship in China-2008\\\", <a href=\\\"https://doi.org/10.18170/DVN/1ZIGVS\\\" target=\\\"_blank\\\">https://doi.org/10.18170/DVN/1ZIGVS</a>, Peking University Open Research Data Platform, V3\",\"identifier_of_dataverse\":\"RCCC\",\"name_of_dataverse\":\"The Research Center For Contemporary China\",\"citation\":\"Mingming Shen; Ming Yang; Jie Yan, 2015, \\\"Attitudes towards Citizenship in China-2008\\\", https://doi.org/10.18170/DVN/1ZIGVS, Peking University Open Research Data Platform, V3\",\"authors\":[\"Mingming Shen\",\"Ming Yang\",\"Jie Yan\"]}],\"count_in_response\":3}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

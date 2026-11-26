@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "isric_soil",
+  "op": "classification",
+  "recordedAt": "2026-11-25T11:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://rest.isric.org/soilgrids/v2.0/classification/query?lon=-7.557&lat=41.196&number_classes=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"type\":\"Point\",\"coordinates\":[-7.557,41.196],\"query_time_s\":6.543022155761719,\"wrb_class_name\":\"Cambisols\",\"wrb_class_value\":6,\"wrb_class_probability\":[[\"Cambisols\",24],[\"Luvisols\",14],[\"Leptosols\",13]]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -2,8 +2,8 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.sweetcornna/free-search-mcp",
   "title": "Free Search",
-  "description": "No-API-key web search, page fetching and document reading across many engines. Local-first.",
-  "version": "0.18.2",
+  "description": "Keyless Rust search, ask & exec MCP server: web, 500+ sources, academic OA fulltext, local docs.",
+  "version": "1.0.0",
   "websiteUrl": "https://github.com/sweetcornna/free-search-mcp#readme",
   "repository": {
     "url": "https://github.com/sweetcornna/free-search-mcp",
@@ -20,7 +20,7 @@
     {
       "registryType": "pypi",
       "identifier": "free-search-mcp",
-      "version": "0.18.2",
+      "version": "1.0.0",
       "runtimeHint": "uvx",
       "transport": {
         "type": "stdio"
@@ -28,7 +28,7 @@
       "environmentVariables": [
         {
           "name": "SEARCH_MCP_PROXY",
-          "description": "Optional outbound proxy URL (http://, https:// or socks5://) for engines that block your network.",
+          "description": "Optional outbound proxy URL (http://, https://, socks5:// or socks5h://) for networks that block search engines.",
           "isRequired": false,
           "isSecret": true
         },
@@ -39,7 +39,7 @@
         },
         {
           "name": "SEARCH_MCP_CACHE_DIR",
-          "description": "Optional directory for the local search/page cache. Default: ~/.cache/search-mcp.",
+          "description": "Optional directory for the local SQLite search/page cache. Default: ~/.cache/search-mcp.",
           "isRequired": false,
           "format": "filepath"
         }

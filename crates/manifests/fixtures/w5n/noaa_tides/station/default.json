@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "noaa_tides",
+  "op": "station",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/9414290.json",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\n  \"count\": 1,\n  \"units\": null,\n  \"stations\": [\n    {\n      \"tidal\": true,\n      \"greatlakes\": false,\n      \"shefcode\": \"FTPC1\",\n      \"details\": {\n        \"self\": \"https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/9414290/details.json\"\n      },\n      \"sensors\": {\n        \"self\": \"https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/9414290/sensors.json\"\n      },\n      \"floodlevels\": {\n        \"self\": \"https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/9414290/floodlevels.json\"\n      },\n      \"datums\": {\n        \"self\": \"https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/9414290/datums.json\"\n      },\n      \"supersededdatums\": {\n        \"self\": \"https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/9414290/supersededdatums.json\"\n      },\n      \"harmonicConstituents\": {\n        \"self\": \"https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/9414290/harcon.json\"\n      },\n      \"benchmarks\": {\n        \"self\": \"https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/9414290/benchmarks.json\"\n      },\n      \"tidePredOffsets\": {\n        \"self\": \"https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/9414290/tidepredoffsets.json\"\n      },\n      \"ofsMapOffsets\": {\n        \"self\": \"https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/9414290/ofsmapoffsets.json\"\n      },\n      \"state\": \"CA\",\n      \"timezone\": \"PST\",\n      \"timezonecorr\": -8,\n      \"observedst\": true,\n      \"stormsurge\": false,\n      \"nearby\": {\n        \"self\": \"https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/9414290/nearby.json\"\n      },\n      \"forecast\": true,\n      \"outlook\": true,\n      \"HTFhistorical\": true,\n      \"HTFmonthly\": false,\n      \"nonNavigational\": false,\n      \"inundationdb\": true,\n      \"id\": \"9414290\",\n      \"name\": \"San Francisco\",\n      \"lat\": 37.806305,\n      \"lng\": -122.46589,\n      \"affiliations\": \"NWLORTS\",\n      \"portscode\": \"sf\",\n      \"products\": {\n        \"self\": \"https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/9414290/products.json\"\n      },\n      \"disclaimers\": {\n        \"self\": \"https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/9414290/disclaimers.json\"\n      },\n      \"notices\": {\n        \"self\": \"https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/9414290/notices.json\"\n      },\n      \"self\": \"https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/9414290.json\",\n      \"expand\": \"details,sensors,floodlevels,datums,harcon,tidepredoffsets,ofsmapoffsets,products,disclaimers,notices\",\n      \"tideType\": \"Mixed\"\n    }\n  ],\n  \"self\": null\n}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+id = "chembl"
+name = "ChEMBL Bioactivity Database"
+summary = "EMBL-EBI database of 2.4M+ bioactive molecules, approved drugs, clinical phases, and bioactivities."
+aliases = ["ebi chembl", "bioactive molecules", "medicinal chemistry"]
+home_url = "https://www.ebi.ac.uk/chembl/"
+tier = 1
+scopes = ["academic.biomed", "reference"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 12000, cache_ttl_s = 86400, host_bucket = "www.ebi.ac.uk" }
+
+[op.search]
+summary = "Search bioactive molecules and drugs in ChEMBL."
+method = "GET"
+url = "https://www.ebi.ac.uk/chembl/api/data/molecule/search.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "aspirin", limit = 3 }, min_results = 2, fixture = "fixtures/w5b/chembl/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Drug name, synonym, or molecule keywords" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "limit", doc = "Maximum molecules per page" }
+offset = { type = "int", min = 0, to = "offset", doc = "Result offset" }
+
+[op.search.map]
+items = ".molecules[]"
+total = ".page_meta.total_count"
+record = '''{
+  chemblId: (.molecule_chembl_id // ""),
+  prefName: ((.pref_name // null) | collapse_ws),
+  moleculeType: (.molecule_type // null),
+  maxPhase: (.max_phase | to_num),
+  firstApproval: (.first_approval | to_int),
+  formula: (.molecule_properties.full_molformula // null),
+  molecularWeight: (.molecule_properties.full_mwt | to_num),
+  smiles: (.molecule_structures.canonical_smiles // null),
+  inchiKey: (.molecule_structures.standard_inchi_key // null),
+  atcClassifications: (.atc_classifications // []),
+  url: ("https://www.ebi.ac.uk/chembl/compound_report_card/" + (.molecule_chembl_id // "") + "/")
+}'''
+hit = '''(if .first_approval != null then (.first_approval | tostring | parse_date) else null end) as $d | {
+  title: (if (.pref_name // "") != "" then ((.pref_name | collapse_ws) + " (" + (.molecule_chembl_id // "") + ")") else (.molecule_chembl_id // "") end),
+  url: ("https://www.ebi.ac.uk/chembl/compound_report_card/" + (.molecule_chembl_id // "") + "/"),
+  snippet: ((((.molecule_type // "") + (if .molecule_properties.full_molformula != null then (" · " + .molecule_properties.full_molformula) else "" end) + (if .max_phase != null then (" · max phase " + (.max_phase | tostring)) else "" end) + (if .first_approval != null then (" · approved " + (.first_approval | tostring)) else "" end)) | gsub("^ · "; "")) | collapse_ws),
+  date: $d,
+  dateSource: (if $d != null then "api" else null end)
+}'''
+
+[op.molecule]
+summary = "Fetch a single ChEMBL molecule record by ChEMBL ID."
+method = "GET"
+url = "https://www.ebi.ac.uk/chembl/api/data/molecule/{chembl_id}.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { chembl_id = "CHEMBL25" }, min_results = 1, fixture = "fixtures/w5b/chembl/molecule/default.json" }
+
+[op.molecule.params]
+chembl_id = { type = "string", required = true, in = "path", doc = "ChEMBL molecule ID (e.g. CHEMBL25)" }
+
+[op.molecule.map]
+items = "."
+record = "@ref:op.search.map.record"

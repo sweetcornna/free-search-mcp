@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "overpass_osm",
+  "op": "query",
+  "recordedAt": "2026-11-25T12:12:19Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://maps.mail.ru/osm/tools/overpass/api/interpreter?data=%5Bout%3Ajson%5D%5Btimeout%3A10%5D%3Bnode(around%3A150%2C52.517%2C13.388)%5B%22amenity%22%5D%3Bout%203%3B",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\n  \"version\": 0.6,\n  \"generator\": \"Overpass API 0.7.62.4 2390de5a\",\n  \"osm3s\": {\n    \"timestamp_osm_base\": \"2026-11-25T12:11:31Z\",\n    \"copyright\": \"The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.\"\n  },\n  \"elements\": [\n\n{\n  \"type\": \"node\",\n  \"id\": 369601773,\n  \"lat\": 52.5159475,\n  \"lon\": 13.3888482,\n  \"tags\": {\n    \"amenity\": \"taxi\",\n    \"name\": \"Grand Hotel\",\n    \"name:de\": \"Grand Hotel\",\n    \"name:uk\": \"Ґранд Готель\"\n  }\n},\n{\n  \"type\": \"node\",\n  \"id\": 380498268,\n  \"lat\": 52.5178945,\n  \"lon\": 13.3882827,\n  \"tags\": {\n    \"addr:city\": \"Berlin\",\n    \"addr:country\": \"DE\",\n    \"addr:housenumber\": \"55\",\n    \"addr:postcode\": \"10117\",\n    \"addr:street\": \"Mittelstraße\",\n    \"addr:suburb\": \"Mitte\",\n    \"amenity\": \"restaurant\",\n    \"check_date\": \"2026-06-02\",\n    \"check_date:smoking\": \"2025-06-30\",\n    \"contact:facebook\": \"https://www.facebook.com/Treffpunkt-Berlin-Alt-Berliner-Kneipe-255598957789188/timeline?ref=page_internal\",\n    \"cuisine\": \"regional\",\n    \"delivery\": \"no\",\n    \"description\": \"Alt-Berliner Kneipe\",\n    \"food\": \"yes\",\n    \"indoor_seating\": \"yes\",\n    \"name\": \"Treffpunkt Berlin\",\n    \"opening_hours\": \"Mo-We 16:00-24:00, Th-Sa 12:00-24:00\",\n    \"outdoor_seating\": \"yes\",\n    \"phone\": \"+49 30 204 1819\",\n    \"smoking\": \"no\",\n    \"surveillance\": \"outdoor\",\n    \"takeaway\": \"no\",\n    \"website\": \"https://www.treffpunktberlin.com/\",\n    \"wheelchair\": \"no\"\n  }\n},\n{\n  \"type\": \"node\",\n  \"id\": 437307174,\n  \"lat\": 52.5165476,\n  \"lon\": 13.3896483,\n  \"tags\": {\n    \"addr:city\": \"Berlin\",\n    \"addr:country\": \"DE\",\n    \"addr:housenumber\": \"21\",\n    \"addr:postcode\": \"10117\",\n    \"addr:street\": \"Unter den Linden\",\n    \"addr:suburb\": \"Mitte\",\n    \"amenity\": \"clinic\",\n    \"healthcare\": \"clinic\",\n    \"healthcare:speciality\": \"endocrinology\",\n    \"level\": \"5\",\n    \"name\": \"Endokrinologie Berlin\",\n    \"name:en\": \"Endocrinology Berlin\",\n    \"opening_hours\": \"Mo-Tu,Th 08:00-13:00,14:00-18:00; We,Fr 08:00-13:00\",\n    \"phone\": \"+49 30 2091562290\",\n    \"website\": \"https://www.endokrinologikum-berlin.de/\"\n  }\n}\n\n  ]\n}\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

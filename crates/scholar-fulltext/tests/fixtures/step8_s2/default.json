@@ -1,0 +1,154 @@
+{
+  "version": 1,
+  "source": "synthetic_step8b_s2",
+  "op": "open_access_pdf",
+  "recordedAt": "",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://pmc.ncbi.nlm.nih.gov/tools/idconv/api/v1/articles/?format=json&ids=10.1038%2Fnature12373&tool=free-search-mcp",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"status\":\"ok\",\"records\":[{\"requested-id\":\"10.1038/nature12373\",\"status\":\"error\"}]}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.openalex.org/works/https://doi.org/10.1038/nature12373?select=id%2Cids%2Cdoi%2Copen_access%2Cbest_oa_location%2Clocations%2Cprimary_location",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 429,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"error\":\"rate limit\"}",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.semanticscholar.org/graph/v1/paper/DOI:10.1038/nature12373?fields=openAccessPdf%2CexternalIds%2Curl%2CisOpenAccess",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"paperId\": \"a5de30adc5c22bc86e8cfabe7fbd07c052d196a8\", \"externalIds\": {\"MAG\": \"2159974629\", \"ArXiv\": \"1304.1068\", \"PubMedCentral\": \"4221854\", \"DOI\": \"10.1038/nature12373\", \"CorpusId\": 4314121, \"PubMed\": \"23903748\"}, \"url\": \"https://www.semanticscholar.org/paper/a5de30adc5c22bc86e8cfabe7fbd07c052d196a8\", \"isOpenAccess\": true, \"openAccessPdf\": {\"url\": \"https://www.nature.com/articles/nature12373.pdf\", \"status\": \"BRONZE\", \"license\": null}}\n",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC4221854/fullTextXML",
+        "headersSubset": {
+          "accept": "application/xml"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 404,
+        "headers": [
+          [
+            "content-type",
+            "text/plain"
+          ]
+        ],
+        "bodyText": "Not Found",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://arxiv.org/html/1304.1068",
+        "headersSubset": {
+          "accept": "text/html"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 404,
+        "headers": [
+          [
+            "content-type",
+            "text/html"
+          ]
+        ],
+        "bodyText": "Not Found",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://ar5iv.labs.arxiv.org/html/1304.1068",
+        "headersSubset": {
+          "accept": "text/html"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 404,
+        "headers": [
+          [
+            "content-type",
+            "text/html"
+          ]
+        ],
+        "bodyText": "Not Found",
+        "bodyB64": null
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful/pmcoa.cgi/BioC_json/PMC4221854/unicode",
+        "headersSubset": {
+          "accept": "application/json"
+        }
+      },
+      "response": {
+        "status": 404,
+        "headers": [
+          [
+            "content-type",
+            "text/plain"
+          ]
+        ],
+        "bodyText": "Not Found",
+        "bodyB64": null
+      }
+    }
+  ]
+}

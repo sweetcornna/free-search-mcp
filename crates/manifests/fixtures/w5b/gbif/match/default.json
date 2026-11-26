@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "gbif",
+  "op": "match",
+  "recordedAt": "2026-11-25T11:55:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.gbif.org/v1/species/match?name=Quercus+robur",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ],
+          [
+            "cache-control",
+            "public, max-age=3601"
+          ]
+        ],
+        "bodyText": "{\"usageKey\":2878688,\"scientificName\":\"Quercus robur L.\",\"canonicalName\":\"Quercus robur\",\"rank\":\"SPECIES\",\"status\":\"ACCEPTED\",\"confidence\":97,\"matchType\":\"EXACT\",\"kingdom\":\"Plantae\",\"phylum\":\"Tracheophyta\",\"order\":\"Fagales\",\"family\":\"Fagaceae\",\"genus\":\"Quercus\",\"species\":\"Quercus robur\",\"kingdomKey\":6,\"phylumKey\":7707728,\"classKey\":220,\"orderKey\":1354,\"familyKey\":4689,\"genusKey\":2877951,\"speciesKey\":2878688,\"class\":\"Magnoliopsida\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

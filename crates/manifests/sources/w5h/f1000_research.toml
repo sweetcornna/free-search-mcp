@@ -1,0 +1,52 @@
+id = "f1000_research"
+name = "F1000Research External API"
+summary = "Open-access, post-publication open peer-review life sciences and biomedical publishing platform with keyless XML search and full JATS XML retrieval."
+aliases = ["f1000", "f1000research", "f1000 research"]
+home_url = "https://f1000research.com"
+tier = 2
+scopes = ["academic", "academic.openaccess", "academic.biomed"]
+caps = ["search", "lookup", "fulltext"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.5, burst = 4, concurrency = 2, timeout_ms = 10000, cache_ttl_s = 43200, host_bucket = "f1000research.com" }
+
+[op.search]
+summary = "Search F1000Research articles and return matching versioned DOIs."
+method = "GET"
+url = "https://f1000research.com/extapi/search"
+response = "xml"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "crispr", limit = 3 }, min_results = 2, fixture = "fixtures/w5h/f1000_research/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Keyword search query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "rows", doc = "DOIs per page" }
+page = { type = "int", default = 1, min = 1, to = "page", doc = "1-based page number" }
+
+[op.search.map]
+items = ".results.doi | arr | .[] | select(type == \"string\" and length > 0)"
+total = "(.results.\"@totalnumberofpages\" | to_int | if . != null then . * ($p.limit // 10) else null end)"
+error = '''if .error != null then (.error | first_str // (.error | tostring)) else null end'''
+record = '''{
+  doi: (. | doi_norm),
+  url: ("https://doi.org/" + .),
+  xmlUrl: ("https://f1000research.com/extapi/article/xml?doi=" + .)
+}'''
+hit = '''{
+  title: ("F1000Research " + .),
+  url: ("https://doi.org/" + .),
+  snippet: ("Open peer-reviewed F1000Research article (call f1000_research.article with doi=" + . + " for full JATS XML)"),
+  date: null
+}'''
+
+[op.article]
+summary = "Fetch raw full-text JATS XML (title, authors, ORCIDs, affiliations, abstract, body, and peer-review metadata) for an F1000Research DOI."
+method = "GET"
+url = "https://f1000research.com/extapi/article/xml"
+response = "text"
+returns = "text"
+probe = { params = { doi = "10.12688/f1000research.8051.1" }, min_results = 1, fixture = "fixtures/w5h/f1000_research/article/default.json" }
+
+[op.article.params]
+doi = { type = "string", required = true, to = "doi", doc = "Versioned F1000Research DOI e.g. 10.12688/f1000research.8051.1" }

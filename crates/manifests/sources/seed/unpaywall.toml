@@ -1,0 +1,62 @@
+id = "unpaywall"
+name = "Unpaywall"
+summary = "Open-access status and legal full-text PDF/landing-page resolver for 50M+ DOIs (requires contact email)."
+aliases = ["unpaywall.org", "oa resolver"]
+home_url = "https://unpaywall.org"
+tier = 1
+scopes = ["academic.openaccess"]
+caps = ["lookup", "fulltext"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 5.0, burst = 10, concurrency = 4, timeout_ms = 6000, cache_ttl_s = 86400, host_bucket = "api.unpaywall.org" }
+
+[op.work]
+summary = "Resolve open-access availability and legal PDF/landing URLs for a DOI via Unpaywall v2."
+method = "GET"
+url = "https://api.unpaywall.org/v2/{doi}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+query_jaq = '''if ($p.email // $cfg.contact_email // "") != "" then [["email", ($p.email // $cfg.contact_email)]] else [] end'''
+probe = { params = { doi = "10.1038/nature12373" }, min_results = 1, fixture = "fixtures/seed/unpaywall/work/default.json" }
+
+[op.work.params]
+doi = { type = "string", required = true, in = "path", encode = "raw", doc = "DOI to resolve, e.g. 10.1038/nature12373" }
+email = { type = "string", in = "none", doc = "Contact email required by Unpaywall API (defaults to SEARCH_MCP_CONTACT_EMAIL)" }
+
+[op.work.map]
+items = "."
+error = "if .error == true then (.message // \"Unpaywall API error\") else null end"
+work = '''(
+  (.doi | doi_norm) as $doi |
+  (.best_oa_location // null) as $oa |
+  {
+    title: ((.title // "") | collapse_ws),
+    authors: [(.z_authors // [])[] | {
+      name: (if (.raw_author_name // "") != "" then .raw_author_name else ([.given, .family] | map(select(type == "string" and length > 0)) | join(" ")) end),
+      orcid: (if (.ORCID // "") != "" then (.ORCID | sub("^https?://orcid\\.org/"; "")) else null end)
+    } | select(.name != "")],
+    year: (.year | to_int),
+    publishedDate: (.published_date | parse_date),
+    venue: (.journal_name // null),
+    workType: (if (.genre // "") == "posted-content" then "preprint" elif (.genre // "") == "proceedings-article" then "conference" else "article" end),
+    ids: {
+      doi: $doi
+    },
+    oa: (if (.is_oa // false) or ($oa != null) then {
+      status: (.oa_status // "green"),
+      url: ($oa.url_for_landing_page // $oa.url // null),
+      pdfUrl: ($oa.url_for_pdf // null),
+      license: ($oa.license // null)
+    } else {
+      status: (.oa_status // "closed"),
+      url: (.doi_url // (if $doi != null then ("https://doi.org/" + $doi) else null end)),
+      pdfUrl: null,
+      license: null
+    } end),
+    retracted: false,
+    versions: [],
+    url: ($oa.url_for_pdf // $oa.url // .doi_url // (if $doi != null then ("https://doi.org/" + $doi) else "" end)),
+    sources: ["unpaywall"]
+  }
+)'''

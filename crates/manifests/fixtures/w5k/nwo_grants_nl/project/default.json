@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "nwo_grants_nl",
+  "op": "project",
+  "recordedAt": "2026-11-25T13:05:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://nwopen-api.nwo.nl/NWOpen-API/api/Projects?project_id=012.000.802",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\n  \"meta\": {\n    \"api_type\": \"NWO Projects API\",\n    \"version\": \"1.0.2\",\n    \"licence\": {\n      \"name\": \"CC0 1.0 Universal\",\n      \"url\": \"https://creativecommons.org/publicdomain/zero/1.0\",\n      \"description\": \"To the extent possible under law, all copyright and related or neighbouring rights have been waived worldwide to the data made available through this API.\"\n    },\n    \"documentation\": \"https://doi.org/10.5281/zenodo.14918287\",\n    \"release_date\": \"2025-08-20T00:00:00\",\n    \"funder\": \"https://doi.org/10.13039/501100003246\",\n    \"ror_id\": \"https://ror.org/04jsz6e67\",\n    \"date\": \"2026-11-25T00:00:00\",\n    \"count\": 1,\n    \"per_page\": 100,\n    \"pages\": 1,\n    \"page\": 1\n  },\n  \"projects\": [\n    {\n      \"project_id\": \"012.000.802\",\n      \"title\": \"Forum of Cultural Exchange between China and the Netherlands: Literature, Aesthetics, and History\",\n      \"funding_scheme_id\": 2327,\n      \"funding_scheme\": \"Samenwerking China - Joint Scientific Thematic Research Programme - Thematic Dialogue Seminars 2010 BOO\",\n      \"department\": \"\",\n      \"sub_department\": \"NWO-breed\",\n      \"start_date\": \"2011-08-27T00:00:00\",\n      \"end_date\": \"2011-08-28T00:00:00\",\n      \"reporting_year\": 2010,\n      \"summary_nl\": \"\",\n      \"summary_en\": \"\",\n      \"project_members\": [\n        {\n          \"role\": \"Project leader\",\n          \"member_id\": 93047,\n          \"last_name\": \"Alphen\",\n          \"degree_pre_nominal\": \"prof. dr.\",\n          \"initials\": \"E.J.\",\n          \"first_name\": \"Ernst\",\n          \"prefix\": \"van\",\n          \"organisation\": \"Universiteit Leiden||Faculteit der Geesteswetenschappen||Leiden University Centre for the Arts in Society (LUCAS)||Literatuurwetenschappen\",\n          \"organisation_id\": 80319,\n          \"ror\": \"https://ror.org/027bh9e22\",\n          \"active\": false\n        },\n        {\n          \"role\": \"Main Applicant\",\n          \"member_id\": 93047,\n          \"last_name\": \"Alphen\",\n          \"degree_pre_nominal\": \"prof. dr.\",\n          \"initials\": \"E.J.\",\n          \"first_name\": \"Ernst\",\n          \"prefix\": \"van\",\n          \"organisation\": \"Universiteit Leiden||Faculteit der Geesteswetenschappen||Leiden University Centre for the Arts in Society (LUCAS)||Literatuurwetenschappen\",\n          \"organisation_id\": 80319,\n          \"ror\": \"https://ror.org/027bh9e22\",\n          \"active\": true\n        }\n      ]\n    }\n  ]\n}\n",
+        "bodyB64": null
+      }
+    }
+  ]
+}

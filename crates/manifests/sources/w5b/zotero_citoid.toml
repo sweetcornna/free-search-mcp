@@ -1,0 +1,41 @@
+id = "zotero_citoid"
+name = "Wikimedia Citoid (Zotero Translators)"
+summary = "Extracts normalized Zotero bibliographic JSON metadata from DOIs, PMIDs, PMCIDs, ISBNs, or URLs."
+aliases = ["citoid", "zotero translator", "citation extractor"]
+home_url = "https://www.mediawiki.org/wiki/Citoid"
+tier = 2
+scopes = ["academic", "reference"]
+caps = ["lookup"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 2.0, burst = 4, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 86400, host_bucket = "wikimedia.org" }
+
+[op.lookup]
+summary = "Resolve a DOI, PMID, PMCID, ISBN, or URL to normalized scholarly bibliographic metadata via Citoid."
+method = "GET"
+url = "https://en.wikipedia.org/api/rest_v1/data/citation/zotero/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "works"
+probe = { params = { id = "23903748" }, min_results = 1, fixture = "fixtures/w5b/zotero_citoid/lookup/default.json" }
+
+[op.lookup.params]
+id = { type = "string", required = true, in = "path", doc = "DOI, PMID, PMCID, ISBN, or URL (e.g. 23903748 or 10.1038/nature12373)" }
+
+[op.lookup.map]
+items = ".[]"
+error = 'if type == "object" and ((.status | to_int) // 200) >= 400 then (.detail // .title // "Citoid error") else null end'
+work = '''((.date // null) | parse_date) as $d | {
+  title: ((.title // "") | strip_tags),
+  authors: [(.creators // [])[] | ((.name // ((.firstName // "") + " " + (.lastName // ""))) | collapse_ws) | select(length > 0) | {name: .}],
+  year: (if $d != null then ($d[0:4] | to_int) else null end),
+  publishedDate: $d,
+  venue: ((.publicationTitle // .bookTitle // .websiteTitle // null) | collapse_ws),
+  workType: (if .itemType == "journalArticle" then "article" elif .itemType == "conferencePaper" then "proceedings-article" else (.itemType // "article") end),
+  ids: { doi: ((.DOI // null) | doi_norm), pmid: (.PMID // null), pmcid: (.PMCID // null) },
+  abstractText: ((.abstractNote // null) | strip_tags),
+  retracted: false,
+  versions: [],
+  url: (.url // (if (.DOI // "") != "" then ("https://doi.org/" + .DOI) else "" end)),
+  sources: ["zotero_citoid"]
+}'''

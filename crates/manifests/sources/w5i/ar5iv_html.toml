@@ -1,0 +1,97 @@
+id = "ar5iv_html"
+name = "ar5iv Historical arXiv HTML5+MathML"
+summary = "LaTeXML HTML5+MathML structured full text for historical and pre-2024 arXiv preprints."
+aliases = ["ar5iv", "ar5iv.labs.arxiv.org", "arxiv html5"]
+home_url = "https://ar5iv.labs.arxiv.org"
+tier = 2
+scopes = ["academic", "academic.preprint"]
+caps = ["lookup", "fulltext"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 0.5, burst = 2, concurrency = 1, timeout_ms = 12000, cache_ttl_s = 86400, host_bucket = "ar5iv.labs.arxiv.org" }
+
+[op.article]
+summary = "Fetch structured HTML5+MathML metadata and abstract for an arXiv preprint from ar5iv."
+method = "GET"
+url = "https://ar5iv.labs.arxiv.org/html/{arxiv_id}"
+headers = { Accept = "text/html" }
+response = "html"
+returns = "works"
+probe = { params = { arxiv_id = "1606.08415" }, min_results = 1, fixture = "fixtures/w5i/ar5iv_html/article/default.json" }
+examples = ['source.call("ar5iv_html.article", {arxiv_id: "1606.08415"})']
+
+[op.article.params]
+arxiv_id = { type = "string", required = true, in = "path", encode = "raw", doc = "arXiv identifier (e.g. 1606.08415 or math/0309285)" }
+
+[op.article.html]
+items_css = "article.ltx_document"
+fields = { title = "h1.ltx_title_document | text", authors = ".ltx_personname | texts", abstract_html = ".ltx_abstract | html" }
+wall_markers = ["Access Denied", "Just a moment"]
+
+[op.article.map]
+items = ".[]"
+work = '''(
+  ($p.arxiv_id // "") as $aid |
+  ("https://ar5iv.labs.arxiv.org/html/" + $aid) as $url |
+  ((.abstract_html // "")
+    | gsub("(?s)<h[1-6][^>]*>.*?</h[1-6]>"; " ")
+    | gsub("(?s)<annotation(?:-xml)?[^>]*>.*?</annotation(?:-xml)?>"; "")
+    | gsub("[\u200b\u2061\u2062\u2063\u2064]"; "")
+    | strip_tags) as $abs |
+  (if ($aid | test("^[0-9]{4}\\.")) then ("20" + $aid[0:2] | to_int)
+   elif ($aid | test("/[0-9]{7}")) then
+     ((($aid | split("/")[1])[0:2] | to_int) as $yy |
+      if $yy == null then null elif $yy >= 91 then (1900 + $yy) else (2000 + $yy) end)
+   else null end) as $yr |
+  {
+    title: ((.title // "") | collapse_ws // ""),
+    authors: [(.authors | arr)[] | collapse_ws | select(. != null and . != "") | {name: .}],
+    year: $yr,
+    publishedDate: null,
+    venue: "arXiv (ar5iv HTML5)",
+    workType: "preprint",
+    ids: { arxiv: (if $aid != "" then ($aid | sub("v[0-9]+$"; "")) else null end) },
+    abstractText: (if ($abs // "") != "" then $abs else null end),
+    oa: {
+      status: "green",
+      url: $url,
+      pdfUrl: ("https://arxiv.org/pdf/" + $aid),
+      structuredFormat: "html5"
+    },
+    retracted: false,
+    versions: [],
+    url: $url,
+    sources: ["ar5iv_html"]
+  }
+)'''
+
+[op.sections]
+summary = "Extract top-level LaTeXML sections and appendices (heading and clean text) from an ar5iv HTML5 preprint."
+method = "GET"
+url = "https://ar5iv.labs.arxiv.org/html/{arxiv_id}"
+headers = { Accept = "text/html" }
+response = "html"
+returns = "records"
+probe = { params = { arxiv_id = "1606.08415" }, min_results = 2, fixture = "fixtures/w5i/ar5iv_html/sections/default.json" }
+examples = ['source.call("ar5iv_html.sections", {arxiv_id: "1606.08415"})']
+
+[op.sections.params]
+arxiv_id = { type = "string", required = true, in = "path", encode = "raw", doc = "arXiv identifier (e.g. 1606.08415 or math/0309285)" }
+
+[op.sections.html]
+items_css = "section.ltx_section, section.ltx_appendix"
+fields = { heading = "h2.ltx_title_section, h2.ltx_title_appendix | text", body_html = "| html" }
+wall_markers = ["Access Denied", "Just a moment"]
+
+[op.sections.map]
+items = '''[.[] | select((.heading // "") != "")] | .[]'''
+record = '''{
+  arxivId: ($p.arxiv_id // ""),
+  heading: ((.heading // "") | collapse_ws // ""),
+  text: (((.body_html // "")
+    | gsub("(?s)<h2[^>]*>.*?</h2>"; " ")
+    | gsub("(?s)<annotation(?:-xml)?[^>]*>.*?</annotation(?:-xml)?>"; "")
+    | gsub("[\u200b\u2061\u2062\u2063\u2064]"; "")
+    | strip_tags) // ""),
+  url: ("https://ar5iv.labs.arxiv.org/html/" + ($p.arxiv_id // ""))
+}'''

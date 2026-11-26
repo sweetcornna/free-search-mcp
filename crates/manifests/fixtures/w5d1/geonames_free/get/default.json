@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "geonames_free",
+  "op": "get",
+  "recordedAt": "2026-11-25T12:13:33Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://secure.geonames.org/getJSON?geonameId=2643743",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json; charset=utf-8"
+          ]
+        ],
+        "bodyText": "{\"timezone\": {\"gmtOffset\": 0, \"timeZoneId\": \"Europe/London\", \"dstOffset\": 1}, \"bbox\": {\"east\": 0.334015, \"south\": 51.28676, \"north\": 51.691874, \"west\": -0.510375, \"accuracyLevel\": 10}, \"asciiName\": \"London\", \"countryId\": \"2635167\", \"fcl\": \"P\", \"countryCode\": \"GB\", \"countryName\": \"United Kingdom\", \"adminName1\": \"England\", \"adminCode1\": \"ENG\", \"lat\": \"51.50853\", \"lng\": \"-0.12574\", \"fcode\": \"PPLC\", \"fcodeName\": \"capital of a political entity\", \"continentCode\": \"EU\", \"geonameId\": 2643743, \"toponymName\": \"London\", \"population\": 8961989, \"wikipediaURL\": \"en.wikipedia.org/wiki/London\", \"name\": \"London\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

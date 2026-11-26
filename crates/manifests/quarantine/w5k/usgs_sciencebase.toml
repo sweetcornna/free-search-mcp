@@ -1,0 +1,71 @@
+id = "usgs_sciencebase"
+name = "USGS ScienceBase Research Data Catalog"
+summary = "US Geological Survey open research data catalog for hydrology, ecology, geology, hazards, and spatial science datasets."
+aliases = ["sciencebase", "usgs data", "usgs catalog"]
+home_url = "https://www.sciencebase.gov/catalog/"
+tier = 2
+scopes = ["dataset"]
+caps = ["search", "lookup", "dataset"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 0.5, burst = 2, concurrency = 1, timeout_ms = 40000, cache_ttl_s = 43200, host_bucket = "www.sciencebase.gov" }
+
+[op.search]
+summary = "Search USGS ScienceBase research data catalog items."
+method = "GET"
+url = "https://www.sciencebase.gov/catalog/items"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { fields = "title,summary,dates,link,tags,webLinks", format = "json" }
+paginate = { style = "offset", param = "offset", start = 0, max_pages = 3 }
+probe = { params = { query = "earthquake", limit = 3, offset = 0 }, min_results = 2, fixture = "fixtures/w5k/usgs_sciencebase/search/default.json" }
+examples = ['source.call("usgs_sciencebase.search", { query: "earthquake", limit: 5 })']
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Dataset search query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "max", doc = "Items per page" }
+offset = { type = "int", default = 0, min = 0, to = "offset", doc = "Pagination offset" }
+
+[op.search.map]
+items = "(.items // [])[]"
+total = ".total"
+error = "if .errors then (.errors.message // (.errors | tostring)) else null end"
+record = '''{
+  id: (.id // ""),
+  title: ((.title // "") | collapse_ws),
+  summary: (.summary | collapse_ws),
+  tags: [(.tags // [])[] | .name | select(. != null)],
+  dates: [(.dates // [])[] | { type: .type, date: (.dateString | parse_date) }],
+  webLinks: [(.webLinks // [])[] | { title: (.title // null), type: (.type // null), uri: (.uri // null) } | select(.uri != null)],
+  url: (.link.url // ("https://www.sciencebase.gov/catalog/item/" + (.id // "")))
+}'''
+hit = '''(
+  (([(.dates // [])[] | select(.type == "Publication" or .type == "lastUpdated" or .type == "Start") | .dateString][0]) | parse_date) as $d |
+  {
+    title: ((.title // "") | collapse_ws),
+    url: (.link.url // ("https://www.sciencebase.gov/catalog/item/" + (.id // ""))),
+    snippet: (((.summary // "") | collapse_ws)[0:240] | collapse_ws),
+    date: $d,
+    dateSource: (if $d != null then "api" else null end)
+  }
+)'''
+
+[op.item]
+summary = "Fetch metadata, tags, dates, and web links for a single USGS ScienceBase item ID."
+method = "GET"
+url = "https://www.sciencebase.gov/catalog/item/{id}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+const_query = { fields = "title,summary,dates,link,tags,webLinks", format = "json" }
+probe = { params = { id = "58ecf3efe4b0b4d95d33535f" }, min_results = 1, fixture = "fixtures/w5k/usgs_sciencebase/item/default.json" }
+examples = ['source.call("usgs_sciencebase.item", { id: "58ecf3efe4b0b4d95d33535f" })']
+
+[op.item.params]
+id = { type = "string", required = true, in = "path", doc = "24-character ScienceBase item ID e.g. 58ecf3efe4b0b4d95d33535f" }
+
+[op.item.map]
+items = "."
+error = "@ref:op.search.map.error"
+record = "@ref:op.search.map.record"

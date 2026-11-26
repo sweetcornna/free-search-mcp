@@ -1,0 +1,125 @@
+id = "geonames_free"
+name = "GeoNames Geographical Database"
+summary = "Global gazetteer of 11M+ place names, coordinates, populations, admin subdivisions, and nearby-place lookup."
+aliases = ["geonames", "gazetteer", "place names"]
+home_url = "https://www.geonames.org"
+tier = 3
+scopes = ["reference.geo"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 1.0, burst = 3, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 86400 }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_GEONAMES_USERNAME"
+in = "query"
+name = "username"
+route_requires_key = true
+
+[op.search]
+summary = "Search GeoNames geographical features by place name, country, or feature class."
+method = "GET"
+url = "https://secure.geonames.org/searchJSON"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "offset", param = "startRow", start = 0, max_pages = 3 }
+probe = { params = { query = "London", limit = 3 }, min_results = 2, fixture = "fixtures/w5d1/geonames_free/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Place name query e.g. London, Kyoto" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "maxRows", doc = "Max features" }
+country = { type = "string", to = "country", doc = "ISO-2 country code e.g. GB, US, JP" }
+feature_class = { type = "string", enum = ["A", "H", "L", "P", "R", "S", "T", "U", "V"], to = "featureClass", doc = "GeoNames feature class (P=city/village, A=admin, T=mountain)" }
+offset = { type = "int", min = 0, to = "startRow", doc = "Start row offset" }
+
+[op.search.map]
+items = "(.geonames // [])[]"
+total = ".totalResultsCount"
+error = ".status.message"
+record = '''{
+  geonameId: .geonameId,
+  name: .name,
+  toponymName: (.toponymName // .name),
+  countryCode: (if (.countryCode // "") != "" then .countryCode else null end),
+  countryName: (if (.countryName // "") != "" then .countryName else null end),
+  adminName1: (if (.adminName1 // "") != "" then .adminName1 else null end),
+  featureClass: (.fcl // null),
+  featureCode: (.fcode // null),
+  featureName: (.fcodeName // null),
+  population: (.population // null),
+  lat: ((.lat | to_num) // .lat),
+  lng: ((.lng | to_num) // .lng),
+  url: ("https://www.geonames.org/" + (.geonameId | tostring))
+}'''
+hit = '''{
+  title: ([(.name // ""), (.adminName1 // ""), (.countryName // "")] | map(select(. != "")) | reduce .[] as $x ([]; if index($x) then . else . + [$x] end) | join(", ")),
+  url: ("https://www.geonames.org/" + (.geonameId | tostring)),
+  snippet: ([(.fcodeName // empty | select(. != "")), (if ((.population // 0) > 0) then ("pop " + (.population | tostring)) else empty end), ("lat " + (.lat | tostring) + ", lng " + (.lng | tostring))] | join(" · "))
+}'''
+
+[op.get]
+summary = "Fetch full GeoNames feature record (timezone, bounding box, population, Wikipedia link) by geonameId."
+method = "GET"
+url = "https://secure.geonames.org/getJSON"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { geoname_id = 2643743 }, min_results = 1, fixture = "fixtures/w5d1/geonames_free/get/default.json" }
+
+[op.get.params]
+geoname_id = { type = "int", required = true, to = "geonameId", doc = "Numeric GeoNames ID e.g. 2643743" }
+
+[op.get.map]
+items = "."
+error = ".status.message"
+record = '''{
+  geonameId: .geonameId,
+  name: .name,
+  toponymName: (.toponymName // .name),
+  countryCode: (if (.countryCode // "") != "" then .countryCode else null end),
+  countryName: (if (.countryName // "") != "" then .countryName else null end),
+  continentCode: (.continentCode // null),
+  adminName1: (if (.adminName1 // "") != "" then .adminName1 else null end),
+  featureClass: (.fcl // null),
+  featureCode: (.fcode // null),
+  population: (.population // null),
+  lat: ((.lat | to_num) // .lat),
+  lng: ((.lng | to_num) // .lng),
+  timezone: (.timezone.timeZoneId // null),
+  bbox: (.bbox // null),
+  wikipediaUrl: (if ((.wikipediaURL // "") != "") then (if (.wikipediaURL | test("^https?://")) then .wikipediaURL else ("https://" + .wikipediaURL) end) else null end),
+  url: ("https://www.geonames.org/" + (.geonameId | tostring))
+}'''
+
+[op.nearby]
+summary = "Find populated places near WGS84 latitude and longitude coordinates."
+method = "GET"
+url = "https://secure.geonames.org/findNearbyPlaceNameJSON"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { lat = 47.3, lng = 9.0, limit = 3 }, min_results = 1, fixture = "fixtures/w5d1/geonames_free/nearby/default.json" }
+
+[op.nearby.params]
+lat = { type = "float", required = true, min = -90.0, max = 90.0, to = "lat", doc = "WGS84 latitude" }
+lng = { type = "float", required = true, min = -180.0, max = 180.0, to = "lng", doc = "WGS84 longitude" }
+radius = { type = "float", min = 0.1, max = 300.0, to = "radius", doc = "Search radius in km" }
+limit = { type = "int", default = 5, min = 1, max = 50, to = "maxRows", doc = "Max places" }
+
+[op.nearby.map]
+items = "(.geonames // [])[]"
+error = ".status.message"
+record = '''{
+  geonameId: .geonameId,
+  name: .name,
+  countryCode: (if (.countryCode // "") != "" then .countryCode else null end),
+  countryName: (if (.countryName // "") != "" then .countryName else null end),
+  adminName1: (if (.adminName1 // "") != "" then .adminName1 else null end),
+  distanceKm: ((.distance | to_num) // .distance),
+  population: (.population // null),
+  lat: ((.lat | to_num) // .lat),
+  lng: ((.lng | to_num) // .lng),
+  url: ("https://www.geonames.org/" + (.geonameId | tostring))
+}'''

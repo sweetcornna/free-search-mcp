@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "ensembl_rest",
+  "op": "id",
+  "recordedAt": "2026-11-25T13:00:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://rest.ensembl.org/lookup/id/ENSG00000012048?expand=0",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"strand\":-1,\"start\":43044292,\"object_type\":\"Gene\",\"end\":43170245,\"source\":\"ensembl_havana\",\"assembly_name\":\"GRCh38\",\"species\":\"homo_sapiens\",\"display_name\":\"BRCA1\",\"logic_name\":\"ensembl_havana_gene_homo_sapiens\",\"biotype\":\"protein_coding\",\"version\":28,\"canonical_transcript\":\"ENST00000357654.9\",\"seq_region_name\":\"17\",\"id\":\"ENSG00000012048\",\"description\":\"BRCA1 DNA repair associated [Source:HGNC Symbol;Acc:HGNC:1100]\",\"db_type\":\"core\"}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

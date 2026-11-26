@@ -1,0 +1,107 @@
+id = "dockerhub"
+name = "Docker Hub"
+summary = "Container image repository search, metadata, pull counts, and tag listings on Docker Hub."
+aliases = ["docker hub", "docker", "hub.docker.com"]
+home_url = "https://hub.docker.com"
+tier = 1
+scopes = ["code"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 2.0, burst = 5, concurrency = 3, timeout_ms = 6000, cache_ttl_s = 21600, host_bucket = "hub.docker.com" }
+
+[op.search]
+summary = "Search container image repositories on Docker Hub."
+method = "GET"
+url = "https://hub.docker.com/v2/search/repositories/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "postgres", limit = 3 }, min_results = 2, fixture = "fixtures/w5c/dockerhub/search/default.json" }
+
+[op.search.params]
+query = { type = "string", required = true, to = "query", doc = "Container image search query" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "page_size", doc = "Results per page" }
+page = { type = "int", min = 1, to = "page", doc = "1-based page number" }
+
+[op.search.map]
+items = ".results[]"
+total = ".count"
+error = "if (.message | type) == \"string\" and (.message | length) > 0 then .message elif (.detail | type) == \"string\" and (.detail | length) > 0 then .detail else null end"
+record = '''{
+  repoName: .repo_name,
+  description: (.short_description // ""),
+  starCount: .star_count,
+  pullCount: .pull_count,
+  isOfficial: (.is_official // false),
+  isAutomated: (.is_automated // false),
+  url: (if .is_official then ("https://hub.docker.com/_/" + (.repo_name // "")) else ("https://hub.docker.com/r/" + (.repo_name // "")) end)
+}'''
+hit = '''{
+  title: (.repo_name // ""),
+  url: (if .is_official then ("https://hub.docker.com/_/" + (.repo_name // "")) else ("https://hub.docker.com/r/" + (.repo_name // "")) end),
+  snippet: ([
+    (if .is_official then "official image" else empty end),
+    (if (.star_count | type) == "number" then "\(.star_count) stars" else empty end),
+    (if (.pull_count | type) == "number" then "\(.pull_count) pulls" else empty end),
+    ((.short_description // "") | select(length > 0))
+  ] | join(" · ")),
+  date: null,
+  dateSource: null
+}'''
+
+[op.repo]
+summary = "Fetch repository metadata for a Docker Hub namespace/name (default namespace: library)."
+method = "GET"
+url = "https://hub.docker.com/v2/repositories/{namespace}/{name}"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = { namespace = "library", name = "postgres" }, min_results = 1, fixture = "fixtures/w5c/dockerhub/repo/default.json" }
+
+[op.repo.params]
+namespace = { type = "string", default = "library", in = "path", doc = "Namespace (use library for official images)" }
+name = { type = "string", required = true, in = "path", doc = "Repository name" }
+
+[op.repo.map]
+items = "."
+error = "@ref:op.search.map.error"
+record = '''{
+  namespace: .namespace,
+  name: .name,
+  description: (.description // ""),
+  starCount: .star_count,
+  pullCount: .pull_count,
+  lastUpdated: .last_updated,
+  url: (if .namespace == "library" then ("https://hub.docker.com/_/" + (.name // "")) else ("https://hub.docker.com/r/" + (.namespace // "") + "/" + (.name // "")) end)
+}'''
+
+[op.tags]
+summary = "List recent image tags and architectures for a Docker Hub repository."
+method = "GET"
+url = "https://hub.docker.com/v2/repositories/{namespace}/{name}/tags"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { namespace = "library", name = "postgres", limit = 3 }, min_results = 2, fixture = "fixtures/w5c/dockerhub/tags/default.json" }
+
+[op.tags.params]
+namespace = { type = "string", default = "library", in = "path", doc = "Namespace (use library for official images)" }
+name = { type = "string", required = true, in = "path", doc = "Repository name" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "page_size", doc = "Tags per page" }
+page = { type = "int", min = 1, to = "page", doc = "1-based page number" }
+
+[op.tags.map]
+items = ".results[]"
+total = ".count"
+error = "@ref:op.search.map.error"
+record = '''{
+  name: .name,
+  digest: .digest,
+  fullSize: .full_size,
+  status: .tag_status,
+  lastUpdated: .last_updated,
+  architectures: ([(.images // [])[] | select((.os // "") != "" and .os != "unknown" and (.architecture // "") != "" and .architecture != "unknown") | "\(.os)/\(.architecture)" + (if (.variant | type) == "string" and (.variant | length) > 0 then "/\(.variant)" else "" end)] | unique)
+}'''

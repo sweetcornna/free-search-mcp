@@ -1,0 +1,64 @@
+id = "readthedocs_v3"
+name = "Read the Docs Search v3"
+summary = "Keyless Read the Docs v3 documentation search across hosted Python and open-source project docs (requires project:<slug> filter in query)."
+aliases = ["readthedocs", "rtd", "rtd docs"]
+home_url = "https://about.readthedocs.com"
+tier = 1
+scopes = ["docs"]
+caps = ["search"]
+transport = "plain"
+pool_role = "explicit"
+limits = { rps = 2.0, burst = 4, concurrency = 2, timeout_ms = 8000, cache_ttl_s = 21600 }
+
+[op.search]
+summary = "Search Read the Docs hosted documentation pages via v3 search API (include project:<slug> in query)."
+method = "GET"
+url = "https://app.readthedocs.org/api/v3/search/"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "project:docs installation", limit = 3 }, min_results = 2, fixture = "fixtures/w5l/readthedocs_v3/search/default.json" }
+examples = [
+  'source.call("readthedocs_v3.search", { query: "project:docs installation", limit: 5 })',
+  'source.call("readthedocs_v3.search", { query: "project:requests session", limit: 5 })',
+]
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Read the Docs v3 query; include project:<slug> (e.g. 'project:docs installation')" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "page_size", doc = "Results per page" }
+page = { type = "int", min = 1, to = "page", doc = "1-based page number" }
+
+[op.search.map]
+items = "(.results // [])[]"
+total = ".count"
+error = "if .detail then (.detail | tostring) else null end"
+record = '''(
+  ((.domain // "") + (.path // "")) as $url |
+  (if (.project | type) == "object" then (.project.slug // "") else (.project // "") end) as $proj |
+  (if (.project | type) == "object" then (.project.alias // null) else (.project_alias // null) end) as $alias |
+  (if (.version | type) == "object" then (.version.slug // "") else (.version // "") end) as $ver |
+  ([(.blocks // [])[] | (.title // empty), (.content // empty)] | map(select(length > 0)) | join(" — ") | collapse_ws // "") as $excerpt |
+  {
+    project: $proj,
+    projectAlias: $alias,
+    version: $ver,
+    title: ((.title // "") | collapse_ws // ""),
+    path: (.path // ""),
+    domain: (.domain // ""),
+    url: $url,
+    excerpt: $excerpt[0:600]
+  }
+)'''
+hit = '''(
+  ((.domain // "") + (.path // "")) as $url |
+  (if (.project | type) == "object" then (.project.slug // "") else (.project // "") end) as $proj |
+  ([(.blocks // [])[:2][] | (.content // empty)] | map(select(length > 0)) | join(" ") | collapse_ws // "") as $snip |
+  {
+    title: ((if $proj != "" then "[" + $proj + "] " else "" end) + ((.title // "") | collapse_ws // "")),
+    url: $url,
+    snippet: $snip[0:280],
+    date: null,
+    dateSource: "api"
+  }
+)'''

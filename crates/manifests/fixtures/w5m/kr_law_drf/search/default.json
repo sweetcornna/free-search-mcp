@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "kr_law_drf",
+  "op": "search",
+  "recordedAt": "2026-11-25T12:45:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://www.law.go.kr/DRF/lawSearch.do?target=law&type=XML&query=%EA%B0%9C%EC%9D%B8%EC%A0%95%EB%B3%B4&display=3&page=1",
+        "headersSubset": {
+          "accept": "application/xml"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/xml; charset=UTF-8"
+          ]
+        ],
+        "bodyText": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><LawSearch><target>law</target><키워드>개인정보</키워드><section>lawNm</section><totalCnt>18</totalCnt><page>1</page><law id=\"1\"><법령일련번호>265129</법령일련번호><현행연혁코드>현행</현행연혁코드><법령명한글>개인정보 보호법</법령명한글><법령약칭명>개인정보보호법</법령약칭명><법령ID>011357</법령ID><공포일자>20240227</공포일자><공포번호>20346</공포번호><제개정구분명>타법개정</제개정구분명><소관부처명>개인정보보호위원회</소관부처명><법령구분명>법률</법령구분명><시행일자>20250313</시행일자><법령상세링크>/DRF/lawService.do?target=law&amp;MST=265129&amp;type=HTML</법령상세링크></law><law id=\"2\"><법령일련번호>267411</법령일련번호><현행연혁코드>현행</현행연혁코드><법령명한글>개인정보 보호법 시행령</법령명한글><법령약칭명></법령약칭명><법령ID>011468</법령ID><공포일자>20250311</공포일자><공포번호>35340</공포번호><제개정구분명>일부개정</제개정구분명><소관부처명>개인정보보호위원회</소관부처명><법령구분명>대통령령</법령구분명><시행일자>20250313</시행일자><법령상세링크>/DRF/lawService.do?target=law&amp;MST=267411&amp;type=HTML</법령상세링크></law></LawSearch>",
+        "bodyB64": null
+      }
+    }
+  ]
+}

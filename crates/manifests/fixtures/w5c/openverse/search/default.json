@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "source": "openverse",
+  "op": "search",
+  "recordedAt": "2026-11-25T11:54:14Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.openverse.org/v1/images/?format=json&mature=false&q=aurora&page_size=3",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ],
+          [
+            "last-modified",
+            "Wed, 25 Nov 2026 11:45:12 GMT"
+          ]
+        ],
+        "bodyText": "{\"result_count\":240,\"page_count\":80,\"page_size\":3,\"page\":1,\"results\":[{\"id\":\"1c3cefca-c00e-484c-af57-4a5316c8e3a2\",\"title\":\"aurora\",\"indexed_on\":\"2020-05-03T05:48:27.285165Z\",\"foreign_landing_url\":\"https://www.flickr.com/photos/8940722@N02/1054046071\",\"url\":\"https://live.staticflickr.com/1088/1054046071_9a6fc75c9a.jpg\",\"creator\":\"well_lucio\",\"creator_url\":\"https://www.flickr.com/photos/8940722@N02\",\"license\":\"by-nd\",\"license_version\":\"2.0\",\"license_url\":\"https://creativecommons.org/licenses/by-nd/2.0/\",\"provider\":\"flickr\",\"source\":\"flickr\",\"category\":null,\"filesize\":null,\"filetype\":null,\"tags\":[{\"name\":\"aurora\",\"accuracy\":null,\"unstable__provider\":\"flickr\"}],\"attribution\":\"\\\"aurora\\\" by well_lucio is licensed under CC BY-ND 2.0. To view a copy of this license, visit https://creativecommons.org/licenses/by-nd/2.0/.\",\"fields_matched\":[\"description\",\"title\",\"tags.name\"],\"mature\":false,\"height\":348,\"width\":500,\"thumbnail\":\"https://api.openverse.org/v1/images/1c3cefca-c00e-484c-af57-4a5316c8e3a2/thumb/?format=json\",\"detail_url\":\"https://api.openverse.org/v1/images/1c3cefca-c00e-484c-af57-4a5316c8e3a2/?format=json\",\"related_url\":\"https://api.openverse.org/v1/images/1c3cefca-c00e-484c-af57-4a5316c8e3a2/related/?format=json\",\"unstable__sensitivity\":[]},{\"id\":\"6d23d7f4-1ed4-4302-819f-14349f9fa4af\",\"title\":\"Flying through Aurora\",\"indexed_on\":\"2020-04-04T11:50:24.359504Z\",\"foreign_landing_url\":\"https://www.flickr.com/photos/72482589@N07/14418726489\",\"url\":\"https://live.staticflickr.com/3855/14418726489_a7645e719f_b.jpg\",\"creator\":\"Astro_Alex\",\"creator_url\":\"https://www.flickr.com/photos/72482589@N07\",\"license\":\"by-sa\",\"license_version\":\"2.0\",\"license_url\":\"https://creativecommons.org/licenses/by-sa/2.0/\",\"provider\":\"flickr\",\"source\":\"flickr\",\"category\":null,\"filesize\":null,\"filetype\":null,\"tags\":[{\"name\":\"aurora\",\"accuracy\":null,\"unstable__provider\":\"flickr\"}],\"attribution\":\"\\\"Flying through Aurora\\\" by Astro_Alex is licensed under CC BY-SA 2.0. To view a copy of this license, visit https://creativecommons.org/licenses/by-sa/2.0/.\",\"fields_matched\":[\"description\",\"title\",\"tags.name\"],\"mature\":false,\"height\":679,\"width\":1024,\"thumbnail\":\"https://api.openverse.org/v1/images/6d23d7f4-1ed4-4302-819f-14349f9fa4af/thumb/?format=json\",\"detail_url\":\"https://api.openverse.org/v1/images/6d23d7f4-1ed4-4302-819f-14349f9fa4af/?format=json\",\"related_url\":\"https://api.openverse.org/v1/images/6d23d7f4-1ed4-4302-819f-14349f9fa4af/related/?format=json\",\"unstable__sensitivity\":[]},{\"id\":\"29960b67-3a90-4fc3-91cb-2b89e7e77415\",\"title\":\"Aurora Tuesday\",\"indexed_on\":\"2020-04-06T05:42:29.051510Z\",\"foreign_landing_url\":\"https://www.flickr.com/photos/72482589@N07/15960114336\",\"url\":\"https://live.staticflickr.com/7579/15960114336_140127f1e1_b.jpg\",\"creator\":\"Astro_Alex\",\"creator_url\":\"https://www.flickr.com/photos/72482589@N07\",\"license\":\"by-sa\",\"license_version\":\"2.0\",\"license_url\":\"https://creativecommons.org/licenses/by-sa/2.0/\",\"provider\":\"flickr\",\"source\":\"flickr\",\"category\":null,\"filesize\":null,\"filetype\":null,\"tags\":[{\"name\":\"aurora\",\"accuracy\":null,\"unstable__provider\":\"flickr\"}],\"attribution\":\"\\\"Aurora Tuesday\\\" by Astro_Alex is licensed under CC BY-SA 2.0. To view a copy of this license, visit https://creativecommons.org/licenses/by-sa/2.0/.\",\"fields_matched\":[\"description\",\"title\",\"tags.name\"],\"mature\":false,\"height\":679,\"width\":1024,\"thumbnail\":\"https://api.openverse.org/v1/images/29960b67-3a90-4fc3-91cb-2b89e7e77415/thumb/?format=json\",\"detail_url\":\"https://api.openverse.org/v1/images/29960b67-3a90-4fc3-91cb-2b89e7e77415/?format=json\",\"related_url\":\"https://api.openverse.org/v1/images/29960b67-3a90-4fc3-91cb-2b89e7e77415/related/?format=json\",\"unstable__sensitivity\":[]}]}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

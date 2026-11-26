@@ -1,0 +1,65 @@
+id = "nyt_articles"
+name = "New York Times Article Search API"
+summary = "Search New York Times news archive (1851 to present) with headlines, abstracts, sections, bylines, and publication dates (requires free NYT developer key)."
+aliases = ["nyt", "nytimes", "new york times"]
+home_url = "https://developer.nytimes.com/docs/articlesearch-product/1/overview"
+tier = 3
+scopes = ["news"]
+caps = ["search"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 0.16, burst = 2, concurrency = 1, timeout_ms = 8000, cache_ttl_s = 3600 }
+
+[auth]
+mode = "required"
+env = "SEARCH_MCP_NYT_API_KEY"
+in = "query"
+name = "api-key"
+format = "{key}"
+route_requires_key = true
+
+[op.search]
+summary = "Search NYT articles by keywords, Lucene filter query, date range, and sort order (10 articles per page)."
+method = "GET"
+url = "https://api.nytimes.com/svc/search/v2/articlesearch.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 0, max_pages = 3 }
+probe = { params = { query = "semiconductor supply chain", page = 0 }, min_results = 2, fixture = "fixtures/w5m/nyt_articles/search/default.json" }
+examples = ["source.call('nyt_articles.search', { query: 'semiconductor supply chain', sort: 'newest', page: 0 })"]
+
+[op.search.params]
+query = { type = "string", required = true, to = "q", doc = "Article search query" }
+fq = { type = "string", to = "fq", doc = "Lucene filter query e.g. section_name:(\"Technology\")" }
+begin_date = { type = "string", to = "begin_date", doc = "Start date YYYYMMDD" }
+end_date = { type = "string", to = "end_date", doc = "End date YYYYMMDD" }
+sort = { type = "string", enum = ["newest", "oldest", "relevance"], to = "sort", doc = "Result sort order" }
+page = { type = "int", default = 0, min = 0, max = 100, to = "page", doc = "0-based page index (10 docs per page)" }
+
+[op.search.map]
+items = "(.response.docs // [])[]"
+total = ".response.meta.hits"
+error = 'if .fault then (.fault.faultstring // "NYT API fault") elif (.status // "OK") != "OK" then (.status | tostring) else null end'
+record = '''{
+  id: ._id,
+  uri: (.uri // null),
+  title: ((.headline.main // "") | strip_tags),
+  printHeadline: ((.headline.print_headline // null) | strip_tags),
+  snippet: ((.abstract // .snippet // "") | strip_tags),
+  leadParagraph: ((.lead_paragraph // null) | strip_tags),
+  section: (.section_name // null),
+  newsDesk: (.news_desk // null),
+  documentType: (.document_type // null),
+  byline: (.byline.original // null),
+  wordCount: (.word_count // null),
+  publishedDate: (.pub_date | parse_date),
+  url: (.web_url // "")
+}'''
+hit = '''{
+  title: ((.headline.main // "") | strip_tags),
+  url: (.web_url // ""),
+  snippet: ((if .section_name then (.section_name + " — ") else "" end) + ((.abstract // .snippet // "") | strip_tags)),
+  date: (.pub_date | parse_date),
+  dateSource: "api"
+}'''

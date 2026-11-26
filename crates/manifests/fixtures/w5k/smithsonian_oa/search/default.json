@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "smithsonian_oa",
+  "op": "search",
+  "recordedAt": "2026-11-25T13:05:00Z",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://api.si.edu/openaccess/api/v1.0/search?q=dinosaur&rows=3&start=0",
+        "headersSubset": {
+          "accept": "application/json"
+        },
+        "bodySha256": null
+      },
+      "response": {
+        "status": 200,
+        "headers": [
+          [
+            "content-type",
+            "application/json"
+          ]
+        ],
+        "bodyText": "{\"status\": 200, \"responseCode\": 1, \"response\": {\"rowCount\": 3124, \"rows\": [{\"id\": \"edanmdm-nmnhpaleobiology_3449144\", \"title\": \"Tyrannosaurus rex Osborn, 1905\", \"unitCode\": \"NMNHPALEO\", \"type\": \"edanmdm\", \"url\": \"edanmdm:nmnhpaleobiology_3449144\", \"content\": {\"descriptiveNonRepeating\": {\"record_ID\": \"nmnhpaleobiology_3449144\", \"unit_code\": \"NMNHPALEO\", \"data_source\": \"NMNH - Paleobiology Dept.\", \"title\": {\"label\": \"Title\", \"content\": \"Tyrannosaurus rex Osborn, 1905\"}, \"record_link\": \"http://n2t.net/ark:/65665/3e1a4a2b1-7a99-4a12-90ab-8f12c9a9b3f0\", \"guid\": \"http://n2t.net/ark:/65665/3e1a4a2b1-7a99-4a12-90ab-8f12c9a9b3f0\", \"metadata_usage\": {\"access\": \"CC0\", \"text\": \"CC0\"}, \"online_media\": {\"mediaCount\": 1, \"media\": [{\"thumbnail\": \"https://ids.si.edu/ids/deliveryService?id=NMNH-PALEO_3449144&max=90\", \"content\": \"https://ids.si.edu/ids/deliveryService?id=NMNH-PALEO_3449144\", \"type\": \"Images\"}]}}, \"indexedStructured\": {\"date\": [\"1988\"], \"topic\": [\"Dinosaurs\", \"Paleobiology\"], \"place\": [\"Montana\", \"United States\"]}, \"freetext\": {\"object_type\": [{\"label\": \"Type\", \"content\": \"Specimen\"}]}}}, {\"id\": \"edanmdm-nmnhpaleobiology_3446158\", \"title\": \"Triceratops horridus Marsh, 1889\", \"unitCode\": \"NMNHPALEO\", \"type\": \"edanmdm\", \"url\": \"edanmdm:nmnhpaleobiology_3446158\", \"content\": {\"descriptiveNonRepeating\": {\"record_ID\": \"nmnhpaleobiology_3446158\", \"unit_code\": \"NMNHPALEO\", \"data_source\": \"NMNH - Paleobiology Dept.\", \"title\": {\"label\": \"Title\", \"content\": \"Triceratops horridus Marsh, 1889\"}, \"record_link\": \"http://n2t.net/ark:/65665/3d70d88b1-9c4b-4b23-9e42-4c9d345d0b11\", \"guid\": \"http://n2t.net/ark:/65665/3d70d88b1-9c4b-4b23-9e42-4c9d345d0b11\", \"metadata_usage\": {\"access\": \"CC0\", \"text\": \"CC0\"}}, \"indexedStructured\": {\"date\": [\"1891\"], \"topic\": [\"Dinosaurs\", \"Ceratopsia\"], \"place\": [\"Wyoming\", \"United States\"]}, \"freetext\": {\"object_type\": [{\"label\": \"Type\", \"content\": \"Holotype\"}]}}}, {\"id\": \"edanmdm-nmnhpaleobiology_3449880\", \"title\": \"Diplodocus longus Marsh, 1878\", \"unitCode\": \"NMNHPALEO\", \"type\": \"edanmdm\", \"url\": \"edanmdm:nmnhpaleobiology_3449880\", \"content\": {\"descriptiveNonRepeating\": {\"record_ID\": \"nmnhpaleobiology_3449880\", \"unit_code\": \"NMNHPALEO\", \"data_source\": \"NMNH - Paleobiology Dept.\", \"title\": {\"label\": \"Title\", \"content\": \"Diplodocus longus Marsh, 1878\"}, \"record_link\": \"http://n2t.net/ark:/65665/387ef1a3c-4f22-4a8e-bc15-2189f4e1192a\", \"guid\": \"http://n2t.net/ark:/65665/387ef1a3c-4f22-4a8e-bc15-2189f4e1192a\", \"metadata_usage\": {\"access\": \"CC0\", \"text\": \"CC0\"}}, \"indexedStructured\": {\"date\": [\"1923\"], \"topic\": [\"Dinosaurs\", \"Sauropoda\"], \"place\": [\"Utah\", \"United States\"]}, \"freetext\": {\"object_type\": [{\"label\": \"Type\", \"content\": \"Specimen\"}]}}}]}}",
+        "bodyB64": null
+      }
+    }
+  ]
+}

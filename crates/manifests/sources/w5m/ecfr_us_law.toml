@@ -1,0 +1,76 @@
+id = "ecfr_us_law"
+name = "eCFR Electronic Code of Federal Regulations"
+summary = "Keyless official US Electronic Code of Federal Regulations (eCFR) full-text search across current federal administrative regulations and CFR title catalog."
+aliases = ["ecfr", "cfr", "code of federal regulations", "us regulations"]
+home_url = "https://www.ecfr.gov"
+tier = 1
+scopes = ["gov", "gov.law"]
+caps = ["search", "lookup"]
+transport = "plain"
+pool_role = "scope_only"
+limits = { rps = 3.0, burst = 6, concurrency = 3, timeout_ms = 10000, cache_ttl_s = 21600 }
+
+[op.search]
+summary = "Full-text search across current US Code of Federal Regulations sections and provisions."
+method = "GET"
+url = "https://www.ecfr.gov/api/search/v1/results"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+paginate = { style = "page", param = "page", start = 1, max_pages = 3 }
+probe = { params = { query = "privacy", limit = 3 }, min_results = 2, fixture = "fixtures/w5m/ecfr_us_law/search/default.json" }
+examples = ["source.call('ecfr_us_law.search', { query: 'privacy', limit: 5 })"]
+
+[op.search.params]
+query = { type = "string", required = true, to = "query", doc = "Full-text CFR search query" }
+order = { type = "string", enum = ["relevance", "newest_change", "oldest_change", "hierarchy"], to = "order", doc = "Optional sort order" }
+limit = { type = "int", default = 10, min = 1, max = 50, to = "per_page", doc = "Results per page" }
+page = { type = "int", default = 1, min = 1, to = "page", doc = "1-based page number" }
+
+[op.search.map]
+items = "(.results // [])[]"
+total = ".meta.total_count"
+record = '''{
+  type: (.type // null),
+  titleNumber: (.hierarchy.title // null),
+  chapter: (.hierarchy.chapter // null),
+  part: (.hierarchy.part // null),
+  section: (.hierarchy.section // null),
+  citation: (if .hierarchy.title and .hierarchy.section then (.hierarchy.title + " CFR § " + .hierarchy.section) elif .hierarchy.title and .hierarchy.part then (.hierarchy.title + " CFR Part " + .hierarchy.part) else ("Title " + (.hierarchy.title // "")) end),
+  heading: ((.headings.section // .headings.part // .headings.title // "") | strip_tags),
+  titleName: ((.headings.title // "") | strip_tags),
+  excerpt: ((.full_text_excerpt // "") | strip_tags),
+  startsOn: (.starts_on | parse_date),
+  endsOn: (.ends_on | parse_date),
+  score: (.score // null),
+  url: ("https://www.ecfr.gov/current/title-" + (.hierarchy.title // "") + (if .hierarchy.part then ("/part-" + .hierarchy.part) else "" end) + (if .hierarchy.section then ("/section-" + .hierarchy.section) else "" end))
+}'''
+hit = '''{
+  title: ((if .hierarchy.title and .hierarchy.section then (.hierarchy.title + " CFR § " + .hierarchy.section + " — ") else "" end) + ((.headings.section // .headings.part // .headings.title // "") | strip_tags)),
+  url: ("https://www.ecfr.gov/current/title-" + (.hierarchy.title // "") + (if .hierarchy.part then ("/part-" + .hierarchy.part) else "" end) + (if .hierarchy.section then ("/section-" + .hierarchy.section) else "" end)),
+  snippet: ((.full_text_excerpt // .headings.part // "") | strip_tags),
+  date: (.starts_on | parse_date),
+  dateSource: "api"
+}'''
+
+[op.titles]
+summary = "List all 50 titles of the US Code of Federal Regulations with latest amendment and currency dates."
+method = "GET"
+url = "https://www.ecfr.gov/api/versioner/v1/titles.json"
+headers = { Accept = "application/json" }
+response = "json"
+returns = "records"
+probe = { params = {}, min_results = 10, fixture = "fixtures/w5m/ecfr_us_law/titles/default.json" }
+examples = ["source.call('ecfr_us_law.titles', {})"]
+
+[op.titles.map]
+items = "(.titles // [])[]"
+record = '''{
+  number: .number,
+  name: (.name // ""),
+  latestAmendedOn: (.latest_amended_on // null),
+  latestIssueDate: (.latest_issue_date // null),
+  upToDateAsOf: (.up_to_date_as_of // null),
+  reserved: (.reserved // false),
+  url: ("https://www.ecfr.gov/current/title-" + (.number | tostring))
+}'''
