@@ -146,21 +146,24 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # Linux wheels are linked against glibc 2.28 through zig so they get a
+          # manylinux_2_28 tag. Built natively on an Ubuntu 24.04 runner they
+          # need glibc 2.39 (or get a bare `linux_*` tag, which PyPI rejects).
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            manylinux: auto
+            maturin_args: --zig --compatibility manylinux_2_28
             platform_slug: linux-x86_64
           - os: ubuntu-24.04-arm
             target: aarch64-unknown-linux-gnu
-            manylinux: auto
+            maturin_args: --zig --compatibility manylinux_2_28
             platform_slug: linux-aarch64
           - os: macos-15
             target: aarch64-apple-darwin
-            manylinux: off
+            maturin_args: ""
             platform_slug: darwin-arm64
           - os: macos-15-intel
             target: x86_64-apple-darwin
-            manylinux: off
+            maturin_args: ""
             platform_slug: darwin-x86_64
     runs-on: ${{ matrix.os }}
     steps:
@@ -172,30 +175,44 @@ jobs:
           targets: ${{ matrix.target }}
       - uses: Swatinem/rust-cache@v2
       - uses: astral-sh/setup-uv@v5
-      - name: Install pinned maturin
-        run: uv tool install "maturin==${MATURIN_VERSION}"
+      - name: Install pinned maturin (with zig)
+        run: uv tool install "maturin[zig]==${MATURIN_VERSION}"
       - name: Build binary wheel
         run: |
           set -euo pipefail
           mkdir -p dist
-          maturin build --release --locked --target "${{ matrix.target }}" --out dist
+          maturin build --release --locked --target "${{ matrix.target }}" --out dist ${{ matrix.maturin_args }}
+          ls -la dist
+          # PyPI rejects bare `linux_*` platform tags; fail here, not at upload.
+          if ls dist/*.whl | grep -E -- '-linux_[a-z0-9_]+\.whl$'; then
+            echo "wheel has a non-manylinux platform tag" >&2
+            exit 1
+          fi
       - name: Smoke-test wheel
         run: |
           set -euo pipefail
           uvx --from dist/free_search_mcp-*.whl free-search-mcp --help >/dev/null
-      - name: Build standalone binary and MCPB bundle
+      - name: Standalone binary and MCPB bundle (binary taken from the wheel)
         env:
           VERSION: ${{ needs.validate.outputs.version }}
           SLUG: ${{ matrix.platform_slug }}
         run: |
           set -euo pipefail
-          cargo build --release --locked --target "${{ matrix.target }}" -p fsm-server --bin free-search-mcp
-          mkdir -p bundles mcpb-stage/bin
+          mkdir -p bundles mcpb-stage/bin bin
+          python3 - dist/free_search_mcp-*.whl bin/free-search-mcp <<'PY'
+          import sys, zipfile
+          wheel, out = sys.argv[1], sys.argv[2]
+          with zipfile.ZipFile(wheel) as z:
+              [name] = [n for n in z.namelist() if n.endswith(".data/scripts/free-search-mcp")]
+              with open(out, "wb") as f:
+                  f.write(z.read(name))
+          PY
+          chmod +x bin/free-search-mcp
+          bin/free-search-mcp --version
           cp -R mcpb/* mcpb-stage/
-          cp "target/${{ matrix.target }}/release/free-search-mcp" mcpb-stage/bin/free-search-mcp
-          chmod +x mcpb-stage/bin/free-search-mcp
+          cp bin/free-search-mcp mcpb-stage/bin/free-search-mcp
           npx --yes "@anthropic-ai/mcpb@${MCPB_VERSION}" pack mcpb-stage "bundles/free-search-mcp-${VERSION}-${SLUG}.mcpb"
-          tar -czf "bundles/free-search-mcp-${VERSION}-${SLUG}.tar.gz" -C "target/${{ matrix.target }}/release" free-search-mcp
+          tar -czf "bundles/free-search-mcp-${VERSION}-${SLUG}.tar.gz" -C bin free-search-mcp
       - uses: actions/upload-artifact@v4
         with:
           name: dist-${{ matrix.platform_slug }}
