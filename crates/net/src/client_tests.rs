@@ -2000,3 +2000,26 @@ async fn tls_handshake_eof_retries_with_tls12_http1_for_idempotent_get_only() {
 
     srv.abort();
 }
+
+/// The header-size bound is checked on our side, so it does not depend on how
+/// either HTTP stack happens to buffer the bytes off the socket.
+#[test]
+fn response_header_size_bound_is_exact() {
+    use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
+    let mut ok = HeaderMap::new();
+    // name (6) + value + 4 bytes overhead == limit exactly.
+    let v = "A".repeat(MAX_RESPONSE_HEADER_BYTES - 6 - 4);
+    ok.insert(
+        HeaderName::from_static("x-huge"),
+        HeaderValue::from_str(&v).unwrap(),
+    );
+    assert!(check_response_header_size(&ok, 200, "t").is_ok());
+
+    let mut big = ok.clone();
+    big.insert(
+        HeaderName::from_static("x-one"),
+        HeaderValue::from_static("1"),
+    );
+    let err = check_response_header_size(&big, 200, "t").unwrap_err();
+    assert!(matches!(err, FsmError::Upstream { .. }), "got {err:?}");
+}

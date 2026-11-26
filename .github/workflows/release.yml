@@ -178,7 +178,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist
-          maturin build --release --target "${{ matrix.target }}" --out dist -- --locked
+          maturin build --release --locked --target "${{ matrix.target }}" --out dist
       - name: Smoke-test wheel
         run: |
           set -euo pipefail

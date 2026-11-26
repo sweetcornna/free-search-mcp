@@ -144,7 +144,7 @@ zip = { version = "9.8.2", default-features = false, features = ["deflate-flate2
 flate2 = "1.1.11"
 tar = "0.4.46"
 bzip2 = "0.6.1"
-liblzma = "0.4.9"
+liblzma = { version = "0.4.9", features = ["static"] }
 imagesize = "0.15.0"
 hayagriva = { version = "0.10.1", features = ["csl-json"] } # csl-json: parse DOI content-negotiation CSL-JSON
 # P1 optional browser crate (NOT in 1.0 Cargo.lock — avoids unused openssl-sys):
