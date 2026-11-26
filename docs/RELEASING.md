@@ -56,12 +56,12 @@ Two automated gates enforce lockstep sync:
    ```
 5. Smoke-build a local wheel with pinned `maturin==1.16.0` (no publish):
    ```bash
-   maturin build --release --out target/wheels -- --locked --offline
+   maturin build --release --locked --offline --out target/wheels
    uvx --from target/wheels/free_search_mcp-*.whl free-search-mcp --help
    ```
 6. Run the live stdio smoke check against the built binary:
    ```bash
-   uv run python scripts/smoke_mcp.py --bin target/release/free-search-mcp
+   uv run --with mcp python scripts/smoke_mcp.py --bin target/release/free-search-mcp
    ```
 7. Only after explicit user/maintainer approval: commit to `main`, push, and
    push an annotated tag `git tag -a vX.Y.Z -m "short title" && git push origin vX.Y.Z`.
