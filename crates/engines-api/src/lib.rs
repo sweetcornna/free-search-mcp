@@ -9,6 +9,9 @@
 pub mod brave_api;
 pub mod cninfo;
 pub mod common;
+pub mod degoog;
+mod instance_search;
+pub mod searxng;
 pub mod facts;
 pub mod github;
 pub mod github_releases;

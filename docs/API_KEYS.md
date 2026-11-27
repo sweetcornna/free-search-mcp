@@ -1,8 +1,8 @@
 # API Keys & Optional Credentials (Manual Only)
 
-You can skip this page. `free-search-mcp` 1.0 is a **no-API-key** server: every
-default web pool, reserve pool, locale pool, academic search pool, and standard
-vertical route works keyless.
+You can skip optional credential setup to use the default keyless search pool.
+This describes the integration's configuration, not a guarantee that every hosted
+provider will accept anonymous requests, remain available, or keep its current limits.
 
 Two rules always hold:
 
@@ -110,3 +110,49 @@ Example explicit call:
 If an opt-in engine is named without its key configured, the server returns an
 actionable notice pointing back to keyless sources so an agent can continue
 without asking you for credentials.
+
+## Trusted Opt-In Search Instances
+
+`searxng` and `degoog` are registered only when their endpoint is configured.
+Set `SEARCH_MCP_SEARXNG_BASE_URL` or `SEARCH_MCP_DEGOOG_BASE_URL` in the process
+environment or `<config_dir>/.env`. Both are security-sensitive: CWD `./.env`
+is ignored, and `config.json` does not load these endpoint settings. Process
+values take precedence over trusted dotenv values; blank values are treated as unset.
+
+Use only an instance you operate or trust: it receives your search queries.
+Supply the instance root, not its `/search` route; Degoog also accepts a root
+ending in `/api`. URLs must be HTTP(S) without userinfo, query, or fragment.
+Optional `SEARCH_MCP_SEARXNG_TOKEN` and `SEARCH_MCP_DEGOOG_API_KEY` credentials
+come from your instance operator and are read through `Config::api_key`.
+Credentials require HTTPS and are sent as Bearer tokens. Redirects are disabled
+and SSRF checks still apply; do not disable those checks merely to try a public instance.
+SearXNG must allow JSON search responses. No public instance availability or
+anonymous access is promised.
+
+Restart after configuration, then explicitly select `sources: ["searxng"]` or
+`sources: ["degoog"]`. A credential alone does not enable an instance.
+
+## Obtaining Search Provider Credentials
+
+Verification date: **2026-11-27**. The official setup pages below are undated;
+these are setup pointers, not verified pricing, quota, or availability guarantees.
+Create credentials yourself in the provider's site, store them in trusted
+configuration (never CWD dotenv), restart, and explicitly select the source.
+Do not paste credentials into chat or commit them.
+
+| Source | Official acquisition route | Configuration variable |
+|---|---|---|
+| `brave_api` | Follow **Get API key** on [Brave Search API](https://brave.com/search/api/) to the [registration dashboard](https://api-dashboard.search.brave.com/register), then obtain a subscription credential. | `SEARCH_MCP_BRAVE_API_KEY` |
+| `serper` | Start at [Serper](https://serper.dev) and use its account/dashboard flow; the fetched public page did not expose exact key-management steps, so those remain unverified. | `SEARCH_MCP_SERPER_API_KEY` |
+| `serpbase` | Use [SerpBase](https://serpbase.dev) and its **Get API Key** console link; follow the provider's account setup. | `SEARCH_MCP_SERPBASE_API_KEY` |
+| `tavily` | Follow **Get API key** from [Tavily documentation](https://docs.tavily.com/) to the [dashboard](https://app.tavily.com), then obtain your key. | `SEARCH_MCP_TAVILY_API_KEY` |
+| `anysearch` | Start at the [official provider site](https://www.anysearch.com/); exact authenticated key-creation steps were not verified. | `SEARCH_MCP_ANYSEARCH_API_KEY` |
+| `exa_search` | The [official quickstart](https://docs.exa.ai/reference/quickstart) links to the [Exa API-key dashboard](https://dashboard.exa.ai/api-keys); sign in and generate a key. | `SEARCH_MCP_EXA_API_KEY` |
+| `firecrawl` | Follow the [introduction](https://docs.firecrawl.dev/introduction), create/sign in to an account, then obtain a key from [API keys](https://www.firecrawl.dev/app/api-keys). | `SEARCH_MCP_FIRECRAWL_API_KEY` |
+| `jina_search` | Use **Get your API key** on [Jina Reader](https://jina.ai/reader), or the [API dashboard](https://jina.ai/api-dashboard), to obtain/manage a key. | `SEARCH_MCP_JINA_API_KEY` |
+
+The Exa, Firecrawl, and Jina search manifests require keys in this integration.
+Anonymous Reader or scrape access does not establish anonymous search access.
+Account creation, authenticated dashboards, credential validity, live search
+requests, current plans, and quotas were not tested. The search MCP connection
+was unavailable; official pages were inspected through direct web fetching instead.
