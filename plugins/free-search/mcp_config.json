@@ -3,7 +3,7 @@
     "search": {
       "command": "uvx",
       "args": [
-        "free-search-mcp==1.0.0"
+        "free-search-mcp==1.0.1"
       ]
     }
   }

@@ -71,7 +71,7 @@ codex mcp remove search
 
 What the plugin installs in Codex:
 - **MCP server `search`** (`plugins/free-search/.mcp.json` / `mcp.json`): runs
-  pinned `uvx free-search-mcp==1.0.0` over stdio, exposing `ask`, `search`, and
+  pinned `uvx free-search-mcp==1.0.1` over stdio, exposing `ask`, `search`, and
   `exec`.
 - **Two skills**: `free-search:verified-research` and
   `free-search:scholar-research`.

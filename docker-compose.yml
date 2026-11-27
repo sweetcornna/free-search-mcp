@@ -12,7 +12,7 @@
 services:
   search-mcp:
     build: .
-    image: free-search-mcp:1.0.0
+    image: free-search-mcp:1.0.1
     # MCP uses stdio — STDIN must stay open.
     stdin_open: true
     tty: false

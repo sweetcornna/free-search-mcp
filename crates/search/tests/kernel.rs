@@ -617,13 +617,15 @@ async fn one_benched_engine_is_replaced_by_a_reserve() {
 }
 
 #[tokio::test(start_paused = true)]
-async fn the_second_hedge_follows_800_ms_later_and_never_a_third() {
+async fn the_second_hedge_skips_duplicate_reserves_and_follows_800_ms_later() {
     // tests/test_rescue.py::test_no_more_than_two_candidates_run_at_once
     let (r1, r2, r3) = (
         slow_web("r1", 0, Reply::Hang),
         slow_web("r2", 0, Reply::Hang),
         slow_web("r3", 0, Reply::Hang),
     );
+    let mut c = cfg();
+    c.reserve_engines = strs(&["r1", "r1", "r2", "r3"]);
     let k = kit(
         vec![
             slow_web("e1", 0, Reply::Hang),
@@ -634,9 +636,10 @@ async fn the_second_hedge_follows_800_ms_later_and_never_a_third() {
             r2.clone(),
             r3.clone(),
         ],
-        cfg(),
+        c,
     );
     let r = run(&k, req("one two")).await;
+    assert_eq!(r1.calls(), 1, "a repeated reserve must not spend a hedge");
     assert_eq!(r1.seen()[0].at, Duration::from_millis(1800));
     assert_eq!(r2.seen()[0].at, Duration::from_millis(2600));
     assert_eq!(r3.calls(), 0, "max 2 hedges");

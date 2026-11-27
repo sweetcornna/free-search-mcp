@@ -1,4 +1,4 @@
-//! Search-cache key (`v4`) and TTLs (`SPEC.md` §5; ports of `_key` and
+//! Search-cache key (`v5`) and TTLs (`SPEC.md` §5; ports of `_key` and
 //! `_read_ttl`).
 
 use fsm_core::scopes;
@@ -6,8 +6,8 @@ use fsm_core::{Config, Freshness, SourceDecl, TransportProfile};
 use serde_json::json;
 use sha2::{Digest, Sha256};
 
-/// The key's own version: bump it to orphan every existing row.
-pub const KEY_VERSION: u32 = 4;
+/// Version 5 invalidates search responses scored with repeat votes from the same source.
+pub const KEY_VERSION: u32 = 5;
 /// Default TTL of a web search.
 pub const WEB_TTL_S: u64 = 6 * 3600;
 /// Academic searches (scholarly indexes move slowly).
@@ -41,7 +41,7 @@ pub struct KeyParts<'a> {
     pub limit: u32,
 }
 
-/// `v4 = sha256(query, scope, sorted sources, freshness, sorted domains,
+/// `v5 = sha256(query, scope, sorted unique sources, freshness, sorted domains,
 /// lang, limit, region, safesearch, accept_language)` over canonical JSON.
 pub fn cache_key(p: &KeyParts<'_>, cfg: &Config) -> String {
     let mut sources: Vec<&str> = p.sources.iter().map(String::as_str).collect();
@@ -160,14 +160,18 @@ mod tests {
     }
 
     #[test]
-    fn the_key_ignores_order_but_not_content() {
+    fn the_key_ignores_source_order_and_duplicates_but_not_content() {
         let c = cfg();
         let a = cache_key(
             &parts("rust", &["bing".into(), "duckduckgo".into()], &[]),
             &c,
         );
         let b = cache_key(
-            &parts("rust", &["duckduckgo".into(), "bing".into()], &[]),
+            &parts(
+                "rust",
+                &["duckduckgo".into(), "bing".into(), "bing".into()],
+                &[],
+            ),
             &c,
         );
         assert_eq!(a, b);

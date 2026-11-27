@@ -2,7 +2,7 @@
 
 use crate::synonyms::SynonymMap;
 use crate::tokenizer::CatalogTokenizer;
-use bm25::{Document, SearchEngine, SearchEngineBuilder};
+use bm25::{Embedder, EmbedderBuilder, ScoredDocument, Scorer};
 use fsm_core::{
     AuthMode, CatalogDetail, CatalogHit, CatalogParamDoc, CatalogQuery, FsmError, HealthRecord,
     HostFn, OpAuthOverride, OpDecl, Param, ProtocolAdapter, Registry, SourceDecl, scopes,
@@ -61,11 +61,38 @@ pub(crate) struct CatalogEntry {
 
 pub(crate) struct CatalogIndex {
     entries: Vec<CatalogEntry>,
-    bm25: Option<SearchEngine<usize, u32, CatalogTokenizer>>,
+    bm25: Option<CatalogBm25>,
     tokenizer: CatalogTokenizer,
     synonyms: SynonymMap,
     /// Document frequency of each normalized token across all entries.
     doc_freq: HashMap<String, usize>,
+}
+
+struct CatalogBm25 {
+    embedder: Embedder<u32, CatalogTokenizer>,
+    scorer: Scorer<usize, u32>,
+}
+
+impl CatalogBm25 {
+    fn build(docs: &[String]) -> Self {
+        let corpus: Vec<&str> = docs.iter().map(String::as_str).collect();
+        let embedder =
+            EmbedderBuilder::with_tokenizer_and_fit_to_corpus(CatalogTokenizer::new(), &corpus)
+                .k1(1.5)
+                .b(0.35)
+                .build();
+        let mut scorer = Scorer::new();
+        for (id, text) in corpus.into_iter().enumerate() {
+            scorer.upsert(&id, embedder.embed(text));
+        }
+        Self { embedder, scorer }
+    }
+
+    fn search(&self, query: &str) -> Vec<ScoredDocument<usize>> {
+        // Catalog ranking only needs document IDs and scores. SearchEngine also clones
+        // the full indexed text for every match, including synonym matches.
+        self.scorer.matches(&self.embedder.embed(query))
+    }
 }
 
 impl CatalogIndex {
@@ -78,22 +105,19 @@ impl CatalogIndex {
         for src in reg.all() {
             let decl = src.decl();
             let (entry, doc_text) = Self::entry_from_source(decl, &tokenizer);
-            let idx = entries.len();
-            docs.push(Document::new(idx, doc_text));
+            docs.push(doc_text);
             entries.push(entry);
         }
 
         for proto in reg.protocols() {
             let (entry, doc_text) = Self::entry_from_protocol(proto.as_ref(), &tokenizer);
-            let idx = entries.len();
-            docs.push(Document::new(idx, doc_text));
+            docs.push(doc_text);
             entries.push(entry);
         }
 
         for host_fn in host_api {
             let (entry, doc_text) = Self::entry_from_host_fn(host_fn, &tokenizer);
-            let idx = entries.len();
-            docs.push(Document::new(idx, doc_text));
+            docs.push(doc_text);
             entries.push(entry);
         }
 
@@ -104,19 +128,7 @@ impl CatalogIndex {
             }
         }
 
-        let bm25 = if docs.is_empty() {
-            None
-        } else {
-            Some(
-                SearchEngineBuilder::<usize, u32, CatalogTokenizer>::with_tokenizer_and_documents(
-                    CatalogTokenizer::new(),
-                    docs,
-                )
-                .k1(1.5)
-                .b(0.35)
-                .build(),
-            )
-        };
+        let bm25 = (!docs.is_empty()).then(|| CatalogBm25::build(&docs));
 
         Self {
             entries,
@@ -527,9 +539,9 @@ impl CatalogIndex {
         // (e.g. "space rocket launches") never triple-count a single shared word (like "space" in "up_space").
         let mut seen_syn_sets: HashSet<Vec<String>> = HashSet::new();
         if let Some(engine) = &self.bm25 {
-            for r in engine.search(query_trimmed, self.entries.len()) {
-                if Self::matches_filters(&self.entries[r.document.id], q) {
-                    *scores.entry(r.document.id).or_insert(0.0) += f64::from(r.score);
+            for r in engine.search(query_trimmed) {
+                if Self::matches_filters(&self.entries[r.id], q) {
+                    *scores.entry(r.id).or_insert(0.0) += f64::from(r.score);
                 }
             }
             let syn_scale = if concept_entries.len() <= 1 { 3.5 } else { 2.4 };
@@ -544,10 +556,10 @@ impl CatalogIndex {
                 }
                 let expanded_query = syns.join(" ");
                 let mut concept_hits: Vec<(usize, f64)> = engine
-                    .search(&expanded_query, self.entries.len())
+                    .search(&expanded_query)
                     .into_iter()
-                    .filter(|r| Self::matches_filters(&self.entries[r.document.id], q))
-                    .map(|r| (r.document.id, f64::from(r.score)))
+                    .filter(|r| Self::matches_filters(&self.entries[r.id], q))
+                    .map(|r| (r.id, f64::from(r.score)))
                     .collect();
                 // Normalize per concept so a group with 15 synonyms doesn't drown out a group with 4,
                 // keeping synonym weight subordinate to direct BM25 matches on original query terms.
