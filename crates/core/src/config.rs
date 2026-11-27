@@ -2428,22 +2428,31 @@ mod tests {
         assert!(defaults.searxng_base_url.is_none());
         assert!(defaults.degoog_base_url.is_none());
         let mut s = src(&[]);
-        s.cwd_dotenv = Some(concat!(
-            "SEARCH_MCP_SEARXNG_BASE_URL=https://untrusted.example\n",
-            "SEARCH_MCP_DEGOOG_BASE_URL=https://untrusted.example\n",
-            "SEARCH_MCP_SEARXNG_TOKEN=untrusted-token\n",
-            "SEARCH_MCP_DEGOOG_API_KEY=untrusted-key\n",
-        ).into());
+        s.cwd_dotenv = Some(
+            concat!(
+                "SEARCH_MCP_SEARXNG_BASE_URL=https://untrusted.example\n",
+                "SEARCH_MCP_DEGOOG_BASE_URL=https://untrusted.example\n",
+                "SEARCH_MCP_SEARXNG_TOKEN=untrusted-token\n",
+                "SEARCH_MCP_DEGOOG_API_KEY=untrusted-key\n",
+            )
+            .into(),
+        );
         let c = load(&s);
         assert!(c.searxng_base_url.is_none() && c.degoog_base_url.is_none());
         assert!(c.api_key("SEARCH_MCP_SEARXNG_TOKEN").is_none());
         assert!(c.api_key("SEARCH_MCP_DEGOOG_API_KEY").is_none());
         for name in [
-            "SEARCH_MCP_SEARXNG_BASE_URL", "SEARCH_MCP_DEGOOG_BASE_URL",
-            "SEARCH_MCP_SEARXNG_TOKEN", "SEARCH_MCP_DEGOOG_API_KEY",
+            "SEARCH_MCP_SEARXNG_BASE_URL",
+            "SEARCH_MCP_DEGOOG_BASE_URL",
+            "SEARCH_MCP_SEARXNG_TOKEN",
+            "SEARCH_MCP_DEGOOG_API_KEY",
         ] {
             assert!(is_security_sensitive(name));
-            assert!(c.deprecation_warnings.iter().any(|note| note.contains(name)));
+            assert!(
+                c.deprecation_warnings
+                    .iter()
+                    .any(|note| note.contains(name))
+            );
         }
         assert!(!format!("{c:?}").contains("untrusted-token"));
         assert!(!c.deprecation_warnings.join(" ").contains("untrusted-key"));
@@ -2452,18 +2461,30 @@ mod tests {
     #[test]
     fn optional_instance_configuration_uses_process_before_trusted_dotenv() {
         let mut s = src(&[
-            ("SEARCH_MCP_SEARXNG_BASE_URL", " https://process.example/search "),
+            (
+                "SEARCH_MCP_SEARXNG_BASE_URL",
+                " https://process.example/search ",
+            ),
             ("SEARCH_MCP_SEARXNG_TOKEN", "process-token"),
         ]);
-        s.config_dir_dotenv = Some(concat!(
-            "SEARCH_MCP_SEARXNG_BASE_URL=https://config.example\n",
-            "SEARCH_MCP_DEGOOG_BASE_URL=https://config.example/api\n",
-            "SEARCH_MCP_SEARXNG_TOKEN=config-token\n",
-            "SEARCH_MCP_DEGOOG_API_KEY=config-key\n",
-        ).into());
+        s.config_dir_dotenv = Some(
+            concat!(
+                "SEARCH_MCP_SEARXNG_BASE_URL=https://config.example\n",
+                "SEARCH_MCP_DEGOOG_BASE_URL=https://config.example/api\n",
+                "SEARCH_MCP_SEARXNG_TOKEN=config-token\n",
+                "SEARCH_MCP_DEGOOG_API_KEY=config-key\n",
+            )
+            .into(),
+        );
         let c = load(&s);
-        assert_eq!(c.searxng_base_url.as_deref(), Some("https://process.example/search"));
-        assert_eq!(c.degoog_base_url.as_deref(), Some("https://config.example/api"));
+        assert_eq!(
+            c.searxng_base_url.as_deref(),
+            Some("https://process.example/search")
+        );
+        assert_eq!(
+            c.degoog_base_url.as_deref(),
+            Some("https://config.example/api")
+        );
         assert_eq!(c.api_key("SEARCH_MCP_SEARXNG_TOKEN"), Some("process-token"));
         assert_eq!(c.api_key("SEARCH_MCP_DEGOOG_API_KEY"), Some("config-key"));
         let debug = format!("{c:?}");
@@ -2473,21 +2494,33 @@ mod tests {
     #[test]
     fn optional_instance_cwd_values_cannot_override_trusted_endpoints_or_keys() {
         let mut s = src(&[]);
-        s.cwd_dotenv = Some(concat!(
-            "SEARCH_MCP_SEARXNG_BASE_URL=https://untrusted.example\n",
-            "SEARCH_MCP_DEGOOG_BASE_URL=https://untrusted.example\n",
-            "SEARCH_MCP_SEARXNG_TOKEN=untrusted-token\n",
-            "SEARCH_MCP_DEGOOG_API_KEY=untrusted-key\n",
-        ).into());
-        s.config_dir_dotenv = Some(concat!(
-            "SEARCH_MCP_SEARXNG_BASE_URL=https://trusted.example/searxng\n",
-            "SEARCH_MCP_DEGOOG_BASE_URL=https://trusted.example/degoog\n",
-            "SEARCH_MCP_SEARXNG_TOKEN=trusted-token\n",
-            "SEARCH_MCP_DEGOOG_API_KEY=trusted-key\n",
-        ).into());
+        s.cwd_dotenv = Some(
+            concat!(
+                "SEARCH_MCP_SEARXNG_BASE_URL=https://untrusted.example\n",
+                "SEARCH_MCP_DEGOOG_BASE_URL=https://untrusted.example\n",
+                "SEARCH_MCP_SEARXNG_TOKEN=untrusted-token\n",
+                "SEARCH_MCP_DEGOOG_API_KEY=untrusted-key\n",
+            )
+            .into(),
+        );
+        s.config_dir_dotenv = Some(
+            concat!(
+                "SEARCH_MCP_SEARXNG_BASE_URL=https://trusted.example/searxng\n",
+                "SEARCH_MCP_DEGOOG_BASE_URL=https://trusted.example/degoog\n",
+                "SEARCH_MCP_SEARXNG_TOKEN=trusted-token\n",
+                "SEARCH_MCP_DEGOOG_API_KEY=trusted-key\n",
+            )
+            .into(),
+        );
         let c = load(&s);
-        assert_eq!(c.searxng_base_url.as_deref(), Some("https://trusted.example/searxng"));
-        assert_eq!(c.degoog_base_url.as_deref(), Some("https://trusted.example/degoog"));
+        assert_eq!(
+            c.searxng_base_url.as_deref(),
+            Some("https://trusted.example/searxng")
+        );
+        assert_eq!(
+            c.degoog_base_url.as_deref(),
+            Some("https://trusted.example/degoog")
+        );
         assert_eq!(c.api_key("SEARCH_MCP_SEARXNG_TOKEN"), Some("trusted-token"));
         assert_eq!(c.api_key("SEARCH_MCP_DEGOOG_API_KEY"), Some("trusted-key"));
     }

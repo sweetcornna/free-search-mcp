@@ -136,14 +136,24 @@ async fn credentials_are_config_only_redacted_and_degoog_accepts_api_root() {
             "https://search.example"
         };
         let (engine, net, cx) = setup(
-            degoog, base, Some("synthetic-token"), 200, r#"{"results":[]}"#,
+            degoog,
+            base,
+            Some("synthetic-token"),
+            200,
+            r#"{"results":[]}"#,
         );
-        engine.call("search", json!({"query":"rust"}), &cx).await.unwrap();
+        engine
+            .call("search", json!({"query":"rust"}), &cx)
+            .await
+            .unwrap();
         let requests = net.requests.lock().unwrap();
         assert!(requests[0].is_redacted_header("Authorization"));
-        assert!(requests[0].headers.iter().any(|(k, v)| {
-            k == "Authorization" && v == "Bearer synthetic-token"
-        }));
+        assert!(
+            requests[0]
+                .headers
+                .iter()
+                .any(|(k, v)| { k == "Authorization" && v == "Bearer synthetic-token" })
+        );
         assert!(!requests[0].follow_redirects);
     }
 }
@@ -160,7 +170,12 @@ async fn unsafe_endpoints_fail_before_send() {
             "file:///tmp/search",
         ] {
             let (engine, net, cx) = setup(degoog, base, Some("synthetic-token"), 200, "{}");
-            assert!(engine.call("search", json!({"query":"rust"}), &cx).await.is_err());
+            assert!(
+                engine
+                    .call("search", json!({"query":"rust"}), &cx)
+                    .await
+                    .is_err()
+            );
             assert!(net.requests.lock().unwrap().is_empty());
         }
     }
@@ -178,9 +193,16 @@ async fn upstream_errors_and_malformed_responses_do_not_echo_body() {
             (200, r#"{"results":null}"#),
         ] {
             let (engine, net, cx) = setup(
-                degoog, "https://search.example", Some("synthetic-token"), status, body,
+                degoog,
+                "https://search.example",
+                Some("synthetic-token"),
+                status,
+                body,
             );
-            let err = engine.call("search", json!({"query":"rust"}), &cx).await.unwrap_err();
+            let err = engine
+                .call("search", json!({"query":"rust"}), &cx)
+                .await
+                .unwrap_err();
             assert!(!err.to_string().contains("synthetic-token"));
             if status == 429 {
                 assert!(matches!(err, FsmError::RateLimited { .. }));
@@ -194,9 +216,18 @@ async fn upstream_errors_and_malformed_responses_do_not_echo_body() {
 async fn cancellation_and_invalid_operations_do_not_send() {
     for degoog in [false, true] {
         let (engine, net, cx) = setup(
-            degoog, "https://search.example", None, 200, r#"{"results":[]}"#,
+            degoog,
+            "https://search.example",
+            None,
+            200,
+            r#"{"results":[]}"#,
         );
-        assert!(engine.call("unknown", json!({"query":"rust"}), &cx).await.is_err());
+        assert!(
+            engine
+                .call("unknown", json!({"query":"rust"}), &cx)
+                .await
+                .is_err()
+        );
         assert!(engine.call("search", json!({}), &cx).await.is_err());
         cx.cancel.cancel();
         assert!(matches!(
@@ -218,9 +249,7 @@ async fn domain_filters_apply_before_limit_and_context_overrides_params() {
     ]}"#;
     for degoog in [false, true] {
         for from_context in [false, true] {
-            let (engine, net, mut cx) = setup(
-                degoog, "https://search.example", None, 200, body,
-            );
+            let (engine, net, mut cx) = setup(degoog, "https://search.example", None, 200, body);
             let mut params = json!({
                 "query": "rust", "limit": 1,
                 "include_domains": ["rust-lang.org"],
@@ -254,13 +283,22 @@ async fn freshness_parameters_match_each_instance_and_context_takes_precedence()
             for from_context in [false, true] {
                 let parameter = if degoog { "time" } else { "time_range" };
                 // SearXNG has no year range; do not send an unsupported value.
-                let expected = if degoog || name != "year" { Some(name) } else { None };
+                let expected = if degoog || name != "year" {
+                    Some(name)
+                } else {
+                    None
+                };
                 let url = match expected {
                     Some(value) => format!("{}&{parameter}={value}", endpoint(degoog)),
                     None => endpoint(degoog).to_owned(),
                 };
                 let (engine, net, mut cx) = setup_with_endpoint(
-                    degoog, "https://search.example", None, 200, r#"{"results":[]}"#, &url,
+                    degoog,
+                    "https://search.example",
+                    None,
+                    200,
+                    r#"{"results":[]}"#,
+                    &url,
                 );
                 let mut params = json!({"query":"rust", "freshness":name});
                 if from_context {
@@ -270,7 +308,9 @@ async fn freshness_parameters_match_each_instance_and_context_takes_precedence()
                 engine.call("search", params, &cx).await.unwrap();
                 let requests = net.requests.lock().unwrap();
                 assert_eq!(requests.len(), 1);
-                let actual = requests[0].query.iter()
+                let actual = requests[0]
+                    .query
+                    .iter()
                     .find(|(key, _)| key == parameter)
                     .map(|(_, value)| value.as_str());
                 assert_eq!(actual, expected);

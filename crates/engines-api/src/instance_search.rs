@@ -84,7 +84,9 @@ impl InstanceSearch {
             .map(str::trim)
             .filter(|s| !s.is_empty());
         if key.is_some() && url.scheme() != "https" {
-            return Err(FsmError::invalid("search instance credentials require HTTPS"));
+            return Err(FsmError::invalid(
+                "search instance credentials require HTTPS",
+            ));
         }
         if key.is_some_and(|s| s.contains('\r') || s.contains('\n')) {
             return Err(FsmError::invalid("invalid search instance credential"));
@@ -133,7 +135,11 @@ impl InstanceSearch {
         }
         let budget = CallBudget::from_cx(cx, &self.decl);
         let ncx = budget.net_cx(cx, &self.decl)?;
-        let resp = self.deps.net.send(req, TransportProfile::Plain, &ncx).await?;
+        let resp = self
+            .deps
+            .net
+            .send(req, TransportProfile::Plain, &ncx)
+            .await?;
         if resp.status == 429 {
             return Err(FsmError::RateLimited {
                 source_id: self.decl.id.clone(),
