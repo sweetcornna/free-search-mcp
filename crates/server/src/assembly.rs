@@ -47,6 +47,20 @@ pub fn build_registry_for_transport(
     fsm_engines_api::register(&mut reg, deps)?;
     fsm_engines_claims::register(&mut reg, deps)?;
 
+    // Instance endpoints are opt-in and cannot be supplied by a CWD dotenv.
+    if let Some(base_url) = &deps.cfg.searxng_base_url {
+        reg.register(Arc::new(fsm_engines_api::searxng::SearxngEngine::new(
+            deps.clone(),
+            base_url.clone(),
+        )))?;
+    }
+    if let Some(base_url) = &deps.cfg.degoog_base_url {
+        reg.register(Arc::new(fsm_engines_api::degoog::DegoogEngine::new(
+            deps.clone(),
+            base_url.clone(),
+        )))?;
+    }
+
     // 1b. Agent-search engines (codex, antigravity; ruling R5).
     register_agent_engines(&mut reg, deps, is_http_transport)?;
 

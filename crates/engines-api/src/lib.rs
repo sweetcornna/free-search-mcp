@@ -9,12 +9,15 @@
 pub mod brave_api;
 pub mod cninfo;
 pub mod common;
+pub mod degoog;
 pub mod facts;
 pub mod github;
 pub mod github_releases;
+mod instance_search;
 pub mod openmeteo;
 pub mod rdap;
 pub mod registries;
+pub mod searxng;
 pub mod sec_edgar;
 pub mod serpbase;
 pub mod serper;

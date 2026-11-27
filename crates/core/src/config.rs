@@ -201,6 +201,9 @@ pub struct Config {
     pub antigravity_version: String,
     pub antigravity_client_id: Option<String>,
     pub antigravity_client_secret: Option<String>,
+    /// Opt-in instance endpoints, accepted only from trusted configuration sources.
+    pub searxng_base_url: Option<String>,
+    pub degoog_base_url: Option<String>,
     /// Every credential value ([`is_key_var`]), keyed by the full
     /// variable name (manifests' `auth.env`), excluding `HTTP_TOKEN`, agent/oauth secrets and dropped names.
     pub api_keys: HashMap<String, String>,
@@ -364,6 +367,8 @@ impl Config {
             antigravity_version: "1.107.0".to_owned(),
             antigravity_client_id: None,
             antigravity_client_secret: None,
+            searxng_base_url: None,
+            degoog_base_url: None,
             api_keys: HashMap::new(),
             deprecation_warnings: Vec::new(),
         }
@@ -950,6 +955,15 @@ impl Config {
                 cfg.antigravity_client_secret = Some(trimmed.to_owned());
             }
         }
+
+        cfg.searxng_base_url = get("SEARCH_MCP_SEARXNG_BASE_URL")
+            .map(str::trim)
+            .filter(|v| !v.is_empty())
+            .map(str::to_owned);
+        cfg.degoog_base_url = get("SEARCH_MCP_DEGOOG_BASE_URL")
+            .map(str::trim)
+            .filter(|v| !v.is_empty())
+            .map(str::to_owned);
 
         for (name, value) in &vars {
             if is_key_var(name)
@@ -2041,6 +2055,20 @@ pub static ENV_TABLE: &[EnvVarSpec] = &[
         security: true,
     },
     EnvVarSpec {
+        name: "SEARCH_MCP_SEARXNG_BASE_URL",
+        origin: EnvOrigin::New,
+        category: "Optional Instance Endpoints",
+        disposition: EnvDisposition::New,
+        security: true,
+    },
+    EnvVarSpec {
+        name: "SEARCH_MCP_DEGOOG_BASE_URL",
+        origin: EnvOrigin::New,
+        category: "Optional Instance Endpoints",
+        disposition: EnvDisposition::New,
+        security: true,
+    },
+    EnvVarSpec {
         name: "SEARCH_MCP_SCOPE_ENGINE_LIMIT",
         origin: EnvOrigin::New,
         category: "Pool Renames",
@@ -2392,6 +2420,121 @@ mod tests {
         );
         assert!(c.hedge_enabled && c.offline_sync && c.download_enabled && !c.allow_private_hosts);
         assert!(c.deprecation_warnings.is_empty() && c.api_keys.is_empty());
+    }
+
+    #[test]
+    fn optional_instance_endpoints_require_trusted_configuration() {
+        let defaults = load(&src(&[]));
+        assert!(defaults.searxng_base_url.is_none());
+        assert!(defaults.degoog_base_url.is_none());
+        let mut s = src(&[]);
+        s.cwd_dotenv = Some(
+            concat!(
+                "SEARCH_MCP_SEARXNG_BASE_URL=https://untrusted.example\n",
+                "SEARCH_MCP_DEGOOG_BASE_URL=https://untrusted.example\n",
+                "SEARCH_MCP_SEARXNG_TOKEN=untrusted-token\n",
+                "SEARCH_MCP_DEGOOG_API_KEY=untrusted-key\n",
+            )
+            .into(),
+        );
+        let c = load(&s);
+        assert!(c.searxng_base_url.is_none() && c.degoog_base_url.is_none());
+        assert!(c.api_key("SEARCH_MCP_SEARXNG_TOKEN").is_none());
+        assert!(c.api_key("SEARCH_MCP_DEGOOG_API_KEY").is_none());
+        for name in [
+            "SEARCH_MCP_SEARXNG_BASE_URL",
+            "SEARCH_MCP_DEGOOG_BASE_URL",
+            "SEARCH_MCP_SEARXNG_TOKEN",
+            "SEARCH_MCP_DEGOOG_API_KEY",
+        ] {
+            assert!(is_security_sensitive(name));
+            assert!(
+                c.deprecation_warnings
+                    .iter()
+                    .any(|note| note.contains(name))
+            );
+        }
+        assert!(!format!("{c:?}").contains("untrusted-token"));
+        assert!(!c.deprecation_warnings.join(" ").contains("untrusted-key"));
+    }
+
+    #[test]
+    fn optional_instance_configuration_uses_process_before_trusted_dotenv() {
+        let mut s = src(&[
+            (
+                "SEARCH_MCP_SEARXNG_BASE_URL",
+                " https://process.example/search ",
+            ),
+            ("SEARCH_MCP_SEARXNG_TOKEN", "process-token"),
+        ]);
+        s.config_dir_dotenv = Some(
+            concat!(
+                "SEARCH_MCP_SEARXNG_BASE_URL=https://config.example\n",
+                "SEARCH_MCP_DEGOOG_BASE_URL=https://config.example/api\n",
+                "SEARCH_MCP_SEARXNG_TOKEN=config-token\n",
+                "SEARCH_MCP_DEGOOG_API_KEY=config-key\n",
+            )
+            .into(),
+        );
+        let c = load(&s);
+        assert_eq!(
+            c.searxng_base_url.as_deref(),
+            Some("https://process.example/search")
+        );
+        assert_eq!(
+            c.degoog_base_url.as_deref(),
+            Some("https://config.example/api")
+        );
+        assert_eq!(c.api_key("SEARCH_MCP_SEARXNG_TOKEN"), Some("process-token"));
+        assert_eq!(c.api_key("SEARCH_MCP_DEGOOG_API_KEY"), Some("config-key"));
+        let debug = format!("{c:?}");
+        assert!(!debug.contains("process-token") && !debug.contains("config-key"));
+    }
+
+    #[test]
+    fn optional_instance_cwd_values_cannot_override_trusted_endpoints_or_keys() {
+        let mut s = src(&[]);
+        s.cwd_dotenv = Some(
+            concat!(
+                "SEARCH_MCP_SEARXNG_BASE_URL=https://untrusted.example\n",
+                "SEARCH_MCP_DEGOOG_BASE_URL=https://untrusted.example\n",
+                "SEARCH_MCP_SEARXNG_TOKEN=untrusted-token\n",
+                "SEARCH_MCP_DEGOOG_API_KEY=untrusted-key\n",
+            )
+            .into(),
+        );
+        s.config_dir_dotenv = Some(
+            concat!(
+                "SEARCH_MCP_SEARXNG_BASE_URL=https://trusted.example/searxng\n",
+                "SEARCH_MCP_DEGOOG_BASE_URL=https://trusted.example/degoog\n",
+                "SEARCH_MCP_SEARXNG_TOKEN=trusted-token\n",
+                "SEARCH_MCP_DEGOOG_API_KEY=trusted-key\n",
+            )
+            .into(),
+        );
+        let c = load(&s);
+        assert_eq!(
+            c.searxng_base_url.as_deref(),
+            Some("https://trusted.example/searxng")
+        );
+        assert_eq!(
+            c.degoog_base_url.as_deref(),
+            Some("https://trusted.example/degoog")
+        );
+        assert_eq!(c.api_key("SEARCH_MCP_SEARXNG_TOKEN"), Some("trusted-token"));
+        assert_eq!(c.api_key("SEARCH_MCP_DEGOOG_API_KEY"), Some("trusted-key"));
+    }
+
+    #[test]
+    fn optional_instance_blank_endpoints_do_not_enable_engines() {
+        let c = load(&src(&[
+            ("SEARCH_MCP_SEARXNG_BASE_URL", "   "),
+            ("SEARCH_MCP_DEGOOG_BASE_URL", ""),
+            ("SEARCH_MCP_SEARXNG_TOKEN", "token-only"),
+            ("SEARCH_MCP_DEGOOG_API_KEY", "key-only"),
+        ]));
+        assert!(c.searxng_base_url.is_none());
+        assert!(c.degoog_base_url.is_none());
     }
 
     #[test]
@@ -2791,7 +2934,8 @@ mod tests {
         let count = |o: EnvOrigin| ENV_TABLE.iter().filter(|s| s.origin == o).count();
         assert_eq!(count(EnvOrigin::LegacySettings), 84);
         assert_eq!(count(EnvOrigin::LegacyNonSettings), 22);
-        assert_eq!(count(EnvOrigin::New), 16);
+        // 16 original new settings plus the two trusted opt-in instance endpoints.
+        assert_eq!(count(EnvOrigin::New), 18);
         let cat = |c: &str| {
             ENV_TABLE
                 .iter()
