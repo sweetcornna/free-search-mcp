@@ -185,7 +185,7 @@ pub fn configured_lane(cfg: &Config, reg: &Registry, state: &AgentLaneState) -> 
 }
 
 /// Nominal agent lane for a search: signed-in configured agent engines eligible
-/// for automatic non-exclusive web searches. Used in the `v4` cache key (`agent:<id>`).
+/// for automatic non-exclusive web searches. Used in the search cache key (`agent:<id>`).
 pub fn lane_nominal(
     plan: &Plan,
     cfg: &Config,

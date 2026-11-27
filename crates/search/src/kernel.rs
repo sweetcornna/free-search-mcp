@@ -414,7 +414,7 @@ impl Ctx<'_> {
                 _ => unreachable!("usable() implies Answered"),
             })
             .collect();
-        usable.len() >= QUORUM && fuse(&usable, self.weighting, usize::MAX).len() >= self.limit
+        usable.len() >= QUORUM && fuse(&usable, self.weighting, self.limit).len() == self.limit
     }
 }
 

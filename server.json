@@ -3,7 +3,7 @@
   "name": "io.github.sweetcornna/free-search-mcp",
   "title": "Free Search",
   "description": "Keyless Rust search, ask & exec MCP server: web, 500+ sources, academic OA fulltext, local docs.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "websiteUrl": "https://github.com/sweetcornna/free-search-mcp#readme",
   "repository": {
     "url": "https://github.com/sweetcornna/free-search-mcp",
@@ -20,7 +20,7 @@
     {
       "registryType": "pypi",
       "identifier": "free-search-mcp",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "runtimeHint": "uvx",
       "transport": {
         "type": "stdio"

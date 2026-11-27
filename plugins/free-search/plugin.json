@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "free-search",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Local-first Rust web, academic, and specialist search with no API key and no signup. Ships 3 MCP tools (search, exec, and ask over 500+ sources), verified-research and scholar-research skills, and a quick-search agent.",
   "author": {
     "name": "ymylive",

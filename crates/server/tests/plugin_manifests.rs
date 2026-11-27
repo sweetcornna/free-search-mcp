@@ -386,7 +386,6 @@ fn test_marketplace_entry_points_at_the_plugin() {
 #[test]
 fn test_plugin_version_tracks_the_package_version() {
     let version = project_version();
-    assert_eq!(version, "1.0.0", "1.0.0 release version expected");
     assert_eq!(cargo_workspace_version(), version);
     assert_eq!(
         read_json(&plugin_dir().join(".claude-plugin/plugin.json"))["version"].as_str(),

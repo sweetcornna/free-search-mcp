@@ -1717,7 +1717,7 @@ dependencies = [
 
 [[package]]
 name = "fsm-agent"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
@@ -1757,7 +1757,7 @@ dependencies = [
 
 [[package]]
 name = "fsm-browser"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "async-trait",
  "fsm-core",
@@ -1770,7 +1770,7 @@ dependencies = [
 
 [[package]]
 name = "fsm-catalog"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "async-trait",
  "bm25",
@@ -1787,7 +1787,7 @@ dependencies = [
 
 [[package]]
 name = "fsm-core"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
@@ -1812,7 +1812,7 @@ dependencies = [
 
 [[package]]
 name = "fsm-docs"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "async-trait",
  "bytes",
@@ -1851,7 +1851,7 @@ dependencies = [
 
 [[package]]
 name = "fsm-engines-api"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
@@ -1876,7 +1876,7 @@ dependencies = [
 
 [[package]]
 name = "fsm-engines-claims"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "async-trait",
  "bytes",
@@ -1901,7 +1901,7 @@ dependencies = [
 
 [[package]]
 name = "fsm-engines-serp"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
@@ -1928,7 +1928,7 @@ dependencies = [
 
 [[package]]
 name = "fsm-extract"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
@@ -1967,7 +1967,7 @@ dependencies = [
 
 [[package]]
 name = "fsm-manifests"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "fsm-core",
  "glob",
@@ -1985,7 +1985,7 @@ dependencies = [
 
 [[package]]
 name = "fsm-net"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "async-compression",
  "async-trait",
@@ -2027,7 +2027,7 @@ dependencies = [
 
 [[package]]
 name = "fsm-protocols-a"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
@@ -2054,7 +2054,7 @@ dependencies = [
 
 [[package]]
 name = "fsm-protocols-b"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
@@ -2083,7 +2083,7 @@ dependencies = [
 
 [[package]]
 name = "fsm-scholar"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "async-trait",
  "bm25",
@@ -2113,7 +2113,7 @@ dependencies = [
 
 [[package]]
 name = "fsm-scholar-fulltext"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "async-trait",
  "bytes",
@@ -2144,7 +2144,7 @@ dependencies = [
 
 [[package]]
 name = "fsm-scholar-graph"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "async-trait",
  "bytes",
@@ -2172,7 +2172,7 @@ dependencies = [
 
 [[package]]
 name = "fsm-script"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "async-trait",
  "bytes",
@@ -2193,7 +2193,7 @@ dependencies = [
 
 [[package]]
 name = "fsm-search"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "async-trait",
  "bytes",
@@ -2225,7 +2225,7 @@ dependencies = [
 
 [[package]]
 name = "fsm-server"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2280,7 +2280,7 @@ dependencies = [
 
 [[package]]
 name = "fsm-sources"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
@@ -2319,7 +2319,7 @@ dependencies = [
 
 [[package]]
 name = "fsm-store"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "async-trait",
  "bytes",
@@ -2342,7 +2342,7 @@ dependencies = [
 
 [[package]]
 name = "fsm-surface"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "fsm-core",
  "insta",
@@ -7254,7 +7254,7 @@ dependencies = [
 
 [[package]]
 name = "xtask"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "anyhow",
  "base64 0.23.1",

@@ -2,7 +2,7 @@
   "manifest_version": "0.4",
   "name": "free-search-mcp",
   "display_name": "Free Search",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Keyless Rust web, academic, and 500+ source search plus one-call ask, sandboxed JS exec, and doc reading.",
   "long_description": "Single-binary Rust MCP server exposing exactly three keyless tools (`search`, `exec`, and `ask`) over 500+ web, academic, and specialist sources with no API key and no signup.\n\nUse `ask` for quick one-call lookups returning dated passages or a sourced answer with no code. Use `search` for multi-engine web/vertical search, local FTS5 cache lookup, or zero-network catalog discovery. Use `exec` (QuickJS-NG ES2020 sandbox) to fetch and clean pages, read PDFs/Office/EPUB/archives, traverse scholarly citation graphs, check Retraction Watch integrity, fetch lawful open-access full text, generate offline citations, and call specialist APIs.\n\nAll three settings below are optional. Leave them empty unless your network needs a proxy. The binary automatically ignores empty or unfilled placeholder values.",
   "author": {

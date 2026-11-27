@@ -42,7 +42,7 @@ No API key, no Python runtime, and no Chromium required.
 Claude Code, Codex, and Antigravity (`agy`) are equal first-class targets. All
 three register the server under key **`"search"`**, ship all three tools
 (`search`, `exec`, `ask`), both skills (`verified-research` and
-`scholar-research`), and the `quick-search` agent, pinned to `1.0.0`. You only
+`scholar-research`), and the `quick-search` agent, pinned to `1.0.1`. You only
 need [uv](https://docs.astral.sh/uv/) (which downloads the prebuilt binary
 wheel via `uvx`) or a standalone `free-search-mcp` binary.
 
@@ -137,7 +137,7 @@ they pin the server version and bundle the `verified-research` and
 | **Claude Code** (plugin) | `/plugin marketplace add sweetcornna/free-search-mcp` → `/plugin install free-search@free-search-mcp` |
 | **Codex** (plugin) | `codex plugin marketplace add sweetcornna/free-search-mcp` → `codex plugin add free-search@free-search-mcp` |
 | **Antigravity (`agy`)** (plugin) | `agy plugin install https://github.com/sweetcornna/free-search-mcp/tree/main/plugins/free-search` |
-| **Claude Desktop** (bundle) | Open `free-search-mcp-1.0.0-<platform>.mcpb` from the [latest release](https://github.com/sweetcornna/free-search-mcp/releases/latest) |
+| **Claude Desktop** (bundle) | Open `free-search-mcp-1.0.1-<platform>.mcpb` from the [latest release](https://github.com/sweetcornna/free-search-mcp/releases/latest) |
 | **MCP Registry** | `io.github.sweetcornna/free-search-mcp` |
 | **Claude Code** (plain MCP) | `claude mcp add search -s user -- uvx free-search-mcp` |
 | **Codex** (plain MCP) | `codex mcp add search -- uvx free-search-mcp` |

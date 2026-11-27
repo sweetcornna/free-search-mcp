@@ -405,12 +405,16 @@ interface CacheHit { url: string; title: string; snippet: string; author?: strin
 interface CatalogHit { id: string; kind: \"source\"|\"protocol\"|\"api\"; summary: string; signature: string; example: string; auth: string; tier: number; health: string; }
 interface CatalogDetail extends CatalogHit { params: {name: string; ty: string; required: boolean; default?: any; min?: number; max?: number; doc: string}[]; scopes: string[]; caps: string[]; homeUrl?: string; }";
 
-/// Render `declare namespace ...` blocks from [`HOST_API`].
+/// Render TypeScript declarations from [`HOST_API`].
 ///
-/// When `in_description_only` is `true`, only entries with `in_description == true`
-/// are emitted (for the compact `exec` tool description). Otherwise every entry in
-/// [`HOST_API`] is emitted.
-pub(crate) fn render_dts_namespaces(in_description_only: bool) -> String {
+/// The `exec` description uses object method signatures for the selected host APIs.
+/// The full declarations use namespaces and include every host API.
+pub(crate) fn render_host_declarations(in_description_only: bool) -> String {
+    let (prefix, opening, method_prefix, closing) = if in_description_only {
+        ("declare const ", ": {\n", "  ", "};\n")
+    } else {
+        ("declare namespace ", " {\n", "  function ", "}\n")
+    };
     let mut out = String::new();
     for ns in NAMESPACES {
         let funcs: Vec<&HostFn> = HOST_API
@@ -420,18 +424,18 @@ pub(crate) fn render_dts_namespaces(in_description_only: bool) -> String {
         if funcs.is_empty() {
             continue;
         }
-        out.push_str("declare namespace ");
+        out.push_str(prefix);
         out.push_str(ns);
-        out.push_str(" {\n");
+        out.push_str(opening);
         for f in funcs {
-            out.push_str("  function ");
+            out.push_str(method_prefix);
             out.push_str(f.sig);
             if !f.sig.contains("; //") && !f.sig.ends_with(';') {
                 out.push(';');
             }
             out.push('\n');
         }
-        out.push_str("}\n");
+        out.push_str(closing);
     }
     out
 }
@@ -439,7 +443,7 @@ pub(crate) fn render_dts_namespaces(in_description_only: bool) -> String {
 /// Full TypeScript declarations generated from [`HOST_API`] plus all core camelCase
 /// interfaces of `SPEC.md` §3.2.
 pub fn dts() -> String {
-    let mut out = render_dts_namespaces(false);
+    let mut out = render_host_declarations(false);
     out.push('\n');
     out.push_str(DTS_INTERFACES);
     out.push('\n');

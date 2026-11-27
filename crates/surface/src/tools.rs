@@ -1,6 +1,6 @@
 //! MCP tool definitions (`search`, `exec`, `ask`) and server instructions (`SPEC.md` §2.2–§2.4, ruling R5).
 
-use crate::host_api::render_dts_namespaces;
+use crate::host_api::render_host_declarations;
 use serde_json::{Value, json};
 
 /// MCP `ServerInfo.instructions` (`SPEC.md` §2.2, ruling R5; hard gate <= 450 bytes).
@@ -10,15 +10,11 @@ const SEARCH_TITLE: &str = "Search web, verticals, cache, or catalog";
 const EXEC_TITLE: &str = "Run sandboxed JS with web/scholar/doc/source/cache APIs";
 const ASK_TITLE: &str = "Quick factual lookup with cited passages or agent";
 
-const SEARCH_DESCRIPTION: &str = "Keyless search over live verticals, FTS5 cache, or 300+ source catalog (use `ask` for small lookups).\n\
-- Live: query + scope ('web','academic','news','code','docs','dataset','finance','security','gov','media','forum','reference', or sub-scopes). Direct registries auto-route on 'web'.\n\
-- Catalog (0 net): scope='catalog' finds 300+ sources, 18 protocols, exec APIs.\n\
-- Cache (0 net): scope='cache' searches fetched pages.\n\
-Snippets are summaries: fetch pages via exec for exact dates/numbers/rules.";
+const SEARCH_DESCRIPTION: &str = "Keyless live search (web, academic, news, code, docs, dataset, finance, security, gov, media, forum, reference, or sub-scopes). `web` auto-routes registry queries. Offline `cache` searches fetched pages (FTS5). Offline `catalog` finds 300+ sources, 18 protocols, and exec APIs. Fetch pages via `exec` to verify exact dates, numbers, or rules.";
 
-const EXEC_DESCRIPTION_PREFIX: &str = "Sandboxed ES2020 JS (QuickJS-NG, no fs/env/sockets) for research, many sources, or custom logic (use `ask` for small lookups). Pass async arrow, statements+return, or expression; use Promise.all. Find 300+ sources via catalog.search(q).\n\n```ts\n";
+const EXEC_DESCRIPTION_PREFIX: &str = "Sandboxed ES2020 JS (QuickJS-NG, no fs/env/sockets) for multi-source research or custom logic. Batch with Promise.all. Find more sources and APIs via catalog.search(q).\n\n```ts\n";
 
-const ASK_DESCRIPTION: &str = "Small factual lookups: versions, dates, prices, definitions, one-off questions; use search/exec for research, many sources or custom logic. Answers from direct registries or top pages with citations (or answer agent if set).";
+const ASK_DESCRIPTION: &str = "Quick factual lookups with citations (versions, dates, prices, definitions). Answers use direct registries, top pages, or a configured answer agent.";
 
 /// MCP tool annotations (`SPEC.md` §2.3–§2.4).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -131,7 +127,7 @@ fn ask_input_schema() -> Value {
 fn exec_description() -> String {
     let mut out = String::with_capacity(3800);
     out.push_str(EXEC_DESCRIPTION_PREFIX);
-    out.push_str(&render_dts_namespaces(true));
+    out.push_str(&render_host_declarations(true));
     out.push_str("```");
     out
 }

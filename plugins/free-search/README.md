@@ -67,7 +67,7 @@ hermes plugins install sweetcornna/free-search-mcp/plugins/free-search --enable
 ### The MCP server `search` (3 tools)
 
 All three client configs (`.mcp.json`, `mcp.json`, `mcp_config.json`) register
-the server under key **`"search"`** running `uvx free-search-mcp==1.0.0` (a
+the server under key **`"search"`** running `uvx free-search-mcp==1.0.1` (a
 compiled Rust binary packaged via `maturin`, so `uv` is the only prerequisite).
 
 The server always exposes exactly **three tools** (`tools/list` ≤ 6,800 bytes):
@@ -89,7 +89,7 @@ The server always exposes exactly **three tools** (`tools/list` ≤ 6,800 bytes)
    fetching, document reading, scholarly graphs/full text/integrity/citations,
    and calling any of the 500+ cataloged sources or 18 generic protocols.
 
-The version is pinned to this plugin's own version (`1.0.0`). Installing plugin
+The version is pinned to this plugin's own version (`1.0.1`). Installing plugin
 `X.Y.Z` always runs package `X.Y.Z`, and `crates/server/tests/plugin_manifests.rs`
 keeps every manifest, pin, and package version in lockstep.
 

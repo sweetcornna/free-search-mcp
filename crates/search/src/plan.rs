@@ -381,9 +381,11 @@ pub fn build(
         seat_reserves(&mut plan, reg, cfg, b);
     }
     if plan.hedge {
+        let mut seen = HashSet::new();
         plan.reserves = cfg
             .reserve_engines
             .iter()
+            .filter(|id| seen.insert(id.as_str()))
             .filter(|id| !plan.seats.iter().any(|s| s.id == **id) && !plan.nominal.contains(id))
             .filter_map(|id| reg.get(id))
             .filter(|s| auto_ok(s.as_ref(), cfg))

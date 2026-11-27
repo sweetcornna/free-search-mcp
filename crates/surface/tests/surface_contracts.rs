@@ -211,16 +211,25 @@ fn host_api_is_single_source_for_dts_exec_description_and_render_dispatch() {
             "dts() missing signature for {}: {needle}",
             f.name
         );
+        let declaration = format!("declare const {ns}: {{\n");
+        let exec_methods = exec_desc
+            .split_once(&declaration)
+            .and_then(|(_, tail)| tail.split_once("\n};\n"))
+            .map(|(methods, _)| methods)
+            .unwrap_or_default();
         if f.in_description {
             assert!(
-                exec_desc.contains(&needle),
-                "exec description missing in_description fn {}: {needle}",
-                f.name
+                exec_methods.lines().map(str::trim_start).any(|signature| {
+                    signature == f.sig || signature.strip_suffix(';') == Some(f.sig)
+                }),
+                "exec description missing signature for {}: {}",
+                f.name,
+                f.sig
             );
         } else {
             assert!(
-                !exec_desc.contains(&format!("  function {method}("))
-                    && !exec_desc.contains(&format!("  function {method}<")),
+                !exec_methods.contains(&format!("  {method}("))
+                    && !exec_methods.contains(&format!("  {method}<")),
                 "discoverable fn {} should not bloat exec description",
                 f.name
             );

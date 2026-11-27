@@ -7,7 +7,7 @@ Every install route runs the same keyless 3-tool server (`search`, `exec`, and
 
 ## 1. Tri-Client Plugins (Recommended)
 
-The plugin pins the server version to `1.0.0` and bundles the `search` MCP
+The plugin pins the server version to `1.0.1` and bundles the `search` MCP
 server, both on-demand skills (`verified-research` and `scholar-research`),
 the `quick-search` agent, and Antigravity standing rules.
 
@@ -63,7 +63,7 @@ hermes plugins install sweetcornna/free-search-mcp/plugins/free-search --enable
 ## 2. Claude Desktop: One-Click Binary Bundle (`.mcpb`)
 
 Each [GitHub Release](https://github.com/sweetcornna/free-search-mcp/releases)
-attaches platform-specific `.mcpb` bundles (`free-search-mcp-1.0.0-<platform>.mcpb`)
+attaches platform-specific `.mcpb` bundles (`free-search-mcp-1.0.1-<platform>.mcpb`)
 using `"type": "binary"`. Double-click the bundle or install it via **Settings
 → Extensions**. It embeds the native `free-search-mcp` binary directly (no
 Python or `uv` needed) and shows three optional settings: proxy, region, and

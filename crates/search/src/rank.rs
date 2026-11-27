@@ -1,8 +1,8 @@
 //! Weighted reciprocal-rank fusion, field-wise absorption and fuzzy title
 //! dedup (ports of `aggregator._merge`, `_absorb`, `_dedup_by_title`).
 //!
-//! Ranking order is deterministic: scores accumulate in bucket order, keys
-//! keep their first-seen position, and the final sort is stable.
+//! Ranking order is deterministic: votes sum in first-seen source order,
+//! pages keep their first-seen position, and the final sort is stable.
 
 use fsm_core::Hit;
 use fsm_core::url_canon::{canonical_host, normalize_url, url_key};
@@ -89,29 +89,29 @@ fn digit_runs(s: &str) -> Vec<String> {
 /// titles whose digit tokens both exist and differ are distinct ("Python 3.13"
 /// vs "3.12"); empty titles are kept.
 pub fn dedup_by_title(items: Vec<Hit>) -> Vec<Hit> {
-    let mut keep: Vec<Hit> = Vec::with_capacity(items.len());
-    let mut keys: Vec<(String, Vec<String>, String)> = Vec::with_capacity(items.len());
-    for it in items {
+    unique_titles(items.into_iter()).collect()
+}
+
+fn unique_titles(items: impl Iterator<Item = Hit>) -> impl Iterator<Item = Hit> {
+    let mut keys: Vec<(String, Vec<String>, String)> = Vec::new();
+    items.filter(move |it| {
         let t = it.title.to_lowercase().trim().to_owned();
         if t.is_empty() {
-            keep.push(it);
-            keys.push((String::new(), Vec::new(), String::new()));
-            continue;
+            return true;
         }
         let host = canonical_host(&it.url);
         let nums = digit_runs(&t);
         let dup = keys.iter().any(|(k_host, k_nums, kt)| {
-            !kt.is_empty()
-                && *k_host == host
+            *k_host == host
                 && !(!k_nums.is_empty() && !nums.is_empty() && *k_nums != nums)
                 && token_set_ratio(&t, kt) >= DEDUP_RATIO
         });
-        if !dup {
-            keep.push(it);
-            keys.push((host, nums, t));
+        if dup {
+            return false;
         }
-    }
-    keep
+        keys.push((host, nums, t));
+        true
+    })
 }
 
 /// A `date_source` that is present and not `snippet` (`api`, `rss`,
@@ -123,27 +123,23 @@ pub fn is_confident(h: &Hit) -> bool {
             .is_some_and(|s| !matches!(s.trim(), "" | "snippet" | "none" | "text"))
 }
 
-struct Rep {
+struct Rep<'a> {
     hit: Hit,
     confident: bool,
-    score: f64,
-    engines: Vec<String>,
+    votes: Vec<(&'a str, f64)>,
 }
 
 /// `_absorb`: fold another sighting of the same page into its representative,
 /// field by field.
-fn absorb(rep: &mut Rep, r: &Hit) {
+fn absorb(rep: &mut Rep<'_>, r: &Hit, url: String) {
     if r.snippet.chars().count() > rep.hit.snippet.chars().count() {
         rep.hit.snippet = r.snippet.clone();
     }
     if rep.hit.title.trim().is_empty() && !r.title.trim().is_empty() {
         rep.hit.title = r.title.clone();
     }
-    if rep.hit.url.starts_with("http://") {
-        let sighted = normalize_url(&r.url);
-        if sighted.starts_with("https://") {
-            rep.hit.url = sighted;
-        }
+    if rep.hit.url.starts_with("http://") && url.starts_with("https://") {
+        rep.hit.url = url;
     }
     let confident = is_confident(r);
     if r.date.is_some() && (rep.hit.date.is_none() || (confident && !rep.confident)) {
@@ -157,16 +153,17 @@ fn absorb(rep: &mut Rep, r: &Hit) {
 }
 
 /// Weighted RRF over per-source buckets (each in that source's rank order),
-/// then title dedup over the FULL ranked list, then the cut to `limit` — so a
-/// duplicate inside the top `limit` is backfilled.
+/// with the strongest vote for each page from each source. Title dedup scans
+/// the ranked list until `limit` hits survive, backfilling skipped duplicates.
 ///
 /// Output hits carry `source` = first sighting's bucket, `sources` = sorted
 /// unique buckets, `score` = rounded RRF score, `date_source` normalised to
 /// `"structured"` | `"snippet"` (absent when undated).
 pub fn fuse(buckets: &[(String, Vec<Hit>)], w: &Weighting, limit: usize) -> Vec<Hit> {
     let mut index: HashMap<String, usize> = HashMap::new();
-    let mut reps: Vec<Rep> = Vec::new();
+    let mut reps: Vec<Rep<'_>> = Vec::new();
     for (src, hits) in buckets {
+        let src = src.as_str();
         let native = w.native.contains(src);
         let direct = w.direct.contains(src);
         for (pos, h) in hits.iter().enumerate() {
@@ -187,9 +184,12 @@ pub fn fuse(buckets: &[(String, Vec<Hit>)], w: &Weighting, limit: usize) -> Vec<
             match index.get(&key) {
                 Some(&i) => {
                     let rep = &mut reps[i];
-                    rep.score += add;
-                    rep.engines.push(src.clone());
-                    absorb(rep, h);
+                    if let Some((_, vote)) = rep.votes.iter_mut().find(|(s, _)| *s == src) {
+                        *vote = vote.max(add);
+                    } else {
+                        rep.votes.push((src, add));
+                    }
+                    absorb(rep, h, url);
                     if record && !h.title.trim().is_empty() {
                         rep.hit.title = h.title.clone();
                     }
@@ -197,30 +197,34 @@ pub fn fuse(buckets: &[(String, Vec<Hit>)], w: &Weighting, limit: usize) -> Vec<
                 None => {
                     let mut hit = h.clone();
                     hit.url = url;
-                    hit.source = src.clone();
+                    hit.source = src.to_owned();
                     index.insert(key, reps.len());
                     reps.push(Rep {
                         confident: is_confident(&hit),
                         hit,
-                        score: add,
-                        engines: vec![src.clone()],
+                        votes: vec![(src, add)],
                     });
                 }
             }
         }
     }
-    let mut order: Vec<usize> = (0..reps.len()).collect();
-    order.sort_by(|a, b| reps[*b].score.total_cmp(&reps[*a].score));
-    let mut ranked = Vec::with_capacity(order.len());
-    let mut slots: Vec<Option<Rep>> = reps.into_iter().map(Some).collect();
-    for i in order {
-        let Some(rep) = slots[i].take() else { continue };
+    let mut order: Vec<_> = reps
+        .iter()
+        .enumerate()
+        .map(|(i, rep)| (i, rep.votes.iter().map(|(_, vote)| vote).sum::<f64>()))
+        .collect();
+    order.sort_by(|(_, a), (_, b)| b.total_cmp(a));
+    let mut slots: Vec<_> = reps.into_iter().map(Some).collect();
+    let ranked = order.into_iter().map(|(i, score)| {
+        let rep = slots[i].take().expect("one rank per representative");
         let mut hit = rep.hit;
-        let mut engines = rep.engines;
-        engines.sort();
-        engines.dedup();
-        hit.sources = engines;
-        hit.score = (rep.score * 1e5).round() / 1e5;
+        hit.sources = rep
+            .votes
+            .into_iter()
+            .map(|(src, _)| src.to_owned())
+            .collect();
+        hit.sources.sort_unstable();
+        hit.score = (score * 1e5).round() / 1e5;
         hit.date_source = hit.date.as_ref().map(|_| {
             if rep.confident {
                 "structured"
@@ -229,11 +233,9 @@ pub fn fuse(buckets: &[(String, Vec<Hit>)], w: &Weighting, limit: usize) -> Vec<
             }
             .to_owned()
         });
-        ranked.push(hit);
-    }
-    let mut out = dedup_by_title(ranked);
-    out.truncate(limit);
-    out
+        hit
+    });
+    unique_titles(ranked).take(limit).collect()
 }
 
 #[cfg(test)]
@@ -500,6 +502,79 @@ mod tests {
         x.date = date.map(str::to_owned);
         x.date_source = src.map(str::to_owned);
         x
+    }
+
+    #[test]
+    fn independent_engines_outrank_one_engine_repeating_a_page() {
+        let consensus = "https://consensus.example/guide";
+        let out = fuse(
+            &[
+                b(
+                    "bing",
+                    vec![
+                        dated(
+                            "http://repeat.example/page",
+                            "",
+                            Some("3 days ago"),
+                            Some("snippet"),
+                        ),
+                        h("Same story", "https://www.repeat.example/page/"),
+                        dated(
+                            "https://repeat.example/page#section",
+                            "The longest snippet comes from the third sighting.",
+                            Some("2026-08-27"),
+                            Some("rss"),
+                        ),
+                    ],
+                ),
+                b("duckduckgo", vec![h("Search ranking guide", consensus)]),
+                b("yahoojp", vec![h("Search ranking guide", consensus)]),
+            ],
+            &Weighting::default(),
+            2,
+        );
+        let ranking: Vec<_> = out.iter().map(|h| (h.url.as_str(), h.score)).collect();
+        assert_eq!(
+            ranking,
+            [
+                (consensus, 0.03279),
+                ("https://www.repeat.example/page", 0.01639)
+            ]
+        );
+        assert_eq!(out[0].sources, ["duckduckgo", "yahoojp"]);
+        assert_eq!(out[1].sources, ["bing"]);
+        assert_eq!(
+            out[1].snippet,
+            "The longest snippet comes from the third sighting."
+        );
+        assert_eq!(out[1].date.as_deref(), Some("2026-08-27"));
+        assert_eq!(out[1].date_source.as_deref(), Some("structured"));
+    }
+
+    #[test]
+    fn a_later_bucket_can_raise_the_same_sources_vote_to_direct_weight() {
+        let url = "https://pypi.org/project/fastapi";
+        let out = fuse(
+            &[
+                b(
+                    "pypi",
+                    vec![
+                        h("Starlette", "https://pypi.org/project/starlette"),
+                        h("FastAPI", url),
+                    ],
+                ),
+                b("pypi", vec![h("FastAPI 0.141.1 on PyPI", url)]),
+            ],
+            &Weighting {
+                direct: ["pypi".to_owned()].into(),
+                ..Weighting::default()
+            },
+            2,
+        );
+        let fastapi = out.iter().find(|h| h.url == url).unwrap();
+        assert_eq!(fastapi.score, 0.08197);
+        assert_eq!(fastapi.sources, ["pypi"]);
+        assert_eq!(fastapi.title, "FastAPI 0.141.1 on PyPI");
     }
 
     #[test]

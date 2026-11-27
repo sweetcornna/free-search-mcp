@@ -78,8 +78,8 @@ Or wire via `.agents/plugins.json` (project) / `~/.gemini/config/plugins.json` (
 
 | Path | Antigravity role |
 |---|---|
-| `plugin.json` | Plugin marker & metadata (`name: "free-search"`, `version: "1.0.0"`) |
-| `mcp_config.json` | Registers the `"search"` stdio MCP server (`uvx free-search-mcp==1.0.0`, exposing `ask`, `search`, `exec`) |
+| `plugin.json` | Plugin marker & metadata (`name: "free-search"`, `version: "1.0.1"`) |
+| `mcp_config.json` | Registers the `"search"` stdio MCP server (`uvx free-search-mcp==1.0.1`, exposing `ask`, `search`, `exec`) |
 | `skills/verified-research/SKILL.md` | On-demand skill for primary-source fact verification (`ask` for quick lookups; `search` + `exec` for corroborated verification) |
 | `skills/scholar-research/SKILL.md` | On-demand skill for academic literature search, citation graphs, Retraction Watch integrity, lawful OA full text, and citations |
 | `rules/AGENTS.md` | Concise standing rule (~1.5 KB) enforcing 3-tool discipline (`ask` / `search` / `exec`), primary-page verification, anti-injection, and no-key rules |

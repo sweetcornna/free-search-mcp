@@ -4,6 +4,20 @@ All notable changes to this project are documented here. The format is loosely
 based on [Keep a Changelog](https://keepachangelog.com/), and the project follows
 semantic versioning.
 
+## [1.0.1] - 2026-11-27
+
+- Fixed search ranking when one engine returns several URLs for the same page.
+  Each engine now contributes its strongest vote for that page. Other sightings
+  can still supply a better snippet or date. Previously cached search results
+  will refresh on the next query.
+- Title deduplication stops once it has filled the requested result count.
+  Repeated entries in the reserve engine list consume only one dispatch slot.
+- Catalog search now scores document IDs directly. Across 12 English and Chinese
+  queries, it requested 56.8% fewer allocation bytes with identical rankings.
+- Shortened MCP tool descriptions and compacted the TypeScript signatures shown
+  to clients. A measured stdio `tools/list` reply fell from 1,781 to 1,684
+  tokens with `o200k_base`. Tool parameters and host method signatures are unchanged.
+
 ## [1.0.0] - 2026-11-25
 
 Complete Rust 1.0 rewrite (`free-search-mcp`, with `search-mcp` CLI alias)

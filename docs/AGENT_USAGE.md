@@ -14,7 +14,7 @@ an agent must never ask a user for a key or sign-in.
 ## Install: Tri-Client Plugins First
 
 All three first-party clients load the same `plugins/free-search` bundle:
-the pinned `search` MCP server (`1.0.0`), the `verified-research` and
+the pinned `search` MCP server (`1.0.1`), the `verified-research` and
 `scholar-research` skills, and the `quick-search` agent (plus `rules/AGENTS.md`
 in Antigravity).
 
@@ -42,7 +42,7 @@ silently shadow the plugin's server. If registering manually in
 agy plugin install https://github.com/sweetcornna/free-search-mcp/tree/main/plugins/free-search
 ```
 
-**Claude Desktop**: Install the binary `free-search-mcp-1.0.0-<platform>.mcpb`
+**Claude Desktop**: Install the binary `free-search-mcp-1.0.1-<platform>.mcpb`
 bundle from the latest GitHub Release.
 
 **MCP Registry**: `io.github.sweetcornna/free-search-mcp`.
