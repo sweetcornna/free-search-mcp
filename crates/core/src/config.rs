@@ -2934,7 +2934,8 @@ mod tests {
         let count = |o: EnvOrigin| ENV_TABLE.iter().filter(|s| s.origin == o).count();
         assert_eq!(count(EnvOrigin::LegacySettings), 84);
         assert_eq!(count(EnvOrigin::LegacyNonSettings), 22);
-        assert_eq!(count(EnvOrigin::New), 16);
+        // 16 original new settings plus the two trusted opt-in instance endpoints.
+        assert_eq!(count(EnvOrigin::New), 18);
         let cat = |c: &str| {
             ENV_TABLE
                 .iter()
