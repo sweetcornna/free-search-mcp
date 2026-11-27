@@ -1360,6 +1360,12 @@ fn render_research_brief(brief: &ResearchBrief, opts: &RenderOpts) -> String {
         format!("sources: {}", brief.search.results.len()),
         format!("pages read: {}", brief.pages.len()),
     ];
+    if brief.search.cached {
+        meta.push(match brief.search.cache_age_s {
+            Some(age) => format!("search cached {} ago", age_phrase(age)),
+            None => "search cached".to_owned(),
+        });
+    }
     if brief.tokens_estimated > 0 {
         meta.push(format!("~{} tokens", brief.tokens_estimated));
     }
@@ -1448,16 +1454,7 @@ fn render_research_brief(brief: &ResearchBrief, opts: &RenderOpts) -> String {
     let doc_headers: Vec<String> = brief
         .pages
         .iter()
-        .map(|p| {
-            let title = non_empty_or(sanitize_inline(&p.title), "(untitled)");
-            let url = sanitize_url(&p.url);
-            let tok = if p.tokens_estimated > 0 {
-                format!(" · ~{} tokens", p.tokens_estimated)
-            } else {
-                String::new()
-            };
-            format!("### {title}\n<{url}>{tok}")
-        })
+        .map(|p| format_page_header(p, "###"))
         .collect();
     let doc_bodies: Vec<String> = brief
         .pages
